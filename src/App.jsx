@@ -180,7 +180,7 @@ function computeHealthScore(ingredients, ingredientDB) {
       s -= (n.sugar || 0) * 2;
       s -= (n.salt || 0) * 10;
       if (n.isVegetable) s += 15;
-      score = Math.max(0, Math.min(100, s));
+      score = Math.max(0, Math.min(99, s));
     } else {
       const cat = NUTRITION_CATEGORIES[dbItem.category || "other"];
       score = (cat?.score || 5) * 10;
@@ -189,7 +189,7 @@ function computeHealthScore(ingredients, ingredientDB) {
     totalWeight += weight;
   }
   if (totalWeight === 0) return 70;
-  return Math.round(weightedScore / totalWeight);
+  return Math.min(99, Math.round(weightedScore / totalWeight));
 }
 
 // ─── DEFAULT DATA ─────────────────────────────────────────────────────────────
@@ -392,7 +392,7 @@ function ImageUpload({ value, onChange, style }) {
 }
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
-function UserAvatar({ user, syncStatus, onSignOut }) {
+function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [open, setOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   if (!user) return null;
@@ -403,7 +403,7 @@ function UserAvatar({ user, syncStatus, onSignOut }) {
       <button onClick={() => { setOpen(o => !o); setConfirmSignOut(false); }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="Mon compte">
         {user.photoURL
           ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: "2px solid var(--border)" }} />
-          : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>{(user.displayName || "?")[0]}</div>
+          : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>{(user.displayName || "?")[0].toUpperCase()}</div>
         }
         <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: syncStatus === "idle" ? "none" : "block" }} />
       </button>
@@ -411,9 +411,21 @@ function UserAvatar({ user, syncStatus, onSignOut }) {
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => { setOpen(false); setConfirmSignOut(false); }} />
           <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: "expandDown 0.2s ease" }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{user.displayName}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{(user.displayName || "").toUpperCase()}</div>
             <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>{user.email}</div>
-            {syncLabel && <div style={{ fontSize: 11, color: syncColor, marginBottom: 12 }}>{syncLabel}</div>}
+            {syncLabel && <div style={{ fontSize: 11, color: syncColor, marginBottom: 10 }}>{syncLabel}</div>}
+            {onToggleTheme && (
+              <>
+                <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
+                <button onClick={onToggleTheme} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+                  onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
+                  <Icon name={isDark ? "sun" : "moon"} size={13} color="currentColor" />
+                  {isDark ? "Mode clair" : "Mode sombre"}
+                </button>
+                <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
+              </>
+            )}
             {!confirmSignOut
               ? <button className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 4 }} onClick={() => setConfirmSignOut(true)}>Déconnexion</button>
               : <div style={{ marginTop: 8 }}>
@@ -458,7 +470,50 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+// ─── SWIPE DOWN TO CLOSE (mobile modals) ─────────────────────────────────────
+function useSwipeDown(onClose, threshold = 140) {
+  const startY = useRef(null);
+  const startX = useRef(null);
+  const sheetRef = useRef(null);
+  const onTouchStart = e => { startY.current = e.touches[0].clientY; startX.current = e.touches[0].clientX; };
+  const onTouchMove = e => {
+    if (startY.current === null) return;
+    const dy = e.touches[0].clientY - startY.current;
+    const dx = Math.abs(e.touches[0].clientX - startX.current);
+    // Only follow drag if movement is primarily vertical
+    if (dy > 0 && dy > dx && sheetRef.current) sheetRef.current.style.transform = `translateY(${dy}px)`;
+  };
+  const onTouchEnd = e => {
+    if (startY.current === null) return;
+    const dy = e.changedTouches[0].clientY - startY.current;
+    const dx = Math.abs(e.changedTouches[0].clientX - startX.current);
+    if (sheetRef.current) sheetRef.current.style.transform = "";
+    if (dy > threshold && dy > dx) onClose();
+    startY.current = null;
+    startX.current = null;
+  };
+  return { sheetRef, onTouchStart, onTouchMove, onTouchEnd };
+}
+
+// ─── SWIPEABLE SHEET ──────────────────────────────────────────────────────────
+function SwipeableSheet({ onClose, children, style }) {
+  const { sheetRef, onTouchStart, onTouchMove, onTouchEnd } = useSwipeDown(onClose);
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div ref={sheetRef} className="modal-sheet"
+        style={{ touchAction: "none", ...style }}
+        onClick={e => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}>
+        <div className="modal-handle" />
+        {children}
+      </div>
+    </div>
+  );
+}
+
+
 export default function App() {
   const [tab, setTab] = useState("home");
   const [recipes, setRecipes] = useLS("rf_recipes2", SAMPLE_RECIPES);
@@ -756,10 +811,10 @@ export default function App() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} />}
-      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} />}
-      {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} />}
-      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} />}
+      {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} />}
     </div>
   );
@@ -769,7 +824,7 @@ export default function App() {
       <RecipeEditor recipe={editingRecipe} onSave={saveRecipe} onCancel={() => setEditingRecipe(null)} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
     </div>
   ) : selectedRecipe && currentRecipe ? (
-    <div className={isDesktop ? "desktop-content" : ""} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
+    <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
       <RecipeDetail recipe={currentRecipe} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onAddToShopping={addToShopping} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
   ) : tabContent;
@@ -873,19 +928,16 @@ export default function App() {
 
         {/* Leave editor confirmation modal */}
         {pendingTab && (
-          <div className="modal-backdrop" onClick={() => setPendingTab(null)}>
-            <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-              <div className="modal-handle" />
-              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Quitter le formulaire ?</h3>
-              <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-                Les modifications non sauvegardées seront perdues. Tu peux sauvegarder d'abord en cliquant sur "Sauvegarder" en haut.
-              </p>
-              <div style={{ display: "flex", gap: 10 }}>
-                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingTab(null)}>Rester</button>
-                <button className="btn btn-danger" style={{ flex: 1 }} onClick={confirmLeaveEditor}>Quitter sans sauvegarder</button>
-              </div>
+          <SwipeableSheet onClose={() => setPendingTab(null)}>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Quitter le formulaire ?</h3>
+            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
+              Les modifications non sauvegardées seront perdues. Tu peux sauvegarder d'abord en cliquant sur "Sauvegarder" en haut.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingTab(null)}>Rester</button>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={confirmLeaveEditor}>Quitter sans sauvegarder</button>
             </div>
-          </div>
+          </SwipeableSheet>
         )}
       </div>
     </>
@@ -949,7 +1001,7 @@ function DesktopSidebar({ tab, setTab, onNewRecipe }) {
 }
 
 // ─── HOME TAB ─────────────────────────────────────────────────────────────────
-function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, user, syncStatus, onSignOut }) {
+function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [search, setSearch] = useState("");
   const [filterTag, setFilterTag] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
@@ -977,7 +1029,7 @@ function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, se
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mes Recettes</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={onNewRecipe}><Icon name="plus" size={16} /> Nouvelle</button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
           </div>
         </div>
         <div style={{ position: "relative", marginBottom: 12 }}>
@@ -1063,6 +1115,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
   const [cookMode, setCookMode] = useState(false);
+  const isProgrammaticScroll = useRef(false);
   const mult = servings / (recipe.servings || 2);
 
   const getIngImage = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
@@ -1126,83 +1179,132 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
       {/* Mobile tabs / Desktop 2-col */}
       <div className="detail-tabs-mobile" style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
-        {["Ingrédients", "Ustensiles", "Étapes"].map(t => (
-          <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}` }}>{t}</button>
+        {["Ingrédients", "Ustensiles", "Étapes"].map((t, i) => (
+          <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, transition: "color 0.15s, border-color 0.15s" }}>{t}</button>
         ))}
       </div>
 
       <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex" }}>
-        {/* ── MOBILE: tab content ── */}
-        <div className="detail-mobile-content" style={{ flex: 1, padding: 16 }}>
-          {activeTab === "Ingrédients" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {recipe.ingredients.map(ing => (
-                <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={getIngImage(ing.dbId)} alt={ing.name} style={{ width: "100%", height: "100%" }} /></div>
-                  <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
-                    <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {activeTab === "Ustensiles" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {(recipe.utensils || []).map(u => (
-                <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "var(--surface2)" }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
-                  <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
-                </div>
-              ))}
-              {(!recipe.utensils || recipe.utensils.length === 0) && <p style={{ color: "var(--text3)", fontSize: 14, gridColumn: "1/-1" }}>Aucun ustensile.</p>}
-            </div>
-          )}
-          {activeTab === "Étapes" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {recipe.steps && recipe.steps.length > 0 && (
-                <button className="btn btn-primary" style={{ width: "100%", borderRadius: 14, padding: "13px 18px", fontSize: 15, fontWeight: 600, gap: 10 }} onClick={() => setCookMode(true)}>
-                  <Icon name="fire" size={17} /> Mode pas à pas
-                </button>
-              )}
-              {(recipe.steps || []).map((step, i) => {
-                const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
-                const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
-                return (
-                  <div key={step.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
-                      <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{step.title}</div>
-                        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>{step.text}</p>
-                      </div>
+        {/* ── MOBILE: swiper ── */}
+        <div id="detail-swiper" className="detail-mobile-content"
+          onTouchStart={e => {
+            const el = e.currentTarget;
+            el._tx = e.touches[0].clientX;
+            el._ty = e.touches[0].clientY;
+            el._lockAxis = null;
+            el._dragging = false;
+          }}
+          onTouchMove={e => {
+            const el = e.currentTarget;
+            const dx = e.touches[0].clientX - el._tx;
+            const dy = Math.abs(e.touches[0].clientY - el._ty);
+            if (el._lockAxis === null && (Math.abs(dx) > 6 || dy > 6)) {
+              el._lockAxis = Math.abs(dx) > dy ? "x" : "y";
+            }
+            if (el._lockAxis === "x") {
+              e.preventDefault();
+              el._dragging = true;
+              const tabs = ["Ingrédients", "Ustensiles", "Étapes"];
+              const curIdx = tabs.indexOf(activeTab);
+              const inner = el.querySelector(".swiper-inner");
+              if (inner) inner.style.transform = `translateX(calc(${-curIdx * 100}% + ${dx}px))`;
+            }
+          }}
+          onTouchEnd={e => {
+            const el = e.currentTarget;
+            if (!el._dragging) return;
+            const dx = e.changedTouches[0].clientX - el._tx;
+            const tabs = ["Ingrédients", "Ustensiles", "Étapes"];
+            const curIdx = tabs.indexOf(activeTab);
+            let nextIdx = curIdx;
+            if (dx < -50 && curIdx < tabs.length - 1) nextIdx = curIdx + 1;
+            else if (dx > 50 && curIdx > 0) nextIdx = curIdx - 1;
+            const inner = el.querySelector(".swiper-inner");
+            if (inner) {
+              inner.style.transition = "transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94)";
+              inner.style.transform = `translateX(${-nextIdx * 100}%)`;
+              setTimeout(() => { if (inner) inner.style.transition = ""; }, 300);
+            }
+            setActiveTab(tabs[nextIdx]);
+            el._dragging = false;
+          }}
+          style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+          <div className="swiper-inner" style={{ display: "flex", width: "100%", height: "100%", transform: `translateX(${-["Ingrédients", "Ustensiles", "Étapes"].indexOf(activeTab) * 100}%)` }}>
+            {/* Slide 1 — Ingrédients */}
+            <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {recipe.ingredients.map(ing => (
+                  <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={getIngImage(ing.dbId)} alt={ing.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
                     </div>
-                    {linkedIngs.length > 0 && (
-                      <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "8px 10px", marginTop: 8 }}>
-                        <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ingrédients pour cette étape</div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                          {linkedIngs.map(ing => (
-                            <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <div style={{ width: 24, height: 24, borderRadius: 6, overflow: "hidden", flexShrink: 0, background: "var(--surface3)" }}><Img src={getIngImage(ing.dbId)} alt={ing.name} style={{ width: "100%", height: "100%" }} /></div>
-                              <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{ing.name}</span>
-                              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
-                            </div>
-                          ))}
+                  </div>
+                ))}
+              </div>
+              <div style={{ height: 16 }} />
+            </div>
+            {/* Slide 2 — Ustensiles */}
+            <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {(recipe.utensils || []).map(u => (
+                  <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "var(--surface2)" }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
+                  </div>
+                ))}
+                {(!recipe.utensils || recipe.utensils.length === 0) && <p style={{ color: "var(--text3)", fontSize: 14, gridColumn: "1/-1" }}>Aucun ustensile.</p>}
+              </div>
+              <div style={{ height: 16 }} />
+            </div>
+            {/* Slide 3 — Étapes */}
+            <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {recipe.steps && recipe.steps.length > 0 && (
+                  <button className="btn btn-primary" style={{ width: "100%", borderRadius: 14, padding: "13px 18px", fontSize: 15, fontWeight: 600, gap: 10 }} onClick={() => setCookMode(true)}>
+                    <Icon name="fire" size={17} /> Mode pas à pas
+                  </button>
+                )}
+                {(recipe.steps || []).map((step, i) => {
+                  const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
+                  const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
+                  return (
+                    <div key={step.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
+                      <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{step.title}</div>
+                          <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>{step.text}</p>
                         </div>
                       </div>
-                    )}
-                    {linkedUts.length > 0 && (
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-                        {linkedUts.map(u => <span key={u.id} className="tag accent" style={{ fontSize: 11 }}>{u.name}</span>)}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {linkedIngs.length > 0 && (
+                        <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "8px 10px", marginTop: 8 }}>
+                          <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ingrédients pour cette étape</div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            {linkedIngs.map(ing => (
+                              <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div style={{ width: 24, height: 24, borderRadius: 6, overflow: "hidden", flexShrink: 0, background: "var(--surface3)" }}><Img src={getIngImage(ing.dbId)} alt={ing.name} style={{ width: "100%", height: "100%" }} /></div>
+                                <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{ing.name}</span>
+                                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {linkedUts.length > 0 && (
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                          {linkedUts.map(u => <span key={u.id} className="tag accent" style={{ fontSize: 11 }}>{u.name}</span>)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ height: 16 }} />
             </div>
-          )}
-          <div style={{ height: 16 }} />
+          </div>{/* end swiper-inner */}
         </div>
 
         {/* ── DESKTOP: 2-column layout (hidden on mobile via CSS) ── */}
@@ -1294,135 +1396,118 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
       {/* Shopping ingredient selection modal */}
       {showShoppingModal && (
-        <div className="modal-backdrop" onClick={() => setShowShoppingModal(false)}>
-          <div className="modal-sheet" style={{ maxHeight: "85dvh" }} onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Ajouter aux courses</h3>
-            <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Décoche les ingrédients que tu as déjà.</p>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-              <button style={{ fontSize: 12, color: "var(--accent)" }} onClick={() => setSelectedIngs(recipe.ingredients.map(i => i.id))}>Tout sélectionner</button>
-              <button style={{ fontSize: 12, color: "var(--text3)" }} onClick={() => setSelectedIngs([])}>Tout décocher</button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto", maxHeight: "52vh", marginBottom: 16 }}>
-              {recipe.ingredients.map(ing => {
-                const selected = selectedIngs.includes(ing.id);
-                return (
-                  <button key={ing.id} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing.id) : [...prev, ing.id])}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12,
-                      background: "var(--surface2)", border: "1px solid var(--border)",
-                      textAlign: "left", transition: "opacity 0.15s", opacity: selected ? 1 : 0.4
-                    }}>
-                    <div style={{
-                      width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-                      background: selected ? "var(--accent)" : "transparent",
-                      border: `2px solid ${selected ? "var(--accent)" : "var(--border)"}`,
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      {selected && <Icon name="check" size={11} color="#fff" />}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
-                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 8 }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <button className="btn btn-primary" style={{ width: "100%" }}
-              disabled={selectedIngs.length === 0}
-              onClick={() => { onAddToShopping(recipe, recipe.ingredients.filter(i => selectedIngs.includes(i.id)), mult); setShowShoppingModal(false); }}>
-              <Icon name="shopping" size={15} /> Ajouter {selectedIngs.length > 0 ? `${selectedIngs.length} article${selectedIngs.length > 1 ? "s" : ""}` : ""}
-            </button>
+        <SwipeableSheet onClose={() => setShowShoppingModal(false)} style={{ maxHeight: "85dvh" }}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Ajouter aux courses</h3>
+          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Décoche les ingrédients que tu as déjà.</p>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+            <button style={{ fontSize: 12, color: "var(--accent)" }} onClick={() => setSelectedIngs(recipe.ingredients.map(i => i.id))}>Tout sélectionner</button>
+            <button style={{ fontSize: 12, color: "var(--text3)" }} onClick={() => setSelectedIngs([])}>Tout décocher</button>
           </div>
-        </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto", maxHeight: "52vh", marginBottom: 16 }}>
+            {recipe.ingredients.map(ing => {
+              const selected = selectedIngs.includes(ing.id);
+              return (
+                <button key={ing.id} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing.id) : [...prev, ing.id])}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12,
+                    background: "var(--surface2)", border: "1px solid var(--border)",
+                    textAlign: "left", transition: "opacity 0.15s", opacity: selected ? 1 : 0.4
+                  }}>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                    background: selected ? "var(--accent)" : "transparent",
+                    border: `2px solid ${selected ? "var(--accent)" : "var(--border)"}`,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {selected && <Icon name="check" size={11} color="#fff" />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
+                    <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 8 }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <button className="btn btn-primary" style={{ width: "100%" }}
+            disabled={selectedIngs.length === 0}
+            onClick={() => { onAddToShopping(recipe, recipe.ingredients.filter(i => selectedIngs.includes(i.id)), mult); setShowShoppingModal(false); }}>
+            <Icon name="shopping" size={15} /> Ajouter {selectedIngs.length > 0 ? `${selectedIngs.length} article${selectedIngs.length > 1 ? "s" : ""}` : ""}
+          </button>
+        </SwipeableSheet>
       )}
 
       {showMealModal && (
-        <div className="modal-backdrop" onClick={() => setShowMealModal(false)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Ajouter au planning</h3>
-            <div className="field-label">Date</div>
-            <input type="date" className="field-input" value={mealDate} onChange={e => setMealDate(e.target.value)} style={{ marginBottom: 12 }} />
-            <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection)</div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-              {[["midi", "🌤 Midi", "var(--yellow)"], ["soir", "🌙 Soir", "var(--blue)"]].map(([slot, label, col]) => {
-                const active = mealSlots.includes(slot);
-                const toggle = () => setMealSlots(prev => {
-                  const next = active ? prev.filter(s => s !== slot) : [...prev, slot];
-                  return next.length ? next : prev; // prevent empty
-                });
-                return (
-                  <button key={slot} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? col : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? col : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
-                    {active && <Icon name="check" size={14} color="#000" />}
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-            {mealSlots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10, textAlign: "center" }}>Ajouté au midi ET au soir</div>}
-            <div className="field-label">Étaler sur X jours consécutifs</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <button onClick={() => setMealPortions(p => Math.max(1, p - 1))} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>−</button>
-              <span style={{ fontSize: 18, fontWeight: 700, minWidth: 30, textAlign: "center" }}>{mealPortions}</span>
-              <button onClick={() => setMealPortions(p => p + 1)} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>+</button>
-              <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{mealPortions > 1 ? `${recipe.servings} portions ÷ ${mealPortions} jours = ${(recipe.servings / mealPortions).toFixed(1)} p/j` : "Toutes les portions ce jour"}</span>
-            </div>
-            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => {
-              for (let d = 0; d < mealPortions; d++) {
-                const dt = new Date(mealDate + "T12:00:00"); dt.setDate(dt.getDate() + d);
-                const dateStr = dt.toISOString().slice(0, 10);
-                mealSlots.forEach(slot => onAddToMealPlan(recipe, dateStr, mealPortions, slot));
-              }
-              setShowMealModal(false);
-            }}><Icon name="check" size={16} /> Confirmer</button>
+        <SwipeableSheet onClose={() => setShowMealModal(false)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Ajouter au planning</h3>
+          <div className="field-label">Date</div>
+          <input type="date" className="field-input" value={mealDate} onChange={e => setMealDate(e.target.value)} style={{ marginBottom: 12 }} />
+          <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection)</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            {[["midi", "🌤 Midi", "var(--yellow)"], ["soir", "🌙 Soir", "var(--blue)"]].map(([slot, label, col]) => {
+              const active = mealSlots.includes(slot);
+              const toggle = () => setMealSlots(prev => {
+                const next = active ? prev.filter(s => s !== slot) : [...prev, slot];
+                return next.length ? next : prev;
+              });
+              return (
+                <button key={slot} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? col : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? col : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
+                  {active && <Icon name="check" size={14} color="#000" />}
+                  {label}
+                </button>
+              );
+            })}
           </div>
-        </div>
+          {mealSlots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10, textAlign: "center" }}>Ajouté au midi ET au soir</div>}
+          <div className="field-label">Étaler sur X jours consécutifs</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setMealPortions(p => Math.max(1, p - 1))} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>−</button>
+            <span style={{ fontSize: 18, fontWeight: 700, minWidth: 30, textAlign: "center" }}>{mealPortions}</span>
+            <button onClick={() => setMealPortions(p => p + 1)} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>+</button>
+            <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{mealPortions > 1 ? `${recipe.servings} portions ÷ ${mealPortions} jours = ${(recipe.servings / mealPortions).toFixed(1)} p/j` : "Toutes les portions ce jour"}</span>
+          </div>
+          <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => {
+            for (let d = 0; d < mealPortions; d++) {
+              const dt = new Date(mealDate + "T12:00:00"); dt.setDate(dt.getDate() + d);
+              const dateStr = dt.toISOString().slice(0, 10);
+              mealSlots.forEach(slot => onAddToMealPlan(recipe, dateStr, mealPortions, slot));
+            }
+            setShowMealModal(false);
+          }}><Icon name="check" size={16} /> Confirmer</button>
+        </SwipeableSheet>
       )}
       {showDeleteConfirm && (
-        <div className="modal-backdrop" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la recette ?</h3>
-            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20 }}>Retirer cette recette la supprimera définitivement des recettes enregistrées.</p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
-              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
-            </div>
+        <SwipeableSheet onClose={() => setShowDeleteConfirm(false)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la recette ?</h3>
+          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20 }}>Retirer cette recette la supprimera définitivement des recettes enregistrées.</p>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
           </div>
-        </div>
+        </SwipeableSheet>
       )}
       {showCollModal && (
-        <div className="modal-backdrop" onClick={() => setShowCollModal(false)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Collections</h3>
-            <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Sélectionne les collections pour <strong>{recipe.name}</strong></p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-              {(collections || []).map(col => {
-                const active = (recipe.collections || []).includes(col.id);
-                return (
-                  <button key={col.id} onClick={() => onToggleCollection(recipe.id, col.id)}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, background: active ? col.color + "22" : "var(--surface2)", border: `1.5px solid ${active ? col.color : "var(--border)"}`, transition: "all 0.15s" }}>
-                    <div style={{ width: 14, height: 14, borderRadius: "50%", background: col.color, flexShrink: 0 }} />
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: "left", color: active ? col.color : "var(--text)" }}>{col.name}</span>
-                    <div style={{ width: 22, height: 22, borderRadius: "50%", background: active ? col.color : "transparent", border: `2px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {active && <Icon name="check" size={12} color="#fff" />}
-                    </div>
-                  </button>
-                );
-              })}
-              {(!collections || collections.length === 0) && <p style={{ color: "var(--text3)", fontSize: 13 }}>Aucune collection. Créez-en dans l'onglet Config.</p>}
-            </div>
-            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => {
-              // Save directly without opening editor
-              const updatedRecipe = { ...recipe };
-              // We toggle via a dedicated callback
-              setShowCollModal(false);
-            }}>Fermer</button>
+        <SwipeableSheet onClose={() => setShowCollModal(false)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Collections</h3>
+          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Sélectionne les collections pour <strong>{recipe.name}</strong></p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+            {(collections || []).map(col => {
+              const active = (recipe.collections || []).includes(col.id);
+              return (
+                <button key={col.id} onClick={() => onToggleCollection(recipe.id, col.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, background: active ? col.color + "22" : "var(--surface2)", border: `1.5px solid ${active ? col.color : "var(--border)"}`, transition: "all 0.15s" }}>
+                  <div style={{ width: 14, height: 14, borderRadius: "50%", background: col.color, flexShrink: 0 }} />
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: "left", color: active ? col.color : "var(--text)" }}>{col.name}</span>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: active ? col.color : "transparent", border: `2px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {active && <Icon name="check" size={12} color="#fff" />}
+                  </div>
+                </button>
+              );
+            })}
+            {(!collections || collections.length === 0) && <p style={{ color: "var(--text3)", fontSize: 13 }}>Aucune collection. Créez-en dans l'onglet Config.</p>}
           </div>
-        </div>
+          <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowCollModal(false)}>Fermer</button>
+        </SwipeableSheet>
       )}
     </div>
   );
@@ -1575,6 +1660,8 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
   };
 
   const dragRef = useRef(null);
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimer = useRef(null);
 
   return (
     <div className="editor-enter" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -1584,46 +1671,82 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
         <button className="btn btn-primary" style={{ padding: "8px 16px" }} onClick={() => onSave(form)}><Icon name="check" size={15} /> Sauvegarder</button>
       </div>
       <div style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, overflowX: "auto" }}>
-        {["info", "ingrédients", "ustensiles", "étapes"].map(s => (
-          <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "10px 16px", fontSize: 12, fontWeight: 500, color: section === s ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${section === s ? "var(--accent)" : "transparent"}`, textTransform: "capitalize" }}>{s}</button>
+        {["info", "ingrédients", "ustensiles", "étapes"].map((s, i) => (
+          <button key={s} onClick={() => {
+            setSection(s);
+            const el = document.getElementById("editor-swiper");
+            if (el) {
+              isProgrammaticScroll.current = true;
+              clearTimeout(scrollTimer.current);
+              el.scrollTo({ left: i * el.offsetWidth, behavior: "smooth" });
+              scrollTimer.current = setTimeout(() => { isProgrammaticScroll.current = false; }, 350);
+            }
+          }} style={{ flexShrink: 0, padding: "10px 16px", fontSize: 12, fontWeight: 500, color: section === s ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${section === s ? "var(--accent)" : "transparent"}`, textTransform: "capitalize", transition: "color 0.15s, border-color 0.15s" }}>{s}</button>
         ))}
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+      <div id="editor-swiper"
+        onTouchStart={e => {
+          const el = e.currentTarget;
+          el._touchStartX = e.touches[0].clientX;
+          el._touchStartY = e.touches[0].clientY;
+          el._lockAxis = null;
+        }}
+        onTouchMove={e => {
+          const el = e.currentTarget;
+          if (el._lockAxis === null) {
+            const dx = Math.abs(e.touches[0].clientX - el._touchStartX);
+            const dy = Math.abs(e.touches[0].clientY - el._touchStartY);
+            if (dx > 6 || dy > 6) el._lockAxis = dx > dy ? "x" : "y";
+          }
+          if (el._lockAxis === "y") el.style.overflowX = "hidden";
+          else el.style.overflowX = "auto";
+        }}
+        onTouchEnd={e => { e.currentTarget.style.overflowX = "auto"; }}
+        onScroll={e => {
+          if (isProgrammaticScroll.current) return;
+          const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
+          setSection(["info", "ingrédients", "ustensiles", "étapes"][idx]);
+        }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
 
-        {section === "info" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div><div className="field-label">Nom <span style={{ color: "var(--accent2)" }}>*</span></div><input className="field-input" placeholder="ex: Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} /></div>
-            <div><div className="field-label">Source</div><input className="field-input" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} /></div>
-            <div>
-              <div className="field-label">Photo principale</div>
-              <ImageUpload value={form.image} onChange={v => up("image", v)} style={{ height: 140 }} />
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-              <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
-              <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
-              <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" value={form.servings} onChange={e => up("servings", +e.target.value)} /></div>
-            </div>
-            <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
-            <div>
-              <div className="field-label" style={{ marginBottom: 8 }}>Collections</div>
-              {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucune collection — créez-en dans Config.</p>}
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {collections.map(col => {
-                  const active = (form.collections || []).includes(col.id);
-                  return (
-                    <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
-                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
-                      {active && <Icon name="check" size={11} color="#fff" />}
-                      {col.name}
-                    </button>
-                  );
-                })}
+        {/* Slide 1 — Info */}
+        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
+          {(
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div><div className="field-label">Nom <span style={{ color: "var(--accent2)" }}>*</span></div><input className="field-input" placeholder="ex: Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} /></div>
+              <div><div className="field-label">Source</div><input className="field-input" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} /></div>
+              <div>
+                <div className="field-label">Photo principale</div>
+                <ImageUpload value={form.image} onChange={v => up("image", v)} style={{ height: 140 }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
+                <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
+                <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" value={form.servings} onChange={e => up("servings", +e.target.value)} /></div>
+              </div>
+              <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Collections</div>
+                {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucune collection — créez-en dans Config.</p>}
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {collections.map(col => {
+                    const active = (form.collections || []).includes(col.id);
+                    return (
+                      <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
+                        style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
+                        {active && <Icon name="check" size={11} color="#fff" />}
+                        {col.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+          <div style={{ height: 20 }} />
+        </div>
 
-        {section === "ingrédients" && (
+        {/* Slide 2 — Ingrédients */}
+        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {form.ingredients.map(ing => (
               <div key={ing.id} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
@@ -1656,9 +1779,11 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
             ))}
             <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
           </div>
-        )}
+          <div style={{ height: 20 }} />
+        </div>
 
-        {section === "ustensiles" && (
+        {/* Slide 3 — Ustensiles */}
+        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {form.utensils.map(u => (
               <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, padding: 14, border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
@@ -1676,9 +1801,11 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
             ))}
             <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addUt}><Icon name="plus" size={16} /> Ajouter un ustensile</button>
           </div>
-        )}
+          <div style={{ height: 20 }} />
+        </div>
 
-        {section === "étapes" && (
+        {/* Slide 4 — Étapes */}
+        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontSize: 12, color: "var(--text3)", background: "var(--surface2)", padding: "8px 12px", borderRadius: 10 }}>
               ↕ Glissez les étapes pour les réorganiser
@@ -1690,8 +1817,9 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
             ))}
             <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>
           </div>
-        )}
-        <div style={{ height: 20 }} />
+          <div style={{ height: 20 }} />
+        </div>
+
       </div>
     </div>
   );
@@ -1809,7 +1937,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut }) {
+function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [viewMode, setViewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
@@ -1924,9 +2052,9 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning repas</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span></div>
-          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 10 }}>
           <button onClick={() => setViewMode("week")} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: viewMode === "week" ? "var(--accent)" : "var(--surface2)", color: viewMode === "week" ? "#fff" : "var(--text2)", border: `1px solid ${viewMode === "week" ? "transparent" : "var(--border)"}` }}>Semaine</button>
@@ -2011,52 +2139,49 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
 
       {/* Add recipe modal */}
       {addModal && (
-        <div className="modal-backdrop" onClick={() => { setAddModal(null); setSearchQ(""); }}>
-          <div className="modal-sheet" style={{ maxHeight: "80dvh" }} onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 4 }}>Ajouter une recette</h3>
-            <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12 }}>
-              {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-            </div>
-            <div style={{ marginBottom: 14 }}>
-              <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection possible)</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                {["midi", "soir"].map(s => {
-                  const active = addModal.slots.includes(s);
-                  const toggle = () => setAddModal(p => {
-                    const cur = p.slots.includes(s) ? p.slots.filter(x => x !== s) : [...p.slots, s];
-                    return { ...p, slots: cur.length ? cur : p.slots }; // prevent empty
-                  });
-                  return (
-                    <button key={s} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? MP_SLOT_TEXT[s] : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? MP_SLOT_TEXT[s] : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
-                      {active && <Icon name="check" size={14} color="#000" />}
-                      {MP_SLOT_LABEL[s]}
-                    </button>
-                  );
-                })}
-              </div>
-              {addModal.slots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6, textAlign: "center" }}>La recette sera ajoutée aux deux repas</div>}
-            </div>
-            <div style={{ position: "relative", marginBottom: 12 }}>
-              <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
-              <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{ paddingLeft: 34 }} autoFocus />
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "44vh" }}>
-              {filteredRecipes.map(r => (
-                <button key={r.id} onClick={() => addMeal(addModal.date, addModal.slots, r.id)}
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{r.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min · {r.servings} portions</div>
-                  </div>
-                  <HealthRing score={r.healthScore || 70} size={30} />
-                </button>
-              ))}
-              {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
-            </div>
+        <SwipeableSheet onClose={() => { setAddModal(null); setSearchQ(""); }} style={{ maxHeight: "80dvh" }}>
+          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 4 }}>Ajouter une recette</h3>
+          <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12 }}>
+            {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
           </div>
-        </div>
+          <div style={{ marginBottom: 14 }}>
+            <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection possible)</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {["midi", "soir"].map(s => {
+                const active = addModal.slots.includes(s);
+                const toggle = () => setAddModal(p => {
+                  const cur = p.slots.includes(s) ? p.slots.filter(x => x !== s) : [...p.slots, s];
+                  return { ...p, slots: cur.length ? cur : p.slots };
+                });
+                return (
+                  <button key={s} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? MP_SLOT_TEXT[s] : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? MP_SLOT_TEXT[s] : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
+                    {active && <Icon name="check" size={14} color="#000" />}
+                    {MP_SLOT_LABEL[s]}
+                  </button>
+                );
+              })}
+            </div>
+            {addModal.slots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6, textAlign: "center" }}>La recette sera ajoutée aux deux repas</div>}
+          </div>
+          <div style={{ position: "relative", marginBottom: 12 }}>
+            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
+            <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{ paddingLeft: 34 }} autoFocus />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "44vh" }}>
+            {filteredRecipes.map(r => (
+              <button key={r.id} onClick={() => addMeal(addModal.date, addModal.slots, r.id)}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500 }}>{r.name}</div>
+                  <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min · {r.servings} portions</div>
+                </div>
+                <HealthRing score={r.healthScore || 70} size={30} />
+              </button>
+            ))}
+            {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
+          </div>
+        </SwipeableSheet>
       )}
     </div>
   );
@@ -2223,7 +2348,7 @@ const FRIDGE_STATUS_BG = { ok: "rgba(76,175,125,0.12)", warn: "rgba(240,192,96,0
 const FRIDGE_STATUS_LABEL = { ok: "Frais", warn: "À utiliser bientôt", danger: "À jeter" };
 
 // ─── FRIDGE TAB ───────────────────────────────────────────────────────────────
-function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut }) {
+function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [view, setView] = useState("stock"); // "stock" | "recipes"
   const [showAdd, setShowAdd] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -2265,14 +2390,14 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mon Frigo</h1>
             <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => setShowSettings(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="settings" size={16} color="var(--text2)" /></button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
           </div>
         </div>
 
@@ -2290,7 +2415,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
           <div style={{ display: "flex", gap: 6, marginBottom: 2, paddingBottom: 12 }}>
             {[["all", "Tous", "var(--text2)"], ["ok", "Frais", "var(--green)"], ["warn", "À surveiller", "var(--yellow)"], ["danger", "Urgents", "var(--red)"]].map(([key, label, color]) => (
               <button key={key} onClick={() => setFilterStatus(key)}
-                style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: filterStatus === key ? color : "var(--surface2)", color: filterStatus === key ? (key === "all" ? "var(--text)" : "#fff") : "var(--text3)", border: `1px solid ${filterStatus === key ? color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, opacity: counts[key] === 0 && key !== "all" ? 0.4 : 1 }}>
+                style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: filterStatus === key ? (key === "all" ? "var(--surface3)" : color) : "var(--surface2)", color: filterStatus === key ? (key === "all" ? "var(--text)" : "#fff") : "var(--text3)", border: `1px solid ${filterStatus === key ? (key === "all" ? "var(--border)" : color) : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, opacity: counts[key] === 0 && key !== "all" ? 0.4 : 1 }}>
                 {label}
                 <span style={{ fontSize: 10, fontWeight: 700, opacity: 0.8 }}>{counts[key]}</span>
               </button>
@@ -2396,71 +2521,64 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
 
       {/* ── ADD / EDIT MODAL ── */}
       {showAdd && (
-        <div className="modal-backdrop" onClick={() => { setShowAdd(false); setEditItem(null); }}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editItem ? "Modifier" : "Ajouter au frigo"}</h3>
-            <div className="field-label">Nom du produit</div>
-            <input className="field-input" placeholder="ex: Poulet, Yaourt, Courgette…" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} autoFocus />
-            <div className="field-label">Catégorie</div>
-            <select className="field-input" value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
-              {Object.entries(NUTRITION_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
-            </select>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-              <div>
-                <div className="field-label">Quantité</div>
-                <input className="field-input" type="number" min="0" placeholder="ex: 500" value={newItem.quantity} onChange={e => setNewItem(p => ({ ...p, quantity: e.target.value }))} />
-              </div>
-              <div>
-                <div className="field-label">Unité</div>
-                <input className="field-input" placeholder="g, ml, pièce…" value={newItem.unit} onChange={e => setNewItem(p => ({ ...p, unit: e.target.value }))} />
-              </div>
+        <SwipeableSheet onClose={() => { setShowAdd(false); setEditItem(null); }}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editItem ? "Modifier" : "Ajouter au frigo"}</h3>
+          <div className="field-label">Nom du produit</div>
+          <input className="field-input" placeholder="ex: Poulet, Yaourt, Courgette…" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} autoFocus />
+          <div className="field-label">Catégorie</div>
+          <select className="field-input" value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+            {Object.entries(NUTRITION_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+          </select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+            <div>
+              <div className="field-label">Quantité</div>
+              <input className="field-input" type="number" min="0" placeholder="ex: 500" value={newItem.quantity} onChange={e => setNewItem(p => ({ ...p, quantity: e.target.value }))} />
             </div>
-            <div className="field-label">Date d'ajout</div>
-            <input type="date" className="field-input" value={newItem.addedAt} onChange={e => setNewItem(p => ({ ...p, addedAt: e.target.value }))} style={{ marginBottom: 16 }} />
-            {/* Freshness preview */}
-            <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 12px", marginBottom: 16, fontSize: 12 }}>
-              <span style={{ color: "var(--text3)" }}>Seuil d'alerte pour </span>
-              <span style={{ fontWeight: 600 }}>{NUTRITION_CATEGORIES[newItem.category]?.label}</span>
-              <span style={{ color: "var(--text3)" }}> : </span>
-              <span style={{ color: "var(--yellow)", fontWeight: 600 }}>⚠ {FRIDGE_THRESHOLDS[newItem.category]?.warn}j</span>
-              <span style={{ color: "var(--text3)" }}> · </span>
-              <span style={{ color: "var(--red)", fontWeight: 600 }}>🔴 {FRIDGE_THRESHOLDS[newItem.category]?.danger}j</span>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => { setShowAdd(false); setEditItem(null); }}>Annuler</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveItem} disabled={!newItem.name.trim()}>Sauvegarder</button>
+            <div>
+              <div className="field-label">Unité</div>
+              <input className="field-input" placeholder="g, ml, pièce…" value={newItem.unit} onChange={e => setNewItem(p => ({ ...p, unit: e.target.value }))} />
             </div>
           </div>
-        </div>
+          <div className="field-label">Date d'ajout</div>
+          <input type="date" className="field-input" value={newItem.addedAt} onChange={e => setNewItem(p => ({ ...p, addedAt: e.target.value }))} style={{ marginBottom: 16 }} />
+          <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 12px", marginBottom: 16, fontSize: 12 }}>
+            <span style={{ color: "var(--text3)" }}>Seuil d'alerte pour </span>
+            <span style={{ fontWeight: 600 }}>{NUTRITION_CATEGORIES[newItem.category]?.label}</span>
+            <span style={{ color: "var(--text3)" }}> : </span>
+            <span style={{ color: "var(--yellow)", fontWeight: 600 }}>⚠ {FRIDGE_THRESHOLDS[newItem.category]?.warn}j</span>
+            <span style={{ color: "var(--text3)" }}> · </span>
+            <span style={{ color: "var(--red)", fontWeight: 600 }}>🔴 {FRIDGE_THRESHOLDS[newItem.category]?.danger}j</span>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => { setShowAdd(false); setEditItem(null); }}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveItem} disabled={!newItem.name.trim()}>Sauvegarder</button>
+          </div>
+        </SwipeableSheet>
       )}
 
       {/* ── SETTINGS MODAL ── */}
       {showSettings && (
-        <div className="modal-backdrop" onClick={() => setShowSettings(false)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Réglages du Frigo</h3>
-            <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 20 }}>Configure le seuil de correspondance pour les suggestions de recettes.</p>
-            <div className="field-label">Seuil de correspondance — {fridgeSettings.matchThreshold}%</div>
-            <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10 }}>Une recette est suggérée si tu as au moins ce pourcentage de ses ingrédients dans le frigo.</p>
-            <input type="range" min="10" max="100" step="5" value={fridgeSettings.matchThreshold}
-              onChange={e => setFridgeSettings(p => ({ ...p, matchThreshold: +e.target.value }))}
-              style={{ width: "100%", accentColor: "var(--accent)", marginBottom: 8 }} />
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text3)", marginBottom: 20 }}>
-              <span>10% (permissif)</span><span>100% (exact)</span>
-            </div>
-            <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--text2)", marginBottom: 20 }}>
-              Actuellement : <strong>{matchedRecipes.length} recette{matchedRecipes.length > 1 ? "s" : ""}</strong> correspondent avec tes {fridge.length} produits en frigo.
-            </div>
-            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowSettings(false)}>Fermer</button>
+        <SwipeableSheet onClose={() => setShowSettings(false)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Réglages du Frigo</h3>
+          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 20 }}>Configure le seuil de correspondance pour les suggestions de recettes.</p>
+          <div className="field-label">Seuil de correspondance — {fridgeSettings.matchThreshold}%</div>
+          <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10 }}>Une recette est suggérée si tu as au moins ce pourcentage de ses ingrédients dans le frigo.</p>
+          <input type="range" min="10" max="100" step="5" value={fridgeSettings.matchThreshold}
+            onChange={e => setFridgeSettings(p => ({ ...p, matchThreshold: +e.target.value }))}
+            style={{ width: "100%", accentColor: "var(--accent)", marginBottom: 8 }} />
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text3)", marginBottom: 20 }}>
+            <span>10% (permissif)</span><span>100% (exact)</span>
           </div>
-        </div>
+          <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--text2)", marginBottom: 20 }}>
+            Actuellement : <strong>{matchedRecipes.length} recette{matchedRecipes.length > 1 ? "s" : ""}</strong> correspondent avec tes {fridge.length} produits en frigo.
+          </div>
+          <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowSettings(false)}>Fermer</button>
+        </SwipeableSheet>
       )}
     </div>
   );
 }
-function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSignOut }) {
+function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [activeListId, setActiveListId] = useState(null);
   const [newListName, setNewListName] = useState("");
   const [showNewList, setShowNewList] = useState(false);
@@ -2502,14 +2620,14 @@ function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSign
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500 }}>Courses</h1>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Courses</h1>
             <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => setShowNewList(true)}><Icon name="plus" size={16} /> Nouvelle liste</button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
           </div>
         </div>
 
@@ -2627,19 +2745,16 @@ function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSign
       )}
       {/* Confirm delete modal — only for free lists */}
       {confirmDeleteId && (
-        <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la liste ?</h3>
-            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-              "{shoppingLists.find(l => l.id === confirmDeleteId)?.name}" sera supprimée définitivement avec tous ses articles.
-            </p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDeleteId(null)}>Annuler</button>
-              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>Supprimer</button>
-            </div>
+        <SwipeableSheet onClose={() => setConfirmDeleteId(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la liste ?</h3>
+          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
+            "{shoppingLists.find(l => l.id === confirmDeleteId)?.name}" sera supprimée définitivement avec tous ses articles.
+          </p>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDeleteId(null)}>Annuler</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>Supprimer</button>
           </div>
-        </div>
+        </SwipeableSheet>
       )}
     </div>
   );
@@ -2675,17 +2790,17 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500 }}>Configuration</h1>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Configuration</h1>
             <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span>
           </div>
-          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
-          {["ingredients", "ustensiles", "collections", "données", "thème"].map(s => (
+          {["ingredients", "ustensiles", "collections", "données"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : s === "données" ? "Données" : "Thème"}
+              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : "Données"}
             </button>
           ))}
         </div>
@@ -2802,29 +2917,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           </div>
         )}
 
-        {section === "thème" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ background: "var(--surface)", borderRadius: 14, padding: 20, border: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Apparence</div>
-                  <p style={{ fontSize: 13, color: "var(--text2)" }}>{isDark ? "Mode sombre activé" : "Mode clair activé"}</p>
-                </div>
-                <button onClick={onToggleTheme}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderRadius: 12,
-                    background: isDark ? "var(--surface2)" : "rgba(232,112,58,0.1)",
-                    border: `1px solid ${isDark ? "var(--border)" : "rgba(232,112,58,0.3)"}`,
-                    color: isDark ? "var(--text2)" : "var(--accent)", fontFamily: "var(--ff-body)", fontWeight: 500, fontSize: 14, transition: "all 0.2s"
-                  }}>
-                  <Icon name={isDark ? "sun" : "moon"} size={18} color={isDark ? "var(--text2)" : "var(--accent)"} />
-                  {isDark ? "Passer en mode clair" : "Passer en mode sombre"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {section === "données" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
@@ -2920,102 +3012,92 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
       {/* Ingredient editor modal */}
       {editIng && (
-        <div className="modal-backdrop" onClick={() => setEditIng(null)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
-            <div className="field-label">Nom</div>
-            <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
-            <div className="field-label">Catégorie nutritionnelle</div>
-            <select className="field-input" value={editIng.category || "other"} onChange={e => setEditIng(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
-              {Object.entries(NUTRITION_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
-            </select>
-            <div className="field-label">Photo</div>
-            <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} />
-            <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {[["protein", "Protéines (g)"], ["fiber", "Fibres (g)"], ["saturatedFat", "G. saturées (g)"], ["sugar", "Sucres (g)"], ["salt", "Sel (g)"]].map(([k, l]) => (
-                  <div key={k}>
-                    <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 3 }}>{l}</div>
-                    <input className="field-input" type="number" min="0" step="0.1" placeholder="0"
-                      value={editIng.nutrition?.[k] || ""}
-                      onChange={e => setEditIng(p => ({ ...p, nutrition: { ...(p.nutrition || {}), isVegetable: p.category === "vegetable" || p.category === "legume", [k]: +e.target.value } }))}
-                      style={{ padding: "6px 10px", fontSize: 12 }} />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditIng(null)}>Annuler</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveIng(editIng)}>Sauvegarder</button>
+        <SwipeableSheet onClose={() => setEditIng(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
+          <div className="field-label">Nom</div>
+          <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div className="field-label">Catégorie nutritionnelle</div>
+          <select className="field-input" value={editIng.category || "other"} onChange={e => setEditIng(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+            {Object.entries(NUTRITION_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+          </select>
+          <div className="field-label">Photo</div>
+          <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} />
+          <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {[["protein", "Protéines (g)"], ["fiber", "Fibres (g)"], ["saturatedFat", "G. saturées (g)"], ["sugar", "Sucres (g)"], ["salt", "Sel (g)"]].map(([k, l]) => (
+                <div key={k}>
+                  <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 3 }}>{l}</div>
+                  <input className="field-input" type="number" min="0" step="0.1" placeholder="0"
+                    value={editIng.nutrition?.[k] || ""}
+                    onChange={e => setEditIng(p => ({ ...p, nutrition: { ...(p.nutrition || {}), isVegetable: p.category === "vegetable" || p.category === "legume", [k]: +e.target.value } }))}
+                    style={{ padding: "6px 10px", fontSize: 12 }} />
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditIng(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveIng(editIng)}>Sauvegarder</button>
+          </div>
+        </SwipeableSheet>
       )}
 
       {/* Utensil editor modal */}
       {editUt && (
-        <div className="modal-backdrop" onClick={() => setEditUt(null)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editUt.id ? "Modifier" : "Nouvel"} ustensile</h3>
-            <div className="field-label">Nom</div>
-            <input className="field-input" placeholder="ex: Casserole" value={editUt.name} onChange={e => setEditUt(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
-            <div className="field-label">Photo</div>
-            <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} />
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditUt(null)}>Annuler</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}>Sauvegarder</button>
-            </div>
+        <SwipeableSheet onClose={() => setEditUt(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editUt.id ? "Modifier" : "Nouvel"} ustensile</h3>
+          <div className="field-label">Nom</div>
+          <input className="field-input" placeholder="ex: Casserole" value={editUt.name} onChange={e => setEditUt(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div className="field-label">Photo</div>
+          <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} />
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditUt(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}>Sauvegarder</button>
           </div>
-        </div>
+        </SwipeableSheet>
       )}
 
       {/* Collection editor modal */}
       {editCol && (
-        <div className="modal-backdrop" onClick={() => setEditCol(null)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCol.id ? "Modifier" : "Nouvelle"} collection</h3>
-            <div style={{ marginBottom: 12 }}>
-              <div className="field-label">Nom</div>
-              <input className="field-input" placeholder="ex: Plats végétariens" value={editCol.name} onChange={e => setEditCol(p => ({ ...p, name: e.target.value }))} />
-            </div>
-            <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-              {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => (
-                <button key={c} onClick={() => setEditCol(p => ({ ...p, color: c }))} style={{ width: 32, height: 32, borderRadius: "50%", background: c, border: `3px solid ${editCol.color === c ? "#fff" : "transparent"}`, boxShadow: editCol.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
-              ))}
-            </div>
-            <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-              {["🍽️", "🥗", "🍝", "🍰", "🥩", "🥦", "🥐", "🍜", "🍛", "🫕", "🥘", "🧁", "🍣", "🫙", "🥚", "🧀", "🫒", "🌮", "🍲"].map(ico => (
-                <button key={ico} onClick={() => setEditCol(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: editCol.icon === ico ? editCol.color + "33" : "var(--surface2)", border: `2px solid ${editCol.icon === ico ? editCol.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
-              ))}
-            </div>
-            {/* Preview */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 14 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: editCol.color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{editCol.icon || "📁"}</div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{editCol.name || "Nom de la collection"}</div>
-                <div style={{ fontSize: 11, color: "var(--text3)" }}>Aperçu</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditCol(null)}>Annuler</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
-                if (!editCol.name.trim()) return;
-                if (editCol.id && collections.find(c => c.id === editCol.id)) {
-                  setCollections(prev => prev.map(c => c.id === editCol.id ? { ...editCol } : c));
-                } else {
-                  setCollections(prev => [...prev, { ...editCol, id: "c" + Date.now(), count: 0 }]);
-                }
-                setEditCol(null);
-              }}>Sauvegarder</button>
+        <SwipeableSheet onClose={() => setEditCol(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCol.id ? "Modifier" : "Nouvelle"} collection</h3>
+          <div style={{ marginBottom: 12 }}>
+            <div className="field-label">Nom</div>
+            <input className="field-input" placeholder="ex: Plats végétariens" value={editCol.name} onChange={e => setEditCol(p => ({ ...p, name: e.target.value }))} />
+          </div>
+          <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+            {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => (
+              <button key={c} onClick={() => setEditCol(p => ({ ...p, color: c }))} style={{ width: 32, height: 32, borderRadius: "50%", background: c, border: `3px solid ${editCol.color === c ? "#fff" : "transparent"}`, boxShadow: editCol.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
+            ))}
+          </div>
+          <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+            {["🍽️", "🥗", "🍝", "🍰", "🥩", "🥦", "🥐", "🍜", "🍛", "🫕", "🥘", "🧁", "🍣", "🫙", "🥚", "🧀", "🫒", "🌮", "🍲"].map(ico => (
+              <button key={ico} onClick={() => setEditCol(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: editCol.icon === ico ? editCol.color + "33" : "var(--surface2)", border: `2px solid ${editCol.icon === ico ? editCol.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: editCol.color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{editCol.icon || "📁"}</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{editCol.name || "Nom de la collection"}</div>
+              <div style={{ fontSize: 11, color: "var(--text3)" }}>Aperçu</div>
             </div>
           </div>
-        </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditCol(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
+              if (!editCol.name.trim()) return;
+              if (editCol.id && collections.find(c => c.id === editCol.id)) {
+                setCollections(prev => prev.map(c => c.id === editCol.id ? { ...editCol } : c));
+              } else {
+                setCollections(prev => [...prev, { ...editCol, id: "c" + Date.now(), count: 0 }]);
+              }
+              setEditCol(null);
+            }}>Sauvegarder</button>
+          </div>
+        </SwipeableSheet>
       )}
     </div>
   );
