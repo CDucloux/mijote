@@ -180,7 +180,7 @@ function computeHealthScore(ingredients, ingredientDB) {
       s -= (n.sugar || 0) * 2;
       s -= (n.salt || 0) * 10;
       if (n.isVegetable) s += 15;
-      score = Math.max(0, Math.min(100, s));
+      score = Math.max(0, Math.min(99, s));
     } else {
       const cat = NUTRITION_CATEGORIES[dbItem.category || "other"];
       score = (cat?.score || 5) * 10;
@@ -189,7 +189,7 @@ function computeHealthScore(ingredients, ingredientDB) {
     totalWeight += weight;
   }
   if (totalWeight === 0) return 70;
-  return Math.round(weightedScore / totalWeight);
+  return Math.min(99, Math.round(weightedScore / totalWeight));
 }
 
 // ─── DEFAULT DATA ─────────────────────────────────────────────────────────────
@@ -392,7 +392,7 @@ function ImageUpload({ value, onChange, style }) {
 }
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
-function UserAvatar({ user, syncStatus, onSignOut }) {
+function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [open, setOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   if (!user) return null;
@@ -403,7 +403,7 @@ function UserAvatar({ user, syncStatus, onSignOut }) {
       <button onClick={() => { setOpen(o => !o); setConfirmSignOut(false); }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="Mon compte">
         {user.photoURL
           ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: "2px solid var(--border)" }} />
-          : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>{(user.displayName || "?")[0]}</div>
+          : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>{(user.displayName || "?")[0].toUpperCase()}</div>
         }
         <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: syncStatus === "idle" ? "none" : "block" }} />
       </button>
@@ -411,9 +411,21 @@ function UserAvatar({ user, syncStatus, onSignOut }) {
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => { setOpen(false); setConfirmSignOut(false); }} />
           <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: "expandDown 0.2s ease" }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{user.displayName}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{(user.displayName || "").toUpperCase()}</div>
             <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>{user.email}</div>
-            {syncLabel && <div style={{ fontSize: 11, color: syncColor, marginBottom: 12 }}>{syncLabel}</div>}
+            {syncLabel && <div style={{ fontSize: 11, color: syncColor, marginBottom: 10 }}>{syncLabel}</div>}
+            {onToggleTheme && (
+              <>
+                <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
+                <button onClick={onToggleTheme} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+                  onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
+                  <Icon name={isDark ? "sun" : "moon"} size={13} color="currentColor" />
+                  {isDark ? "Mode clair" : "Mode sombre"}
+                </button>
+                <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
+              </>
+            )}
             {!confirmSignOut
               ? <button className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 4 }} onClick={() => setConfirmSignOut(true)}>Déconnexion</button>
               : <div style={{ marginTop: 8 }}>
@@ -458,7 +470,27 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+// ─── SWIPE DOWN TO CLOSE (mobile modals) ─────────────────────────────────────
+function useSwipeDown(onClose, threshold = 80) {
+  const startY = useRef(null);
+  const sheetRef = useRef(null);
+  const onTouchStart = e => { startY.current = e.touches[0].clientY; };
+  const onTouchMove = e => {
+    if (startY.current === null) return;
+    const dy = e.touches[0].clientY - startY.current;
+    if (dy > 0 && sheetRef.current) sheetRef.current.style.transform = `translateY(${dy}px)`;
+  };
+  const onTouchEnd = e => {
+    if (startY.current === null) return;
+    const dy = e.changedTouches[0].clientY - startY.current;
+    if (sheetRef.current) sheetRef.current.style.transform = "";
+    if (dy > threshold) onClose();
+    startY.current = null;
+  };
+  return { sheetRef, onTouchStart, onTouchMove, onTouchEnd };
+}
+
+
 export default function App() {
   const [tab, setTab] = useState("home");
   const [recipes, setRecipes] = useLS("rf_recipes2", SAMPLE_RECIPES);
@@ -756,10 +788,10 @@ export default function App() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} />}
-      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} />}
-      {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} />}
-      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} />}
+      {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} />}
     </div>
   );
@@ -769,7 +801,7 @@ export default function App() {
       <RecipeEditor recipe={editingRecipe} onSave={saveRecipe} onCancel={() => setEditingRecipe(null)} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
     </div>
   ) : selectedRecipe && currentRecipe ? (
-    <div className={isDesktop ? "desktop-content" : ""} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
+    <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
       <RecipeDetail recipe={currentRecipe} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onAddToShopping={addToShopping} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
   ) : tabContent;
@@ -949,7 +981,7 @@ function DesktopSidebar({ tab, setTab, onNewRecipe }) {
 }
 
 // ─── HOME TAB ─────────────────────────────────────────────────────────────────
-function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, user, syncStatus, onSignOut }) {
+function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [search, setSearch] = useState("");
   const [filterTag, setFilterTag] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
@@ -977,7 +1009,7 @@ function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, se
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mes Recettes</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={onNewRecipe}><Icon name="plus" size={16} /> Nouvelle</button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
           </div>
         </div>
         <div style={{ position: "relative", marginBottom: 12 }}>
@@ -1063,6 +1095,8 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
   const [cookMode, setCookMode] = useState(false);
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimer = useRef(null);
   const mult = servings / (recipe.servings || 2);
 
   const getIngImage = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
@@ -1126,15 +1160,29 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
       {/* Mobile tabs / Desktop 2-col */}
       <div className="detail-tabs-mobile" style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
-        {["Ingrédients", "Ustensiles", "Étapes"].map(t => (
-          <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}` }}>{t}</button>
+        {["Ingrédients", "Ustensiles", "Étapes"].map((t, i) => (
+          <button key={t} onClick={() => {
+            setActiveTab(t);
+            const el = document.getElementById("detail-swiper");
+            if (el) {
+              isProgrammaticScroll.current = true;
+              clearTimeout(scrollTimer.current);
+              el.scrollTo({ left: i * el.offsetWidth, behavior: "smooth" });
+              scrollTimer.current = setTimeout(() => { isProgrammaticScroll.current = false; }, 350);
+            }
+          }} style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, transition: "color 0.15s, border-color 0.15s" }}>{t}</button>
         ))}
       </div>
 
       <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex" }}>
-        {/* ── MOBILE: tab content ── */}
-        <div className="detail-mobile-content" style={{ flex: 1, padding: 16 }}>
-          {activeTab === "Ingrédients" && (
+        {/* ── MOBILE: swiper ── */}
+        <div id="detail-swiper" className="detail-mobile-content" onScroll={e => {
+          if (isProgrammaticScroll.current) return;
+          const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
+          setActiveTab(["Ingrédients", "Ustensiles", "Étapes"][idx]);
+        }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+          {/* Slide 1 — Ingrédients */}
+          <div style={{ minWidth: "100%", scrollSnapAlign: "start", padding: 16, overflowY: "auto" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {recipe.ingredients.map(ing => (
                 <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
@@ -1147,8 +1195,10 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                 </div>
               ))}
             </div>
-          )}
-          {activeTab === "Ustensiles" && (
+            <div style={{ height: 16 }} />
+          </div>
+          {/* Slide 2 — Ustensiles */}
+          <div style={{ minWidth: "100%", scrollSnapAlign: "start", padding: 16, overflowY: "auto" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {(recipe.utensils || []).map(u => (
                 <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
@@ -1158,8 +1208,10 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               ))}
               {(!recipe.utensils || recipe.utensils.length === 0) && <p style={{ color: "var(--text3)", fontSize: 14, gridColumn: "1/-1" }}>Aucun ustensile.</p>}
             </div>
-          )}
-          {activeTab === "Étapes" && (
+            <div style={{ height: 16 }} />
+          </div>
+          {/* Slide 3 — Étapes */}
+          <div style={{ minWidth: "100%", scrollSnapAlign: "start", padding: 16, overflowY: "auto" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {recipe.steps && recipe.steps.length > 0 && (
                 <button className="btn btn-primary" style={{ width: "100%", borderRadius: 14, padding: "13px 18px", fontSize: 15, fontWeight: 600, gap: 10 }} onClick={() => setCookMode(true)}>
@@ -1201,8 +1253,8 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                 );
               })}
             </div>
-          )}
-          <div style={{ height: 16 }} />
+            <div style={{ height: 16 }} />
+          </div>
         </div>
 
         {/* ── DESKTOP: 2-column layout (hidden on mobile via CSS) ── */}
@@ -1575,6 +1627,8 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
   };
 
   const dragRef = useRef(null);
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimer = useRef(null);
 
   return (
     <div className="editor-enter" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -1584,46 +1638,64 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
         <button className="btn btn-primary" style={{ padding: "8px 16px" }} onClick={() => onSave(form)}><Icon name="check" size={15} /> Sauvegarder</button>
       </div>
       <div style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, overflowX: "auto" }}>
-        {["info", "ingrédients", "ustensiles", "étapes"].map(s => (
-          <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "10px 16px", fontSize: 12, fontWeight: 500, color: section === s ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${section === s ? "var(--accent)" : "transparent"}`, textTransform: "capitalize" }}>{s}</button>
+        {["info", "ingrédients", "ustensiles", "étapes"].map((s, i) => (
+          <button key={s} onClick={() => {
+            setSection(s);
+            const el = document.getElementById("editor-swiper");
+            if (el) {
+              isProgrammaticScroll.current = true;
+              clearTimeout(scrollTimer.current);
+              el.scrollTo({ left: i * el.offsetWidth, behavior: "smooth" });
+              scrollTimer.current = setTimeout(() => { isProgrammaticScroll.current = false; }, 350);
+            }
+          }} style={{ flexShrink: 0, padding: "10px 16px", fontSize: 12, fontWeight: 500, color: section === s ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${section === s ? "var(--accent)" : "transparent"}`, textTransform: "capitalize", transition: "color 0.15s, border-color 0.15s" }}>{s}</button>
         ))}
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+      <div id="editor-swiper" onScroll={e => {
+        if (isProgrammaticScroll.current) return;
+        const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
+        setSection(["info", "ingrédients", "ustensiles", "étapes"][idx]);
+      }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
 
-        {section === "info" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div><div className="field-label">Nom <span style={{ color: "var(--accent2)" }}>*</span></div><input className="field-input" placeholder="ex: Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} /></div>
-            <div><div className="field-label">Source</div><input className="field-input" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} /></div>
-            <div>
-              <div className="field-label">Photo principale</div>
-              <ImageUpload value={form.image} onChange={v => up("image", v)} style={{ height: 140 }} />
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-              <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
-              <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
-              <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" value={form.servings} onChange={e => up("servings", +e.target.value)} /></div>
-            </div>
-            <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
-            <div>
-              <div className="field-label" style={{ marginBottom: 8 }}>Collections</div>
-              {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucune collection — créez-en dans Config.</p>}
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {collections.map(col => {
-                  const active = (form.collections || []).includes(col.id);
-                  return (
-                    <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
-                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
-                      {active && <Icon name="check" size={11} color="#fff" />}
-                      {col.name}
-                    </button>
-                  );
-                })}
+        {/* Slide 1 — Info */}
+        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
+          {(
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div><div className="field-label">Nom <span style={{ color: "var(--accent2)" }}>*</span></div><input className="field-input" placeholder="ex: Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} /></div>
+              <div><div className="field-label">Source</div><input className="field-input" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} /></div>
+              <div>
+                <div className="field-label">Photo principale</div>
+                <ImageUpload value={form.image} onChange={v => up("image", v)} style={{ height: 140 }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
+                <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
+                <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" value={form.servings} onChange={e => up("servings", +e.target.value)} /></div>
+              </div>
+              <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Collections</div>
+                {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucune collection — créez-en dans Config.</p>}
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {collections.map(col => {
+                    const active = (form.collections || []).includes(col.id);
+                    return (
+                      <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
+                        style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
+                        {active && <Icon name="check" size={11} color="#fff" />}
+                        {col.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+          <div style={{ height: 20 }} />
+        </div>
 
-        {section === "ingrédients" && (
+        {/* Slide 2 — Ingrédients */}
+        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {form.ingredients.map(ing => (
               <div key={ing.id} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
@@ -1656,9 +1728,11 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
             ))}
             <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
           </div>
-        )}
+          <div style={{ height: 20 }} />
+        </div>
 
-        {section === "ustensiles" && (
+        {/* Slide 3 — Ustensiles */}
+        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {form.utensils.map(u => (
               <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, padding: 14, border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
@@ -1676,9 +1750,11 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
             ))}
             <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addUt}><Icon name="plus" size={16} /> Ajouter un ustensile</button>
           </div>
-        )}
+          <div style={{ height: 20 }} />
+        </div>
 
-        {section === "étapes" && (
+        {/* Slide 4 — Étapes */}
+        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontSize: 12, color: "var(--text3)", background: "var(--surface2)", padding: "8px 12px", borderRadius: 10 }}>
               ↕ Glissez les étapes pour les réorganiser
@@ -1690,8 +1766,9 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
             ))}
             <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>
           </div>
-        )}
-        <div style={{ height: 20 }} />
+          <div style={{ height: 20 }} />
+        </div>
+
       </div>
     </div>
   );
@@ -1809,7 +1886,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut }) {
+function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [viewMode, setViewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
@@ -1926,7 +2003,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning repas</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span></div>
-          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 10 }}>
           <button onClick={() => setViewMode("week")} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: viewMode === "week" ? "var(--accent)" : "var(--surface2)", color: viewMode === "week" ? "#fff" : "var(--text2)", border: `1px solid ${viewMode === "week" ? "transparent" : "var(--border)"}` }}>Semaine</button>
@@ -2223,7 +2300,7 @@ const FRIDGE_STATUS_BG = { ok: "rgba(76,175,125,0.12)", warn: "rgba(240,192,96,0
 const FRIDGE_STATUS_LABEL = { ok: "Frais", warn: "À utiliser bientôt", danger: "À jeter" };
 
 // ─── FRIDGE TAB ───────────────────────────────────────────────────────────────
-function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut }) {
+function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [view, setView] = useState("stock"); // "stock" | "recipes"
   const [showAdd, setShowAdd] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -2272,7 +2349,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => setShowSettings(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="settings" size={16} color="var(--text2)" /></button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
           </div>
         </div>
 
@@ -2290,7 +2367,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
           <div style={{ display: "flex", gap: 6, marginBottom: 2, paddingBottom: 12 }}>
             {[["all", "Tous", "var(--text2)"], ["ok", "Frais", "var(--green)"], ["warn", "À surveiller", "var(--yellow)"], ["danger", "Urgents", "var(--red)"]].map(([key, label, color]) => (
               <button key={key} onClick={() => setFilterStatus(key)}
-                style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: filterStatus === key ? color : "var(--surface2)", color: filterStatus === key ? (key === "all" ? "var(--text)" : "#fff") : "var(--text3)", border: `1px solid ${filterStatus === key ? color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, opacity: counts[key] === 0 && key !== "all" ? 0.4 : 1 }}>
+                style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: filterStatus === key ? (key === "all" ? "var(--surface3)" : color) : "var(--surface2)", color: filterStatus === key ? (key === "all" ? "var(--text)" : "#fff") : "var(--text3)", border: `1px solid ${filterStatus === key ? (key === "all" ? "var(--border)" : color) : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, opacity: counts[key] === 0 && key !== "all" ? 0.4 : 1 }}>
                 {label}
                 <span style={{ fontSize: 10, fontWeight: 700, opacity: 0.8 }}>{counts[key]}</span>
               </button>
@@ -2460,7 +2537,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
     </div>
   );
 }
-function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSignOut }) {
+function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [activeListId, setActiveListId] = useState(null);
   const [newListName, setNewListName] = useState("");
   const [showNewList, setShowNewList] = useState(false);
@@ -2509,7 +2586,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSign
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => setShowNewList(true)}><Icon name="plus" size={16} /> Nouvelle liste</button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
           </div>
         </div>
 
@@ -2680,12 +2757,12 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500 }}>Configuration</h1>
             <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span>
           </div>
-          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} />
+          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
-          {["ingredients", "ustensiles", "collections", "données", "thème"].map(s => (
+          {["ingredients", "ustensiles", "collections", "données"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : s === "données" ? "Données" : "Thème"}
+              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : "Données"}
             </button>
           ))}
         </div>
@@ -2798,29 +2875,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                 </div>
               ))}
               {collections.length === 0 && <p style={{ fontSize: 13, color: "var(--text3)" }}>Aucune collection. Créez-en une !</p>}
-            </div>
-          </div>
-        )}
-
-        {section === "thème" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ background: "var(--surface)", borderRadius: 14, padding: 20, border: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Apparence</div>
-                  <p style={{ fontSize: 13, color: "var(--text2)" }}>{isDark ? "Mode sombre activé" : "Mode clair activé"}</p>
-                </div>
-                <button onClick={onToggleTheme}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderRadius: 12,
-                    background: isDark ? "var(--surface2)" : "rgba(232,112,58,0.1)",
-                    border: `1px solid ${isDark ? "var(--border)" : "rgba(232,112,58,0.3)"}`,
-                    color: isDark ? "var(--text2)" : "var(--accent)", fontFamily: "var(--ff-body)", fontWeight: 500, fontSize: 14, transition: "all 0.2s"
-                  }}>
-                  <Icon name={isDark ? "sun" : "moon"} size={18} color={isDark ? "var(--text2)" : "var(--accent)"} />
-                  {isDark ? "Passer en mode clair" : "Passer en mode sombre"}
-                </button>
-              </div>
             </div>
           </div>
         )}
