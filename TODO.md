@@ -34,7 +34,8 @@
   - [x] Sur desktop comme sur mobile, quand on clique sur une recette pour l'afficher en détail, il faut faire en sorte que l'affichage ne soit pas instantanné (encore une fois, UX)
   - [X] Sur mobile, dans la partie recette - pouvoir avoir la fonctionnalité style "swiper" à droite pour passer de manière fluide entre ingrédidents, ustensiles et étapes (pareil pour le formulaire nouvelle recette ou modifier la recette, + le switch entre info, ingrédients, ustensiles et étapes doit etre + fluide)
   - [x] Quand on est en mode light, corriger le bug UI dans "Mon Frigo" le bouton "Tous" est trop noir
-  - [ ] Sur mobile, avoir la possibilité de faire glisser vers les bas certains popups (Ajouter au planning, ajouter aux courses, ajouter au frigo, supprimer la recette, supprimer la liste)
+  - [x] Uniformiser la hauteur des titres quand sur mobile + avatar
+  - [x] Sur mobile, avoir la possibilité de faire glisser vers les bas certains popups (Ajouter au planning, ajouter aux courses, ajouter au frigo, supprimer la recette, supprimer la liste)
 
 - [ ] App & légal
   - [ ] Page À propos — licence, crédits, copyright
