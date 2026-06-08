@@ -28,12 +28,12 @@
 ## 🔜 Backlog — v1.1
 
 - [ ] UI
-  - [ ] A la fois un sujet UI et Backend, mais un score de santé ne peut par construction jamais être à 100 (si il est à 100 côté UI c'est moche en plus)
-  - [ ] Le nom récupéré via Google Auth doit etre affiché en MAJUSCULE
-  - [ ] Switcher le thème doit être déporté dans la partie profil quand je clique sur l'avatar 
-  - [ ] Sur desktop comme sur mobile, quand on clique sur une recette pour l'afficher en détail, il faut faire en sorte que l'affichage ne soit pas instantanné (encore une fois, UX)
-  - [ ] Sur mobile, dans la partie recette - pouvoir avoir la fonctionnalité style "swiper" à droite pour passer de manière fluide entre ingrédidents, ustensiles et étapes (pareil pour le formulaire nouvelle recette ou modifier la recette, + le switch entre info, ingrédients, ustensiles et étapes doit etre + fluide)
-  - [ ] Quand on est en mode light, corriger le bug UI dans "Mon Frigo" le bouton "Tous" est trop noir
+  - [x] A la fois un sujet UI et Backend, mais un score de santé ne peut par construction jamais être à 100 (si il est à 100 côté UI c'est moche en plus)
+  - [x] Le nom récupéré via Google Auth doit etre affiché en MAJUSCULE
+  - [x] Switcher le thème doit être déporté dans la partie profil quand je clique sur l'avatar 
+  - [x] Sur desktop comme sur mobile, quand on clique sur une recette pour l'afficher en détail, il faut faire en sorte que l'affichage ne soit pas instantanné (encore une fois, UX)
+  - [X] Sur mobile, dans la partie recette - pouvoir avoir la fonctionnalité style "swiper" à droite pour passer de manière fluide entre ingrédidents, ustensiles et étapes (pareil pour le formulaire nouvelle recette ou modifier la recette, + le switch entre info, ingrédients, ustensiles et étapes doit etre + fluide)
+  - [x] Quand on est en mode light, corriger le bug UI dans "Mon Frigo" le bouton "Tous" est trop noir
   - [ ] Sur mobile, avoir la possibilité de faire glisser vers les bas certains popups (Ajouter au planning, ajouter aux courses, ajouter au frigo, supprimer la recette, supprimer la liste)
 
 - [ ] App & légal

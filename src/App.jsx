@@ -471,21 +471,26 @@ function useIsDesktop() {
 }
 
 // ─── SWIPE DOWN TO CLOSE (mobile modals) ─────────────────────────────────────
-function useSwipeDown(onClose, threshold = 80) {
+function useSwipeDown(onClose, threshold = 140) {
   const startY = useRef(null);
+  const startX = useRef(null);
   const sheetRef = useRef(null);
-  const onTouchStart = e => { startY.current = e.touches[0].clientY; };
+  const onTouchStart = e => { startY.current = e.touches[0].clientY; startX.current = e.touches[0].clientX; };
   const onTouchMove = e => {
     if (startY.current === null) return;
     const dy = e.touches[0].clientY - startY.current;
-    if (dy > 0 && sheetRef.current) sheetRef.current.style.transform = `translateY(${dy}px)`;
+    const dx = Math.abs(e.touches[0].clientX - startX.current);
+    // Only follow drag if movement is primarily vertical
+    if (dy > 0 && dy > dx && sheetRef.current) sheetRef.current.style.transform = `translateY(${dy}px)`;
   };
   const onTouchEnd = e => {
     if (startY.current === null) return;
     const dy = e.changedTouches[0].clientY - startY.current;
+    const dx = Math.abs(e.changedTouches[0].clientX - startX.current);
     if (sheetRef.current) sheetRef.current.style.transform = "";
-    if (dy > threshold) onClose();
+    if (dy > threshold && dy > dx) onClose();
     startY.current = null;
+    startX.current = null;
   };
   return { sheetRef, onTouchStart, onTouchMove, onTouchEnd };
 }
@@ -1176,11 +1181,29 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
       <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex" }}>
         {/* ── MOBILE: swiper ── */}
-        <div id="detail-swiper" className="detail-mobile-content" onScroll={e => {
-          if (isProgrammaticScroll.current) return;
-          const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
-          setActiveTab(["Ingrédients", "Ustensiles", "Étapes"][idx]);
-        }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+        <div id="detail-swiper" className="detail-mobile-content"
+          onTouchStart={e => {
+            const el = e.currentTarget;
+            el._touchStartX = e.touches[0].clientX;
+            el._touchStartY = e.touches[0].clientY;
+            el._lockAxis = null;
+          }}
+          onTouchMove={e => {
+            const el = e.currentTarget;
+            if (el._lockAxis === null) {
+              const dx = Math.abs(e.touches[0].clientX - el._touchStartX);
+              const dy = Math.abs(e.touches[0].clientY - el._touchStartY);
+              if (dx > 6 || dy > 6) el._lockAxis = dx > dy ? "x" : "y";
+            }
+            if (el._lockAxis === "y") el.style.overflowX = "hidden";
+            else el.style.overflowX = "auto";
+          }}
+          onTouchEnd={e => { e.currentTarget.style.overflowX = "auto"; }}
+          onScroll={e => {
+            if (isProgrammaticScroll.current) return;
+            const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
+            setActiveTab(["Ingrédients", "Ustensiles", "Étapes"][idx]);
+          }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
           {/* Slide 1 — Ingrédients */}
           <div style={{ minWidth: "100%", scrollSnapAlign: "start", padding: 16, overflowY: "auto" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1651,11 +1674,29 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
           }} style={{ flexShrink: 0, padding: "10px 16px", fontSize: 12, fontWeight: 500, color: section === s ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${section === s ? "var(--accent)" : "transparent"}`, textTransform: "capitalize", transition: "color 0.15s, border-color 0.15s" }}>{s}</button>
         ))}
       </div>
-      <div id="editor-swiper" onScroll={e => {
-        if (isProgrammaticScroll.current) return;
-        const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
-        setSection(["info", "ingrédients", "ustensiles", "étapes"][idx]);
-      }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+      <div id="editor-swiper"
+        onTouchStart={e => {
+          const el = e.currentTarget;
+          el._touchStartX = e.touches[0].clientX;
+          el._touchStartY = e.touches[0].clientY;
+          el._lockAxis = null;
+        }}
+        onTouchMove={e => {
+          const el = e.currentTarget;
+          if (el._lockAxis === null) {
+            const dx = Math.abs(e.touches[0].clientX - el._touchStartX);
+            const dy = Math.abs(e.touches[0].clientY - el._touchStartY);
+            if (dx > 6 || dy > 6) el._lockAxis = dx > dy ? "x" : "y";
+          }
+          if (el._lockAxis === "y") el.style.overflowX = "hidden";
+          else el.style.overflowX = "auto";
+        }}
+        onTouchEnd={e => { e.currentTarget.style.overflowX = "auto"; }}
+        onScroll={e => {
+          if (isProgrammaticScroll.current) return;
+          const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
+          setSection(["info", "ingrédients", "ustensiles", "étapes"][idx]);
+        }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
 
         {/* Slide 1 — Info */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
