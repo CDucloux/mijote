@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, getDocs, writeBatch } from "firebase/firestore";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import React from 'react'
 
 // ─── FIREBASE ─────────────────────────────────────────────────────────────────
@@ -17,6 +18,95 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const provider = new GoogleAuthProvider();
 const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
+
+// ─── FIRESTORE DATA LAYER (split documents) ──────────────────────────────────
+// Structure:
+//   users/{uid}/recipes/{recipeId}   — one doc per recipe (own 1MB budget each)
+//   users/{uid}/meta/collections     — { items: [...] }
+//   users/{uid}/meta/mealPlan        — { data: {...} }
+//   users/{uid}/meta/shoppingLists   — { items: [...] }
+//   users/{uid}/meta/fridge          — { items: [...], settings: {...} }
+//   users/{uid}/meta/userDB          — { ingredients: [...], utensils: [...] }
+//   master/ingredients               — { items: [...] } (shared, read-only for users)
+//   master/utensils                  — { items: [...] }
+
+const metaDoc = (uid, name) => doc(db, "users", uid, "meta", name);
+const recipesCol = (uid) => collection(db, "users", uid, "recipes");
+
+// Read the shared Master reference DB (ingredients + utensils + categories).
+async function loadMasterDB() {
+  try {
+    const [ing, ut, cat] = await Promise.all([
+      getDoc(doc(db, "master", "ingredients")),
+      getDoc(doc(db, "master", "utensils")),
+      getDoc(doc(db, "master", "categories")),
+    ]);
+    return {
+      ingredients: ing.exists() ? (ing.data().items || []) : [],
+      utensils: ut.exists() ? (ut.data().items || []) : [],
+      categories: cat.exists() && cat.data().map && Object.keys(cat.data().map).length
+        ? cat.data().map : DEFAULT_CATEGORIES,
+    };
+  } catch {
+    return { ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES };
+  }
+}
+
+// Load all of a user's data from the split structure.
+async function loadUserData(uid) {
+  const [recipesSnap, collectionsSnap, mealPlanSnap, shoppingSnap, fridgeSnap, userDBSnap] = await Promise.all([
+    getDocs(recipesCol(uid)),
+    getDoc(metaDoc(uid, "collections")),
+    getDoc(metaDoc(uid, "mealPlan")),
+    getDoc(metaDoc(uid, "shoppingLists")),
+    getDoc(metaDoc(uid, "fridge")),
+    getDoc(metaDoc(uid, "userDB")),
+  ]);
+  return {
+    recipes: recipesSnap.docs.map(d => d.data()),
+    collections: collectionsSnap.exists() ? (collectionsSnap.data().items || []) : null,
+    mealPlan: mealPlanSnap.exists() ? (mealPlanSnap.data().data || {}) : null,
+    shoppingLists: shoppingSnap.exists() ? (shoppingSnap.data().items || []) : null,
+    fridge: fridgeSnap.exists() ? (fridgeSnap.data().items || []) : null,
+    fridgeSettings: fridgeSnap.exists() ? (fridgeSnap.data().settings || null) : null,
+    userDB: userDBSnap.exists() ? userDBSnap.data() : null,
+  };
+}
+
+// One-time migration from the legacy single doc (users/{uid}/data/app).
+async function migrateLegacyDoc(uid) {
+  try {
+    const legacy = await getDoc(doc(db, "users", uid, "data", "app"));
+    if (!legacy.exists()) return null;
+    return legacy.data();
+  } catch {
+    return null;
+  }
+}
+
+// Diff-based recipe sync: write only changed/new recipes, delete removed ones.
+async function syncRecipes(uid, recipes, lastSyncedMap) {
+  const batch = writeBatch(db);
+  const currentIds = new Set();
+  let ops = 0;
+  for (const r of recipes) {
+    if (!r.id) continue;
+    currentIds.add(r.id);
+    const prev = lastSyncedMap.get(r.id);
+    if (!prev || JSON.stringify(prev) !== JSON.stringify(r)) {
+      batch.set(doc(recipesCol(uid), r.id), r);
+      ops++;
+    }
+  }
+  for (const id of lastSyncedMap.keys()) {
+    if (!currentIds.has(id)) { batch.delete(doc(recipesCol(uid), id)); ops++; }
+  }
+  if (ops > 0) await batch.commit();
+  const newMap = new Map();
+  for (const r of recipes) if (r.id) newMap.set(r.id, r);
+  return newMap;
+}
 
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
@@ -143,23 +233,38 @@ const GLOBAL_STYLE = `
 `;
 
 // ─── NUTRITION DATABASE ────────────────────────────────────────────────────────
-const NUTRITION_CATEGORIES = {
-  vegetable: { label: "Légume/Fruit", score: 10, color: "#4caf7d", icon: "🥦" },
-  protein_lean: { label: "Protéine maigre", score: 8, color: "#5b9cf6", icon: "🍗" },
-  protein_fat: { label: "Protéine grasse", score: 5, color: "#f0a875", icon: "🥩" },
-  dairy: { label: "Produit laitier", score: 6, color: "#f0e060", icon: "🧀" },
-  grain_whole: { label: "Céréale complète", score: 7, color: "#c8a870", icon: "🌾" },
-  grain_ref: { label: "Céréale raffinée", score: 4, color: "#c8a870", icon: "🍞" },
-  fat_good: { label: "Matière grasse saine", score: 6, color: "#80c080", icon: "🫒" },
-  fat_bad: { label: "Matière grasse saturée", score: 2, color: "#e05252", icon: "🧈" },
-  sugar: { label: "Sucre/Sucrant", score: 1, color: "#e05252", icon: "🍬" },
-  condiment: { label: "Condiment/Épice", score: 7, color: "#9a9490", icon: "🧂" },
-  legume: { label: "Légumineuse", score: 9, color: "#4caf7d", icon: "🫘" },
-  alcohol: { label: "Alcool", score: 0, color: "#e05252", icon: "🍷" },
-  other: { label: "Autre", score: 5, color: "#9a9490", icon: "📦" },
+// Default nutrition categories — seed for the Master `categories` doc.
+// `score` is on a 0-10 scale internally (displayed/edited as 0-100 in the UI).
+const DEFAULT_CATEGORIES = {
+  vegetable: { label: "Légumes", score: 10, color: "#4caf7d", icon: "🥦", order: 0 },
+  fruit: { label: "Fruits", score: 8, color: "#80c080", icon: "🍎", order: 1 },
+  legume: { label: "Légumineuses", score: 9, color: "#4caf7d", icon: "🫘", order: 2 },
+  protein_lean: { label: "Protéines maigres", score: 8, color: "#5b9cf6", icon: "🍗", order: 3 },
+  protein_fat: { label: "Protéines grasses", score: 5, color: "#f0a875", icon: "🥩", order: 4 },
+  fish_seafood: { label: "Poissons/Fruits de mer", score: 9, color: "#5b9cf6", icon: "🐟", order: 5 },
+  dairy: { label: "Produits laitiers", score: 6, color: "#f0e060", icon: "🧀", order: 6 },
+  grain_whole: { label: "Céréales complètes", score: 7, color: "#c8a870", icon: "🌾", order: 7 },
+  grain_ref: { label: "Céréales raffinées", score: 4, color: "#c8a870", icon: "🍞", order: 8 },
+  fat_good: { label: "Matières grasses saines", score: 6, color: "#80c080", icon: "🫒", order: 9 },
+  nuts_seeds: { label: "Noix et graines", score: 8, color: "#c8a870", icon: "🥜", order: 10 },
+  fat_bad: { label: "Matières grasses saturées", score: 2, color: "#e05252", icon: "🧈", order: 11 },
+  mushroom: { label: "Champignons", score: 8, color: "#9a9490", icon: "🍄", order: 12 },
+  herbs: { label: "Herbes aromatiques fraîches", score: 9, color: "#4caf7d", icon: "🌿", order: 13 },
+  condiment: { label: "Condiments/Épices", score: 7, color: "#9a9490", icon: "🧂", order: 14 },
+  sugar: { label: "Sucres/Sucrants", score: 1, color: "#e05252", icon: "🍬", order: 15 },
+  alcohol: { label: "Alcools", score: 0, color: "#e05252", icon: "🍷", order: 16 },
+  other: { label: "Autres", score: 5, color: "#9a9490", icon: "📦", order: 17 },
 };
 
-function computeHealthScore(ingredients, ingredientDB) {
+// Return [key, cat] entries sorted by their `order` field (stable fallback to insertion).
+function sortedCategoryEntries(categories) {
+  return Object.entries(categories).sort((a, b) => {
+    const oa = a[1].order ?? 999, ob = b[1].order ?? 999;
+    return oa === ob ? a[0].localeCompare(b[0]) : oa - ob;
+  });
+}
+
+function computeHealthScore(ingredients, ingredientDB, categories = DEFAULT_CATEGORIES) {
   if (!ingredients || ingredients.length === 0) return 70;
   let totalWeight = 0;
   let weightedScore = 0;
@@ -182,7 +287,7 @@ function computeHealthScore(ingredients, ingredientDB) {
       if (n.isVegetable) s += 15;
       score = Math.max(0, Math.min(99, s));
     } else {
-      const cat = NUTRITION_CATEGORIES[dbItem.category || "other"];
+      const cat = categories[dbItem.category || "other"];
       score = (cat?.score || 5) * 10;
     }
     weightedScore += score * weight;
@@ -193,95 +298,13 @@ function computeHealthScore(ingredients, ingredientDB) {
 }
 
 // ─── DEFAULT DATA ─────────────────────────────────────────────────────────────
-const DEFAULT_INGREDIENT_DB = [
-  { id: "db_i1", name: "Pommes de terre", category: "vegetable", image: "https://picsum.photos/seed/potato/200/200" },
-  { id: "db_i2", name: "Tome fraîche", category: "dairy", image: "https://picsum.photos/seed/cheese/200/200" },
-  { id: "db_i3", name: "Beurre", category: "fat_bad", image: "https://picsum.photos/seed/butter/200/200" },
-  { id: "db_i4", name: "Crème fraîche", category: "dairy", image: "https://picsum.photos/seed/cream/200/200" },
-  { id: "db_i5", name: "Ail", category: "vegetable", image: "https://picsum.photos/seed/garlic/200/200" },
-  { id: "db_i6", name: "Sel", category: "condiment", image: "" },
-  { id: "db_i7", name: "Banane", category: "vegetable", image: "https://picsum.photos/seed/banana/200/200" },
-  { id: "db_i8", name: "Farine", category: "grain_ref", image: "https://picsum.photos/seed/flour/200/200" },
-  { id: "db_i9", name: "Sucre brun", category: "sugar", image: "https://picsum.photos/seed/sugar/200/200" },
-  { id: "db_i10", name: "Œuf", category: "protein_lean", image: "https://picsum.photos/seed/eggs/200/200" },
-  { id: "db_i11", name: "Levure chimique", category: "condiment", image: "" },
-  { id: "db_i12", name: "Huile d'olive", category: "fat_good", image: "" },
-  { id: "db_i13", name: "Oignon", category: "vegetable", image: "" },
-  { id: "db_i14", name: "Tomate", category: "vegetable", image: "" },
-  { id: "db_i15", name: "Poulet", category: "protein_lean", image: "" },
-];
-
-const DEFAULT_UTENSIL_DB = [
-  { id: "db_u1", name: "Casserole", image: "https://picsum.photos/seed/pan/200/200" },
-  { id: "db_u2", name: "Moulin à légumes", image: "" },
-  { id: "db_u3", name: "Four", image: "" },
-  { id: "db_u4", name: "Saladier", image: "" },
-  { id: "db_u5", name: "Moule à cake", image: "" },
-  { id: "db_u6", name: "Poêle", image: "" },
-  { id: "db_u7", name: "Couteau de chef", image: "" },
-  { id: "db_u8", name: "Mixeur", image: "" },
-];
-
-const SAMPLE_RECIPES = [
-  {
-    id: "r1", name: "Aligot",
-    description: "La recette emblématique de l'Aveyron — pommes de terre, tome fraîche et beurre fondus en un ruban soyeux.",
-    image: "https://picsum.photos/seed/aligot/600/400",
-    prepTime: 20, cookTime: 25, servings: 4, collections: ["c1"], tags: ["Aveyron", "Comfort food"],
-    ingredients: [
-      { id: "i1", dbId: "db_i1", name: "Pommes de terre", amount: 1, unit: "kg" },
-      { id: "i2", dbId: "db_i2", name: "Tome fraîche", amount: 400, unit: "g" },
-      { id: "i3", dbId: "db_i3", name: "Beurre", amount: 50, unit: "g" },
-      { id: "i4", dbId: "db_i4", name: "Crème fraîche", amount: 100, unit: "ml" },
-      { id: "i5", dbId: "db_i5", name: "Ail", amount: 2, unit: "gousses" },
-      { id: "i6", dbId: "db_i6", name: "Sel", amount: 1, unit: "pincée" },
-    ],
-    utensils: [
-      { id: "u1", dbId: "db_u1", name: "Casserole" },
-      { id: "u2", dbId: "db_u2", name: "Moulin à légumes" },
-    ],
-    steps: [
-      { id: "s1", title: "Cuire les pommes de terre", text: "Éplucher et cuire les pommes de terre dans de l'eau salée avec l'ail pendant 25 min.", ingredients: ["i1", "i5"], utensils: ["u1"] },
-      { id: "s2", title: "Écraser", text: "Égoutter et passer au moulin à légumes. Remettre sur feu doux.", ingredients: ["i1"], utensils: ["u2"] },
-      { id: "s3", title: "Incorporer", text: "Ajouter le beurre puis la crème fraîche, mélanger vigoureusement.", ingredients: ["i3", "i4"], utensils: [] },
-      { id: "s4", title: "Filer la tome", text: "Incorporer la tome coupée en lamelles en tournant jusqu'à obtenir le fameux fil.", ingredients: ["i2"], utensils: [] },
-    ],
-    source: "tourisme-aveyron.com", createdAt: "2024-01-10",
-  },
-  {
-    id: "r2", name: "Banana Bread",
-    description: "Un banana bread moelleux et parfumé, parfait pour le petit-déjeuner.",
-    image: "https://picsum.photos/seed/bananabread/600/400",
-    prepTime: 15, cookTime: 50, servings: 8, collections: [], tags: ["Boulangerie", "Sucré"],
-    ingredients: [
-      { id: "i1", dbId: "db_i7", name: "Bananes mûres", amount: 3, unit: "" },
-      { id: "i2", dbId: "db_i8", name: "Farine", amount: 200, unit: "g" },
-      { id: "i3", dbId: "db_i9", name: "Sucre brun", amount: 100, unit: "g" },
-      { id: "i4", dbId: "db_i3", name: "Beurre", amount: 80, unit: "g" },
-      { id: "i5", dbId: "db_i10", name: "Œufs", amount: 2, unit: "" },
-      { id: "i6", dbId: "db_i11", name: "Levure chimique", amount: 1, unit: "c.à.c." },
-    ],
-    utensils: [
-      { id: "u1", dbId: "db_u5", name: "Moule à cake" },
-      { id: "u2", dbId: "db_u4", name: "Saladier" },
-      { id: "u3", dbId: "db_u3", name: "Four" },
-    ],
-    steps: [
-      { id: "s1", title: "Préchauffer", text: "Préchauffer le four à 180°C.", ingredients: [], utensils: ["u3"] },
-      { id: "s2", title: "Écraser les bananes", text: "Écraser les bananes à la fourchette dans le saladier.", ingredients: ["i1"], utensils: ["u2"] },
-      { id: "s3", title: "Mélanger", text: "Ajouter le sucre brun, le beurre fondu et les œufs. Mélanger.", ingredients: ["i3", "i4", "i5"], utensils: [] },
-      { id: "s4", title: "Incorporer les secs", text: "Incorporer la farine et la levure.", ingredients: ["i2", "i6"], utensils: [] },
-      { id: "s5", title: "Enfourner", text: "Verser dans le moule à cake et cuire 50 min.", ingredients: [], utensils: ["u1", "u3"] },
-    ],
-    source: "cestmafournee.com", createdAt: "2024-01-12",
-  },
-];
-
-const SAMPLE_COLLECTIONS = [
-  { id: "c1", name: "Entrées", count: 19, color: "#e8703a", icon: "🥗" },
-  { id: "c2", name: "Pasta", count: 11, color: "#f0c060", icon: "🍝" },
-  { id: "c3", name: "Desserts", count: 8, color: "#e05252", icon: "🍰" },
-];
+// New users start completely empty. Ingredient/utensil reference data now comes
+// from the shared read-only Master DB in Firestore (master/ingredients,
+// master/utensils), merged with each user's own additions (meta/userDB).
+const DEFAULT_INGREDIENT_DB = [];
+const DEFAULT_UTENSIL_DB = [];
+const SAMPLE_RECIPES = [];
+const SAMPLE_COLLECTIONS = [];
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
 const Icon = ({ name, size = 20, color = "currentColor" }) => {
@@ -314,6 +337,7 @@ const Icon = ({ name, size = 20, color = "currentColor" }) => {
     list2: <svg {...p}><line x1="8" x2="21" y1="6" y2="6" /><line x1="8" x2="21" y1="12" y2="12" /><line x1="8" x2="21" y1="18" y2="18" /><line x1="3" x2="3.01" y1="6" y2="6" /><line x1="3" x2="3.01" y1="12" y2="12" /><line x1="3" x2="3.01" y1="18" y2="18" /></svg>,
     sun: <svg {...p}><circle cx="12" cy="12" r="5" /><line x1="12" x2="12" y1="1" y2="3" /><line x1="12" x2="12" y1="21" y2="23" /><line x1="4.22" x2="5.64" y1="4.22" y2="5.64" /><line x1="18.36" x2="19.78" y1="18.36" y2="19.78" /><line x1="1" x2="3" y1="12" y2="12" /><line x1="21" x2="23" y1="12" y2="12" /><line x1="4.22" x2="5.64" y1="19.78" y2="18.36" /><line x1="18.36" x2="19.78" y1="5.64" y2="4.22" /></svg>,
     moon: <svg {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
+    logout: <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>,
   };
   return icons[name] || null;
 };
@@ -350,22 +374,135 @@ const HealthRing = ({ score, size = 56 }) => {
 // ─── IMAGE (with fallback) ────────────────────────────────────────────────────
 const Img = ({ src, alt, style }) => {
   const [err, setErr] = useState(false);
+  useEffect(() => { setErr(false); }, [src]);
   if (!src || err) return (
     <div style={{ background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)", ...style }}>
       <Icon name="photo" size={20} />
     </div>
   );
-  return <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer" crossOrigin="anonymous" style={{ objectFit: "cover", ...style }} />;
+  return <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer" style={{ objectFit: "cover", ...style }} />;
 };
 
-// ─── IMAGE UPLOAD ─────────────────────────────────────────────────────────────
-function ImageUpload({ value, onChange, style }) {
-  const inputId = useRef("img_" + Math.random().toString(36).slice(2)).current;
-  const handleFile = e => {
-    const file = e.target.files[0]; if (!file) return;
+// ─── INGREDIENT IMAGE (round, slightly larger, transparent-friendly) ──────────
+// Used everywhere an ingredient image appears, for a consistent circular look.
+const IngImage = ({ src, alt, size = 48 }) => {
+  const [err, setErr] = useState(false);
+  useEffect(() => { setErr(false); }, [src]);
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%", flexShrink: 0,
+      background: "var(--surface2)", border: "1px solid var(--border)",
+      display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+    }}>
+      {src && !err
+        ? <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer"
+            style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+        : <Icon name="photo" size={Math.round(size * 0.42)} color="var(--text3)" />}
+    </div>
+  );
+};
+
+// ─── IMAGE COMPRESSION + STORAGE UPLOAD ──────────────────────────────────────
+// Compress an image File client-side: resize to max edge.
+// Transparent images (PNG/WebP with alpha) are kept as PNG to preserve
+// transparency; everything else is flattened to JPEG for smaller size.
+// Resolves to { blob, ext, contentType }.
+function compressImage(file, { maxEdge = 800, quality = 0.75 } = {}) {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = ev => onChange(ev.target.result);
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxEdge) { height = Math.round(height * maxEdge / width); width = maxEdge; }
+        else if (height > maxEdge) { width = Math.round(width * maxEdge / height); height = maxEdge; }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        // Detect transparency: PNG/WebP source likely has an alpha channel.
+        const maybeTransparent = /image\/(png|webp)/i.test(file.type);
+        let keepAlpha = false;
+        if (maybeTransparent) {
+          try {
+            const data = ctx.getImageData(0, 0, width, height).data;
+            for (let i = 3; i < data.length; i += 4) {
+              if (data[i] < 250) { keepAlpha = true; break; }
+            }
+          } catch { keepAlpha = maybeTransparent; } // tainted canvas → trust the source type
+        }
+        if (keepAlpha) {
+          canvas.toBlob(
+            blob => blob ? resolve({ blob, ext: "png", contentType: "image/png" }) : reject(new Error("Compression échouée")),
+            "image/png"
+          );
+        } else {
+          canvas.toBlob(
+            blob => blob ? resolve({ blob, ext: "jpg", contentType: "image/jpeg" }) : reject(new Error("Compression échouée")),
+            "image/jpeg", quality
+          );
+        }
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
     reader.readAsDataURL(file);
+  });
+}
+
+// Upload a compressed image to Firebase Storage.
+// `pathPrefix` is e.g. "recipes", "ingredients", "utensils" (stored under the
+// user's folder), or "master/..." (stored at root, readable by all users).
+// Returns the public download URL stored in Firestore.
+async function uploadImage(file, pathPrefix) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Non authentifié");
+  const { blob, ext, contentType } = await compressImage(file);
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const path = pathPrefix.startsWith("master/")
+    ? `${pathPrefix}/${id}.${ext}`
+    : `users/${uid}/${pathPrefix}/${id}.${ext}`;
+  const sRef = storageRef(storage, path);
+  await uploadBytes(sRef, blob, { contentType });
+  return await getDownloadURL(sRef);
+}
+
+// Delete a previously uploaded image by its download URL (best-effort).
+async function deleteImageByUrl(url) {
+  if (!url || !url.includes("firebasestorage")) return;
+  try {
+    const sRef = storageRef(storage, url);
+    await deleteObject(sRef);
+  } catch { /* already gone or not ours — ignore */ }
+}
+
+// ─── IMAGE UPLOAD ─────────────────────────────────────────────────────────────
+function ImageUpload({ value, onChange, style, pathPrefix = "misc" }) {
+  const inputId = useRef("img_" + Math.random().toString(36).slice(2)).current;
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const handleFile = async e => {
+    const file = e.target.files[0]; if (!file) return;
+    setError("");
+    setUploading(true);
+    try {
+      const url = await uploadImage(file, pathPrefix);
+      onChange(url);
+    } catch (err) {
+      // Fallback: if Storage upload fails, keep working with compressed base64
+      try {
+        const { blob } = await compressImage(file);
+        const reader = new FileReader();
+        reader.onload = ev => onChange(ev.target.result);
+        reader.readAsDataURL(blob);
+      } catch {
+        setError("Échec de l'upload");
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // allow re-selecting the same file
+    }
   };
   return (
     <div style={{ position: "relative", ...style }}>
@@ -376,17 +513,26 @@ function ImageUpload({ value, onChange, style }) {
             <Icon name="close" size={13} />
           </button>
           <label htmlFor={inputId} style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: 8, padding: "4px 8px", fontSize: 11, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-            <Icon name="photo" size={12} color="#fff" /> Changer
+            <Icon name="photo" size={12} color="#fff" /> {uploading ? "…" : "Changer"}
           </label>
         </div>
       ) : (
         <label htmlFor={inputId} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: style?.height || 80, background: "var(--surface2)", border: "2px dashed rgba(255,255,255,0.12)", borderRadius: 12, color: "var(--text3)", cursor: "pointer" }}>
-          <Icon name="photo" size={22} />
-          <span style={{ fontSize: 13, fontWeight: 500 }}>Choisir une photo</span>
-          <span style={{ fontSize: 11, color: "var(--text3)" }}>Galerie ou appareil photo</span>
+          {uploading ? (
+            <>
+              <div style={{ width: 22, height: 22, border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>Compression & upload…</span>
+            </>
+          ) : (
+            <>
+              <Icon name="photo" size={22} />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>Choisir une photo</span>
+              <span style={{ fontSize: 11, color: "var(--text3)" }}>{error || "Galerie ou appareil photo"}</span>
+            </>
+          )}
         </label>
       )}
-      <input id={inputId} type="file" accept="image/*" onChange={handleFile} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
+      <input id={inputId} type="file" accept="image/*" onChange={handleFile} disabled={uploading} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
     </div>
   );
 }
@@ -427,7 +573,12 @@ function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
               </>
             )}
             {!confirmSignOut
-              ? <button className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "center", marginTop: 4 }} onClick={() => setConfirmSignOut(true)}>Déconnexion</button>
+              ? <button onClick={() => setConfirmSignOut(true)}
+                  style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.18)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.10)"; }}>
+                  <Icon name="logout" size={16} color="var(--red)" /> Se déconnecter
+                </button>
               : <div style={{ marginTop: 8 }}>
                 <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 8, textAlign: "center" }}>Confirmer la déconnexion ?</div>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -516,47 +667,144 @@ function SwipeableSheet({ onClose, children, style }) {
 
 export default function App() {
   const [tab, setTab] = useState("home");
+  // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
+  const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
+  const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
+  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+  const isAdmin = !!(user && ADMIN_EMAIL && user.email === ADMIN_EMAIL);
+
   const [recipes, setRecipes] = useLS("rf_recipes2", SAMPLE_RECIPES);
   const [collections, setCollections] = useLS("rf_collections2", SAMPLE_COLLECTIONS);
   const [mealPlan, setMealPlan] = useLS("rf_mealplan2", {});
   const [shoppingLists, setShoppingLists] = useLS("rf_shopping3", []);
-  const [ingredientDB, setIngredientDB] = useLS("rf_ingdb", DEFAULT_INGREDIENT_DB);
-  const [utensilDB, setUtensilDB] = useLS("rf_utdb", DEFAULT_UTENSIL_DB);
+  // Reference DBs: shared Master + user's own additions, merged for display.
+  const [masterDB, setMasterDB] = useState({ ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES });
+  const [userDB, setUserDB] = useState({ ingredients: [], utensils: [] });
+  // Nutrition categories live in the Master (admin-managed). Fall back to defaults.
+  const categories = useMemo(
+    () => (masterDB.categories && Object.keys(masterDB.categories).length ? masterDB.categories : DEFAULT_CATEGORIES),
+    [masterDB]
+  );
+  const setCategories = useCallback((updater) => {
+    setMasterDB(prev => {
+      const cur = prev.categories && Object.keys(prev.categories).length ? prev.categories : DEFAULT_CATEGORIES;
+      const next = typeof updater === "function" ? updater(cur) : updater;
+      return { ...prev, categories: next };
+    });
+  }, []);
+  // Admins see master items as editable; normal users see them read-only.
+  const ingredientDB = useMemo(
+    () => [...masterDB.ingredients.map(i => ({ ...i, _ro: !isAdmin })), ...userDB.ingredients],
+    [masterDB, userDB, isAdmin]
+  );
+  const utensilDB = useMemo(
+    () => [...masterDB.utensils.map(u => ({ ...u, _ro: !isAdmin })), ...userDB.utensils],
+    [masterDB, userDB, isAdmin]
+  );
+  // Setters: admins write everything to the shared Master (folding in any of their
+  // own/migrated items); normal users only ever write to their own additions.
+  const setIngredientDB = useCallback((updater) => {
+    if (isAdmin) {
+      const merged = [...masterDB.ingredients, ...userDB.ingredients];
+      const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
+      setMasterDB(prev => ({ ...prev, ingredients: next }));
+      if (userDB.ingredients.length) setUserDB(prev => ({ ...prev, ingredients: [] }));
+    } else {
+      setUserDB(prev => {
+        const merged = [...masterDB.ingredients, ...prev.ingredients];
+        const next = typeof updater === "function" ? updater(merged) : updater;
+        const masterIds = new Set(masterDB.ingredients.map(i => i.id));
+        return { ...prev, ingredients: next.filter(i => !masterIds.has(i.id)).map(({ _ro, ...rest }) => rest) };
+      });
+    }
+  }, [masterDB, userDB, isAdmin]);
+  const setUtensilDB = useCallback((updater) => {
+    if (isAdmin) {
+      const merged = [...masterDB.utensils, ...userDB.utensils];
+      const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
+      setMasterDB(prev => ({ ...prev, utensils: next }));
+      if (userDB.utensils.length) setUserDB(prev => ({ ...prev, utensils: [] }));
+    } else {
+      setUserDB(prev => {
+        const merged = [...masterDB.utensils, ...prev.utensils];
+        const next = typeof updater === "function" ? updater(merged) : updater;
+        const masterIds = new Set(masterDB.utensils.map(u => u.id));
+        return { ...prev, utensils: next.filter(u => !masterIds.has(u.id)).map(({ _ro, ...rest }) => rest) };
+      });
+    }
+  }, [masterDB, userDB, isAdmin]);
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // ── Auth state ──────────────────────────────────────────────────────────────
-  const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
-  const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
+  // ── Auth refs ─────────────────────────────────────────────────────────────────
   const firestoreUnsub = useRef(null);
   const cloudLoaded = useRef(false); // gate saves until initial cloud load completes
+  const recipeSyncMap = useRef(new Map()); // last-synced recipe snapshot for diffing
 
   useEffect(() => {
-    // Handle redirect result (for browsers that block popups)
     getRedirectResult(auth).catch(() => { });
     const unsub = onAuthStateChanged(auth, async u => {
-      cloudLoaded.current = false;       // reset gate on every auth change
+      cloudLoaded.current = false;
+      recipeSyncMap.current = new Map();
       setUser(u);
       if (u) {
-        // Load user data from Firestore on sign-in
         setSyncStatus("syncing");
         try {
-          const snap = await getDoc(doc(db, "users", u.uid, "data", "app"));
-          if (snap.exists()) {
-            const d = snap.data();
-            if (d.recipes) setRecipes(d.recipes);
-            if (d.collections) setCollections(d.collections);
-            if (d.mealPlan) setMealPlan(d.mealPlan);
-            if (d.shoppingLists) setShoppingLists(d.shoppingLists);
-            if (d.ingredientDB) setIngredientDB(d.ingredientDB);
-            if (d.utensilDB) setUtensilDB(d.utensilDB);
-            if (d.fridge) setFridge(d.fridge);
-            if (d.fridgeSettings) setFridgeSettings(d.fridgeSettings);
+          // Master reference DB (shared, read-only) — load in parallel.
+          const masterPromise = loadMasterDB();
+
+          // Load user's split data.
+          let data = await loadUserData(u.uid);
+          const isEmpty = data.recipes.length === 0 && !data.collections && !data.userDB
+            && !data.mealPlan && !data.shoppingLists && !data.fridge;
+
+          // First run with no split data? Try migrating the legacy single doc.
+          if (isEmpty) {
+            const legacy = await migrateLegacyDoc(u.uid);
+            if (legacy) {
+              data = {
+                recipes: legacy.recipes || [],
+                collections: legacy.collections || null,
+                mealPlan: legacy.mealPlan || null,
+                shoppingLists: legacy.shoppingLists || null,
+                fridge: legacy.fridge || null,
+                fridgeSettings: legacy.fridgeSettings || null,
+                // Legacy ingredientDB/utensilDB become the user's own additions.
+                userDB: { ingredients: legacy.ingredientDB || [], utensils: legacy.utensilDB || [] },
+              };
+            }
           }
-          // Wait a tick so the state updates above settle before allowing saves
+
+          // Hydrate state.
+          setRecipes(data.recipes || []);
+          if (data.collections) setCollections(data.collections);
+          if (data.mealPlan) setMealPlan(data.mealPlan);
+          if (data.shoppingLists) setShoppingLists(data.shoppingLists);
+          if (data.fridge) setFridge(data.fridge);
+          if (data.fridgeSettings) setFridgeSettings(data.fridgeSettings);
+          setUserDB(data.userDB || { ingredients: [], utensils: [] });
+          setMasterDB(await masterPromise);
+
+          // Seed the recipe diff map so the first save doesn't rewrite everything.
+          const map = new Map();
+          for (const r of (data.recipes || [])) if (r.id) map.set(r.id, r);
+          recipeSyncMap.current = map;
+
+          // If we migrated, persist into the split structure once.
+          if (isEmpty && data.recipes && (data.recipes.length || data.userDB)) {
+            await Promise.all([
+              syncRecipes(u.uid, data.recipes, new Map()).then(m => { recipeSyncMap.current = m; }),
+              setDoc(metaDoc(u.uid, "collections"), { items: data.collections || [] }),
+              setDoc(metaDoc(u.uid, "mealPlan"), { data: data.mealPlan || {} }),
+              setDoc(metaDoc(u.uid, "shoppingLists"), { items: data.shoppingLists || [] }),
+              setDoc(metaDoc(u.uid, "fridge"), { items: data.fridge || [], settings: data.fridgeSettings || { matchThreshold: 25 } }),
+              setDoc(metaDoc(u.uid, "userDB"), data.userDB || { ingredients: [], utensils: [] }),
+            ]);
+          }
+
           setTimeout(() => { cloudLoaded.current = true; setSyncStatus("synced"); }, 0);
         } catch (e) { setSyncStatus("error"); }
       } else {
@@ -586,25 +834,41 @@ export default function App() {
   }, [tab]);
 
 
-  // ── Save to Firestore whenever data changes ──────────────────────────────────
-  const saveToFirestore = useCallback(async (patch) => {
-    if (!user || !cloudLoaded.current) return;   // don't save until cloud data is loaded
+  // ── Save to Firestore whenever data changes (split structure) ─────────────────
+  const saveMeta = useCallback(async (name, payload) => {
+    if (!user || !cloudLoaded.current) return;
     setSyncStatus("syncing");
     try {
-      await setDoc(doc(db, "users", user.uid, "data", "app"), patch, { merge: true });
+      await setDoc(metaDoc(user.uid, name), payload);
       setSyncStatus("synced");
     } catch (e) { setSyncStatus("error"); }
   }, [user]);
 
-  // Auto-save on data changes (gated by cloudLoaded inside saveToFirestore)
-  useEffect(() => { saveToFirestore({ recipes }); }, [recipes]);
-  useEffect(() => { saveToFirestore({ collections }); }, [collections]);
-  useEffect(() => { saveToFirestore({ mealPlan }); }, [mealPlan]);
-  useEffect(() => { saveToFirestore({ shoppingLists }); }, [shoppingLists]);
-  useEffect(() => { saveToFirestore({ ingredientDB }); }, [ingredientDB]);
-  useEffect(() => { saveToFirestore({ utensilDB }); }, [utensilDB]);
-  useEffect(() => { saveToFirestore({ fridge }); }, [fridge]);
-  useEffect(() => { saveToFirestore({ fridgeSettings }); }, [fridgeSettings]);
+  // Recipes: diff-based — only changed/new/removed docs are written.
+  useEffect(() => {
+    if (!user || !cloudLoaded.current) return;
+    setSyncStatus("syncing");
+    syncRecipes(user.uid, recipes, recipeSyncMap.current)
+      .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
+      .catch(() => setSyncStatus("error"));
+  }, [recipes, user]);
+
+  useEffect(() => { saveMeta("collections", { items: collections }); }, [collections]);
+  useEffect(() => { saveMeta("mealPlan", { data: mealPlan }); }, [mealPlan]);
+  useEffect(() => { saveMeta("shoppingLists", { items: shoppingLists }); }, [shoppingLists]);
+  useEffect(() => { saveMeta("fridge", { items: fridge, settings: fridgeSettings }); }, [fridge, fridgeSettings]);
+  useEffect(() => { saveMeta("userDB", userDB); }, [userDB]);
+
+  // Master DB: only admins persist changes (and Firestore rules enforce it server-side).
+  useEffect(() => {
+    if (!user || !cloudLoaded.current || !isAdmin) return;
+    setSyncStatus("syncing");
+    Promise.all([
+      setDoc(doc(db, "master", "ingredients"), { items: masterDB.ingredients }),
+      setDoc(doc(db, "master", "utensils"), { items: masterDB.utensils }),
+      setDoc(doc(db, "master", "categories"), { map: masterDB.categories || DEFAULT_CATEGORIES }),
+    ]).then(() => setSyncStatus("synced")).catch(() => setSyncStatus("error"));
+  }, [masterDB, user, isAdmin]);
 
   const notify = (msg, type = "success") => {
     setNotification({ msg, type });
@@ -612,7 +876,7 @@ export default function App() {
   };
 
   const saveRecipe = r => {
-    const score = computeHealthScore(r.ingredients, ingredientDB);
+    const score = computeHealthScore(r.ingredients, ingredientDB, categories);
     const withScore = { ...r, healthScore: score };
     let updatedRecipes;
     if (r.id && recipes.find(x => x.id === r.id)) {
@@ -634,7 +898,13 @@ export default function App() {
     notify("Recette sauvegardée ✓");
   };
 
-  const deleteRecipe = id => { setRecipes(prev => prev.filter(r => r.id !== id)); setSelectedRecipe(null); notify("Recette supprimée"); };
+  const deleteRecipe = id => {
+    const r = recipes.find(x => x.id === id);
+    if (r?.image) deleteImageByUrl(r.image);
+    setRecipes(prev => prev.filter(r => r.id !== id));
+    setSelectedRecipe(null);
+    notify("Recette supprimée");
+  };
 
   const addToShopping = (recipe, selectedIngredients, mult = 1) => {
     const ings = selectedIngredients || recipe.ingredients;
@@ -759,7 +1029,7 @@ export default function App() {
   ${stepLines}` : ""}
 
   <div class="footer">
-    <span class="footer-brand">Mijoté· v1.0 — Cardamome</span>
+    <span class="footer-brand">Mijoté· v${__APP_VERSION__} — Cardamome</span>
     ${recipe.source ? `<span>Source : <a href="${recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}" style="color:var(--accent)">${recipe.source.replace(/^https?:\/\//, "")}</a></span>` : ""}
   </div>
 </body>
@@ -814,8 +1084,8 @@ export default function App() {
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
-      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
-      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} />}
+      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
+      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
   );
 
@@ -929,14 +1199,14 @@ export default function App() {
         {/* Leave editor confirmation modal */}
         {pendingTab && (
           <SwipeableSheet onClose={() => setPendingTab(null)}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Quitter le formulaire ?</h3>
-            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-              Les modifications non sauvegardées seront perdues. Tu peux sauvegarder d'abord en cliquant sur "Sauvegarder" en haut.
-            </p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingTab(null)}>Rester</button>
-              <button className="btn btn-danger" style={{ flex: 1 }} onClick={confirmLeaveEditor}>Quitter sans sauvegarder</button>
-            </div>
+              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Quitter le formulaire ?</h3>
+              <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
+                Les modifications non sauvegardées seront perdues. Tu peux sauvegarder d'abord en cliquant sur "Sauvegarder" en haut.
+              </p>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingTab(null)}>Rester</button>
+                <button className="btn btn-danger" style={{ flex: 1 }} onClick={confirmLeaveEditor}>Quitter sans sauvegarder</button>
+              </div>
           </SwipeableSheet>
         )}
       </div>
@@ -987,7 +1257,7 @@ function DesktopSidebar({ tab, setTab, onNewRecipe }) {
           fontSize: 11, fontWeight: 500, fontFamily: "var(--ff-body)", letterSpacing: "0.01em"
         }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#8fba7a", flexShrink: 0 }} />
-          v1.0 — Cardamome
+          {`v${__APP_VERSION__} — Cardamome`}
         </span>
       </div>
       <div style={{ borderTop: "1px solid var(--border)", margin: "0 10px 14px" }} />
@@ -1026,7 +1296,7 @@ function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, se
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mes Recettes</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mes Recettes</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={onNewRecipe}><Icon name="plus" size={16} /> Nouvelle</button>
             <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
@@ -1230,80 +1500,80 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           }}
           style={{ flex: 1, overflow: "hidden", position: "relative" }}>
           <div className="swiper-inner" style={{ display: "flex", width: "100%", height: "100%", transform: `translateX(${-["Ingrédients", "Ustensiles", "Étapes"].indexOf(activeTab) * 100}%)` }}>
-            {/* Slide 1 — Ingrédients */}
-            <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {recipe.ingredients.map(ing => (
-                  <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
-                    <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={getIngImage(ing.dbId)} alt={ing.name} style={{ width: "100%", height: "100%" }} /></div>
-                    <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
-                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
+          {/* Slide 1 — Ingrédients */}
+          <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {recipe.ingredients.map(ing => (
+                <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
+                  <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={50} />
+                  <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                    <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ height: 16 }} />
+          </div>
+          {/* Slide 2 — Ustensiles */}
+          <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {(recipe.utensils || []).map(u => (
+                <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "var(--surface2)" }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
+                </div>
+              ))}
+              {(!recipe.utensils || recipe.utensils.length === 0) && <p style={{ color: "var(--text3)", fontSize: 14, gridColumn: "1/-1" }}>Aucun ustensile.</p>}
+            </div>
+            <div style={{ height: 16 }} />
+          </div>
+          {/* Slide 3 — Étapes */}
+          <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {recipe.steps && recipe.steps.length > 0 && (
+                <button className="btn btn-primary" style={{ width: "100%", borderRadius: 14, padding: "13px 18px", fontSize: 15, fontWeight: 600, gap: 10 }} onClick={() => setCookMode(true)}>
+                  <Icon name="fire" size={17} /> Mode pas à pas
+                </button>
+              )}
+              {(recipe.steps || []).map((step, i) => {
+                const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
+                const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
+                return (
+                  <div key={step.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{step.title}</div>
+                        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>{step.text}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ height: 16 }} />
-            </div>
-            {/* Slide 2 — Ustensiles */}
-            <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {(recipe.utensils || []).map(u => (
-                  <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "var(--surface2)" }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
-                    <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
-                  </div>
-                ))}
-                {(!recipe.utensils || recipe.utensils.length === 0) && <p style={{ color: "var(--text3)", fontSize: 14, gridColumn: "1/-1" }}>Aucun ustensile.</p>}
-              </div>
-              <div style={{ height: 16 }} />
-            </div>
-            {/* Slide 3 — Étapes */}
-            <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {recipe.steps && recipe.steps.length > 0 && (
-                  <button className="btn btn-primary" style={{ width: "100%", borderRadius: 14, padding: "13px 18px", fontSize: 15, fontWeight: 600, gap: 10 }} onClick={() => setCookMode(true)}>
-                    <Icon name="fire" size={17} /> Mode pas à pas
-                  </button>
-                )}
-                {(recipe.steps || []).map((step, i) => {
-                  const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
-                  const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
-                  return (
-                    <div key={step.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
-                      <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
-                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{step.title}</div>
-                          <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>{step.text}</p>
+                    {linkedIngs.length > 0 && (
+                      <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "8px 10px", marginTop: 8 }}>
+                        <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ingrédients pour cette étape</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          {linkedIngs.map(ing => (
+                            <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={30} />
+                              <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{ing.name}</span>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      {linkedIngs.length > 0 && (
-                        <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "8px 10px", marginTop: 8 }}>
-                          <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ingrédients pour cette étape</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                            {linkedIngs.map(ing => (
-                              <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <div style={{ width: 24, height: 24, borderRadius: 6, overflow: "hidden", flexShrink: 0, background: "var(--surface3)" }}><Img src={getIngImage(ing.dbId)} alt={ing.name} style={{ width: "100%", height: "100%" }} /></div>
-                                <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{ing.name}</span>
-                                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {linkedUts.length > 0 && (
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-                          {linkedUts.map(u => <span key={u.id} className="tag accent" style={{ fontSize: 11 }}>{u.name}</span>)}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ height: 16 }} />
+                    )}
+                    {linkedUts.length > 0 && (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                        {linkedUts.map(u => <span key={u.id} className="tag accent" style={{ fontSize: 11 }}>{u.name}</span>)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+            <div style={{ height: 16 }} />
+          </div>
           </div>{/* end swiper-inner */}
         </div>
 
@@ -1316,7 +1586,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {recipe.ingredients.map(ing => (
                   <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface2)", borderRadius: 10, padding: "8px 12px", border: "1px solid var(--border)" }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}><Img src={getIngImage(ing.dbId)} alt={ing.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={40} />
                     <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{ing.name}</div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
@@ -1397,116 +1667,116 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
       {/* Shopping ingredient selection modal */}
       {showShoppingModal && (
         <SwipeableSheet onClose={() => setShowShoppingModal(false)} style={{ maxHeight: "85dvh" }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Ajouter aux courses</h3>
-          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Décoche les ingrédients que tu as déjà.</p>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-            <button style={{ fontSize: 12, color: "var(--accent)" }} onClick={() => setSelectedIngs(recipe.ingredients.map(i => i.id))}>Tout sélectionner</button>
-            <button style={{ fontSize: 12, color: "var(--text3)" }} onClick={() => setSelectedIngs([])}>Tout décocher</button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto", maxHeight: "52vh", marginBottom: 16 }}>
-            {recipe.ingredients.map(ing => {
-              const selected = selectedIngs.includes(ing.id);
-              return (
-                <button key={ing.id} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing.id) : [...prev, ing.id])}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12,
-                    background: "var(--surface2)", border: "1px solid var(--border)",
-                    textAlign: "left", transition: "opacity 0.15s", opacity: selected ? 1 : 0.4
-                  }}>
-                  <div style={{
-                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-                    background: selected ? "var(--accent)" : "transparent",
-                    border: `2px solid ${selected ? "var(--accent)" : "var(--border)"}`,
-                    display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>
-                    {selected && <Icon name="check" size={11} color="#fff" />}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
-                    <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 8 }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          <button className="btn btn-primary" style={{ width: "100%" }}
-            disabled={selectedIngs.length === 0}
-            onClick={() => { onAddToShopping(recipe, recipe.ingredients.filter(i => selectedIngs.includes(i.id)), mult); setShowShoppingModal(false); }}>
-            <Icon name="shopping" size={15} /> Ajouter {selectedIngs.length > 0 ? `${selectedIngs.length} article${selectedIngs.length > 1 ? "s" : ""}` : ""}
-          </button>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Ajouter aux courses</h3>
+            <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Décoche les ingrédients que tu as déjà.</p>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+              <button style={{ fontSize: 12, color: "var(--accent)" }} onClick={() => setSelectedIngs(recipe.ingredients.map(i => i.id))}>Tout sélectionner</button>
+              <button style={{ fontSize: 12, color: "var(--text3)" }} onClick={() => setSelectedIngs([])}>Tout décocher</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto", maxHeight: "52vh", marginBottom: 16 }}>
+              {recipe.ingredients.map(ing => {
+                const selected = selectedIngs.includes(ing.id);
+                return (
+                  <button key={ing.id} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing.id) : [...prev, ing.id])}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12,
+                      background: "var(--surface2)", border: "1px solid var(--border)",
+                      textAlign: "left", transition: "opacity 0.15s", opacity: selected ? 1 : 0.4
+                    }}>
+                    <div style={{
+                      width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                      background: selected ? "var(--accent)" : "transparent",
+                      border: `2px solid ${selected ? "var(--accent)" : "var(--border)"}`,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      {selected && <Icon name="check" size={11} color="#fff" />}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
+                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 8 }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <button className="btn btn-primary" style={{ width: "100%" }}
+              disabled={selectedIngs.length === 0}
+              onClick={() => { onAddToShopping(recipe, recipe.ingredients.filter(i => selectedIngs.includes(i.id)), mult); setShowShoppingModal(false); }}>
+              <Icon name="shopping" size={15} /> Ajouter {selectedIngs.length > 0 ? `${selectedIngs.length} article${selectedIngs.length > 1 ? "s" : ""}` : ""}
+            </button>
         </SwipeableSheet>
       )}
 
       {showMealModal && (
         <SwipeableSheet onClose={() => setShowMealModal(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Ajouter au planning</h3>
-          <div className="field-label">Date</div>
-          <input type="date" className="field-input" value={mealDate} onChange={e => setMealDate(e.target.value)} style={{ marginBottom: 12 }} />
-          <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection)</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            {[["midi", "🌤 Midi", "var(--yellow)"], ["soir", "🌙 Soir", "var(--blue)"]].map(([slot, label, col]) => {
-              const active = mealSlots.includes(slot);
-              const toggle = () => setMealSlots(prev => {
-                const next = active ? prev.filter(s => s !== slot) : [...prev, slot];
-                return next.length ? next : prev;
-              });
-              return (
-                <button key={slot} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? col : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? col : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
-                  {active && <Icon name="check" size={14} color="#000" />}
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-          {mealSlots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10, textAlign: "center" }}>Ajouté au midi ET au soir</div>}
-          <div className="field-label">Étaler sur X jours consécutifs</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-            <button onClick={() => setMealPortions(p => Math.max(1, p - 1))} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>−</button>
-            <span style={{ fontSize: 18, fontWeight: 700, minWidth: 30, textAlign: "center" }}>{mealPortions}</span>
-            <button onClick={() => setMealPortions(p => p + 1)} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>+</button>
-            <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{mealPortions > 1 ? `${recipe.servings} portions ÷ ${mealPortions} jours = ${(recipe.servings / mealPortions).toFixed(1)} p/j` : "Toutes les portions ce jour"}</span>
-          </div>
-          <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => {
-            for (let d = 0; d < mealPortions; d++) {
-              const dt = new Date(mealDate + "T12:00:00"); dt.setDate(dt.getDate() + d);
-              const dateStr = dt.toISOString().slice(0, 10);
-              mealSlots.forEach(slot => onAddToMealPlan(recipe, dateStr, mealPortions, slot));
-            }
-            setShowMealModal(false);
-          }}><Icon name="check" size={16} /> Confirmer</button>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Ajouter au planning</h3>
+            <div className="field-label">Date</div>
+            <input type="date" className="field-input" value={mealDate} onChange={e => setMealDate(e.target.value)} style={{ marginBottom: 12 }} />
+            <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection)</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              {[["midi", "🌤 Midi", "var(--yellow)"], ["soir", "🌙 Soir", "var(--blue)"]].map(([slot, label, col]) => {
+                const active = mealSlots.includes(slot);
+                const toggle = () => setMealSlots(prev => {
+                  const next = active ? prev.filter(s => s !== slot) : [...prev, slot];
+                  return next.length ? next : prev;
+                });
+                return (
+                  <button key={slot} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? col : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? col : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
+                    {active && <Icon name="check" size={14} color="#000" />}
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {mealSlots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10, textAlign: "center" }}>Ajouté au midi ET au soir</div>}
+            <div className="field-label">Étaler sur X jours consécutifs</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <button onClick={() => setMealPortions(p => Math.max(1, p - 1))} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>−</button>
+              <span style={{ fontSize: 18, fontWeight: 700, minWidth: 30, textAlign: "center" }}>{mealPortions}</span>
+              <button onClick={() => setMealPortions(p => p + 1)} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>+</button>
+              <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{mealPortions > 1 ? `${recipe.servings} portions ÷ ${mealPortions} jours = ${(recipe.servings / mealPortions).toFixed(1)} p/j` : "Toutes les portions ce jour"}</span>
+            </div>
+            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => {
+              for (let d = 0; d < mealPortions; d++) {
+                const dt = new Date(mealDate + "T12:00:00"); dt.setDate(dt.getDate() + d);
+                const dateStr = dt.toISOString().slice(0, 10);
+                mealSlots.forEach(slot => onAddToMealPlan(recipe, dateStr, mealPortions, slot));
+              }
+              setShowMealModal(false);
+            }}><Icon name="check" size={16} /> Confirmer</button>
         </SwipeableSheet>
       )}
       {showDeleteConfirm && (
         <SwipeableSheet onClose={() => setShowDeleteConfirm(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la recette ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20 }}>Retirer cette recette la supprimera définitivement des recettes enregistrées.</p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
-          </div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la recette ?</h3>
+            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20 }}>Retirer cette recette la supprimera définitivement des recettes enregistrées.</p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
+            </div>
         </SwipeableSheet>
       )}
       {showCollModal && (
         <SwipeableSheet onClose={() => setShowCollModal(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Collections</h3>
-          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Sélectionne les collections pour <strong>{recipe.name}</strong></p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-            {(collections || []).map(col => {
-              const active = (recipe.collections || []).includes(col.id);
-              return (
-                <button key={col.id} onClick={() => onToggleCollection(recipe.id, col.id)}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, background: active ? col.color + "22" : "var(--surface2)", border: `1.5px solid ${active ? col.color : "var(--border)"}`, transition: "all 0.15s" }}>
-                  <div style={{ width: 14, height: 14, borderRadius: "50%", background: col.color, flexShrink: 0 }} />
-                  <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: "left", color: active ? col.color : "var(--text)" }}>{col.name}</span>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: active ? col.color : "transparent", border: `2px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {active && <Icon name="check" size={12} color="#fff" />}
-                  </div>
-                </button>
-              );
-            })}
-            {(!collections || collections.length === 0) && <p style={{ color: "var(--text3)", fontSize: 13 }}>Aucune collection. Créez-en dans l'onglet Config.</p>}
-          </div>
-          <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowCollModal(false)}>Fermer</button>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Collections</h3>
+            <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Sélectionne les collections pour <strong>{recipe.name}</strong></p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+              {(collections || []).map(col => {
+                const active = (recipe.collections || []).includes(col.id);
+                return (
+                  <button key={col.id} onClick={() => onToggleCollection(recipe.id, col.id)}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, background: active ? col.color + "22" : "var(--surface2)", border: `1.5px solid ${active ? col.color : "var(--border)"}`, transition: "all 0.15s" }}>
+                    <div style={{ width: 14, height: 14, borderRadius: "50%", background: col.color, flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: "left", color: active ? col.color : "var(--text)" }}>{col.name}</span>
+                    <div style={{ width: 22, height: 22, borderRadius: "50%", background: active ? col.color : "transparent", border: `2px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {active && <Icon name="check" size={12} color="#fff" />}
+                    </div>
+                  </button>
+                );
+              })}
+              {(!collections || collections.length === 0) && <p style={{ color: "var(--text3)", fontSize: 13 }}>Aucune collection. Créez-en dans l'onglet Config.</p>}
+            </div>
+            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowCollModal(false)}>Fermer</button>
         </SwipeableSheet>
       )}
     </div>
@@ -1711,36 +1981,36 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
         {/* Slide 1 — Info */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           {(
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div><div className="field-label">Nom <span style={{ color: "var(--accent2)" }}>*</span></div><input className="field-input" placeholder="ex: Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} /></div>
-              <div><div className="field-label">Source</div><input className="field-input" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} /></div>
-              <div>
-                <div className="field-label">Photo principale</div>
-                <ImageUpload value={form.image} onChange={v => up("image", v)} style={{ height: 140 }} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
-                <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
-                <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" value={form.servings} onChange={e => up("servings", +e.target.value)} /></div>
-              </div>
-              <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
-              <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Collections</div>
-                {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucune collection — créez-en dans Config.</p>}
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {collections.map(col => {
-                    const active = (form.collections || []).includes(col.id);
-                    return (
-                      <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
-                        style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
-                        {active && <Icon name="check" size={11} color="#fff" />}
-                        {col.name}
-                      </button>
-                    );
-                  })}
-                </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div><div className="field-label">Nom <span style={{ color: "var(--accent2)" }}>*</span></div><input className="field-input" placeholder="ex: Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} /></div>
+            <div><div className="field-label">Source</div><input className="field-input" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} /></div>
+            <div>
+              <div className="field-label">Photo principale</div>
+              <ImageUpload value={form.image} onChange={v => up("image", v)} style={{ height: 140 }} pathPrefix="recipes" />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+              <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
+              <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
+              <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" value={form.servings} onChange={e => up("servings", +e.target.value)} /></div>
+            </div>
+            <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
+            <div>
+              <div className="field-label" style={{ marginBottom: 8 }}>Collections</div>
+              {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucune collection — créez-en dans Config.</p>}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {collections.map(col => {
+                  const active = (form.collections || []).includes(col.id);
+                  return (
+                    <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
+                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
+                      {active && <Icon name="check" size={11} color="#fff" />}
+                      {col.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
+          </div>
           )}
           <div style={{ height: 20 }} />
         </div>
@@ -2053,7 +2323,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning repas</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning repas</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span></div>
           <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 10 }}>
@@ -2140,47 +2410,47 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
       {/* Add recipe modal */}
       {addModal && (
         <SwipeableSheet onClose={() => { setAddModal(null); setSearchQ(""); }} style={{ maxHeight: "80dvh" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 4 }}>Ajouter une recette</h3>
-          <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12 }}>
-            {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection possible)</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["midi", "soir"].map(s => {
-                const active = addModal.slots.includes(s);
-                const toggle = () => setAddModal(p => {
-                  const cur = p.slots.includes(s) ? p.slots.filter(x => x !== s) : [...p.slots, s];
-                  return { ...p, slots: cur.length ? cur : p.slots };
-                });
-                return (
-                  <button key={s} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? MP_SLOT_TEXT[s] : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? MP_SLOT_TEXT[s] : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
-                    {active && <Icon name="check" size={14} color="#000" />}
-                    {MP_SLOT_LABEL[s]}
-                  </button>
-                );
-              })}
+            <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 4 }}>Ajouter une recette</h3>
+            <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12 }}>
+              {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
             </div>
-            {addModal.slots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6, textAlign: "center" }}>La recette sera ajoutée aux deux repas</div>}
-          </div>
-          <div style={{ position: "relative", marginBottom: 12 }}>
-            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
-            <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{ paddingLeft: 34 }} autoFocus />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "44vh" }}>
-            {filteredRecipes.map(r => (
-              <button key={r.id} onClick={() => addMeal(addModal.date, addModal.slots, r.id)}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>{r.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min · {r.servings} portions</div>
-                </div>
-                <HealthRing score={r.healthScore || 70} size={30} />
-              </button>
-            ))}
-            {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
-          </div>
+            <div style={{ marginBottom: 14 }}>
+              <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection possible)</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {["midi", "soir"].map(s => {
+                  const active = addModal.slots.includes(s);
+                  const toggle = () => setAddModal(p => {
+                    const cur = p.slots.includes(s) ? p.slots.filter(x => x !== s) : [...p.slots, s];
+                    return { ...p, slots: cur.length ? cur : p.slots };
+                  });
+                  return (
+                    <button key={s} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? MP_SLOT_TEXT[s] : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? MP_SLOT_TEXT[s] : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
+                      {active && <Icon name="check" size={14} color="#000" />}
+                      {MP_SLOT_LABEL[s]}
+                    </button>
+                  );
+                })}
+              </div>
+              {addModal.slots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6, textAlign: "center" }}>La recette sera ajoutée aux deux repas</div>}
+            </div>
+            <div style={{ position: "relative", marginBottom: 12 }}>
+              <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
+              <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{ paddingLeft: 34 }} autoFocus />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "44vh" }}>
+              {filteredRecipes.map(r => (
+                <button key={r.id} onClick={() => addMeal(addModal.date, addModal.slots, r.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>{r.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min · {r.servings} portions</div>
+                  </div>
+                  <HealthRing score={r.healthScore || 70} size={30} />
+                </button>
+              ))}
+              {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
+            </div>
         </SwipeableSheet>
       )}
     </div>
@@ -2286,9 +2556,7 @@ function CookMode({ recipe, mult, ingredientDB, onClose }) {
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {linkedIngs.map(ing => (
                       <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "var(--surface2)" }}>
-                          <Img src={getIngImage(ing.dbId)} alt={ing.name} style={{ width: "100%", height: "100%" }} />
-                        </div>
+                        <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={42} />
                         <span style={{ flex: 1, fontSize: 14 }}>{ing.name}</span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
                       </div>
@@ -2348,7 +2616,7 @@ const FRIDGE_STATUS_BG = { ok: "rgba(76,175,125,0.12)", warn: "rgba(240,192,96,0
 const FRIDGE_STATUS_LABEL = { ok: "Frais", warn: "À utiliser bientôt", danger: "À jeter" };
 
 // ─── FRIDGE TAB ───────────────────────────────────────────────────────────────
-function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
+function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
   const [view, setView] = useState("stock"); // "stock" | "recipes"
   const [showAdd, setShowAdd] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -2393,7 +2661,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mon Frigo</h1>
-            <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span>
+            <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => setShowSettings(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="settings" size={16} color="var(--text2)" /></button>
@@ -2443,7 +2711,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
               {filteredFridge.map(item => {
                 const status = fridgeStatus(item);
                 const days = fridgeDaysAge(item.addedAt);
-                const cat = NUTRITION_CATEGORIES[item.category || "other"];
+                const cat = categories[item.category || "other"];
                 const thresh = FRIDGE_THRESHOLDS[item.category || "other"];
                 return (
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${status === "danger" ? "rgba(224,82,82,0.3)" : status === "warn" ? "rgba(240,192,96,0.25)" : "var(--border)"}` }}>
@@ -2522,57 +2790,57 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
       {/* ── ADD / EDIT MODAL ── */}
       {showAdd && (
         <SwipeableSheet onClose={() => { setShowAdd(false); setEditItem(null); }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editItem ? "Modifier" : "Ajouter au frigo"}</h3>
-          <div className="field-label">Nom du produit</div>
-          <input className="field-input" placeholder="ex: Poulet, Yaourt, Courgette…" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} autoFocus />
-          <div className="field-label">Catégorie</div>
-          <select className="field-input" value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
-            {Object.entries(NUTRITION_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
-          </select>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-            <div>
-              <div className="field-label">Quantité</div>
-              <input className="field-input" type="number" min="0" placeholder="ex: 500" value={newItem.quantity} onChange={e => setNewItem(p => ({ ...p, quantity: e.target.value }))} />
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editItem ? "Modifier" : "Ajouter au frigo"}</h3>
+            <div className="field-label">Nom du produit</div>
+            <input className="field-input" placeholder="ex: Poulet, Yaourt, Courgette…" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} autoFocus />
+            <div className="field-label">Catégorie</div>
+            <select className="field-input" value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+              {sortedCategoryEntries(categories).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+            </select>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+              <div>
+                <div className="field-label">Quantité</div>
+                <input className="field-input" type="number" min="0" placeholder="ex: 500" value={newItem.quantity} onChange={e => setNewItem(p => ({ ...p, quantity: e.target.value }))} />
+              </div>
+              <div>
+                <div className="field-label">Unité</div>
+                <input className="field-input" placeholder="g, ml, pièce…" value={newItem.unit} onChange={e => setNewItem(p => ({ ...p, unit: e.target.value }))} />
+              </div>
             </div>
-            <div>
-              <div className="field-label">Unité</div>
-              <input className="field-input" placeholder="g, ml, pièce…" value={newItem.unit} onChange={e => setNewItem(p => ({ ...p, unit: e.target.value }))} />
+            <div className="field-label">Date d'ajout</div>
+            <input type="date" className="field-input" value={newItem.addedAt} onChange={e => setNewItem(p => ({ ...p, addedAt: e.target.value }))} style={{ marginBottom: 16 }} />
+            <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 12px", marginBottom: 16, fontSize: 12 }}>
+              <span style={{ color: "var(--text3)" }}>Seuil d'alerte pour </span>
+              <span style={{ fontWeight: 600 }}>{categories[newItem.category]?.label}</span>
+              <span style={{ color: "var(--text3)" }}> : </span>
+              <span style={{ color: "var(--yellow)", fontWeight: 600 }}>⚠ {FRIDGE_THRESHOLDS[newItem.category]?.warn}j</span>
+              <span style={{ color: "var(--text3)" }}> · </span>
+              <span style={{ color: "var(--red)", fontWeight: 600 }}>🔴 {FRIDGE_THRESHOLDS[newItem.category]?.danger}j</span>
             </div>
-          </div>
-          <div className="field-label">Date d'ajout</div>
-          <input type="date" className="field-input" value={newItem.addedAt} onChange={e => setNewItem(p => ({ ...p, addedAt: e.target.value }))} style={{ marginBottom: 16 }} />
-          <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 12px", marginBottom: 16, fontSize: 12 }}>
-            <span style={{ color: "var(--text3)" }}>Seuil d'alerte pour </span>
-            <span style={{ fontWeight: 600 }}>{NUTRITION_CATEGORIES[newItem.category]?.label}</span>
-            <span style={{ color: "var(--text3)" }}> : </span>
-            <span style={{ color: "var(--yellow)", fontWeight: 600 }}>⚠ {FRIDGE_THRESHOLDS[newItem.category]?.warn}j</span>
-            <span style={{ color: "var(--text3)" }}> · </span>
-            <span style={{ color: "var(--red)", fontWeight: 600 }}>🔴 {FRIDGE_THRESHOLDS[newItem.category]?.danger}j</span>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => { setShowAdd(false); setEditItem(null); }}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveItem} disabled={!newItem.name.trim()}>Sauvegarder</button>
-          </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => { setShowAdd(false); setEditItem(null); }}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveItem} disabled={!newItem.name.trim()}>Sauvegarder</button>
+            </div>
         </SwipeableSheet>
       )}
 
       {/* ── SETTINGS MODAL ── */}
       {showSettings && (
         <SwipeableSheet onClose={() => setShowSettings(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Réglages du Frigo</h3>
-          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 20 }}>Configure le seuil de correspondance pour les suggestions de recettes.</p>
-          <div className="field-label">Seuil de correspondance — {fridgeSettings.matchThreshold}%</div>
-          <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10 }}>Une recette est suggérée si tu as au moins ce pourcentage de ses ingrédients dans le frigo.</p>
-          <input type="range" min="10" max="100" step="5" value={fridgeSettings.matchThreshold}
-            onChange={e => setFridgeSettings(p => ({ ...p, matchThreshold: +e.target.value }))}
-            style={{ width: "100%", accentColor: "var(--accent)", marginBottom: 8 }} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text3)", marginBottom: 20 }}>
-            <span>10% (permissif)</span><span>100% (exact)</span>
-          </div>
-          <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--text2)", marginBottom: 20 }}>
-            Actuellement : <strong>{matchedRecipes.length} recette{matchedRecipes.length > 1 ? "s" : ""}</strong> correspondent avec tes {fridge.length} produits en frigo.
-          </div>
-          <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowSettings(false)}>Fermer</button>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Réglages du Frigo</h3>
+            <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 20 }}>Configure le seuil de correspondance pour les suggestions de recettes.</p>
+            <div className="field-label">Seuil de correspondance — {fridgeSettings.matchThreshold}%</div>
+            <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10 }}>Une recette est suggérée si tu as au moins ce pourcentage de ses ingrédients dans le frigo.</p>
+            <input type="range" min="10" max="100" step="5" value={fridgeSettings.matchThreshold}
+              onChange={e => setFridgeSettings(p => ({ ...p, matchThreshold: +e.target.value }))}
+              style={{ width: "100%", accentColor: "var(--accent)", marginBottom: 8 }} />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text3)", marginBottom: 20 }}>
+              <span>10% (permissif)</span><span>100% (exact)</span>
+            </div>
+            <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--text2)", marginBottom: 20 }}>
+              Actuellement : <strong>{matchedRecipes.length} recette{matchedRecipes.length > 1 ? "s" : ""}</strong> correspondent avec tes {fridge.length} produits en frigo.
+            </div>
+            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowSettings(false)}>Fermer</button>
         </SwipeableSheet>
       )}
     </div>
@@ -2623,7 +2891,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSign
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Courses</h1>
-            <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span>
+            <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => setShowNewList(true)}><Icon name="plus" size={16} /> Nouvelle liste</button>
@@ -2708,7 +2976,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSign
             {activeList.items.map(item => (
               <button key={item.id} onClick={() => toggleItem(activeList.id, item.id)}
                 style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "10px 14px", background: "var(--surface)", borderRadius: 12, marginBottom: 8, border: "1px solid var(--border)", textAlign: "left", opacity: item.checked ? 0.5 : 1, transition: "opacity 0.2s" }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "var(--surface2)" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%" }} /></div>
+                <IngImage src={item.image} alt={item.name} size={46} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, textDecoration: item.checked ? "line-through" : "none" }}>{item.name}</div>
                   {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
@@ -2746,14 +3014,14 @@ function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSign
       {/* Confirm delete modal — only for free lists */}
       {confirmDeleteId && (
         <SwipeableSheet onClose={() => setConfirmDeleteId(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la liste ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-            "{shoppingLists.find(l => l.id === confirmDeleteId)?.name}" sera supprimée définitivement avec tous ses articles.
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDeleteId(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>Supprimer</button>
-          </div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la liste ?</h3>
+            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
+              "{shoppingLists.find(l => l.id === confirmDeleteId)?.name}" sera supprimée définitivement avec tous ses articles.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDeleteId(null)}>Annuler</button>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>Supprimer</button>
+            </div>
         </SwipeableSheet>
       )}
     </div>
@@ -2761,11 +3029,15 @@ function ShoppingTab({ shoppingLists, setShoppingLists, user, syncStatus, onSign
 }
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
-function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus }) {
+function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
   const [section, setSection] = useState("ingredients");
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editCol, setEditCol] = useState(null);
+  const [editCat, setEditCat] = useState(null); // { key, label, score(0-100), color, icon, isNew }
+  const [confirmDelCat, setConfirmDelCat] = useState(null); // { key, label }
+  const [dragCat, setDragCat] = useState(null); // key being dragged
+  const [overCat, setOverCat] = useState(null); // key currently hovered as drop target
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState("");
   const [schemaOpen, setSchemaOpen] = useState(false);
@@ -2779,13 +3051,62 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
     else setIngredientDB(prev => [...prev, { ...item, id: "db_i" + Date.now() }]);
     setEditIng(null);
   };
-  const delIng = id => setIngredientDB(prev => prev.filter(d => d.id !== id));
+  const delIng = id => {
+    const item = ingredientDB.find(d => d.id === id);
+    if (item?.image) deleteImageByUrl(item.image);
+    setIngredientDB(prev => prev.filter(d => d.id !== id));
+  };
   const saveUt = item => {
     if (utensilDB.find(d => d.id === item.id)) setUtensilDB(prev => prev.map(d => d.id === item.id ? item : d));
     else setUtensilDB(prev => [...prev, { ...item, id: "db_u" + Date.now() }]);
     setEditUt(null);
   };
-  const delUt = id => setUtensilDB(prev => prev.filter(d => d.id !== id));
+  const delUt = id => {
+    const item = utensilDB.find(d => d.id === id);
+    if (item?.image) deleteImageByUrl(item.image);
+    setUtensilDB(prev => prev.filter(d => d.id !== id));
+  };
+
+  // ── Categories (admin only) — score entered on 0-100, stored on 0-10 scale ──
+  const slugifyCat = (label) => "cat_" + label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 32);
+  const saveCat = (form) => {
+    const label = (form.label || "").trim();
+    if (!label) return;
+    let key = form.key;
+    if (form.isNew) {
+      key = slugifyCat(label) || ("cat_" + Date.now());
+      if (categories[key]) key = key + "_" + Date.now().toString(36).slice(-4);
+    }
+    const entry = {
+      label,
+      score: Math.max(0, Math.min(10, Math.round((Number(form.score) || 0) / 10))),
+      color: form.color || "#9a9490",
+      icon: form.icon || "📦",
+      order: form.isNew
+        ? (Math.max(-1, ...Object.values(categories).map(c => c.order ?? 0)) + 1)
+        : (categories[key]?.order ?? Object.keys(categories).length),
+    };
+    setCategories(prev => ({ ...prev, [key]: entry }));
+    setEditCat(null);
+  };
+  const delCat = (key) => {
+    const inUse = ingredientDB.filter(d => (d.category || "other") === key).length;
+    if (inUse > 0) return; // guarded in UI too
+    setCategories(prev => { const next = { ...prev }; delete next[key]; return next; });
+  };
+  // Reorder categories by drag & drop: move `fromKey` to the position of `toKey`.
+  const moveCategory = (fromKey, toKey) => {
+    if (fromKey === toKey) return;
+    const ordered = sortedCategoryEntries(categories).map(([k]) => k);
+    const from = ordered.indexOf(fromKey), to = ordered.indexOf(toKey);
+    if (from < 0 || to < 0) return;
+    ordered.splice(to, 0, ordered.splice(from, 1)[0]);
+    setCategories(prev => {
+      const next = { ...prev };
+      ordered.forEach((k, i) => { next[k] = { ...next[k], order: i }; });
+      return next;
+    });
+  };
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -2793,7 +3114,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Configuration</h1>
-            <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>v1.0</span></span>
+            <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span>
           </div>
           <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
@@ -2809,13 +3130,58 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {Object.entries(NUTRITION_CATEGORIES).map(([catKey, cat]) => {
-              const catIngs = ingredientDB.filter(d => d.category === catKey);
+            {isAdmin && (
+              <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(232,112,58,0.18), rgba(232,112,58,0.06))", border: "1px solid rgba(232,112,58,0.35)", boxShadow: "0 2px 12px rgba(232,112,58,0.10)" }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(232,112,58,0.4)" }}>
+                  <Icon name="settings" size={16} color="#fff" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.02em" }}>MODE ADMIN</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>MASTER</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>Tes modifications sont publiées dans la base partagée</div>
+                </div>
+              </div>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => setEditCat({ key: "", label: "", score: 50, color: "#9a9490", icon: "📦", isNew: true })}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, width: "100%", padding: "12px 16px", borderRadius: 13, background: "var(--surface)", border: "1.5px dashed var(--accent)", color: "var(--accent)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,112,58,0.08)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; }}>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon name="plus" size={13} color="#fff" />
+                </span>
+                Définir une nouvelle catégorie
+              </button>
+            )}
+            {sortedCategoryEntries(categories).map(([catKey, cat]) => {
+              const catIngs = ingredientDB.filter(d => d.category === catKey)
+                .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" }));
               const isOpen = openCats[catKey];
               return (
-                <div key={catKey} style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
+                <div key={catKey}
+                  draggable={isAdmin}
+                  onDragStart={isAdmin ? (e) => { setDragCat(catKey); e.dataTransfer.effectAllowed = "move"; } : undefined}
+                  onDragOver={isAdmin ? (e) => { e.preventDefault(); if (catKey !== overCat) setOverCat(catKey); } : undefined}
+                  onDragLeave={isAdmin ? () => { if (overCat === catKey) setOverCat(null); } : undefined}
+                  onDrop={isAdmin ? (e) => { e.preventDefault(); if (dragCat && dragCat !== catKey) moveCategory(dragCat, catKey); setDragCat(null); setOverCat(null); } : undefined}
+                  onDragEnd={isAdmin ? () => { setDragCat(null); setOverCat(null); } : undefined}
+                  style={{
+                    background: "var(--surface)", borderRadius: 14, overflow: "hidden",
+                    border: `1px solid ${overCat === catKey && dragCat && dragCat !== catKey ? "var(--accent)" : "var(--border)"}`,
+                    opacity: dragCat === catKey ? 0.4 : 1,
+                    boxShadow: overCat === catKey && dragCat && dragCat !== catKey ? "0 0 0 2px var(--accent)" : "none",
+                    transition: "border-color 0.15s, box-shadow 0.15s, opacity 0.15s",
+                  }}>
                   {/* Category header */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px" }}>
+                    {isAdmin && (
+                      <span style={{ cursor: "grab", color: "var(--text3)", display: "flex", flexShrink: 0, touchAction: "none" }} title="Glisser pour réordonner">
+                        <Icon name="drag" size={16} color="var(--text3)" />
+                      </span>
+                    )}
                     <button onClick={() => toggleCat(catKey)} style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
                       <span style={{ fontSize: 20 }}>{cat.icon}</span>
                       <div style={{ flex: 1 }}>
@@ -2834,6 +3200,12 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                       onClick={() => setEditIng({ id: "", name: "", category: catKey, image: "", nutrition: null })}>
                       <Icon name="plus" size={12} /> Ajouter
                     </button>
+                    {isAdmin && (
+                      <>
+                        <button onClick={() => setEditCat({ key: catKey, label: cat.label, score: (cat.score || 0) * 10, color: cat.color || "#9a9490", icon: cat.icon || "📦", isNew: false })} style={{ color: "var(--text3)", flexShrink: 0 }} title="Modifier la catégorie"><Icon name="edit" size={14} /></button>
+                        <button onClick={() => setConfirmDelCat({ key: catKey, label: cat.label })} disabled={catIngs.length > 0} style={{ color: catIngs.length > 0 ? "var(--text3)" : "var(--red)", opacity: catIngs.length > 0 ? 0.35 : 1, flexShrink: 0 }} title={catIngs.length > 0 ? "Catégorie non vide — déplacez ses ingrédients d'abord" : "Supprimer la catégorie"}><Icon name="trash" size={14} /></button>
+                      </>
+                    )}
                   </div>
                   {/* Ingredients list */}
                   {isOpen && (
@@ -2849,9 +3221,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                           borderTop: i > 0 ? "1px solid var(--border)" : "none",
                           background: "var(--surface2)"
                         }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 9, overflow: "hidden", flexShrink: 0, background: "var(--surface3)" }}>
-                            <Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%" }} />
-                          </div>
+                          <IngImage src={item.image} alt={item.name} size={42} />
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</div>
                             {item.nutrition && (
@@ -2864,8 +3234,13 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                               </div>
                             )}
                           </div>
-                          <button onClick={() => setEditIng({ ...item })} style={{ color: "var(--text3)", marginRight: 4 }}><Icon name="edit" size={14} /></button>
-                          <button onClick={() => delIng(item.id)} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
+                          {item._ro
+                            ? <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500, padding: "2px 8px", background: "var(--surface3)", borderRadius: 8, flexShrink: 0 }}>Master</span>
+                            : <>
+                              <button onClick={() => setEditIng({ ...item })} style={{ color: "var(--text3)", marginRight: 4 }}><Icon name="edit" size={14} /></button>
+                              <button onClick={() => delIng(item.id)} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
+                            </>
+                          }
                         </div>
                       ))}
                     </div>
@@ -2878,6 +3253,20 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
         {section === "ustensiles" && (
           <div>
+            {isAdmin && (
+              <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", marginBottom: 14, borderRadius: 14, background: "linear-gradient(135deg, rgba(232,112,58,0.18), rgba(232,112,58,0.06))", border: "1px solid rgba(232,112,58,0.35)", boxShadow: "0 2px 12px rgba(232,112,58,0.10)" }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(232,112,58,0.4)" }}>
+                  <Icon name="settings" size={16} color="#fff" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.02em" }}>MODE ADMIN</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>MASTER</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>Tes modifications sont publiées dans la base partagée</div>
+                </div>
+              </div>
+            )}
             <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditUt({ id: "", name: "", image: "" })}><Icon name="plus" size={14} /> Nouvel ustensile</button>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {utensilDB.map(item => (
@@ -2885,8 +3274,13 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                   <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "var(--surface2)" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%" }} /></div>
                   <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => setEditUt({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={14} /></button>
-                    <button onClick={() => delUt(item.id)} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
+                    {item._ro
+                      ? <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500, padding: "2px 8px", background: "var(--surface3)", borderRadius: 8 }}>Master</span>
+                      : <>
+                        <button onClick={() => setEditUt({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={14} /></button>
+                        <button onClick={() => delUt(item.id)} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
+                      </>
+                    }
                   </div>
                 </div>
               ))}
@@ -3013,90 +3407,144 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       {/* Ingredient editor modal */}
       {editIng && (
         <SwipeableSheet onClose={() => setEditIng(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
-          <div className="field-label">Nom</div>
-          <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
-          <div className="field-label">Catégorie nutritionnelle</div>
-          <select className="field-input" value={editIng.category || "other"} onChange={e => setEditIng(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
-            {Object.entries(NUTRITION_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
-          </select>
-          <div className="field-label">Photo</div>
-          <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} />
-          <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {[["protein", "Protéines (g)"], ["fiber", "Fibres (g)"], ["saturatedFat", "G. saturées (g)"], ["sugar", "Sucres (g)"], ["salt", "Sel (g)"]].map(([k, l]) => (
-                <div key={k}>
-                  <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 3 }}>{l}</div>
-                  <input className="field-input" type="number" min="0" step="0.1" placeholder="0"
-                    value={editIng.nutrition?.[k] || ""}
-                    onChange={e => setEditIng(p => ({ ...p, nutrition: { ...(p.nutrition || {}), isVegetable: p.category === "vegetable" || p.category === "legume", [k]: +e.target.value } }))}
-                    style={{ padding: "6px 10px", fontSize: 12 }} />
-                </div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
+            <div className="field-label">Nom</div>
+            <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+            <div className="field-label">Catégorie nutritionnelle</div>
+            <select className="field-input" value={editIng.category || "other"} onChange={e => setEditIng(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+              {sortedCategoryEntries(categories).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+            </select>
+            <div className="field-label">Photo</div>
+            <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} pathPrefix={isAdmin ? "master/ingredients" : "ingredients"} />
+            <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {[["protein", "Protéines (g)"], ["fiber", "Fibres (g)"], ["saturatedFat", "G. saturées (g)"], ["sugar", "Sucres (g)"], ["salt", "Sel (g)"]].map(([k, l]) => (
+                  <div key={k}>
+                    <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 3 }}>{l}</div>
+                    <input className="field-input" type="number" min="0" step="0.1" placeholder="0"
+                      value={editIng.nutrition?.[k] || ""}
+                      onChange={e => setEditIng(p => ({ ...p, nutrition: { ...(p.nutrition || {}), isVegetable: p.category === "vegetable" || p.category === "legume", [k]: +e.target.value } }))}
+                      style={{ padding: "6px 10px", fontSize: 12 }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditIng(null)}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveIng(editIng)}>Sauvegarder</button>
+            </div>
+        </SwipeableSheet>
+      )}
+
+      {/* Category editor modal (admin only) */}
+      {editCat && (
+        <SwipeableSheet onClose={() => setEditCat(null)}>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCat.isNew ? "Nouvelle catégorie" : "Modifier la catégorie"}</h3>
+            <div className="field-label">Nom</div>
+            <input className="field-input" placeholder="ex: Boisson sucrée" value={editCat.label} onChange={e => setEditCat(p => ({ ...p, label: e.target.value }))} style={{ marginBottom: 12 }} />
+            <div className="field-label">Score santé — {editCat.score}/100</div>
+            <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8 }}>Contribue au score santé des recettes utilisant des ingrédients de cette catégorie.</p>
+            <input type="range" min="0" max="100" step="10" value={editCat.score}
+              onChange={e => setEditCat(p => ({ ...p, score: +e.target.value }))}
+              style={{ width: "100%", accentColor: editCat.color, marginBottom: 4 }} />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text3)", marginBottom: 16 }}>
+              <span>0 (mauvais)</span><span>100 (excellent)</span>
+            </div>
+            <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+              {["#4caf7d", "#5b9cf6", "#f0a875", "#f0e060", "#c8a870", "#80c080", "#e05252", "#9a9490", "#c080e0"].map(c => (
+                <button key={c} onClick={() => setEditCat(p => ({ ...p, color: c }))} style={{ width: 30, height: 30, borderRadius: "50%", background: c, border: `3px solid ${editCat.color === c ? "#fff" : "transparent"}`, boxShadow: editCat.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
               ))}
             </div>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditIng(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveIng(editIng)}>Sauvegarder</button>
-          </div>
+            <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+              {["🥦", "🍗", "🥩", "🧀", "🌾", "🍞", "🫒", "🧈", "🍬", "🧂", "🫘", "🍷", "📦", "🐟", "🥜", "🍫", "☕", "🥤", "🍯", "🌶️"].map(ico => (
+                <button key={ico} onClick={() => setEditCat(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: editCat.icon === ico ? editCat.color + "33" : "var(--surface2)", border: `2px solid ${editCat.icon === ico ? editCat.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 16 }}>
+              <span style={{ fontSize: 22 }}>{editCat.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{editCat.label || "Nom de la catégorie"}</div>
+                <div style={{ fontSize: 11, color: "var(--text3)" }}>Score {editCat.score}/100</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditCat(null)}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveCat(editCat)} disabled={!editCat.label.trim()}>Sauvegarder</button>
+            </div>
+        </SwipeableSheet>
+      )}
+
+      {/* Category delete confirmation */}
+      {confirmDelCat && (
+        <SwipeableSheet onClose={() => setConfirmDelCat(null)}>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la catégorie ?</h3>
+            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
+              La catégorie « {confirmDelCat.label} » sera retirée de la base Master partagée. Cette action est visible par tous les utilisateurs.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDelCat(null)}>Annuler</button>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { delCat(confirmDelCat.key); setConfirmDelCat(null); }}>Supprimer</button>
+            </div>
         </SwipeableSheet>
       )}
 
       {/* Utensil editor modal */}
       {editUt && (
         <SwipeableSheet onClose={() => setEditUt(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editUt.id ? "Modifier" : "Nouvel"} ustensile</h3>
-          <div className="field-label">Nom</div>
-          <input className="field-input" placeholder="ex: Casserole" value={editUt.name} onChange={e => setEditUt(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
-          <div className="field-label">Photo</div>
-          <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} />
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditUt(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}>Sauvegarder</button>
-          </div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editUt.id ? "Modifier" : "Nouvel"} ustensile</h3>
+            <div className="field-label">Nom</div>
+            <input className="field-input" placeholder="ex: Casserole" value={editUt.name} onChange={e => setEditUt(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+            <div className="field-label">Photo</div>
+            <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} pathPrefix={isAdmin ? "master/utensils" : "utensils"} />
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditUt(null)}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}>Sauvegarder</button>
+            </div>
         </SwipeableSheet>
       )}
 
       {/* Collection editor modal */}
       {editCol && (
         <SwipeableSheet onClose={() => setEditCol(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCol.id ? "Modifier" : "Nouvelle"} collection</h3>
-          <div style={{ marginBottom: 12 }}>
-            <div className="field-label">Nom</div>
-            <input className="field-input" placeholder="ex: Plats végétariens" value={editCol.name} onChange={e => setEditCol(p => ({ ...p, name: e.target.value }))} />
-          </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => (
-              <button key={c} onClick={() => setEditCol(p => ({ ...p, color: c }))} style={{ width: 32, height: 32, borderRadius: "50%", background: c, border: `3px solid ${editCol.color === c ? "#fff" : "transparent"}`, boxShadow: editCol.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
-            ))}
-          </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-            {["🍽️", "🥗", "🍝", "🍰", "🥩", "🥦", "🥐", "🍜", "🍛", "🫕", "🥘", "🧁", "🍣", "🫙", "🥚", "🧀", "🫒", "🌮", "🍲"].map(ico => (
-              <button key={ico} onClick={() => setEditCol(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: editCol.icon === ico ? editCol.color + "33" : "var(--surface2)", border: `2px solid ${editCol.icon === ico ? editCol.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
-            ))}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: editCol.color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{editCol.icon || "📁"}</div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{editCol.name || "Nom de la collection"}</div>
-              <div style={{ fontSize: 11, color: "var(--text3)" }}>Aperçu</div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCol.id ? "Modifier" : "Nouvelle"} collection</h3>
+            <div style={{ marginBottom: 12 }}>
+              <div className="field-label">Nom</div>
+              <input className="field-input" placeholder="ex: Plats végétariens" value={editCol.name} onChange={e => setEditCol(p => ({ ...p, name: e.target.value }))} />
             </div>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditCol(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
-              if (!editCol.name.trim()) return;
-              if (editCol.id && collections.find(c => c.id === editCol.id)) {
-                setCollections(prev => prev.map(c => c.id === editCol.id ? { ...editCol } : c));
-              } else {
-                setCollections(prev => [...prev, { ...editCol, id: "c" + Date.now(), count: 0 }]);
-              }
-              setEditCol(null);
-            }}>Sauvegarder</button>
-          </div>
+            <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+              {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => (
+                <button key={c} onClick={() => setEditCol(p => ({ ...p, color: c }))} style={{ width: 32, height: 32, borderRadius: "50%", background: c, border: `3px solid ${editCol.color === c ? "#fff" : "transparent"}`, boxShadow: editCol.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
+              ))}
+            </div>
+            <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+              {["🍽️", "🥗", "🍝", "🍰", "🥩", "🥦", "🥐", "🍜", "🍛", "🫕", "🥘", "🧁", "🍣", "🫙", "🥚", "🧀", "🫒", "🌮", "🍲"].map(ico => (
+                <button key={ico} onClick={() => setEditCol(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: editCol.icon === ico ? editCol.color + "33" : "var(--surface2)", border: `2px solid ${editCol.icon === ico ? editCol.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: editCol.color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{editCol.icon || "📁"}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{editCol.name || "Nom de la collection"}</div>
+                <div style={{ fontSize: 11, color: "var(--text3)" }}>Aperçu</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditCol(null)}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
+                if (!editCol.name.trim()) return;
+                if (editCol.id && collections.find(c => c.id === editCol.id)) {
+                  setCollections(prev => prev.map(c => c.id === editCol.id ? { ...editCol } : c));
+                } else {
+                  setCollections(prev => [...prev, { ...editCol, id: "c" + Date.now(), count: 0 }]);
+                }
+                setEditCol(null);
+              }}>Sauvegarder</button>
+            </div>
         </SwipeableSheet>
       )}
     </div>

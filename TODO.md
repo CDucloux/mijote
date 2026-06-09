@@ -27,6 +27,14 @@
 
 ## 🔜 Backlog — v1.1
 
+- [ ] Aller chercher la version dans le package.json
+- [ ] Système de parsing pluriel amélioré
+- [ ] Bouton de déconnexion en rouge
+- [x] Avatars d'images améliorés 
+
+DB: 
+- [x] Je ne peux plus modifier la DB ingrédients Master ni les ustensiles.
+
 - [ ] UI
   - [x] A la fois un sujet UI et Backend, mais un score de santé ne peut par construction jamais être à 100 (si il est à 100 côté UI c'est moche en plus)
   - [x] Le nom récupéré via Google Auth doit etre affiché en MAJUSCULE
