@@ -25,11 +25,19 @@
 - [x] Inventaire et Mode Frigo
 
 
-## 🔜 Backlog — v1.1
+## 🔜 Backlog — v1.0.1
 
-- [ ] Aller chercher la version dans le package.json
 - [ ] Système de parsing pluriel amélioré
-- [ ] Bouton de déconnexion en rouge
+- [ ] Architecture aves pages /config, /recipes, etc etc
+- [ ] MAJ du schéma JSON pour refléter les changements qu'il y a eu au niveau des steps 
+
+- [ ] UI Improvements
+  - [ ] Afficher le planning avec une animation un peu comme les recettes
+  - [ ] Quand on clique sur une collection, petite animation pareil, là c'est trop direct
+
+- [x] Listes non liées aux recettes => pas d'image
+- [x] Bouton de déconnexion en rouge
+- [x] Aller chercher la version dans le package.json
 - [x] Avatars d'images améliorés 
 
 DB: 
