@@ -725,7 +725,7 @@ function SwipeableSheet({ onClose, children, style }) {
 // sous le doigt est déjà tout en haut (le scroll mobile vit dans des div internes
 // en overflow:auto, pas sur window/body). Listener touchmove non-passif pour
 // pouvoir bloquer l'overscroll natif pendant le geste.
-function usePullToRefresh(onRefresh, { enabled = true, threshold = 70, max = 130 } = {}) {
+function usePullToRefresh(onRefresh, { enabled = true, threshold = 110, max = 170 } = {}) {
   const containerRef = useRef(null);
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -751,7 +751,12 @@ function usePullToRefresh(onRefresh, { enabled = true, threshold = 70, max = 130
     };
 
     const onStart = (e) => {
-      if (refreshing || e.touches.length !== 1 || !atTop(e.target)) { g.current.active = false; return; }
+      if (refreshing || e.touches.length !== 1) { g.current.active = false; return; }
+      // Ne pas interférer avec les bottom-sheets : elles sont rendues à l'intérieur
+      // de ce conteneur, donc leurs touchmove remontent jusqu'ici. Si le doigt part
+      // dans un .modal-backdrop, on laisse la sheet gérer son propre swipe-to-close.
+      if (e.target.closest && e.target.closest(".modal-backdrop")) { g.current.active = false; return; }
+      if (!atTop(e.target)) { g.current.active = false; return; }
       g.current.startY = e.touches[0].clientY;
       g.current.active = true;
     };
@@ -792,7 +797,7 @@ function usePullToRefresh(onRefresh, { enabled = true, threshold = 70, max = 130
   return { containerRef, pull, refreshing };
 }
 
-function PullToRefresh({ enabled, onRefresh, children, threshold = 70 }) {
+function PullToRefresh({ enabled, onRefresh, children, threshold = 110 }) {
   const { containerRef, pull, refreshing } = usePullToRefresh(onRefresh, { enabled, threshold });
   const active = pull > 0 || refreshing;
   const ready = pull >= threshold;
@@ -1353,6 +1358,7 @@ export default function App() {
           <>
             <PullToRefresh
               enabled={!isDesktop && editingRecipe === null}
+              threshold={110}
               onRefresh={() => window.location.reload()}
             >
               {mainScreen}

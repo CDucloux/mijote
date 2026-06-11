@@ -32,6 +32,7 @@
   - [ ] Architecture aves pages /config, /recipes, etc etc
 
 - [ ] Système de recherche du mode frigo doit etre le même que sur les autres pages
+- 
 - [ ] Entrée dans le mode "Pas à pas" trop instantannée -> nope.
 
 - [x] Même système de Zoom sur la landing page
