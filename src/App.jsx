@@ -108,6 +108,16 @@ async function syncRecipes(uid, recipes, lastSyncedMap) {
   return newMap;
 }
 
+// Strip deprecated fields before exporting a recipe to JSON, so generated files
+// match the current schema: the top-level `description` and each step's `title`
+// are no longer part of it. Other fields are preserved untouched.
+function cleanRecipeForExport(recipe) {
+  const { description, steps, ...rest } = recipe;
+  const cleaned = { ...rest };
+  if (Array.isArray(steps)) cleaned.steps = steps.map(({ title, ...step }) => step);
+  return cleaned;
+}
+
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GLOBAL_STYLE = `
@@ -132,6 +142,9 @@ const GLOBAL_STYLE = `
   html.light .field-input{color:#2c2420;background:#ede8e2;}
   html.light select option{background:#ede8e2;color:#1a1614;}
   *,*::before,*::after{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.1s ease;}
+  /* Selection highlight — Mijoté sage green, distinct from the orange accent and the default blue */
+  ::selection{background:rgba(76,175,125,0.35);}
+  ::-moz-selection{background:rgba(76,175,125,0.35);}
   html,body{background:var(--bg);color:var(--text);font-family:var(--ff-body);font-size:15px;height:100%;overflow:hidden;}
   #root{height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;overflow:hidden;}
   button{font-family:var(--ff-body);cursor:pointer;border:none;background:none;color:inherit;}
@@ -175,7 +188,7 @@ const GLOBAL_STYLE = `
     *{scrollbar-width:thin;scrollbar-color:var(--surface3) transparent;}
 
     html,body{overflow:auto;}
-    #root{max-width:100%;height:100dvh;flex-direction:row;overflow:hidden;}
+    #root{margin:0;max-width:100%;width:100%;height:100dvh;zoom:var(--page-zoom,1);flex-direction:row;overflow:hidden;}
 
     /* Sidebar */
     .desktop-sidebar{
@@ -221,6 +234,26 @@ const GLOBAL_STYLE = `
 
     /* Editor wider */
     .editor-layout{max-width:720px;margin:0 auto;width:100%;}
+
+    /* Recipe card hover zoom — desktop only */
+    .recipe-card-thumb{overflow:hidden;}
+    .recipe-card-thumb img{transition:transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94);}
+    .recipe-card:hover .recipe-card-thumb img{transform:scale(1.08);}
+    .recipe-card{transition:border-color 0.15s,box-shadow 0.25s;}
+    .recipe-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.12);}
+
+    /* Button hover / press feedback — desktop only (no motion) */
+    .btn{transition:background-color .18s ease,border-color .18s ease,box-shadow .2s ease,filter .18s ease;}
+    .btn-primary:hover{filter:brightness(1.06);box-shadow:0 4px 14px -4px rgba(232,112,58,0.5);}
+    .btn-ghost:hover{background:var(--surface3);border-color:var(--text3);color:var(--text);}
+    .btn-danger:hover{background:rgba(224,82,82,0.22);border-color:rgba(224,82,82,0.5);}
+    .btn:active{filter:brightness(0.95);}
+    /* Floating action FAB + soft icon button (no lift) */
+    .fab-toggle{transition:filter .18s ease,box-shadow .2s ease;}
+    .fab-toggle:hover{filter:brightness(1.06);box-shadow:0 12px 30px -6px rgba(232,112,58,0.6);}
+    .fab-toggle:active{filter:brightness(0.93);}
+    .icon-btn-soft{transition:background-color .18s ease,color .18s ease;}
+    .icon-btn-soft:hover{background:var(--surface3)!important;color:var(--text)!important;}
 
     /* Cook mode sidebar */
     .cook-mode-sidebar{display:flex!important;flex-direction:column;}
@@ -622,6 +655,28 @@ function useIsDesktop() {
   return isDesktop;
 }
 
+// ─── PROGRESSIVE PAGE ZOOM (very large screens) ──────────────────────────────
+// On wide desktops, scale the entire UI up proportionally so the fixed-width
+// design fills the screen instead of leaving large empty margins. Sets a CSS
+// custom property consumed by #root; #root divides its own width/height by the
+// same factor so the app shell stays locked to the viewport (no extra scrollbars).
+function usePageZoom({ startWidth = 1500, maxZoom = 1.6 } = {}) {
+  useEffect(() => {
+    const root = document.documentElement;
+    const apply = () => {
+      const w = window.innerWidth;
+      const z = w > startWidth ? Math.min(maxZoom, w / startWidth) : 1;
+      root.style.setProperty("--page-zoom", String(+z.toFixed(4)));
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    return () => {
+      window.removeEventListener("resize", apply);
+      root.style.removeProperty("--page-zoom");
+    };
+  }, [startWidth, maxZoom]);
+}
+
 // ─── SWIPE DOWN TO CLOSE (mobile modals) ─────────────────────────────────────
 function useSwipeDown(onClose, threshold = 140) {
   const startY = useRef(null);
@@ -665,8 +720,107 @@ function SwipeableSheet({ onClose, children, style }) {
   );
 }
 
+// ─── PULL TO REFRESH (mobile) ────────────────────────────────────────────────
+// Détecte un tirage vers le bas UNIQUEMENT quand le conteneur scrollable réel
+// sous le doigt est déjà tout en haut (le scroll mobile vit dans des div internes
+// en overflow:auto, pas sur window/body). Listener touchmove non-passif pour
+// pouvoir bloquer l'overscroll natif pendant le geste.
+function usePullToRefresh(onRefresh, { enabled = true, threshold = 70, max = 130 } = {}) {
+  const containerRef = useRef(null);
+  const [pull, setPull] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const g = useRef({ startY: 0, active: false, pull: 0 });
+  const cb = useRef(onRefresh);
+  cb.current = onRefresh;
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !enabled) return;
+
+    // Le scrollable sous `target` est-il déjà tout en haut ?
+    const atTop = (target) => {
+      let n = target;
+      while (n && n !== el.parentElement) {
+        if (n.scrollHeight > n.clientHeight) {
+          const oy = getComputedStyle(n).overflowY;
+          if (oy === "auto" || oy === "scroll") return n.scrollTop <= 0;
+        }
+        n = n.parentElement;
+      }
+      return true; // aucun scrollable trouvé → on considère qu'on est en haut
+    };
+
+    const onStart = (e) => {
+      if (refreshing || e.touches.length !== 1 || !atTop(e.target)) { g.current.active = false; return; }
+      g.current.startY = e.touches[0].clientY;
+      g.current.active = true;
+    };
+    const onMove = (e) => {
+      if (!g.current.active) return;
+      const dy = e.touches[0].clientY - g.current.startY;
+      if (dy <= 0) { g.current.pull = 0; setPull(0); return; }
+      const dist = Math.min(max, dy * 0.5); // rubber-band
+      g.current.pull = dist;
+      setPull(dist);
+      e.preventDefault(); // bloque l'overscroll natif pendant le tirage
+    };
+    const onEnd = () => {
+      if (!g.current.active) return;
+      g.current.active = false;
+      if (g.current.pull >= threshold) {
+        setRefreshing(true);
+        setPull(threshold);                 // reste accroché pendant le refresh
+        Promise.resolve().then(() => cb.current?.());
+      } else {
+        setPull(0);
+      }
+      g.current.pull = 0;
+    };
+
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onEnd);
+    el.addEventListener("touchcancel", onEnd);
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchcancel", onEnd);
+    };
+  }, [enabled, refreshing, threshold, max]);
+
+  return { containerRef, pull, refreshing };
+}
+
+function PullToRefresh({ enabled, onRefresh, children, threshold = 70 }) {
+  const { containerRef, pull, refreshing } = usePullToRefresh(onRefresh, { enabled, threshold });
+  const active = pull > 0 || refreshing;
+  const ready = pull >= threshold;
+  return (
+    <div ref={containerRef} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+      {enabled && active && (
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: refreshing ? threshold : pull, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 5 }}>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", border: "1px solid var(--border)", boxShadow: "0 2px 12px rgba(0,0,0,0.3)", opacity: Math.min(1, pull / threshold) }}>
+            {refreshing
+              ? <div style={{ width: 16, height: 16, border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              : <span style={{ fontSize: 16, lineHeight: 1, color: "var(--accent)", transition: "transform 0.18s", transform: `rotate(${ready ? 180 : 0}deg)` }}>↓</span>}
+          </div>
+        </div>
+      )}
+      <div style={{
+        flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
+        transform: active ? `translateY(${refreshing ? threshold : pull}px)` : "none",
+        transition: pull > 0 && !refreshing ? "none" : "transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94)",
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 
 export default function App() {
+  usePageZoom();
   const [tab, setTab] = useState("home");
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
@@ -925,7 +1079,7 @@ export default function App() {
   };
 
   const exportJSON = recipe => {
-    const blob = new Blob([JSON.stringify(recipe, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(cleanRecipeForExport(recipe), null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${recipe.name.split(" ").join("_")}.json`; a.click();
     notify("Export JSON téléchargé");
   };
@@ -947,18 +1101,22 @@ export default function App() {
   };
 
   const exportPDF = recipe => {
-    const ingLines = recipe.ingredients.map(i =>
-      `<div class="ing-row"><span class="ing-name">${i.name}</span><span class="ing-qty">${i.amount} ${i.unit}</span></div>`
-    ).join("");
+    const ingImg = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
+    const utImg = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
+    const pill = (img, name, qty) =>
+      `<span class="pill"><span class="pill-img">${img ? `<img src="${img}" alt="" />` : ""}</span><span class="pill-name">${name}</span>${qty ? `<span class="pill-qty">${qty}</span>` : ""}</span>`;
+    const ingPills = recipe.ingredients.map(i => pill(ingImg(i.dbId), i.name, `${i.amount}${i.unit || ""}`)).join("");
     const stepLines = recipe.steps.map((s, i) => {
-      const ingNames = recipe.ingredients.filter(x => s.ingredients?.includes(x.id)).map(x => `${x.name} (${x.amount} ${x.unit})`).join(" · ");
+      const linkedIngs = recipe.ingredients.filter(x => s.ingredients?.includes(x.id)).map(x => pill(ingImg(x.dbId), x.name, `${x.amount}${x.unit || ""}`)).join("");
+      const linkedUts = (recipe.utensils || []).filter(u => s.utensils?.includes(u.id)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
+      const pills = linkedIngs + linkedUts;
       return `
         <div class="step">
           <div class="step-num">${i + 1}</div>
           <div class="step-body">
-            <div class="step-title">${s.title}</div>
-            <p class="step-text">${s.text}</p>
-            ${ingNames ? `<div class="step-ings">🥕 ${ingNames}</div>` : ""}
+            <div class="step-title">Étape ${i + 1}</div>
+            ${s.text ? `<p class="step-text">${s.text}</p>` : ""}
+            ${pills ? `<div class="step-pills">${pills}</div>` : ""}
           </div>
         </div>`;
     }).join("");
@@ -973,7 +1131,7 @@ export default function App() {
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --accent: #e8703a; --text: #1a1714; --text2: #5a5250; --text3: #9a9490; --border: #e8e0d8; --surface: #f9f6f2; }
-    body { font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; max-width: 680px; margin: 0 auto; padding: 48px 40px 64px; font-size: 14px; line-height: 1.6; }
+    body { font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; max-width: 680px; margin: 0 auto; padding: 48px 40px 64px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     /* Header */
     .header { border-bottom: 2px solid var(--accent); padding-bottom: 24px; margin-bottom: 28px; }
     .brand { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 400; color: var(--accent); letter-spacing: 0.04em; margin-bottom: 10px; }
@@ -986,19 +1144,20 @@ export default function App() {
     .tag { font-size: 11px; font-weight: 500; color: var(--accent); background: rgba(232,112,58,0.1); border: 1px solid rgba(232,112,58,0.25); border-radius: 20px; padding: 2px 10px; }
     /* Section titles */
     .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-    /* Ingredients */
-    .ingredients { background: var(--surface); border-radius: 12px; padding: 16px 20px; margin-bottom: 32px; }
-    .ing-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
-    .ing-row:last-child { border-bottom: none; }
-    .ing-name { font-weight: 500; }
-    .ing-qty { font-weight: 600; color: var(--accent); font-size: 13px; }
+    /* Ingredients & step pills */
+    .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
+    .pill-img { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #fff; border: 1px solid var(--border); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .pill-img img { width: 100%; height: 100%; object-fit: cover; }
+    .pill-name { font-weight: 500; color: var(--text); }
+    .pill-qty { color: var(--text3); font-weight: 500; }
+    .ing-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
     /* Steps */
-    .step { display: flex; gap: 14px; margin-bottom: 20px; }
+    .step { display: flex; gap: 14px; margin-bottom: 22px; }
     .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
     .step-body { flex: 1; }
-    .step-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+    .step-title { font-weight: 700; font-size: 13px; color: var(--accent); margin-bottom: 6px; }
     .step-text { color: var(--text2); line-height: 1.65; }
-    .step-ings { font-size: 11px; color: var(--text3); margin-top: 6px; font-style: italic; }
+    .step-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     /* Footer */
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); }
     .footer-brand { font-family: 'Fraunces', serif; color: var(--accent); }
@@ -1023,7 +1182,7 @@ export default function App() {
 
   ${recipe.ingredients?.length ? `
   <div class="section-title">Ingrédients</div>
-  <div class="ingredients">${ingLines}</div>` : ""}
+  <div class="ing-pills">${ingPills}</div>` : ""}
 
   ${recipe.steps?.length ? `
   <div class="section-title">Étapes</div>
@@ -1038,7 +1197,7 @@ export default function App() {
     const w = window.open("", "_blank");
     w.document.write(html);
     w.document.close();
-    setTimeout(() => w.print(), 800);
+    setTimeout(() => w.print(), 1200);
     notify("PDF en cours de génération…");
   };
 
@@ -1086,7 +1245,7 @@ export default function App() {
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
-      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
+      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
   );
 
@@ -1118,7 +1277,7 @@ export default function App() {
       <style>{`
         @keyframes loginFloat{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-10px) rotate(2deg);}}
         @keyframes loginFadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
-        .login-root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:var(--bg);position:relative;overflow:hidden;}
+        .login-root{min-height:100dvh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:var(--bg);position:relative;overflow:hidden;}
         .login-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.18;pointer-events:none;}
         .login-card{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;max-width:360px;width:100%;animation:loginFadeUp 0.6s cubic-bezier(0.25,0.46,0.45,0.94) both;}
         .login-emoji-wrap{display:flex;justify-content:center;margin-bottom:28px;}
@@ -1192,7 +1351,12 @@ export default function App() {
           </>
         ) : (
           <>
-            {mainScreen}
+            <PullToRefresh
+              enabled={!isDesktop && editingRecipe === null}
+              onRefresh={() => window.location.reload()}
+            >
+              {mainScreen}
+            </PullToRefresh>
             <TabBar tab={tab} setTab={requestTab} />
           </>
         )}
@@ -1362,7 +1526,7 @@ function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, se
           <h2 style={{ fontSize: 16, fontWeight: 600 }}>Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span></h2>
           {filterCol && <button onClick={() => setFilterCol(null)} style={{ fontSize: 12, color: "var(--accent)" }}>Effacer filtre</button>}
         </div>
-        <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
+        <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
           {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
         </div>
         {visibleCount < filtered.length && (
@@ -1380,8 +1544,8 @@ function RecipeCard({ recipe, onClick, style }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const score = recipe.healthScore || 70;
   return (
-    <button className="slide-up" onClick={onClick} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", transition: "border-color 0.15s", ...style }}>
-      <div style={{ aspectRatio: "16/10", position: "relative" }}>
+    <button className="slide-up recipe-card" onClick={onClick} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", ...style }}>
+      <div className="recipe-card-thumb" style={{ aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.7),transparent)" }} />
       </div>
@@ -1410,8 +1574,20 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
   const [cookMode, setCookMode] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const actionsRef = useRef(null);
   const isProgrammaticScroll = useRef(false);
   const mult = servings / (recipe.servings || 2);
+
+  // Collapse the desktop actions panel when clicking anywhere outside it.
+  useEffect(() => {
+    if (!actionsOpen) return;
+    const handlePointerDown = e => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target)) setActionsOpen(false);
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [actionsOpen]);
 
   const getIngImage = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
   const getUtImage = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
@@ -1466,11 +1642,32 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
         </div>
       </div>
 
-      {/* Action bar — always visible on all screen sizes */}
-      <div style={{ display: "flex", gap: 8, padding: "10px 16px", background: isDesktop ? "var(--bg)" : "var(--surface)", borderBottom: isDesktop ? "none" : "1px solid var(--border)", flexShrink: 0 }}>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Ajouter aux courses</button>
-        <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
-      </div>
+      {/* Action bar — inline on mobile, collapsible floating panel (bottom-right) on desktop */}
+      {isDesktop ? (
+        <div ref={actionsRef} style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
+          {actionsOpen ? (
+            <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, minWidth: 232, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)", boxShadow: "0 16px 42px -8px rgba(0,0,0,0.28)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Actions</span>
+                <button className="icon-btn-soft" title="Réduire" onClick={() => setActionsOpen(false)} style={{ width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", color: "var(--text3)" }}>
+                  <Icon name="close" size={13} color="var(--text3)" />
+                </button>
+              </div>
+              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Ajouter aux courses</button>
+              <button className="btn btn-ghost" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
+            </div>
+          ) : (
+            <button className="fab-toggle" title="Actions" onClick={() => setActionsOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 26px -4px rgba(232,112,58,0.5)" }}>
+              <Icon name="shopping" size={22} color="#fff" />
+            </button>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 8, padding: "10px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+          <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Ajouter aux courses</button>
+          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
+        </div>
+      )}
 
       {/* Mobile tabs / Desktop 2-col */}
       <div className="detail-tabs-mobile" style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
@@ -1810,6 +2007,25 @@ function normalizeStr(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
+// ─── INGREDIENT DB MATCHER (singular/plural tolerant) ─────────────────────────
+function singularizeFr(w) {
+  if (w.length > 3 && w.endsWith("aux")) return w.slice(0, -3) + "al";
+  if (w.length > 2 && w.endsWith("x")) return w.slice(0, -1);
+  if (w.length > 2 && w.endsWith("s")) return w.slice(0, -1);
+  return w;
+}
+function canonicalIngredientName(name) {
+  return normalizeStr(name).split(/\s+/).map(singularizeFr).join(" ");
+}
+function findIngredientMatch(name, db) {
+  if (!name || !db || !db.length) return null;
+  const target = normalizeStr(name);
+  const exact = db.find(d => normalizeStr(d.name) === target);
+  if (exact) return exact;
+  const canonTarget = canonicalIngredientName(name);
+  return db.find(d => canonicalIngredientName(d.name) === canonTarget) || null;
+}
+
 // ─── INGREDIENT INPUT PARSER ──────────────────────────────────────────────────
 function parseIngredientInput(raw) {
   if (!raw || !raw.trim()) return { amount: "", unit: "", name: raw.trim() };
@@ -2045,7 +2261,7 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
                     onChange={e => {
                       const raw = e.target.value;
                       const parsed = parseIngredientInput(raw);
-                      const match = parsed.name ? ingredientDB.find(d => normalizeStr(d.name) === normalizeStr(parsed.name)) : null;
+                      const match = parsed.name ? findIngredientMatch(parsed.name, ingredientDB) : null;
                       up("ingredients", form.ingredients.map(x => x.id === ing.id ? {
                         ...x, _raw: raw, name: parsed.name, amount: parsed.amount, unit: parsed.unit,
                         dbId: match ? match.id : ""
@@ -2219,7 +2435,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDragOver={e => { e.preventDefault(); onSetDropTarget(dropKey); }}
       onDragLeave={() => onSetDropTarget(null)}
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
-      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: meals.length ? "auto" : 10 }}>
+      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", height: 60, overflowY: "auto", display: "flex", flexDirection: "column", justifyContent: meals.length > 1 ? "flex-start" : "center" }}>
       {meals.map((meal, mi) => {
         const globalIdx = (mealPlan[date] || []).indexOf(meal);
         const r = recipes.find(x => x.id === meal.recipeId);
@@ -2390,12 +2606,12 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
 
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 12px 16px" }}>
         {viewMode === "week" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {weekDays.map(date => {
+          <div key={`week-${weekDays[0]}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {weekDays.map((date, di) => {
               const isToday = date === todayStr;
               const d = new Date(date + "T12:00");
               return (
-                <div key={date} style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+                <div key={date} className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(232,112,58,0.5)" : "var(--border)"}`, animationDelay: `${di * 0.04}s` }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: isToday ? "var(--accent)" : "var(--text)" }}>
@@ -2418,7 +2634,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
         )}
 
         {viewMode === "month" && (
-          <div>
+          <div key={`month-${currentDate.getFullYear()}-${currentDate.getMonth()}`}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
               {MP_DAYS_SHORT.map(d => <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: "var(--text3)", padding: "4px 0" }}>{d}</div>)}
             </div>
@@ -2430,8 +2646,8 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
                 const midiMeals = getMeals(date, "midi");
                 const soirMeals = getMeals(date, "soir");
                 return (
-                  <button key={date} onClick={() => openAdd(date, ["midi"])}
-                    style={{ background: "var(--surface)", borderRadius: 10, padding: "5px 4px", minHeight: 64, border: `1px solid ${isToday ? "rgba(232,112,58,0.5)" : "var(--border)"}`, textAlign: "left", cursor: "pointer" }}>
+                  <button key={date} onClick={() => openAdd(date, ["midi"])} className="slide-up"
+                    style={{ background: "var(--surface)", borderRadius: 10, padding: "5px 4px", minHeight: 64, border: `1px solid ${isToday ? "rgba(232,112,58,0.5)" : "var(--border)"}`, textAlign: "left", cursor: "pointer", animationDelay: `${Math.min(i, 28) * 0.012}s` }}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: isToday ? "var(--accent)" : "var(--text3)", textAlign: "center", marginBottom: 4 }}>{d.getDate()}</div>
                     {midiMeals.slice(0, 1).map((m, mi) => { const r = recipes.find(x => x.id === m.recipeId); return r ? <div key={mi} style={{ background: MP_SLOT_COLOR.midi, borderRadius: 3, padding: "1px 3px", fontSize: 8, color: MP_SLOT_TEXT.midi, marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</div> : null; })}
                     {soirMeals.slice(0, 1).map((m, mi) => { const r = recipes.find(x => x.id === m.recipeId); return r ? <div key={mi} style={{ background: MP_SLOT_COLOR.soir, borderRadius: 3, padding: "1px 3px", fontSize: 8, color: MP_SLOT_TEXT.soir, marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</div> : null; })}
@@ -2914,7 +3130,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
     if (!newItemName.trim() || !activeList) return;
     const parsed = parseIngredientInput(newItemName);
     const name = parsed.name || newItemName.trim();
-    const dbMatch = (ingredientDB || []).find(d => normalizeStr(d.name) === normalizeStr(name));
+    const dbMatch = findIngredientMatch(name, ingredientDB);
     const item = { id: "si" + Date.now(), name, amount: parsed.amount || "", unit: parsed.unit || "", image: dbMatch?.image || "", checked: false };
     updateList(activeList.id, l => ({ ...l, items: [...l.items, item] }));
     setNewItemName(""); setNewItemAmount(""); setNewItemUnit("");
@@ -3036,7 +3252,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
                 {newItemName.trim() && (() => {
                   const p = parseIngredientInput(newItemName);
                   const name = p.name || newItemName.trim();
-                  const match = (ingredientDB || []).find(d => normalizeStr(d.name) === normalizeStr(name));
+                  const match = findIngredientMatch(name, ingredientDB);
                   return (
                     <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
                       {match?.image && <IngImage src={match.image} alt={match.name} size={34} />}
@@ -3075,6 +3291,26 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
 }
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
+// ─── ADMIN BANNER (shared Master DB notice) ───────────────────────────────────
+// Single source of truth for the "MODE ADMIN" banner. `style` lets callers add
+// spacing without duplicating the whole markup (e.g. marginBottom per section).
+function AdminBanner({ style }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(91,156,246,0.20), rgba(91,156,246,0.06))", border: "1px solid rgba(91,156,246,0.38)", boxShadow: "0 2px 12px rgba(91,156,246,0.12)", ...style }}>
+      <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(91,156,246,0.45)" }}>
+        <Icon name="settings" size={16} color="#fff" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)", letterSpacing: "0.02em" }}>MODE ADMIN</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--blue)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>MASTER</span>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>Tes modifications sont publiées dans la base partagée</div>
+      </div>
+    </div>
+  );
+}
+
 function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
   const [section, setSection] = useState("ingredients");
   const [editIng, setEditIng] = useState(null);
@@ -3176,20 +3412,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {isAdmin && (
-              <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(232,112,58,0.18), rgba(232,112,58,0.06))", border: "1px solid rgba(232,112,58,0.35)", boxShadow: "0 2px 12px rgba(232,112,58,0.10)" }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(232,112,58,0.4)" }}>
-                  <Icon name="settings" size={16} color="#fff" />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.02em" }}>MODE ADMIN</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>MASTER</span>
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>Tes modifications sont publiées dans la base partagée</div>
-                </div>
-              </div>
-            )}
+            {isAdmin && <AdminBanner />}
             {isAdmin && (
               <button
                 onClick={() => setEditCat({ key: "", label: "", score: 50, color: "#9a9490", icon: "📦", isNew: true })}
@@ -3299,20 +3522,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
         {section === "ustensiles" && (
           <div>
-            {isAdmin && (
-              <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", marginBottom: 14, borderRadius: 14, background: "linear-gradient(135deg, rgba(232,112,58,0.18), rgba(232,112,58,0.06))", border: "1px solid rgba(232,112,58,0.35)", boxShadow: "0 2px 12px rgba(232,112,58,0.10)" }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(232,112,58,0.4)" }}>
-                  <Icon name="settings" size={16} color="#fff" />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.02em" }}>MODE ADMIN</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>MASTER</span>
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>Tes modifications sont publiées dans la base partagée</div>
-                </div>
-              </div>
-            )}
+            {isAdmin && <AdminBanner style={{ marginBottom: 14 }} />}
             <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditUt({ id: "", name: "", image: "" })}><Icon name="plus" size={14} /> Nouvel ustensile</button>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {utensilDB.map(item => (
@@ -3432,7 +3642,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                         '    <span style="color:#5b9cf6">"name"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>',
                         '  <span style="color:#9a9490">}]</span>',
                         '  <span style="color:#5b9cf6">"steps"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[{</span>',
-                        '    <span style="color:#5b9cf6">"title"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>',
                         '    <span style="color:#5b9cf6">"text"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>',
                         '    <span style="color:#5b9cf6">"ingredients"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[</span><span style="color:#4caf7d">"ingredient_name"</span><span style="color:#9a9490">]</span>  <span style="color:#5a5754;font-style:italic">← optionnel</span>',
                         '    <span style="color:#5b9cf6">"utensils"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[</span><span style="color:#4caf7d">"utensil_name"</span><span style="color:#9a9490">]</span>  <span style="color:#5a5754;font-style:italic">← optionnel</span>',

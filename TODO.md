@@ -27,14 +27,22 @@
 
 ## 🔜 Backlog — v1.0.1
 
-- [ ] Système de parsing pluriel amélioré
-- [ ] Architecture aves pages /config, /recipes, etc etc
-- [ ] MAJ du schéma JSON pour refléter les changements qu'il y a eu au niveau des steps 
+- [x] Système de parsing pluriel amélioré
+- [ ] Refactoring des composants / modularisartion
+  - [ ] Architecture aves pages /config, /recipes, etc etc
+
+- [ ] Système de recherche du mode frigo doit etre le même que sur les autres pages
+- [ ] Entrée dans le mode "Pas à pas" trop instantannée -> nope.
+
+- [x] Même système de Zoom sur la landing page
+- [x] Couleur de sélection d'éléments 
+- [x] MAJ du schéma JSON pour refléter les changements qu'il y a eu au niveau des steps (suppression du champ "description" + du sous champ "title" dans steps)
+- [x] Suppression du champ "description" quand on génère un ou plusieurs JSON de recettes + du sous champ title dans les steps
 
 - [ ] UI Improvements
-  - [ ] Afficher le planning avec une animation un peu comme les recettes
-  - [ ] Quand on clique sur une collection, petite animation pareil, là c'est trop direct
-
+  - [ ] Smartphone : si je tire mon doigt vers le bas, je peux recharger la page
+  - [x] Afficher le planning avec une animation un peu comme les recettes
+  - [x] Quand on clique sur une collection, petite animation pareil, là c'est trop direct
 - [x] Listes non liées aux recettes => pas d'image
 - [x] Bouton de déconnexion en rouge
 - [x] Aller chercher la version dans le package.json
@@ -43,7 +51,7 @@
 DB: 
 - [x] Je ne peux plus modifier la DB ingrédients Master ni les ustensiles.
 
-- [ ] UI
+- [x] UI
   - [x] A la fois un sujet UI et Backend, mais un score de santé ne peut par construction jamais être à 100 (si il est à 100 côté UI c'est moche en plus)
   - [x] Le nom récupéré via Google Auth doit etre affiché en MAJUSCULE
   - [x] Switcher le thème doit être déporté dans la partie profil quand je clique sur l'avatar 
