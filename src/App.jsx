@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, getDocs, writeBatch } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, getDocs, writeBatch } from "firebase/firestore";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import React from 'react'
 
@@ -17,7 +18,13 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const provider = new GoogleAuthProvider();
-const db = getFirestore(firebaseApp);
+// Cache persistant (IndexedDB) : lectures hors-ligne + file d'écritures durable qui
+// survit aux rechargements et se resynchronise automatiquement à la reconnexion.
+// persistentMultipleTabManager gère plusieurs onglets ouverts. À appeler avant tout
+// autre accès Firestore (c'est le cas ici, au chargement du module).
+const db = initializeFirestore(firebaseApp, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
 const storage = getStorage(firebaseApp);
 
 // ─── FIRESTORE DATA LAYER (split documents) ──────────────────────────────────
@@ -173,6 +180,7 @@ const GLOBAL_STYLE = `
   @keyframes expandDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
   @keyframes editorSlideIn{from{opacity:0;transform:translateY(32px);}to{opacity:1;transform:translateY(0);}}
   .editor-enter{animation:editorSlideIn 0.32s cubic-bezier(0.25,0.46,0.45,0.94) both;}
+  @keyframes cookModeIn{from{opacity:0;transform:scale(0.97) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
   @keyframes popIn{0%{transform:scale(0) rotate(-10deg);opacity:0;}60%{transform:scale(1.2) rotate(5deg);}100%{transform:scale(1) rotate(0deg);opacity:1;}}
   @keyframes floatUp{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-60px);opacity:0;}}
   .drag-over{border-color:var(--accent)!important;background:rgba(232,112,58,0.08)!important;}
@@ -330,6 +338,121 @@ function computeHealthScore(ingredients, ingredientDB, categories = DEFAULT_CATE
   return Math.min(99, Math.round(weightedScore / totalWeight));
 }
 
+// ─── NAME MATCHING (import → DB linking) ─────────────────────────────────────
+// Normalise un nom pour le rapprochement : minuscules, sans accents ni
+// ponctuation, espaces compactés. "Huile d'olive" → "huile d olive".
+// ─── INGREDIENT / UTENSIL NAME MATCHING (source unique, partagée éditeur + import) ──
+// Rapprochement nom → entrée de base. 4 paliers de confiance ; on renvoie le 1er qui répond :
+//   A. exact        : noms identiques normalisés
+//   B. singulier    : identiques au pluriel près
+//   C. canonique    : identiques après retrait du bruit (préparation/état + connecteurs),
+//                     comparaison ensembliste (ordre des mots indifférent)
+//   D. sous-ensemble : tous les mots d'une entrée DB de ≥2 mots ⊆ nom cherché
+// Les ALIAS de chaque entrée sont indexés comme son nom à chaque palier.
+// On ne retire jamais les mots de VARIÉTÉ/TYPE (blanc, noir, doux, fort, nouveau…) : ils
+// distinguent des ingrédients différents. Ces équivalences relèvent des alias.
+function normalizeName(s) {
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+// Singulier FR approximatif : -aux→-al, -x→∅, -s→∅ (gardes de longueur pour épargner ail, jus, riz…).
+function singularizeWord(w) {
+  if (w.length > 3 && w.endsWith("aux")) return w.slice(0, -3) + "al";
+  if (w.length > 2 && w.endsWith("x")) return w.slice(0, -1);
+  if (w.length > 3 && w.endsWith("s")) return w.slice(0, -1);
+  return w;
+}
+function singularizeName(n) {
+  return n.split(" ").filter(Boolean).map(singularizeWord).join(" ");
+}
+
+// Connecteurs (issus aussi des apostrophes : "d'olive" → "d olive").
+const MATCH_CONNECTORS = new Set([
+  "de", "d", "du", "des", "la", "le", "les", "l", "a", "au", "aux",
+  "en", "et", "ou", "avec", "sans",
+]);
+// Qualificatifs de PRÉPARATION / d'ÉTAT, non discriminants → retirés au palier C.
+// Dérivés des formes accentuées via la même normalisation/singularisation, pour
+// éviter toute erreur de translittération. Liste curée et ajustable.
+const RAW_QUALIFIERS = [
+  "émincé", "émincée", "ciselé", "ciselée", "haché", "hachée", "râpé", "râpée",
+  "moulu", "moulue", "concassé", "concassée", "écrasé", "écrasée", "pressé", "pressée",
+  "broyé", "broyée", "fondu", "fondue", "ramolli", "ramollie", "battu", "battue",
+  "égoutté", "égouttée", "essoré", "essorée", "équeuté", "équeutée",
+  "dénoyauté", "dénoyautée", "pelé", "pelée", "mondé", "mondée",
+  "décortiqué", "décortiquée", "effeuillé", "effeuillée",
+  "grillé", "grillée", "torréfié", "torréfiée", "blanchi", "blanchie",
+  "revenu", "revenue", "cuit", "cuite", "précuit", "précuite",
+  "surgelé", "surgelée", "congelé", "congelée", "décongelé", "décongelée",
+  "frais", "fraîche", "mûr", "mûre", "bio", "extra",
+  "tiède", "froid", "froide", "chaud", "chaude",
+];
+const MATCH_QUALIFIERS = new Set(RAW_QUALIFIERS.map(w => singularizeWord(normalizeName(w))));
+
+function stripToCanonical(normName) {
+  const toks = singularizeName(normName).split(" ").filter(Boolean)
+    .filter(t => !MATCH_CONNECTORS.has(t) && !MATCH_QUALIFIERS.has(t));
+  return toks.sort().join(" "); // tri → comparaison ensembliste (ordre des mots indifférent)
+}
+// Toutes les chaînes-source d'une entrée : son nom + ses alias éventuels.
+function itemNameForms(item) {
+  return [item?.name, ...(Array.isArray(item?.aliases) ? item.aliases : [])]
+    .filter(s => typeof s === "string" && s.trim());
+}
+
+// Construit un résolveur (name) → item de la DB | null.
+// NB : recréé à chaque appel de findIngredientMatch (coût O(n), comme l'ancien db.find).
+// Si la base Master grossit beaucoup : useMemo(() => createIngredientResolver(db), [db]).
+function createIngredientResolver(db) {
+  const exact = new Map(), singular = new Map(), canonical = new Map(), subset = [];
+  // Indexation du plus générique au plus spécifique : à canonique égal, l'entrée de base gagne.
+  const indexed = (db || []).filter(d => d?.id && d?.name).map(d => {
+    const forms = itemNameForms(d).map(normalizeName);
+    const ntok = Math.min(...forms.map(f => f.split(" ").filter(Boolean).length));
+    return { d, forms, ntok };
+  }).sort((a, b) => a.ntok - b.ntok);
+  for (const { d, forms } of indexed) {
+    for (const n of forms) {
+      if (!n) continue;
+      if (!exact.has(n)) exact.set(n, d);
+      const sg = singularizeName(n);
+      if (!singular.has(sg)) singular.set(sg, d);
+      const can = stripToCanonical(n);
+      if (can && !canonical.has(can)) canonical.set(can, d);
+      const toks = sg.split(" ").filter(Boolean);
+      if (toks.length >= 2) subset.push({ item: d, tokens: toks, ntok: toks.length, len: sg.length });
+    }
+  }
+  subset.sort((a, b) => b.ntok - a.ntok || b.len - a.len); // plus spécifique d'abord
+  return function resolve(name) {
+    const n = normalizeName(name);
+    if (!n) return null;
+    const a = exact.get(n); if (a) return a;           // A
+    const b = singular.get(singularizeName(n)); if (b) return b;           // B
+    const can = stripToCanonical(n);
+    const c = can ? canonical.get(can) : null; if (c) return c;           // C
+    const recToks = new Set(singularizeName(n).split(" ").filter(Boolean)); // D
+    for (const e of subset) if (e.tokens.every(t => recToks.has(t))) return e.item;
+    return null;
+  };
+}
+
+// Points d'entrée publics (signatures inchangées).
+// Éditeur / listes : renvoie l'OBJET ingrédient (ou null).
+function findIngredientMatch(name, db) {
+  if (!name || !db || !db.length) return null;
+  return createIngredientResolver(db)(name);
+}
+// Import : renvoie un résolveur (name) → id (ou "").
+function buildNameMatcher(db) {
+  const resolve = createIngredientResolver(db);
+  return (name) => { const m = resolve(name); return m ? m.id : ""; };
+}
+
 // ─── DEFAULT DATA ─────────────────────────────────────────────────────────────
 // New users start completely empty. Ingredient/utensil reference data now comes
 // from the shared read-only Master DB in Firestore (master/ingredients,
@@ -424,14 +547,14 @@ const IngImage = ({ src, alt, size = 48 }) => {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: "var(--surface2)", border: "1px solid var(--border)",
+      background: "#fff", border: "1px solid var(--border)",
       display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
     }}>
       {src && !err
         ? <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer"
           loading="lazy" decoding="async"
           style={{ width: "82%", height: "82%", objectFit: "contain" }} />
-        : <Icon name="photo" size={Math.round(size * 0.42)} color="var(--text3)" />}
+        : <Icon name="photo" size={Math.round(size * 0.42)} color="#b3afaa" />}
     </div>
   );
 };
@@ -498,7 +621,9 @@ async function uploadImage(file, pathPrefix) {
     ? `${pathPrefix}/${id}.${ext}`
     : `users/${uid}/${pathPrefix}/${id}.${ext}`;
   const sRef = storageRef(storage, path);
-  await uploadBytes(sRef, blob, { contentType });
+  // cacheControl long : les URLs de download Storage étant stables par objet,
+  // le navigateur (et le futur service worker) gardent l'image au lieu de la refetch.
+  await uploadBytes(sRef, blob, { contentType, cacheControl: "public, max-age=31536000, immutable" });
   return await getDownloadURL(sRef);
 }
 
@@ -854,44 +979,28 @@ export default function App() {
   }, []);
   // Admins see master items as editable; normal users see them read-only.
   const ingredientDB = useMemo(
-    () => [...masterDB.ingredients.map(i => ({ ...i, _ro: !isAdmin })), ...userDB.ingredients],
+    () => [...masterDB.ingredients, ...userDB.ingredients].map(i => ({ ...i, _ro: !isAdmin })),
     [masterDB, userDB, isAdmin]
   );
   const utensilDB = useMemo(
-    () => [...masterDB.utensils.map(u => ({ ...u, _ro: !isAdmin })), ...userDB.utensils],
+    () => [...masterDB.utensils, ...userDB.utensils].map(u => ({ ...u, _ro: !isAdmin })),
     [masterDB, userDB, isAdmin]
   );
   // Setters: admins write everything to the shared Master (folding in any of their
   // own/migrated items); normal users only ever write to their own additions.
   const setIngredientDB = useCallback((updater) => {
-    if (isAdmin) {
-      const merged = [...masterDB.ingredients, ...userDB.ingredients];
-      const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
-      setMasterDB(prev => ({ ...prev, ingredients: next }));
-      if (userDB.ingredients.length) setUserDB(prev => ({ ...prev, ingredients: [] }));
-    } else {
-      setUserDB(prev => {
-        const merged = [...masterDB.ingredients, ...prev.ingredients];
-        const next = typeof updater === "function" ? updater(merged) : updater;
-        const masterIds = new Set(masterDB.ingredients.map(i => i.id));
-        return { ...prev, ingredients: next.filter(i => !masterIds.has(i.id)).map(({ _ro, ...rest }) => rest) };
-      });
-    }
+    if (!isAdmin) return; // base de référence en lecture seule pour les non-admins
+    const merged = [...masterDB.ingredients, ...userDB.ingredients];
+    const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
+    setMasterDB(prev => ({ ...prev, ingredients: next }));
+    if (userDB.ingredients.length) setUserDB(prev => ({ ...prev, ingredients: [] }));
   }, [masterDB, userDB, isAdmin]);
   const setUtensilDB = useCallback((updater) => {
-    if (isAdmin) {
-      const merged = [...masterDB.utensils, ...userDB.utensils];
-      const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
-      setMasterDB(prev => ({ ...prev, utensils: next }));
-      if (userDB.utensils.length) setUserDB(prev => ({ ...prev, utensils: [] }));
-    } else {
-      setUserDB(prev => {
-        const merged = [...masterDB.utensils, ...prev.utensils];
-        const next = typeof updater === "function" ? updater(merged) : updater;
-        const masterIds = new Set(masterDB.utensils.map(u => u.id));
-        return { ...prev, utensils: next.filter(u => !masterIds.has(u.id)).map(({ _ro, ...rest }) => rest) };
-      });
-    }
+    if (!isAdmin) return; // base de référence en lecture seule pour les non-admins
+    const merged = [...masterDB.utensils, ...userDB.utensils];
+    const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
+    setMasterDB(prev => ({ ...prev, utensils: next }));
+    if (userDB.utensils.length) setUserDB(prev => ({ ...prev, utensils: [] }));
   }, [masterDB, userDB, isAdmin]);
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
@@ -1093,13 +1202,41 @@ export default function App() {
     try {
       const data = JSON.parse(json);
       const incoming = (Array.isArray(data) ? data : [data]);
+      const matchIng = buildNameMatcher(ingredientDB);
+      const matchUt = buildNameMatcher(utensilDB);
+      let linked = 0;
+      // Pour chaque recette : remplit les dbId vides par rapprochement de nom
+      // contre la base de l'utilisateur, puis recalcule le score santé à partir
+      // des ingrédients désormais reliés. Un dbId déjà présent est respecté.
+      const prepared = incoming
+        .filter(r => r.name)
+        .map(r => {
+          const ingredients = (r.ingredients || []).map(ing => {
+            if (ing.dbId) return ing;
+            const dbId = matchIng(ing.name);
+            if (dbId) linked++;
+            return { ...ing, dbId };
+          });
+          const utensils = (r.utensils || []).map(u => {
+            if (u.dbId) return u;
+            const dbId = matchUt(u.name);
+            if (dbId) linked++;
+            return { ...u, dbId };
+          });
+          return {
+            ...r,
+            id: "r" + Date.now() + Math.random(),
+            ingredients,
+            utensils,
+            healthScore: computeHealthScore(ingredients, ingredientDB, categories),
+          };
+        });
       setRecipes(prev => {
         const existingNames = new Set(prev.map(r => r.name.toLowerCase().trim()));
-        const newOnes = incoming.filter(r => r.name && !existingNames.has(r.name.toLowerCase().trim()))
-          .map(r => ({ ...r, id: "r" + Date.now() + Math.random() }));
+        const newOnes = prepared.filter(r => !existingNames.has(r.name.toLowerCase().trim()));
         const skipped = incoming.length - newOnes.length;
-        if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${skipped > 0 ? ` · ${skipped} doublon(s) ignoré(s)` : ""} ✓`);
-        else notify(`Aucune recette importée — ${skipped} doublon(s) ignoré(s)`, "error");
+        if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${linked > 0 ? ` · ${linked} élément(s) reliés à ta base` : ""}${skipped > 0 ? ` · ${skipped} doublon(s) ignoré(s)` : ""} ✓`);
+        else notify(`Aucune recette importée${skipped > 0 ? ` — ${skipped} doublon(s) ignoré(s)` : ""}`, "error");
         return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
       });
     } catch { notify("JSON invalide", "error"); }
@@ -1136,7 +1273,8 @@ export default function App() {
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --accent: #e8703a; --text: #1a1714; --text2: #5a5250; --text3: #9a9490; --border: #e8e0d8; --surface: #f9f6f2; }
-    body { font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; max-width: 680px; margin: 0 auto; padding: 48px 40px 64px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; margin-bottom: 24px; display: block; }
     /* Header */
     .header { border-bottom: 2px solid var(--accent); padding-bottom: 24px; margin-bottom: 28px; }
     .brand { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 400; color: var(--accent); letter-spacing: 0.04em; margin-bottom: 10px; }
@@ -1166,13 +1304,25 @@ export default function App() {
     /* Footer */
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); }
     .footer-brand { font-family: 'Fraunces', serif; color: var(--accent); }
+    /* Pagination impression : marges UNIFORMES sur toutes les pages (via @page,
+       et non le padding du body qui ne s'applique qu'en 1re/dernière page),
+       + coupes propres (titres non orphelins, pastilles/étapes/footer insécables). */
+    @page { margin: 16mm 14mm; }
     @media print {
-      body { padding: 24px 28px; }
-      .step { page-break-inside: avoid; }
+      body { max-width: none; margin: 0; padding: 0; font-size: 12px; }
+      .hero { height: 200px; break-inside: avoid; }
+      .header { break-inside: avoid; }
+      .section-title { break-after: avoid; page-break-after: avoid; }
+      .pill { break-inside: avoid; page-break-inside: avoid; }
+      .step { break-inside: avoid; page-break-inside: avoid; }
+      .step-pills { break-inside: avoid; page-break-inside: avoid; }
+      .footer { break-inside: avoid; page-break-inside: avoid; }
+      p { orphans: 3; widows: 3; }
     }
   </style>
 </head>
 <body>
+  ${recipe.image ? `<img class="hero" src="${recipe.image}" alt="${recipe.name}" />` : ""}
   <div class="header">
     <div class="brand">Mijoté·</div>
     <h1>${recipe.name}</h1>
@@ -1202,7 +1352,12 @@ export default function App() {
     const w = window.open("", "_blank");
     w.document.write(html);
     w.document.close();
-    setTimeout(() => w.print(), 1200);
+    const heroImg = w.document.querySelector(".hero");
+    if (heroImg && !heroImg.complete) {
+      heroImg.onload = heroImg.onerror = () => setTimeout(() => w.print(), 300);
+    } else {
+      setTimeout(() => w.print(), 1200);
+    }
     notify("PDF en cours de génération…");
   };
 
@@ -1248,7 +1403,7 @@ export default function App() {
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
-      {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
@@ -1558,7 +1713,11 @@ function RecipeCard({ recipe, onClick, style }) {
       <div style={{ padding: "10px 10px 12px" }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>{recipe.name}</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 11, color: "var(--text2)", display: "flex", alignItems: "center", gap: 4 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>
+          <span style={{ fontSize: 11, color: "var(--text2)", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>
+            <span style={{ color: "var(--text3)" }}>·</span>
+            <span>{recipe.ingredients?.length || 0} ingr.</span>
+          </span>
           <HealthRing score={score} size={32} />
         </div>
       </div>
@@ -1568,7 +1727,7 @@ function RecipeCard({ recipe, onClick, style }) {
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
 function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection }) {
-  const [servings, setServings] = useState(recipe.servings || 2);
+  const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
   const isDesktop = useIsDesktop();
   const [showMealModal, setShowMealModal] = useState(false);
@@ -1642,7 +1801,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 14 }}>−</button>
             <span style={{ fontSize: 14, fontWeight: 600, minWidth: 18, textAlign: "center" }}>{servings}</span>
-            <button onClick={() => setServings(s => s + 1)} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14 }}>+</button>
+            <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14 }}>+</button>
           </div>
           <span style={{ fontSize: 10, color: "var(--text3)" }}>Portions</span>
         </div>
@@ -1749,7 +1908,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {(recipe.utensils || []).map(u => (
                   <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "var(--surface2)" }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "#fff" }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                     <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
                   </div>
                 ))}
@@ -1789,7 +1948,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                           ))}
                           {linkedUts.map(u => (
                             <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                              <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "var(--surface3)", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                              <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                               {u.name}
                             </span>
                           ))}
@@ -1829,7 +1988,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {recipe.utensils.map(u => (
                     <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", background: "var(--surface3)", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                       <span style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</span>
                     </div>
                   ))}
@@ -1867,7 +2026,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                         ))}
                         {linkedUts.map(u => (
                           <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "var(--surface3)", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                             {u.name}
                           </span>
                         ))}
@@ -1883,7 +2042,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
       {/* ── COOK MODE — fullscreen step-by-step ── */}
       {cookMode && recipe.steps?.length > 0 && (
-        <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} onClose={() => setCookMode(false)} />
+        <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} onClose={() => setCookMode(false)} />
       )}
 
       {/* Shopping ingredient selection modal */}
@@ -2013,31 +2172,14 @@ function normalizeStr(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-// ─── INGREDIENT DB MATCHER (singular/plural tolerant) ─────────────────────────
-function singularizeFr(w) {
-  if (w.length > 3 && w.endsWith("aux")) return w.slice(0, -3) + "al";
-  if (w.length > 2 && w.endsWith("x")) return w.slice(0, -1);
-  if (w.length > 2 && w.endsWith("s")) return w.slice(0, -1);
-  return w;
-}
-function canonicalIngredientName(name) {
-  return normalizeStr(name).split(/\s+/).map(singularizeFr).join(" ");
-}
-function findIngredientMatch(name, db) {
-  if (!name || !db || !db.length) return null;
-  const target = normalizeStr(name);
-  const exact = db.find(d => normalizeStr(d.name) === target);
-  if (exact) return exact;
-  const canonTarget = canonicalIngredientName(name);
-  return db.find(d => canonicalIngredientName(d.name) === canonTarget) || null;
-}
-
 // ─── INGREDIENT INPUT PARSER ──────────────────────────────────────────────────
 function parseIngredientInput(raw) {
-  if (!raw || !raw.trim()) return { amount: "", unit: "", name: raw.trim() };
+  if (!raw || !raw.trim()) return { amount: "", unit: "", name: (raw || "").trim() };
   const s = raw.trim();
 
-  // Known multi-word units (order matters — longest first)
+  // Unités connues. L'ordre n'a plus d'incidence sur la justesse (on exige une
+  // frontière de mot après l'unité), mais on teste les plus longues d'abord
+  // comme tie-break défensif.
   const UNITS = [
     "cuillère à soupe", "cuillères à soupe", "c. à soupe", "c.à.s",
     "cuillère à café", "cuillères à café", "c. à café", "c.à.c",
@@ -2047,9 +2189,8 @@ function parseIngredientInput(raw) {
     "gousse", "gousses", "feuille", "feuilles", "branche", "branches",
     "pincée", "pincées", "poignée", "poignées", "verre", "verres",
     "bol", "bols", "tasse", "tasses", "boîte", "boîtes", "pot", "pots",
-  ];
+  ].sort((a, b) => b.length - a.length);
 
-  // Try to match: number (+ fraction) + optional unit + rest
   const fracMap = { "1/2": 0.5, "1/3": 0.333, "2/3": 0.667, "1/4": 0.25, "3/4": 0.75 };
   const numRe = /^(\d+(?:[.,]\d+)?(?:\/\d+)?)\s*/;
   const fracRe = /^(1\/2|1\/3|2\/3|1\/4|3\/4)\s*/;
@@ -2057,7 +2198,7 @@ function parseIngredientInput(raw) {
   let rest = s;
   let amount = "";
 
-  // Extract number
+  // Extraction du nombre (entier, décimal ou fraction, éventuellement "1 1/2").
   let mFrac = rest.match(fracRe);
   let mNum = rest.match(numRe);
   if (mFrac) {
@@ -2066,7 +2207,6 @@ function parseIngredientInput(raw) {
   } else if (mNum) {
     amount = mNum[1].replace(",", ".");
     rest = rest.slice(mNum[0].length);
-    // Check for fraction after number e.g. "1 1/2"
     let mFrac2 = rest.match(fracRe);
     if (mFrac2) {
       amount = String(parseFloat(amount) + (fracMap[mFrac2[1]] || 0));
@@ -2076,16 +2216,22 @@ function parseIngredientInput(raw) {
 
   if (!amount) return { amount: "", unit: "", name: s };
 
-  // Extract unit
+  // Extraction de l'unité : le préfixe doit être SUIVI d'une frontière de mot
+  // (espace ou fin de chaîne), pour que "gousse" ne soit plus avalé par "g",
+  // ni "litre" par "l", etc.
   let unit = "";
   const restLower = rest.toLowerCase();
   for (const u of UNITS) {
-    if (restLower.startsWith(u.toLowerCase())) {
-      unit = u;
-      rest = rest.slice(u.length).trim();
-      // Remove leading "de", "d'" after unit
-      rest = rest.replace(/^d[e']?\s*/i, "").trim();
-      break;
+    const ul = u.toLowerCase();
+    if (restLower.startsWith(ul)) {
+      const next = rest.charAt(ul.length); // "" en fin de chaîne
+      if (next === "" || /\s/.test(next)) {
+        unit = u;
+        rest = rest.slice(u.length).trim();
+        // Retire un "de"/"d'" de liaison après l'unité.
+        rest = rest.replace(/^d[e']?\s*/i, "").trim();
+        break;
+      }
     }
   }
 
@@ -2093,35 +2239,41 @@ function parseIngredientInput(raw) {
 }
 
 // ─── TAG INPUT ────────────────────────────────────────────────────────────────
-function TagInput({ tags, onChange, allTags }) {
+function TagInput({ tags, onChange, allTags, label = "Tags", placeholder = "Végétarien, Rapide…", inputId = "tag-input-field", commitOnBlur = false, dedupeInsensitive = false }) {
   const [input, setInput] = useState("");
   const [focused, setFocused] = useState(false);
+  const inputRef = useRef("");
+  inputRef.current = input;
   const suggestions = allTags.filter(t =>
     t.toLowerCase().includes(input.toLowerCase()) && !tags.includes(t) && input.length > 0
   );
 
   const addTag = tag => {
     const t = tag.trim();
-    if (t && !tags.includes(t)) onChange([...tags, t]);
+    if (!t) { setInput(""); return; }
+    const isDup = dedupeInsensitive
+      ? tags.some(x => x.localeCompare(t, undefined, { sensitivity: "base" }) === 0) // ignore casse + accents
+      : tags.includes(t);
+    if (!isDup) onChange([...tags, t]);
     setInput("");
   };
   const removeTag = t => onChange(tags.filter(x => x !== t));
 
   return (
     <div>
-      <div className="field-label">Tags</div>
+      {label ? <div className="field-label">{label}</div> : null}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "8px 10px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", minHeight: 42, cursor: "text" }}
-        onClick={() => document.getElementById("tag-input-field").focus()}>
+        onClick={() => document.getElementById(inputId).focus()}>
         {tags.map(t => (
           <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)" }}>
             {t}
             <button onClick={e => { e.stopPropagation(); removeTag(t); }} style={{ fontSize: 14, lineHeight: 1, color: "var(--accent)", padding: 0 }}>×</button>
           </span>
         ))}
-        <input id="tag-input-field" value={input} onChange={e => setInput(e.target.value)}
-          onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 150)}
+        <input id={inputId} value={input} onChange={e => setInput(e.target.value)}
+          onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => { setFocused(false); if (commitOnBlur && inputRef.current.trim()) addTag(inputRef.current); }, 150)}
           onKeyDown={e => { if ((e.key === "," || e.key === "Enter") && input.trim()) { e.preventDefault(); addTag(input); } if (e.key === "Backspace" && !input && tags.length) removeTag(tags[tags.length - 1]); }}
-          placeholder={tags.length === 0 ? "Végétarien, Rapide…" : ""}
+          placeholder={tags.length === 0 ? placeholder : ""}
           style={{ border: "none", background: "none", outline: "none", fontSize: 14, color: "var(--text)", minWidth: 100, flex: 1, fontFamily: "var(--ff-body)", padding: "1px 2px" }} />
       </div>
       {focused && suggestions.length > 0 && (
@@ -2232,7 +2384,7 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                 <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
                 <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
-                <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" value={form.servings} onChange={e => up("servings", +e.target.value)} /></div>
+                <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" max="24" value={form.servings} onChange={e => up("servings", Math.min(24, Math.max(1, +e.target.value)))} /></div>
               </div>
               <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
               <div>
@@ -2718,19 +2870,20 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
 
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
-function CookMode({ recipe, mult, ingredientDB, onClose }) {
+function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
-
 
   const step = recipe.steps[stepIdx];
   const total = recipe.steps.length;
   const linkedIngs = recipe.ingredients.filter(i => step.ingredients?.includes(i.id));
+  const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
 
   const getIngImage = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
+  const getUtImage = dbId => (utensilDB || []).find(d => d.id === dbId)?.image || "";
   const progress = ((stepIdx + 1) / total) * 100;
 
-  return (
+  return createPortal(
     <>
       {done && (
         <div style={{ position: "fixed", inset: 0, zIndex: 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", padding: 32, textAlign: "center" }}>
@@ -2823,6 +2976,21 @@ function CookMode({ recipe, mult, ingredientDB, onClose }) {
                   </div>
                 </div>
               )}
+
+              {/* Ustensiles de l'étape */}
+              {linkedUts.length > 0 && (
+                <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {linkedUts.map(u => (
+                      <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                        <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                        {u.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2839,7 +3007,8 @@ function CookMode({ recipe, mult, ingredientDB, onClose }) {
           }
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
@@ -2882,16 +3051,38 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
   const [newItem, setNewItem] = useState({ name: "", category: "vegetable", quantity: "", unit: "", addedAt: new Date().toISOString().slice(0, 10) });
   const [showSettings, setShowSettings] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [addText, setAddText] = useState("");
 
   const saveItem = () => {
     if (!newItem.name.trim()) return;
+    const m = findIngredientMatch(newItem.name, ingredientDB);
+    const withImg = { ...newItem, image: m?.image || newItem.image || "" };
     if (editItem) {
-      setFridge(prev => prev.map(i => i.id === editItem ? { ...newItem, id: editItem } : i));
+      setFridge(prev => prev.map(i => i.id === editItem ? { ...withImg, id: editItem } : i));
     } else {
-      setFridge(prev => [...prev, { ...newItem, id: "f" + Date.now() }]);
+      setFridge(prev => [...prev, { ...withImg, id: "f" + Date.now() }]);
     }
     setNewItem({ name: "", category: "vegetable", quantity: "", unit: "", addedAt: new Date().toISOString().slice(0, 10) });
     setEditItem(null); setShowAdd(false);
+  };
+
+  // Ajout rapide depuis une saisie libre (comme Courses / éditeur de recette) :
+  // nom/quantité/unité inférés, catégorie + image récupérées de l'ingrédient, date = aujourd'hui.
+  const addFridgeItem = () => {
+    if (!addText.trim()) return;
+    const p = parseIngredientInput(addText);
+    const name = p.name || addText.trim();
+    const m = findIngredientMatch(name, ingredientDB);
+    setFridge(prev => [...prev, {
+      id: "f" + Date.now(),
+      name,
+      category: m?.category || "other",
+      quantity: p.amount || "",
+      unit: p.unit || "",
+      image: m?.image || "",
+      addedAt: new Date().toISOString().slice(0, 10),
+    }]);
+    setAddText("");
   };
   const deleteItem = id => setFridge(prev => prev.filter(i => i.id !== id));
   const startEdit = item => { setNewItem({ ...item, addedAt: item.addedAt.slice(0, 10) }); setEditItem(item.id); setShowAdd(true); };
@@ -2956,9 +3147,33 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
         {/* ── STOCK VIEW ── */}
         {view === "stock" && (
           <>
-            <button className="btn btn-primary" style={{ width: "100%", borderRadius: 12, marginBottom: 14 }} onClick={() => { setNewItem({ name: "", category: "vegetable", quantity: "", unit: "", addedAt: new Date().toISOString().slice(0, 10) }); setEditItem(null); setShowAdd(true); }}>
-              <Icon name="plus" size={16} /> Ajouter un produit
-            </button>
+            {/* Ajout rapide : saisie libre → nom/quantité/unité + catégorie/image auto */}
+            <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Ajouter un produit</div>
+              <input className="field-input" placeholder="ex: 500g poulet, 2 yaourts, 1 courgette…"
+                value={addText} onChange={e => setAddText(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && addFridgeItem()} style={{ marginBottom: 8 }} />
+              {addText.trim() && (() => {
+                const p = parseIngredientInput(addText);
+                const name = p.name || addText.trim();
+                const m = findIngredientMatch(name, ingredientDB);
+                const cat = categories[m?.category || "other"];
+                return (
+                  <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+                    <IngImage src={m?.image || ""} alt={name} size={34} />
+                    {p.amount && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {p.amount}</span>}
+                    {p.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {p.unit}</span>}
+                    {p.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{p.name}</span>}
+                    {m
+                      ? <span style={{ fontSize: 11, background: "rgba(76,175,125,0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ {cat?.icon} {cat?.label}</span>
+                      : <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{cat?.icon} Autres · non référencé</span>}
+                  </div>
+                );
+              })()}
+              <button className="btn btn-primary" style={{ width: "100%" }} onClick={addFridgeItem} disabled={!addText.trim()}>
+                <Icon name="plus" size={15} /> Ajouter
+              </button>
+            </div>
             {filteredFridge.length === 0 && (
               <div style={{ textAlign: "center", color: "var(--text3)", padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 40 }}>🧊</span>
@@ -2970,12 +3185,11 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
               {filteredFridge.map(item => {
                 const status = fridgeStatus(item);
                 const days = fridgeDaysAge(item.addedAt);
-                const cat = categories[item.category || "other"];
                 const thresh = FRIDGE_THRESHOLDS[item.category || "other"];
                 return (
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${status === "danger" ? "rgba(224,82,82,0.3)" : status === "warn" ? "rgba(240,192,96,0.25)" : "var(--border)"}` }}>
-                    {/* Icon */}
-                    <div style={{ width: 42, height: 42, borderRadius: 11, background: FRIDGE_STATUS_BG[status], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{cat?.icon || "📦"}</div>
+                    {/* Image de l'ingrédient (comme dans les autres menus), avec repli si non référencé */}
+                    <IngImage src={item.image || (findIngredientMatch(item.name, ingredientDB)?.image || "")} alt={item.name} size={46} />
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.name}</div>
@@ -3049,7 +3263,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
       {/* ── ADD / EDIT MODAL ── */}
       {showAdd && (
         <SwipeableSheet onClose={() => { setShowAdd(false); setEditItem(null); }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editItem ? "Modifier" : "Ajouter au frigo"}</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editItem ? "Modifier le produit" : "Ajouter au frigo"}</h3>
           <div className="field-label">Nom du produit</div>
           <input className="field-input" placeholder="ex: Poulet, Yaourt, Courgette…" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} autoFocus />
           <div className="field-label">Catégorie</div>
@@ -3105,7 +3319,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
     </div>
   );
 }
-function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
+function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
   const [activeListId, setActiveListId] = useState(null);
   const [newListName, setNewListName] = useState("");
   const [showNewList, setShowNewList] = useState(false);
@@ -3113,6 +3327,9 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
   const [newItemAmount, setNewItemAmount] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [viewMode, setViewMode] = useState("manuel"); // "manuel" | "alpha" | "categorie"
+  const [editItem, setEditItem] = useState(null);      // article en cours d'édition
+  const [pending, setPending] = useState(() => new Set()); // articles en cours d'animation → « Pris »
 
   const activeList = shoppingLists.find(l => l.id === activeListId) || shoppingLists[0] || null;
 
@@ -3141,6 +3358,85 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
     updateList(activeList.id, l => ({ ...l, items: [...l.items, item] }));
     setNewItemName(""); setNewItemAmount(""); setNewItemUnit("");
   };
+
+  // Catégorie d'un article : résolue depuis la Master DB via le nom (sinon "other").
+  const catOf = name => (findIngredientMatch(name, ingredientDB)?.category) || "other";
+  const updateItem = (listId, itemId, patch) =>
+    updateList(listId, l => ({ ...l, items: l.items.map(i => i.id === itemId ? { ...i, ...patch } : i) }));
+  const deleteItem = (listId, itemId) =>
+    updateList(listId, l => ({ ...l, items: l.items.filter(i => i.id !== itemId) }));
+
+  // Collage d'une liste : une ligne = un article, tiret/puce/numéro de tête ignorés.
+  const stripBullet = s => s.replace(/^\s*[-*\u2022\u00b7\u2013\u2014]+\s*/, "").replace(/^\s*\d+[.)]\s*/, "").trim();
+  const addManyFromText = text => {
+    if (!activeList) return;
+    const lines = text.split(/\r?\n/).map(stripBullet).filter(Boolean);
+    if (!lines.length) return;
+    const items = lines.map((line, idx) => {
+      const p = parseIngredientInput(line);
+      const name = p.name || line;
+      const m = findIngredientMatch(name, ingredientDB);
+      return { id: "si" + Date.now() + "_" + idx, name, amount: p.amount || "", unit: p.unit || "", image: m?.image || "", checked: false };
+    });
+    updateList(activeList.id, l => ({ ...l, items: [...l.items, ...items] }));
+    setNewItemName("");
+  };
+  const handlePaste = e => {
+    const text = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+    if (/\r?\n/.test(text)) { e.preventDefault(); addManyFromText(text); }
+  };
+
+  // En-tête de groupe (catégorie ou « Pris »).
+  const groupHeader = (label, icon, count) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 7, margin: "14px 2px 8px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>
+      {icon && <span style={{ fontSize: 13 }}>{icon}</span>}
+      <span>{label}</span>
+      {count != null && <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{count}</span>}
+      <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+    </div>
+  );
+
+  // Ligne d'article : zone principale = bascule coché ; boutons modifier / supprimer à droite.
+  const renderItem = item => {
+    const striking = pending.has(item.id);
+    const struck = item.checked || striking;
+    return (
+      <div key={item.id}
+        style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", background: "var(--surface)", borderRadius: 12, marginBottom: 8, border: "1px solid var(--border)", opacity: item.checked ? 0.55 : (striking ? 0.75 : 1), transition: "opacity 0.25s ease" }}>
+        <button onClick={() => {
+          if (item.checked) { toggleItem(activeList.id, item.id); return; } // décocher : immédiat
+          if (striking) return;
+          setPending(prev => { const n = new Set(prev); n.add(item.id); return n; }); // 1) barre sur place
+          setTimeout(() => {
+            toggleItem(activeList.id, item.id);                              // 2) puis déplace vers « Pris »
+            setPending(prev => { const n = new Set(prev); n.delete(item.id); return n; });
+          }, 320);
+        }}
+          style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: struck ? "var(--green)" : "transparent", border: `2px solid ${struck ? "var(--green)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" }}>
+            {struck && <Icon name="check" size={11} color="#fff" />}
+          </div>
+          <IngImage src={item.image} alt={item.name} size={40} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{item.name}</span>
+              <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: struck ? "100%" : "0%", transition: "width 0.25s ease" }} />
+            </div>
+            {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
+          </div>
+        </button>
+        <button onClick={() => setEditItem(item)} title="Modifier"
+          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)" }}>
+          <Icon name="edit" size={13} />
+        </button>
+        <button onClick={() => deleteItem(activeList.id, item.id)} title="Supprimer"
+          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)" }}>
+          <Icon name="trash" size={13} />
+        </button>
+      </div>
+    );
+  };
+
 
   const checked = activeList ? activeList.items.filter(i => i.checked).length : 0;
   const total = activeList ? activeList.items.length : 0;
@@ -3227,34 +3523,74 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
             </div>
           </div>
 
-          {/* Items */}
+          {/* Affichage + items */}
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
+            {/* Ordre d'affichage : manuel / alphabétique / par catégorie */}
+            {total > 0 && (
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                {[["manuel", "Manuel"], ["alpha", "A→Z"], ["categorie", "Catégories"]].map(([k, lab]) => {
+                  const on = viewMode === k;
+                  return (
+                    <button key={k} onClick={() => setViewMode(k)}
+                      style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: on ? "var(--accent)" : "var(--surface2)", color: on ? "#fff" : "var(--text2)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>
+                      {lab}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {activeList.items.length === 0 && activeList.type !== "free" && (
               <div style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>
                 <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Icon name="shopping" size={14} color="var(--text3)" /> Aucun article dans cette liste.</span>
               </div>
             )}
-            {activeList.items.map(item => (
-              <button key={item.id} onClick={() => toggleItem(activeList.id, item.id)}
-                style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "10px 14px", background: "var(--surface)", borderRadius: 12, marginBottom: 8, border: "1px solid var(--border)", textAlign: "left", opacity: item.checked ? 0.5 : 1, transition: "opacity 0.2s" }}>
-                <IngImage src={item.image} alt={item.name} size={46} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, textDecoration: item.checked ? "line-through" : "none" }}>{item.name}</div>
-                  {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
-                </div>
-                <div style={{ width: 24, height: 24, borderRadius: "50%", flexShrink: 0, background: item.checked ? "var(--green)" : "transparent", border: `2px solid ${item.checked ? "var(--green)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {item.checked && <Icon name="check" size={12} color="#fff" />}
-                </div>
-              </button>
-            ))}
 
-            {/* Manual add — only for free lists */}
+            {(() => {
+              const items = activeList.items;
+              const todo = items.filter(i => !i.checked);
+              const done = items.filter(i => i.checked);
+              const byName = (a, b) => a.name.localeCompare(b.name, "fr");
+              let sections;
+              if (viewMode === "categorie") {
+                const groups = {};
+                for (const it of todo) { const c = catOf(it.name); (groups[c] = groups[c] || []).push(it); }
+                sections = sortedCategoryEntries(categories)
+                  .filter(([k]) => groups[k] && groups[k].length)
+                  .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: groups[k].slice().sort(byName) }));
+              } else {
+                const arr = todo.slice();
+                if (viewMode === "alpha") arr.sort(byName);
+                sections = arr.length ? [{ key: "__all", label: null, items: arr }] : [];
+              }
+              return (
+                <>
+                  {sections.map(sec => (
+                    <div key={sec.key}>
+                      {sec.label && groupHeader(sec.label, sec.icon, sec.items.length)}
+                      {sec.items.map(renderItem)}
+                    </div>
+                  ))}
+                  {done.length > 0 && (
+                    <div>
+                      {groupHeader("Pris", "✓", done.length)}
+                      {done.slice().sort(byName).map(renderItem)}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* Ajout manuel + collage — listes libres uniquement */}
             {activeList.type === "free" && (
               <div style={{ marginTop: 16, background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", maxWidth: 520 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Ajouter un article</div>
-                <input className="field-input" placeholder="ex: 500g farine, 2 oeufs, 1 c. à soupe huile…"
-                  value={newItemName} onChange={e => setNewItemName(e.target.value)}
+                <input className="field-input" placeholder="ex: 500g farine, 2 oeufs… (ou colle une liste)"
+                  value={newItemName} onChange={e => setNewItemName(e.target.value)} onPaste={handlePaste}
                   onKeyDown={e => e.key === "Enter" && addManualItem()} style={{ marginBottom: 8 }} />
+                <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8, lineHeight: 1.4 }}>
+                  Astuce : colle une liste (une ligne par article, tirets acceptés) pour tout ajouter d'un coup.
+                </div>
                 {newItemName.trim() && (() => {
                   const p = parseIngredientInput(newItemName);
                   const name = p.name || newItemName.trim();
@@ -3292,6 +3628,34 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
           </div>
         </SwipeableSheet>
       )}
+      {/* Édition d'un article */}
+      {editItem && activeList && (
+        <SwipeableSheet onClose={() => setEditItem(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 14 }}>Modifier l'article</h3>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom</div>
+          <input className="field-input" value={editItem.name} onChange={e => setEditItem(p => ({ ...p, name: e.target.value }))} autoFocus style={{ marginBottom: 12 }} />
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Quantité</div>
+              <input className="field-input" value={editItem.amount} onChange={e => setEditItem(p => ({ ...p, amount: e.target.value }))} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Unité</div>
+              <input className="field-input" value={editItem.unit} onChange={e => setEditItem(p => ({ ...p, unit: e.target.value }))} />
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditItem(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
+              const name = (editItem.name || "").trim();
+              if (!name) return;
+              const m = findIngredientMatch(name, ingredientDB);
+              updateItem(activeList.id, editItem.id, { name, amount: editItem.amount, unit: editItem.unit, image: m?.image || editItem.image || "" });
+              setEditItem(null);
+            }}>Enregistrer</button>
+          </div>
+        </SwipeableSheet>
+      )}
     </div>
   );
 }
@@ -3324,6 +3688,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
   const [editCol, setEditCol] = useState(null);
   const [editCat, setEditCat] = useState(null); // { key, label, score(0-100), color, icon, isNew }
   const [confirmDelCat, setConfirmDelCat] = useState(null); // { key, label }
+  const [confirmDel, setConfirmDel] = useState(null); // { type: "ing" | "ut", item }
   const [dragCat, setDragCat] = useState(null); // key being dragged
   const [overCat, setOverCat] = useState(null); // key currently hovered as drop target
   const [jsonText, setJsonText] = useState("");
@@ -3413,12 +3778,25 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
             </button>
           ))}
         </div>
+        {/* Compteur + bannière admin : figés avec l'en-tête (restent visibles au scroll), pour Ingrédients et Ustensiles */}
+        {(section === "ingredients" || section === "ustensiles") && (() => {
+          const n = section === "ingredients" ? ingredientDB.length : utensilDB.length;
+          const noun = section === "ingredients" ? "ingrédient" : "ustensile";
+          return (
+            <div style={{ paddingTop: 14 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--text2)", padding: "0 2px", marginBottom: isAdmin ? 10 : 0 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{n}</span>
+                <span>{noun}{n > 1 ? "s" : ""} dans la base</span>
+              </div>
+              {isAdmin && <AdminBanner />}
+            </div>
+          );
+        })()}
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {isAdmin && <AdminBanner />}
             {isAdmin && (
               <button
                 onClick={() => setEditCat({ key: "", label: "", score: 50, color: "#9a9490", icon: "📦", isNew: true })}
@@ -3471,10 +3849,12 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                         <Icon name="forward" size={12} color="var(--text3)" />
                       </span>
                     </button>
-                    <button className="btn btn-primary btn-sm" style={{ flexShrink: 0, padding: "4px 10px", fontSize: 11 }}
-                      onClick={() => setEditIng({ id: "", name: "", category: catKey, image: "", nutrition: null })}>
-                      <Icon name="plus" size={12} /> Ajouter
-                    </button>
+                    {isAdmin && (
+                      <button className="btn btn-primary btn-sm" style={{ flexShrink: 0, padding: "4px 10px", fontSize: 11 }}
+                        onClick={() => setEditIng({ id: "", name: "", category: catKey, image: "", nutrition: null })}>
+                        <Icon name="plus" size={12} /> Ajouter
+                      </button>
+                    )}
                     {isAdmin && (
                       <>
                         <button onClick={() => setEditCat({ key: catKey, label: cat.label, score: (cat.score || 0) * 10, color: cat.color || "#9a9490", icon: cat.icon || "📦", isNew: false })} style={{ color: "var(--text3)", flexShrink: 0 }} title="Modifier la catégorie"><Icon name="edit" size={14} /></button>
@@ -3513,7 +3893,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                             ? <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500, padding: "2px 8px", background: "var(--surface3)", borderRadius: 8, flexShrink: 0 }}>Master</span>
                             : <>
                               <button onClick={() => setEditIng({ ...item })} style={{ color: "var(--text3)", marginRight: 4 }}><Icon name="edit" size={14} /></button>
-                              <button onClick={() => delIng(item.id)} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
+                              <button onClick={() => setConfirmDel({ type: "ing", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
                             </>
                           }
                         </div>
@@ -3528,19 +3908,18 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
         {section === "ustensiles" && (
           <div>
-            {isAdmin && <AdminBanner style={{ marginBottom: 14 }} />}
-            <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditUt({ id: "", name: "", image: "" })}><Icon name="plus" size={14} /> Nouvel ustensile</button>
+            {isAdmin && <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditUt({ id: "", name: "", image: "" })}><Icon name="plus" size={14} /> Nouvel ustensile</button>}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {utensilDB.map(item => (
                 <div key={item.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "var(--surface2)" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "#fff" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%" }} /></div>
                   <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
                   <div style={{ display: "flex", gap: 8 }}>
                     {item._ro
                       ? <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500, padding: "2px 8px", background: "var(--surface3)", borderRadius: 8 }}>Master</span>
                       : <>
                         <button onClick={() => setEditUt({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={14} /></button>
-                        <button onClick={() => delUt(item.id)} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
+                        <button onClick={() => setConfirmDel({ type: "ut", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
                       </>
                     }
                   </div>
@@ -3671,6 +4050,21 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div className="field-label">Alias / synonymes</div>
+          <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 6, lineHeight: 1.4 }}>
+            Autres noms qui doivent pointer vers cet ingrédient (ex : ciboule, cébette, oignon nouveau).
+          </p>
+          <div style={{ marginBottom: 12 }}>
+            <TagInput
+              tags={editIng.aliases || []}
+              onChange={v => setEditIng(p => ({ ...p, aliases: v }))}
+              allTags={[]}
+              label=""
+              placeholder="ciboule, cébette…"
+              inputId="alias-input-field"
+              commitOnBlur
+              dedupeInsensitive />
+          </div>
           <div className="field-label">Catégorie nutritionnelle</div>
           <select className="field-input" value={editIng.category || "other"} onChange={e => setEditIng(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
             {sortedCategoryEntries(categories).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
@@ -3739,15 +4133,15 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       )}
 
       {/* Category delete confirmation */}
-      {confirmDelCat && (
-        <SwipeableSheet onClose={() => setConfirmDelCat(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la catégorie ?</h3>
+      {confirmDel && (
+        <SwipeableSheet onClose={() => setConfirmDel(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer {confirmDel.type === "ing" ? "l'ingrédient" : "l'ustensile"} ?</h3>
           <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-            La catégorie « {confirmDelCat.label} » sera retirée de la base Master partagée. Cette action est visible par tous les utilisateurs.
+            « {confirmDel.item.name} » sera retiré de la base Master partagée. Cette action est visible par tous les utilisateurs et irréversible.
           </p>
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDelCat(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { delCat(confirmDelCat.key); setConfirmDelCat(null); }}>Supprimer</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDel(null)}>Annuler</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { confirmDel.type === "ing" ? delIng(confirmDel.item.id) : delUt(confirmDel.item.id); setConfirmDel(null); }}>Supprimer</button>
           </div>
         </SwipeableSheet>
       )}

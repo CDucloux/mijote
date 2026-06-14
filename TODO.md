@@ -1,6 +1,80 @@
 
 # Listes des fontionnalités à mijoter
 
+## 🔜 Backlog — v1.0.5
+
+- [ ] Disposer d'un badge (couelur orange ? vs couleur verte quand je suis syncrho à firebase) qui dit quand je suis en Mode offline ?
+
+- [ ] Dans la partie config ustensiles, pouvoir afficher 3 ou 4 cards sur la même ligne quand je suis en mode desktop + ustensiles triés par défaut dans l'ordre alphabétique (pareil pour liste déroulante dans menu de modif ou créa recette).
+
+- [ ] (pas sur) Alias pour les ustensiles ?
+
+- [ ] Pouvoir télécharger la liste de tous les ingrédients + ustensiles implémentés pour feed à Claude précisément (en tant que table dans un fichier markdown) ? (Nom + Aliases + dbid + catégorie ?)
+
+- [ ] Validation de schéma JSON
+
+- [ ] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
+
+## 🔜 Backlog — v1.0.4
+
+- [x] Mode Courses : 
+  - [x] Pouvoir coller une liste de courses séparés par un \n et commençant par des tirets
+  - [x] Pouvoir réordonner la liste des ingrédients (par ordre alphabétique) et possibiité d'affichage par groupe de catégories d'articles
+  - [x] Une fois cochés, les articles doivent être groupés dans une catégorie en dessous
+  - [x] Pouvoir modifier individuellement un ingrédient ou le supprimer de la liste
+  - [x] Le passage dans la catégorie "pris" doit etre plus fluide, et pas instant
+- [x] Le système de recherche du mode frigo doit etre le même que sur les autres pages
+
+- [x] Corriger le bug d'affichage sur mobile du mode pas à pas + ajouter aussi les ustensiles dans le mode pas à pas
+- [x] Charger les images + vite (gestion du cache)
+
+- [x] Au niveau du backggound d'image des ingrédients et ustensiles => il doit etre blanc (qu'on soit en theme light ou dark) - c'est plus facile à gérer car certaines images ont soit pas de bg, soit des bg blancs
+
+- [x] Tab ustensiles + ingrédients avec indicateurs de nombre + scroll à partir du message master DB
+
+## 🔜 Backlog — v1.0.3
+
+- [x] Système de parsing pluriel amélioré
+- [x] Nombre d'ingrédients sur la card de recetes dans "Mes Recettes"
+- [x] Indicateur du nombre d'ingrédients dispo dans la Master DB
+- [x] Pour la génération du pdf, avoir moins de marge sur la gauche et la droite, + avoir l'image principale de la recette
+- [x] Pur la génération du pdf, mieux géréer les sauts de page aussi
+- [x] Limiter à 24 portions MAX
+
+## 🔜 Backlog — v1.0.2
+
+- [x] Entrée dans le mode "Pas à pas" trop instantannée -> nope.
+- [x] Même système de Zoom sur la landing page
+- [x] Couleur de sélection d'éléments 
+- [x] MAJ du schéma JSON pour refléter les changements qu'il y a eu au niveau des steps (suppression du champ "description" + du sous champ "title" dans steps)
+- [x] Suppression du champ "description" quand on génère un ou plusieurs JSON de recettes + du sous champ title dans les steps
+
+- [x] UI Improvements
+  - [x] Smartphone : si je tire mon doigt vers le bas, je peux recharger la page
+  - [x] Afficher le planning avec une animation un peu comme les recettes
+  - [x] Quand on clique sur une collection, petite animation pareil, là c'est trop direct
+- [x] Listes non liées aux recettes => pas d'image
+- [x] Bouton de déconnexion en rouge
+- [x] Aller chercher la version dans le package.json
+- [x] Avatars d'images améliorés 
+
+
+## 🔜 Backlog — v1.0.1
+
+
+DB: 
+- [x] Je ne peux plus modifier la DB ingrédients Master ni les ustensiles.
+
+- [x] UI
+  - [x] A la fois un sujet UI et Backend, mais un score de santé ne peut par construction jamais être à 100 (si il est à 100 côté UI c'est moche en plus)
+  - [x] Le nom récupéré via Google Auth doit etre affiché en MAJUSCULE
+  - [x] Switcher le thème doit être déporté dans la partie profil quand je clique sur l'avatar 
+  - [x] Sur desktop comme sur mobile, quand on clique sur une recette pour l'afficher en détail, il faut faire en sorte que l'affichage ne soit pas instantanné (encore une fois, UX)
+  - [X] Sur mobile, dans la partie recette - pouvoir avoir la fonctionnalité style "swiper" à droite pour passer de manière fluide entre ingrédidents, ustensiles et étapes (pareil pour le formulaire nouvelle recette ou modifier la recette, + le switch entre info, ingrédients, ustensiles et étapes doit etre + fluide)
+  - [x] Quand on est en mode light, corriger le bug UI dans "Mon Frigo" le bouton "Tous" est trop noir
+  - [x] Uniformiser la hauteur des titres quand sur mobile + avatar
+  - [x] Sur mobile, avoir la possibilité de faire glisser vers le bas certains popups (Ajouter au planning, ajouter aux courses, ajouter au frigo, supprimer la recette, supprimer la liste)
+
 ## ✅ Fait — v1.0 Cardamome
 
 - [x] Auth & Sync
@@ -24,58 +98,24 @@
 
 - [x] Inventaire et Mode Frigo
 
+## 🔭 Horizon — v1.2+
 
-## 🔜 Backlog — v1.0.1
-
-- [x] Système de parsing pluriel amélioré
 - [ ] Refactoring des composants / modularisartion
   - [ ] Architecture aves pages /config, /recipes, etc etc
 
-- [ ] Système de recherche du mode frigo doit etre le même que sur les autres pages
-- 
-- [ ] Entrée dans le mode "Pas à pas" trop instantannée -> nope.
-
-- [x] Même système de Zoom sur la landing page
-- [x] Couleur de sélection d'éléments 
-- [x] MAJ du schéma JSON pour refléter les changements qu'il y a eu au niveau des steps (suppression du champ "description" + du sous champ "title" dans steps)
-- [x] Suppression du champ "description" quand on génère un ou plusieurs JSON de recettes + du sous champ title dans les steps
-
-- [ ] UI Improvements
-  - [ ] Smartphone : si je tire mon doigt vers le bas, je peux recharger la page
-  - [x] Afficher le planning avec une animation un peu comme les recettes
-  - [x] Quand on clique sur une collection, petite animation pareil, là c'est trop direct
-- [x] Listes non liées aux recettes => pas d'image
-- [x] Bouton de déconnexion en rouge
-- [x] Aller chercher la version dans le package.json
-- [x] Avatars d'images améliorés 
-
-DB: 
-- [x] Je ne peux plus modifier la DB ingrédients Master ni les ustensiles.
-
-- [x] UI
-  - [x] A la fois un sujet UI et Backend, mais un score de santé ne peut par construction jamais être à 100 (si il est à 100 côté UI c'est moche en plus)
-  - [x] Le nom récupéré via Google Auth doit etre affiché en MAJUSCULE
-  - [x] Switcher le thème doit être déporté dans la partie profil quand je clique sur l'avatar 
-  - [x] Sur desktop comme sur mobile, quand on clique sur une recette pour l'afficher en détail, il faut faire en sorte que l'affichage ne soit pas instantanné (encore une fois, UX)
-  - [X] Sur mobile, dans la partie recette - pouvoir avoir la fonctionnalité style "swiper" à droite pour passer de manière fluide entre ingrédidents, ustensiles et étapes (pareil pour le formulaire nouvelle recette ou modifier la recette, + le switch entre info, ingrédients, ustensiles et étapes doit etre + fluide)
-  - [x] Quand on est en mode light, corriger le bug UI dans "Mon Frigo" le bouton "Tous" est trop noir
-  - [x] Uniformiser la hauteur des titres quand sur mobile + avatar
-  - [x] Sur mobile, avoir la possibilité de faire glisser vers les bas certains popups (Ajouter au planning, ajouter aux courses, ajouter au frigo, supprimer la recette, supprimer la liste)
-
-- [ ] App & légal
-  - [ ] Page À propos — licence, crédits, copyright
-
-
-## 🔭 Horizon — v1.2+
+- [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
 
 - [ ] Communauté de mijoteurs !
 
-- [ ] Proposition automatique de plan sur une semaine
+- [ ] Proposition automatique de plan sur une semaine (Ajouter dans le mode planning ça)
   - [ ] Mode fainéant (recettes rapides)
   - [ ] Filtre saisonnier (été / hiver / …)
 
 
 - [ ] Qualité & contenu
   - [ ] Score de santé plus élaboré (pondération, Nutri-Score plus fidèle ?)
-  - [ ] Export PDF revu et amélioré ?
+  - [x] Export PDF revu et amélioré ?
   - [ ] Génération de recette via API Claude / ChatGPT (clé API utilisateur)
+
+- [ ] App & légal
+  - [ ] Page À propos — licence, crédits, copyright
