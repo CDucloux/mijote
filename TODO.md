@@ -1,19 +1,29 @@
 
 # Listes des fontionnalités à mijoter
 
-## 🔜 Backlog — v1.0.5
+## 🔜 Backlog — v1.0.6
 
-- [ ] Disposer d'un badge (couelur orange ? vs couleur verte quand je suis syncrho à firebase) qui dit quand je suis en Mode offline ?
+- [x] (En mode master uniquement) Pouvoir télécharger la liste de tous les ingrédients implémentés pour feed à Claude précisément (en tant que table dans un fichier markdown) ? (Nom + Aliases + dbid + catégorie pour ingrédients)
+  - [ ] à faire pour ustensiles
+  - [ ] (pas sur) Alias pour les ustensiles ?
 
-- [ ] Dans la partie config ustensiles, pouvoir afficher 3 ou 4 cards sur la même ligne quand je suis en mode desktop + ustensiles triés par défaut dans l'ordre alphabétique (pareil pour liste déroulante dans menu de modif ou créa recette).
-
-- [ ] (pas sur) Alias pour les ustensiles ?
-
-- [ ] Pouvoir télécharger la liste de tous les ingrédients + ustensiles implémentés pour feed à Claude précisément (en tant que table dans un fichier markdown) ? (Nom + Aliases + dbid + catégorie ?)
+- [ ] Approche + moderne sur l'ajout des ustensiles (icones, etc !) dans form crea ou modif recete
 
 - [ ] Validation de schéma JSON
-
 - [ ] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
+
+## 🔜 Backlog — v1.0.5
+
+- [x] Simplification Courses : ne plus disposer des pills Manuel, A-Z, Catégories => En effet, le tri doit par défaut etre groupé par catégorie et etre alphabétique. La catégorie "Pris" devient "Acheté" et elle est affichée en bas elle par contre - l'icone poubelle doit etre affichée en rouge + remonter "Ajouter un article" en haut de la liste + sur mode desktop, faire en sorte que ça fasse toute la largeur du screen (il faudra un switch à droite pour coller une liste avec tous les éléments plutot que de le faire dans le même widget)
+
+- [x] Limite maximum de caractères pour en moyenne 50 articles à implémenter aussi + limite à 200 caractères côté "Ajouter un article" (si pas déjà fait)
+
+- [x] Disposer d'un badge (couelur orange ? vs couleur verte quand je suis syncrho à firebase) qui dit quand je suis en Mode offline (plutot que juste "Synchronisation...") ?
+
+- [x] Dans la partie config ustensiles, pouvoir afficher 3 ou 4 cards sur la même ligne quand je suis en mode desktop + ustensiles triés par défaut dans l'ordre alphabétique dans le volet "ustensiles" de config.
+
+- [x] Partage de liste de courses
+  - [ ] A tester + en profondeur
 
 ## 🔜 Backlog — v1.0.4
 

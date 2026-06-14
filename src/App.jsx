@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, getDocs, writeBatch } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, getDocs, writeBatch, query, where } from "firebase/firestore";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import React from 'react'
 
@@ -40,6 +40,31 @@ const storage = getStorage(firebaseApp);
 
 const metaDoc = (uid, name) => doc(db, "users", uid, "meta", name);
 const recipesCol = (uid) => collection(db, "users", uid, "recipes");
+// Listes de courses partagées (lecture/écriture entre membres) : collection top-level
+// autorisée par e-mail côté règles Firestore. Annuaire des utilisateurs connus pour
+// proposer les e-mails disponibles avec avatar.
+const sharedListsCol = () => collection(db, "sharedLists");
+const sharedListDoc = (id) => doc(db, "sharedLists", id);
+const userDirCol = () => collection(db, "userDirectory");
+const userDirDoc = (uid) => doc(db, "userDirectory", uid);
+
+// Nettoie une liste avant écriture dans sharedLists (retire les champs internes _*).
+function toSharedListDoc(list, { ownerEmail, ownerUid }) {
+  const sharedWith = Array.from(new Set((list.sharedWith || []).map(e => (e || "").trim().toLowerCase()).filter(Boolean)));
+  const memberEmails = Array.from(new Set([ownerEmail, ...sharedWith].filter(Boolean)));
+  return {
+    id: list.id,
+    name: list.name || "",
+    type: list.type || "free",
+    items: list.items || [],
+    hideClear: !!list.hideClear,
+    sharedWith,
+    ownerEmail,
+    ownerUid: ownerUid || null,
+    memberEmails,
+    updatedAt: Date.now(),
+  };
+}
 
 // Read the shared Master reference DB (ingredients + utensils + categories).
 async function loadMasterDB() {
@@ -134,7 +159,7 @@ const GLOBAL_STYLE = `
     --bg:#0e0e0f;--surface:#171718;--surface2:#1f1f21;--surface3:#252527;
     --border:rgba(255,255,255,0.07);--accent:#e8703a;--accent2:#f0a875;
     --text:#f0ede8;--text2:#9a9490;--text3:#5a5754;
-    --green:#4caf7d;--red:#e05252;--yellow:#f0c060;--blue:#5b9cf6;
+    --green:#4caf7d;--red:#e05252;--yellow:#f0c060;--blue:#5b9cf6;--orange:#f0992a;
     --radius:16px;--radius-sm:10px;
     --ff-display:'Fraunces',serif;--ff-body:'DM Sans',sans-serif;
     --tab-h:72px;
@@ -228,6 +253,8 @@ const GLOBAL_STYLE = `
     .desktop-content .recipe-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))!important;}
     .desktop-content .collections-row{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))!important;gap:12px!important;overflow:visible!important;}
     .desktop-content .collections-row button{width:auto!important;}
+    /* Config ustensiles : 4 cartes par ligne sur desktop (au lieu de 2), pleine largeur */
+    .desktop-content .config-ut-grid{grid-template-columns:repeat(4,1fr)!important;}
 
     /* Detail panel — two-column on large screens */
     .detail-layout{display:flex;height:100%;overflow:hidden;}
@@ -700,9 +727,13 @@ function ImageUpload({ value, onChange, style, pathPrefix = "misc" }) {
 function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
   const [open, setOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const online = useOnline();
   if (!user) return null;
-  const syncLabel = syncStatus === "syncing" ? "Synchronisation…" : syncStatus === "synced" ? "✓ Synchronisé" : syncStatus === "error" ? "⚠ Erreur sync" : null;
-  const syncColor = syncStatus === "synced" ? "var(--green)" : syncStatus === "error" ? "var(--red)" : "var(--text3)";
+  const offline = !online;
+  const syncLabel = offline ? "⚡ Hors ligne — synchro à la reconnexion"
+    : syncStatus === "syncing" ? "Synchronisation…" : syncStatus === "synced" ? "✓ Synchronisé" : syncStatus === "error" ? "⚠ Erreur sync" : null;
+  const syncColor = offline ? "var(--orange)" : syncStatus === "synced" ? "var(--green)" : syncStatus === "error" ? "var(--red)" : "var(--text3)";
+  const showDot = offline || syncStatus !== "idle";
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
       <button onClick={() => { setOpen(o => !o); setConfirmSignOut(false); }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="Mon compte">
@@ -710,7 +741,7 @@ function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
           ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: "2px solid var(--border)" }} />
           : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>{(user.displayName || "?")[0].toUpperCase()}</div>
         }
-        <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: syncStatus === "idle" ? "none" : "block" }} />
+        <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none" }} />
       </button>
       {open && (
         <>
@@ -778,6 +809,18 @@ function useIsDesktop() {
     return () => window.removeEventListener("resize", handler);
   }, []);
   return isDesktop;
+}
+
+// État de connexion réseau (online/offline), pour distinguer « hors ligne » d'une erreur de sync.
+function useOnline() {
+  const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  useEffect(() => {
+    const on = () => setOnline(true), off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
+  return online;
 }
 
 // ─── PROGRESSIVE PAGE ZOOM (very large screens) ──────────────────────────────
@@ -962,6 +1005,23 @@ export default function App() {
   const [collections, setCollections] = useLS("rf_collections2", SAMPLE_COLLECTIONS);
   const [mealPlan, setMealPlan] = useLS("rf_mealplan2", {});
   const [shoppingLists, setShoppingLists] = useLS("rf_shopping3", []);
+  // Listes partagées (autres membres ou que je partage) — alimentées par onSnapshot.
+  const [sharedLists, setSharedLists] = useState([]);
+  // Annuaire des utilisateurs connus (pour proposer les e-mails avec avatar au partage).
+  const [directory, setDirectory] = useState([]);
+  const personalListsRef = useRef(shoppingLists);
+  const sharedListsRef = useRef(sharedLists);
+  useEffect(() => { personalListsRef.current = shoppingLists; }, [shoppingLists]);
+  useEffect(() => { sharedListsRef.current = sharedLists; }, [sharedLists]);
+  // Une liste est « partagée » dès qu'elle a au moins un invité. Le tag _shared (issu du
+  // snapshot) ne sert qu'à l'affichage — pas à la décision de routage, sinon le départage
+  // (sharedWith vidé) ne ramènerait jamais la liste en perso.
+  const listIsShared = (l) => Array.isArray(l.sharedWith) && l.sharedWith.length > 0;
+  // Vue fusionnée affichée : listes partagées d'abord, puis perso, dédoublonnées par id.
+  const mergedShoppingLists = useMemo(() => {
+    const sharedIds = new Set(sharedLists.map(l => l.id));
+    return [...sharedLists, ...shoppingLists.filter(l => !sharedIds.has(l.id))];
+  }, [shoppingLists, sharedLists]);
   // Reference DBs: shared Master + user's own additions, merged for display.
   const [masterDB, setMasterDB] = useState({ ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES });
   const [userDB, setUserDB] = useState({ ingredients: [], utensils: [] });
@@ -1002,6 +1062,85 @@ export default function App() {
     setMasterDB(prev => ({ ...prev, utensils: next }));
     if (userDB.utensils.length) setUserDB(prev => ({ ...prev, utensils: [] }));
   }, [masterDB, userDB, isAdmin]);
+
+  // Écrit les changements des listes partagées vers Firestore (création/màj/suppression/quitter).
+  // Compare l'ancien et le nouvel état fusionné pour n'écrire que ce qui change.
+  const persistSharedDiffs = useCallback(async (prevMerged, next) => {
+    if (!user?.email) return;
+    const myEmail = user.email.toLowerCase();
+    const prevById = new Map(prevMerged.map(l => [l.id, l]));
+    const nextById = new Map(next.map(l => [l.id, l]));
+    const ops = [];
+    for (const l of next) {
+      const prev = prevById.get(l.id);
+      if (!listIsShared(l)) {
+        // Départage : était partagée, redevient perso → le propriétaire supprime le doc partagé.
+        if (prev && prev._shared && (prev.ownerEmail || "").toLowerCase() === myEmail) {
+          ops.push(deleteDoc(sharedListDoc(l.id)));
+        }
+        continue;
+      }
+      const ownerEmail = (l.ownerEmail || myEmail).toLowerCase();
+      const ownerUid = l.ownerUid || (ownerEmail === myEmail ? user.uid : null);
+      const payload = toSharedListDoc(l, { ownerEmail, ownerUid });
+      const sig = p => JSON.stringify({ name: p.name, items: p.items, hideClear: !!p.hideClear, sharedWith: (p.sharedWith || []).map(e => (e || "").toLowerCase()) });
+      if (!prev || !prev._shared || sig(prev) !== sig(payload)) {
+        ops.push(setDoc(sharedListDoc(l.id), payload));
+      }
+    }
+    for (const l of prevMerged) {
+      if (l._shared && !nextById.has(l.id)) {
+        if ((l.ownerEmail || "").toLowerCase() === myEmail) {
+          ops.push(deleteDoc(sharedListDoc(l.id)));                          // propriétaire : suppression
+        } else {
+          const sharedWith = (l.sharedWith || []).filter(e => (e || "").toLowerCase() !== myEmail);
+          const memberEmails = (l.memberEmails || []).filter(e => (e || "").toLowerCase() !== myEmail);
+          ops.push(setDoc(sharedListDoc(l.id), { ...toSharedListDoc(l, { ownerEmail: (l.ownerEmail || "").toLowerCase(), ownerUid: l.ownerUid || null }), sharedWith, memberEmails })); // membre : quitter
+        }
+      }
+    }
+    if (!ops.length) return;
+    setSyncStatus("syncing");
+    const results = await Promise.allSettled(ops);
+    if (results.some(r => r.status === "rejected")) {
+      setSyncStatus("error");
+      notify("Partage indisponible : écriture refusée. Les règles Firestore sont-elles déployées ?", "error");
+    } else {
+      setSyncStatus("synced");
+    }
+  }, [user]);
+
+  // Setter unique exposé à ShoppingTab : reçoit la liste FUSIONNÉE, aiguille perso vs partagé.
+  const setMergedShoppingLists = useCallback((updater) => {
+    const myEmail = (user?.email || "").toLowerCase();
+    const sharedIds = new Set(sharedListsRef.current.map(l => l.id));
+    // Vue fusionnée identique au memo : la version partagée prime sur la copie perso de même id.
+    const prevMerged = [...sharedListsRef.current, ...personalListsRef.current.filter(l => !sharedIds.has(l.id))];
+    const next = typeof updater === "function" ? updater(prevMerged) : updater;
+
+    const ownerOf = l => (l.ownerEmail || myEmail).toLowerCase();
+    const isMine = l => !listIsShared(l) || ownerOf(l) === myEmail;
+
+    // Anti-perte : le PROPRIÉTAIRE garde toujours une copie perso durable, même partagée.
+    // Les listes partagées PAR d'autres ne vivent que dans la collection partagée.
+    const nextPersonal = next.filter(isMine);
+    const nextShared = next.filter(listIsShared);
+
+    const strippedPersonal = nextPersonal.map(l => {
+      const { _shared, memberEmails, ownerUid, ...rest } = l;
+      if (listIsShared(l)) return { ...rest, ownerEmail: ownerOf(l) };  // conserve sharedWith + ownerEmail
+      const { ownerEmail, sharedWith, ...clean } = rest;                // perso non partagée : aucune méta de partage
+      return clean;
+    });
+    if (JSON.stringify(personalListsRef.current) !== JSON.stringify(strippedPersonal)) setShoppingLists(strippedPersonal);
+
+    setSharedLists(nextShared.map(l => {                              // reflet optimiste immédiat
+      const ownerEmail = ownerOf(l);
+      const sw = (l.sharedWith || []).map(e => (e || "").toLowerCase());
+      return { ...l, _shared: true, ownerEmail, ownerUid: l.ownerUid || (ownerEmail === myEmail ? user?.uid : null), memberEmails: Array.from(new Set([ownerEmail, ...sw])) };
+    }));
+    persistSharedDiffs(prevMerged, next);
+  }, [persistSharedDiffs, setShoppingLists, user]);
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -1125,6 +1264,31 @@ export default function App() {
   useEffect(() => { saveMeta("collections", { items: collections }); }, [collections]);
   useEffect(() => { saveMeta("mealPlan", { data: mealPlan }); }, [mealPlan]);
   useEffect(() => { saveMeta("shoppingLists", { items: shoppingLists }); }, [shoppingLists]);
+
+  // Abonnement temps réel aux listes partagées dont je suis membre (par e-mail).
+  useEffect(() => {
+    if (!user?.email) { setSharedLists([]); return; }
+    const email = user.email.toLowerCase();
+    let unsub;
+    try {
+      unsub = onSnapshot(
+        query(sharedListsCol(), where("memberEmails", "array-contains", email)),
+        snap => setSharedLists(snap.docs.map(d => ({ ...d.data(), _shared: true }))),
+        () => { } // règles non déployées / hors-ligne : on ignore silencieusement
+      );
+    } catch { /* noop */ }
+    return () => { if (unsub) unsub(); };
+  }, [user]);
+
+  // Annuaire : publie ma fiche (e-mail/avatar) et charge celles des autres pour le partage.
+  useEffect(() => {
+    if (!user) { setDirectory([]); return; }
+    setDoc(userDirDoc(user.uid), {
+      uid: user.uid, email: (user.email || "").toLowerCase(),
+      displayName: user.displayName || "", photoURL: user.photoURL || "", updatedAt: Date.now(),
+    }, { merge: true }).catch(() => { });
+    getDocs(userDirCol()).then(s => setDirectory(s.docs.map(d => d.data()))).catch(() => { });
+  }, [user]);
   useEffect(() => { saveMeta("fridge", { items: fridge, settings: fridgeSettings }); }, [fridge, fridgeSettings]);
   useEffect(() => { saveMeta("userDB", userDB); }, [userDB]);
 
@@ -1403,7 +1567,7 @@ export default function App() {
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
-      {tab === "shopping" && <ShoppingTab shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
+      {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
@@ -3319,7 +3483,11 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
     </div>
   );
 }
-function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
+// Bornes pour limiter les écritures Firestore.
+const MAX_LIST_ITEMS = 50;                   // nb max d'articles ajoutés en une fois (collage)
+const MAX_ITEM_CHARS = 200;                  // longueur max du nom d'un article (saisie unique)
+const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractères en moyenne
+function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, directory = [], syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
   const [activeListId, setActiveListId] = useState(null);
   const [newListName, setNewListName] = useState("");
   const [showNewList, setShowNewList] = useState(false);
@@ -3327,9 +3495,12 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
   const [newItemAmount, setNewItemAmount] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const [viewMode, setViewMode] = useState("manuel"); // "manuel" | "alpha" | "categorie"
   const [editItem, setEditItem] = useState(null);      // article en cours d'édition
-  const [pending, setPending] = useState(() => new Set()); // articles en cours d'animation → « Pris »
+  const [pending, setPending] = useState(() => new Set()); // articles en cours d'animation → « Acheté »
+  const [listMode, setListMode] = useState(false);     // false = article par article ; true = coller une liste
+  const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
+  const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
+  const [shareEmail, setShareEmail] = useState("");    // saisie e-mail dans la section partage
 
   const activeList = shoppingLists.find(l => l.id === activeListId) || shoppingLists[0] || null;
 
@@ -3352,7 +3523,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
   const addManualItem = () => {
     if (!newItemName.trim() || !activeList) return;
     const parsed = parseIngredientInput(newItemName);
-    const name = parsed.name || newItemName.trim();
+    const name = (parsed.name || newItemName.trim()).slice(0, MAX_ITEM_CHARS);
     const dbMatch = findIngredientMatch(name, ingredientDB);
     const item = { id: "si" + Date.now(), name, amount: parsed.amount || "", unit: parsed.unit || "", image: dbMatch?.image || "", checked: false };
     updateList(activeList.id, l => ({ ...l, items: [...l.items, item] }));
@@ -3370,23 +3541,19 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
   const stripBullet = s => s.replace(/^\s*[-*\u2022\u00b7\u2013\u2014]+\s*/, "").replace(/^\s*\d+[.)]\s*/, "").trim();
   const addManyFromText = text => {
     if (!activeList) return;
-    const lines = text.split(/\r?\n/).map(stripBullet).filter(Boolean);
+    const lines = text.split(/\r?\n/).map(stripBullet).filter(Boolean).slice(0, MAX_LIST_ITEMS);
     if (!lines.length) return;
     const items = lines.map((line, idx) => {
       const p = parseIngredientInput(line);
-      const name = p.name || line;
+      const name = (p.name || line).slice(0, MAX_ITEM_CHARS);
       const m = findIngredientMatch(name, ingredientDB);
       return { id: "si" + Date.now() + "_" + idx, name, amount: p.amount || "", unit: p.unit || "", image: m?.image || "", checked: false };
     });
     updateList(activeList.id, l => ({ ...l, items: [...l.items, ...items] }));
     setNewItemName("");
   };
-  const handlePaste = e => {
-    const text = (e.clipboardData || window.clipboardData)?.getData("text") || "";
-    if (/\r?\n/.test(text)) { e.preventDefault(); addManyFromText(text); }
-  };
 
-  // En-tête de groupe (catégorie ou « Pris »).
+  // En-tête de groupe (catégorie ou « Acheté »).
   const groupHeader = (label, icon, count) => (
     <div style={{ display: "flex", alignItems: "center", gap: 7, margin: "14px 2px 8px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>
       {icon && <span style={{ fontSize: 13 }}>{icon}</span>}
@@ -3408,7 +3575,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
           if (striking) return;
           setPending(prev => { const n = new Set(prev); n.add(item.id); return n; }); // 1) barre sur place
           setTimeout(() => {
-            toggleItem(activeList.id, item.id);                              // 2) puis déplace vers « Pris »
+            toggleItem(activeList.id, item.id);                              // 2) puis déplace vers « Acheté »
             setPending(prev => { const n = new Set(prev); n.delete(item.id); return n; });
           }, 320);
         }}
@@ -3430,8 +3597,8 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
           <Icon name="edit" size={13} />
         </button>
         <button onClick={() => deleteItem(activeList.id, item.id)} title="Supprimer"
-          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)" }}>
-          <Icon name="trash" size={13} />
+          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}>
+          <Icon name="trash" size={13} color="var(--red)" />
         </button>
       </div>
     );
@@ -3481,6 +3648,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
                     border: `1px solid ${isActive ? "transparent" : "var(--border)"}`
                   }}>
                   <Icon name={l.type === "recipe" ? "book" : "shopping"} size={12} color={isActive ? "#fff" : "var(--text3)"} />
+                  {l._shared && <Icon name="share" size={11} color={isActive ? "#fff" : "var(--text3)"} />}
                   {l.name}
                   {l.items.length > 0 && (
                     <span style={{ fontSize: 10, background: isActive ? "rgba(255,255,255,0.25)" : "var(--surface3)", borderRadius: 10, padding: "1px 6px" }}>
@@ -3511,6 +3679,14 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{activeList.name}</span>
               {activeList.type === "recipe" && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--text3)" }}>Recette</span>}
+              {activeList._shared && (
+                <span style={{ marginLeft: 8, fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <Icon name="share" size={11} color="var(--text3)" />
+                  {(activeList.ownerEmail || "").toLowerCase() === (user?.email || "").toLowerCase()
+                    ? `Partagée · ${(activeList.sharedWith || []).length} invité(s)`
+                    : `Partagée par ${activeList.ownerEmail}`}
+                </span>
+              )}
               {total > 0 && (
                 <div style={{ height: 3, background: "var(--surface2)", borderRadius: 2, marginTop: 6, overflow: "hidden" }}>
                   <div style={{ height: "100%", background: "var(--green)", borderRadius: 2, width: `${(checked / total) * 100}%`, transition: "width 0.3s" }} />
@@ -3518,25 +3694,80 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
               )}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
-              {checked > 0 && <button className="btn btn-ghost btn-sm" onClick={() => clearChecked(activeList.id)}><Icon name="check" size={12} /> Vider cochés</button>}
+              <button className="btn btn-ghost btn-sm" title="Configurer la liste" onClick={() => { setConfigList({ ...activeList, sharedWith: activeList.sharedWith || [] }); setShareEmail(""); }}><Icon name="settings" size={14} /></button>
               <button className="btn btn-danger btn-sm" onClick={() => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id)}><Icon name="trash" size={13} /></button>
             </div>
           </div>
 
-          {/* Affichage + items */}
+          {/* Liste — pleine largeur, défilante */}
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
-            {/* Ordre d'affichage : manuel / alphabétique / par catégorie */}
-            {total > 0 && (
-              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-                {[["manuel", "Manuel"], ["alpha", "A→Z"], ["categorie", "Catégories"]].map(([k, lab]) => {
-                  const on = viewMode === k;
+            {/* Ajout — remonté en haut ; switch à droite : « article par article » ↔ « coller une liste » */}
+            {activeList.type === "free" && (
+              <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{listMode ? "Ajouter des articles" : "Ajouter un article"}</div>
+                  <button onClick={() => setListMode(v => !v)} title="Basculer en collage de liste"
+                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 9px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: listMode ? "var(--accent)" : "var(--surface2)", color: listMode ? "#fff" : "var(--text2)", border: `1px solid ${listMode ? "transparent" : "var(--border)"}`, transition: "all 0.15s", flexShrink: 0, whiteSpace: "nowrap" }}>
+                    <span>Coller une liste</span>
+                    <span style={{ position: "relative", width: 28, height: 15, borderRadius: 10, background: listMode ? "rgba(255,255,255,0.4)" : "var(--surface3)", transition: "background 0.15s" }}>
+                      <span style={{ position: "absolute", top: 2, left: listMode ? 15 : 2, width: 11, height: 11, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+                    </span>
+                  </button>
+                </div>
+
+                {listMode ? (() => {
+                  const count = pasteText.split(/\r?\n/).map(stripBullet).filter(Boolean).length;
+                  const over = count > MAX_LIST_ITEMS;
                   return (
-                    <button key={k} onClick={() => setViewMode(k)}
-                      style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: on ? "var(--accent)" : "var(--surface2)", color: on ? "#fff" : "var(--text2)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>
-                      {lab}
-                    </button>
+                    <>
+                      <textarea className="field-input" value={pasteText} autoFocus maxLength={MAX_LIST_CHARS}
+                        onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
+                        placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
+                        style={{ minHeight: 130, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
+                        <span style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.3 }}>Une ligne = un article (tirets, puces et numéros acceptés).</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: over ? "var(--red)" : "var(--text3)", flexShrink: 0 }}>{count}/{MAX_LIST_ITEMS}</span>
+                      </div>
+                      {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois — retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
+                      <button className="btn btn-primary" style={{ width: "100%" }} disabled={count === 0 || over}
+                        onClick={() => { addManyFromText(pasteText); setPasteText(""); setListMode(false); }}>
+                        <Icon name="plus" size={15} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}
+                      </button>
+                    </>
                   );
-                })}
+                })() : (
+                  <>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input className="field-input" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
+                        value={newItemName} onChange={e => setNewItemName(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && addManualItem()}
+                        onPaste={e => {
+                          const t = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+                          if (/\r?\n/.test(t)) { e.preventDefault(); setPasteText(p => (p ? p + "\n" : "") + t); setListMode(true); }
+                        }}
+                        style={{ flex: 1 }} />
+                      <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={addManualItem} disabled={!newItemName.trim()}>
+                        <Icon name="plus" size={15} /> Ajouter
+                      </button>
+                    </div>
+                    {newItemName.trim() && (() => {
+                      const p = parseIngredientInput(newItemName);
+                      const name = p.name || newItemName.trim();
+                      const match = findIngredientMatch(name, ingredientDB);
+                      return (
+                        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+                          {match?.image && <IngImage src={match.image} alt={match.name} size={34} />}
+                          {p.amount && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {p.amount}</span>}
+                          {p.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {p.unit}</span>}
+                          {p.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{p.name}</span>}
+                          {match
+                            ? <span style={{ fontSize: 11, background: "rgba(76,175,125,0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Reconnu</span>
+                            : p.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px" }}>Non référencé</span> : null}
+                        </div>
+                      );
+                    })()}
+                  </>
+                )}
               </div>
             )}
 
@@ -3546,72 +3777,44 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
               </div>
             )}
 
+            {/* Tri par défaut : groupé par catégorie, alphabétique dans chaque groupe ; « Acheté » en bas */}
             {(() => {
               const items = activeList.items;
               const todo = items.filter(i => !i.checked);
               const done = items.filter(i => i.checked);
               const byName = (a, b) => a.name.localeCompare(b.name, "fr");
-              let sections;
-              if (viewMode === "categorie") {
-                const groups = {};
-                for (const it of todo) { const c = catOf(it.name); (groups[c] = groups[c] || []).push(it); }
-                sections = sortedCategoryEntries(categories)
-                  .filter(([k]) => groups[k] && groups[k].length)
-                  .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: groups[k].slice().sort(byName) }));
-              } else {
-                const arr = todo.slice();
-                if (viewMode === "alpha") arr.sort(byName);
-                sections = arr.length ? [{ key: "__all", label: null, items: arr }] : [];
-              }
+              const groups = {};
+              for (const it of todo) { const c = catOf(it.name); (groups[c] = groups[c] || []).push(it); }
+              const sections = sortedCategoryEntries(categories)
+                .filter(([k]) => groups[k] && groups[k].length)
+                .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: groups[k].slice().sort(byName) }));
               return (
                 <>
                   {sections.map(sec => (
                     <div key={sec.key}>
-                      {sec.label && groupHeader(sec.label, sec.icon, sec.items.length)}
+                      {groupHeader(sec.label, sec.icon, sec.items.length)}
                       {sec.items.map(renderItem)}
                     </div>
                   ))}
                   {done.length > 0 && (
                     <div>
-                      {groupHeader("Pris", "✓", done.length)}
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, margin: "14px 2px 8px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>
+                        <span style={{ fontSize: 13 }}>✓</span>
+                        <span>Acheté</span>
+                        <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
+                        <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+                        {!activeList.hideClear && (
+                          <button className="btn btn-ghost btn-sm" style={{ padding: "3px 10px", fontSize: 11, flexShrink: 0 }} onClick={() => clearChecked(activeList.id)}>
+                            <Icon name="check" size={11} /> Vider
+                          </button>
+                        )}
+                      </div>
                       {done.slice().sort(byName).map(renderItem)}
                     </div>
                   )}
                 </>
               );
             })()}
-
-            {/* Ajout manuel + collage — listes libres uniquement */}
-            {activeList.type === "free" && (
-              <div style={{ marginTop: 16, background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", maxWidth: 520 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Ajouter un article</div>
-                <input className="field-input" placeholder="ex: 500g farine, 2 oeufs… (ou colle une liste)"
-                  value={newItemName} onChange={e => setNewItemName(e.target.value)} onPaste={handlePaste}
-                  onKeyDown={e => e.key === "Enter" && addManualItem()} style={{ marginBottom: 8 }} />
-                <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8, lineHeight: 1.4 }}>
-                  Astuce : colle une liste (une ligne par article, tirets acceptés) pour tout ajouter d'un coup.
-                </div>
-                {newItemName.trim() && (() => {
-                  const p = parseIngredientInput(newItemName);
-                  const name = p.name || newItemName.trim();
-                  const match = findIngredientMatch(name, ingredientDB);
-                  return (
-                    <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-                      {match?.image && <IngImage src={match.image} alt={match.name} size={34} />}
-                      {p.amount && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {p.amount}</span>}
-                      {p.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {p.unit}</span>}
-                      {p.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{p.name}</span>}
-                      {match
-                        ? <span style={{ fontSize: 11, background: "rgba(76,175,125,0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Reconnu</span>
-                        : p.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px" }}>Non référencé</span> : null}
-                    </div>
-                  );
-                })()}
-                <button className="btn btn-primary" style={{ width: "100%" }} onClick={addManualItem} disabled={!newItemName.trim()}>
-                  <Icon name="plus" size={15} /> Ajouter
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -3656,6 +3859,120 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, sync
           </div>
         </SwipeableSheet>
       )}
+      {/* Configuration de la liste */}
+      {configList && (() => {
+        const myEmail = (user?.email || "").toLowerCase();
+        const isOwner = !configList._shared || (configList.ownerEmail || "").toLowerCase() === myEmail;
+        const email = shareEmail.trim().toLowerCase();
+        const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        const alreadyShared = configList.sharedWith.includes(email);
+        const addEmail = (e) => {
+          const v = (e || email).trim().toLowerCase();
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || configList.sharedWith.includes(v) || v === myEmail) return;
+          setConfigList(p => ({ ...p, sharedWith: [...p.sharedWith, v] }));
+          setShareEmail("");
+        };
+        // Avatars proposés : utilisateurs connus, hors moi et hors déjà-partagés.
+        const suggestions = directory
+          .map(d => ({ ...d, email: (d.email || "").toLowerCase() }))
+          .filter(d => d.email && d.email !== myEmail && !configList.sharedWith.includes(d.email));
+        const dirByEmail = Object.fromEntries(directory.map(d => [(d.email || "").toLowerCase(), d]));
+        const Avatar = ({ d, size = 28 }) => d?.photoURL
+          ? <img src={d.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} />
+          : <span style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 700 }}>{((d?.displayName || d?.email || "?")[0] || "?").toUpperCase()}</span>;
+        return (
+          <SwipeableSheet onClose={() => setConfigList(null)}>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Configurer la liste</h3>
+
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom de la liste</div>
+            <input className="field-input" value={configList.name} maxLength={60} autoFocus
+              onChange={e => setConfigList(p => ({ ...p, name: e.target.value }))}
+              onKeyDown={e => e.key === "Enter" && e.target.blur()} style={{ marginBottom: 18 }} />
+
+            <button onClick={() => setConfigList(p => ({ ...p, hideClear: !p.hideClear }))}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: "12px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 18, cursor: "pointer", textAlign: "left" }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Cacher le bouton « Vider »</div>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Évite d'effacer les articles achetés par mégarde.</div>
+              </div>
+              <span style={{ position: "relative", flexShrink: 0, width: 38, height: 22, borderRadius: 12, background: configList.hideClear ? "var(--accent)" : "var(--surface3)", transition: "background 0.15s" }}>
+                <span style={{ position: "absolute", top: 2, left: configList.hideClear ? 18 : 2, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+              </span>
+            </button>
+
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon name="share" size={12} color="var(--text3)" /> Partage (lecture &amp; écriture)
+            </div>
+
+            {!isOwner ? (
+              <>
+                <p style={{ fontSize: 12, color: "var(--text2)", lineHeight: 1.4, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Avatar d={dirByEmail[(configList.ownerEmail || "").toLowerCase()]} /> Liste partagée par <strong>{configList.ownerEmail}</strong>. Tu peux la voir et la modifier.
+                </p>
+                <button className="btn btn-danger" style={{ width: "100%", marginBottom: 18 }}
+                  onClick={() => { setShoppingLists(prev => prev.filter(l => l.id !== configList.id)); setConfigList(null); }}>
+                  Quitter le partage
+                </button>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.4, marginBottom: 10 }}>
+                  Ajoute les personnes qui pourront voir et modifier cette liste.
+                </p>
+                <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                  <input className="field-input" type="email" inputMode="email" placeholder="email@exemple.com"
+                    value={shareEmail} onChange={e => setShareEmail(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && addEmail()} style={{ flex: 1 }} />
+                  <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={() => addEmail()} disabled={!emailValid || alreadyShared}>
+                    <Icon name="plus" size={15} /> Ajouter
+                  </button>
+                </div>
+
+                {suggestions.length > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 6 }}>Suggestions</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {suggestions.map(d => (
+                        <button key={d.email} onClick={() => addEmail(d.email)}
+                          style={{ display: "flex", alignItems: "center", gap: 7, padding: "4px 10px 4px 4px", borderRadius: 20, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", maxWidth: "100%" }}>
+                          <Avatar d={d} />
+                          <span style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.displayName || d.email}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {configList.sharedWith.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+                    {configList.sharedWith.map(e => (
+                      <div key={e} style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10, padding: "6px 10px" }}>
+                        <Avatar d={dirByEmail[e]} />
+                        <span style={{ flex: 1, fontSize: 13, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{dirByEmail[e]?.displayName ? `${dirByEmail[e].displayName} · ${e}` : e}</span>
+                        <button onClick={() => setConfigList(p => ({ ...p, sharedWith: p.sharedWith.filter(x => x !== e) }))} style={{ flexShrink: 0, color: "var(--red)" }} title="Retirer"><Icon name="close" size={14} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: 8, fontSize: 11, color: "var(--text3)", lineHeight: 1.4, background: "rgba(91,156,246,0.10)", border: "1px solid rgba(91,156,246,0.28)", borderRadius: 10, padding: "9px 12px", marginBottom: 18 }}>
+                  <span style={{ flexShrink: 0 }}>☁️</span>
+                  <span>Les personnes ajoutées verront la liste dès leur prochaine connexion et pourront l'éditer en temps réel.</span>
+                </div>
+              </>
+            )}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfigList(null)}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} disabled={!configList.name.trim()} onClick={() => {
+                const name = configList.name.trim();
+                updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear, sharedWith: configList.sharedWith }));
+                setConfigList(null);
+              }}>Enregistrer</button>
+            </div>
+          </SwipeableSheet>
+        );
+      })()}
     </div>
   );
 }
@@ -3761,6 +4078,25 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
     });
   };
 
+  // Export Markdown de toute la base d'ingrédients (admin/master) — table prête à fournir à un LLM.
+  // Colonnes : Nom · Aliases · dbid · Catégorie (clé machine, précise). Triée par catégorie puis nom.
+  const exportIngredientsMarkdown = () => {
+    const esc = s => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
+    const order = sortedCategoryEntries(categories).map(([k]) => k);
+    const rows = [...ingredientDB].sort((a, b) => {
+      const ca = order.indexOf(a.category || "other"), cb = order.indexOf(b.category || "other");
+      return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr");
+    });
+    const header = "| Nom | Aliases | dbid | Catégorie |\n|---|---|---|---|";
+    const body = rows.map(r => `| ${esc(r.name)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.id)} | ${esc(r.category || "other")} |`).join("\n");
+    const md = `# Base d'ingrédients Mijoté (${rows.length})\n\n${header}\n${body}\n`;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
+    a.download = "ingredients_mijote.md";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
@@ -3807,6 +4143,11 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                   <Icon name="plus" size={13} color="#fff" />
                 </span>
                 Définir une nouvelle catégorie
+              </button>
+            )}
+            {isAdmin && ingredientDB.length > 0 && (
+              <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={exportIngredientsMarkdown}>
+                <Icon name="download" size={14} /> Exporter la base (Markdown)
               </button>
             )}
             {sortedCategoryEntries(categories).map(([catKey, cat]) => {
@@ -3909,8 +4250,8 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
         {section === "ustensiles" && (
           <div>
             {isAdmin && <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditUt({ id: "", name: "", image: "" })}><Icon name="plus" size={14} /> Nouvel ustensile</button>}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {utensilDB.map(item => (
+            <div className="config-ut-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {[...utensilDB].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr")).map(item => (
                 <div key={item.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "#fff" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%" }} /></div>
                   <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
