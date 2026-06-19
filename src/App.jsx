@@ -3070,7 +3070,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
     a.download = "planning_repas.ics";
     a.click();
     URL.revokeObjectURL(a.href);
-    notify?.("planning_repas.ics téléchargé");
+    notify?.("Planning exporté dans ton calendrier");
   };
 
   return (
