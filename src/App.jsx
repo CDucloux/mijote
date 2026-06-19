@@ -1346,7 +1346,7 @@ function AppInner() {
     const r = recipes.find(x => x.id === id);
     if (r?.image) deleteImageByUrl(r.image);
     setRecipes(prev => prev.filter(r => r.id !== id));
-    setSelectedRecipe(null);
+    navigate("/recipes");
     notify("Recette supprimée");
   };
 
@@ -1546,14 +1546,12 @@ function AppInner() {
       setPendingTab(newTab);
     } else {
       setTab(newTab);
-      setSelectedRecipe(null);
     }
   };
 
   const confirmLeaveEditor = () => {
     setEditingRecipe(null);
     setTab(pendingTab);
-    setSelectedRecipe(null);
     setPendingTab(null);
   };
 
