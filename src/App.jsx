@@ -2025,6 +2025,20 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
         </div>
       </div>
 
+      {/* Mode Lecture banner */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", background: "linear-gradient(135deg, rgba(232,112,58,0.18), rgba(232,112,58,0.05))", borderBottom: "1px solid rgba(232,112,58,0.28)", flexShrink: 0 }}>
+        <div style={{ width: 26, height: 26, borderRadius: 8, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(232,112,58,0.4)" }}>
+          <Icon name="book" size={13} color="#fff" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>MODE LECTURE</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em", opacity: 0.9 }}>READ ONLY</span>
+        </div>
+        <button onClick={onEdit} style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "rgba(232,112,58,0.12)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontFamily: "var(--ff-body)", whiteSpace: "nowrap" }}>
+          Modifier →
+        </button>
+      </div>
+
       {/* Info bar */}
       <div style={{ display: "flex", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "10px 16px", flexShrink: 0 }}>
         {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Santé", value: <HealthRing score={recipe.healthScore || 70} size={34} />, icon: null }].map((item, i) => (
