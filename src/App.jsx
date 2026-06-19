@@ -320,9 +320,10 @@ const DEFAULT_CATEGORIES = {
   mushroom: { label: "Champignons", score: 8, color: "#9a9490", icon: "🍄", order: 12 },
   herbs: { label: "Herbes aromatiques fraîches", score: 9, color: "#4caf7d", icon: "🌿", order: 13 },
   condiment: { label: "Condiments/Épices", score: 7, color: "#9a9490", icon: "🧂", order: 14 },
-  sugar: { label: "Sucres/Sucrants", score: 1, color: "#e05252", icon: "🍬", order: 15 },
-  alcohol: { label: "Alcools", score: 0, color: "#e05252", icon: "🍷", order: 16 },
-  other: { label: "Autres", score: 5, color: "#9a9490", icon: "📦", order: 17 },
+  canned: { label: "Conserves", score: 5, color: "#b08060", icon: "🥫", order: 15 },
+  sugar: { label: "Sucres/Sucrants", score: 1, color: "#e05252", icon: "🍬", order: 16 },
+  alcohol: { label: "Alcools", score: 0, color: "#e05252", icon: "🍷", order: 17 },
+  other: { label: "Autres", score: 5, color: "#9a9490", icon: "📦", order: 18 },
 };
 
 // Return [key, cat] entries sorted by their `order` field (stable fallback to insertion).
@@ -3366,7 +3367,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
   const [editPantryItem, setEditPantryItem] = useState(null); // { id, name, quantity, unit, image, category }
   // Catégories autorisées par emplacement
   const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "protein_lean", "protein_fat", "fish_seafood", "dairy", "mushroom"]);
-  const PANTRY_CATS = new Set(["grain_whole", "grain_ref", "fat_good", "fat_bad", "nuts_seeds", "condiment", "herbs", "sugar", "alcohol", "other"]);
+  const PANTRY_CATS = new Set(["grain_whole", "grain_ref", "fat_good", "fat_bad", "nuts_seeds", "condiment", "canned", "herbs", "sugar", "alcohol", "other"]);
 
   const deletePantryItem = id => setPantry(prev => prev.filter(i => i.id !== id));
   const savePantryEdit = () => {
@@ -4534,18 +4535,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {isAdmin && (
-              <button
-                onClick={() => setEditCat({ key: "", label: "", score: 50, color: "#9a9490", icon: "📦", isNew: true })}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, width: "100%", padding: "12px 16px", borderRadius: 13, background: "var(--surface)", border: "1.5px dashed var(--accent)", color: "var(--accent)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,112,58,0.08)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; }}>
-                <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Icon name="plus" size={13} color="#fff" />
-                </span>
-                Définir une nouvelle catégorie
-              </button>
-            )}
             {isAdmin && ingredientDB.length > 0 && (
               <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={exportIngredientsMarkdown}>
                 <Icon name="download" size={14} /> Exporter la base (Markdown)
@@ -4581,7 +4570,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                       <span style={{ fontSize: 20 }}>{cat.icon}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{cat.label}</div>
-                        <div style={{ fontSize: 11, color: "var(--text3)" }}>{catIngs.length} ingrédient{catIngs.length !== 1 ? "s" : ""} · Score {cat.score * 10}/100</div>
+                        <div style={{ fontSize: 11, color: "var(--text3)" }}>{catIngs.length} ingrédient{catIngs.length !== 1 ? "s" : ""} · Score {cat.score * 10}/100 · <code style={{ fontSize: 10, background: "var(--surface2)", borderRadius: 4, padding: "1px 4px" }}>{catKey}</code></div>
                       </div>
                       <span style={{
                         display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%",
@@ -4596,12 +4585,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                         onClick={() => setEditIng({ id: "", name: "", category: catKey, image: "", nutrition: null })}>
                         <Icon name="plus" size={12} /> Ajouter
                       </button>
-                    )}
-                    {isAdmin && (
-                      <>
-                        <button onClick={() => setEditCat({ key: catKey, label: cat.label, score: (cat.score || 0) * 10, color: cat.color || "#9a9490", icon: cat.icon || "📦", isNew: false })} style={{ color: "var(--text3)", flexShrink: 0 }} title="Modifier la catégorie"><Icon name="edit" size={14} /></button>
-                        <button onClick={() => setConfirmDelCat({ key: catKey, label: cat.label })} disabled={catIngs.length > 0} style={{ color: catIngs.length > 0 ? "var(--text3)" : "var(--red)", opacity: catIngs.length > 0 ? 0.35 : 1, flexShrink: 0 }} title={catIngs.length > 0 ? "Catégorie non vide — déplacez ses ingrédients d'abord" : "Supprimer la catégorie"}><Icon name="trash" size={14} /></button>
-                      </>
                     )}
                   </div>
                   {/* Ingredients list */}
@@ -4836,45 +4819,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
         </SwipeableSheet>
       )}
 
-      {/* Category editor modal (admin only) */}
-      {editCat && (
-        <SwipeableSheet onClose={() => setEditCat(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCat.isNew ? "Nouvelle catégorie" : "Modifier la catégorie"}</h3>
-          <div className="field-label">Nom</div>
-          <input className="field-input" placeholder="ex: Boisson sucrée" value={editCat.label} onChange={e => setEditCat(p => ({ ...p, label: e.target.value }))} style={{ marginBottom: 12 }} />
-          <div className="field-label">Score santé — {editCat.score}/100</div>
-          <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8 }}>Contribue au score santé des recettes utilisant des ingrédients de cette catégorie.</p>
-          <input type="range" min="0" max="100" step="10" value={editCat.score}
-            onChange={e => setEditCat(p => ({ ...p, score: +e.target.value }))}
-            style={{ width: "100%", accentColor: editCat.color, marginBottom: 4 }} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text3)", marginBottom: 16 }}>
-            <span>0 (mauvais)</span><span>100 (excellent)</span>
-          </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            {["#4caf7d", "#5b9cf6", "#f0a875", "#f0e060", "#c8a870", "#80c080", "#e05252", "#9a9490", "#c080e0"].map(c => (
-              <button key={c} onClick={() => setEditCat(p => ({ ...p, color: c }))} style={{ width: 30, height: 30, borderRadius: "50%", background: c, border: `3px solid ${editCat.color === c ? "#fff" : "transparent"}`, boxShadow: editCat.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
-            ))}
-          </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
-            {["🥦", "🍗", "🥩", "🧀", "🌾", "🍞", "🫒", "🧈", "🍬", "🧂", "🫘", "🍷", "📦", "🐟", "🥜", "🍫", "☕", "🥤", "🍯", "🌶️"].map(ico => (
-              <button key={ico} onClick={() => setEditCat(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: editCat.icon === ico ? editCat.color + "33" : "var(--surface2)", border: `2px solid ${editCat.icon === ico ? editCat.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
-            ))}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 16 }}>
-            <span style={{ fontSize: 22 }}>{editCat.icon}</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{editCat.label || "Nom de la catégorie"}</div>
-              <div style={{ fontSize: 11, color: "var(--text3)" }}>Score {editCat.score}/100</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditCat(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveCat(editCat)} disabled={!editCat.label.trim()}>Sauvegarder</button>
-          </div>
-        </SwipeableSheet>
-      )}
 
       {/* Category delete confirmation */}
       {confirmDel && (
