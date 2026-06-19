@@ -3847,7 +3847,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
             {/* FAB — opens add modal */}
             {activeList.type === "free" && (
               <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}
-                style={{ position: "fixed", bottom: 80, right: 20, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+                style={{ position: "fixed", bottom: "calc(var(--tab-h) + 12px)", right: 20, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
                 <Icon name="plus" size={22} color="#fff" />
               </button>
             )}
