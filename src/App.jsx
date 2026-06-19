@@ -1992,7 +1992,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
   const getUtImage = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
 
   return (
-    <div style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ position: "relative", height: 220, flexShrink: 0, color: "#fff" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.5) 0%,transparent 40%,rgba(14,14,15,0.95) 100%)" }} />
@@ -2052,7 +2052,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                   <Icon name="close" size={13} color="var(--text3)" />
                 </button>
               </div>
-              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Ajouter aux courses</button>
+              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Courses</button>
               <button className="btn btn-ghost" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
             </div>
           ) : (
@@ -2063,8 +2063,12 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
         </div>
       ) : (
         <div style={{ display: "flex", gap: 8, padding: "10px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Ajouter aux courses</button>
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
+          <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
+            <Icon name="shopping" size={14} color="#fff" /> Courses
+          </button>
+          <button onClick={() => setShowMealModal(true)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 30, background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
+            <Icon name="calendar" size={14} color="var(--text)" /> Planifier
+          </button>
         </div>
       )}
 
