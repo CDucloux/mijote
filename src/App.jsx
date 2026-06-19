@@ -3363,15 +3363,10 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
   const [showPantryAdd, setShowPantryAdd] = useState(false);
   const [pantryText, setPantryText] = useState("");
   const [editPantryItem, setEditPantryItem] = useState(null); // { id, name, quantity, unit, image, category }
+  // Catégories autorisées par emplacement
+  const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "protein_lean", "protein_fat", "fish_seafood", "dairy", "mushroom"]);
+  const PANTRY_CATS = new Set(["grain_whole", "grain_ref", "fat_good", "fat_bad", "nuts_seeds", "condiment", "herbs", "sugar", "alcohol", "other"]);
 
-  const addPantryItem = () => {
-    if (!pantryText.trim()) return;
-    const p = parseIngredientInput(pantryText);
-    const name = p.name || pantryText.trim();
-    const m = findIngredientMatch(name, ingredientDB);
-    setPantry(prev => [...prev, { id: "p" + Date.now(), name, category: m?.category || "other", quantity: p.amount || "", unit: p.unit || "", image: m?.image || "" }]);
-    setPantryText("");
-  };
   const deletePantryItem = id => setPantry(prev => prev.filter(i => i.id !== id));
   const savePantryEdit = () => {
     if (!editPantryItem?.name?.trim()) return;
@@ -3393,30 +3388,41 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
     setEditItem(null); setShowAdd(false);
   };
 
-  // Ajout rapide depuis une saisie libre (comme Courses / éditeur de recette) :
-  // nom/quantité/unité inférés, catégorie + image récupérées de l'ingrédient, date = aujourd'hui.
+  const [fridgeWarn, setFridgeWarn] = useState("");
+  const [pantryWarn, setPantryWarn] = useState("");
+
   const addFridgeItem = () => {
     if (!addText.trim()) return;
     const p = parseIngredientInput(addText);
     const name = p.name || addText.trim();
     const m = findIngredientMatch(name, ingredientDB);
-    setFridge(prev => [...prev, {
-      id: "f" + Date.now(),
-      name,
-      category: m?.category || "other",
-      quantity: p.amount || "",
-      unit: p.unit || "",
-      image: m?.image || "",
-      addedAt: new Date().toISOString().slice(0, 10),
-    }]);
+    const cat = m?.category || "other";
+    if (!FRIDGE_CATS.has(cat)) {
+      setFridgeWarn(`"${name}" appartient aux étagères (${DEFAULT_CATEGORIES[cat]?.label || cat})`);
+      return;
+    }
+    setFridgeWarn("");
+    setFridge(prev => [...prev, { id: "f" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "", addedAt: new Date().toISOString().slice(0, 10) }]);
     setAddText("");
   };
+
+  const addPantryItem = () => {
+    if (!pantryText.trim()) return;
+    const p = parseIngredientInput(pantryText);
+    const name = p.name || pantryText.trim();
+    const m = findIngredientMatch(name, ingredientDB);
+    const cat = m?.category || "other";
+    if (!PANTRY_CATS.has(cat)) {
+      setPantryWarn(`"${name}" appartient au frigo (${DEFAULT_CATEGORIES[cat]?.label || cat})`);
+      return;
+    }
+    setPantryWarn("");
+    setPantry(prev => [...prev, { id: "p" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "" }]);
+    setPantryText("");
+  };
+
   const deleteItem = id => setFridge(prev => prev.filter(i => i.id !== id));
   const startEdit = item => { setNewItem({ ...item, addedAt: item.addedAt.slice(0, 10) }); setEditItem(item.id); setShowAdd(true); };
-
-  // Catégories autorisées par emplacement
-  const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "protein_lean", "protein_fat", "fish_seafood", "dairy", "mushroom"]);
-  const PANTRY_CATS = new Set(["grain_whole", "grain_ref", "fat_good", "fat_bad", "nuts_seeds", "condiment", "herbs", "sugar", "alcohol", "other"]);
 
   // Filtered stock
   const filteredFridge = fridge.filter(item => filterStatus === "all" || fridgeStatus(item) === filterStatus)
@@ -3486,8 +3492,9 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
             <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", marginBottom: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Ajouter un produit</div>
               <input className="field-input" placeholder="ex: 500g poulet, 2 yaourts, 1 courgette…"
-                value={addText} onChange={e => setAddText(e.target.value)}
+                value={addText} onChange={e => { setAddText(e.target.value); setFridgeWarn(""); }}
                 onKeyDown={e => e.key === "Enter" && addFridgeItem()} style={{ marginBottom: 8 }} />
+              {fridgeWarn && <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>⚠️ {fridgeWarn} — ajoute-le dans les étagères.</div>}
               {addText.trim() && (() => {
                 const p = parseIngredientInput(addText);
                 const name = p.name || addText.trim();
@@ -3560,13 +3567,14 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
             {/* Quick add */}
             <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
               <input className="field-input" placeholder="ex: 400g tomates pelées, huile d'olive…" value={pantryText}
-                onChange={e => setPantryText(e.target.value)}
+                onChange={e => { setPantryText(e.target.value); setPantryWarn(""); }}
                 onKeyDown={e => e.key === "Enter" && addPantryItem()}
                 style={{ flex: 1 }} />
               <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={addPantryItem} disabled={!pantryText.trim()}>
                 <Icon name="plus" size={15} /> Ajouter
               </button>
             </div>
+            {pantryWarn && <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>⚠️ {pantryWarn} — ajoute-le dans le frigo.</div>}
 
             {pantry.length === 0 ? (
               <div style={{ textAlign: "center", color: "var(--text3)", padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
