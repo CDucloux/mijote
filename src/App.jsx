@@ -1978,7 +1978,7 @@ function RecipeNotFound({ onBack }) {
       <div>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginBottom: 8 }}>Recette introuvable</h2>
         <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, maxWidth: 280 }}>
-          Ce lien ne correspond à aucune recette de ta collection. Elle a peut-être été supprimée.
+          Ce lien ne correspond à aucune recette de la collection. Elle a peut-être été supprimée.
         </p>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
@@ -3070,7 +3070,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
     a.download = "planning_repas.ics";
     a.click();
     URL.revokeObjectURL(a.href);
-    notify?.("planning_repas.ics téléchargé ✓");
+    notify?.("planning_repas.ics téléchargé");
   };
 
   return (
