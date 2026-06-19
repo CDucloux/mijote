@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNavigate, useLocation, useParams, Navigate, Routes, Route } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
@@ -197,7 +198,7 @@ const GLOBAL_STYLE = `
   .slide-up{animation:slideUp 0.28s cubic-bezier(0.25,0.46,0.45,0.94) both;}
   @keyframes slideUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn 0.2s;}
-  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
   .modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:20px;max-height:92dvh;overflow-y:auto;animation:sheetUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94);}
   @keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
   .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
@@ -786,12 +787,14 @@ function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 const TABS = [
-  { id: "home", label: "Recettes", icon: "book" },
-  { id: "meal-plan", label: "Planning", icon: "calendar" },
-  { id: "shopping", label: "Courses", icon: "shopping" },
-  { id: "fridge", label: "Frigo", icon: "fridge" },
-  { id: "config", label: "Config", icon: "settings" },
+  { id: "home", label: "Recettes", icon: "book", path: "/recipes" },
+  { id: "meal-plan", label: "Planning", icon: "calendar", path: "/meal-plan" },
+  { id: "shopping", label: "Courses", icon: "shopping", path: "/shopping-lists" },
+  { id: "fridge", label: "Frigo", icon: "fridge", path: "/fridge" },
+  { id: "config", label: "Config", icon: "settings", path: "/config" },
 ];
+const TAB_BY_PATH = Object.fromEntries(TABS.map(t => [t.path, t.id]));
+const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t.path]));
 
 // ─── LOCAL STORAGE HELPERS ────────────────────────────────────────────────────
 function useLS(key, def) {
@@ -992,9 +995,12 @@ function PullToRefresh({ enabled, onRefresh, children, threshold = 110 }) {
 }
 
 
-export default function App() {
+function AppInner() {
   usePageZoom();
-  const [tab, setTab] = useState("home");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const tab = TAB_BY_PATH[location.pathname] || "home";
+  const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/recipes"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
@@ -1143,7 +1149,12 @@ export default function App() {
   }, [persistSharedDiffs, setShoppingLists, user]);
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const { id: recipeIdParam } = useParams();
+  const selectedRecipe = recipeIdParam || null;
+  const setSelectedRecipe = useCallback((id) => {
+    if (id) navigate(`/recipes/${id}`);
+    else navigate(location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname, { replace: true });
+  }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [notification, setNotification] = useState(null);
 
@@ -1335,7 +1346,7 @@ export default function App() {
     const r = recipes.find(x => x.id === id);
     if (r?.image) deleteImageByUrl(r.image);
     setRecipes(prev => prev.filter(r => r.id !== id));
-    setSelectedRecipe(null);
+    navigate("/recipes");
     notify("Recette supprimée");
   };
 
@@ -1535,14 +1546,12 @@ export default function App() {
       setPendingTab(newTab);
     } else {
       setTab(newTab);
-      setSelectedRecipe(null);
     }
   };
 
   const confirmLeaveEditor = () => {
     setEditingRecipe(null);
     setTab(pendingTab);
-    setSelectedRecipe(null);
     setPendingTab(null);
   };
 
@@ -1566,7 +1575,7 @@ export default function App() {
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
-      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} notify={notify} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
@@ -1587,9 +1596,59 @@ export default function App() {
   if (user === undefined) return (
     <>
       <style>{GLOBAL_STYLE}</style>
-      <div id="root" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100dvh", flexDirection: "column", gap: 16 }}>
-        <div style={{ fontSize: 32 }}>🫕</div>
-        <div style={{ fontSize: 14, color: "var(--text3)" }}>Chargement…</div>
+      <style>{`
+        @keyframes loadingFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes loadingPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.7;transform:scale(0.97);}}
+        .loading-root{
+          min-height:100dvh;width:100%;display:flex;flex-direction:column;
+          align-items:center;justify-content:center;gap:0;
+          background:var(--bg);position:relative;overflow:hidden;
+        }
+        .loading-blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.13;pointer-events:none;}
+        .loading-card{
+          position:relative;z-index:1;display:flex;flex-direction:column;
+          align-items:center;gap:0;
+          animation:loadingFadeIn 0.5s cubic-bezier(0.25,0.46,0.45,0.94) both;
+        }
+        .loading-logo{
+          font-family:var(--ff-display);font-size:28px;font-weight:500;
+          letter-spacing:-0.02em;color:var(--text);margin-bottom:32px;
+          animation:loadingPulse 2.4s ease-in-out infinite;
+        }
+        .loading-logo span{color:var(--accent);}
+        .loading-spinner-wrap{position:relative;width:56px;height:56px;margin-bottom:28px;}
+        .loading-spinner-track{
+          position:absolute;inset:0;border-radius:50%;
+          border:2.5px solid var(--border);
+        }
+        .loading-spinner{
+          position:absolute;inset:0;border-radius:50%;
+          border:2.5px solid transparent;
+          border-top-color:var(--accent);
+          border-right-color:var(--accent2);
+          animation:spin 0.9s cubic-bezier(0.4,0,0.2,1) infinite;
+        }
+        .loading-emoji{
+          position:absolute;inset:0;display:flex;align-items:center;
+          justify-content:center;font-size:22px;
+        }
+        .loading-label{
+          font-size:13px;color:var(--text3);font-family:var(--ff-body);
+          font-weight:400;letter-spacing:0.01em;
+        }
+      `}</style>
+      <div className={`loading-root${isDark ? "" : " light"}`}>
+        <div className="loading-blob" style={{ width:320,height:320,background:"var(--accent)",top:"-60px",right:"-60px" }} />
+        <div className="loading-blob" style={{ width:240,height:240,background:"#5b9cf6",bottom:"60px",left:"-50px" }} />
+        <div className="loading-card">
+          <div className="loading-logo">Mijoté<span>·</span></div>
+          <div className="loading-spinner-wrap">
+            <div className="loading-spinner-track" />
+            <div className="loading-spinner" />
+            <div className="loading-emoji">🫕</div>
+          </div>
+          <div className="loading-label">Connexion en cours…</div>
+        </div>
       </div>
     </>
   );
@@ -1664,8 +1723,13 @@ export default function App() {
       <style>{GLOBAL_STYLE}</style>
       <div id="root" className={isDark ? "" : "light"}>
         {notification && (
-          <div style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)", background: notification.type === "error" ? "var(--red)" : "var(--green)", color: "#fff", padding: "10px 20px", borderRadius: 30, fontSize: 13, fontWeight: 500, zIndex: 999, boxShadow: "0 4px 20px rgba(0,0,0,0.4)", whiteSpace: "nowrap", animation: "slideUp 0.2s" }}>
-            {notification.msg}
+          <div style={{ position: "fixed", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: notification.type === "error" ? "var(--red)" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: "toastIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both" }}>
+              <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name={notification.type === "error" ? "close" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
+              </div>
+              {notification.msg}
+            </div>
           </div>
         )}
         {isDesktop ? (
@@ -1701,6 +1765,21 @@ export default function App() {
         )}
       </div>
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/recipes" replace />} />
+      <Route path="/recipes" element={<AppInner />} />
+      <Route path="/recipes/:id" element={<AppInner />} />
+      <Route path="/meal-plan" element={<AppInner />} />
+      <Route path="/shopping-lists" element={<AppInner />} />
+      <Route path="/fridge" element={<AppInner />} />
+      <Route path="/config" element={<AppInner />} />
+      <Route path="*" element={<Navigate to="/recipes" replace />} />
+    </Routes>
   );
 }
 
@@ -1922,7 +2001,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
   const getUtImage = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
 
   return (
-    <div style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ position: "relative", height: 220, flexShrink: 0, color: "#fff" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.5) 0%,transparent 40%,rgba(14,14,15,0.95) 100%)" }} />
@@ -1982,7 +2061,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                   <Icon name="close" size={13} color="var(--text3)" />
                 </button>
               </div>
-              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Ajouter aux courses</button>
+              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Courses</button>
               <button className="btn btn-ghost" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
             </div>
           ) : (
@@ -1993,8 +2072,12 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
         </div>
       ) : (
         <div style={{ display: "flex", gap: 8, padding: "10px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Ajouter aux courses</button>
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
+          <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
+            <Icon name="shopping" size={14} color="#fff" /> Courses
+          </button>
+          <button onClick={() => setShowMealModal(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 30, background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
+            <Icon name="calendar" size={14} color="var(--text)" /> Planifier
+          </button>
         </div>
       )}
 
@@ -2455,6 +2538,100 @@ function TagInput({ tags, onChange, allTags, label = "Tags", placeholder = "Vég
 }
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
+function UtensilPicker({ utensilDB, selected, onChange }) {
+  const [search, setSearch] = useState("");
+  const selectedIds = new Set(selected.map(u => u.dbId));
+
+  const toggle = (d) => {
+    if (selectedIds.has(d.id)) {
+      onChange(selected.filter(u => u.dbId !== d.id));
+    } else {
+      onChange([...selected, { id: "u" + Date.now(), dbId: d.id, name: d.name }]);
+    }
+  };
+
+  const filtered = utensilDB.filter(d =>
+    !search || d.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div style={{ minWidth: "100%", scrollSnapAlign: "start", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* Selected chips */}
+      {selected.length > 0 && (
+        <div style={{ padding: "14px 16px 0", display: "flex", flexWrap: "wrap", gap: 8, flexShrink: 0 }}>
+          {selected.map(u => {
+            const db = utensilDB.find(d => d.id === u.dbId);
+            return (
+              <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: "rgba(232,112,58,0.12)", border: "1px solid rgba(232,112,58,0.35)" }}>
+                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {db?.image
+                    ? <img src={db.image} alt={u.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} referrerPolicy="no-referrer" loading="lazy" />
+                    : <Icon name="photo" size={12} color="#b3afaa" />}
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{u.name}</span>
+                <button onClick={() => toggle({ id: u.dbId, name: u.name })} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
+                  <Icon name="close" size={12} color="var(--accent)" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Search */}
+      <div style={{ padding: "12px 16px 8px", flexShrink: 0 }}>
+        <div style={{ position: "relative" }}>
+          <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex" }}>
+            <Icon name="search" size={14} color="var(--text3)" />
+          </div>
+          <input
+            className="field-input"
+            placeholder="Rechercher un ustensile…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ paddingLeft: 32 }}
+          />
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "4px 16px 20px" }}>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "32px 0" }}>Aucun ustensile trouvé</div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {filtered.map(d => {
+              const on = selectedIds.has(d.id);
+              return (
+                <button key={d.id} onClick={() => toggle(d)} style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                  padding: "14px 8px 10px",
+                  borderRadius: 14,
+                  background: on ? "rgba(232,112,58,0.1)" : "var(--surface)",
+                  border: `1.5px solid ${on ? "var(--accent)" : "var(--border)"}`,
+                  cursor: "pointer", position: "relative", transition: "all 0.15s",
+                }}>
+                  {on && (
+                    <div style={{ position: "absolute", top: 7, right: 7, width: 18, height: 18, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Icon name="check" size={10} color="#fff" />
+                    </div>
+                  )}
+                  <div style={{ width: 56, height: 56, borderRadius: 12, background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)" }}>
+                    {d.image
+                      ? <img src={d.image} alt={d.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} referrerPolicy="no-referrer" loading="lazy" />
+                      : <Icon name="photo" size={22} color="#b3afaa" />}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: on ? "var(--accent)" : "var(--text2)", textAlign: "center", lineHeight: 1.3, wordBreak: "break-word" }}>{d.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, collections, recipes }) {
   const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], tags: recipe.tags || [], collections: recipe.collections || [] });
   const [section, setSection] = useState("info");
@@ -2614,26 +2791,7 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
         </div>
 
         {/* Slide 3 — Ustensiles */}
-        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {form.utensils.map(u => (
-              <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, padding: 14, border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <select className="field-input" value={u.dbId} onChange={e => {
-                    const item = utensilDB.find(d => d.id === e.target.value);
-                    up("utensils", form.utensils.map(x => x.id === u.id ? { ...x, dbId: e.target.value, name: item?.name || "" } : x));
-                  }}>
-                    <option value="">— Sélectionner —</option>
-                    {utensilDB.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                </div>
-                <button onClick={() => remUt(u.id)}><Icon name="trash" size={14} color="var(--red)" /></button>
-              </div>
-            ))}
-            <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addUt}><Icon name="plus" size={16} /> Ajouter un ustensile</button>
-          </div>
-          <div style={{ height: 20 }} />
-        </div>
+        <UtensilPicker utensilDB={utensilDB} selected={form.utensils} onChange={v => up("utensils", v)} />
 
         {/* Slide 4 — Étapes */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
@@ -2782,14 +2940,13 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
-  const [viewMode, setViewMode] = useState("week");
+function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme, notify }) {
+  const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [addModal, setAddModal] = useState(null);
   const [searchQ, setSearchQ] = useState("");
-  const [icsStatus, setIcsStatus] = useState(null);
 
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -2839,7 +2996,6 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
   const escapeICS = mpEscapeICS;
 
   const exportICS = () => {
-    setIcsStatus(null);
     const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//RecipeApp//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
     let count = 0;
 
@@ -2881,7 +3037,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
 
     lines.push("END:VCALENDAR");
 
-    if (count === 0) { setIcsStatus("empty"); return; }
+    if (count === 0) { notify?.("Aucun repas dans le planning à exporter", "error"); return; }
 
     const CRLF = "\r\n";
     const blob = new Blob([lines.join(CRLF)], { type: "text/calendar;charset=utf-8" });
@@ -2890,43 +3046,30 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
     a.download = "planning_repas.ics";
     a.click();
     URL.revokeObjectURL(a.href);
-    setIcsStatus("done");
-    setTimeout(() => setIcsStatus(null), 3000);
+    notify?.("planning_repas.ics téléchargé ✓");
   };
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
+      <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning repas</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span></div>
           <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 10 }}>
-          <button onClick={() => setViewMode("week")} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: viewMode === "week" ? "var(--accent)" : "var(--surface2)", color: viewMode === "week" ? "#fff" : "var(--text2)", border: `1px solid ${viewMode === "week" ? "transparent" : "var(--border)"}` }}>Semaine</button>
-          <button onClick={() => setViewMode("month")} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: viewMode === "month" ? "var(--accent)" : "var(--surface2)", color: viewMode === "month" ? "#fff" : "var(--text2)", border: `1px solid ${viewMode === "month" ? "transparent" : "var(--border)"}` }}>Mois</button>
-          <button onClick={exportICS} title="Exporter en .ics (Google Calendar, Apple Calendar…)" style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={() => navigate(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
+          <span style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
+            {`${new Date(weekDays[0] + "T12:00").getDate()} — ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
+          </span>
+          <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
+          <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)", flexShrink: 0 }}>Auj.</button>
+          <button onClick={exportICS} title="Exporter en .ics (Google Calendar, Apple Calendar…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
             <Icon name="download" size={13} color="var(--blue)" /> .ics
           </button>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => navigate(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="back" size={16} /></button>
-          <span style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
-            {viewMode === "week"
-              ? `${new Date(weekDays[0] + "T12:00").getDate()} — ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`
-              : `${MP_MONTHS_FR[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
-          </span>
-          <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="forward" size={16} /></button>
-          <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)" }}>Auj.</button>
-        </div>
-        {icsStatus && (
-          <div style={{ marginTop: 8, padding: "8px 14px", borderRadius: 10, background: icsStatus === "done" ? "rgba(76,175,125,0.15)" : "rgba(232,112,58,0.12)", border: `1px solid ${icsStatus === "done" ? "rgba(76,175,125,0.35)" : "rgba(232,112,58,0.35)"}`, fontSize: 12 }}>
-            {icsStatus === "done" && <span style={{ color: "var(--green)" }}>✓ planning_repas.ics téléchargé — ouvre-le pour importer dans Google Calendar</span>}
-            {icsStatus === "empty" && <span style={{ color: "var(--accent2)" }}>⚠ Aucun repas dans le planning à exporter</span>}
-          </div>
-        )}
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "12px 12px 16px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
         {viewMode === "week" && (
           <div key={`week-${weekDays[0]}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {weekDays.map((date, di) => {
@@ -2955,31 +3098,6 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
           </div>
         )}
 
-        {viewMode === "month" && (
-          <div key={`month-${currentDate.getFullYear()}-${currentDate.getMonth()}`}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
-              {MP_DAYS_SHORT.map(d => <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: "var(--text3)", padding: "4px 0" }}>{d}</div>)}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
-              {monthDays.map((date, i) => {
-                if (!date) return <div key={i} />;
-                const isToday = date === todayStr;
-                const d = new Date(date + "T12:00");
-                const midiMeals = getMeals(date, "midi");
-                const soirMeals = getMeals(date, "soir");
-                return (
-                  <button key={date} onClick={() => openAdd(date, ["midi"])} className="slide-up"
-                    style={{ background: "var(--surface)", borderRadius: 10, padding: "5px 4px", minHeight: 64, border: `1px solid ${isToday ? "rgba(232,112,58,0.5)" : "var(--border)"}`, textAlign: "left", cursor: "pointer", animationDelay: `${Math.min(i, 28) * 0.012}s` }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: isToday ? "var(--accent)" : "var(--text3)", textAlign: "center", marginBottom: 4 }}>{d.getDate()}</div>
-                    {midiMeals.slice(0, 1).map((m, mi) => { const r = recipes.find(x => x.id === m.recipeId); return r ? <div key={mi} style={{ background: MP_SLOT_COLOR.midi, borderRadius: 3, padding: "1px 3px", fontSize: 8, color: MP_SLOT_TEXT.midi, marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</div> : null; })}
-                    {soirMeals.slice(0, 1).map((m, mi) => { const r = recipes.find(x => x.id === m.recipeId); return r ? <div key={mi} style={{ background: MP_SLOT_COLOR.soir, borderRadius: 3, padding: "1px 3px", fontSize: 8, color: MP_SLOT_TEXT.soir, marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</div> : null; })}
-                    {(midiMeals.length + soirMeals.length) > 2 && <div style={{ fontSize: 8, color: "var(--text3)", textAlign: "center" }}>+{midiMeals.length + soirMeals.length - 2}</div>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Add recipe modal */}
@@ -3346,12 +3464,12 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {filteredFridge.map(item => {
+              {filteredFridge.map((item, idx) => {
                 const status = fridgeStatus(item);
                 const days = fridgeDaysAge(item.addedAt);
                 const thresh = FRIDGE_THRESHOLDS[item.category || "other"];
                 return (
-                  <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${status === "danger" ? "rgba(224,82,82,0.3)" : status === "warn" ? "rgba(240,192,96,0.25)" : "var(--border)"}` }}>
+                  <div key={item.id} className="slide-up" style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${status === "danger" ? "rgba(224,82,82,0.3)" : status === "warn" ? "rgba(240,192,96,0.25)" : "var(--border)"}`, animationDelay: `${idx * 0.04}s` }}>
                     {/* Image de l'ingrédient (comme dans les autres menus), avec repli si non référencé */}
                     <IngImage src={item.image || (findIngredientMatch(item.name, ingredientDB)?.image || "")} alt={item.name} size={46} />
                     {/* Info */}
@@ -3402,9 +3520,9 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <p style={{ fontSize: 12, color: "var(--text3)", marginBottom: 4 }}>{matchedRecipes.length} recette{matchedRecipes.length > 1 ? "s" : ""} avec au moins {fridgeSettings.matchThreshold}% des ingrédients disponibles</p>
-                {matchedRecipes.map(({ recipe, matched, total, pct }) => (
-                  <button key={recipe.id} onClick={() => onSelectRecipe(recipe.id)}
-                    style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)", textAlign: "left", transition: "border-color 0.15s" }}>
+                {matchedRecipes.map(({ recipe, matched, total, pct }, idx) => (
+                  <button key={recipe.id} onClick={() => onSelectRecipe(recipe.id)} className="slide-up"
+                    style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)", textAlign: "left", transition: "border-color 0.15s", animationDelay: `${idx * 0.04}s` }}>
                     <div style={{ width: 52, height: 52, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{recipe.name}</div>
@@ -3636,14 +3754,14 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
         {/* List selector tabs */}
         {shoppingLists.length > 0 && (
           <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8 }}>
-            {shoppingLists.map(l => {
+            {shoppingLists.map((l, idx) => {
               const isActive = (activeListId === l.id) || (!activeListId && shoppingLists[0] === l);
               const lChecked = l.items.filter(i => i.checked).length;
               return (
-                <button key={l.id} onClick={() => setActiveListId(l.id)}
+                <button key={l.id} onClick={() => setActiveListId(l.id)} className="slide-up"
                   style={{
                     flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-                    background: isActive ? "var(--accent)" : "var(--surface2)",
+                    background: isActive ? "var(--accent)" : "var(--surface2)", animationDelay: `${idx * 0.05}s`,
                     color: isActive ? "#fff" : "var(--text2)",
                     border: `1px solid ${isActive ? "transparent" : "var(--border)"}`
                   }}>
@@ -3673,7 +3791,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 
       {/* Active list content */}
       {activeList && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* List header */}
           <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
@@ -3978,6 +4096,137 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 }
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
+// ─── CHANGELOG SECTION ────────────────────────────────────────────────────────
+const CHANGELOG = [
+  {
+    version: "1.0.6", label: "en cours", accent: true,
+    items: [
+      "Routage URL complet : chaque recette a son propre lien /recipes/:id",
+      "Écran de chargement animé avec spinner après connexion Google",
+      "En-tête fixe dans le détail d'une recette lors du scroll",
+      "Suppression du mode \"Mois\" dans le planning",
+      "Animations d'entrée sur toutes les pages",
+      "Sélecteur d'ustensiles moderne avec images et recherche",
+      "Bandeau \"Mode Lecture\" dans la configuration",
+      "Notifications toast avec icône et animation corrigée",
+    ],
+  },
+  {
+    version: "1.0.5", label: "Simplification & Partage",
+    items: [
+      "Courses : tri par catégorie + alphabétique, suppression des filtres manuels",
+      "Catégorie \"Pris\" → \"Acheté\" déplacée en bas",
+      "Badge Hors ligne orange / vert selon synchronisation Firebase",
+      "Config ustensiles : 3–4 cards par ligne sur desktop, tri alphabétique",
+      "Partage de liste de courses (version alpha)",
+    ],
+  },
+  {
+    version: "1.0.4", label: "Mode Courses & Frigo",
+    items: [
+      "Courses : coller une liste séparée par des sauts de ligne",
+      "Passage dans \"Acheté\" fluide (animation)",
+      "Modification et suppression individuelles d'articles",
+      "Recherche Frigo identique aux autres pages",
+      "Mode pas à pas : correction mobile + ustensiles intégrés",
+    ],
+  },
+  {
+    version: "1.0.3", label: "PDF & Qualité",
+    items: [
+      "Parsing des pluriels amélioré",
+      "Nombre d'ingrédients sur chaque carte de recette",
+      "PDF : marges réduites, image principale, sauts de page gérés",
+      "Limite maximale de 24 portions",
+    ],
+  },
+  {
+    version: "1.0.2", label: "UX & Animations",
+    items: [
+      "Pull-to-refresh sur mobile",
+      "Animation du planning et des collections",
+      "Swiper entre Ingrédients / Ustensiles / Étapes sur mobile",
+      "Bouton de déconnexion en rouge, version depuis package.json",
+    ],
+  },
+  {
+    version: "1.0.1", label: "Stabilisation",
+    items: [
+      "Correction de l'édition de la Master DB",
+      "Score de santé plafonné à 99",
+      "Glissement vers le bas pour fermer les modals",
+    ],
+  },
+  {
+    version: "1.0.0", label: "Cardamome 🌿",
+    items: [
+      "Authentification Google, synchronisation Firebase Firestore",
+      "Mode recette pas à pas (cook mode)",
+      "Import / Export JSON (drag & drop)",
+      "Planning repas & Inventaire Frigo",
+    ],
+  },
+];
+
+function ChangelogSection() {
+  const [open, setOpen] = React.useState({});
+  const toggle = v => setOpen(p => ({ ...p, [v]: !p[v] }));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {CHANGELOG.map((entry, i) => {
+        const isLatest = i === 0;
+        const isOpen = isLatest || !!open[entry.version];
+        return (
+          <div key={entry.version} style={{ borderRadius: 14, border: isLatest ? "1px solid rgba(232,112,58,0.4)" : "1px solid var(--border)", background: isLatest ? "linear-gradient(135deg,rgba(232,112,58,0.10),rgba(232,112,58,0.03))" : "var(--surface)", overflow: "hidden" }}>
+            <button onClick={() => !isLatest && toggle(entry.version)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 16px", background: "none", border: "none", cursor: isLatest ? "default" : "pointer", textAlign: "left" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: isLatest ? "var(--accent)" : "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: isLatest ? "#fff" : "var(--text3)", letterSpacing: "-0.02em" }}>v{entry.version}</span>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: isLatest ? "var(--accent)" : "var(--text)" }}>v{entry.version}</span>
+                  {isLatest && <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 7px", letterSpacing: "0.04em" }}>NOUVEAU</span>}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 1 }}>{entry.label}</div>
+              </div>
+              {!isLatest && <Icon name={isOpen ? "back" : "forward"} size={14} color="var(--text3)" />}
+            </button>
+            {isOpen && (
+              <div style={{ padding: "0 16px 14px 62px", display: "flex", flexDirection: "column", gap: 6 }}>
+                {entry.items.map((item, j) => (
+                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--text3)", marginTop: 6, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: isLatest ? "var(--text)" : "var(--text2)", lineHeight: 1.5 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── READ-ONLY BANNER ─────────────────────────────────────────────────────────
+function ReadOnlyBanner({ style }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(155,135,245,0.20), rgba(155,135,245,0.06))", border: "1px solid rgba(155,135,245,0.38)", boxShadow: "0 2px 12px rgba(155,135,245,0.12)", ...style }}>
+      <div style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(155,135,245,0.85)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(155,135,245,0.45)" }}>
+        <Icon name="book" size={16} color="#fff" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(155,135,245,1)", letterSpacing: "0.02em" }}>MODE LECTURE</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(155,135,245,0.85)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>READ ONLY</span>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>La base partagée est gérée par l'administrateur Mijoté ✦</div>
+      </div>
+    </div>
+  );
+}
+
 // ─── ADMIN BANNER (shared Master DB notice) ───────────────────────────────────
 // Single source of truth for the "MODE ADMIN" banner. `style` lets callers add
 // spacing without duplicating the whole markup (e.g. marginBottom per section).
@@ -4108,9 +4357,10 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
-          {["ingredients", "ustensiles", "collections", "données"].map(s => (
-            <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : "Données"}
+          {["ingredients", "ustensiles", "collections", "données", "nouveautés"].map(s => (
+            <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}`, position: "relative" }}>
+              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : s === "données" ? "Données" : "Nouveautés"}
+              {s === "nouveautés" && section !== "nouveautés" && <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", border: "2px solid var(--bg)" }} />}
             </button>
           ))}
         </div>
@@ -4120,11 +4370,11 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           const noun = section === "ingredients" ? "ingrédient" : "ustensile";
           return (
             <div style={{ paddingTop: 14 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--text2)", padding: "0 2px", marginBottom: isAdmin ? 10 : 0 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--text2)", padding: "0 2px", marginBottom: 10 }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{n}</span>
                 <span>{noun}{n > 1 ? "s" : ""} dans la base</span>
               </div>
-              {isAdmin && <AdminBanner />}
+              {isAdmin ? <AdminBanner /> : <ReadOnlyBanner />}
             </div>
           );
         })()}
@@ -4231,7 +4481,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                             )}
                           </div>
                           {item._ro
-                            ? <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500, padding: "2px 8px", background: "var(--surface3)", borderRadius: 8, flexShrink: 0 }}>Master</span>
+                            ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8, flexShrink: 0 }}>Master</span>
                             : <>
                               <button onClick={() => setEditIng({ ...item })} style={{ color: "var(--text3)", marginRight: 4 }}><Icon name="edit" size={14} /></button>
                               <button onClick={() => setConfirmDel({ type: "ing", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
@@ -4257,7 +4507,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                   <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
                   <div style={{ display: "flex", gap: 8 }}>
                     {item._ro
-                      ? <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500, padding: "2px 8px", background: "var(--surface3)", borderRadius: 8 }}>Master</span>
+                      ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8 }}>Master</span>
                       : <>
                         <button onClick={() => setEditUt({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={14} /></button>
                         <button onClick={() => setConfirmDel({ type: "ut", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
@@ -4383,6 +4633,8 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
             </div>
           </div>
         )}
+
+        {section === "nouveautés" && <ChangelogSection />}
       </div>
 
       {/* Ingredient editor modal */}

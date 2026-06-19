@@ -1,0 +1,83 @@
+# Changelog — Mijoté
+
+## v1.0.6 — en cours
+
+- Routage URL complet : chaque recette a son propre lien `/recipes/:id`
+- Écran de chargement animé avec spinner après connexion Google
+- En-tête fixe dans le détail d'une recette lors du scroll
+- Suppression du mode "Mois" dans le planning
+- Animations d'entrée sur toutes les pages (Frigo, Courses, etc.)
+- Sélecteur d'ustensiles moderne avec images et recherche dans le formulaire recette
+- Bandeau "Mode Lecture" dans la configuration (ingrédients & ustensiles)
+- Pills "Master" colorées en violet en mode lecture
+- Notifications toast avec icône (succès ✓, erreur ✕) et animation corrigée
+
+## v1.0.5 — Simplification & Partage
+
+- Courses : tri par catégorie + ordre alphabétique par défaut, suppression des filtres manuels
+- Catégorie "Pris" renommée "Acheté" et déplacée en bas
+- Icône poubelle rouge dans les listes de courses
+- Bouton "Ajouter un article" remonté en haut de liste
+- Mode desktop : liste de courses pleine largeur avec switch dédié
+- Limite de 200 caractères par article de liste
+- Badge "Hors ligne" orange / vert selon l'état de synchronisation Firebase
+- Config ustensiles : 3–4 cards par ligne sur desktop, tri alphabétique
+- Partage de liste de courses (version alpha)
+
+## v1.0.4 — Mode Courses & Frigo
+
+- Courses : coller une liste séparée par des sauts de ligne (format tirets)
+- Réorganisation alphabétique et par catégories des articles
+- Passage dans "Acheté" fluide (animation)
+- Modification et suppression individuelles d'articles
+- Recherche Frigo identique aux autres pages
+- Correction de l'affichage mobile du mode pas à pas + ustensiles intégrés
+- Chargement des images accéléré (cache navigateur)
+- Fond blanc systématique pour les images ingrédients et ustensiles
+- Onglets ingrédients / ustensiles avec compteurs et scroll intelligent
+
+## v1.0.3 — PDF & Qualité
+
+- Parsing des pluriels amélioré (quantités, unités)
+- Nombre d'ingrédients affiché sur chaque carte de recette
+- Indicateur du nombre d'éléments dans la Master DB
+- PDF : marges réduites, image principale incluse, sauts de page gérés
+- Limite maximale de 24 portions
+
+## v1.0.2 — UX & Animations
+
+- Entrée dans le mode pas à pas animée
+- Zoom identique sur la page de connexion
+- Couleur de sélection des éléments harmonisée
+- Mise à jour du schéma JSON (suppression des champs obsolètes `description` / `title` dans les étapes)
+- Pull-to-refresh sur mobile
+- Animation du planning et des collections
+- Listes de courses sans image (non liées à une recette)
+- Bouton de déconnexion en rouge
+- Version récupérée depuis `package.json`
+- Avatars d'images améliorés
+
+## v1.0.1 — Stabilisation
+
+- Correction de l'édition de la Master DB (ingrédients et ustensiles)
+- Score de santé plafonné à 99 (jamais 100 par construction)
+- Nom Google affiché en majuscules
+- Thème clair/sombre déplacé dans le menu profil
+- Transition animée à l'ouverture d'une recette (mobile et desktop)
+- Swiper entre Ingrédients / Ustensiles / Étapes sur mobile
+- Correction du bouton "Tous" en mode clair dans Mon Frigo
+- Hauteur des titres uniformisée sur mobile
+- Glissement vers le bas pour fermer les modals (planning, courses, frigo, suppression)
+
+## v1.0.0 — Cardamome 🌿
+
+- Authentification Google avec avatar
+- Synchronisation Firebase Firestore
+- Mode recette pas à pas (cook mode)
+- Recherche par ingrédient
+- Inférences de quantités et unités
+- Tags sans virgule
+- Source de recette cliquable
+- Import / Export JSON (drag & drop)
+- Planning repas
+- Inventaire Frigo
