@@ -1261,7 +1261,7 @@ function AppInner() {
   // Update document title on tab change
   useEffect(() => {
     const titles = { "home": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Frigo", "config": "Configuration" };
-    document.title = `Mijoté · ${titles[tab] || "Recettes"}`;
+    document.title = `Mijoté | ${titles[tab] || "Recettes"}`;
   }, [tab]);
 
 
