@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
@@ -786,12 +787,14 @@ function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 const TABS = [
-  { id: "home", label: "Recettes", icon: "book" },
-  { id: "meal-plan", label: "Planning", icon: "calendar" },
-  { id: "shopping", label: "Courses", icon: "shopping" },
-  { id: "fridge", label: "Frigo", icon: "fridge" },
-  { id: "config", label: "Config", icon: "settings" },
+  { id: "home", label: "Recettes", icon: "book", path: "/recipes" },
+  { id: "meal-plan", label: "Planning", icon: "calendar", path: "/meal-plan" },
+  { id: "shopping", label: "Courses", icon: "shopping", path: "/shopping-lists" },
+  { id: "fridge", label: "Frigo", icon: "fridge", path: "/fridge" },
+  { id: "config", label: "Config", icon: "settings", path: "/config" },
 ];
+const TAB_BY_PATH = Object.fromEntries(TABS.map(t => [t.path, t.id]));
+const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t.path]));
 
 // ─── LOCAL STORAGE HELPERS ────────────────────────────────────────────────────
 function useLS(key, def) {
@@ -992,9 +995,12 @@ function PullToRefresh({ enabled, onRefresh, children, threshold = 110 }) {
 }
 
 
-export default function App() {
+function AppInner() {
   usePageZoom();
-  const [tab, setTab] = useState("home");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const tab = TAB_BY_PATH[location.pathname] || "home";
+  const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/recipes"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
@@ -1701,6 +1707,20 @@ export default function App() {
         )}
       </div>
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/recipes" replace />} />
+      <Route path="/recipes" element={<AppInner />} />
+      <Route path="/meal-plan" element={<AppInner />} />
+      <Route path="/shopping-lists" element={<AppInner />} />
+      <Route path="/fridge" element={<AppInner />} />
+      <Route path="/config" element={<AppInner />} />
+      <Route path="*" element={<Navigate to="/recipes" replace />} />
+    </Routes>
   );
 }
 
