@@ -3389,12 +3389,12 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {filteredFridge.map(item => {
+              {filteredFridge.map((item, idx) => {
                 const status = fridgeStatus(item);
                 const days = fridgeDaysAge(item.addedAt);
                 const thresh = FRIDGE_THRESHOLDS[item.category || "other"];
                 return (
-                  <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${status === "danger" ? "rgba(224,82,82,0.3)" : status === "warn" ? "rgba(240,192,96,0.25)" : "var(--border)"}` }}>
+                  <div key={item.id} className="slide-up" style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${status === "danger" ? "rgba(224,82,82,0.3)" : status === "warn" ? "rgba(240,192,96,0.25)" : "var(--border)"}`, animationDelay: `${idx * 0.04}s` }}>
                     {/* Image de l'ingrédient (comme dans les autres menus), avec repli si non référencé */}
                     <IngImage src={item.image || (findIngredientMatch(item.name, ingredientDB)?.image || "")} alt={item.name} size={46} />
                     {/* Info */}
@@ -3445,9 +3445,9 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <p style={{ fontSize: 12, color: "var(--text3)", marginBottom: 4 }}>{matchedRecipes.length} recette{matchedRecipes.length > 1 ? "s" : ""} avec au moins {fridgeSettings.matchThreshold}% des ingrédients disponibles</p>
-                {matchedRecipes.map(({ recipe, matched, total, pct }) => (
-                  <button key={recipe.id} onClick={() => onSelectRecipe(recipe.id)}
-                    style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)", textAlign: "left", transition: "border-color 0.15s" }}>
+                {matchedRecipes.map(({ recipe, matched, total, pct }, idx) => (
+                  <button key={recipe.id} onClick={() => onSelectRecipe(recipe.id)} className="slide-up"
+                    style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)", textAlign: "left", transition: "border-color 0.15s", animationDelay: `${idx * 0.04}s` }}>
                     <div style={{ width: 52, height: 52, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{recipe.name}</div>
@@ -3679,14 +3679,14 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
         {/* List selector tabs */}
         {shoppingLists.length > 0 && (
           <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8 }}>
-            {shoppingLists.map(l => {
+            {shoppingLists.map((l, idx) => {
               const isActive = (activeListId === l.id) || (!activeListId && shoppingLists[0] === l);
               const lChecked = l.items.filter(i => i.checked).length;
               return (
-                <button key={l.id} onClick={() => setActiveListId(l.id)}
+                <button key={l.id} onClick={() => setActiveListId(l.id)} className="slide-up"
                   style={{
                     flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-                    background: isActive ? "var(--accent)" : "var(--surface2)",
+                    background: isActive ? "var(--accent)" : "var(--surface2)", animationDelay: `${idx * 0.05}s`,
                     color: isActive ? "#fff" : "var(--text2)",
                     border: `1px solid ${isActive ? "transparent" : "var(--border)"}`
                   }}>
@@ -3716,7 +3716,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 
       {/* Active list content */}
       {activeList && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* List header */}
           <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
