@@ -3643,6 +3643,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
   const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
   const [shareEmail, setShareEmail] = useState("");    // saisie e-mail dans la section partage
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const activeList = shoppingLists.find(l => l.id === activeListId) || shoppingLists[0] || null;
 
@@ -3843,74 +3844,12 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 
           {/* Liste — pleine largeur, défilante */}
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
-            {/* Ajout — remonté en haut ; switch à droite : « article par article » ↔ « coller une liste » */}
+            {/* FAB — opens add modal */}
             {activeList.type === "free" && (
-              <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{listMode ? "Ajouter des articles" : "Ajouter un article"}</div>
-                  <button onClick={() => setListMode(v => !v)} title="Basculer en collage de liste"
-                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 9px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: listMode ? "var(--accent)" : "var(--surface2)", color: listMode ? "#fff" : "var(--text2)", border: `1px solid ${listMode ? "transparent" : "var(--border)"}`, transition: "all 0.15s", flexShrink: 0, whiteSpace: "nowrap" }}>
-                    <span>Coller une liste</span>
-                    <span style={{ position: "relative", width: 28, height: 15, borderRadius: 10, background: listMode ? "rgba(255,255,255,0.4)" : "var(--surface3)", transition: "background 0.15s" }}>
-                      <span style={{ position: "absolute", top: 2, left: listMode ? 15 : 2, width: 11, height: 11, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
-                    </span>
-                  </button>
-                </div>
-
-                {listMode ? (() => {
-                  const count = pasteText.split(/\r?\n/).map(stripBullet).filter(Boolean).length;
-                  const over = count > MAX_LIST_ITEMS;
-                  return (
-                    <>
-                      <textarea className="field-input" value={pasteText} autoFocus maxLength={MAX_LIST_CHARS}
-                        onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
-                        placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
-                        style={{ minHeight: 130, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
-                        <span style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.3 }}>Une ligne = un article (tirets, puces et numéros acceptés).</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: over ? "var(--red)" : "var(--text3)", flexShrink: 0 }}>{count}/{MAX_LIST_ITEMS}</span>
-                      </div>
-                      {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois — retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
-                      <button className="btn btn-primary" style={{ width: "100%" }} disabled={count === 0 || over}
-                        onClick={() => { addManyFromText(pasteText); setPasteText(""); setListMode(false); }}>
-                        <Icon name="plus" size={15} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}
-                      </button>
-                    </>
-                  );
-                })() : (
-                  <>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input className="field-input" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
-                        value={newItemName} onChange={e => setNewItemName(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && addManualItem()}
-                        onPaste={e => {
-                          const t = (e.clipboardData || window.clipboardData)?.getData("text") || "";
-                          if (/\r?\n/.test(t)) { e.preventDefault(); setPasteText(p => (p ? p + "\n" : "") + t); setListMode(true); }
-                        }}
-                        style={{ flex: 1 }} />
-                      <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={addManualItem} disabled={!newItemName.trim()}>
-                        <Icon name="plus" size={15} /> Ajouter
-                      </button>
-                    </div>
-                    {newItemName.trim() && (() => {
-                      const p = parseIngredientInput(newItemName);
-                      const name = p.name || newItemName.trim();
-                      const match = findIngredientMatch(name, ingredientDB);
-                      return (
-                        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
-                          {match?.image && <IngImage src={match.image} alt={match.name} size={34} />}
-                          {p.amount && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {p.amount}</span>}
-                          {p.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {p.unit}</span>}
-                          {p.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{p.name}</span>}
-                          {match
-                            ? <span style={{ fontSize: 11, background: "rgba(76,175,125,0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Reconnu</span>
-                            : p.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px" }}>Non référencé</span> : null}
-                        </div>
-                      );
-                    })()}
-                  </>
-                )}
-              </div>
+              <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}
+                style={{ position: "fixed", bottom: 80, right: 20, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+                <Icon name="plus" size={22} color="#fff" />
+              </button>
             )}
 
             {activeList.items.length === 0 && activeList.type !== "free" && (
@@ -4001,6 +3940,89 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
           </div>
         </SwipeableSheet>
       )}
+      {/* Modal ajout d'article / liste */}
+      {showAddModal && activeList?.type === "free" && (
+        <SwipeableSheet onClose={() => { setShowAddModal(false); setListMode(false); setNewItemName(""); setPasteText(""); }}>
+          {/* En-tête avec icône presse-papiers */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg,rgba(232,112,58,0.18),rgba(232,112,58,0.06))", border: "1px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                <line x1="9" y1="12" x2="15" y2="12" />
+                <line x1="9" y1="16" x2="13" y2="16" />
+              </svg>
+            </div>
+            <div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 1 }}>{listMode ? "Coller une liste" : "Ajouter un article"}</h3>
+              <p style={{ fontSize: 12, color: "var(--text3)" }}>{activeList.name}</p>
+            </div>
+          </div>
+
+          {/* Toggle article / liste */}
+          <div style={{ display: "flex", background: "var(--surface2)", borderRadius: 10, padding: 3, marginBottom: 16, gap: 3 }}>
+            {[{ label: "Article", val: false }, { label: "Coller une liste", val: true }].map(({ label, val }) => (
+              <button key={label} onClick={() => setListMode(val)}
+                style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: listMode === val ? "var(--surface)" : "transparent", color: listMode === val ? "var(--accent)" : "var(--text3)", boxShadow: listMode === val ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {listMode ? (() => {
+            const count = pasteText.split(/\r?\n/).map(stripBullet).filter(Boolean).length;
+            const over = count > MAX_LIST_ITEMS;
+            return (
+              <>
+                <textarea className="field-input" value={pasteText} autoFocus maxLength={MAX_LIST_CHARS}
+                  onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
+                  placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
+                  style={{ minHeight: 140, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.3 }}>Une ligne = un article (tirets, puces et numéros acceptés).</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: over ? "var(--red)" : "var(--text3)", flexShrink: 0 }}>{count}/{MAX_LIST_ITEMS}</span>
+                </div>
+                {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois — retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
+                <button className="btn btn-primary" style={{ width: "100%" }} disabled={count === 0 || over}
+                  onClick={() => { addManyFromText(pasteText); setPasteText(""); setShowAddModal(false); setListMode(false); }}>
+                  <Icon name="plus" size={15} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}
+                </button>
+              </>
+            );
+          })() : (
+            <>
+              <input className="field-input" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
+                value={newItemName} onChange={e => setNewItemName(e.target.value)}
+                autoFocus
+                onKeyDown={e => { if (e.key === "Enter") { addManualItem(); setShowAddModal(false); } }}
+                onPaste={e => {
+                  const t = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+                  if (/\r?\n/.test(t)) { e.preventDefault(); setPasteText(p => (p ? p + "\n" : "") + t); setListMode(true); }
+                }}
+                style={{ marginBottom: 10 }} />
+              {newItemName.trim() && (() => {
+                const p = parseIngredientInput(newItemName);
+                const name = p.name || newItemName.trim();
+                const match = findIngredientMatch(name, ingredientDB);
+                return (
+                  <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+                    {match?.image && <IngImage src={match.image} alt={match.name} size={34} />}
+                    {p.amount && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {p.amount}</span>}
+                    {p.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {p.unit}</span>}
+                    {p.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{p.name}</span>}
+                    {match ? <span style={{ fontSize: 11, background: "rgba(76,175,125,0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Reconnu</span>
+                      : p.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px" }}>Non référencé</span> : null}
+                  </div>
+                );
+              })()}
+              <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => { addManualItem(); setShowAddModal(false); }} disabled={!newItemName.trim()}>
+                <Icon name="plus" size={15} /> Ajouter
+              </button>
+            </>
+          )}
+        </SwipeableSheet>
+      )}
+
       {/* Configuration de la liste */}
       {configList && (() => {
         const myEmail = (user?.email || "").toLowerCase();
