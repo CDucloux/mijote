@@ -1,16 +1,35 @@
 
 # Listes des fontionnalités à mijoter
 
-## 🔜 Backlog — v1.0.6
+## 🔜 Backlog — v1.0.7
+
+- [ ] DIsposer d'une page "Ingrédient"
+- [ ] Liste partagées => Maximum 3 personnes qui peuvent etre ajoutées et à qui on peut partager
+- [ ] Notifications ? à mette en place
+- [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
 
 - [x] (En mode master uniquement) Pouvoir télécharger la liste de tous les ingrédients implémentés pour feed à Claude précisément (en tant que table dans un fichier markdown) ? (Nom + Aliases + dbid + catégorie pour ingrédients)
   - [ ] à faire pour ustensiles
   - [ ] (pas sur) Alias pour les ustensiles ?
 
-- [ ] Approche + moderne sur l'ajout des ustensiles (icones, etc !) dans form crea ou modif recete
-
 - [ ] Validation de schéma JSON
 - [ ] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
+
+- [ ] Config / Exporter la base en markdown doit etre à droite dans le bandeau master
+
+## 🔜 Backlog — v1.0.6
+
+- [x] Architecture avec routeurs vers pages /config, /recipes, etc etc
+  - [x] Faire pareil pour les recettes individuelles - id des recettes
+
+- [x] Ecran de chargement + stylé, avec un spinner notamment
+- [x] Ecran fixe au niveau des recettees + gestion du bug UI sur le scroll down
+- [x] Retirer le mode planif "Mois"
+- [x] Animations quand on rentre sur toutes les pages de Mijoté
+- [x] Approche + moderne sur l'ajout des ustensiles (icones, etc !) dans le formulaire crea et modif recete
+- [x] Bandeau "Mode Lecture" ou un truc un peu stylé analogue au bandeau master quand on est en lecture
+
+- [x] Pour tous les popup (Succes; error, etc etc => Avoir une icone) + comportement étrange des popup - ça pop un peu à droite avant d'arriver au milieu ?
 
 ## 🔜 Backlog — v1.0.5
 
@@ -22,8 +41,7 @@
 
 - [x] Dans la partie config ustensiles, pouvoir afficher 3 ou 4 cards sur la même ligne quand je suis en mode desktop + ustensiles triés par défaut dans l'ordre alphabétique dans le volet "ustensiles" de config.
 
-- [x] Partage de liste de courses
-  - [ ] A tester + en profondeur
+- [x] Partage de liste de courses (version alpha)
 
 ## 🔜 Backlog — v1.0.4
 
@@ -111,9 +129,10 @@ DB:
 ## 🔭 Horizon — v1.2+
 
 - [ ] Refactoring des composants / modularisartion
-  - [ ] Architecture aves pages /config, /recipes, etc etc
 
 - [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
+
+- [ ] Mode Frigo + Placard ?? à réfléchir
 
 - [ ] Communauté de mijoteurs !
 
