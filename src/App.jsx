@@ -1149,6 +1149,7 @@ function AppInner() {
   }, [persistSharedDiffs, setShoppingLists, user]);
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
+  const [pantry, setPantry] = useLS("rf_pantry", []);
   const { id: recipeIdParam } = useParams();
   const selectedRecipe = recipeIdParam || null;
   const setSelectedRecipe = useCallback((id) => {
@@ -1204,6 +1205,7 @@ function AppInner() {
           if (data.shoppingLists) setShoppingLists(data.shoppingLists);
           if (data.fridge) setFridge(data.fridge);
           if (data.fridgeSettings) setFridgeSettings(data.fridgeSettings);
+          if (data.pantry) setPantry(data.pantry);
           setUserDB(data.userDB || { ingredients: [], utensils: [] });
           setMasterDB(await masterPromise);
 
@@ -1219,7 +1221,7 @@ function AppInner() {
               setDoc(metaDoc(u.uid, "collections"), { items: data.collections || [] }),
               setDoc(metaDoc(u.uid, "mealPlan"), { data: data.mealPlan || {} }),
               setDoc(metaDoc(u.uid, "shoppingLists"), { items: data.shoppingLists || [] }),
-              setDoc(metaDoc(u.uid, "fridge"), { items: data.fridge || [], settings: data.fridgeSettings || { matchThreshold: 25 } }),
+              setDoc(metaDoc(u.uid, "fridge"), { items: data.fridge || [], settings: data.fridgeSettings || { matchThreshold: 25 }, pantry: data.pantry || [] }),
               setDoc(metaDoc(u.uid, "userDB"), data.userDB || { ingredients: [], utensils: [] }),
             ]);
           }
@@ -1300,7 +1302,7 @@ function AppInner() {
     }, { merge: true }).catch(() => { });
     getDocs(userDirCol()).then(s => setDirectory(s.docs.map(d => d.data()))).catch(() => { });
   }, [user]);
-  useEffect(() => { saveMeta("fridge", { items: fridge, settings: fridgeSettings }); }, [fridge, fridgeSettings]);
+  useEffect(() => { saveMeta("fridge", { items: fridge, settings: fridgeSettings, pantry }); }, [fridge, fridgeSettings, pantry]);
   useEffect(() => { saveMeta("userDB", userDB); }, [userDB]);
 
   // Master DB: only admins persist changes (and Firestore rules enforce it server-side).
@@ -1577,7 +1579,7 @@ function AppInner() {
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} notify={notify} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
-      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
+      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} pantry={pantry} setPantry={setPantry} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
   );
@@ -3350,14 +3352,33 @@ const FRIDGE_STATUS_BG = { ok: "rgba(76,175,125,0.12)", warn: "rgba(240,192,96,0
 const FRIDGE_STATUS_LABEL = { ok: "Frais", warn: "À utiliser bientôt", danger: "À jeter" };
 
 // ─── FRIDGE TAB ───────────────────────────────────────────────────────────────
-function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
-  const [view, setView] = useState("stock"); // "stock" | "recipes"
+function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantry, setPantry, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
+  const [view, setView] = useState("stock"); // "stock" | "pantry" | "recipes"
   const [showAdd, setShowAdd] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [newItem, setNewItem] = useState({ name: "", category: "vegetable", quantity: "", unit: "", addedAt: new Date().toISOString().slice(0, 10) });
   const [showSettings, setShowSettings] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [addText, setAddText] = useState("");
+  const [showPantryAdd, setShowPantryAdd] = useState(false);
+  const [pantryText, setPantryText] = useState("");
+  const [editPantryItem, setEditPantryItem] = useState(null); // { id, name, quantity, unit, image, category }
+
+  const addPantryItem = () => {
+    if (!pantryText.trim()) return;
+    const p = parseIngredientInput(pantryText);
+    const name = p.name || pantryText.trim();
+    const m = findIngredientMatch(name, ingredientDB);
+    setPantry(prev => [...prev, { id: "p" + Date.now(), name, category: m?.category || "other", quantity: p.amount || "", unit: p.unit || "", image: m?.image || "" }]);
+    setPantryText("");
+  };
+  const deletePantryItem = id => setPantry(prev => prev.filter(i => i.id !== id));
+  const savePantryEdit = () => {
+    if (!editPantryItem?.name?.trim()) return;
+    const m = findIngredientMatch(editPantryItem.name, ingredientDB);
+    setPantry(prev => prev.map(i => i.id === editPantryItem.id ? { ...editPantryItem, image: m?.image || editPantryItem.image || "" } : i));
+    setEditPantryItem(null);
+  };
 
   const saveItem = () => {
     if (!newItem.name.trim()) return;
@@ -3426,9 +3447,13 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
         </div>
 
         {/* View toggle */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-          <button onClick={() => setView("stock")} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "stock" ? "var(--accent)" : "var(--surface2)", color: view === "stock" ? "#fff" : "var(--text2)", border: `1px solid ${view === "stock" ? "transparent" : "var(--border)"}` }}>🧊 Stock</button>
-          <button onClick={() => setView("recipes")} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "recipes" ? "var(--accent)" : "var(--surface2)", color: view === "recipes" ? "#fff" : "var(--text2)", border: `1px solid ${view === "recipes" ? "transparent" : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 12, overflowX: "auto" }}>
+          <button onClick={() => setView("stock")} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "stock" ? "var(--accent)" : "var(--surface2)", color: view === "stock" ? "#fff" : "var(--text2)", border: `1px solid ${view === "stock" ? "transparent" : "var(--border)"}` }}>🧊 Frigo</button>
+          <button onClick={() => setView("pantry")} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "pantry" ? "var(--accent)" : "var(--surface2)", color: view === "pantry" ? "#fff" : "var(--text2)", border: `1px solid ${view === "pantry" ? "transparent" : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6 }}>
+            🫙 Étagères
+            {pantry.length > 0 && <span style={{ background: view === "pantry" ? "rgba(255,255,255,0.25)" : "var(--surface3)", color: view === "pantry" ? "#fff" : "var(--text2)", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>{pantry.length}</span>}
+          </button>
+          <button onClick={() => setView("recipes")} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "recipes" ? "var(--accent)" : "var(--surface2)", color: view === "recipes" ? "#fff" : "var(--text2)", border: `1px solid ${view === "recipes" ? "transparent" : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6 }}>
             🍽 Recettes possibles
             {matchedRecipes.length > 0 && <span style={{ background: view === "recipes" ? "rgba(255,255,255,0.25)" : "var(--accent)", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>{matchedRecipes.length}</span>}
           </button>
@@ -3522,6 +3547,53 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
                 );
               })}
             </div>
+          </>
+        )}
+
+        {/* ── PANTRY VIEW ── */}
+        {view === "pantry" && (
+          <>
+            {/* Quick add */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <input className="field-input" placeholder="ex: 400g tomates pelées, huile d'olive…" value={pantryText}
+                onChange={e => setPantryText(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && addPantryItem()}
+                style={{ flex: 1 }} />
+              <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={addPantryItem} disabled={!pantryText.trim()}>
+                <Icon name="plus" size={15} /> Ajouter
+              </button>
+            </div>
+
+            {pantry.length === 0 ? (
+              <div style={{ textAlign: "center", color: "var(--text3)", padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 40 }}>🫙</span>
+                <p style={{ fontSize: 14, fontWeight: 500 }}>Étagères vides</p>
+                <p style={{ fontSize: 12, maxWidth: 260 }}>Ajoute tes conserves, condiments, épices et autres produits de longue conservation.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[...pantry].sort((a, b) => a.name.localeCompare(b.name, "fr")).map(item => (
+                  <div key={item.id} className="slide-up" style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)" }}>
+                    {item.image
+                      ? <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
+                      : <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 20 }}>🫙</div>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{item.name}</div>
+                      {(item.quantity || item.unit) && (
+                        <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 1 }}>
+                          {[item.quantity, item.unit].filter(Boolean).join(" ")}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                      <button onClick={() => setEditPantryItem({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={15} /></button>
+                      <button onClick={() => deletePantryItem(item.id)} style={{ color: "var(--red)" }}><Icon name="trash" size={15} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 
@@ -3620,6 +3692,29 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
             Actuellement : <strong>{matchedRecipes.length} recette{matchedRecipes.length > 1 ? "s" : ""}</strong> correspondent avec tes {fridge.length} produits en frigo.
           </div>
           <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowSettings(false)}>Fermer</button>
+        </SwipeableSheet>
+      )}
+
+      {/* Étagères — édition d'un item */}
+      {editPantryItem && (
+        <SwipeableSheet onClose={() => setEditPantryItem(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Modifier l'article</h3>
+          <div className="field-label">Nom</div>
+          <input className="field-input" value={editPantryItem.name} autoFocus onChange={e => setEditPantryItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <div className="field-label">Quantité</div>
+              <input className="field-input" value={editPantryItem.quantity} onChange={e => setEditPantryItem(p => ({ ...p, quantity: e.target.value }))} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div className="field-label">Unité</div>
+              <input className="field-input" value={editPantryItem.unit} onChange={e => setEditPantryItem(p => ({ ...p, unit: e.target.value }))} />
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditPantryItem(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={savePantryEdit}>Enregistrer</button>
+          </div>
         </SwipeableSheet>
       )}
     </div>
