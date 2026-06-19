@@ -198,7 +198,7 @@ const GLOBAL_STYLE = `
   .slide-up{animation:slideUp 0.28s cubic-bezier(0.25,0.46,0.45,0.94) both;}
   @keyframes slideUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn 0.2s;}
-  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
   .modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:20px;max-height:92dvh;overflow-y:auto;animation:sheetUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94);}
   @keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
   .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
@@ -1723,8 +1723,13 @@ function AppInner() {
       <style>{GLOBAL_STYLE}</style>
       <div id="root" className={isDark ? "" : "light"}>
         {notification && (
-          <div style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)", background: notification.type === "error" ? "var(--red)" : "var(--green)", color: "#fff", padding: "10px 20px", borderRadius: 30, fontSize: 13, fontWeight: 500, zIndex: 999, boxShadow: "0 4px 20px rgba(0,0,0,0.4)", whiteSpace: "nowrap", animation: "slideUp 0.2s" }}>
-            {notification.msg}
+          <div style={{ position: "fixed", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: notification.type === "error" ? "var(--red)" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: "toastIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both" }}>
+              <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name={notification.type === "error" ? "close" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
+              </div>
+              {notification.msg}
+            </div>
           </div>
         )}
         {isDesktop ? (
