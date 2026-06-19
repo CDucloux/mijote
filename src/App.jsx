@@ -1590,6 +1590,8 @@ function AppInner() {
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
       <RecipeDetail recipe={currentRecipe} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onAddToShopping={addToShopping} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
+  ) : selectedRecipe && !currentRecipe && cloudLoaded.current ? (
+    <RecipeNotFound onBack={() => navigate("/recipes")} />
   ) : tabContent;
 
   // Loading state
@@ -1969,6 +1971,28 @@ function RecipeCard({ recipe, onClick, style }) {
 }
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
+function RecipeNotFound({ onBack }) {
+  return (
+    <div className="editor-enter" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: "40px 32px", textAlign: "center" }}>
+      <div style={{ fontSize: 64, lineHeight: 1 }}>🍽️</div>
+      <div>
+        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginBottom: 8 }}>Recette introuvable</h2>
+        <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, maxWidth: 280 }}>
+          Ce lien ne correspond à aucune recette de ta collection. Elle a peut-être été supprimée.
+        </p>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <span style={{ fontSize: 11, fontFamily: "monospace", color: "var(--text3)" }}>404</span>
+        <span style={{ width: 1, height: 14, background: "var(--border)" }} />
+        <span style={{ fontSize: 11, color: "var(--text3)" }}>NOT_FOUND</span>
+      </div>
+      <button onClick={onBack} className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+        <Icon name="back" size={15} color="#fff" /> Retour aux recettes
+      </button>
+    </div>
+  );
+}
+
 function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection }) {
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
