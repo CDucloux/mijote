@@ -2025,20 +2025,6 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
         </div>
       </div>
 
-      {/* Mode Lecture banner */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", background: "linear-gradient(135deg, rgba(232,112,58,0.18), rgba(232,112,58,0.05))", borderBottom: "1px solid rgba(232,112,58,0.28)", flexShrink: 0 }}>
-        <div style={{ width: 26, height: 26, borderRadius: 8, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(232,112,58,0.4)" }}>
-          <Icon name="book" size={13} color="#fff" />
-        </div>
-        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>MODE LECTURE</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em", opacity: 0.9 }}>READ ONLY</span>
-        </div>
-        <button onClick={onEdit} style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "rgba(232,112,58,0.12)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontFamily: "var(--ff-body)", whiteSpace: "nowrap" }}>
-          Modifier →
-        </button>
-      </div>
-
       {/* Info bar */}
       <div style={{ display: "flex", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "10px 16px", flexShrink: 0 }}>
         {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Santé", value: <HealthRing score={recipe.healthScore || 70} size={34} />, icon: null }].map((item, i) => (
@@ -4105,6 +4091,24 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 }
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
+// ─── READ-ONLY BANNER ─────────────────────────────────────────────────────────
+function ReadOnlyBanner({ style }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(155,135,245,0.20), rgba(155,135,245,0.06))", border: "1px solid rgba(155,135,245,0.38)", boxShadow: "0 2px 12px rgba(155,135,245,0.12)", ...style }}>
+      <div style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(155,135,245,0.85)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(155,135,245,0.45)" }}>
+        <Icon name="book" size={16} color="#fff" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(155,135,245,1)", letterSpacing: "0.02em" }}>MODE LECTURE</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(155,135,245,0.85)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>READ ONLY</span>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>La base partagée est gérée par l'administrateur</div>
+      </div>
+    </div>
+  );
+}
+
 // ─── ADMIN BANNER (shared Master DB notice) ───────────────────────────────────
 // Single source of truth for the "MODE ADMIN" banner. `style` lets callers add
 // spacing without duplicating the whole markup (e.g. marginBottom per section).
@@ -4251,7 +4255,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                 <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{n}</span>
                 <span>{noun}{n > 1 ? "s" : ""} dans la base</span>
               </div>
-              {isAdmin && <AdminBanner />}
+              {isAdmin ? <AdminBanner /> : <ReadOnlyBanner />}
             </div>
           );
         })()}
