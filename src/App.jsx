@@ -1579,7 +1579,7 @@ function AppInner() {
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} notify={notify} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
-      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} pantry={pantry} setPantry={setPantry} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
+      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} pantry={pantry} setPantry={setPantry} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} notify={notify} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
   );
@@ -3352,7 +3352,7 @@ const FRIDGE_STATUS_BG = { ok: "rgba(76,175,125,0.12)", warn: "rgba(240,192,96,0
 const FRIDGE_STATUS_LABEL = { ok: "Frais", warn: "À utiliser bientôt", danger: "À jeter" };
 
 // ─── FRIDGE TAB ───────────────────────────────────────────────────────────────
-function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantry, setPantry, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
+function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantry, setPantry, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES, notify }) {
   const [view, setView] = useState("stock"); // "stock" | "pantry" | "recipes"
   const [showAdd, setShowAdd] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -3388,9 +3388,6 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
     setEditItem(null); setShowAdd(false);
   };
 
-  const [fridgeWarn, setFridgeWarn] = useState("");
-  const [pantryWarn, setPantryWarn] = useState("");
-
   const addFridgeItem = () => {
     if (!addText.trim()) return;
     const p = parseIngredientInput(addText);
@@ -3398,10 +3395,9 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
     const m = findIngredientMatch(name, ingredientDB);
     const cat = m?.category || "other";
     if (!FRIDGE_CATS.has(cat)) {
-      setFridgeWarn(`"${name}" appartient aux étagères (${DEFAULT_CATEGORIES[cat]?.label || cat})`);
+      notify?.(`${DEFAULT_CATEGORIES[cat]?.icon || "🫙"} "${name}" va dans les étagères`, "error");
       return;
     }
-    setFridgeWarn("");
     setFridge(prev => [...prev, { id: "f" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "", addedAt: new Date().toISOString().slice(0, 10) }]);
     setAddText("");
   };
@@ -3413,10 +3409,9 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
     const m = findIngredientMatch(name, ingredientDB);
     const cat = m?.category || "other";
     if (!PANTRY_CATS.has(cat)) {
-      setPantryWarn(`"${name}" appartient au frigo (${DEFAULT_CATEGORIES[cat]?.label || cat})`);
+      notify?.(`${DEFAULT_CATEGORIES[cat]?.icon || "🧊"} "${name}" va dans le frigo`, "error");
       return;
     }
-    setPantryWarn("");
     setPantry(prev => [...prev, { id: "p" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "" }]);
     setPantryText("");
   };
@@ -3492,9 +3487,8 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
             <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", marginBottom: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Ajouter un produit</div>
               <input className="field-input" placeholder="ex: 500g poulet, 2 yaourts, 1 courgette…"
-                value={addText} onChange={e => { setAddText(e.target.value); setFridgeWarn(""); }}
+                value={addText} onChange={e => setAddText(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && addFridgeItem()} style={{ marginBottom: 8 }} />
-              {fridgeWarn && <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>⚠️ {fridgeWarn} — ajoute-le dans les étagères.</div>}
               {addText.trim() && (() => {
                 const p = parseIngredientInput(addText);
                 const name = p.name || addText.trim();
@@ -3574,8 +3568,6 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
                 <Icon name="plus" size={15} /> Ajouter
               </button>
             </div>
-            {pantryWarn && <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>⚠️ {pantryWarn} — ajoute-le dans le frigo.</div>}
-
             {pantry.length === 0 ? (
               <div style={{ textAlign: "center", color: "var(--text3)", padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 40 }}>🫙</span>
