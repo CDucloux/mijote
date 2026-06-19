@@ -2857,7 +2857,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
 function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
-  const [viewMode, setViewMode] = useState("week");
+  const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
@@ -2976,8 +2976,6 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
           <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 10 }}>
-          <button onClick={() => setViewMode("week")} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: viewMode === "week" ? "var(--accent)" : "var(--surface2)", color: viewMode === "week" ? "#fff" : "var(--text2)", border: `1px solid ${viewMode === "week" ? "transparent" : "var(--border)"}` }}>Semaine</button>
-          <button onClick={() => setViewMode("month")} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: viewMode === "month" ? "var(--accent)" : "var(--surface2)", color: viewMode === "month" ? "#fff" : "var(--text2)", border: `1px solid ${viewMode === "month" ? "transparent" : "var(--border)"}` }}>Mois</button>
           <button onClick={exportICS} title="Exporter en .ics (Google Calendar, Apple Calendar…)" style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
             <Icon name="download" size={13} color="var(--blue)" /> .ics
           </button>
@@ -3000,7 +2998,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
         )}
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "12px 12px 16px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
         {viewMode === "week" && (
           <div key={`week-${weekDays[0]}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {weekDays.map((date, di) => {
@@ -3029,31 +3027,6 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
           </div>
         )}
 
-        {viewMode === "month" && (
-          <div key={`month-${currentDate.getFullYear()}-${currentDate.getMonth()}`}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
-              {MP_DAYS_SHORT.map(d => <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: "var(--text3)", padding: "4px 0" }}>{d}</div>)}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
-              {monthDays.map((date, i) => {
-                if (!date) return <div key={i} />;
-                const isToday = date === todayStr;
-                const d = new Date(date + "T12:00");
-                const midiMeals = getMeals(date, "midi");
-                const soirMeals = getMeals(date, "soir");
-                return (
-                  <button key={date} onClick={() => openAdd(date, ["midi"])} className="slide-up"
-                    style={{ background: "var(--surface)", borderRadius: 10, padding: "5px 4px", minHeight: 64, border: `1px solid ${isToday ? "rgba(232,112,58,0.5)" : "var(--border)"}`, textAlign: "left", cursor: "pointer", animationDelay: `${Math.min(i, 28) * 0.012}s` }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: isToday ? "var(--accent)" : "var(--text3)", textAlign: "center", marginBottom: 4 }}>{d.getDate()}</div>
-                    {midiMeals.slice(0, 1).map((m, mi) => { const r = recipes.find(x => x.id === m.recipeId); return r ? <div key={mi} style={{ background: MP_SLOT_COLOR.midi, borderRadius: 3, padding: "1px 3px", fontSize: 8, color: MP_SLOT_TEXT.midi, marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</div> : null; })}
-                    {soirMeals.slice(0, 1).map((m, mi) => { const r = recipes.find(x => x.id === m.recipeId); return r ? <div key={mi} style={{ background: MP_SLOT_COLOR.soir, borderRadius: 3, padding: "1px 3px", fontSize: 8, color: MP_SLOT_TEXT.soir, marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</div> : null; })}
-                    {(midiMeals.length + soirMeals.length) > 2 && <div style={{ fontSize: 8, color: "var(--text3)", textAlign: "center" }}>+{midiMeals.length + soirMeals.length - 2}</div>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Add recipe modal */}
