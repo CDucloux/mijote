@@ -3816,7 +3816,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 
       {/* Active list content */}
       {activeList && (
-        <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
           {/* List header */}
           <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
@@ -3842,15 +3842,16 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
             </div>
           </div>
 
+          {/* FAB — absolute inside the list container */}
+          {activeList.type === "free" && (
+            <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}
+              style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+              <Icon name="plus" size={22} color="#fff" />
+            </button>
+          )}
+
           {/* Liste — pleine largeur, défilante */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
-            {/* FAB — opens add modal */}
-            {activeList.type === "free" && (
-              <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}
-                style={{ position: "fixed", bottom: "calc(var(--tab-h) + 12px)", right: 20, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
-                <Icon name="plus" size={22} color="#fff" />
-              </button>
-            )}
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 80px" }}>
 
             {activeList.items.length === 0 && activeList.type !== "free" && (
               <div style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>
