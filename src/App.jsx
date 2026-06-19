@@ -3331,6 +3331,7 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
 // ─── FRIDGE CONSTANTS ─────────────────────────────────────────────────────────
 const FRIDGE_THRESHOLDS = {
   vegetable: { warn: 5, danger: 8, label: "Légume/Fruit" },
+  meat: { warn: 2, danger: 4, label: "Viande" },
   dairy: { warn: 5, danger: 10, label: "Produit laitier" },
   grain_whole: { warn: 30, danger: 60, label: "Céréale complète" },
   grain_ref: { warn: 30, danger: 60, label: "Céréale raffinée" },
@@ -3347,7 +3348,7 @@ function fridgeDaysAge(addedAt) {
 }
 function fridgeStatus(item) {
   const days = fridgeDaysAge(item.addedAt);
-  const t = FRIDGE_THRESHOLDS[item.category || "other"];
+  const t = FRIDGE_THRESHOLDS[item.category] || FRIDGE_THRESHOLDS["other"];
   if (days >= t.danger) return "danger";
   if (days >= t.warn) return "warn";
   return "ok";
