@@ -79,7 +79,7 @@ async function loadMasterDB() {
       ingredients: ing.exists() ? (ing.data().items || []) : [],
       utensils: ut.exists() ? (ut.data().items || []) : [],
       categories: cat.exists() && cat.data().map && Object.keys(cat.data().map).length
-        ? { ...DEFAULT_CATEGORIES, ...cat.data().map } : DEFAULT_CATEGORIES,
+        ? Object.fromEntries(Object.entries({ ...DEFAULT_CATEGORIES, ...cat.data().map }).filter(([k]) => k in DEFAULT_CATEGORIES)) : DEFAULT_CATEGORIES,
     };
   } catch {
     return { ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES };
