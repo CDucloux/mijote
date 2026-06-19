@@ -3414,17 +3414,21 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
   const deleteItem = id => setFridge(prev => prev.filter(i => i.id !== id));
   const startEdit = item => { setNewItem({ ...item, addedAt: item.addedAt.slice(0, 10) }); setEditItem(item.id); setShowAdd(true); };
 
+  // Catégories autorisées par emplacement
+  const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "protein_lean", "protein_fat", "fish_seafood", "dairy", "mushroom"]);
+  const PANTRY_CATS = new Set(["grain_whole", "grain_ref", "fat_good", "fat_bad", "nuts_seeds", "condiment", "herbs", "sugar", "alcohol", "other"]);
+
   // Filtered stock
   const filteredFridge = fridge.filter(item => filterStatus === "all" || fridgeStatus(item) === filterStatus)
     .sort((a, b) => fridgeDaysAge(b.addedAt) - fridgeDaysAge(a.addedAt));
 
-  // Recipe matching
+  // Recipe matching — frigo + étagères combinés
   const threshold = fridgeSettings.matchThreshold / 100;
-  const fridgeNames = fridge.map(i => normalizeStr(i.name));
+  const stockNames = [...fridge, ...pantry].map(i => normalizeStr(i.name));
   const matchedRecipes = recipes.map(recipe => {
     const ings = recipe.ingredients || [];
     if (ings.length === 0) return null;
-    const matched = ings.filter(ing => fridgeNames.some(fn => normalizeStr(ing.name).includes(fn) || fn.includes(normalizeStr(ing.name))));
+    const matched = ings.filter(ing => stockNames.some(fn => normalizeStr(ing.name).includes(fn) || fn.includes(normalizeStr(ing.name))));
     const pct = matched.length / ings.length;
     return pct >= threshold ? { recipe, matched: matched.length, total: ings.length, pct } : null;
   }).filter(Boolean).sort((a, b) => b.pct - a.pct);
@@ -3646,7 +3650,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
           <input className="field-input" placeholder="ex: Poulet, Yaourt, Courgette…" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} autoFocus />
           <div className="field-label">Catégorie</div>
           <select className="field-input" value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
-            {sortedCategoryEntries(categories).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+            {sortedCategoryEntries(categories).filter(([k]) => FRIDGE_CATS.has(k)).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
           </select>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
             <div>
@@ -3701,6 +3705,10 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Modifier l'article</h3>
           <div className="field-label">Nom</div>
           <input className="field-input" value={editPantryItem.name} autoFocus onChange={e => setEditPantryItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div className="field-label">Catégorie</div>
+          <select className="field-input" value={editPantryItem.category || "other"} onChange={e => setEditPantryItem(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+            {sortedCategoryEntries(categories).filter(([k]) => PANTRY_CATS.has(k)).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+          </select>
           <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
               <div className="field-label">Quantité</div>
