@@ -4103,7 +4103,7 @@ function ReadOnlyBanner({ style }) {
           <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(155,135,245,1)", letterSpacing: "0.02em" }}>MODE LECTURE</span>
           <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(155,135,245,0.85)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>READ ONLY</span>
         </div>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>La base partagée est gérée par l'administrateur</div>
+        <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>La base partagée est gérée par l'administrateur Mijoté ✦</div>
       </div>
     </div>
   );
@@ -4362,7 +4362,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                             )}
                           </div>
                           {item._ro
-                            ? <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500, padding: "2px 8px", background: "var(--surface3)", borderRadius: 8, flexShrink: 0 }}>Master</span>
+                            ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8, flexShrink: 0 }}>Master</span>
                             : <>
                               <button onClick={() => setEditIng({ ...item })} style={{ color: "var(--text3)", marginRight: 4 }}><Icon name="edit" size={14} /></button>
                               <button onClick={() => setConfirmDel({ type: "ing", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
@@ -4388,7 +4388,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                   <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
                   <div style={{ display: "flex", gap: 8 }}>
                     {item._ro
-                      ? <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500, padding: "2px 8px", background: "var(--surface3)", borderRadius: 8 }}>Master</span>
+                      ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8 }}>Master</span>
                       : <>
                         <button onClick={() => setEditUt({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={14} /></button>
                         <button onClick={() => setConfirmDel({ type: "ut", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
