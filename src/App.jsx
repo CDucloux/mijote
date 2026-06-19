@@ -2987,7 +2987,6 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
   const escapeICS = mpEscapeICS;
 
   const exportICS = () => {
-    setIcsStatus(null);
     const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//RecipeApp//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
     let count = 0;
 
