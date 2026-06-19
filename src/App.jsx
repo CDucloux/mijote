@@ -3396,7 +3396,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
     const m = findIngredientMatch(name, ingredientDB);
     const cat = m?.category || "other";
     if (!FRIDGE_CATS.has(cat)) {
-      notify?.(`${DEFAULT_CATEGORIES[cat]?.icon || "🫙"} "${name}" va dans les étagères`, "warning");
+      notify?.(`"${name}" n'est pas un produit frais`, "warning");
       return;
     }
     setFridge(prev => [...prev, { id: "f" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "", addedAt: new Date().toISOString().slice(0, 10) }]);
@@ -3410,7 +3410,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
     const m = findIngredientMatch(name, ingredientDB);
     const cat = m?.category || "other";
     if (!PANTRY_CATS.has(cat)) {
-      notify?.(`${DEFAULT_CATEGORIES[cat]?.icon || "🧊"} "${name}" va dans le frigo`, "warning");
+      notify?.(`"${name}" est un produit frais`, "warning");
       return;
     }
     setPantry(prev => [...prev, { id: "p" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "" }]);
