@@ -795,6 +795,18 @@ const TABS = [
 const TAB_BY_PATH = Object.fromEntries(TABS.map(t => [t.path, t.id]));
 const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t.path]));
 
+// Config sub-sections URL mapping
+const CONFIG_SECTION_BY_PATH = {
+  "ingredients": "ingredients",
+  "ustensils": "ustensiles",
+  "collections": "collections",
+  "data": "données",
+  "changelog": "nouveautés",
+};
+const CONFIG_PATH_BY_SECTION = Object.fromEntries(
+  Object.entries(CONFIG_SECTION_BY_PATH).map(([path, section]) => [section, path])
+);
+
 // ─── LOCAL STORAGE HELPERS ────────────────────────────────────────────────────
 function useLS(key, def) {
   const [val, setVal] = useState(() => { try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : def; } catch { return def; } });
@@ -998,7 +1010,7 @@ function AppInner() {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || "home";
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config/") ? "config" : "home");
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/recipes"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
@@ -1788,7 +1800,8 @@ export default function App() {
       <Route path="/meal-plan" element={<AppInner />} />
       <Route path="/shopping-lists" element={<AppInner />} />
       <Route path="/fridge" element={<AppInner />} />
-      <Route path="/config" element={<AppInner />} />
+      <Route path="/config" element={<Navigate to="/config/ingredients" replace />} />
+      <Route path="/config/:configSection" element={<AppInner />} />
       <Route path="*" element={<Navigate to="/recipes" replace />} />
     </Routes>
   );
@@ -4412,7 +4425,10 @@ function AdminBanner({ style }) {
 }
 
 function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
-  const [section, setSection] = useState("ingredients");
+  const { configSection: configSectionParam } = useParams();
+  const navigate = useNavigate();
+  const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "ingredients";
+  const setSection = (s) => navigate(`/config/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editCol, setEditCol] = useState(null);
