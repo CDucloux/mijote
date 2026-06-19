@@ -4251,7 +4251,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           const noun = section === "ingredients" ? "ingrédient" : "ustensile";
           return (
             <div style={{ paddingTop: 14 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--text2)", padding: "0 2px", marginBottom: isAdmin ? 10 : 0 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--text2)", padding: "0 2px", marginBottom: 10 }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{n}</span>
                 <span>{noun}{n > 1 ? "s" : ""} dans la base</span>
               </div>
