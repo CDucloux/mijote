@@ -4538,13 +4538,13 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                 <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{n}</span>
                 <span>{noun}{n > 1 ? "s" : ""} dans la base</span>
               </div>
-              {isAdmin ? <AdminBanner style={{ marginBottom: 4 }} /> : <ReadOnlyBanner style={{ marginBottom: 4 }} />}
+              {isAdmin ? <AdminBanner style={{ marginBottom: 16 }} /> : <ReadOnlyBanner style={{ marginBottom: 16 }} />}
             </div>
           );
         })()}
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 20px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {isAdmin && ingredientDB.length > 0 && (
