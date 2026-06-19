@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
+import { useNavigate, useLocation, useParams, Navigate, Routes, Route } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
@@ -1149,7 +1149,12 @@ function AppInner() {
   }, [persistSharedDiffs, setShoppingLists, user]);
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const { id: recipeIdParam } = useParams();
+  const selectedRecipe = recipeIdParam || null;
+  const setSelectedRecipe = useCallback((id) => {
+    if (id) navigate(`/recipes/${id}`);
+    else navigate(location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname, { replace: true });
+  }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [notification, setNotification] = useState(null);
 
@@ -1765,6 +1770,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/recipes" replace />} />
       <Route path="/recipes" element={<AppInner />} />
+      <Route path="/recipes/:id" element={<AppInner />} />
       <Route path="/meal-plan" element={<AppInner />} />
       <Route path="/shopping-lists" element={<AppInner />} />
       <Route path="/fridge" element={<AppInner />} />
