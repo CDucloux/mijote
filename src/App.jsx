@@ -1031,7 +1031,13 @@ function AppInner() {
     return [...sharedLists, ...shoppingLists.filter(l => !sharedIds.has(l.id))];
   }, [shoppingLists, sharedLists]);
   // Reference DBs: shared Master + user's own additions, merged for display.
-  const [masterDB, setMasterDB] = useState({ ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES });
+  const [masterDB, setMasterDB] = useState(() => {
+    try {
+      const cached = localStorage.getItem("rf_masterDB_cache");
+      if (cached) return JSON.parse(cached);
+    } catch { /* ignore */ }
+    return { ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES };
+  });
   const [userDB, setUserDB] = useState({ ingredients: [], utensils: [] });
   // Nutrition categories live in the Master (admin-managed). Fall back to defaults.
   const categories = useMemo(
@@ -1209,7 +1215,9 @@ function AppInner() {
           if (data.fridgeSettings) setFridgeSettings(data.fridgeSettings);
           if (data.pantry) setPantry(data.pantry);
           setUserDB(data.userDB || { ingredients: [], utensils: [] });
-          setMasterDB(await masterPromise);
+          const freshMaster = await masterPromise;
+          setMasterDB(freshMaster);
+          try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ }
 
           // Seed the recipe diff map so the first save doesn't rewrite everything.
           const map = new Map();
