@@ -1593,9 +1593,59 @@ function AppInner() {
   if (user === undefined) return (
     <>
       <style>{GLOBAL_STYLE}</style>
-      <div id="root" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100dvh", flexDirection: "column", gap: 16 }}>
-        <div style={{ fontSize: 32 }}>🫕</div>
-        <div style={{ fontSize: 14, color: "var(--text3)" }}>Chargement…</div>
+      <style>{`
+        @keyframes loadingFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes loadingPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.7;transform:scale(0.97);}}
+        .loading-root{
+          min-height:100dvh;width:100%;display:flex;flex-direction:column;
+          align-items:center;justify-content:center;gap:0;
+          background:var(--bg);position:relative;overflow:hidden;
+        }
+        .loading-blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.13;pointer-events:none;}
+        .loading-card{
+          position:relative;z-index:1;display:flex;flex-direction:column;
+          align-items:center;gap:0;
+          animation:loadingFadeIn 0.5s cubic-bezier(0.25,0.46,0.45,0.94) both;
+        }
+        .loading-logo{
+          font-family:var(--ff-display);font-size:28px;font-weight:500;
+          letter-spacing:-0.02em;color:var(--text);margin-bottom:32px;
+          animation:loadingPulse 2.4s ease-in-out infinite;
+        }
+        .loading-logo span{color:var(--accent);}
+        .loading-spinner-wrap{position:relative;width:56px;height:56px;margin-bottom:28px;}
+        .loading-spinner-track{
+          position:absolute;inset:0;border-radius:50%;
+          border:2.5px solid var(--border);
+        }
+        .loading-spinner{
+          position:absolute;inset:0;border-radius:50%;
+          border:2.5px solid transparent;
+          border-top-color:var(--accent);
+          border-right-color:var(--accent2);
+          animation:spin 0.9s cubic-bezier(0.4,0,0.2,1) infinite;
+        }
+        .loading-emoji{
+          position:absolute;inset:0;display:flex;align-items:center;
+          justify-content:center;font-size:22px;
+        }
+        .loading-label{
+          font-size:13px;color:var(--text3);font-family:var(--ff-body);
+          font-weight:400;letter-spacing:0.01em;
+        }
+      `}</style>
+      <div className={`loading-root${isDark ? "" : " light"}`}>
+        <div className="loading-blob" style={{ width:320,height:320,background:"var(--accent)",top:"-60px",right:"-60px" }} />
+        <div className="loading-blob" style={{ width:240,height:240,background:"#5b9cf6",bottom:"60px",left:"-50px" }} />
+        <div className="loading-card">
+          <div className="loading-logo">Mijoté<span>·</span></div>
+          <div className="loading-spinner-wrap">
+            <div className="loading-spinner-track" />
+            <div className="loading-spinner" />
+            <div className="loading-emoji">🫕</div>
+          </div>
+          <div className="loading-label">Connexion en cours…</div>
+        </div>
       </div>
     </>
   );
