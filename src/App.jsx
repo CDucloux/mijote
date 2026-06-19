@@ -1572,7 +1572,7 @@ function AppInner() {
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
-      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
+      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} notify={notify} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
@@ -2931,14 +2931,13 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
+function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme, notify }) {
   const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [addModal, setAddModal] = useState(null);
   const [searchQ, setSearchQ] = useState("");
-  const [icsStatus, setIcsStatus] = useState(null);
 
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -3030,7 +3029,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
 
     lines.push("END:VCALENDAR");
 
-    if (count === 0) { setIcsStatus("empty"); return; }
+    if (count === 0) { notify?.("Aucun repas dans le planning à exporter", "error"); return; }
 
     const CRLF = "\r\n";
     const blob = new Blob([lines.join(CRLF)], { type: "text/calendar;charset=utf-8" });
@@ -3039,8 +3038,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
     a.download = "planning_repas.ics";
     a.click();
     URL.revokeObjectURL(a.href);
-    setIcsStatus("done");
-    setTimeout(() => setIcsStatus(null), 3000);
+    notify?.("planning_repas.ics téléchargé ✓");
   };
 
   return (
@@ -3061,12 +3059,6 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
             <Icon name="download" size={13} color="var(--blue)" /> .ics
           </button>
         </div>
-        {icsStatus && (
-          <div style={{ marginTop: 8, padding: "8px 14px", borderRadius: 10, background: icsStatus === "done" ? "rgba(76,175,125,0.15)" : "rgba(232,112,58,0.12)", border: `1px solid ${icsStatus === "done" ? "rgba(76,175,125,0.35)" : "rgba(232,112,58,0.35)"}`, fontSize: 12 }}>
-            {icsStatus === "done" && <span style={{ color: "var(--green)" }}>✓ planning_repas.ics téléchargé — ouvre-le pour importer dans Google Calendar</span>}
-            {icsStatus === "empty" && <span style={{ color: "var(--accent2)" }}>⚠ Aucun repas dans le planning à exporter</span>}
-          </div>
-        )}
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
