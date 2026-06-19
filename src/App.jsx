@@ -308,8 +308,6 @@ const DEFAULT_CATEGORIES = {
   vegetable: { label: "Légumes", score: 10, color: "#4caf7d", icon: "🥦", order: 0 },
   fruit: { label: "Fruits", score: 8, color: "#80c080", icon: "🍎", order: 1 },
   legume: { label: "Légumineuses", score: 9, color: "#4caf7d", icon: "🫘", order: 2 },
-  protein_lean: { label: "Protéines maigres", score: 8, color: "#5b9cf6", icon: "🍗", order: 3 },
-  protein_fat: { label: "Protéines grasses", score: 5, color: "#f0a875", icon: "🥩", order: 4 },
   meat: { label: "Viande", score: 6, color: "#c87050", icon: "🥩", order: 5 },
   fish_seafood: { label: "Poissons/Fruits de mer", score: 9, color: "#5b9cf6", icon: "🐟", order: 5 },
   dairy: { label: "Produits laitiers", score: 6, color: "#f0e060", icon: "🧀", order: 6 },
@@ -3334,8 +3332,6 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
 // ─── FRIDGE CONSTANTS ─────────────────────────────────────────────────────────
 const FRIDGE_THRESHOLDS = {
   vegetable: { warn: 5, danger: 8, label: "Légume/Fruit" },
-  protein_lean: { warn: 2, danger: 4, label: "Viande/Poisson maigre" },
-  protein_fat: { warn: 3, danger: 5, label: "Viande grasse" },
   dairy: { warn: 5, danger: 10, label: "Produit laitier" },
   grain_whole: { warn: 30, danger: 60, label: "Céréale complète" },
   grain_ref: { warn: 30, danger: 60, label: "Céréale raffinée" },
@@ -3375,7 +3371,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
   const [pantryText, setPantryText] = useState("");
   const [editPantryItem, setEditPantryItem] = useState(null); // { id, name, quantity, unit, image, category }
   // Catégories autorisées par emplacement
-  const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "protein_lean", "protein_fat", "meat", "fish_seafood", "dairy", "mushroom"]);
+  const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "meat", "fish_seafood", "dairy", "mushroom"]);
   const PANTRY_CATS = new Set(["grain_whole", "grain_ref", "fat_good", "fat_bad", "nuts_seeds", "condiment", "canned", "herbs", "sugar", "alcohol", "other"]);
 
   const deletePantryItem = id => setPantry(prev => prev.filter(i => i.id !== id));
