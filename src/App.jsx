@@ -2572,7 +2572,9 @@ function UtensilPicker({ utensilDB, selected, onChange }) {
       {/* Search */}
       <div style={{ padding: "12px 16px 8px", flexShrink: 0 }}>
         <div style={{ position: "relative" }}>
-          <Icon name="search" size={14} color="var(--text3)" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex" }}>
+            <Icon name="search" size={14} color="var(--text3)" />
+          </div>
           <input
             className="field-input"
             placeholder="Rechercher un ustensile…"
