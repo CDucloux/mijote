@@ -310,6 +310,7 @@ const DEFAULT_CATEGORIES = {
   legume: { label: "Légumineuses", score: 9, color: "#4caf7d", icon: "🫘", order: 2 },
   protein_lean: { label: "Protéines maigres", score: 8, color: "#5b9cf6", icon: "🍗", order: 3 },
   protein_fat: { label: "Protéines grasses", score: 5, color: "#f0a875", icon: "🥩", order: 4 },
+  meat: { label: "Viande", score: 6, color: "#c87050", icon: "🥩", order: 5 },
   fish_seafood: { label: "Poissons/Fruits de mer", score: 9, color: "#5b9cf6", icon: "🐟", order: 5 },
   dairy: { label: "Produits laitiers", score: 6, color: "#f0e060", icon: "🧀", order: 6 },
   grain_whole: { label: "Céréales complètes", score: 7, color: "#c8a870", icon: "🌾", order: 7 },
@@ -3374,7 +3375,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
   const [pantryText, setPantryText] = useState("");
   const [editPantryItem, setEditPantryItem] = useState(null); // { id, name, quantity, unit, image, category }
   // Catégories autorisées par emplacement
-  const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "protein_lean", "protein_fat", "fish_seafood", "dairy", "mushroom"]);
+  const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "protein_lean", "protein_fat", "meat", "fish_seafood", "dairy", "mushroom"]);
   const PANTRY_CATS = new Set(["grain_whole", "grain_ref", "fat_good", "fat_bad", "nuts_seeds", "condiment", "canned", "herbs", "sugar", "alcohol", "other"]);
 
   const deletePantryItem = id => setPantry(prev => prev.filter(i => i.id !== id));
