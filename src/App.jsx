@@ -522,6 +522,7 @@ const Icon = ({ name, size = 20, color = "currentColor" }) => {
     sun: <svg {...p}><circle cx="12" cy="12" r="5" /><line x1="12" x2="12" y1="1" y2="3" /><line x1="12" x2="12" y1="21" y2="23" /><line x1="4.22" x2="5.64" y1="4.22" y2="5.64" /><line x1="18.36" x2="19.78" y1="18.36" y2="19.78" /><line x1="1" x2="3" y1="12" y2="12" /><line x1="21" x2="23" y1="12" y2="12" /><line x1="4.22" x2="5.64" y1="19.78" y2="18.36" /><line x1="18.36" x2="19.78" y1="5.64" y2="4.22" /></svg>,
     moon: <svg {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
     logout: <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>,
+    warning: <svg {...p} strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   };
   return icons[name] || null;
 };
@@ -1728,9 +1729,9 @@ function AppInner() {
       <div id="root" className={isDark ? "" : "light"}>
         {notification && (
           <div style={{ position: "fixed", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: notification.type === "error" ? "var(--red)" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: "toastIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: notification.type === "error" ? "var(--red)" : notification.type === "warning" ? "#e8920a" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: "toastIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both" }}>
               <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name={notification.type === "error" ? "close" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
+                <Icon name={notification.type === "error" ? "close" : notification.type === "warning" ? "warning" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
               </div>
               {notification.msg}
             </div>
@@ -3395,7 +3396,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
     const m = findIngredientMatch(name, ingredientDB);
     const cat = m?.category || "other";
     if (!FRIDGE_CATS.has(cat)) {
-      notify?.(`${DEFAULT_CATEGORIES[cat]?.icon || "🫙"} "${name}" va dans les étagères`, "error");
+      notify?.(`${DEFAULT_CATEGORIES[cat]?.icon || "🫙"} "${name}" va dans les étagères`, "warning");
       return;
     }
     setFridge(prev => [...prev, { id: "f" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "", addedAt: new Date().toISOString().slice(0, 10) }]);
@@ -3409,7 +3410,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
     const m = findIngredientMatch(name, ingredientDB);
     const cat = m?.category || "other";
     if (!PANTRY_CATS.has(cat)) {
-      notify?.(`${DEFAULT_CATEGORIES[cat]?.icon || "🧊"} "${name}" va dans le frigo`, "error");
+      notify?.(`${DEFAULT_CATEGORIES[cat]?.icon || "🧊"} "${name}" va dans le frigo`, "warning");
       return;
     }
     setPantry(prev => [...prev, { id: "p" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "" }]);
