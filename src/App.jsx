@@ -3966,6 +3966,16 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
               </div>
             )}
 
+            {activeList.items.length === 0 && activeList.type === "free" && (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: "60px 32px", textAlign: "center" }}>
+                <Icon name="shopping" size={48} color="var(--text3)" />
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)" }}>Liste vide</div>
+                <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 240 }}>
+                  Appuie sur le bouton <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", verticalAlign: "middle" }}><Icon name="plus" size={11} color="#fff" /></span> en bas à droite pour ajouter des articles.
+                </div>
+              </div>
+            )}
+
             {/* Tri par défaut : groupé par catégorie, alphabétique dans chaque groupe ; « Acheté » en bas */}
             {(() => {
               const items = activeList.items;
