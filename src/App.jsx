@@ -3527,7 +3527,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
               {filteredFridge.map((item, idx) => {
                 const status = fridgeStatus(item);
                 const days = fridgeDaysAge(item.addedAt);
-                const thresh = FRIDGE_THRESHOLDS[item.category || "other"];
+                const thresh = FRIDGE_THRESHOLDS[item.category] || FRIDGE_THRESHOLDS["other"];
                 return (
                   <div key={item.id} className="slide-up" style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${status === "danger" ? "rgba(224,82,82,0.3)" : status === "warn" ? "rgba(240,192,96,0.25)" : "var(--border)"}`, animationDelay: `${idx * 0.04}s` }}>
                     {/* Image de l'ingrédient (comme dans les autres menus), avec repli si non référencé */}
