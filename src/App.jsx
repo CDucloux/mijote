@@ -362,6 +362,44 @@ function nutriToScore100(ns) {
   return 0;
 }
 
+// Conversion d'une unité vers des grammes (approximations culinaires).
+// Valeur objet `{ g, piece: true }` → unité « à la pièce » : on privilégie le
+// `gramsPerPiece` de l'ingrédient s'il est renseigné, sinon `g` sert de défaut.
+const UNIT_GRAMS = {
+  // Masse
+  "mg": 0.001, "g": 1, "kg": 1000,
+  // Volume (≈ 1 g/ml)
+  "ml": 1, "cl": 10, "dl": 100, "l": 1000, "litre": 1000, "litres": 1000,
+  // Mesures de cuisine
+  "cuillère à soupe": 15, "cuillères à soupe": 15, "c. à soupe": 15, "c.à.s": 15,
+  "cuillère à café": 5, "cuillères à café": 5, "c. à café": 5, "c.à.c": 5,
+  "pincée": 0.4, "pincées": 0.4,
+  "verre": 200, "verres": 200, "tasse": 200, "tasses": 200, "bol": 350, "bols": 350,
+  // Pièces (poids par défaut, surchargé par gramsPerPiece de l'ingrédient)
+  "pièce": { g: 100, piece: true }, "pièces": { g: 100, piece: true }, "pce": { g: 100, piece: true }, "pc": { g: 100, piece: true },
+  "tranche": { g: 25, piece: true }, "tranches": { g: 25, piece: true },
+  "gousse": { g: 5, piece: true }, "gousses": { g: 5, piece: true },
+  "botte": { g: 100, piece: true }, "bottes": { g: 100, piece: true },
+  "sachet": { g: 10, piece: true }, "sachets": { g: 10, piece: true },
+  "feuille": { g: 2, piece: true }, "feuilles": { g: 2, piece: true },
+  "branche": { g: 5, piece: true }, "branches": { g: 5, piece: true },
+  "poignée": { g: 30, piece: true }, "poignées": { g: 30, piece: true },
+  "boîte": { g: 400, piece: true }, "boîtes": { g: 400, piece: true },
+  "pot": { g: 125, piece: true }, "pots": { g: 125, piece: true },
+};
+
+// Masse en grammes d'une ligne d'ingrédient de recette. Unité inconnue/vide → grammes.
+function ingredientGrams(recipeIng, dbItem) {
+  const amount = parseFloat(String(recipeIng.amount).replace(",", ".")) || 1;
+  const unit = (recipeIng.unit || "").trim().toLowerCase();
+  const entry = UNIT_GRAMS[unit];
+  let perUnit;
+  if (entry == null) perUnit = 1;                                     // unité inconnue → on suppose des grammes
+  else if (typeof entry === "object") perUnit = dbItem?.gramsPerPiece || entry.g; // pièce : poids spécifique sinon défaut
+  else perUnit = entry;
+  return Math.max(amount * perUnit, 1);
+}
+
 function computeHealthScore(ingredients, ingredientDB) {
   if (!ingredients || ingredients.length === 0) return 50;
   let mass = 0, vegMass = 0;
@@ -369,9 +407,7 @@ function computeHealthScore(ingredients, ingredientDB) {
   for (const recipeIng of ingredients) {
     const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
     if (!dbItem || !dbItem.nutrition) continue; // maille ingrédient : pas de nutrition → ignoré
-    const amount = recipeIng.amount || 1;
-    const g = recipeIng.unit === "kg" || recipeIng.unit === "l" ? amount * 1000 : amount;
-    const m = Math.max(g, 1);
+    const m = ingredientGrams(recipeIng, dbItem);
     const n = dbItem.nutrition;
     tot.calories     += (n.calories || 0)     * m / 100;
     tot.sugar        += (n.sugar || 0)        * m / 100;
@@ -4567,6 +4603,7 @@ const ING_MD_COLUMNS = [
   { key: "aliases", label: "Aliases" },
   { key: "id", label: "dbid" },
   { key: "category", label: "Catégorie" },
+  { key: "gramsPerPiece", label: "g/pièce", num: true },
   { key: "image", label: "Image" },
   { key: "calories", label: "kcal", nut: true },
   { key: "protein", label: "Protéines", nut: true },
@@ -4615,6 +4652,9 @@ function parseIngredientsMarkdown(text) {
       if (col.nut) {
         const num = parseFloat(val.replace(",", "."));
         if (!Number.isNaN(num)) nutrition[key] = num;
+      } else if (col.num) {
+        const num = parseFloat(val.replace(",", "."));
+        if (!Number.isNaN(num)) row[key] = num;
       } else if (key === "aliases") {
         const arr = val.split(",").map(a => a.trim()).filter(Boolean);
         if (arr.length) row.aliases = arr;
@@ -5103,6 +5143,12 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           </select>
           <div className="field-label">Photo</div>
           <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} pathPrefix={isAdmin ? "master/ingredients" : "ingredients"} />
+          <div className="field-label">Poids moyen d'une pièce (g)</div>
+          <input className="field-input" type="number" min="0" step="1" placeholder="ex. 125 pour une tomate — optionnel"
+            value={editIng.gramsPerPiece ?? ""}
+            onChange={e => setEditIng(p => ({ ...p, gramsPerPiece: e.target.value === "" ? undefined : +e.target.value }))}
+            style={{ marginBottom: 4 }} />
+          <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 12 }}>Utilisé pour le score quand la quantité est en pièces, tranches, gousses…</div>
           <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
