@@ -337,30 +337,24 @@ function computeHealthScore(ingredients, ingredientDB, categories = DEFAULT_CATE
   let weightedScore = 0;
   for (const recipeIng of ingredients) {
     const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
-    if (!dbItem) continue;
+    if (!dbItem || !dbItem.nutrition) continue; // maille ingrédient : pas de nutrition → pas de contribution
     const amount = recipeIng.amount || 1;
     const unitWeight = recipeIng.unit === "kg" ? amount * 1000 : recipeIng.unit === "l" ? amount * 1000 : amount;
     const weight = Math.max(unitWeight, 10);
-    let score;
-    if (dbItem.nutrition) {
-      // Nutri-score style from macros per 100g
-      const n = dbItem.nutrition;
-      let s = 50;
-      // Bonus : nutriments favorables
-      s += (n.fiber || 0) * 3;
-      s += (n.protein || 0) * 2;
-      s += (n.omega3 || 0) * 5;
-      // Malus : nutriments défavorables
-      s -= (n.saturatedFat || 0) * 4;
-      s -= (n.sugar || 0) * 2;
-      s -= (n.salt || 0) * 10;
-      s -= (n.calories || 0) * 0.03; // densité énergétique (100 kcal → -3)
-      if (n.isVegetable) s += 15;
-      score = Math.max(0, Math.min(99, s));
-    } else {
-      const cat = categories[dbItem.category || "other"];
-      score = (cat?.score || 5) * 10;
-    }
+    // Nutri-score style from macros per 100g
+    const n = dbItem.nutrition;
+    let s = 50;
+    // Bonus : nutriments favorables
+    s += (n.fiber || 0) * 3;
+    s += (n.protein || 0) * 2;
+    s += (n.omega3 || 0) * 5;
+    // Malus : nutriments défavorables
+    s -= (n.saturatedFat || 0) * 4;
+    s -= (n.sugar || 0) * 2;
+    s -= (n.salt || 0) * 10;
+    s -= (n.calories || 0) * 0.03; // densité énergétique (100 kcal → -3)
+    if (n.isVegetable) s += 15;
+    const score = Math.max(0, Math.min(99, s));
     weightedScore += score * weight;
     totalWeight += weight;
   }
