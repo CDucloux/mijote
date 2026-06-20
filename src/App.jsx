@@ -331,35 +331,73 @@ function sortedCategoryEntries(categories) {
   });
 }
 
-function computeHealthScore(ingredients, ingredientDB, categories = DEFAULT_CATEGORIES) {
+// ─── SCORE SANTÉ — Nutri-Score (algorithme 2023, aliments généraux) ─────────
+// On agrège les nutriments de TOUTE la recette ramenés à 100g de plat fini,
+// puis on calcule un unique Nutri-Score, mappé sur l'échelle 0-100 du ring.
+// Tables de seuils par 100g : `nsPoints` renvoie l'index du 1er seuil non dépassé.
+const NS_ENERGY = [335, 670, 1005, 1340, 1675, 2010, 2345, 2680, 3015, 3350];                 // kJ → 0..10
+const NS_SUGAR  = [3.4, 6.8, 10, 14, 17, 20, 24, 27, 31, 34, 37, 41, 44, 48, 51];             // g  → 0..15
+const NS_SATFAT = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];                                            // g  → 0..10
+const NS_SALT   = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.4, 3.8, 4.2, 4.6, 5]; // g → 0..20
+const NS_FIBER  = [3.0, 4.1, 5.2, 6.3, 7.4];                                                  // g  → 0..5
+const NS_PROT   = [2.4, 4.8, 7.2, 9.6, 12, 14, 17];                                           // g  → 0..7
+
+function nsPoints(value, thresholds) {
+  for (let i = 0; i < thresholds.length; i++) if (value <= thresholds[i]) return i;
+  return thresholds.length;
+}
+
+// Mappe le Nutri-Score brut (négatif = sain) sur 0-100, par paliers alignés
+// sur les lettres A–E et les couleurs du ring (A/B ≥70 vert, C 50-70 jaune, D/E <50 rouge).
+function nutriToScore100(ns) {
+  const pts = [[-7, 100], [0, 80], [2, 70], [10, 50], [18, 30], [28, 0]];
+  if (ns <= pts[0][0]) return 100;
+  if (ns >= pts[pts.length - 1][0]) return 0;
+  for (let i = 1; i < pts.length; i++) {
+    if (ns <= pts[i][0]) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+      return Math.round(y0 + (y1 - y0) * (ns - x0) / (x1 - x0));
+    }
+  }
+  return 0;
+}
+
+function computeHealthScore(ingredients, ingredientDB) {
   if (!ingredients || ingredients.length === 0) return 50;
-  let totalWeight = 0;
-  let weightedScore = 0;
+  let mass = 0, vegMass = 0;
+  const tot = { calories: 0, sugar: 0, saturatedFat: 0, salt: 0, fiber: 0, protein: 0 };
   for (const recipeIng of ingredients) {
     const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
-    if (!dbItem || !dbItem.nutrition) continue; // maille ingrédient : pas de nutrition → pas de contribution
+    if (!dbItem || !dbItem.nutrition) continue; // maille ingrédient : pas de nutrition → ignoré
     const amount = recipeIng.amount || 1;
-    const unitWeight = recipeIng.unit === "kg" ? amount * 1000 : recipeIng.unit === "l" ? amount * 1000 : amount;
-    const weight = Math.max(unitWeight, 10);
-    // Nutri-score style from macros per 100g
+    const g = recipeIng.unit === "kg" || recipeIng.unit === "l" ? amount * 1000 : amount;
+    const m = Math.max(g, 1);
     const n = dbItem.nutrition;
-    let s = 50;
-    // Bonus : nutriments favorables
-    s += (n.fiber || 0) * 3;
-    s += (n.protein || 0) * 2;
-    s += (n.omega3 || 0) * 5;
-    // Malus : nutriments défavorables
-    s -= (n.saturatedFat || 0) * 4;
-    s -= (n.sugar || 0) * 2;
-    s -= (n.salt || 0) * 10;
-    s -= (n.calories || 0) * 0.03; // densité énergétique (100 kcal → -3)
-    if (n.isVegetable) s += 15;
-    const score = Math.max(0, Math.min(99, s));
-    weightedScore += score * weight;
-    totalWeight += weight;
+    tot.calories     += (n.calories || 0)     * m / 100;
+    tot.sugar        += (n.sugar || 0)        * m / 100;
+    tot.saturatedFat += (n.saturatedFat || 0) * m / 100;
+    tot.salt         += (n.salt || 0)         * m / 100;
+    tot.fiber        += (n.fiber || 0)        * m / 100;
+    tot.protein      += (n.protein || 0)      * m / 100;
+    if (n.isVegetable) vegMass += m;
+    mass += m;
   }
-  if (totalWeight === 0) return 50;
-  return Math.min(99, Math.round(weightedScore / totalWeight));
+  if (mass === 0) return 50;
+  // Profil pour 100g de plat fini
+  const per100 = k => tot[k] / mass * 100;
+  // Points négatifs (énergie en kJ, sucres, AG saturés, sel)
+  const N = nsPoints(per100("calories") * 4.184, NS_ENERGY)
+          + nsPoints(per100("sugar"), NS_SUGAR)
+          + nsPoints(per100("saturatedFat"), NS_SATFAT)
+          + nsPoints(per100("salt"), NS_SALT);
+  // Points positifs (part de végétaux, fibres, protéines)
+  const vegFrac = vegMass / mass * 100;
+  const vegPts = vegFrac > 80 ? 5 : vegFrac > 60 ? 2 : vegFrac > 40 ? 1 : 0;
+  const fiberPts = nsPoints(per100("fiber"), NS_FIBER);
+  const proteinPts = nsPoints(per100("protein"), NS_PROT);
+  // Règle Nutri-Score : si N≥11 et part de végétaux < 5 pts, les protéines ne comptent pas
+  const P = vegPts + fiberPts + (N >= 11 && vegPts < 5 ? 0 : proteinPts);
+  return nutriToScore100(N - P);
 }
 
 // ─── NAME MATCHING (import → DB linking) ─────────────────────────────────────
@@ -1360,7 +1398,7 @@ function AppInner() {
   };
 
   const saveRecipe = r => {
-    const score = computeHealthScore(r.ingredients, ingredientDB, categories);
+    const score = computeHealthScore(r.ingredients, ingredientDB);
     const withScore = { ...r, healthScore: score };
     let updatedRecipes;
     if (r.id && recipes.find(x => x.id === r.id)) {
@@ -1443,7 +1481,7 @@ function AppInner() {
             id: "r" + Date.now() + Math.random(),
             ingredients,
             utensils,
-            healthScore: computeHealthScore(ingredients, ingredientDB, categories),
+            healthScore: computeHealthScore(ingredients, ingredientDB),
           };
         });
       setRecipes(prev => {
@@ -1986,7 +2024,7 @@ function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, se
 
 function RecipeCard({ recipe, onClick, style }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-  const score = recipe.healthScore || 70;
+  const score = recipe.healthScore || 50;
   return (
     <button className="slide-up recipe-card" onClick={onClick} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", ...style }}>
       <div className="recipe-card-thumb" style={{ aspectRatio: "16/10", position: "relative" }}>
@@ -2094,7 +2132,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
       {/* Info bar */}
       <div style={{ display: "flex", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "10px 16px", flexShrink: 0 }}>
-        {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Santé", value: <HealthRing score={recipe.healthScore || 70} size={34} />, icon: null }].map((item, i) => (
+        {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Santé", value: <HealthRing score={recipe.healthScore || 50} size={34} />, icon: null }].map((item, i) => (
           <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 1, borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
             {item.icon && <Icon name={item.icon} size={13} color="var(--text3)" />}
             {typeof item.value === "string" ? <span style={{ fontSize: 14, fontWeight: 600 }}>{item.value}</span> : item.value}
@@ -3201,7 +3239,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
                   <div style={{ fontSize: 14, fontWeight: 500 }}>{r.name}</div>
                   <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min · {r.servings} portions</div>
                 </div>
-                <HealthRing score={r.healthScore || 70} size={30} />
+                <HealthRing score={r.healthScore || 50} size={30} />
               </button>
             ))}
             {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
