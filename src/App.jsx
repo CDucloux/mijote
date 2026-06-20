@@ -934,17 +934,23 @@ function usePullToRefresh(onRefresh, { enabled = true, threshold = 110, max = 17
 
     const onStart = (e) => {
       if (refreshing || e.touches.length !== 1) { g.current.active = false; return; }
-      // Ne pas interférer avec les bottom-sheets : elles sont rendues à l'intérieur
-      // de ce conteneur, donc leurs touchmove remontent jusqu'ici. Si le doigt part
-      // dans un .modal-backdrop, on laisse la sheet gérer son propre swipe-to-close.
       if (e.target.closest && e.target.closest(".modal-backdrop")) { g.current.active = false; return; }
       if (!atTop(e.target)) { g.current.active = false; return; }
       g.current.startY = e.touches[0].clientY;
+      g.current.startX = e.touches[0].clientX;
+      g.current.dirLocked = false;
       g.current.active = true;
     };
     const onMove = (e) => {
       if (!g.current.active) return;
       const dy = e.touches[0].clientY - g.current.startY;
+      const dx = e.touches[0].clientX - g.current.startX;
+      // Lock direction on first significant move — ignore if horizontal
+      if (!g.current.dirLocked) {
+        if (Math.abs(dx) > Math.abs(dy) + 4) { g.current.active = false; return; }
+        if (Math.abs(dy) > 6) g.current.dirLocked = true;
+        else return;
+      }
       if (dy <= 0) { g.current.pull = 0; setPull(0); return; }
       const dist = Math.min(max, dy * 0.5); // rubber-band
       g.current.pull = dist;
@@ -1761,7 +1767,7 @@ function AppInner() {
             {mainScreen}
           </>
         ) : (
-          <>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
             <PullToRefresh
               enabled={!isDesktop && editingRecipe === null}
               threshold={110}
@@ -1770,7 +1776,7 @@ function AppInner() {
               {mainScreen}
             </PullToRefresh>
             <TabBar tab={tab} setTab={requestTab} />
-          </>
+          </div>
         )}
 
         {/* Leave editor confirmation modal */}
@@ -2043,8 +2049,8 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [actionsOpen]);
 
-  const getIngImage = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
-  const getUtImage = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
+  const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
+  const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -2185,7 +2191,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {recipe.ingredients.map(ing => (
                   <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
-                    <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={50} />
+                    <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={50} />
                     <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
@@ -2201,7 +2207,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {(recipe.utensils || []).map(u => (
                   <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "#fff" }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "#fff" }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                     <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
                   </div>
                 ))}
@@ -2234,14 +2240,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                           {linkedIngs.map(ing => (
                             <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                              <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={22} />
+                              <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={22} />
                               {ing.name}
                               <span style={{ color: "var(--text3)", fontWeight: 400, marginLeft: 2 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
                             </span>
                           ))}
                           {linkedUts.map(u => (
                             <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                              <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                              <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                               {u.name}
                             </span>
                           ))}
@@ -2265,7 +2271,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {recipe.ingredients.map(ing => (
                   <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={48} />
+                    <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                     <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
                       <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
@@ -2281,7 +2287,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {recipe.utensils.map(u => (
                     <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                       <span style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</span>
                     </div>
                   ))}
@@ -2312,14 +2318,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {linkedIngs.map(ing => (
                           <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={24} />
+                            <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={24} />
                             {ing.name}
                             <span style={{ color: "var(--text3)", fontWeight: 500 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
                           </span>
                         ))}
                         {linkedUts.map(u => (
                           <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                             {u.name}
                           </span>
                         ))}
@@ -3207,8 +3213,8 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
   const linkedIngs = recipe.ingredients.filter(i => step.ingredients?.includes(i.id));
   const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
 
-  const getIngImage = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
-  const getUtImage = dbId => (utensilDB || []).find(d => d.id === dbId)?.image || "";
+  const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
+  const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
   const progress = ((stepIdx + 1) / total) * 100;
 
   return createPortal(
@@ -3296,7 +3302,7 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {linkedIngs.map(ing => (
                       <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={42} />
+                        <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={42} />
                         <span style={{ flex: 1, fontSize: 14 }}>{ing.name}</span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
                       </div>
@@ -3312,7 +3318,7 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {linkedUts.map(u => (
                       <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                        <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                        <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                         {u.name}
                       </span>
                     ))}
