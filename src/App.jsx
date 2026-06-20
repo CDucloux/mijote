@@ -1019,7 +1019,11 @@ function AppInner() {
   const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config/") ? "config" : "home");
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/recipes"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
-  const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
+  // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
+  // Au remontage du composant lors d'une navigation, Firebase est déjà initialisé :
+  // `auth.currentUser` renvoie l'utilisateur synchronement, évitant un flash de l'écran
+  // de chargement entre les onglets.
+  const [user, setUser] = useState(() => auth.currentUser ?? undefined);
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
   const isAdmin = !!(user && ADMIN_EMAIL && user.email === ADMIN_EMAIL);
