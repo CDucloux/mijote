@@ -400,8 +400,8 @@ function ingredientGrams(recipeIng, dbItem) {
   return Math.max(amount * perUnit, 1);
 }
 
-function computeHealthScore(ingredients, ingredientDB) {
-  if (!ingredients || ingredients.length === 0) return 50;
+function computeNutriInfo(ingredients, ingredientDB) {
+  if (!ingredients || ingredients.length === 0) return { score: 50, letter: null };
   let mass = 0, vegMass = 0;
   const tot = { calories: 0, sugar: 0, saturatedFat: 0, salt: 0, fiber: 0, protein: 0 };
   for (const recipeIng of ingredients) {
@@ -433,7 +433,13 @@ function computeHealthScore(ingredients, ingredientDB) {
   const proteinPts = nsPoints(per100("protein"), NS_PROT);
   // Règle Nutri-Score : si N≥11 et part de végétaux < 5 pts, les protéines ne comptent pas
   const P = vegPts + fiberPts + (N >= 11 && vegPts < 5 ? 0 : proteinPts);
-  return nutriToScore100(N - P);
+  const ns = N - P;
+  const letter = ns <= -1 ? "A" : ns <= 2 ? "B" : ns <= 10 ? "C" : ns <= 18 ? "D" : "E";
+  return { score: nutriToScore100(ns), letter };
+}
+
+function computeHealthScore(ingredients, ingredientDB) {
+  return computeNutriInfo(ingredients, ingredientDB).score;
 }
 
 // ─── NAME MATCHING (import → DB linking) ─────────────────────────────────────
@@ -623,6 +629,33 @@ const HealthRing = ({ score, size = 56 }) => {
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: size < 48 ? 11 : 13, fontWeight: 600, color }}>{score}</span>
       </div>
+    </div>
+  );
+};
+
+const NUTRI_COLORS = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
+
+const NutriScoreBadge = ({ letter }) => {
+  if (!letter) return <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>—</span>;
+  const letters = ["A", "B", "C", "D", "E"];
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
+      {letters.map(l => {
+        const active = l === letter;
+        const color = NUTRI_COLORS[l];
+        return (
+          <div key={l} style={{
+            width: active ? 22 : 16,
+            height: active ? 28 : 20,
+            borderRadius: 5,
+            background: active ? color : color + "40",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.2s",
+          }}>
+            <span style={{ fontSize: active ? 13 : 9, fontWeight: 800, color: active ? "#fff" : color, lineHeight: 1 }}>{l}</span>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -1434,8 +1467,8 @@ function AppInner() {
   };
 
   const saveRecipe = r => {
-    const score = computeHealthScore(r.ingredients, ingredientDB);
-    const withScore = { ...r, healthScore: score };
+    const { score, letter } = computeNutriInfo(r.ingredients, ingredientDB);
+    const withScore = { ...r, healthScore: score, nutriLetter: letter };
     let updatedRecipes;
     if (r.id && recipes.find(x => x.id === r.id)) {
       // Editing — check duplicate name only against OTHER recipes
@@ -1517,7 +1550,7 @@ function AppInner() {
             id: "r" + Date.now() + Math.random(),
             ingredients,
             utensils,
-            healthScore: computeHealthScore(ingredients, ingredientDB),
+            ...(() => { const { score, letter } = computeNutriInfo(ingredients, ingredientDB); return { healthScore: score, nutriLetter: letter }; })(),
           };
         });
       setRecipes(prev => {
@@ -2168,7 +2201,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
       {/* Info bar */}
       <div style={{ display: "flex", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "10px 16px", flexShrink: 0 }}>
-        {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Santé", value: <HealthRing score={recipe.healthScore || 50} size={34} />, icon: null }].map((item, i) => (
+        {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Nutri-Score", value: <NutriScoreBadge letter={recipe.nutriLetter} />, icon: null }].map((item, i) => (
           <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 1, borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
             {item.icon && <Icon name={item.icon} size={13} color="var(--text3)" />}
             {typeof item.value === "string" ? <span style={{ fontSize: 14, fontWeight: 600 }}>{item.value}</span> : item.value}
