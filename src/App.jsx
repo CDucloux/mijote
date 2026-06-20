@@ -521,6 +521,7 @@ const Icon = ({ name, size = 20, color = "currentColor" }) => {
     moon: <svg {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
     logout: <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>,
     warning: <svg {...p} strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+    sparkle: <svg {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>,
   };
   return icons[name] || null;
 };
@@ -1615,6 +1616,7 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
+      <AnnouncementBanner />
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} notify={notify} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
@@ -4293,6 +4295,11 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 const CHANGELOG = [
   {
     version: "1.0.6", label: "en cours", accent: true,
+    // 1 à 2 nouveautés phares mises en avant dans le bandeau d'annonce.
+    highlights: [
+      "Vos images sont désormais disponibles hors-ligne ⚡",
+      "Nouvelle vue Étagères dans le Frigo 🗄️",
+    ],
     items: [
       "Routage URL complet : chaque recette a son propre lien /recipes/:id",
       "Écran de chargement animé avec spinner après connexion Google",
@@ -4360,6 +4367,54 @@ const CHANGELOG = [
     ],
   },
 ];
+
+// Clé de mémorisation : on stocke la version dont le bandeau a été fermé.
+const ANNOUNCE_SEEN_KEY = "rf_announce_seen";
+
+// Bandeau d'annonce affiché en haut de tous les onglets : met en avant les
+// `highlights` de la dernière version. Fermable, et mémorisé par version
+// (il ne réapparaît qu'à la sortie d'une nouvelle version).
+function AnnouncementBanner() {
+  const navigate = useNavigate();
+  const latest = CHANGELOG[0];
+  const highlights = latest?.highlights || [];
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem(ANNOUNCE_SEEN_KEY) === latest?.version; } catch { return false; }
+  });
+  if (!highlights.length || dismissed) return null;
+  const close = (e) => {
+    e?.stopPropagation();
+    try { localStorage.setItem(ANNOUNCE_SEEN_KEY, latest.version); } catch { /* quota */ }
+    setDismissed(true);
+  };
+  return (
+    <div
+      onClick={() => navigate("/config/changelog")}
+      style={{
+        flexShrink: 0, display: "flex", alignItems: "center", gap: 11, cursor: "pointer",
+        padding: "9px 12px", margin: "10px 16px 0", borderRadius: 13,
+        background: "linear-gradient(135deg, rgba(232,112,58,0.16), rgba(232,112,58,0.05))",
+        border: "1px solid rgba(232,112,58,0.34)", boxShadow: "0 2px 12px rgba(232,112,58,0.10)",
+      }}
+    >
+      <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(232,112,58,0.4)" }}>
+        <Icon name="sparkle" size={16} color="#fff" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.02em" }}>NOUVEAUTÉS</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.03em" }}>v{latest.version}</span>
+        </div>
+        <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 1, lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis" }}>
+          {highlights.join(" · ")}
+        </div>
+      </div>
+      <button onClick={close} aria-label="Fermer l'annonce" style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.06)", border: "none", color: "var(--text3)", cursor: "pointer" }}>
+        <Icon name="close" size={13} />
+      </button>
+    </div>
+  );
+}
 
 function ChangelogSection() {
   const [open, setOpen] = React.useState({});
