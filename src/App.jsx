@@ -1273,6 +1273,12 @@ function AppInner() {
     document.documentElement.classList.toggle("light", !isDark);
   }, [isDark]);
 
+  // Keep masterDB cache in sync so images are available after reload
+  useEffect(() => {
+    if (!masterDB.ingredients.length && !masterDB.utensils.length) return;
+    try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(masterDB)); } catch { /* quota */ }
+  }, [masterDB]);
+
   // Update document title on tab change
   useEffect(() => {
     const titles = { "home": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Frigo", "config": "Configuration" };
