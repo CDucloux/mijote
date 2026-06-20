@@ -346,11 +346,15 @@ function computeHealthScore(ingredients, ingredientDB, categories = DEFAULT_CATE
       // Nutri-score style from macros per 100g
       const n = dbItem.nutrition;
       let s = 50;
+      // Bonus : nutriments favorables
       s += (n.fiber || 0) * 3;
       s += (n.protein || 0) * 2;
+      s += (n.omega3 || 0) * 5;
+      // Malus : nutriments défavorables
       s -= (n.saturatedFat || 0) * 4;
       s -= (n.sugar || 0) * 2;
       s -= (n.salt || 0) * 10;
+      s -= (n.calories || 0) * 0.03; // densité énergétique (100 kcal → -3)
       if (n.isVegetable) s += 15;
       score = Math.max(0, Math.min(99, s));
     } else {
@@ -4522,6 +4526,80 @@ function AdminBanner({ style }) {
   );
 }
 
+// ─── EXPORT / IMPORT MARKDOWN DE LA BASE D'INGRÉDIENTS ──────────────────────
+// Source unique des colonnes : l'export et l'import partagent cette spec, pour
+// garantir un aller-retour fidèle. `nut: true` = champ rangé dans `nutrition`.
+// `isVegetable` n'est pas une colonne : il est recalculé depuis la catégorie.
+const ING_MD_COLUMNS = [
+  { key: "name", label: "Nom" },
+  { key: "aliases", label: "Aliases" },
+  { key: "id", label: "dbid" },
+  { key: "category", label: "Catégorie" },
+  { key: "image", label: "Image" },
+  { key: "calories", label: "kcal", nut: true },
+  { key: "protein", label: "Protéines", nut: true },
+  { key: "carbs", label: "Glucides", nut: true },
+  { key: "sugar", label: "Sucres", nut: true },
+  { key: "fat", label: "Lipides", nut: true },
+  { key: "saturatedFat", label: "AG saturés", nut: true },
+  { key: "omega3", label: "Oméga-3", nut: true },
+  { key: "fiber", label: "Fibres", nut: true },
+  { key: "salt", label: "Sel", nut: true },
+];
+
+// Découpe une ligne de tableau Markdown en cellules, en respectant les `\|` échappés.
+function splitMarkdownRow(line) {
+  const inner = line.replace(/^\s*\|/, "").replace(/\|\s*$/, "");
+  return inner.split(/(?<!\\)\|/).map(c => c.replace(/\\\|/g, "|").trim());
+}
+
+// Parse un export Markdown d'ingrédients → liste d'objets partiels (clés présentes
+// seulement). Robuste à l'ordre des colonnes : on s'aligne sur l'en-tête.
+function parseIngredientsMarkdown(text) {
+  const lines = (text || "").split(/\r?\n/);
+  // Repérer la ligne d'en-tête (contient "Nom" et "dbid") puis la ligne de séparation.
+  let headerIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (/\|/.test(lines[i]) && /\bNom\b/i.test(lines[i]) && /\bdbid\b/i.test(lines[i])) { headerIdx = i; break; }
+  }
+  if (headerIdx < 0) return [];
+  const headers = splitMarkdownRow(lines[headerIdx]).map(h => h.toLowerCase());
+  // Index colonne → clé interne, via le label de la spec.
+  const colKey = headers.map(h => {
+    const col = ING_MD_COLUMNS.find(c => c.label.toLowerCase() === h);
+    return col ? col.key : null;
+  });
+  const out = [];
+  for (let i = headerIdx + 2; i < lines.length; i++) { // +2 : sauter la ligne |---|
+    const line = lines[i];
+    if (!/\|/.test(line)) continue;
+    const cells = splitMarkdownRow(line);
+    if (cells.every(c => c === "" || /^-+$/.test(c))) continue;
+    const row = {}; const nutrition = {};
+    cells.forEach((val, ci) => {
+      const key = colKey[ci];
+      if (!key || val === "") return;
+      const col = ING_MD_COLUMNS.find(c => c.key === key);
+      if (col.nut) {
+        const num = parseFloat(val.replace(",", "."));
+        if (!Number.isNaN(num)) nutrition[key] = num;
+      } else if (key === "aliases") {
+        const arr = val.split(",").map(a => a.trim()).filter(Boolean);
+        if (arr.length) row.aliases = arr;
+      } else {
+        row[key] = val;
+      }
+    });
+    if (!row.name) continue;
+    if (Object.keys(nutrition).length) {
+      nutrition.isVegetable = row.category === "vegetable" || row.category === "legume";
+      row.nutrition = nutrition;
+    }
+    out.push(row);
+  }
+  return out;
+}
+
 function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -4547,6 +4625,10 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
   const [dragOver, setDragOver] = useState(false);
   const [openCats, setOpenCats] = useState({});
   const fileRef = useRef();
+  const [mdError, setMdError] = useState("");
+  const [mdInfo, setMdInfo] = useState("");
+  const [mdDragOver, setMdDragOver] = useState(false);
+  const mdFileRef = useRef();
   const toggleCat = k => setOpenCats(p => ({ ...p, [k]: !p[k] }));
 
   const saveIng = item => {
@@ -4611,23 +4693,61 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
     });
   };
 
-  // Export Markdown de toute la base d'ingrédients (admin/master) — table prête à fournir à un LLM.
-  // Colonnes : Nom · Aliases · dbid · Catégorie (clé machine, précise). Triée par catégorie puis nom.
+  // Export Markdown COMPLET de toute la base d'ingrédients (admin/master).
+  // Toutes les colonnes de ING_MD_COLUMNS (identité + nutrition). Aller-retour
+  // fidèle : le fichier produit est réimportable tel quel. Trié par catégorie puis nom.
   const exportIngredientsMarkdown = () => {
     const esc = s => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
+    const cell = (r, col) => {
+      if (col.nut) { const v = r.nutrition?.[col.key]; return v == null || v === "" ? "" : esc(v); }
+      if (col.key === "aliases") return esc((r.aliases || []).join(", "));
+      if (col.key === "category") return esc(r.category || "other");
+      return esc(r[col.key]);
+    };
     const order = sortedCategoryEntries(categories).map(([k]) => k);
     const rows = [...ingredientDB].sort((a, b) => {
       const ca = order.indexOf(a.category || "other"), cb = order.indexOf(b.category || "other");
       return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr");
     });
-    const header = "| Nom | Aliases | dbid | Catégorie |\n|---|---|---|---|";
-    const body = rows.map(r => `| ${esc(r.name)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.id)} | ${esc(r.category || "other")} |`).join("\n");
-    const md = `# Base d'ingrédients Mijoté (${rows.length})\n\n${header}\n${body}\n`;
+    const header = `| ${ING_MD_COLUMNS.map(c => c.label).join(" | ")} |\n|${ING_MD_COLUMNS.map(() => "---").join("|")}|`;
+    const body = rows.map(r => `| ${ING_MD_COLUMNS.map(c => cell(r, c)).join(" | ")} |`).join("\n");
+    const md = `# Base d'ingrédients Mijoté (${rows.length})\n\nValeurs nutritionnelles pour 100g. Oméga-3 inclus dans les lipides. \`Légume\` est recalculé depuis la catégorie à l'import.\n\n${header}\n${body}\n`;
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
     a.download = "ingredients_mijote.md";
     a.click();
     URL.revokeObjectURL(a.href);
+  };
+
+  // Import Markdown : réinjecte / met à jour la base. Match par dbid sinon par nom.
+  const importIngredientsMarkdown = (text) => {
+    const parsed = parseIngredientsMarkdown(text);
+    if (!parsed.length) { setMdError("Aucun ingrédient reconnu dans le fichier Markdown."); return; }
+    let created = 0, updated = 0;
+    setIngredientDB(prev => {
+      const next = [...prev];
+      const idxById = new Map(next.map((d, i) => [d.id, i]));
+      const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
+      parsed.forEach((row, n) => {
+        let idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
+          : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
+        if (idx >= 0) {
+          const cur = next[idx];
+          next[idx] = { ...cur, ...row, id: cur.id, nutrition: row.nutrition || cur.nutrition };
+          updated++;
+        } else {
+          const id = "db_i" + Date.now() + "_" + n;
+          const item = { ...row, id };
+          next.push(item);
+          idxById.set(id, next.length - 1);
+          idxByName.set(normalizeStr(row.name), next.length - 1);
+          created++;
+        }
+      });
+      return next;
+    });
+    setMdError("");
+    setMdInfo(`${created} créé${created > 1 ? "s" : ""}, ${updated} mis à jour.`);
   };
 
   return (
@@ -4667,10 +4787,31 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {isAdmin && ingredientDB.length > 0 && (
-              <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={exportIngredientsMarkdown}>
-                <Icon name="download" size={14} /> Exporter la base (Markdown)
-              </button>
+            {isAdmin && (
+              <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>Base d'ingrédients (Markdown)</div>
+                {ingredientDB.length > 0 && (
+                  <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={exportIngredientsMarkdown}>
+                    <Icon name="download" size={14} /> Exporter la base complète
+                  </button>
+                )}
+                <input ref={mdFileRef} type="file" accept=".md,.markdown,.txt" style={{ display: "none" }}
+                  onChange={e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } e.target.value = ""; }} />
+                <div
+                  onDragOver={e => { e.preventDefault(); setMdDragOver(true); }}
+                  onDragLeave={() => setMdDragOver(false)}
+                  onDrop={e => { e.preventDefault(); setMdDragOver(false); const f = Array.from(e.dataTransfer.files).find(f => /\.(md|markdown|txt)$/i.test(f.name)); if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } }}
+                  onClick={() => mdFileRef.current.click()}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "20px", borderRadius: 12, border: `2px dashed ${mdDragOver ? "var(--accent)" : "var(--border)"}`, background: mdDragOver ? "rgba(232,112,58,0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
+                  <Icon name="import" size={24} color={mdDragOver ? "var(--accent)" : "var(--text3)"} />
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: mdDragOver ? "var(--accent)" : "var(--text)" }}>Importer un fichier Markdown</div>
+                    <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>met à jour (par nom/dbid) ou crée les ingrédients</div>
+                  </div>
+                </div>
+                {mdError && <p style={{ color: "var(--red)", fontSize: 12 }}>{mdError}</p>}
+                {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12 }}>✓ {mdInfo}</p>}
+              </div>
             )}
             {sortedCategoryEntries(categories).map(([catKey, cat]) => {
               const catIngs = ingredientDB.filter(d => d.category === catKey)
@@ -4933,10 +5074,10 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {[["protein", "Protéines (g)"], ["fiber", "Fibres (g)"], ["saturatedFat", "G. saturées (g)"], ["sugar", "Sucres (g)"], ["salt", "Sel (g)"]].map(([k, l]) => (
+              {[["calories", "Énergie (kcal)", 1], ["protein", "Protéines (g)", 0.1], ["carbs", "Glucides (g)", 0.1], ["sugar", "Sucres (g)", 0.1], ["fat", "Lipides (g)", 0.1], ["saturatedFat", "G. saturées (g)", 0.1], ["omega3", "Oméga-3 (g)", 0.01], ["fiber", "Fibres (g)", 0.1], ["salt", "Sel (g)", 0.01]].map(([k, l, step]) => (
                 <div key={k}>
                   <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 3 }}>{l}</div>
-                  <input className="field-input" type="number" min="0" step="0.1" placeholder="0"
+                  <input className="field-input" type="number" min="0" step={step} placeholder="0"
                     value={editIng.nutrition?.[k] || ""}
                     onChange={e => setEditIng(p => ({ ...p, nutrition: { ...(p.nutrition || {}), isVegetable: p.category === "vegetable" || p.category === "legume", [k]: +e.target.value } }))}
                     style={{ padding: "6px 10px", fontSize: 12 }} />
