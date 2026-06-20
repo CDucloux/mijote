@@ -3601,10 +3601,10 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[...pantry].sort((a, b) => a.name.localeCompare(b.name, "fr")).map(item => (
                   <div key={item.id} className="slide-up" style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)" }}>
-                    {item.image
-                      ? <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
+                    {(() => { const img = item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""; return img
+                      ? <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
                       : <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 20 }}>🫙</div>
-                    }
+                    ; })()}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{item.name}</div>
                       {(item.quantity || item.unit) && (
@@ -3852,7 +3852,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
           <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: struck ? "var(--green)" : "transparent", border: `2px solid ${struck ? "var(--green)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" }}>
             {struck && <Icon name="check" size={11} color="#fff" />}
           </div>
-          <IngImage src={item.image} alt={item.name} size={40} />
+          <IngImage src={item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""} alt={item.name} size={40} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{item.name}</span>
