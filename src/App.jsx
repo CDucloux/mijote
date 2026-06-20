@@ -332,7 +332,7 @@ function sortedCategoryEntries(categories) {
 }
 
 function computeHealthScore(ingredients, ingredientDB, categories = DEFAULT_CATEGORIES) {
-  if (!ingredients || ingredients.length === 0) return 70;
+  if (!ingredients || ingredients.length === 0) return 50;
   let totalWeight = 0;
   let weightedScore = 0;
   for (const recipeIng of ingredients) {
@@ -358,7 +358,7 @@ function computeHealthScore(ingredients, ingredientDB, categories = DEFAULT_CATE
     weightedScore += score * weight;
     totalWeight += weight;
   }
-  if (totalWeight === 0) return 70;
+  if (totalWeight === 0) return 50;
   return Math.min(99, Math.round(weightedScore / totalWeight));
 }
 
