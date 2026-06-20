@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate, useLocation, useParams, Navigate, Routes, Route } from "react-router-dom";
+import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
@@ -1177,7 +1177,11 @@ function AppInner() {
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
   const [pantry, setPantry] = useLS("rf_pantry", []);
-  const { id: recipeIdParam } = useParams();
+  // Dérivé du pathname (et non de useParams) pour qu'AppInner reste une instance
+  // unique montée sur `path="*"` : pas de remontage entre les onglets.
+  const recipeIdParam = location.pathname.startsWith("/recipes/")
+    ? decodeURIComponent(location.pathname.slice(9)) || undefined
+    : undefined;
   const selectedRecipe = recipeIdParam || null;
   const setSelectedRecipe = useCallback((id) => {
     if (id) navigate(`/recipes/${id}`);
@@ -1811,14 +1815,10 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/recipes" replace />} />
-      <Route path="/recipes" element={<AppInner />} />
-      <Route path="/recipes/:id" element={<AppInner />} />
-      <Route path="/meal-plan" element={<AppInner />} />
-      <Route path="/shopping-lists" element={<AppInner />} />
-      <Route path="/fridge" element={<AppInner />} />
-      <Route path="/config" element={<AppInner />} />
-      <Route path="/config/:configSection" element={<AppInner />} />
-      <Route path="*" element={<Navigate to="/recipes" replace />} />
+      {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
+          l'onglet / la recette / la section depuis le pathname, ce qui évite tout
+          remontage (et donc le flicker de l'écran de chargement) lors de la navigation. */}
+      <Route path="*" element={<AppInner />} />
     </Routes>
   );
 }
@@ -4441,8 +4441,11 @@ function AdminBanner({ style }) {
 }
 
 function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
-  const { configSection: configSectionParam } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const configSectionParam = location.pathname.startsWith("/config/")
+    ? location.pathname.slice(8) || undefined
+    : undefined;
   const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "ingredients";
   const setSection = (s) => navigate(`/config/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
   useEffect(() => {
