@@ -79,7 +79,7 @@ async function loadMasterDB() {
       ingredients: ing.exists() ? (ing.data().items || []) : [],
       utensils: ut.exists() ? (ut.data().items || []) : [],
       categories: cat.exists() && cat.data().map && Object.keys(cat.data().map).length
-        ? cat.data().map : DEFAULT_CATEGORIES,
+        ? Object.fromEntries(Object.entries({ ...DEFAULT_CATEGORIES, ...cat.data().map }).filter(([k]) => k in DEFAULT_CATEGORIES)) : DEFAULT_CATEGORIES,
     };
   } catch {
     return { ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES };
@@ -308,21 +308,19 @@ const DEFAULT_CATEGORIES = {
   vegetable: { label: "Légumes", score: 10, color: "#4caf7d", icon: "🥦", order: 0 },
   fruit: { label: "Fruits", score: 8, color: "#80c080", icon: "🍎", order: 1 },
   legume: { label: "Légumineuses", score: 9, color: "#4caf7d", icon: "🫘", order: 2 },
-  protein_lean: { label: "Protéines maigres", score: 8, color: "#5b9cf6", icon: "🍗", order: 3 },
-  protein_fat: { label: "Protéines grasses", score: 5, color: "#f0a875", icon: "🥩", order: 4 },
+  meat: { label: "Viande", score: 6, color: "#c87050", icon: "🥩", order: 5 },
   fish_seafood: { label: "Poissons/Fruits de mer", score: 9, color: "#5b9cf6", icon: "🐟", order: 5 },
   dairy: { label: "Produits laitiers", score: 6, color: "#f0e060", icon: "🧀", order: 6 },
-  grain_whole: { label: "Céréales complètes", score: 7, color: "#c8a870", icon: "🌾", order: 7 },
-  grain_ref: { label: "Céréales raffinées", score: 4, color: "#c8a870", icon: "🍞", order: 8 },
+  grain: { label: "Céréales", score: 6, color: "#c8a870", icon: "🌾", order: 7 },
   fat_good: { label: "Matières grasses saines", score: 6, color: "#80c080", icon: "🫒", order: 9 },
   nuts_seeds: { label: "Noix et graines", score: 8, color: "#c8a870", icon: "🥜", order: 10 },
-  fat_bad: { label: "Matières grasses saturées", score: 2, color: "#e05252", icon: "🧈", order: 11 },
   mushroom: { label: "Champignons", score: 8, color: "#9a9490", icon: "🍄", order: 12 },
   herbs: { label: "Herbes aromatiques fraîches", score: 9, color: "#4caf7d", icon: "🌿", order: 13 },
   condiment: { label: "Condiments/Épices", score: 7, color: "#9a9490", icon: "🧂", order: 14 },
-  sugar: { label: "Sucres/Sucrants", score: 1, color: "#e05252", icon: "🍬", order: 15 },
-  alcohol: { label: "Alcools", score: 0, color: "#e05252", icon: "🍷", order: 16 },
-  other: { label: "Autres", score: 5, color: "#9a9490", icon: "📦", order: 17 },
+  canned: { label: "Conserves", score: 5, color: "#b08060", icon: "🥫", order: 15 },
+  sugar: { label: "Sucres/Sucrants", score: 1, color: "#e05252", icon: "🍬", order: 16 },
+  alcohol: { label: "Alcools", score: 0, color: "#e05252", icon: "🍷", order: 17 },
+  other: { label: "Autres", score: 5, color: "#9a9490", icon: "📦", order: 18 },
 };
 
 // Return [key, cat] entries sorted by their `order` field (stable fallback to insertion).
@@ -522,6 +520,7 @@ const Icon = ({ name, size = 20, color = "currentColor" }) => {
     sun: <svg {...p}><circle cx="12" cy="12" r="5" /><line x1="12" x2="12" y1="1" y2="3" /><line x1="12" x2="12" y1="21" y2="23" /><line x1="4.22" x2="5.64" y1="4.22" y2="5.64" /><line x1="18.36" x2="19.78" y1="18.36" y2="19.78" /><line x1="1" x2="3" y1="12" y2="12" /><line x1="21" x2="23" y1="12" y2="12" /><line x1="4.22" x2="5.64" y1="19.78" y2="18.36" /><line x1="18.36" x2="19.78" y1="5.64" y2="4.22" /></svg>,
     moon: <svg {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
     logout: <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>,
+    warning: <svg {...p} strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   };
   return icons[name] || null;
 };
@@ -796,6 +795,18 @@ const TABS = [
 const TAB_BY_PATH = Object.fromEntries(TABS.map(t => [t.path, t.id]));
 const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t.path]));
 
+// Config sub-sections URL mapping
+const CONFIG_SECTION_BY_PATH = {
+  "ingredients": "ingredients",
+  "ustensils": "ustensiles",
+  "collections": "collections",
+  "data": "données",
+  "changelog": "nouveautés",
+};
+const CONFIG_PATH_BY_SECTION = Object.fromEntries(
+  Object.entries(CONFIG_SECTION_BY_PATH).map(([path, section]) => [section, path])
+);
+
 // ─── LOCAL STORAGE HELPERS ────────────────────────────────────────────────────
 function useLS(key, def) {
   const [val, setVal] = useState(() => { try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : def; } catch { return def; } });
@@ -999,7 +1010,7 @@ function AppInner() {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || "home";
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config/") ? "config" : "home");
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/recipes"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
@@ -1029,7 +1040,13 @@ function AppInner() {
     return [...sharedLists, ...shoppingLists.filter(l => !sharedIds.has(l.id))];
   }, [shoppingLists, sharedLists]);
   // Reference DBs: shared Master + user's own additions, merged for display.
-  const [masterDB, setMasterDB] = useState({ ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES });
+  const [masterDB, setMasterDB] = useState(() => {
+    try {
+      const cached = localStorage.getItem("rf_masterDB_cache");
+      if (cached) return JSON.parse(cached);
+    } catch { /* ignore */ }
+    return { ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES };
+  });
   const [userDB, setUserDB] = useState({ ingredients: [], utensils: [] });
   // Nutrition categories live in the Master (admin-managed). Fall back to defaults.
   const categories = useMemo(
@@ -1149,6 +1166,7 @@ function AppInner() {
   }, [persistSharedDiffs, setShoppingLists, user]);
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
+  const [pantry, setPantry] = useLS("rf_pantry", []);
   const { id: recipeIdParam } = useParams();
   const selectedRecipe = recipeIdParam || null;
   const setSelectedRecipe = useCallback((id) => {
@@ -1204,8 +1222,11 @@ function AppInner() {
           if (data.shoppingLists) setShoppingLists(data.shoppingLists);
           if (data.fridge) setFridge(data.fridge);
           if (data.fridgeSettings) setFridgeSettings(data.fridgeSettings);
+          if (data.pantry) setPantry(data.pantry);
           setUserDB(data.userDB || { ingredients: [], utensils: [] });
-          setMasterDB(await masterPromise);
+          const freshMaster = await masterPromise;
+          setMasterDB(freshMaster);
+          try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ }
 
           // Seed the recipe diff map so the first save doesn't rewrite everything.
           const map = new Map();
@@ -1219,7 +1240,7 @@ function AppInner() {
               setDoc(metaDoc(u.uid, "collections"), { items: data.collections || [] }),
               setDoc(metaDoc(u.uid, "mealPlan"), { data: data.mealPlan || {} }),
               setDoc(metaDoc(u.uid, "shoppingLists"), { items: data.shoppingLists || [] }),
-              setDoc(metaDoc(u.uid, "fridge"), { items: data.fridge || [], settings: data.fridgeSettings || { matchThreshold: 25 } }),
+              setDoc(metaDoc(u.uid, "fridge"), { items: data.fridge || [], settings: data.fridgeSettings || { matchThreshold: 25 }, pantry: data.pantry || [] }),
               setDoc(metaDoc(u.uid, "userDB"), data.userDB || { ingredients: [], utensils: [] }),
             ]);
           }
@@ -1249,7 +1270,7 @@ function AppInner() {
   // Update document title on tab change
   useEffect(() => {
     const titles = { "home": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Frigo", "config": "Configuration" };
-    document.title = `Mijoté · ${titles[tab] || "Recettes"}`;
+    document.title = `Mijoté | ${titles[tab] || "Recettes"}`;
   }, [tab]);
 
 
@@ -1300,7 +1321,7 @@ function AppInner() {
     }, { merge: true }).catch(() => { });
     getDocs(userDirCol()).then(s => setDirectory(s.docs.map(d => d.data()))).catch(() => { });
   }, [user]);
-  useEffect(() => { saveMeta("fridge", { items: fridge, settings: fridgeSettings }); }, [fridge, fridgeSettings]);
+  useEffect(() => { saveMeta("fridge", { items: fridge, settings: fridgeSettings, pantry }); }, [fridge, fridgeSettings, pantry]);
   useEffect(() => { saveMeta("userDB", userDB); }, [userDB]);
 
   // Master DB: only admins persist changes (and Firestore rules enforce it server-side).
@@ -1577,7 +1598,7 @@ function AppInner() {
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} notify={notify} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
-      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
+      {tab === "fridge" && <FridgeTab fridge={fridge} setFridge={setFridge} fridgeSettings={fridgeSettings} setFridgeSettings={setFridgeSettings} pantry={pantry} setPantry={setPantry} recipes={recipes} ingredientDB={ingredientDB} onSelectRecipe={setSelectedRecipe} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} notify={notify} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isDark={isDark} onToggleTheme={toggleTheme} user={user} onSignOut={handleSignOut} syncStatus={syncStatus} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
   );
@@ -1590,6 +1611,8 @@ function AppInner() {
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
       <RecipeDetail recipe={currentRecipe} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onAddToShopping={addToShopping} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
+  ) : selectedRecipe && !currentRecipe && cloudLoaded.current ? (
+    <RecipeNotFound onBack={() => navigate("/recipes")} />
   ) : tabContent;
 
   // Loading state
@@ -1724,9 +1747,9 @@ function AppInner() {
       <div id="root" className={isDark ? "" : "light"}>
         {notification && (
           <div style={{ position: "fixed", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: notification.type === "error" ? "var(--red)" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: "toastIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: notification.type === "error" ? "var(--red)" : notification.type === "warning" ? "#e8920a" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: "toastIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both" }}>
               <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name={notification.type === "error" ? "close" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
+                <Icon name={notification.type === "error" ? "close" : notification.type === "warning" ? "warning" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
               </div>
               {notification.msg}
             </div>
@@ -1777,7 +1800,8 @@ export default function App() {
       <Route path="/meal-plan" element={<AppInner />} />
       <Route path="/shopping-lists" element={<AppInner />} />
       <Route path="/fridge" element={<AppInner />} />
-      <Route path="/config" element={<AppInner />} />
+      <Route path="/config" element={<Navigate to="/config/ingredients" replace />} />
+      <Route path="/config/:configSection" element={<AppInner />} />
       <Route path="*" element={<Navigate to="/recipes" replace />} />
     </Routes>
   );
@@ -1969,6 +1993,28 @@ function RecipeCard({ recipe, onClick, style }) {
 }
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
+function RecipeNotFound({ onBack }) {
+  return (
+    <div className="editor-enter" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: "40px 32px", textAlign: "center" }}>
+      <div style={{ fontSize: 64, lineHeight: 1 }}>🍽️</div>
+      <div>
+        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginBottom: 8 }}>Recette introuvable</h2>
+        <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, maxWidth: 280 }}>
+          Ce lien ne correspond à aucune recette de la collection. Elle a peut-être été supprimée.
+        </p>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <span style={{ fontSize: 11, fontFamily: "monospace", color: "var(--text3)" }}>404</span>
+        <span style={{ width: 1, height: 14, background: "var(--border)" }} />
+        <span style={{ fontSize: 11, color: "var(--text3)" }}>NOT_FOUND</span>
+      </div>
+      <button onClick={onBack} className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+        <Icon name="back" size={15} color="#fff" /> Retour aux recettes
+      </button>
+    </div>
+  );
+}
+
 function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection }) {
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
@@ -3046,7 +3092,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
     a.download = "planning_repas.ics";
     a.click();
     URL.revokeObjectURL(a.href);
-    notify?.("planning_repas.ics téléchargé ✓");
+    notify?.("Planning exporté dans ton calendrier");
   };
 
   return (
@@ -3297,13 +3343,10 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
 // ─── FRIDGE CONSTANTS ─────────────────────────────────────────────────────────
 const FRIDGE_THRESHOLDS = {
   vegetable: { warn: 5, danger: 8, label: "Légume/Fruit" },
-  protein_lean: { warn: 2, danger: 4, label: "Viande/Poisson maigre" },
-  protein_fat: { warn: 3, danger: 5, label: "Viande grasse" },
+  meat: { warn: 2, danger: 4, label: "Viande" },
   dairy: { warn: 5, danger: 10, label: "Produit laitier" },
-  grain_whole: { warn: 30, danger: 60, label: "Céréale complète" },
-  grain_ref: { warn: 30, danger: 60, label: "Céréale raffinée" },
+  grain: { warn: 30, danger: 60, label: "Céréale" },
   fat_good: { warn: 30, danger: 90, label: "Matière grasse saine" },
-  fat_bad: { warn: 14, danger: 30, label: "Matière grasse saturée" },
   sugar: { warn: 60, danger: 180, label: "Sucre" },
   condiment: { warn: 30, danger: 90, label: "Condiment/Épice" },
   legume: { warn: 3, danger: 5, label: "Légumineuse cuite" },
@@ -3316,7 +3359,7 @@ function fridgeDaysAge(addedAt) {
 }
 function fridgeStatus(item) {
   const days = fridgeDaysAge(item.addedAt);
-  const t = FRIDGE_THRESHOLDS[item.category || "other"];
+  const t = FRIDGE_THRESHOLDS[item.category] || FRIDGE_THRESHOLDS["other"];
   if (days >= t.danger) return "danger";
   if (days >= t.warn) return "warn";
   return "ok";
@@ -3326,14 +3369,28 @@ const FRIDGE_STATUS_BG = { ok: "rgba(76,175,125,0.12)", warn: "rgba(240,192,96,0
 const FRIDGE_STATUS_LABEL = { ok: "Frais", warn: "À utiliser bientôt", danger: "À jeter" };
 
 // ─── FRIDGE TAB ───────────────────────────────────────────────────────────────
-function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
-  const [view, setView] = useState("stock"); // "stock" | "recipes"
+function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantry, setPantry, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES, notify }) {
+  const [view, setView] = useState("stock"); // "stock" | "pantry" | "recipes"
   const [showAdd, setShowAdd] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [newItem, setNewItem] = useState({ name: "", category: "vegetable", quantity: "", unit: "", addedAt: new Date().toISOString().slice(0, 10) });
   const [showSettings, setShowSettings] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [addText, setAddText] = useState("");
+  const [showPantryAdd, setShowPantryAdd] = useState(false);
+  const [pantryText, setPantryText] = useState("");
+  const [editPantryItem, setEditPantryItem] = useState(null); // { id, name, quantity, unit, image, category }
+  // Catégories autorisées par emplacement
+  const FRIDGE_CATS = new Set(["vegetable", "fruit", "legume", "meat", "fish_seafood", "dairy", "mushroom"]);
+  const PANTRY_CATS = new Set(["grain", "fat_good", "nuts_seeds", "condiment", "canned", "herbs", "sugar", "alcohol", "other"]);
+
+  const deletePantryItem = id => setPantry(prev => prev.filter(i => i.id !== id));
+  const savePantryEdit = () => {
+    if (!editPantryItem?.name?.trim()) return;
+    const m = findIngredientMatch(editPantryItem.name, ingredientDB);
+    setPantry(prev => prev.map(i => i.id === editPantryItem.id ? { ...editPantryItem, image: m?.image || editPantryItem.image || "" } : i));
+    setEditPantryItem(null);
+  };
 
   const saveItem = () => {
     if (!newItem.name.trim()) return;
@@ -3348,24 +3405,34 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
     setEditItem(null); setShowAdd(false);
   };
 
-  // Ajout rapide depuis une saisie libre (comme Courses / éditeur de recette) :
-  // nom/quantité/unité inférés, catégorie + image récupérées de l'ingrédient, date = aujourd'hui.
   const addFridgeItem = () => {
     if (!addText.trim()) return;
     const p = parseIngredientInput(addText);
     const name = p.name || addText.trim();
     const m = findIngredientMatch(name, ingredientDB);
-    setFridge(prev => [...prev, {
-      id: "f" + Date.now(),
-      name,
-      category: m?.category || "other",
-      quantity: p.amount || "",
-      unit: p.unit || "",
-      image: m?.image || "",
-      addedAt: new Date().toISOString().slice(0, 10),
-    }]);
+    const cat = m?.category || "other";
+    if (!FRIDGE_CATS.has(cat)) {
+      notify?.(`"${name}" n'est pas un produit frais`, "warning");
+      return;
+    }
+    setFridge(prev => [...prev, { id: "f" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "", addedAt: new Date().toISOString().slice(0, 10) }]);
     setAddText("");
   };
+
+  const addPantryItem = () => {
+    if (!pantryText.trim()) return;
+    const p = parseIngredientInput(pantryText);
+    const name = p.name || pantryText.trim();
+    const m = findIngredientMatch(name, ingredientDB);
+    const cat = m?.category || "other";
+    if (!PANTRY_CATS.has(cat)) {
+      notify?.(`"${name}" est un produit frais`, "warning");
+      return;
+    }
+    setPantry(prev => [...prev, { id: "p" + Date.now(), name, category: cat, quantity: p.amount || "", unit: p.unit || "", image: m?.image || "" }]);
+    setPantryText("");
+  };
+
   const deleteItem = id => setFridge(prev => prev.filter(i => i.id !== id));
   const startEdit = item => { setNewItem({ ...item, addedAt: item.addedAt.slice(0, 10) }); setEditItem(item.id); setShowAdd(true); };
 
@@ -3373,13 +3440,13 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
   const filteredFridge = fridge.filter(item => filterStatus === "all" || fridgeStatus(item) === filterStatus)
     .sort((a, b) => fridgeDaysAge(b.addedAt) - fridgeDaysAge(a.addedAt));
 
-  // Recipe matching
+  // Recipe matching — frigo + étagères combinés
   const threshold = fridgeSettings.matchThreshold / 100;
-  const fridgeNames = fridge.map(i => normalizeStr(i.name));
+  const stockNames = [...fridge, ...pantry].map(i => normalizeStr(i.name));
   const matchedRecipes = recipes.map(recipe => {
     const ings = recipe.ingredients || [];
     if (ings.length === 0) return null;
-    const matched = ings.filter(ing => fridgeNames.some(fn => normalizeStr(ing.name).includes(fn) || fn.includes(normalizeStr(ing.name))));
+    const matched = ings.filter(ing => stockNames.some(fn => normalizeStr(ing.name).includes(fn) || fn.includes(normalizeStr(ing.name))));
     const pct = matched.length / ings.length;
     return pct >= threshold ? { recipe, matched: matched.length, total: ings.length, pct } : null;
   }).filter(Boolean).sort((a, b) => b.pct - a.pct);
@@ -3402,9 +3469,13 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
         </div>
 
         {/* View toggle */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-          <button onClick={() => setView("stock")} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "stock" ? "var(--accent)" : "var(--surface2)", color: view === "stock" ? "#fff" : "var(--text2)", border: `1px solid ${view === "stock" ? "transparent" : "var(--border)"}` }}>🧊 Stock</button>
-          <button onClick={() => setView("recipes")} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "recipes" ? "var(--accent)" : "var(--surface2)", color: view === "recipes" ? "#fff" : "var(--text2)", border: `1px solid ${view === "recipes" ? "transparent" : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 12, overflowX: "auto" }}>
+          <button onClick={() => setView("stock")} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "stock" ? "var(--accent)" : "var(--surface2)", color: view === "stock" ? "#fff" : "var(--text2)", border: `1px solid ${view === "stock" ? "transparent" : "var(--border)"}` }}>🧊 Frigo</button>
+          <button onClick={() => setView("pantry")} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "pantry" ? "var(--accent)" : "var(--surface2)", color: view === "pantry" ? "#fff" : "var(--text2)", border: `1px solid ${view === "pantry" ? "transparent" : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6 }}>
+            🫙 Étagères
+            {pantry.length > 0 && <span style={{ background: view === "pantry" ? "rgba(255,255,255,0.25)" : "var(--surface3)", color: view === "pantry" ? "#fff" : "var(--text2)", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>{pantry.length}</span>}
+          </button>
+          <button onClick={() => setView("recipes")} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: view === "recipes" ? "var(--accent)" : "var(--surface2)", color: view === "recipes" ? "#fff" : "var(--text2)", border: `1px solid ${view === "recipes" ? "transparent" : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6 }}>
             🍽 Recettes possibles
             {matchedRecipes.length > 0 && <span style={{ background: view === "recipes" ? "rgba(255,255,255,0.25)" : "var(--accent)", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>{matchedRecipes.length}</span>}
           </button>
@@ -3467,7 +3538,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
               {filteredFridge.map((item, idx) => {
                 const status = fridgeStatus(item);
                 const days = fridgeDaysAge(item.addedAt);
-                const thresh = FRIDGE_THRESHOLDS[item.category || "other"];
+                const thresh = FRIDGE_THRESHOLDS[item.category] || FRIDGE_THRESHOLDS["other"];
                 return (
                   <div key={item.id} className="slide-up" style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: `1px solid ${status === "danger" ? "rgba(224,82,82,0.3)" : status === "warn" ? "rgba(240,192,96,0.25)" : "var(--border)"}`, animationDelay: `${idx * 0.04}s` }}>
                     {/* Image de l'ingrédient (comme dans les autres menus), avec repli si non référencé */}
@@ -3498,6 +3569,52 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
                 );
               })}
             </div>
+          </>
+        )}
+
+        {/* ── PANTRY VIEW ── */}
+        {view === "pantry" && (
+          <>
+            {/* Quick add */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <input className="field-input" placeholder="ex: 400g tomates pelées, huile d'olive…" value={pantryText}
+                onChange={e => { setPantryText(e.target.value); setPantryWarn(""); }}
+                onKeyDown={e => e.key === "Enter" && addPantryItem()}
+                style={{ flex: 1 }} />
+              <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={addPantryItem} disabled={!pantryText.trim()}>
+                <Icon name="plus" size={15} /> Ajouter
+              </button>
+            </div>
+            {pantry.length === 0 ? (
+              <div style={{ textAlign: "center", color: "var(--text3)", padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 40 }}>🫙</span>
+                <p style={{ fontSize: 14, fontWeight: 500 }}>Étagères vides</p>
+                <p style={{ fontSize: 12, maxWidth: 260 }}>Ajoute tes conserves, condiments, épices et autres produits de longue conservation.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[...pantry].sort((a, b) => a.name.localeCompare(b.name, "fr")).map(item => (
+                  <div key={item.id} className="slide-up" style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)" }}>
+                    {item.image
+                      ? <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
+                      : <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 20 }}>🫙</div>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{item.name}</div>
+                      {(item.quantity || item.unit) && (
+                        <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 1 }}>
+                          {[item.quantity, item.unit].filter(Boolean).join(" ")}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                      <button onClick={() => setEditPantryItem({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={15} /></button>
+                      <button onClick={() => deletePantryItem(item.id)} style={{ color: "var(--red)" }}><Icon name="trash" size={15} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 
@@ -3550,7 +3667,7 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
           <input className="field-input" placeholder="ex: Poulet, Yaourt, Courgette…" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} autoFocus />
           <div className="field-label">Catégorie</div>
           <select className="field-input" value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
-            {sortedCategoryEntries(categories).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+            {sortedCategoryEntries(categories).filter(([k]) => FRIDGE_CATS.has(k)).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
           </select>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
             <div>
@@ -3598,6 +3715,33 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, recip
           <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowSettings(false)}>Fermer</button>
         </SwipeableSheet>
       )}
+
+      {/* Étagères — édition d'un item */}
+      {editPantryItem && (
+        <SwipeableSheet onClose={() => setEditPantryItem(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Modifier l'article</h3>
+          <div className="field-label">Nom</div>
+          <input className="field-input" value={editPantryItem.name} autoFocus onChange={e => setEditPantryItem(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div className="field-label">Catégorie</div>
+          <select className="field-input" value={editPantryItem.category || "other"} onChange={e => setEditPantryItem(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+            {sortedCategoryEntries(categories).filter(([k]) => PANTRY_CATS.has(k)).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+          </select>
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <div className="field-label">Quantité</div>
+              <input className="field-input" value={editPantryItem.quantity} onChange={e => setEditPantryItem(p => ({ ...p, quantity: e.target.value }))} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div className="field-label">Unité</div>
+              <input className="field-input" value={editPantryItem.unit} onChange={e => setEditPantryItem(p => ({ ...p, unit: e.target.value }))} />
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditPantryItem(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={savePantryEdit}>Enregistrer</button>
+          </div>
+        </SwipeableSheet>
+      )}
     </div>
   );
 }
@@ -3619,6 +3763,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
   const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
   const [shareEmail, setShareEmail] = useState("");    // saisie e-mail dans la section partage
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const activeList = shoppingLists.find(l => l.id === activeListId) || shoppingLists[0] || null;
 
@@ -3791,7 +3936,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 
       {/* Active list content */}
       {activeList && (
-        <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
           {/* List header */}
           <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
@@ -3817,81 +3962,30 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
             </div>
           </div>
 
-          {/* Liste — pleine largeur, défilante */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
-            {/* Ajout — remonté en haut ; switch à droite : « article par article » ↔ « coller une liste » */}
-            {activeList.type === "free" && (
-              <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{listMode ? "Ajouter des articles" : "Ajouter un article"}</div>
-                  <button onClick={() => setListMode(v => !v)} title="Basculer en collage de liste"
-                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 9px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: listMode ? "var(--accent)" : "var(--surface2)", color: listMode ? "#fff" : "var(--text2)", border: `1px solid ${listMode ? "transparent" : "var(--border)"}`, transition: "all 0.15s", flexShrink: 0, whiteSpace: "nowrap" }}>
-                    <span>Coller une liste</span>
-                    <span style={{ position: "relative", width: 28, height: 15, borderRadius: 10, background: listMode ? "rgba(255,255,255,0.4)" : "var(--surface3)", transition: "background 0.15s" }}>
-                      <span style={{ position: "absolute", top: 2, left: listMode ? 15 : 2, width: 11, height: 11, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
-                    </span>
-                  </button>
-                </div>
+          {/* FAB — absolute inside the list container */}
+          {activeList.type === "free" && (
+            <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}
+              style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+              <Icon name="plus" size={22} color="#fff" />
+            </button>
+          )}
 
-                {listMode ? (() => {
-                  const count = pasteText.split(/\r?\n/).map(stripBullet).filter(Boolean).length;
-                  const over = count > MAX_LIST_ITEMS;
-                  return (
-                    <>
-                      <textarea className="field-input" value={pasteText} autoFocus maxLength={MAX_LIST_CHARS}
-                        onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
-                        placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
-                        style={{ minHeight: 130, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
-                        <span style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.3 }}>Une ligne = un article (tirets, puces et numéros acceptés).</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: over ? "var(--red)" : "var(--text3)", flexShrink: 0 }}>{count}/{MAX_LIST_ITEMS}</span>
-                      </div>
-                      {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois — retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
-                      <button className="btn btn-primary" style={{ width: "100%" }} disabled={count === 0 || over}
-                        onClick={() => { addManyFromText(pasteText); setPasteText(""); setListMode(false); }}>
-                        <Icon name="plus" size={15} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}
-                      </button>
-                    </>
-                  );
-                })() : (
-                  <>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input className="field-input" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
-                        value={newItemName} onChange={e => setNewItemName(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && addManualItem()}
-                        onPaste={e => {
-                          const t = (e.clipboardData || window.clipboardData)?.getData("text") || "";
-                          if (/\r?\n/.test(t)) { e.preventDefault(); setPasteText(p => (p ? p + "\n" : "") + t); setListMode(true); }
-                        }}
-                        style={{ flex: 1 }} />
-                      <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={addManualItem} disabled={!newItemName.trim()}>
-                        <Icon name="plus" size={15} /> Ajouter
-                      </button>
-                    </div>
-                    {newItemName.trim() && (() => {
-                      const p = parseIngredientInput(newItemName);
-                      const name = p.name || newItemName.trim();
-                      const match = findIngredientMatch(name, ingredientDB);
-                      return (
-                        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
-                          {match?.image && <IngImage src={match.image} alt={match.name} size={34} />}
-                          {p.amount && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {p.amount}</span>}
-                          {p.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {p.unit}</span>}
-                          {p.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{p.name}</span>}
-                          {match
-                            ? <span style={{ fontSize: 11, background: "rgba(76,175,125,0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Reconnu</span>
-                            : p.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px" }}>Non référencé</span> : null}
-                        </div>
-                      );
-                    })()}
-                  </>
-                )}
-              </div>
-            )}
+          {/* Liste — pleine largeur, défilante */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 80px" }}>
 
             {activeList.items.length === 0 && activeList.type !== "free" && (
               <div style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>
                 <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Icon name="shopping" size={14} color="var(--text3)" /> Aucun article dans cette liste.</span>
+              </div>
+            )}
+
+            {activeList.items.length === 0 && activeList.type === "free" && (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: "60px 32px", textAlign: "center" }}>
+                <Icon name="shopping" size={48} color="var(--text3)" />
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)" }}>Liste vide</div>
+                <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 240 }}>
+                  Appuie sur le bouton <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", verticalAlign: "middle" }}><Icon name="plus" size={11} color="#fff" /></span> en bas à droite pour ajouter des articles.
+                </div>
               </div>
             )}
 
@@ -3977,6 +4071,89 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
           </div>
         </SwipeableSheet>
       )}
+      {/* Modal ajout d'article / liste */}
+      {showAddModal && activeList?.type === "free" && (
+        <SwipeableSheet onClose={() => { setShowAddModal(false); setListMode(false); setNewItemName(""); setPasteText(""); }}>
+          {/* En-tête avec icône presse-papiers */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg,rgba(232,112,58,0.18),rgba(232,112,58,0.06))", border: "1px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                <line x1="9" y1="12" x2="15" y2="12" />
+                <line x1="9" y1="16" x2="13" y2="16" />
+              </svg>
+            </div>
+            <div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 1 }}>{listMode ? "Coller une liste" : "Ajouter un article"}</h3>
+              <p style={{ fontSize: 12, color: "var(--text3)" }}>{activeList.name}</p>
+            </div>
+          </div>
+
+          {/* Toggle article / liste */}
+          <div style={{ display: "flex", background: "var(--surface2)", borderRadius: 10, padding: 3, marginBottom: 16, gap: 3 }}>
+            {[{ label: "Article", val: false }, { label: "Coller une liste", val: true }].map(({ label, val }) => (
+              <button key={label} onClick={() => setListMode(val)}
+                style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: listMode === val ? "var(--surface)" : "transparent", color: listMode === val ? "var(--accent)" : "var(--text3)", boxShadow: listMode === val ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {listMode ? (() => {
+            const count = pasteText.split(/\r?\n/).map(stripBullet).filter(Boolean).length;
+            const over = count > MAX_LIST_ITEMS;
+            return (
+              <>
+                <textarea className="field-input" value={pasteText} autoFocus maxLength={MAX_LIST_CHARS}
+                  onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
+                  placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
+                  style={{ minHeight: 140, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.3 }}>Une ligne = un article (tirets, puces et numéros acceptés).</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: over ? "var(--red)" : "var(--text3)", flexShrink: 0 }}>{count}/{MAX_LIST_ITEMS}</span>
+                </div>
+                {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois — retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
+                <button className="btn btn-primary" style={{ width: "100%" }} disabled={count === 0 || over}
+                  onClick={() => { addManyFromText(pasteText); setPasteText(""); setShowAddModal(false); setListMode(false); }}>
+                  <Icon name="plus" size={15} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}
+                </button>
+              </>
+            );
+          })() : (
+            <>
+              <input className="field-input" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
+                value={newItemName} onChange={e => setNewItemName(e.target.value)}
+                autoFocus
+                onKeyDown={e => { if (e.key === "Enter") { addManualItem(); setShowAddModal(false); } }}
+                onPaste={e => {
+                  const t = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+                  if (/\r?\n/.test(t)) { e.preventDefault(); setPasteText(p => (p ? p + "\n" : "") + t); setListMode(true); }
+                }}
+                style={{ marginBottom: 10 }} />
+              {newItemName.trim() && (() => {
+                const p = parseIngredientInput(newItemName);
+                const name = p.name || newItemName.trim();
+                const match = findIngredientMatch(name, ingredientDB);
+                return (
+                  <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+                    {match?.image && <IngImage src={match.image} alt={match.name} size={34} />}
+                    {p.amount && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {p.amount}</span>}
+                    {p.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {p.unit}</span>}
+                    {p.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{p.name}</span>}
+                    {match ? <span style={{ fontSize: 11, background: "rgba(76,175,125,0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Reconnu</span>
+                      : p.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px" }}>Non référencé</span> : null}
+                  </div>
+                );
+              })()}
+              <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => { addManualItem(); setShowAddModal(false); }} disabled={!newItemName.trim()}>
+                <Icon name="plus" size={15} /> Ajouter
+              </button>
+            </>
+          )}
+        </SwipeableSheet>
+      )}
+
       {/* Configuration de la liste */}
       {configList && (() => {
         const myEmail = (user?.email || "").toLowerCase();
@@ -4248,7 +4425,10 @@ function AdminBanner({ style }) {
 }
 
 function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
-  const [section, setSection] = useState("ingredients");
+  const { configSection: configSectionParam } = useParams();
+  const navigate = useNavigate();
+  const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "ingredients";
+  const setSection = (s) => navigate(`/config/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editCol, setEditCol] = useState(null);
@@ -4374,7 +4554,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                 <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{n}</span>
                 <span>{noun}{n > 1 ? "s" : ""} dans la base</span>
               </div>
-              {isAdmin ? <AdminBanner /> : <ReadOnlyBanner />}
+              {isAdmin ? <AdminBanner style={{ marginBottom: 16 }} /> : <ReadOnlyBanner style={{ marginBottom: 16 }} />}
             </div>
           );
         })()}
@@ -4383,18 +4563,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {isAdmin && (
-              <button
-                onClick={() => setEditCat({ key: "", label: "", score: 50, color: "#9a9490", icon: "📦", isNew: true })}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, width: "100%", padding: "12px 16px", borderRadius: 13, background: "var(--surface)", border: "1.5px dashed var(--accent)", color: "var(--accent)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.18s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,112,58,0.08)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; }}>
-                <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Icon name="plus" size={13} color="#fff" />
-                </span>
-                Définir une nouvelle catégorie
-              </button>
-            )}
             {isAdmin && ingredientDB.length > 0 && (
               <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={exportIngredientsMarkdown}>
                 <Icon name="download" size={14} /> Exporter la base (Markdown)
@@ -4430,7 +4598,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                       <span style={{ fontSize: 20 }}>{cat.icon}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{cat.label}</div>
-                        <div style={{ fontSize: 11, color: "var(--text3)" }}>{catIngs.length} ingrédient{catIngs.length !== 1 ? "s" : ""} · Score {cat.score * 10}/100</div>
+                        <div style={{ fontSize: 11, color: "var(--text3)" }}>{catIngs.length} ingrédient{catIngs.length !== 1 ? "s" : ""} · Score {cat.score * 10}/100 · <code style={{ fontSize: 10, background: "var(--surface2)", borderRadius: 4, padding: "1px 4px" }}>{catKey}</code></div>
                       </div>
                       <span style={{
                         display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%",
@@ -4445,12 +4613,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                         onClick={() => setEditIng({ id: "", name: "", category: catKey, image: "", nutrition: null })}>
                         <Icon name="plus" size={12} /> Ajouter
                       </button>
-                    )}
-                    {isAdmin && (
-                      <>
-                        <button onClick={() => setEditCat({ key: catKey, label: cat.label, score: (cat.score || 0) * 10, color: cat.color || "#9a9490", icon: cat.icon || "📦", isNew: false })} style={{ color: "var(--text3)", flexShrink: 0 }} title="Modifier la catégorie"><Icon name="edit" size={14} /></button>
-                        <button onClick={() => setConfirmDelCat({ key: catKey, label: cat.label })} disabled={catIngs.length > 0} style={{ color: catIngs.length > 0 ? "var(--text3)" : "var(--red)", opacity: catIngs.length > 0 ? 0.35 : 1, flexShrink: 0 }} title={catIngs.length > 0 ? "Catégorie non vide — déplacez ses ingrédients d'abord" : "Supprimer la catégorie"}><Icon name="trash" size={14} /></button>
-                      </>
                     )}
                   </div>
                   {/* Ingredients list */}
@@ -4685,45 +4847,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
         </SwipeableSheet>
       )}
 
-      {/* Category editor modal (admin only) */}
-      {editCat && (
-        <SwipeableSheet onClose={() => setEditCat(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCat.isNew ? "Nouvelle catégorie" : "Modifier la catégorie"}</h3>
-          <div className="field-label">Nom</div>
-          <input className="field-input" placeholder="ex: Boisson sucrée" value={editCat.label} onChange={e => setEditCat(p => ({ ...p, label: e.target.value }))} style={{ marginBottom: 12 }} />
-          <div className="field-label">Score santé — {editCat.score}/100</div>
-          <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8 }}>Contribue au score santé des recettes utilisant des ingrédients de cette catégorie.</p>
-          <input type="range" min="0" max="100" step="10" value={editCat.score}
-            onChange={e => setEditCat(p => ({ ...p, score: +e.target.value }))}
-            style={{ width: "100%", accentColor: editCat.color, marginBottom: 4 }} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text3)", marginBottom: 16 }}>
-            <span>0 (mauvais)</span><span>100 (excellent)</span>
-          </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            {["#4caf7d", "#5b9cf6", "#f0a875", "#f0e060", "#c8a870", "#80c080", "#e05252", "#9a9490", "#c080e0"].map(c => (
-              <button key={c} onClick={() => setEditCat(p => ({ ...p, color: c }))} style={{ width: 30, height: 30, borderRadius: "50%", background: c, border: `3px solid ${editCat.color === c ? "#fff" : "transparent"}`, boxShadow: editCat.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
-            ))}
-          </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
-            {["🥦", "🍗", "🥩", "🧀", "🌾", "🍞", "🫒", "🧈", "🍬", "🧂", "🫘", "🍷", "📦", "🐟", "🥜", "🍫", "☕", "🥤", "🍯", "🌶️"].map(ico => (
-              <button key={ico} onClick={() => setEditCat(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: editCat.icon === ico ? editCat.color + "33" : "var(--surface2)", border: `2px solid ${editCat.icon === ico ? editCat.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
-            ))}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 16 }}>
-            <span style={{ fontSize: 22 }}>{editCat.icon}</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{editCat.label || "Nom de la catégorie"}</div>
-              <div style={{ fontSize: 11, color: "var(--text3)" }}>Score {editCat.score}/100</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditCat(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveCat(editCat)} disabled={!editCat.label.trim()}>Sauvegarder</button>
-          </div>
-        </SwipeableSheet>
-      )}
 
       {/* Category delete confirmation */}
       {confirmDel && (
