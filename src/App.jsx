@@ -1812,7 +1812,7 @@ export default function App() {
       <Route path="/meal-plan" element={<AppInner />} />
       <Route path="/shopping-lists" element={<AppInner />} />
       <Route path="/fridge" element={<AppInner />} />
-      <Route path="/config" element={<Navigate to="/config/ingredients" replace />} />
+      <Route path="/config" element={<AppInner />} />
       <Route path="/config/:configSection" element={<AppInner />} />
       <Route path="*" element={<Navigate to="/recipes" replace />} />
     </Routes>
@@ -4441,6 +4441,9 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
   const navigate = useNavigate();
   const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "ingredients";
   const setSection = (s) => navigate(`/config/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
+  useEffect(() => {
+    if (!configSectionParam) navigate("/config/ingredients", { replace: true });
+  }, [configSectionParam]);
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editCol, setEditCol] = useState(null);
