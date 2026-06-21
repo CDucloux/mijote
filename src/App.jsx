@@ -2285,7 +2285,7 @@ function NutritionModal({ recipe, ingredientDB, servings, onClose }) {
                 <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: row.sub ? 400 : 600, color: row.sub ? "var(--text2)" : "var(--text)" }}>{row.label}</span>
                 <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                   <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: 600 }}>{fmt(row.value, row.key === "salt" ? "g" : "g")}</span>
-                  {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", width: 38, textAlign: "right" }}>{pct}% AJR</span>}
+                  {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", minWidth: 46, flexShrink: 0, whiteSpace: "nowrap", textAlign: "right" }}>{pct}% AJR</span>}
                 </span>
               </div>
               <div style={{ height: 6, borderRadius: 3, background: "var(--surface2)", overflow: "hidden" }}>
@@ -2333,6 +2333,7 @@ function RecipeNotFound({ onBack }) {
 }
 
 function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection }) {
+  const navigate = useNavigate();
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
   const isDesktop = useIsDesktop();
@@ -2504,13 +2505,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
             <div style={{ minWidth: "100%", padding: 16, overflowY: "auto", height: "100%" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {recipe.ingredients.map(ing => (
-                  <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
+                  <div key={ing.id} onClick={() => ing.dbId && navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)", cursor: ing.dbId ? "pointer" : "default" }}>
                     <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={50} />
                     <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
                       <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
                     </div>
+                    {ing.dbId && <Icon name="forward" size={13} color="var(--text3)" />}
                   </div>
                 ))}
               </div>
@@ -2586,7 +2588,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {recipe.ingredients.map(ing => (
-                  <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div key={ing.id} onClick={() => ing.dbId && navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: ing.dbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (ing.dbId) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
                     <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                     <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
@@ -5022,7 +5024,7 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
                       <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: row.sub ? 400 : 600, color: row.sub ? "var(--text2)" : "var(--text)" }}>{row.label}</span>
                       <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                         <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: 600 }}>{fmt(row.value)}</span>
-                        {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", width: 38, textAlign: "right" }}>{pct}% AJR</span>}
+                        {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", minWidth: 46, flexShrink: 0, whiteSpace: "nowrap", textAlign: "right" }}>{pct}% AJR</span>}
                       </span>
                     </div>
                     <div style={{ height: 6, borderRadius: 3, background: "var(--surface)", overflow: "hidden" }}>
