@@ -31,158 +31,9 @@ import { ShoppingTab } from "./screens/ShoppingTab.jsx";
 import { RecipeEditor } from "./screens/RecipeEditor.jsx";
 import { RecipeDetail } from "./screens/RecipeDetail.jsx";
 import { ConfigTab } from "./screens/ConfigTab.jsx";
+import { LoadingScreen } from "./screens/LoadingScreen.jsx";
+import { LoginScreen } from "./screens/LoginScreen.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
-
-// ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
-const GLOBAL_STYLE = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap');
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-  :root{
-    --bg:#0e0e0f;--bg-rgb:14,14,15;--surface:#171718;--surface2:#1f1f21;--surface3:#252527;
-    --border:rgba(255,255,255,0.07);--accent:#e8703a;--accent2:#f0a875;
-    --text:#f0ede8;--text2:#9a9490;--text3:#5a5754;
-    --green:#4caf7d;--red:#e05252;--yellow:#f0c060;--blue:#5b9cf6;--orange:#f0992a;
-    --radius:16px;--radius-sm:10px;
-    --ff-display:'Fraunces',serif;--ff-body:'DM Sans',sans-serif;
-    --tab-h:72px;
-  }
-  /* ── LIGHT THEME ── */
-  html.light,.light{
-    --bg:#f5f0eb;--bg-rgb:245,240,235;--surface:#ffffff;--surface2:#ede8e2;--surface3:#e0d8d0;
-    --border:rgba(0,0,0,0.09);
-    --text:#2c2420;--text2:#5a5250;--text3:#887870;
-  }
-  html.light,html.light body{background:#f5f0eb;color:#2c2420;}
-  /* Pills ustensiles (desktop) : fond blanc en thème clair */
-  html.light .ut-pill-desktop{background:#ffffff!important;}
-  html.light .field-input{color:#2c2420;background:#ede8e2;}
-  html.light select option{background:#ede8e2;color:#1a1614;}
-  *,*::before,*::after{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.1s ease;}
-  /* Selection highlight — Mijoté sage green, distinct from the orange accent and the default blue */
-  ::selection{background:rgba(76,175,125,0.35);}
-  ::-moz-selection{background:rgba(76,175,125,0.35);}
-  html,body{background:var(--bg);color:var(--text);font-family:var(--ff-body);font-size:15px;height:100%;overflow:hidden;}
-  #root{height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;overflow:hidden;}
-  button{font-family:var(--ff-body);cursor:pointer;border:none;background:none;color:inherit;}
-  input,textarea,select{font-family:var(--ff-body);}
-  ::-webkit-scrollbar{display:none;}*{scrollbar-width:none;}
-  .tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
-  .tag.accent{background:rgba(232,112,58,0.15);color:var(--accent);border-color:rgba(232,112,58,0.3);}
-  .tag.green{background:rgba(76,175,125,0.15);color:var(--green);border-color:rgba(76,175,125,0.3);}
-  .field-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
-  .field-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:14px;outline:none;transition:border-color 0.2s;}
-  .field-input:focus{border-color:var(--accent);}
-  .field-input::placeholder{color:var(--text3);}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;transition:all 0.18s;}
-  .btn-primary{background:var(--accent);color:#fff;}
-  .btn-ghost{border:1px solid var(--border);color:var(--text2);background:var(--surface2);}
-  .btn-danger{background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);}
-  .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;}
-  .slide-up{animation:slideUp 0.28s cubic-bezier(0.25,0.46,0.45,0.94) both;}
-  @keyframes slideUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn 0.2s;}
-  @keyframes toastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
-  .modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:20px;max-height:92dvh;overflow-y:auto;animation:sheetUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94);}
-  @keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-  .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
-  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-  @keyframes expandDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-  @keyframes editorSlideIn{from{opacity:0;transform:translateY(32px);}to{opacity:1;transform:translateY(0);}}
-  .editor-enter{animation:editorSlideIn 0.32s cubic-bezier(0.25,0.46,0.45,0.94) both;}
-  @keyframes cookModeIn{from{opacity:0;transform:scale(0.97) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
-  @keyframes popIn{0%{transform:scale(0) rotate(-10deg);opacity:0;}60%{transform:scale(1.2) rotate(5deg);}100%{transform:scale(1) rotate(0deg);opacity:1;}}
-  @keyframes floatUp{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-60px);opacity:0;}}
-  .drag-over{border-color:var(--accent)!important;background:rgba(232,112,58,0.08)!important;}
-  .detail-scroll-fix{min-height:0;}
-
-  /* ── DESKTOP LAYOUT ── */
-  .app-brand{display:inline-flex;align-items:center;gap:3px;}
-  @media(min-width:768px){.app-brand{display:none!important;}
-  
-    ::-webkit-scrollbar{display:block;width:6px;height:6px;}
-    ::-webkit-scrollbar-track{background:transparent;}
-    ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
-    *{scrollbar-width:thin;scrollbar-color:var(--surface3) transparent;}
-
-    html,body{overflow:auto;}
-    #root{margin:0;max-width:100%;width:100%;height:100dvh;zoom:var(--page-zoom,1);flex-direction:row;overflow:hidden;}
-
-    /* Sidebar */
-    .desktop-sidebar{
-      width:220px;min-width:220px;height:100dvh;
-      background:var(--surface);border-right:1px solid var(--border);
-      display:flex;flex-direction:column;padding:28px 0 20px;
-      flex-shrink:0;
-    }
-    .desktop-sidebar-logo{
-      font-family:var(--ff-display);font-size:22px;font-weight:500;
-      padding:0 22px 28px;letter-spacing:-0.02em;color:var(--text);
-    }
-    .desktop-sidebar-logo span{color:var(--accent);}
-    .desktop-nav-item{
-      display:flex;align-items:center;gap:12px;
-      padding:11px 22px;margin:1px 10px;border-radius:10px;
-      font-size:14px;font-weight:500;color:var(--text2);
-      transition:all 0.15s;cursor:pointer;border:none;background:none;
-      font-family:var(--ff-body);width:calc(100% - 20px);text-align:left;
-    }
-    .desktop-nav-item:hover{background:var(--surface2);color:var(--text);}
-    .desktop-nav-item.active{background:rgba(232,112,58,0.15);color:var(--accent);}
-    .desktop-nav-item.active svg{stroke:var(--accent);}
-
-    /* Content area */
-    .desktop-content{flex:1;overflow:hidden;display:flex;flex-direction:column;}
-
-    /* Wider panels */
-    .desktop-content .recipe-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))!important;}
-    .desktop-content .collections-row{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))!important;gap:12px!important;overflow:visible!important;}
-    .desktop-content .collections-row button{width:auto!important;}
-    /* Config ustensiles : 4 cartes par ligne sur desktop (au lieu de 2), pleine largeur */
-    .desktop-content .config-ut-grid{grid-template-columns:repeat(4,1fr)!important;}
-
-    /* Detail panel — two-column on large screens */
-    .detail-layout{display:flex;height:100%;overflow:hidden;}
-    .detail-hero-col{width:340px;min-width:340px;position:relative;flex-shrink:0;}
-    .detail-hero-col .hero-img{height:100%!important;position:absolute;inset:0;}
-    .detail-content-col{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
-
-    /* Modal on desktop: centered dialog instead of bottom sheet */
-    .modal-backdrop{justify-content:center;align-items:center;}
-    .modal-sheet{border-radius:20px!important;max-width:480px;width:100%;margin:0 auto;max-height:80dvh;}
-    .modal-handle{display:none;}
-
-    /* Editor wider */
-    .editor-layout{max-width:720px;margin:0 auto;width:100%;}
-
-    /* Recipe card hover zoom — desktop only */
-    .recipe-card-thumb{overflow:hidden;}
-    .recipe-card-thumb img{transition:transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94);}
-    .recipe-card:hover .recipe-card-thumb img{transform:scale(1.08);}
-    .recipe-card{transition:border-color 0.15s,box-shadow 0.25s;}
-    .recipe-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.12);}
-
-    /* Button hover / press feedback — desktop only (no motion) */
-    .btn{transition:background-color .18s ease,border-color .18s ease,box-shadow .2s ease,filter .18s ease;}
-    .btn-primary:hover{filter:brightness(1.06);box-shadow:0 4px 14px -4px rgba(232,112,58,0.5);}
-    .btn-ghost:hover{background:var(--surface3);border-color:var(--text3);color:var(--text);}
-    .btn-danger:hover{background:rgba(224,82,82,0.22);border-color:rgba(224,82,82,0.5);}
-    .btn:active{filter:brightness(0.95);}
-    /* Floating action FAB + soft icon button (no lift) */
-    .fab-toggle{transition:filter .18s ease,box-shadow .2s ease;}
-    .fab-toggle:hover{filter:brightness(1.06);box-shadow:0 12px 30px -6px rgba(232,112,58,0.6);}
-    .fab-toggle:active{filter:brightness(0.93);}
-    .icon-btn-soft{transition:background-color .18s ease,color .18s ease;}
-    .icon-btn-soft:hover{background:var(--surface3)!important;color:var(--text)!important;}
-
-    /* Cook mode sidebar */
-    .cook-mode-sidebar{display:flex!important;flex-direction:column;}
-
-    /* Recipe detail: hide tabs on desktop, show 2-col layout */
-    .detail-tabs-mobile{display:none!important;}
-    .detail-mobile-content{display:none!important;}
-    .detail-desktop-content{display:flex!important;}
-  }
-`;
 
 
 function AppInner() {
@@ -851,135 +702,13 @@ function AppInner() {
   ) : tabContent;
 
   // Loading state
-  if (user === undefined) return (
-    <>
-      <style>{GLOBAL_STYLE}</style>
-      <style>{`
-        @keyframes loadingFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
-        @keyframes loadingPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.7;transform:scale(0.97);}}
-        .loading-root{
-          min-height:100dvh;width:100%;display:flex;flex-direction:column;
-          align-items:center;justify-content:center;gap:0;
-          background:var(--bg);position:relative;overflow:hidden;
-        }
-        .loading-blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.13;pointer-events:none;}
-        .loading-card{
-          position:relative;z-index:1;display:flex;flex-direction:column;
-          align-items:center;gap:0;
-          animation:loadingFadeIn 0.5s cubic-bezier(0.25,0.46,0.45,0.94) both;
-        }
-        .loading-logo{
-          font-family:var(--ff-display);font-size:28px;font-weight:500;
-          letter-spacing:-0.02em;color:var(--text);margin-bottom:32px;
-          animation:loadingPulse 2.4s ease-in-out infinite;
-        }
-        .loading-logo span{color:var(--accent);}
-        .loading-spinner-wrap{position:relative;width:56px;height:56px;margin-bottom:28px;}
-        .loading-spinner-track{
-          position:absolute;inset:0;border-radius:50%;
-          border:2.5px solid var(--border);
-        }
-        .loading-spinner{
-          position:absolute;inset:0;border-radius:50%;
-          border:2.5px solid transparent;
-          border-top-color:var(--accent);
-          border-right-color:var(--accent2);
-          animation:spin 0.9s cubic-bezier(0.4,0,0.2,1) infinite;
-        }
-        .loading-emoji{
-          position:absolute;inset:0;display:flex;align-items:center;
-          justify-content:center;font-size:22px;
-        }
-        .loading-label{
-          font-size:13px;color:var(--text3);font-family:var(--ff-body);
-          font-weight:400;letter-spacing:0.01em;
-        }
-      `}</style>
-      <div className={`loading-root${isDark ? "" : " light"}`}>
-        <div className="loading-blob" style={{ width:320,height:320,background:"var(--accent)",top:"-60px",right:"-60px" }} />
-        <div className="loading-blob" style={{ width:240,height:240,background:"#5b9cf6",bottom:"60px",left:"-50px" }} />
-        <div className="loading-card">
-          <div className="loading-logo">Mijoté<span>·</span></div>
-          <div className="loading-spinner-wrap">
-            <div className="loading-spinner-track" />
-            <div className="loading-spinner" />
-            <div className="loading-emoji">🫕</div>
-          </div>
-          <div className="loading-label">Connexion en cours…</div>
-        </div>
-      </div>
-    </>
-  );
+  if (user === undefined) return <LoadingScreen isDark={isDark} />;
 
   // Login screen
-  if (!user) return (
-    <>
-      <style>{GLOBAL_STYLE}</style>
-      <style>{`
-        @keyframes loginFloat{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-10px) rotate(2deg);}}
-        @keyframes loginFadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
-        .login-root{min-height:100dvh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:var(--bg);position:relative;overflow:hidden;}
-        .login-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.18;pointer-events:none;}
-        .login-card{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;max-width:360px;width:100%;animation:loginFadeUp 0.6s cubic-bezier(0.25,0.46,0.45,0.94) both;}
-        .login-emoji-wrap{display:flex;justify-content:center;margin-bottom:28px;}
-        .login-emoji{font-size:72px;line-height:1;animation:loginFloat 4s ease-in-out infinite;display:block;}
-        .login-tagline{font-family:var(--ff-display);font-size:26px;font-weight:500;letter-spacing:-0.03em;line-height:1.15;color:var(--text);text-align:center;margin-bottom:10px;}
-        .login-tagline em{font-style:italic;color:var(--accent);}
-        .login-sub{font-size:16px;font-family:var(--ff-display);font-style:italic;font-weight:300;color:var(--text2);text-align:center;line-height:1.65;margin-bottom:20px;width:100%;}
-        .login-google-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:16px 24px;border-radius:16px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;font-family:var(--ff-body);font-weight:500;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,0.25);transition:all 0.18s;margin-bottom:16px;}
-        .login-google-btn:hover{background:var(--surface2);}
-        .login-divider{display:flex;align-items:center;gap:12px;width:100%;margin-bottom:16px;}
-        .login-divider-line{flex:1;height:1px;background:var(--border);}
-        .login-feats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
-        .login-feat{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:500;background:var(--surface);border:1px solid var(--border);color:var(--text3);}
-        .login-theme-toggle{position:absolute;top:20px;right:20px;z-index:10;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:30px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);transition:background 0.2s,border-color 0.2s;}
-        .login-theme-toggle:hover{border-color:var(--accent);color:var(--text);}
-        .login-toggle-track{width:32px;height:18px;border-radius:9px;background:var(--surface3);position:relative;transition:background 0.25s;flex-shrink:0;}
-        .login-toggle-track.dark{background:var(--accent);}
-        .login-toggle-thumb{position:absolute;top:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left 0.22s cubic-bezier(0.34,1.56,0.64,1);}
-        .login-toggle-thumb.dark{left:17px;}
-        .login-toggle-thumb.light{left:3px;}
-        .login-copyright{position:absolute;bottom:16px;right:20px;font-size:11px;color:var(--text3);line-height:1.5;text-align:right;pointer-events:none;}
-      `}</style>
-      <div className={`login-root${isDark ? "" : " light"}`}>
-        {/* Theme toggle */}
-        <button className="login-theme-toggle" onClick={toggleTheme} aria-label="Changer le thème">
-          <span>{isDark ? "🌙" : "☀️"}</span>
-          <div className={`login-toggle-track${isDark ? " dark" : ""}`}>
-            <div className={`login-toggle-thumb${isDark ? " dark" : " light"}`} />
-          </div>
-        </button>
-        {/* Decorative blobs */}
-        <div className="login-blob" style={{ width: 340, height: 340, background: "var(--accent)", top: "-80px", right: "-80px" }} />
-        <div className="login-blob" style={{ width: 260, height: 260, background: "#5b9cf6", bottom: "40px", left: "-60px" }} />
-        <div className="login-card">
-          <div className="login-emoji-wrap"><span className="login-emoji">🫕</span></div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 10, width: "100%" }}>
-            <span style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)", whiteSpace: "nowrap", flexShrink: 0 }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span></span>
-            <div style={{ width: 1.5, alignSelf: "stretch", background: "var(--border)", borderRadius: 1, flexShrink: 0 }} />
-            <h1 className="login-tagline" style={{ marginBottom: 0 }}>Cuisinez mieux,<br /><em>organisez moins.</em></h1>
-          </div>
-          <p className="login-sub">Toutes vos recettes, votre planning repas et vos courses — au même endroit, toujours avec vous.</p>
-          <button className="login-google-btn" onClick={handleSignIn}>
-            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z" /><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" /><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" /><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-3.59-13.46-8.72l-7.97 6.19C6.51 42.62 14.62 48 24 48z" /></svg>
-            Continuer avec Google
-          </button>
-          <div className="login-feats">
-            {["📖 Recettes illimitées", "📅 Planning semaine", "🛒 Listes de courses", "☁️ Sync cloud"].map(f => (
-              <span key={f} className="login-feat">{f}</span>
-            ))}
-          </div>
-
-        </div>
-        <p className="login-copyright">© 2026 Mijoté · Tous droits réservés</p>
-      </div>
-    </>
-  );
+  if (!user) return <LoginScreen isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
   return (
-    <>
-      <style>{GLOBAL_STYLE}</style>
-      <div id="root" className={isDark ? "" : "light"}>
+    <div id="root" className={isDark ? "" : "light"}>
         {notification && (
           <div style={{ position: "fixed", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: notification.type === "error" ? "var(--red)" : notification.type === "warning" ? "#e8920a" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: "toastIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both" }}>
@@ -1022,7 +751,6 @@ function AppInner() {
           </SwipeableSheet>
         )}
       </div>
-    </>
   );
 }
 
