@@ -3,19 +3,22 @@
 
 ## 🔜 Backlog — v1.0.7
 
-- [ ] DIsposer d'une page "Ingrédient"
-- [ ] Liste partagées => Maximum 3 personnes qui peuvent etre ajoutées et à qui on peut partager
-- [ ] Notifications ? à mette en place
-- [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
+- [x] Qualité & contenu
+  - [x] Score de santé plus élaboré (pondération, Nutri-Score)
+  - [x] Export PDF revu et amélioré ?
+
+- [x] Section détaillée sur les apports nutri
+- [x] Disposer d'une page "Ingrédient"
+  - [x] Animation mise en place
+  - [ ] Pouvoir dans les recettes cliquer sur un ingrédient (dans la partie "Ingrédient") => emmène vers la page de l'ingrédient 
+- [x] Fixes de bugs d'UI
+
+- [ ] Notifications ? à mette en place (Comment gérer pour le PWA ?)
 
 - [x] (En mode master uniquement) Pouvoir télécharger la liste de tous les ingrédients implémentés pour feed à Claude précisément (en tant que table dans un fichier markdown) ? (Nom + Aliases + dbid + catégorie pour ingrédients)
-  - [ ] à faire pour ustensiles
-  - [ ] (pas sur) Alias pour les ustensiles ?
 
 - [ ] Validation de schéma JSON
 - [ ] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
-
-- [ ] Config / Exporter la base en markdown doit etre à droite dans le bandeau master
 
 ## 🔜 Backlog — v1.0.6
 
@@ -128,11 +131,15 @@ DB:
 
 ## 🔭 Horizon — v1.2+
 
+- [ ] Liste partagées => Maximum 3 personnes qui peuvent etre ajoutées et à qui on peut partager
+
+- [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
+
 - [ ] Refactoring des composants / modularisartion
 
 - [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
 
-- [ ] Mode Frigo + Placard ?? à réfléchir
+- [ ] Mode Frigo + Etageres
 
 - [ ] Communauté de mijoteurs !
 
@@ -140,10 +147,6 @@ DB:
   - [ ] Mode fainéant (recettes rapides)
   - [ ] Filtre saisonnier (été / hiver / …)
 
-
-- [ ] Qualité & contenu
-  - [ ] Score de santé plus élaboré (pondération, Nutri-Score plus fidèle ?)
-  - [x] Export PDF revu et amélioré ?
   - [ ] Génération de recette via API Claude / ChatGPT (clé API utilisateur)
 
 - [ ] App & légal
