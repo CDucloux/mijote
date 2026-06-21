@@ -1621,12 +1621,13 @@ function AppInner() {
     body { font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; margin-bottom: 24px; display: block; }
     /* Header */
-    .header { border-bottom: 2px solid var(--accent); padding-bottom: 24px; margin-bottom: 28px; }
+    .header { padding-bottom: 22px; margin-bottom: 26px; position: relative; }
+    .header::after { content: ""; position: absolute; left: 0; bottom: 0; width: 48px; height: 4px; border-radius: 4px; background: var(--accent); }
     h1 { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
     .meta { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
     .meta-item { display: flex; flex-direction: column; }
     .meta-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-    .meta-value { font-size: 16px; font-weight: 600; color: var(--text); }
+    .meta-value { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1; }
     .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
     .tag { font-size: 11px; font-weight: 500; color: var(--accent); background: rgba(232,112,58,0.1); border: 1px solid rgba(232,112,58,0.25); border-radius: 20px; padding: 2px 10px; }
     /* Nutri-Score badge */
@@ -1640,10 +1641,10 @@ function AppInner() {
     .pill-img img { width: 100%; height: 100%; object-fit: cover; }
     .pill-name { font-weight: 500; color: var(--text); }
     .pill-qty { color: var(--text3); font-weight: 500; }
-    .ing-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+    .ing-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     /* Steps */
     .step { margin-bottom: 22px; }
-    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 2px; }
     .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .step-title { font-weight: 700; font-size: 14px; color: var(--accent); }
     .step-text { color: var(--text2); line-height: 1.65; padding-left: 40px; }
@@ -1685,7 +1686,7 @@ function AppInner() {
 
   ${utPills ? `
   <div class="section-title">Ustensiles</div>
-  <div class="ing-pills" style="margin-bottom:32px">${utPills}</div>` : ""}
+  <div class="ing-pills" style="margin-bottom:20px">${utPills}</div>` : ""}
 
   ${recipe.steps?.length ? `
   <div class="section-title">Étapes</div>
