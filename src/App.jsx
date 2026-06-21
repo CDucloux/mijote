@@ -652,7 +652,7 @@ const NutriScoreBadge = ({ letter, compact }) => {
   }
   const letters = ["A", "B", "C", "D", "E"];
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 2, background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 6, padding: "3px 4px", boxShadow: "0 1px 3px rgba(0,0,0,0.14)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 2, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "3px 4px", boxShadow: "0 1px 3px rgba(0,0,0,0.14)" }}>
       {letters.map(l => {
         const active = l === letter;
         return (
@@ -2395,7 +2395,9 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           {/* Left col: ingrédients + ustensiles (card) */}
           <div style={{ width: 300, minWidth: 300, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ingrédients</div>
+              <div style={{ display: "flex", alignItems: "center", minHeight: 34, marginBottom: 16 }}>
+                <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {recipe.ingredients.map(ing => (
                   <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -2411,7 +2413,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
             </div>
             {recipe.utensils && recipe.utensils.length > 0 && (
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {recipe.utensils.map(u => (
                     <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
@@ -2426,8 +2428,8 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           </div>
           {/* Right col: étapes (card) */}
           <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Étapes</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 34, marginBottom: 16 }}>
+              <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
               {recipe.steps && recipe.steps.length > 0 && (
                 <button className="btn btn-primary btn-sm" style={{ gap: 7, borderRadius: 10 }} onClick={() => setCookMode(true)}>
                   <Icon name="fire" size={13} /> Mode pas à pas
