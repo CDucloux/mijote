@@ -637,8 +637,19 @@ const NUTRI_COLORS = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E
 
 // Badge Nutri-Score façon étiquette officielle : barre blanche, 5 lettres,
 // la lettre active surélevée et pleine, les autres réduites et atténuées.
-const NutriScoreBadge = ({ letter }) => {
+const NutriScoreBadge = ({ letter, compact }) => {
   if (!letter) return <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>—</span>;
+  if (compact) {
+    return (
+      <span style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: 22, height: 22, borderRadius: 6,
+        background: NUTRI_COLORS[letter],
+        fontSize: 13, fontWeight: 800, color: "#fff", lineHeight: 1,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
+      }}>{letter}</span>
+    );
+  }
   const letters = ["A", "B", "C", "D", "E"];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 2, background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 6, padding: "3px 4px", boxShadow: "0 1px 3px rgba(0,0,0,0.14)" }}>
@@ -2093,22 +2104,21 @@ function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, se
 
 function RecipeCard({ recipe, onClick, style }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-  const score = recipe.healthScore || 50;
   return (
-    <button className="slide-up recipe-card" onClick={onClick} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", ...style }}>
+    <button className="slide-up recipe-card" onClick={onClick} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", ...style }}>
       <div className="recipe-card-thumb" style={{ aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.7),transparent)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.65),transparent)" }} />
       </div>
-      <div style={{ padding: "10px 10px 12px" }}>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>{recipe.name}</div>
+      <div style={{ padding: "10px 12px 12px" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, lineHeight: 1.3, letterSpacing: "-0.01em" }}>{recipe.name}</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 11, color: "var(--text2)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 11, color: "var(--text2)", display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>
-            <span style={{ color: "var(--text3)" }}>·</span>
+            <span style={{ width: 1, height: 10, background: "var(--border)", display: "inline-block", borderRadius: 1 }} />
             <span>{recipe.ingredients?.length || 0} ingr.</span>
           </span>
-          <HealthRing score={score} size={32} />
+          <NutriScoreBadge letter={recipe.nutriLetter} compact />
         </div>
       </div>
     </button>
@@ -2173,7 +2183,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ position: "relative", height: isDesktop ? 160 : 220, flexShrink: 0, color: "#fff" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.5) 0%,transparent 40%,rgba(14,14,15,0.95) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
         <button onClick={onBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="back" size={18} /></button>
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
           <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="edit" size={16} /></button>
