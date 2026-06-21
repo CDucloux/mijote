@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
+import { useNavigate, useLocation, useParams, Navigate, Routes, Route } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
@@ -331,139 +331,37 @@ function sortedCategoryEntries(categories) {
   });
 }
 
-// ─── SCORE SANTÉ — Nutri-Score (algorithme 2023, aliments généraux) ─────────
-// On agrège les nutriments de TOUTE la recette ramenés à 100g de plat fini,
-// puis on calcule un unique Nutri-Score, mappé sur l'échelle 0-100 du ring.
-// Tables de seuils par 100g : `nsPoints` renvoie l'index du 1er seuil non dépassé.
-const NS_ENERGY = [335, 670, 1005, 1340, 1675, 2010, 2345, 2680, 3015, 3350];                 // kJ → 0..10
-const NS_SUGAR  = [3.4, 6.8, 10, 14, 17, 20, 24, 27, 31, 34, 37, 41, 44, 48, 51];             // g  → 0..15
-const NS_SATFAT = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];                                            // g  → 0..10
-const NS_SALT   = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.4, 3.8, 4.2, 4.6, 5]; // g → 0..20
-const NS_FIBER  = [3.0, 4.1, 5.2, 6.3, 7.4];                                                  // g  → 0..5
-const NS_PROT   = [2.4, 4.8, 7.2, 9.6, 12, 14, 17];                                           // g  → 0..7
-
-function nsPoints(value, thresholds) {
-  for (let i = 0; i < thresholds.length; i++) if (value <= thresholds[i]) return i;
-  return thresholds.length;
-}
-
-// Mappe le Nutri-Score brut (négatif = sain) sur 0-100, par paliers alignés
-// sur les lettres A–E et les couleurs du ring (A/B ≥70 vert, C 50-70 jaune, D/E <50 rouge).
-function nutriToScore100(ns) {
-  const pts = [[-7, 100], [0, 80], [2, 70], [10, 50], [18, 30], [28, 0]];
-  if (ns <= pts[0][0]) return 100;
-  if (ns >= pts[pts.length - 1][0]) return 0;
-  for (let i = 1; i < pts.length; i++) {
-    if (ns <= pts[i][0]) {
-      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
-      return Math.round(y0 + (y1 - y0) * (ns - x0) / (x1 - x0));
-    }
-  }
-  return 0;
-}
-
-// Conversion d'une unité vers des grammes (approximations culinaires).
-// Valeur objet `{ g, piece: true }` → unité « à la pièce » : on privilégie le
-// `gramsPerPiece` de l'ingrédient s'il est renseigné, sinon `g` sert de défaut.
-const UNIT_GRAMS = {
-  // Masse
-  "mg": 0.001, "g": 1, "kg": 1000,
-  // Volume (≈ 1 g/ml)
-  "ml": 1, "cl": 10, "dl": 100, "l": 1000, "litre": 1000, "litres": 1000,
-  // Mesures de cuisine
-  "cuillère à soupe": 15, "cuillères à soupe": 15, "c. à soupe": 15, "c.à.s": 15,
-  "cuillère à café": 5, "cuillères à café": 5, "c. à café": 5, "c.à.c": 5,
-  "pincée": 0.4, "pincées": 0.4,
-  "verre": 200, "verres": 200, "tasse": 200, "tasses": 200, "bol": 350, "bols": 350,
-  // Pièces (poids par défaut, surchargé par gramsPerPiece de l'ingrédient)
-  "pièce": { g: 100, piece: true }, "pièces": { g: 100, piece: true }, "pce": { g: 100, piece: true }, "pc": { g: 100, piece: true },
-  "tranche": { g: 25, piece: true }, "tranches": { g: 25, piece: true },
-  "gousse": { g: 5, piece: true }, "gousses": { g: 5, piece: true },
-  "botte": { g: 100, piece: true }, "bottes": { g: 100, piece: true },
-  "sachet": { g: 10, piece: true }, "sachets": { g: 10, piece: true },
-  "feuille": { g: 2, piece: true }, "feuilles": { g: 2, piece: true },
-  "branche": { g: 5, piece: true }, "branches": { g: 5, piece: true },
-  "poignée": { g: 30, piece: true }, "poignées": { g: 30, piece: true },
-  "boîte": { g: 400, piece: true }, "boîtes": { g: 400, piece: true },
-  "pot": { g: 125, piece: true }, "pots": { g: 125, piece: true },
-};
-
-// Masse en grammes d'une ligne d'ingrédient de recette. Unité inconnue/vide → grammes.
-function ingredientGrams(recipeIng, dbItem) {
-  const amount = parseFloat(String(recipeIng.amount).replace(",", ".")) || 1;
-  const unit = (recipeIng.unit || "").trim().toLowerCase();
-  const entry = UNIT_GRAMS[unit];
-  let perUnit;
-  if (entry == null) perUnit = 1;                                     // unité inconnue → on suppose des grammes
-  else if (typeof entry === "object") perUnit = dbItem?.gramsPerPiece || entry.g; // pièce : poids spécifique sinon défaut
-  else perUnit = entry;
-  return Math.max(amount * perUnit, 1);
-}
-
-function computeNutriInfo(ingredients, ingredientDB) {
-  if (!ingredients || ingredients.length === 0) return { score: 50, letter: null };
-  let mass = 0, vegMass = 0;
-  const tot = { calories: 0, sugar: 0, saturatedFat: 0, salt: 0, fiber: 0, protein: 0 };
+function computeHealthScore(ingredients, ingredientDB, categories = DEFAULT_CATEGORIES) {
+  if (!ingredients || ingredients.length === 0) return 70;
+  let totalWeight = 0;
+  let weightedScore = 0;
   for (const recipeIng of ingredients) {
     const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
-    if (!dbItem || !dbItem.nutrition) continue; // maille ingrédient : pas de nutrition → ignoré
-    const m = ingredientGrams(recipeIng, dbItem);
-    const n = dbItem.nutrition;
-    tot.calories     += (n.calories || 0)     * m / 100;
-    tot.sugar        += (n.sugar || 0)        * m / 100;
-    tot.saturatedFat += (n.saturatedFat || 0) * m / 100;
-    tot.salt         += (n.salt || 0)         * m / 100;
-    tot.fiber        += (n.fiber || 0)        * m / 100;
-    tot.protein      += (n.protein || 0)      * m / 100;
-    if (n.isVegetable) vegMass += m;
-    mass += m;
-  }
-  if (mass === 0) return 50;
-  // Profil pour 100g de plat fini
-  const per100 = k => tot[k] / mass * 100;
-  // Points négatifs (énergie en kJ, sucres, AG saturés, sel)
-  const N = nsPoints(per100("calories") * 4.184, NS_ENERGY)
-          + nsPoints(per100("sugar"), NS_SUGAR)
-          + nsPoints(per100("saturatedFat"), NS_SATFAT)
-          + nsPoints(per100("salt"), NS_SALT);
-  // Points positifs (part de végétaux, fibres, protéines)
-  const vegFrac = vegMass / mass * 100;
-  const vegPts = vegFrac > 80 ? 5 : vegFrac > 60 ? 2 : vegFrac > 40 ? 1 : 0;
-  const fiberPts = nsPoints(per100("fiber"), NS_FIBER);
-  const proteinPts = nsPoints(per100("protein"), NS_PROT);
-  // Règle Nutri-Score : si N≥11 et part de végétaux < 5 pts, les protéines ne comptent pas
-  const P = vegPts + fiberPts + (N >= 11 && vegPts < 5 ? 0 : proteinPts);
-  const ns = N - P;
-  const letter = ns <= -1 ? "A" : ns <= 2 ? "B" : ns <= 10 ? "C" : ns <= 18 ? "D" : "E";
-  return { score: nutriToScore100(ns), letter };
-}
-
-function computeHealthScore(ingredients, ingredientDB) {
-  return computeNutriInfo(ingredients, ingredientDB).score;
-}
-
-// Agrégation nutritionnelle complète d'une recette : totaux, par portion et
-// pour 100 g de plat fini. `coverage` = part de la masse (ingrédients reconnus)
-// disposant réellement de données nutritionnelles → transparence sur la fiabilité.
-const NUTRI_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat", "omega3", "fiber", "salt"];
-function computeNutritionDetail(ingredients, ingredientDB, servings) {
-  const tot = Object.fromEntries(NUTRI_KEYS.map(k => [k, 0]));
-  let mass = 0, covered = 0;
-  for (const recipeIng of ingredients || []) {
-    const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
     if (!dbItem) continue;
-    const m = ingredientGrams(recipeIng, dbItem);
-    mass += m;
+    const amount = recipeIng.amount || 1;
+    const unitWeight = recipeIng.unit === "kg" ? amount * 1000 : recipeIng.unit === "l" ? amount * 1000 : amount;
+    const weight = Math.max(unitWeight, 10);
+    let score;
     if (dbItem.nutrition) {
+      // Nutri-score style from macros per 100g
       const n = dbItem.nutrition;
-      for (const k of NUTRI_KEYS) tot[k] += (n[k] || 0) * m / 100;
-      covered += m;
+      let s = 50;
+      s += (n.fiber || 0) * 3;
+      s += (n.protein || 0) * 2;
+      s -= (n.saturatedFat || 0) * 4;
+      s -= (n.sugar || 0) * 2;
+      s -= (n.salt || 0) * 10;
+      if (n.isVegetable) s += 15;
+      score = Math.max(0, Math.min(99, s));
+    } else {
+      const cat = categories[dbItem.category || "other"];
+      score = (cat?.score || 5) * 10;
     }
+    weightedScore += score * weight;
+    totalWeight += weight;
   }
-  const s = Math.max(1, servings || 1);
-  const perServing = Object.fromEntries(NUTRI_KEYS.map(k => [k, tot[k] / s]));
-  const per100 = Object.fromEntries(NUTRI_KEYS.map(k => [k, covered ? tot[k] / covered * 100 : 0]));
-  return { totals: tot, perServing, per100, mass, covered, coverage: mass ? covered / mass : 0 };
+  if (totalWeight === 0) return 70;
+  return Math.min(99, Math.round(weightedScore / totalWeight));
 }
 
 // ─── NAME MATCHING (import → DB linking) ─────────────────────────────────────
@@ -623,8 +521,6 @@ const Icon = ({ name, size = 20, color = "currentColor" }) => {
     moon: <svg {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
     logout: <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>,
     warning: <svg {...p} strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-    sparkle: <svg {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>,
-    externalLink: <svg {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></svg>,
   };
   return icons[name] || null;
 };
@@ -654,44 +550,6 @@ const HealthRing = ({ score, size = 56 }) => {
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: size < 48 ? 11 : 13, fontWeight: 600, color }}>{score}</span>
       </div>
-    </div>
-  );
-};
-
-const NUTRI_COLORS = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
-
-// Badge Nutri-Score façon étiquette officielle : barre blanche, 5 lettres,
-// la lettre active surélevée et pleine, les autres réduites et atténuées.
-const NutriScoreBadge = ({ letter, compact }) => {
-  if (!letter) return <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>—</span>;
-  if (compact) {
-    return (
-      <span style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: 22, height: 22, borderRadius: 6,
-        background: NUTRI_COLORS[letter],
-        fontSize: 13, fontWeight: 800, color: "#fff", lineHeight: 1,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
-      }}>{letter}</span>
-    );
-  }
-  const letters = ["A", "B", "C", "D", "E"];
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 2, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "3px 4px", boxShadow: "0 1px 3px rgba(0,0,0,0.14)" }}>
-      {letters.map(l => {
-        const active = l === letter;
-        return (
-          <span key={l} style={{
-            width: active ? 21 : 15, height: active ? 25 : 18,
-            borderRadius: active ? 5 : 3,
-            background: NUTRI_COLORS[l],
-            opacity: active ? 1 : 0.5,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: active ? 14 : 10, fontWeight: 800, color: "#fff", lineHeight: 1,
-            transition: "all 0.2s",
-          }}>{l}</span>
-        );
-      })}
     </div>
   );
 };
@@ -1076,23 +934,17 @@ function usePullToRefresh(onRefresh, { enabled = true, threshold = 110, max = 17
 
     const onStart = (e) => {
       if (refreshing || e.touches.length !== 1) { g.current.active = false; return; }
+      // Ne pas interférer avec les bottom-sheets : elles sont rendues à l'intérieur
+      // de ce conteneur, donc leurs touchmove remontent jusqu'ici. Si le doigt part
+      // dans un .modal-backdrop, on laisse la sheet gérer son propre swipe-to-close.
       if (e.target.closest && e.target.closest(".modal-backdrop")) { g.current.active = false; return; }
       if (!atTop(e.target)) { g.current.active = false; return; }
       g.current.startY = e.touches[0].clientY;
-      g.current.startX = e.touches[0].clientX;
-      g.current.dirLocked = false;
       g.current.active = true;
     };
     const onMove = (e) => {
       if (!g.current.active) return;
       const dy = e.touches[0].clientY - g.current.startY;
-      const dx = e.touches[0].clientX - g.current.startX;
-      // Lock direction on first significant move — ignore if horizontal
-      if (!g.current.dirLocked) {
-        if (Math.abs(dx) > Math.abs(dy) + 4) { g.current.active = false; return; }
-        if (Math.abs(dy) > 6) g.current.dirLocked = true;
-        else return;
-      }
       if (dy <= 0) { g.current.pull = 0; setPull(0); return; }
       const dist = Math.min(max, dy * 0.5); // rubber-band
       g.current.pull = dist;
@@ -1161,11 +1013,7 @@ function AppInner() {
   const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config/") ? "config" : "home");
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/recipes"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
-  // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
-  // Au remontage du composant lors d'une navigation, Firebase est déjà initialisé :
-  // `auth.currentUser` renvoie l'utilisateur synchronement, évitant un flash de l'écran
-  // de chargement entre les onglets.
-  const [user, setUser] = useState(() => auth.currentUser ?? undefined);
+  const [user, setUser] = useState(undefined); // undefined = loading, null = not signed in
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
   const isAdmin = !!(user && ADMIN_EMAIL && user.email === ADMIN_EMAIL);
@@ -1319,11 +1167,7 @@ function AppInner() {
   const [fridge, setFridge] = useLS("rf_fridge", []);
   const [fridgeSettings, setFridgeSettings] = useLS("rf_fridge_settings", { matchThreshold: 25 });
   const [pantry, setPantry] = useLS("rf_pantry", []);
-  // Dérivé du pathname (et non de useParams) pour qu'AppInner reste une instance
-  // unique montée sur `path="*"` : pas de remontage entre les onglets.
-  const recipeIdParam = location.pathname.startsWith("/recipes/")
-    ? decodeURIComponent(location.pathname.slice(9)) || undefined
-    : undefined;
+  const { id: recipeIdParam } = useParams();
   const selectedRecipe = recipeIdParam || null;
   const setSelectedRecipe = useCallback((id) => {
     if (id) navigate(`/recipes/${id}`);
@@ -1423,12 +1267,6 @@ function AppInner() {
     document.documentElement.classList.toggle("light", !isDark);
   }, [isDark]);
 
-  // Keep masterDB cache in sync so images are available after reload
-  useEffect(() => {
-    if (!masterDB.ingredients.length && !masterDB.utensils.length) return;
-    try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(masterDB)); } catch { /* quota */ }
-  }, [masterDB]);
-
   // Update document title on tab change
   useEffect(() => {
     const titles = { "home": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Frigo", "config": "Configuration" };
@@ -1503,8 +1341,8 @@ function AppInner() {
   };
 
   const saveRecipe = r => {
-    const { score, letter } = computeNutriInfo(r.ingredients, ingredientDB);
-    const withScore = { ...r, healthScore: score, nutriLetter: letter };
+    const score = computeHealthScore(r.ingredients, ingredientDB, categories);
+    const withScore = { ...r, healthScore: score };
     let updatedRecipes;
     if (r.id && recipes.find(x => x.id === r.id)) {
       // Editing — check duplicate name only against OTHER recipes
@@ -1586,7 +1424,7 @@ function AppInner() {
             id: "r" + Date.now() + Math.random(),
             ingredients,
             utensils,
-            ...(() => { const { score, letter } = computeNutriInfo(ingredients, ingredientDB); return { healthScore: score, nutriLetter: letter }; })(),
+            healthScore: computeHealthScore(ingredients, ingredientDB, categories),
           };
         });
       setRecipes(prev => {
@@ -1606,31 +1444,21 @@ function AppInner() {
     const pill = (img, name, qty) =>
       `<span class="pill"><span class="pill-img">${img ? `<img src="${img}" alt="" />` : ""}</span><span class="pill-name">${name}</span>${qty ? `<span class="pill-qty">${qty}</span>` : ""}</span>`;
     const ingPills = recipe.ingredients.map(i => pill(ingImg(i.dbId), i.name, `${i.amount}${i.unit || ""}`)).join("");
-    const NUTRI_COLORS_PDF = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
-    const nutriBadge = letter => {
-      if (!letter) return "";
-      return `<div class="nutri-badge">
-        ${["A","B","C","D","E"].map(l => {
-          const active = l === letter;
-          return `<span class="nl" style="background:${NUTRI_COLORS_PDF[l]};width:${active?21:15}px;height:${active?25:18}px;border-radius:${active?5:3}px;opacity:${active?1:0.5};font-size:${active?14:10}px">${l}</span>`;
-        }).join("")}
-      </div>`;
-    };
     const stepLines = recipe.steps.map((s, i) => {
       const linkedIngs = recipe.ingredients.filter(x => s.ingredients?.includes(x.id)).map(x => pill(ingImg(x.dbId), x.name, `${x.amount}${x.unit || ""}`)).join("");
       const linkedUts = (recipe.utensils || []).filter(u => s.utensils?.includes(u.id)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
       const pills = linkedIngs + linkedUts;
       return `
         <div class="step">
-          <div class="step-header">
-            <div class="step-num">${i + 1}</div>
+          <div class="step-num">${i + 1}</div>
+          <div class="step-body">
             <div class="step-title">Étape ${i + 1}</div>
+            ${s.text ? `<p class="step-text">${s.text}</p>` : ""}
+            ${pills ? `<div class="step-pills">${pills}</div>` : ""}
           </div>
-          ${s.text ? `<p class="step-text">${s.text}</p>` : ""}
-          ${pills ? `<div class="step-pills">${pills}</div>` : ""}
         </div>`;
     }).join("");
-    const utPills = (recipe.utensils || []).map(u => pill(utImg(u.dbId), u.name, "")).join("");
+    const tags = (recipe.tags || []).map(t => `<span class="tag">${t}</span>`).join("");
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1644,37 +1472,37 @@ function AppInner() {
     body { font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; margin-bottom: 24px; display: block; }
     /* Header */
-    .header { padding-bottom: 4px; margin-bottom: 12px; }
+    .header { border-bottom: 2px solid var(--accent); padding-bottom: 24px; margin-bottom: 28px; }
+    .brand { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 400; color: var(--accent); letter-spacing: 0.04em; margin-bottom: 10px; }
     h1 { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
-    .title-rule { width: 48px; height: 4px; border-radius: 4px; background: var(--accent); margin-bottom: 22px; }
-    .meta { display: flex; gap: 38px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 0; }
+    .meta { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
     .meta-item { display: flex; flex-direction: column; }
-    .meta-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-    .meta-val { height: 27px; display: flex; align-items: center; }
-    .meta-value { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1; }
-    /* Nutri-Score badge */
-    .nutri-badge { display: inline-flex; align-items: center; gap: 2px; background: #f9f6f2; border: 1px solid #e8e0d8; border-radius: 6px; padding: 3px 4px; }
-    .nl { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; line-height: 1; }
+    .meta-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+    .meta-value { font-size: 16px; font-weight: 600; color: var(--text); }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 11px; font-weight: 500; color: var(--accent); background: rgba(232,112,58,0.1); border: 1px solid rgba(232,112,58,0.25); border-radius: 20px; padding: 2px 10px; }
     /* Section titles */
-    .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
     /* Ingredients & step pills */
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
     .pill-img { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #fff; border: 1px solid var(--border); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
     .pill-img img { width: 100%; height: 100%; object-fit: cover; }
     .pill-name { font-weight: 500; color: var(--text); }
     .pill-qty { color: var(--text3); font-weight: 500; }
-    .ing-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .ing-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
     /* Steps */
-    .step { margin-bottom: 22px; }
-    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 2px; }
-    .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .step-title { font-weight: 700; font-size: 14px; color: var(--accent); }
-    .step-text { color: var(--text2); line-height: 1.65; padding-left: 40px; }
-    .step-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-left: 40px; }
+    .step { display: flex; gap: 14px; margin-bottom: 22px; }
+    .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .step-body { flex: 1; }
+    .step-title { font-weight: 700; font-size: 13px; color: var(--accent); margin-bottom: 6px; }
+    .step-text { color: var(--text2); line-height: 1.65; }
+    .step-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     /* Footer */
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); }
-    .footer-brand { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
-    .footer-brand .dot { color: var(--accent); }
+    .footer-brand { font-family: 'Fraunces', serif; color: var(--accent); }
+    /* Pagination impression : marges UNIFORMES sur toutes les pages (via @page,
+       et non le padding du body qui ne s'applique qu'en 1re/dernière page),
+       + coupes propres (titres non orphelins, pastilles/étapes/footer insécables). */
     @page { margin: 16mm 14mm; }
     @media print {
       body { max-width: none; margin: 0; padding: 0; font-size: 12px; }
@@ -1692,30 +1520,27 @@ function AppInner() {
 <body>
   ${recipe.image ? `<img class="hero" src="${recipe.image}" alt="${recipe.name}" />` : ""}
   <div class="header">
+    <div class="brand">Mijoté·</div>
     <h1>${recipe.name}</h1>
-    <div class="title-rule"></div>
     <div class="meta">
-      <div class="meta-item"><span class="meta-label">Préparation</span><div class="meta-val"><span class="meta-value">${recipe.prepTime} min</span></div></div>
-      <div class="meta-item"><span class="meta-label">Cuisson</span><div class="meta-val"><span class="meta-value">${recipe.cookTime} min</span></div></div>
-      <div class="meta-item"><span class="meta-label">Portions</span><div class="meta-val"><span class="meta-value">${recipe.servings}</span></div></div>
-      ${recipe.nutriLetter ? `<div class="meta-item"><span class="meta-label">Nutri-Score</span><div class="meta-val">${nutriBadge(recipe.nutriLetter)}</div></div>` : ""}
+      <div class="meta-item"><span class="meta-label">Préparation</span><span class="meta-value">${recipe.prepTime} min</span></div>
+      <div class="meta-item"><span class="meta-label">Cuisson</span><span class="meta-value">${recipe.cookTime} min</span></div>
+      <div class="meta-item"><span class="meta-label">Portions</span><span class="meta-value">${recipe.servings}</span></div>
+      ${recipe.healthScore ? `<div class="meta-item"><span class="meta-label">Score santé</span><span class="meta-value" style="color:${recipe.healthScore >= 70 ? "#4caf7d" : recipe.healthScore >= 50 ? "#f0c060" : "#e05252"}">${recipe.healthScore}/100</span></div>` : ""}
     </div>
+    ${tags ? `<div class="tags">${tags}</div>` : ""}
   </div>
 
   ${recipe.ingredients?.length ? `
   <div class="section-title">Ingrédients</div>
   <div class="ing-pills">${ingPills}</div>` : ""}
 
-  ${utPills ? `
-  <div class="section-title">Ustensiles</div>
-  <div class="ing-pills" style="margin-bottom:20px">${utPills}</div>` : ""}
-
   ${recipe.steps?.length ? `
   <div class="section-title">Étapes</div>
   ${stepLines}` : ""}
 
   <div class="footer">
-    <span class="footer-brand">Mijoté<span class="dot">·</span></span>
+    <span class="footer-brand">Mijoté· v${__APP_VERSION__} — Cardamome</span>
     ${recipe.source ? `<span>Source : <a href="${recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}" style="color:var(--accent)">${recipe.source.replace(/^https?:\/\//, "")}</a></span>` : ""}
   </div>
 </body>
@@ -1770,7 +1595,6 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      <AnnouncementPopup />
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} notify={notify} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
@@ -1937,7 +1761,7 @@ function AppInner() {
             {mainScreen}
           </>
         ) : (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
+          <>
             <PullToRefresh
               enabled={!isDesktop && editingRecipe === null}
               threshold={110}
@@ -1946,7 +1770,7 @@ function AppInner() {
               {mainScreen}
             </PullToRefresh>
             <TabBar tab={tab} setTab={requestTab} />
-          </div>
+          </>
         )}
 
         {/* Leave editor confirmation modal */}
@@ -1971,10 +1795,14 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/recipes" replace />} />
-      {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
-          l'onglet / la recette / la section depuis le pathname, ce qui évite tout
-          remontage (et donc le flicker de l'écran de chargement) lors de la navigation. */}
-      <Route path="*" element={<AppInner />} />
+      <Route path="/recipes" element={<AppInner />} />
+      <Route path="/recipes/:id" element={<AppInner />} />
+      <Route path="/meal-plan" element={<AppInner />} />
+      <Route path="/shopping-lists" element={<AppInner />} />
+      <Route path="/fridge" element={<AppInner />} />
+      <Route path="/config" element={<Navigate to="/config/ingredients" replace />} />
+      <Route path="/config/:configSection" element={<AppInner />} />
+      <Route path="*" element={<Navigate to="/recipes" replace />} />
     </Routes>
   );
 }
@@ -2142,170 +1970,25 @@ function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, se
 
 function RecipeCard({ recipe, onClick, style }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+  const score = recipe.healthScore || 70;
   return (
-    <button className="slide-up recipe-card" onClick={onClick} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", ...style }}>
+    <button className="slide-up recipe-card" onClick={onClick} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", ...style }}>
       <div className="recipe-card-thumb" style={{ aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.65),transparent)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.7),transparent)" }} />
       </div>
-      <div style={{ padding: "10px 12px 12px" }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, lineHeight: 1.3, letterSpacing: "-0.01em", height: "2.6em", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>
+      <div style={{ padding: "10px 10px 12px" }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>{recipe.name}</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 11, color: "var(--text2)", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 11, color: "var(--text2)", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>
-            <span style={{ width: 1, height: 10, background: "var(--border)", display: "inline-block", borderRadius: 1 }} />
+            <span style={{ color: "var(--text3)" }}>·</span>
             <span>{recipe.ingredients?.length || 0} ingr.</span>
           </span>
-          <NutriScoreBadge letter={recipe.nutriLetter} compact />
+          <HealthRing score={score} size={32} />
         </div>
       </div>
     </button>
-  );
-}
-
-// ─── NUTRITION ANALYSIS MODAL ─────────────────────────────────────────────────
-// Repères nutritionnels journaliers (AJR adulte, base 2000 kcal) pour situer
-// chaque apport en % d'une journée type.
-const NUTRI_RI = { calories: 2000, fat: 70, saturatedFat: 20, carbs: 260, sugar: 90, fiber: 30, protein: 50, salt: 6, omega3: 2 };
-const MACRO_COLORS = { protein: "#5b8def", carbs: "#f0b429", fat: "#e8703a" };
-
-const Donut = ({ segments, size = 130, stroke = 18, centerLabel, centerSub }) => {
-  const r = (size - stroke) / 2, circ = 2 * Math.PI * r;
-  const total = segments.reduce((s, x) => s + x.value, 0) || 1;
-  let acc = 0;
-  return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface2)" strokeWidth={stroke} />
-        {segments.map((seg, i) => {
-          const frac = seg.value / total;
-          const dash = frac * circ;
-          const el = (
-            <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={seg.color} strokeWidth={stroke}
-              strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-acc * circ}
-              style={{ transition: "stroke-dasharray 0.5s ease" }} />
-          );
-          acc += frac;
-          return el;
-        })}
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 22, fontWeight: 700, lineHeight: 1 }}>{centerLabel}</span>
-        {centerSub && <span style={{ fontSize: 10, color: "var(--text3)", marginTop: 3 }}>{centerSub}</span>}
-      </div>
-    </div>
-  );
-};
-
-const NUTRI_LETTER_DESC = {
-  A: "Excellente qualité nutritionnelle",
-  B: "Bonne qualité nutritionnelle",
-  C: "Qualité nutritionnelle moyenne",
-  D: "Qualité nutritionnelle faible",
-  E: "Qualité nutritionnelle très faible",
-};
-
-function NutritionModal({ recipe, ingredientDB, servings, onClose }) {
-  const [basis, setBasis] = useState("portion"); // "portion" | "100g"
-  const detail = useMemo(() => computeNutritionDetail(recipe.ingredients, ingredientDB, servings), [recipe.ingredients, ingredientDB, servings]);
-  const letter = recipe.nutriLetter;
-  const data = basis === "portion" ? detail.perServing : detail.per100;
-  const kcal = Math.round(data.calories);
-  const kj = Math.round(data.calories * 4.184);
-
-  // Répartition énergétique des macros (4/4/9 kcal/g)
-  const macroKcal = { protein: data.protein * 4, carbs: data.carbs * 4, fat: data.fat * 9 };
-  const macroSegs = [
-    { key: "protein", label: "Protéines", color: MACRO_COLORS.protein, value: macroKcal.protein, grams: data.protein },
-    { key: "carbs", label: "Glucides", color: MACRO_COLORS.carbs, value: macroKcal.carbs, grams: data.carbs },
-    { key: "fat", label: "Lipides", color: MACRO_COLORS.fat, value: macroKcal.fat, grams: data.fat },
-  ];
-  const macroTot = macroSegs.reduce((s, x) => s + x.value, 0) || 1;
-
-  const fmt = (v, unit = "g") => {
-    if (v == null) return "—";
-    const r = v >= 10 ? Math.round(v) : Math.round(v * 10) / 10;
-    return `${r} ${unit}`;
-  };
-  const riPct = (key, v) => NUTRI_RI[key] ? Math.round(v / NUTRI_RI[key] * 100) : null;
-
-  // Barres détaillées (les "dont" indentés sous leur macro parent)
-  const rows = [
-    { key: "fat", label: "Lipides", value: data.fat, color: MACRO_COLORS.fat },
-    { key: "saturatedFat", label: "dont acides gras saturés", value: data.saturatedFat, sub: true, color: "#c8581f" },
-    { key: "omega3", label: "dont oméga-3", value: data.omega3, sub: true, color: "#2f9e6f" },
-    { key: "carbs", label: "Glucides", value: data.carbs, color: MACRO_COLORS.carbs },
-    { key: "sugar", label: "dont sucres", value: data.sugar, sub: true, color: "#d99a10" },
-    { key: "fiber", label: "Fibres", value: data.fiber, color: "#7bb661" },
-    { key: "protein", label: "Protéines", value: data.protein, color: MACRO_COLORS.protein },
-    { key: "salt", label: "Sel", value: data.salt, color: "#9aa0a6" },
-  ];
-
-  return (
-    <SwipeableSheet onClose={onClose} style={{ maxWidth: 460 }}>
-      {/* En-tête : Nutri-Score */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 4 }}>
-        <NutriScoreBadge letter={letter} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500 }}>Analyse nutritionnelle</div>
-          {letter && <div style={{ fontSize: 12, color: "var(--text3)" }}>{NUTRI_LETTER_DESC[letter]}</div>}
-        </div>
-      </div>
-
-      {/* Bascule portion / 100 g */}
-      <div style={{ display: "flex", gap: 4, background: "var(--surface2)", borderRadius: 10, padding: 3, margin: "14px 0 18px" }}>
-        {[["portion", `Par portion`], ["100g", "Pour 100 g"]].map(([id, lbl]) => (
-          <button key={id} onClick={() => setBasis(id)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: basis === id ? "var(--surface)" : "transparent", color: basis === id ? "var(--text)" : "var(--text3)", boxShadow: basis === id ? "0 1px 3px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>{lbl}</button>
-        ))}
-      </div>
-
-      {/* Énergie + donut macros */}
-      <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "16px 18px", background: "var(--surface2)", borderRadius: 16, marginBottom: 16 }}>
-        <Donut size={128} stroke={17} segments={macroSegs} centerLabel={kcal} centerSub="kcal" />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontSize: 11, color: "var(--text3)" }}>{kj.toLocaleString("fr-FR")} kJ · {basis === "portion" ? "par portion" : "pour 100 g"}</div>
-          {macroSegs.map(seg => (
-            <div key={seg.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: 3, background: seg.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 12, flex: 1 }}>{seg.label}</span>
-              <span style={{ fontSize: 12, fontWeight: 600 }}>{fmt(seg.grams)}</span>
-              <span style={{ fontSize: 11, color: "var(--text3)", width: 34, textAlign: "right" }}>{Math.round(seg.value / macroTot * 100)}%</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Détail avec barres % AJR */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 8 }}>
-        {rows.map(row => {
-          const pct = riPct(row.key, row.value);
-          return (
-            <div key={row.key} style={{ paddingLeft: row.sub ? 14 : 0 }}>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: row.sub ? 400 : 600, color: row.sub ? "var(--text2)" : "var(--text)" }}>{row.label}</span>
-                <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                  <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: 600 }}>{fmt(row.value, row.key === "salt" ? "g" : "g")}</span>
-                  {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", width: 38, textAlign: "right" }}>{pct}% AJR</span>}
-                </span>
-              </div>
-              <div style={{ height: 6, borderRadius: 3, background: "var(--surface2)", overflow: "hidden" }}>
-                <div style={{ width: `${Math.min(100, pct || 0)}%`, height: "100%", borderRadius: 3, background: row.color, transition: "width 0.4s ease" }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Note de fiabilité */}
-      {detail.coverage < 0.95 && (
-        <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.5, marginTop: 12, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
-          Estimation sur {Math.round(detail.coverage * 100)}% de la masse du plat — certains ingrédients n'ont pas encore de données nutritionnelles.
-        </div>
-      )}
-      <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 12 }}>
-        % AJR = apports journaliers recommandés (régime de référence 2000 kcal)
-      </div>
-    </SwipeableSheet>
   );
 }
 
@@ -2345,7 +2028,6 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
   const [cookMode, setCookMode] = useState(false);
-  const [showNutrition, setShowNutrition] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsRef = useRef(null);
   const isProgrammaticScroll = useRef(false);
@@ -2361,14 +2043,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [actionsOpen]);
 
-  const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
-  const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
+  const getIngImage = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
+  const getUtImage = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ position: "relative", height: isDesktop ? 160 : 220, flexShrink: 0, color: "#fff" }}>
+      <div style={{ position: "relative", height: 220, flexShrink: 0, color: "#fff" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.5) 0%,transparent 40%,rgba(14,14,15,0.95) 100%)" }} />
         <button onClick={onBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="back" size={18} /></button>
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
           <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="edit" size={16} /></button>
@@ -2381,9 +2063,9 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           {recipe.source && (
             <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}
               target="_blank" rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginTop: 1, marginBottom: 8 }}>
-              {(() => { try { return new URL(recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source).hostname.replace(/^www\./, ""); } catch { return recipe.source.replace(/^https?:\/\/(?:www\.)?/, "").split("/")[0]; } })()}
-              <Icon name="externalLink" size={11} color="rgba(255,255,255,0.65)" />
+              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.7)", textDecoration: "none", marginTop: 1, marginBottom: 8 }}>
+              <Icon name="forward" size={11} color="rgba(255,255,255,0.7)" />
+              {recipe.source.replace(/^https?:\/\//, "")}
             </a>
           )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -2395,19 +2077,17 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
       </div>
 
       {/* Info bar */}
-      <div style={{ display: "flex", alignItems: "stretch", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "12px 16px", flexShrink: 0 }}>
-        {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Nutri-Score", value: <NutriScoreBadge letter={recipe.nutriLetter} />, icon: null, onClick: () => setShowNutrition(true) }].map((item, i) => (
-          <div key={i} onClick={item.onClick} role={item.onClick ? "button" : undefined} title={item.onClick ? "Analyse nutritionnelle" : undefined}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, borderRight: i < 2 ? "1px solid var(--border)" : "none", cursor: item.onClick ? "pointer" : "default" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flex: 1, justifyContent: "center" }}>
-              {item.icon && <Icon name={item.icon} size={13} color="var(--text3)" />}
-              {typeof item.value === "string" ? <span style={{ fontSize: 14, fontWeight: 600 }}>{item.value}</span> : item.value}
-            </div>
-            <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 3 }}>{item.label}{item.onClick && <Icon name="forward" size={9} color="var(--text3)" />}</span>
+      <div style={{ display: "flex", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "10px 16px", flexShrink: 0 }}>
+        {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Santé", value: <HealthRing score={recipe.healthScore || 70} size={34} />, icon: null }].map((item, i) => (
+          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 1, borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
+            {item.icon && <Icon name={item.icon} size={13} color="var(--text3)" />}
+            {typeof item.value === "string" ? <span style={{ fontSize: 14, fontWeight: 600 }}>{item.value}</span> : item.value}
+            <span style={{ fontSize: 10, color: "var(--text3)" }}>{item.label}</span>
           </div>
         ))}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, flex: 1 }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+          <div style={{ height: 13 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 14 }}>−</button>
             <span style={{ fontSize: 14, fontWeight: 600, minWidth: 18, textAlign: "center" }}>{servings}</span>
             <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14 }}>+</button>
@@ -2505,7 +2185,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {recipe.ingredients.map(ing => (
                   <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
-                    <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={50} />
+                    <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={50} />
                     <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
@@ -2521,7 +2201,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {(recipe.utensils || []).map(u => (
                   <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "#fff" }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "#fff" }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                     <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
                   </div>
                 ))}
@@ -2554,14 +2234,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                           {linkedIngs.map(ing => (
                             <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                              <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={22} />
+                              <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={22} />
                               {ing.name}
                               <span style={{ color: "var(--text3)", fontWeight: 400, marginLeft: 2 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
                             </span>
                           ))}
                           {linkedUts.map(u => (
                             <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                              <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                              <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                               {u.name}
                             </span>
                           ))}
@@ -2581,13 +2261,11 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           {/* Left col: ingrédients + ustensiles (card) */}
           <div style={{ width: 300, minWidth: 300, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
             <div>
-              <div style={{ display: "flex", alignItems: "center", minHeight: 34, marginBottom: 16 }}>
-                <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ingrédients</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {recipe.ingredients.map(ing => (
                   <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
+                    <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={48} />
                     <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
                       <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
@@ -2599,11 +2277,11 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
             </div>
             {recipe.utensils && recipe.utensils.length > 0 && (
               <div>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {recipe.utensils.map(u => (
                     <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                       <span style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</span>
                     </div>
                   ))}
@@ -2614,8 +2292,8 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           </div>
           {/* Right col: étapes (card) */}
           <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 34, marginBottom: 16 }}>
-              <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Étapes</div>
               {recipe.steps && recipe.steps.length > 0 && (
                 <button className="btn btn-primary btn-sm" style={{ gap: 7, borderRadius: 10 }} onClick={() => setCookMode(true)}>
                   <Icon name="fire" size={13} /> Mode pas à pas
@@ -2634,14 +2312,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {linkedIngs.map(ing => (
                           <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={24} />
+                            <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={24} />
                             {ing.name}
                             <span style={{ color: "var(--text3)", fontWeight: 500 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
                           </span>
                         ))}
                         {linkedUts.map(u => (
                           <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                             {u.name}
                           </span>
                         ))}
@@ -2656,9 +2334,6 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
       </div>
 
       {/* ── COOK MODE — fullscreen step-by-step ── */}
-      {showNutrition && (
-        <NutritionModal recipe={recipe} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
-      )}
       {cookMode && recipe.steps?.length > 0 && (
         <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} onClose={() => setCookMode(false)} />
       )}
@@ -3510,7 +3185,7 @@ function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredien
                   <div style={{ fontSize: 14, fontWeight: 500 }}>{r.name}</div>
                   <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min · {r.servings} portions</div>
                 </div>
-                <HealthRing score={r.healthScore || 50} size={30} />
+                <HealthRing score={r.healthScore || 70} size={30} />
               </button>
             ))}
             {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
@@ -3532,8 +3207,8 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
   const linkedIngs = recipe.ingredients.filter(i => step.ingredients?.includes(i.id));
   const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
 
-  const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
-  const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
+  const getIngImage = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
+  const getUtImage = dbId => (utensilDB || []).find(d => d.id === dbId)?.image || "";
   const progress = ((stepIdx + 1) / total) * 100;
 
   return createPortal(
@@ -3621,7 +3296,7 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {linkedIngs.map(ing => (
                       <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={42} />
+                        <IngImage src={getIngImage(ing.dbId)} alt={ing.name} size={42} />
                         <span style={{ flex: 1, fontSize: 14 }}>{ing.name}</span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
                       </div>
@@ -3637,7 +3312,7 @@ function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose }) {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {linkedUts.map(u => (
                       <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                        <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                        <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                         {u.name}
                       </span>
                     ))}
@@ -3920,10 +3595,10 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[...pantry].sort((a, b) => a.name.localeCompare(b.name, "fr")).map(item => (
                   <div key={item.id} className="slide-up" style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 14, padding: "12px 14px", border: "1px solid var(--border)" }}>
-                    {(() => { const img = item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""; return img
-                      ? <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
+                    {item.image
+                      ? <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
                       : <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 20 }}>🫙</div>
-                    ; })()}
+                    }
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{item.name}</div>
                       {(item.quantity || item.unit) && (
@@ -4171,7 +3846,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
           <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: struck ? "var(--green)" : "transparent", border: `2px solid ${struck ? "var(--green)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" }}>
             {struck && <Icon name="check" size={11} color="#fff" />}
           </div>
-          <IngImage src={item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""} alt={item.name} size={40} />
+          <IngImage src={item.image} alt={item.name} size={40} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{item.name}</span>
@@ -4602,11 +4277,6 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
 const CHANGELOG = [
   {
     version: "1.0.6", label: "en cours", accent: true,
-    // 1 à 2 nouveautés phares mises en avant dans le bandeau d'annonce.
-    highlights: [
-      "Vos images sont désormais disponibles hors-ligne ⚡",
-      "Nouvelle vue Étagères dans le Frigo 🗄️",
-    ],
     items: [
       "Routage URL complet : chaque recette a son propre lien /recipes/:id",
       "Écran de chargement animé avec spinner après connexion Google",
@@ -4674,81 +4344,6 @@ const CHANGELOG = [
     ],
   },
 ];
-
-const ANNOUNCE_SEEN_KEY = "rf_announce_seen";
-
-function AnnouncementPopup() {
-  const navigate = useNavigate();
-  const latest = CHANGELOG[0];
-  const highlights = latest?.highlights || [];
-  const [dismissed, setDismissed] = useState(() => {
-    try { return localStorage.getItem(ANNOUNCE_SEEN_KEY) === latest?.version; } catch { return false; }
-  });
-  if (!highlights.length || dismissed) return null;
-  const close = () => {
-    try { localStorage.setItem(ANNOUNCE_SEEN_KEY, latest.version); } catch { }
-    setDismissed(true);
-  };
-  return (
-    <div
-      onClick={close}
-      style={{
-        position: "fixed", inset: 0, zIndex: 9999,
-        background: "rgba(0,0,0,0.45)", display: "flex",
-        alignItems: "center", justifyContent: "center", padding: 24,
-      }}
-    >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: "100%", maxWidth: 360, borderRadius: 20,
-          background: "var(--surface)", boxShadow: "0 8px 40px rgba(0,0,0,0.28)",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{
-          background: "linear-gradient(135deg, rgba(232,112,58,0.18), rgba(232,112,58,0.06))",
-          borderBottom: "1px solid rgba(232,112,58,0.25)",
-          padding: "20px 20px 16px",
-          display: "flex", alignItems: "flex-start", gap: 14,
-        }}>
-          <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 3px 10px rgba(232,112,58,0.45)" }}>
-            <Icon name="sparkle" size={20} color="#fff" />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: "var(--accent)", letterSpacing: "0.03em" }}>NOUVEAUTÉS</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 6, padding: "2px 7px" }}>v{latest.version}</span>
-            </div>
-            <p style={{ margin: 0, fontSize: 13, color: "var(--text2)", lineHeight: 1.4 }}>Voici ce qui a changé dans cette version :</p>
-          </div>
-        </div>
-        <ul style={{ margin: 0, padding: "14px 20px", listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
-          {highlights.map((h, i) => (
-            <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "var(--text1)", lineHeight: 1.4 }}>
-              <span style={{ marginTop: 5, flexShrink: 0, width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "block" }} />
-              {h}
-            </li>
-          ))}
-        </ul>
-        <div style={{ padding: "12px 20px 18px", display: "flex", gap: 10 }}>
-          <button
-            onClick={() => { close(); navigate("/config/changelog"); }}
-            style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
-          >
-            Voir les détails
-          </button>
-          <button
-            onClick={close}
-            style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
-          >
-            Fermer
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ChangelogSection() {
   const [open, setOpen] = React.useState({});
@@ -4829,95 +4424,11 @@ function AdminBanner({ style }) {
   );
 }
 
-// ─── EXPORT / IMPORT MARKDOWN DE LA BASE D'INGRÉDIENTS ──────────────────────
-// Source unique des colonnes : l'export et l'import partagent cette spec, pour
-// garantir un aller-retour fidèle. `nut: true` = champ rangé dans `nutrition`.
-// `isVegetable` n'est pas une colonne : il est recalculé depuis la catégorie.
-const ING_MD_COLUMNS = [
-  { key: "name", label: "Nom" },
-  { key: "aliases", label: "Aliases" },
-  { key: "id", label: "dbid" },
-  { key: "category", label: "Catégorie" },
-  { key: "gramsPerPiece", label: "g/pièce", num: true },
-  { key: "image", label: "Image" },
-  { key: "calories", label: "kcal", nut: true },
-  { key: "protein", label: "Protéines", nut: true },
-  { key: "carbs", label: "Glucides", nut: true },
-  { key: "sugar", label: "Sucres", nut: true },
-  { key: "fat", label: "Lipides", nut: true },
-  { key: "saturatedFat", label: "AG saturés", nut: true },
-  { key: "omega3", label: "Oméga-3", nut: true },
-  { key: "fiber", label: "Fibres", nut: true },
-  { key: "salt", label: "Sel", nut: true },
-];
-
-// Découpe une ligne de tableau Markdown en cellules, en respectant les `\|` échappés.
-function splitMarkdownRow(line) {
-  const inner = line.replace(/^\s*\|/, "").replace(/\|\s*$/, "");
-  return inner.split(/(?<!\\)\|/).map(c => c.replace(/\\\|/g, "|").trim());
-}
-
-// Parse un export Markdown d'ingrédients → liste d'objets partiels (clés présentes
-// seulement). Robuste à l'ordre des colonnes : on s'aligne sur l'en-tête.
-function parseIngredientsMarkdown(text) {
-  const lines = (text || "").split(/\r?\n/);
-  // Repérer la ligne d'en-tête (contient "Nom" et "dbid") puis la ligne de séparation.
-  let headerIdx = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (/\|/.test(lines[i]) && /\bNom\b/i.test(lines[i]) && /\bdbid\b/i.test(lines[i])) { headerIdx = i; break; }
-  }
-  if (headerIdx < 0) return [];
-  const headers = splitMarkdownRow(lines[headerIdx]).map(h => h.toLowerCase());
-  // Index colonne → clé interne, via le label de la spec.
-  const colKey = headers.map(h => {
-    const col = ING_MD_COLUMNS.find(c => c.label.toLowerCase() === h);
-    return col ? col.key : null;
-  });
-  const out = [];
-  for (let i = headerIdx + 2; i < lines.length; i++) { // +2 : sauter la ligne |---|
-    const line = lines[i];
-    if (!/\|/.test(line)) continue;
-    const cells = splitMarkdownRow(line);
-    if (cells.every(c => c === "" || /^-+$/.test(c))) continue;
-    const row = {}; const nutrition = {};
-    cells.forEach((val, ci) => {
-      const key = colKey[ci];
-      if (!key || val === "") return;
-      const col = ING_MD_COLUMNS.find(c => c.key === key);
-      if (col.nut) {
-        const num = parseFloat(val.replace(",", "."));
-        if (!Number.isNaN(num)) nutrition[key] = num;
-      } else if (col.num) {
-        const num = parseFloat(val.replace(",", "."));
-        if (!Number.isNaN(num)) row[key] = num;
-      } else if (key === "aliases") {
-        const arr = val.split(",").map(a => a.trim()).filter(Boolean);
-        if (arr.length) row.aliases = arr;
-      } else {
-        row[key] = val;
-      }
-    });
-    if (!row.name) continue;
-    if (Object.keys(nutrition).length) {
-      nutrition.isVegetable = row.category === "vegetable" || row.category === "legume";
-      row.nutrition = nutrition;
-    }
-    out.push(row);
-  }
-  return out;
-}
-
 function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
+  const { configSection: configSectionParam } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const configSectionParam = location.pathname.startsWith("/config/")
-    ? location.pathname.slice(8) || undefined
-    : undefined;
   const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "ingredients";
   const setSection = (s) => navigate(`/config/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
-  useEffect(() => {
-    if (!configSectionParam) navigate("/config/ingredients", { replace: true });
-  }, [configSectionParam]);
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editCol, setEditCol] = useState(null);
@@ -4932,10 +4443,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
   const [dragOver, setDragOver] = useState(false);
   const [openCats, setOpenCats] = useState({});
   const fileRef = useRef();
-  const [mdError, setMdError] = useState("");
-  const [mdInfo, setMdInfo] = useState("");
-  const [mdDragOver, setMdDragOver] = useState(false);
-  const mdFileRef = useRef();
   const toggleCat = k => setOpenCats(p => ({ ...p, [k]: !p[k] }));
 
   const saveIng = item => {
@@ -5000,61 +4507,23 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
     });
   };
 
-  // Export Markdown COMPLET de toute la base d'ingrédients (admin/master).
-  // Toutes les colonnes de ING_MD_COLUMNS (identité + nutrition). Aller-retour
-  // fidèle : le fichier produit est réimportable tel quel. Trié par catégorie puis nom.
+  // Export Markdown de toute la base d'ingrédients (admin/master) — table prête à fournir à un LLM.
+  // Colonnes : Nom · Aliases · dbid · Catégorie (clé machine, précise). Triée par catégorie puis nom.
   const exportIngredientsMarkdown = () => {
     const esc = s => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
-    const cell = (r, col) => {
-      if (col.nut) { const v = r.nutrition?.[col.key]; return v == null || v === "" ? "" : esc(v); }
-      if (col.key === "aliases") return esc((r.aliases || []).join(", "));
-      if (col.key === "category") return esc(r.category || "other");
-      return esc(r[col.key]);
-    };
     const order = sortedCategoryEntries(categories).map(([k]) => k);
     const rows = [...ingredientDB].sort((a, b) => {
       const ca = order.indexOf(a.category || "other"), cb = order.indexOf(b.category || "other");
       return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr");
     });
-    const header = `| ${ING_MD_COLUMNS.map(c => c.label).join(" | ")} |\n|${ING_MD_COLUMNS.map(() => "---").join("|")}|`;
-    const body = rows.map(r => `| ${ING_MD_COLUMNS.map(c => cell(r, c)).join(" | ")} |`).join("\n");
-    const md = `# Base d'ingrédients Mijoté (${rows.length})\n\nValeurs nutritionnelles pour 100g. Oméga-3 inclus dans les lipides. \`Légume\` est recalculé depuis la catégorie à l'import.\n\n${header}\n${body}\n`;
+    const header = "| Nom | Aliases | dbid | Catégorie |\n|---|---|---|---|";
+    const body = rows.map(r => `| ${esc(r.name)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.id)} | ${esc(r.category || "other")} |`).join("\n");
+    const md = `# Base d'ingrédients Mijoté (${rows.length})\n\n${header}\n${body}\n`;
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
     a.download = "ingredients_mijote.md";
     a.click();
     URL.revokeObjectURL(a.href);
-  };
-
-  // Import Markdown : réinjecte / met à jour la base. Match par dbid sinon par nom.
-  const importIngredientsMarkdown = (text) => {
-    const parsed = parseIngredientsMarkdown(text);
-    if (!parsed.length) { setMdError("Aucun ingrédient reconnu dans le fichier Markdown."); return; }
-    let created = 0, updated = 0;
-    setIngredientDB(prev => {
-      const next = [...prev];
-      const idxById = new Map(next.map((d, i) => [d.id, i]));
-      const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
-      parsed.forEach((row, n) => {
-        let idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
-          : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
-        if (idx >= 0) {
-          const cur = next[idx];
-          next[idx] = { ...cur, ...row, id: cur.id, nutrition: row.nutrition || cur.nutrition };
-          updated++;
-        } else {
-          const id = "db_i" + Date.now() + "_" + n;
-          const item = { ...row, id };
-          next.push(item);
-          idxById.set(id, next.length - 1);
-          idxByName.set(normalizeStr(row.name), next.length - 1);
-          created++;
-        }
-      });
-      return next;
-    });
-    setMdError("");
-    setMdInfo(`${created} créé${created > 1 ? "s" : ""}, ${updated} mis à jour.`);
   };
 
   return (
@@ -5094,31 +4563,10 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {isAdmin && (
-              <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Base d'ingrédients (Markdown)</div>
-                {ingredientDB.length > 0 && (
-                  <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={exportIngredientsMarkdown}>
-                    <Icon name="download" size={14} /> Exporter la base complète
-                  </button>
-                )}
-                <input ref={mdFileRef} type="file" accept=".md,.markdown,.txt" style={{ display: "none" }}
-                  onChange={e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } e.target.value = ""; }} />
-                <div
-                  onDragOver={e => { e.preventDefault(); setMdDragOver(true); }}
-                  onDragLeave={() => setMdDragOver(false)}
-                  onDrop={e => { e.preventDefault(); setMdDragOver(false); const f = Array.from(e.dataTransfer.files).find(f => /\.(md|markdown|txt)$/i.test(f.name)); if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } }}
-                  onClick={() => mdFileRef.current.click()}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "20px", borderRadius: 12, border: `2px dashed ${mdDragOver ? "var(--accent)" : "var(--border)"}`, background: mdDragOver ? "rgba(232,112,58,0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
-                  <Icon name="import" size={24} color={mdDragOver ? "var(--accent)" : "var(--text3)"} />
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: mdDragOver ? "var(--accent)" : "var(--text)" }}>Importer un fichier Markdown</div>
-                    <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>met à jour (par nom/dbid) ou crée les ingrédients</div>
-                  </div>
-                </div>
-                {mdError && <p style={{ color: "var(--red)", fontSize: 12 }}>{mdError}</p>}
-                {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12 }}>✓ {mdInfo}</p>}
-              </div>
+            {isAdmin && ingredientDB.length > 0 && (
+              <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={exportIngredientsMarkdown}>
+                <Icon name="download" size={14} /> Exporter la base (Markdown)
+              </button>
             )}
             {sortedCategoryEntries(categories).map(([catKey, cat]) => {
               const catIngs = ingredientDB.filter(d => d.category === catKey)
@@ -5150,7 +4598,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                       <span style={{ fontSize: 20 }}>{cat.icon}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{cat.label}</div>
-                        <div style={{ fontSize: 11, color: "var(--text3)" }}>{catIngs.length} ingrédient{catIngs.length !== 1 ? "s" : ""} · <code style={{ fontSize: 10, background: "var(--surface2)", borderRadius: 4, padding: "1px 4px" }}>{catKey}</code></div>
+                        <div style={{ fontSize: 11, color: "var(--text3)" }}>{catIngs.length} ingrédient{catIngs.length !== 1 ? "s" : ""} · Score {cat.score * 10}/100 · <code style={{ fontSize: 10, background: "var(--surface2)", borderRadius: 4, padding: "1px 4px" }}>{catKey}</code></div>
                       </div>
                       <span style={{
                         display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%",
@@ -5378,19 +4826,13 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           </select>
           <div className="field-label">Photo</div>
           <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} pathPrefix={isAdmin ? "master/ingredients" : "ingredients"} />
-          <div className="field-label">Poids moyen d'une pièce (g)</div>
-          <input className="field-input" type="number" min="0" step="1" placeholder="ex. 125 pour une tomate — optionnel"
-            value={editIng.gramsPerPiece ?? ""}
-            onChange={e => setEditIng(p => ({ ...p, gramsPerPiece: e.target.value === "" ? undefined : +e.target.value }))}
-            style={{ marginBottom: 4 }} />
-          <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 12 }}>Utilisé pour le score quand la quantité est en pièces, tranches, gousses…</div>
           <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {[["calories", "Énergie (kcal)", 1], ["protein", "Protéines (g)", 0.1], ["carbs", "Glucides (g)", 0.1], ["sugar", "Sucres (g)", 0.1], ["fat", "Lipides (g)", 0.1], ["saturatedFat", "G. saturées (g)", 0.1], ["omega3", "Oméga-3 (g)", 0.01], ["fiber", "Fibres (g)", 0.1], ["salt", "Sel (g)", 0.01]].map(([k, l, step]) => (
+              {[["protein", "Protéines (g)"], ["fiber", "Fibres (g)"], ["saturatedFat", "G. saturées (g)"], ["sugar", "Sucres (g)"], ["salt", "Sel (g)"]].map(([k, l]) => (
                 <div key={k}>
                   <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 3 }}>{l}</div>
-                  <input className="field-input" type="number" min="0" step={step} placeholder="0"
+                  <input className="field-input" type="number" min="0" step="0.1" placeholder="0"
                     value={editIng.nutrition?.[k] || ""}
                     onChange={e => setEditIng(p => ({ ...p, nutrition: { ...(p.nutrition || {}), isVegetable: p.category === "vegetable" || p.category === "legume", [k]: +e.target.value } }))}
                     style={{ padding: "6px 10px", fontSize: 12 }} />
