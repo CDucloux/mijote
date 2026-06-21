@@ -206,7 +206,7 @@ const GLOBAL_STYLE = `
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   :root{
-    --bg:#0e0e0f;--surface:#171718;--surface2:#1f1f21;--surface3:#252527;
+    --bg:#0e0e0f;--bg-rgb:14,14,15;--surface:#171718;--surface2:#1f1f21;--surface3:#252527;
     --border:rgba(255,255,255,0.07);--accent:#e8703a;--accent2:#f0a875;
     --text:#f0ede8;--text2:#9a9490;--text3:#5a5754;
     --green:#4caf7d;--red:#e05252;--yellow:#f0c060;--blue:#5b9cf6;--orange:#f0992a;
@@ -216,7 +216,7 @@ const GLOBAL_STYLE = `
   }
   /* ── LIGHT THEME ── */
   html.light,.light{
-    --bg:#f5f0eb;--surface:#ffffff;--surface2:#ede8e2;--surface3:#e0d8d0;
+    --bg:#f5f0eb;--bg-rgb:245,240,235;--surface:#ffffff;--surface2:#ede8e2;--surface3:#e0d8d0;
     --border:rgba(0,0,0,0.09);
     --text:#2c2420;--text2:#5a5250;--text3:#887870;
   }
@@ -2438,6 +2438,24 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
   const scrollRef = useRef(null);
   const heroSentinelRef = useRef(null);
   const [heroCollapsed, setHeroCollapsed] = useState(false);
+  const swipeStart = useRef(null);
+  const TAB_ORDER = ["Ingrédients", "Ustensiles", "Étapes"];
+  const swipeHandlers = {
+    onTouchStart: e => { swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, axis: null }; },
+    onTouchMove: e => {
+      const s = swipeStart.current; if (!s || s.axis) return;
+      const dx = Math.abs(e.touches[0].clientX - s.x), dy = Math.abs(e.touches[0].clientY - s.y);
+      if (dx > 8 || dy > 8) s.axis = dx > dy ? "x" : "y";
+    },
+    onTouchEnd: e => {
+      const s = swipeStart.current; swipeStart.current = null;
+      if (!s || s.axis !== "x") return;
+      const dx = e.changedTouches[0].clientX - s.x;
+      const idx = TAB_ORDER.indexOf(activeTab);
+      if (dx < -50 && idx < TAB_ORDER.length - 1) setActiveTab(TAB_ORDER[idx + 1]);
+      else if (dx > 50 && idx > 0) setActiveTab(TAB_ORDER[idx - 1]);
+    },
+  };
 
   useEffect(() => {
     const sentinel = heroSentinelRef.current;
@@ -2579,7 +2597,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           {/* Barre compacte sticky */}
           <div style={{
             position: "sticky", top: 0, zIndex: 30, flexShrink: 0,
-            background: heroCollapsed ? "rgba(var(--bg-rgb,14,14,15),0.88)" : "transparent",
+            background: heroCollapsed ? "rgba(var(--bg-rgb),0.85)" : "transparent",
             backdropFilter: heroCollapsed ? "blur(16px)" : "none",
             borderBottom: heroCollapsed ? "1px solid var(--border)" : "none",
             transition: "background 0.25s, border-color 0.25s",
@@ -2628,12 +2646,13 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
           {/* Onglets sticky sous la barre */}
           <div style={{ position: "sticky", top: 52, zIndex: 29, background: "var(--surface)", borderBottom: "1px solid var(--border)", display: "flex", flexShrink: 0 }}>
-            {["Ingrédients", "Ustensiles", "Étapes"].map(t => (
-              <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "11px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, transition: "color 0.15s, border-color 0.15s", background: "none", border: "none", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, cursor: "pointer" }}>{t}</button>
+            {TAB_ORDER.map(t => (
+              <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "11px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", background: "none", border: "none", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, transition: "color 0.15s, border-color 0.15s", cursor: "pointer" }}>{t}</button>
             ))}
           </div>
 
-          {/* Contenu selon onglet actif */}
+          {/* Contenu selon onglet actif — swipe horizontal pour changer d'onglet */}
+          <div {...swipeHandlers}>
           {activeTab === "Ingrédients" && (
             <div style={{ padding: "16px 16px 32px" }}>
               {/* Portions — pilote les quantités de la liste */}
@@ -2718,6 +2737,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               </div>
             </div>
           )}
+          </div>{/* end swipe wrapper */}
         </div>
 
 
