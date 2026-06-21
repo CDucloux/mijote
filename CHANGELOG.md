@@ -1,6 +1,6 @@
 # Changelog — Mijoté
 
-## v2.0.0 — Industrialisation & Architecture
+## v2.0.0 — Safran · Industrialisation & Architecture
 
 - Refonte complète de l'architecture : le fichier monolithe `App.jsx` (6000+ lignes) éclaté en une structure en couches (61 fichiers)
 - Couche logique métier isolée et découplée de l'interface : Nutri-Score, rapprochement d'ingrédients, parsing, import et export PDF/JSON
