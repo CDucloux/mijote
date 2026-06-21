@@ -4907,6 +4907,133 @@ function parseIngredientsMarkdown(text) {
   return out;
 }
 
+// ─── INGREDIENT DETAIL (fiche aliment) ────────────────────────────────────────
+// Page publique /config/ingredients/{id} : tout utilisateur peut consulter la
+// fiche ; seul l'admin dispose des actions Modifier / Supprimer.
+function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEGORIES, isAdmin, onBack, onEdit, onDelete }) {
+  if (!ingredient) {
+    return (
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 40, textAlign: "center" }}>
+        <div style={{ fontSize: 48 }}>🥕</div>
+        <p style={{ color: "var(--text2)", fontSize: 14 }}>Cet ingrédient n'existe pas (ou plus) dans la base.</p>
+        <button className="btn btn-primary" onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon name="back" size={15} color="#fff" /> Retour aux ingrédients</button>
+      </div>
+    );
+  }
+  const cat = categories[ingredient.category] || DEFAULT_CATEGORIES.other;
+  const n = ingredient.nutrition || {};
+  const hasNutrition = !!ingredient.nutrition;
+  const { letter } = computeNutriInfo([{ dbId: ingredient.id, amount: 100, unit: "g" }], ingredientDB);
+  const kcal = Math.round(n.calories || 0);
+  const kj = Math.round((n.calories || 0) * 4.184);
+  const aliases = Array.isArray(ingredient.aliases) ? ingredient.aliases : [];
+
+  const macroSegs = [
+    { key: "protein", label: "Protéines", color: MACRO_COLORS.protein, value: (n.protein || 0) * 4, grams: n.protein || 0 },
+    { key: "carbs", label: "Glucides", color: MACRO_COLORS.carbs, value: (n.carbs || 0) * 4, grams: n.carbs || 0 },
+    { key: "fat", label: "Lipides", color: MACRO_COLORS.fat, value: (n.fat || 0) * 9, grams: n.fat || 0 },
+  ];
+  const macroTot = macroSegs.reduce((s, x) => s + x.value, 0) || 1;
+  const fmt = v => v == null ? "—" : `${v >= 10 ? Math.round(v) : Math.round(v * 10) / 10} g`;
+  const riPct = (key, v) => NUTRI_RI[key] ? Math.round((v || 0) / NUTRI_RI[key] * 100) : null;
+  const rows = [
+    { key: "fat", label: "Lipides", value: n.fat, color: MACRO_COLORS.fat },
+    { key: "saturatedFat", label: "dont acides gras saturés", value: n.saturatedFat, sub: true, color: "#c8581f" },
+    { key: "omega3", label: "dont oméga-3", value: n.omega3, sub: true, color: "#2f9e6f" },
+    { key: "carbs", label: "Glucides", value: n.carbs, color: MACRO_COLORS.carbs },
+    { key: "sugar", label: "dont sucres", value: n.sugar, sub: true, color: "#d99a10" },
+    { key: "fiber", label: "Fibres", value: n.fiber, color: "#7bb661" },
+    { key: "protein", label: "Protéines", value: n.protein, color: MACRO_COLORS.protein },
+    { key: "salt", label: "Sel", value: n.salt, color: "#9aa0a6" },
+  ];
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto" }}>
+      <div style={{ maxWidth: 580, margin: "0 auto", padding: "16px 20px 48px" }}>
+        {/* Barre haute : retour + actions admin */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, padding: "6px 14px", cursor: "pointer" }}>
+            <Icon name="back" size={14} color="var(--text2)" /> Ingrédients
+          </button>
+          {isAdmin ? (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={onEdit}><Icon name="edit" size={14} /> Modifier</button>
+              <button className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--red)" }} onClick={onDelete}><Icon name="trash" size={14} color="var(--red)" /></button>
+            </div>
+          ) : (
+            <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "3px 10px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8 }}>Lecture seule</span>
+          )}
+        </div>
+
+        {/* En-tête : image + nom + catégorie + Nutri-Score */}
+        <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 22 }}>
+          <IngImage src={ingredient.image} alt={ingredient.name} size={88} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 27, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8 }}>{ingredient.name}</h1>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, padding: "3px 12px", fontSize: 12, color: "var(--text2)" }}>
+              <span>{cat.icon}</span> {cat.label}
+            </div>
+            {aliases.length > 0 && (
+              <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>Aussi : {aliases.join(", ")}</div>
+            )}
+          </div>
+          <div style={{ flexShrink: 0 }}><NutriScoreBadge letter={letter} /></div>
+        </div>
+
+        {ingredient.gramsPerPiece != null && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text2)", background: "var(--surface2)", borderRadius: 10, padding: "8px 12px", marginBottom: 18 }}>
+            <Icon name="portions" size={14} color="var(--text3)" /> 1 pièce ≈ <strong>{ingredient.gramsPerPiece} g</strong>
+          </div>
+        )}
+
+        {/* Nutrition pour 100 g */}
+        <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, marginBottom: 12 }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
+
+        {hasNutrition ? (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "16px 18px", background: "var(--surface2)", borderRadius: 16, marginBottom: 16 }}>
+              <Donut size={128} stroke={17} segments={macroSegs} centerLabel={kcal} centerSub="kcal" />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ fontSize: 11, color: "var(--text3)" }}>{kj.toLocaleString("fr-FR")} kJ pour 100 g</div>
+                {macroSegs.map(seg => (
+                  <div key={seg.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 3, background: seg.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, flex: 1 }}>{seg.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{fmt(seg.grams)}</span>
+                    <span style={{ fontSize: 11, color: "var(--text3)", width: 34, textAlign: "right" }}>{Math.round(seg.value / macroTot * 100)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 8 }}>
+              {rows.map(row => {
+                const pct = riPct(row.key, row.value);
+                return (
+                  <div key={row.key} style={{ paddingLeft: row.sub ? 14 : 0 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: row.sub ? 400 : 600, color: row.sub ? "var(--text2)" : "var(--text)" }}>{row.label}</span>
+                      <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: 600 }}>{fmt(row.value)}</span>
+                        {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", width: 38, textAlign: "right" }}>{pct}% AJR</span>}
+                      </span>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 3, background: "var(--surface)", overflow: "hidden" }}>
+                      <div style={{ width: `${Math.min(100, pct || 0)}%`, height: "100%", borderRadius: 3, background: row.color, transition: "width 0.4s ease" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 12 }}>% AJR = apports journaliers recommandés (régime de référence 2000 kcal)</div>
+          </>
+        ) : (
+          <div style={{ fontSize: 13, color: "var(--text3)", fontStyle: "italic", padding: "16px 0" }}>Aucune donnée nutritionnelle renseignée pour cet ingrédient.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -4914,6 +5041,9 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
     ? location.pathname.slice(8) || undefined
     : undefined;
   const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "ingredients";
+  // Fiche ingrédient : /config/ingredients/{id}
+  const ingDetailMatch = location.pathname.match(/^\/config\/ingredients\/(.+)$/);
+  const ingDetailId = ingDetailMatch ? decodeURIComponent(ingDetailMatch[1]) : null;
   const setSection = (s) => navigate(`/config/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
   useEffect(() => {
     if (!configSectionParam) navigate("/config/ingredients", { replace: true });
@@ -5059,6 +5189,18 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {ingDetailId ? (
+        <IngredientDetail
+          ingredient={ingredientDB.find(d => d.id === ingDetailId)}
+          ingredientDB={ingredientDB}
+          categories={categories}
+          isAdmin={isAdmin}
+          onBack={() => navigate("/config/ingredients")}
+          onEdit={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setEditIng({ ...it }); }}
+          onDelete={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setConfirmDel({ type: "ing", item: it }); }}
+        />
+      ) : (
+      <>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -5176,13 +5318,13 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                         </div>
                       )}
                       {catIngs.map((item, i) => (
-                        <div key={item.id} style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+                        <button key={item.id} onClick={() => navigate(`/config/ingredients/${encodeURIComponent(item.id)}`)} title="Voir la fiche" style={{
+                          width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
                           borderTop: i > 0 ? "1px solid var(--border)" : "none",
-                          background: "var(--surface)"
+                          background: "var(--surface)", textAlign: "left", cursor: "pointer", border: "none",
                         }}>
                           <IngImage src={item.image} alt={item.name} size={42} />
-                          <div style={{ flex: 1 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</div>
                             {item.nutrition && (
                               <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>
@@ -5194,14 +5336,9 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                               </div>
                             )}
                           </div>
-                          {item._ro
-                            ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8, flexShrink: 0 }}>Master</span>
-                            : <>
-                              <button onClick={() => setEditIng({ ...item })} style={{ color: "var(--text3)", marginRight: 4 }}><Icon name="edit" size={14} /></button>
-                              <button onClick={() => setConfirmDel({ type: "ing", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
-                            </>
-                          }
-                        </div>
+                          {item._ro && <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8, flexShrink: 0 }}>Master</span>}
+                          <Icon name="forward" size={14} color="var(--text3)" />
+                        </button>
                       ))}
                     </div>
                   )}
@@ -5350,6 +5487,8 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
         {section === "nouveautés" && <ChangelogSection />}
       </div>
+      </>
+      )}
 
       {/* Ingredient editor modal */}
       {editIng && (
@@ -5415,7 +5554,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           </p>
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDel(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { confirmDel.type === "ing" ? delIng(confirmDel.item.id) : delUt(confirmDel.item.id); setConfirmDel(null); }}>Supprimer</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { confirmDel.type === "ing" ? delIng(confirmDel.item.id) : delUt(confirmDel.item.id); setConfirmDel(null); if (ingDetailId) navigate("/config/ingredients"); }}>Supprimer</button>
           </div>
         </SwipeableSheet>
       )}
