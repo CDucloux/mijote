@@ -5242,12 +5242,12 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           ingredientDB={ingredientDB}
           categories={categories}
           isAdmin={isAdmin}
-          onBack={() => navigate("/config/ingredients")}
+          onBack={() => navigate(-1)}
           onEdit={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setEditIng({ ...it }); }}
           onDelete={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setConfirmDel({ type: "ing", item: it }); }}
         />
       ) : (
-      <>
+      <div key={section} className="editor-enter" style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -5526,7 +5526,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
         {section === "nouveautés" && <ChangelogSection />}
       </div>
-      </>
+      </div>
       )}
 
       {/* Ingredient editor modal */}
@@ -5620,7 +5620,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           </p>
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDel(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { confirmDel.type === "ing" ? delIng(confirmDel.item.id) : delUt(confirmDel.item.id); setConfirmDel(null); if (ingDetailId) navigate("/config/ingredients"); }}>Supprimer</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { confirmDel.type === "ing" ? delIng(confirmDel.item.id) : delUt(confirmDel.item.id); setConfirmDel(null); if (ingDetailId) navigate(-1); }}>Supprimer</button>
           </div>
         </SwipeableSheet>
       )}
