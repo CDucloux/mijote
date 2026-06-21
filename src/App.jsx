@@ -22,8 +22,8 @@ import { useLS } from "./hooks/useLS.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { useOnline } from "./hooks/useOnline.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
-import { useSwipeDown } from "./hooks/useSwipeDown.js";
-import { usePullToRefresh } from "./hooks/usePullToRefresh.js";
+import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
+import { PullToRefresh } from "./components/PullToRefresh.jsx";
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GLOBAL_STYLE = `
