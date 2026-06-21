@@ -221,6 +221,8 @@ const GLOBAL_STYLE = `
     --text:#2c2420;--text2:#5a5250;--text3:#887870;
   }
   html.light,html.light body{background:#f5f0eb;color:#2c2420;}
+  /* Pills ustensiles (desktop) : fond blanc en thème clair */
+  html.light .ut-pill-desktop{background:#ffffff!important;}
   html.light .field-input{color:#2c2420;background:#ede8e2;}
   html.light select option{background:#ede8e2;color:#1a1614;}
   *,*::before,*::after{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.1s ease;}
@@ -2692,7 +2694,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {(recipe.utensils || []).map(u => (
                   <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "var(--surface2)" }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "#fff" }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                     <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
                   </div>
                 ))}
@@ -2774,7 +2776,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {recipe.utensils.map(u => (
-                    <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
+                    <div key={u.id} className="ut-pill-desktop" style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
                       <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
                       <span style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</span>
                     </div>
