@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
-import { signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, deleteDoc, onSnapshot, getDocs, query, where } from "firebase/firestore";
+import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
+import { setDoc, deleteDoc } from "firebase/firestore";
 
-import { db, auth, provider } from "./lib/firebase.js";
-import {
-  metaDoc, sharedListsCol, sharedListDoc, userDirCol, userDirDoc,
-  toSharedListDoc, loadMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
-} from "./lib/firestore.js";
+import { auth, provider } from "./lib/firebase.js";
+import { sharedListDoc, toSharedListDoc } from "./lib/firestore.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
@@ -16,6 +13,7 @@ import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildSho
 import {
   DEFAULT_CATEGORIES, SAMPLE_RECIPES, SAMPLE_COLLECTIONS,
 } from "./constants/categories.js";
+import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
 import { useLS } from "./hooks/useLS.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
@@ -215,83 +213,20 @@ function AppInner() {
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // ── Auth refs ─────────────────────────────────────────────────────────────────
-  const firestoreUnsub = useRef(null);
-  const cloudLoaded = useRef(false); // gate saves until initial cloud load completes
-  const recipeSyncMap = useRef(new Map()); // last-synced recipe snapshot for diffing
+  // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
+  const { cloudLoaded } = useFirestoreSync({
+    user, setUser, isAdmin, setSyncStatus,
+    recipes, setRecipes,
+    collections, setCollections,
+    mealPlan, setMealPlan,
+    shoppingLists, setShoppingLists,
+    setSharedLists,
+    setDirectory,
+    fridge, setFridge, fridgeSettings, setFridgeSettings, pantry, setPantry,
+    masterDB, setMasterDB,
+    userDB, setUserDB,
+  });
 
-  useEffect(() => {
-    getRedirectResult(auth).catch(() => { });
-    const unsub = onAuthStateChanged(auth, async u => {
-      cloudLoaded.current = false;
-      recipeSyncMap.current = new Map();
-      setUser(u);
-      if (u) {
-        setSyncStatus("syncing");
-        try {
-          // Master reference DB (shared, read-only) — load in parallel.
-          const masterPromise = loadMasterDB();
-
-          // Load user's split data.
-          let data = await loadUserData(u.uid);
-          const isEmpty = data.recipes.length === 0 && !data.collections && !data.userDB
-            && !data.mealPlan && !data.shoppingLists && !data.fridge;
-
-          // First run with no split data? Try migrating the legacy single doc.
-          if (isEmpty) {
-            const legacy = await migrateLegacyDoc(u.uid);
-            if (legacy) {
-              data = {
-                recipes: legacy.recipes || [],
-                collections: legacy.collections || null,
-                mealPlan: legacy.mealPlan || null,
-                shoppingLists: legacy.shoppingLists || null,
-                fridge: legacy.fridge || null,
-                fridgeSettings: legacy.fridgeSettings || null,
-                // Legacy ingredientDB/utensilDB become the user's own additions.
-                userDB: { ingredients: legacy.ingredientDB || [], utensils: legacy.utensilDB || [] },
-              };
-            }
-          }
-
-          // Hydrate state.
-          setRecipes(data.recipes || []);
-          if (data.collections) setCollections(data.collections);
-          if (data.mealPlan) setMealPlan(data.mealPlan);
-          if (data.shoppingLists) setShoppingLists(data.shoppingLists);
-          if (data.fridge) setFridge(data.fridge);
-          if (data.fridgeSettings) setFridgeSettings(data.fridgeSettings);
-          if (data.pantry) setPantry(data.pantry);
-          setUserDB(data.userDB || { ingredients: [], utensils: [] });
-          const freshMaster = await masterPromise;
-          setMasterDB(freshMaster);
-          try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ }
-
-          // Seed the recipe diff map so the first save doesn't rewrite everything.
-          const map = new Map();
-          for (const r of (data.recipes || [])) if (r.id) map.set(r.id, r);
-          recipeSyncMap.current = map;
-
-          // If we migrated, persist into the split structure once.
-          if (isEmpty && data.recipes && (data.recipes.length || data.userDB)) {
-            await Promise.all([
-              syncRecipes(u.uid, data.recipes, new Map()).then(m => { recipeSyncMap.current = m; }),
-              setDoc(metaDoc(u.uid, "collections"), { items: data.collections || [] }),
-              setDoc(metaDoc(u.uid, "mealPlan"), { data: data.mealPlan || {} }),
-              setDoc(metaDoc(u.uid, "shoppingLists"), { items: data.shoppingLists || [] }),
-              setDoc(metaDoc(u.uid, "fridge"), { items: data.fridge || [], settings: data.fridgeSettings || { matchThreshold: 25 }, pantry: data.pantry || [] }),
-              setDoc(metaDoc(u.uid, "userDB"), data.userDB || { ingredients: [], utensils: [] }),
-            ]);
-          }
-
-          setTimeout(() => { cloudLoaded.current = true; setSyncStatus("synced"); }, 0);
-        } catch (e) { setSyncStatus("error"); }
-      } else {
-        if (firestoreUnsub.current) { firestoreUnsub.current(); firestoreUnsub.current = null; }
-      }
-    });
-    return () => unsub();
-  }, []);
   const [isDark, setIsDark] = useState(() => {
     try { return localStorage.getItem("rf_theme") !== "light"; } catch { return true; }
   });
@@ -306,79 +241,12 @@ function AppInner() {
     document.documentElement.classList.toggle("light", !isDark);
   }, [isDark]);
 
-  // Keep masterDB cache in sync so images are available after reload
-  useEffect(() => {
-    if (!masterDB.ingredients.length && !masterDB.utensils.length) return;
-    try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(masterDB)); } catch { /* quota */ }
-  }, [masterDB]);
-
   // Update document title on tab change
   useEffect(() => {
     const titles = { "home": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Frigo", "config": "Configuration" };
     document.title = `Mijoté | ${titles[tab] || "Recettes"}`;
   }, [tab]);
 
-
-  // ── Save to Firestore whenever data changes (split structure) ─────────────────
-  const saveMeta = useCallback(async (name, payload) => {
-    if (!user || !cloudLoaded.current) return;
-    setSyncStatus("syncing");
-    try {
-      await setDoc(metaDoc(user.uid, name), payload);
-      setSyncStatus("synced");
-    } catch (e) { setSyncStatus("error"); }
-  }, [user]);
-
-  // Recipes: diff-based — only changed/new/removed docs are written.
-  useEffect(() => {
-    if (!user || !cloudLoaded.current) return;
-    setSyncStatus("syncing");
-    syncRecipes(user.uid, recipes, recipeSyncMap.current)
-      .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
-      .catch(() => setSyncStatus("error"));
-  }, [recipes, user]);
-
-  useEffect(() => { saveMeta("collections", { items: collections }); }, [collections]);
-  useEffect(() => { saveMeta("mealPlan", { data: mealPlan }); }, [mealPlan]);
-  useEffect(() => { saveMeta("shoppingLists", { items: shoppingLists }); }, [shoppingLists]);
-
-  // Abonnement temps réel aux listes partagées dont je suis membre (par e-mail).
-  useEffect(() => {
-    if (!user?.email) { setSharedLists([]); return; }
-    const email = user.email.toLowerCase();
-    let unsub;
-    try {
-      unsub = onSnapshot(
-        query(sharedListsCol(), where("memberEmails", "array-contains", email)),
-        snap => setSharedLists(snap.docs.map(d => ({ ...d.data(), _shared: true }))),
-        () => { } // règles non déployées / hors-ligne : on ignore silencieusement
-      );
-    } catch { /* noop */ }
-    return () => { if (unsub) unsub(); };
-  }, [user]);
-
-  // Annuaire : publie ma fiche (e-mail/avatar) et charge celles des autres pour le partage.
-  useEffect(() => {
-    if (!user) { setDirectory([]); return; }
-    setDoc(userDirDoc(user.uid), {
-      uid: user.uid, email: (user.email || "").toLowerCase(),
-      displayName: user.displayName || "", photoURL: user.photoURL || "", updatedAt: Date.now(),
-    }, { merge: true }).catch(() => { });
-    getDocs(userDirCol()).then(s => setDirectory(s.docs.map(d => d.data()))).catch(() => { });
-  }, [user]);
-  useEffect(() => { saveMeta("fridge", { items: fridge, settings: fridgeSettings, pantry }); }, [fridge, fridgeSettings, pantry]);
-  useEffect(() => { saveMeta("userDB", userDB); }, [userDB]);
-
-  // Master DB: only admins persist changes (and Firestore rules enforce it server-side).
-  useEffect(() => {
-    if (!user || !cloudLoaded.current || !isAdmin) return;
-    setSyncStatus("syncing");
-    Promise.all([
-      setDoc(doc(db, "master", "ingredients"), { items: masterDB.ingredients }),
-      setDoc(doc(db, "master", "utensils"), { items: masterDB.utensils }),
-      setDoc(doc(db, "master", "categories"), { map: masterDB.categories || DEFAULT_CATEGORIES }),
-    ]).then(() => setSyncStatus("synced")).catch(() => setSyncStatus("error"));
-  }, [masterDB, user, isAdmin]);
 
   const notify = (msg, type = "success") => {
     setNotification({ msg, type });
