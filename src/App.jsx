@@ -1621,15 +1621,15 @@ function AppInner() {
     body { font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; margin-bottom: 24px; display: block; }
     /* Header */
-    .header { padding-bottom: 22px; margin-bottom: 26px; }
+    .header { padding-bottom: 16px; margin-bottom: 20px; }
     h1 { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
     .title-rule { width: 48px; height: 4px; border-radius: 4px; background: var(--accent); margin-bottom: 22px; }
     .meta { display: flex; gap: 38px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 16px; }
     .meta-item { display: flex; flex-direction: column; }
     .meta-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-    .meta-val { height: 27px; display: flex; align-items: flex-end; }
+    .meta-val { height: 27px; display: flex; align-items: center; }
     .meta-value { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1; }
-    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; margin-bottom: 0; }
     .tag { font-size: 11px; font-weight: 500; color: var(--accent); background: rgba(232,112,58,0.1); border: 1px solid rgba(232,112,58,0.25); border-radius: 20px; padding: 2px 10px; }
     /* Nutri-Score badge */
     .nutri-badge { display: inline-flex; align-items: center; gap: 2px; background: #f9f6f2; border: 1px solid #e8e0d8; border-radius: 6px; padding: 3px 4px; }
