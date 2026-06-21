@@ -4853,6 +4853,20 @@ const ING_MD_COLUMNS = [
   { key: "salt", label: "Sel", nut: true },
 ];
 
+// Colonnes minimales attendues dans l'en-tête d'un export Mijoté valide. Sert de
+// garde-fou : un Markdown qui ne contient pas ces colonnes n'est pas un export
+// d'ingrédients et ne doit surtout pas écraser la base master.
+const ING_MD_REQUIRED_LABELS = ["nom", "dbid", "catégorie", "kcal"];
+
+// Bornes de validation (valeurs nutritionnelles pour 100 g, sauf g/pièce).
+// Toute valeur hors bornes fait échouer l'import entier, pour éviter d'écraser
+// la base master avec des données aberrantes.
+const ING_MD_BOUNDS = {
+  calories: [0, 1000], protein: [0, 100], carbs: [0, 100], sugar: [0, 100],
+  fat: [0, 100], saturatedFat: [0, 100], omega3: [0, 100], fiber: [0, 100],
+  salt: [0, 100], gramsPerPiece: [0, 10000],
+};
+
 // Découpe une ligne de tableau Markdown en cellules, en respectant les `\|` échappés.
 function splitMarkdownRow(line) {
   const inner = line.replace(/^\s*\|/, "").replace(/\|\s*$/, "");
@@ -5205,8 +5219,40 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
   // Import Markdown : réinjecte / met à jour la base. Match par dbid sinon par nom.
   const importIngredientsMarkdown = (text) => {
+    setMdInfo("");
+    // 1. Garde-fou en-tête : le fichier doit ressembler à un export Mijoté.
+    const headerOk = (text || "").split(/\r?\n/).some(l =>
+      /\|/.test(l) && (() => {
+        const cells = splitMarkdownRow(l).map(c => c.toLowerCase());
+        return ING_MD_REQUIRED_LABELS.every(lbl => cells.includes(lbl));
+      })());
+    if (!headerOk) {
+      setMdError("Fichier non reconnu : il doit contenir un tableau exporté depuis Mijoté (colonnes Nom, dbid, Catégorie, kcal…). Import annulé pour protéger la base.");
+      return;
+    }
     const parsed = parseIngredientsMarkdown(text);
     if (!parsed.length) { setMdError("Aucun ingrédient reconnu dans le fichier Markdown."); return; }
+
+    // 2. Validation stricte ligne par ligne. Au moindre problème on annule TOUT
+    //    l'import : pas d'écrasement partiel de la base master.
+    const validCats = new Set(Object.keys(categories));
+    const errors = [];
+    parsed.forEach(row => {
+      const where = `« ${row.name || "?"} »`;
+      if (!row.name || row.name.length > 120) errors.push(`${where} : nom manquant ou trop long.`);
+      if (row.category && !validCats.has(row.category)) errors.push(`${where} : catégorie inconnue « ${row.category} ».`);
+      const nut = row.nutrition || {};
+      Object.entries(ING_MD_BOUNDS).forEach(([k, [min, max]]) => {
+        const v = k === "gramsPerPiece" ? row.gramsPerPiece : nut[k];
+        if (v != null && (typeof v !== "number" || Number.isNaN(v) || v < min || v > max))
+          errors.push(`${where} : ${k} = ${v} hors bornes (${min}–${max}).`);
+      });
+    });
+    if (errors.length) {
+      setMdError(`Import annulé — ${errors.length} erreur${errors.length > 1 ? "s" : ""} : ` + errors.slice(0, 3).join(" ") + (errors.length > 3 ? " …" : ""));
+      return;
+    }
+
     let created = 0, updated = 0;
     setIngredientDB(prev => {
       const next = [...prev];
@@ -5283,32 +5329,6 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {isAdmin && (
-              <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Base d'ingrédients (Markdown)</div>
-                {ingredientDB.length > 0 && (
-                  <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={exportIngredientsMarkdown}>
-                    <Icon name="download" size={14} /> Exporter la base complète
-                  </button>
-                )}
-                <input ref={mdFileRef} type="file" accept=".md,.markdown,.txt" style={{ display: "none" }}
-                  onChange={e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } e.target.value = ""; }} />
-                <div
-                  onDragOver={e => { e.preventDefault(); setMdDragOver(true); }}
-                  onDragLeave={() => setMdDragOver(false)}
-                  onDrop={e => { e.preventDefault(); setMdDragOver(false); const f = Array.from(e.dataTransfer.files).find(f => /\.(md|markdown|txt)$/i.test(f.name)); if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } }}
-                  onClick={() => mdFileRef.current.click()}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "20px", borderRadius: 12, border: `2px dashed ${mdDragOver ? "var(--accent)" : "var(--border)"}`, background: mdDragOver ? "rgba(232,112,58,0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
-                  <Icon name="import" size={24} color={mdDragOver ? "var(--accent)" : "var(--text3)"} />
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: mdDragOver ? "var(--accent)" : "var(--text)" }}>Importer un fichier Markdown</div>
-                    <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>met à jour (par nom/dbid) ou crée les ingrédients</div>
-                  </div>
-                </div>
-                {mdError && <p style={{ color: "var(--red)", fontSize: 12 }}>{mdError}</p>}
-                {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12 }}>✓ {mdInfo}</p>}
-              </div>
-            )}
             {sortedCategoryEntries(categories).map(([catKey, cat], ci) => {
               const catIngs = ingredientDB.filter(d => d.category === catKey)
                 .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" }));
@@ -5385,6 +5405,48 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                 </div>
               );
             })}
+
+            {/* ── Import / Export Markdown de la base master (admin) — en bas ── */}
+            {isAdmin && (
+              <>
+                <div style={{ height: 6 }} />
+                {/* Export */}
+                <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter la base</h3>
+                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{ingredientDB.length} ingrédient{ingredientDB.length > 1 ? "s" : ""} · format Markdown</p>
+                    </div>
+                    <button className="btn btn-ghost btn-sm" onClick={exportIngredientsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      <Icon name="download" size={14} /> Exporter
+                    </button>
+                  </div>
+                </div>
+                {/* Import drag & drop */}
+                <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Importer dans la base</h3>
+                  <p style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12, lineHeight: 1.45 }}>
+                    <span style={{ color: "var(--red)", fontWeight: 600 }}>⚠️ Écrase la base master</span> : met à jour (par nom / dbid) ou crée les ingrédients. Seuls les fichiers exportés depuis Mijoté et validés sont acceptés.
+                  </p>
+                  <input ref={mdFileRef} type="file" accept=".md,.markdown,.txt" style={{ display: "none" }}
+                    onChange={e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdInfo(""); setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } e.target.value = ""; }} />
+                  <div
+                    onDragOver={e => { e.preventDefault(); setMdDragOver(true); }}
+                    onDragLeave={() => setMdDragOver(false)}
+                    onDrop={e => { e.preventDefault(); setMdDragOver(false); const f = Array.from(e.dataTransfer.files).find(f => /\.(md|markdown|txt)$/i.test(f.name)); if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdInfo(""); setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } }}
+                    onClick={() => mdFileRef.current.click()}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px", borderRadius: 12, border: `2px dashed ${mdDragOver ? "var(--accent)" : "var(--border)"}`, background: mdDragOver ? "rgba(232,112,58,0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
+                    <Icon name="import" size={28} color={mdDragOver ? "var(--accent)" : "var(--text3)"} />
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: mdDragOver ? "var(--accent)" : "var(--text)" }}>Dépose un fichier Markdown ici</div>
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>ou clique pour sélectionner</div>
+                    </div>
+                  </div>
+                  {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
+                  {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
+                </div>
+              </>
+            )}
           </div>
         )}
 
