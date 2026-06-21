@@ -221,6 +221,8 @@ const GLOBAL_STYLE = `
     --text:#2c2420;--text2:#5a5250;--text3:#887870;
   }
   html.light,html.light body{background:#f5f0eb;color:#2c2420;}
+  /* Fiche recette : fond blanc en thème clair, plus propre que le beige */
+  html.light .recipe-detail-root{background:#ffffff;}
   html.light .field-input{color:#2c2420;background:#ede8e2;}
   html.light select option{background:#ede8e2;color:#1a1614;}
   *,*::before,*::after{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.1s ease;}
@@ -2195,9 +2197,16 @@ function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, se
             </div>
           </div>
         )}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600 }}>Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span></h2>
-          {filterCol && <button onClick={() => setFilterCol(null)} style={{ fontSize: 12, color: "var(--accent)" }}>Effacer filtre</button>}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
+            {(() => { const ac = collections.find(c => c.id === filterCol); return ac ? (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: ac.color + "22", color: ac.color, border: `1px solid ${ac.color}55`, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 13, lineHeight: 1 }}>{ac.icon || "📁"}</span>{ac.name}
+              </span>
+            ) : null; })()}
+          </h2>
+          {filterCol && <button onClick={() => setFilterCol(null)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 500, color: "var(--accent)", background: "none", border: "none", cursor: "pointer" }}><Icon name="close" size={13} color="var(--accent)" /> Quitter la collection</button>}
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
           {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
@@ -2472,7 +2481,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
   const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div className="recipe-detail-root" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* ── DESKTOP HERO ── */}
       {isDesktop && (
       <div style={{ position: "relative", height: 160, flexShrink: 0, color: "#fff" }}>
