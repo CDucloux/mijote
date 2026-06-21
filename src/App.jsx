@@ -2397,7 +2397,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           <div style={{ width: 300, minWidth: 300, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", minHeight: 34, marginBottom: 16 }}>
-                <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 300, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
+                <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {recipe.ingredients.map(ing => (
@@ -2414,7 +2414,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
             </div>
             {recipe.utensils && recipe.utensils.length > 0 && (
               <div>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 300, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {recipe.utensils.map(u => (
                     <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
@@ -2430,7 +2430,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           {/* Right col: étapes (card) */}
           <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 34, marginBottom: 16 }}>
-              <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 300, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
+              <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
               {recipe.steps && recipe.steps.length > 0 && (
                 <button className="btn btn-primary btn-sm" style={{ gap: 7, borderRadius: 10 }} onClick={() => setCookMode(true)}>
                   <Icon name="fire" size={13} /> Mode pas à pas
