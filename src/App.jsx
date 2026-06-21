@@ -2584,7 +2584,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
             borderBottom: heroCollapsed ? "1px solid var(--border)" : "none",
             transition: "background 0.25s, border-color 0.25s",
             pointerEvents: heroCollapsed ? "auto" : "none",
-            height: 52,
+            height: 52, marginTop: -52,
             display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px",
           }}>
             {heroCollapsed && <>
@@ -2594,6 +2594,36 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                 <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>
               </div>
             </>}
+          </div>
+
+          {/* Infos + actions — remontés juste sous le hero, au-dessus des onglets */}
+          <div style={{ padding: "16px 16px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 16, padding: "14px 8px", marginBottom: 12, border: "1px solid var(--border)" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <Icon name="clock" size={13} color="var(--text3)" />
+                <span style={{ fontSize: 15, fontWeight: 600 }}>{fmtTime(recipe.prepTime)}</span>
+                <span style={{ fontSize: 10, color: "var(--text3)" }}>Prép.</span>
+              </div>
+              <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <Icon name="fire" size={13} color="var(--text3)" />
+                <span style={{ fontSize: 15, fontWeight: 600 }}>{fmtTime(recipe.cookTime)}</span>
+                <span style={{ fontSize: 10, color: "var(--text3)" }}>Cuisson</span>
+              </div>
+              <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+              <button onClick={() => setShowNutrition(true)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer" }}>
+                <NutriScoreBadge letter={recipe.nutriLetter} />
+                <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 2 }}>Nutri-Score <Icon name="forward" size={9} color="var(--text3)" /></span>
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
+                <Icon name="shopping" size={14} color="#fff" /> Courses
+              </button>
+              <button onClick={() => setShowMealModal(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
+                <Icon name="calendar" size={14} color="var(--text)" /> Planifier
+              </button>
+            </div>
           </div>
 
           {/* Onglets sticky sous la barre */}
@@ -2606,46 +2636,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           {/* Contenu selon onglet actif */}
           {activeTab === "Ingrédients" && (
             <div style={{ padding: "16px 16px 32px" }}>
-              {/* Nutri-Score + portions — ici sur mobile ils ont toute la place */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", borderRadius: 16, padding: "14px 16px", marginBottom: 14, border: "1px solid var(--border)" }}>
-                <div style={{ flex: 1, display: "flex", gap: 16 }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                    <Icon name="clock" size={13} color="var(--text3)" />
-                    <span style={{ fontSize: 15, fontWeight: 600 }}>{fmtTime(recipe.prepTime)}</span>
-                    <span style={{ fontSize: 10, color: "var(--text3)" }}>Prép.</span>
-                  </div>
-                  <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                    <Icon name="fire" size={13} color="var(--text3)" />
-                    <span style={{ fontSize: 15, fontWeight: 600 }}>{fmtTime(recipe.cookTime)}</span>
-                    <span style={{ fontSize: 10, color: "var(--text3)" }}>Cuisson</span>
-                  </div>
-                  <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
-                  {/* Portions */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 16, border: "none", cursor: "pointer" }}>−</button>
-                      <span style={{ fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: "center" }}>{servings}</span>
-                      <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 16, border: "none", cursor: "pointer" }}>+</button>
-                    </div>
-                    <span style={{ fontSize: 10, color: "var(--text3)" }}>Portions</span>
-                  </div>
+              {/* Portions — pilote les quantités de la liste */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)", borderRadius: 14, padding: "12px 16px", marginBottom: 14, border: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>Portions</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 18, border: "none", cursor: "pointer" }}>−</button>
+                  <span style={{ fontSize: 18, fontWeight: 700, minWidth: 24, textAlign: "center" }}>{servings}</span>
+                  <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, border: "none", cursor: "pointer" }}>+</button>
                 </div>
-                {/* Nutri-Score — a maintenant tout l'espace qu'il veut */}
-                <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch", marginLeft: 4 }} />
-                <button onClick={() => setShowNutrition(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, paddingLeft: 12, background: "none", border: "none", cursor: "pointer" }}>
-                  <NutriScoreBadge letter={recipe.nutriLetter} />
-                  <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 2 }}>Nutri-Score <Icon name="forward" size={9} color="var(--text3)" /></span>
-                </button>
-              </div>
-              {/* Boutons actions */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-                <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
-                  <Icon name="shopping" size={14} color="#fff" /> Courses
-                </button>
-                <button onClick={() => setShowMealModal(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 30, background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
-                  <Icon name="calendar" size={14} color="var(--text)" /> Planifier
-                </button>
               </div>
               {/* Liste ingrédients */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
