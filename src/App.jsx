@@ -3201,6 +3201,19 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
   const [section, setSection] = useState("info");
   const up = (f, v) => setForm(p => ({ ...p, [f]: v }));
 
+  // Un ingrédient renseigné doit avoir une quantité strictement positive.
+  const ingIsMissingQty = ing => (ing.name || ing.dbId) && !(Number(ing.amount) > 0);
+  const handleSave = () => {
+    const bad = form.ingredients.filter(ingIsMissingQty);
+    if (bad.length > 0) {
+      setSection("ingrédients");
+      const names = bad.map(i => i.name || "sans nom").join(", ");
+      alert(`Quantité manquante ou nulle pour : ${names}.\nIndique une quantité (ex: « 1 botte coriandre ») avant de sauvegarder.`);
+      return;
+    }
+    onSave(form);
+  };
+
   // Ingredients
   const addIng = () => {
     up("ingredients", [...form.ingredients, { id: "i" + Date.now(), dbId: "", name: "", amount: "", unit: "", _raw: "" }]);
@@ -3236,7 +3249,7 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "var(--surface)" }}>
         <button onClick={onCancel}><Icon name="close" size={20} /></button>
         <h2 style={{ flex: 1, fontSize: 18, fontWeight: 600 }}>{recipe.id ? "Modifier" : (form.name.trim() || "Nouvelle recette")}</h2>
-        <button className="btn btn-primary" style={{ padding: "8px 16px" }} onClick={() => onSave(form)}><Icon name="check" size={15} /> Sauvegarder</button>
+        <button className="btn btn-primary" style={{ padding: "8px 16px" }} onClick={handleSave}><Icon name="check" size={15} /> Sauvegarder</button>
       </div>
       <div style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, overflowX: "auto" }}>
         {["info", "ingrédients", "ustensiles", "étapes"].map((s, i) => (
@@ -3337,7 +3350,9 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
                         const img = ingredientDB.find(d => d.id === ing.dbId)?.image;
                         return img ? <IngImage src={img} alt={ing.name} size={32} /> : null;
                       })()}
-                      {(ing.amount !== undefined && ing.amount !== "") && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {ing.amount}</span>}
+                      {Number(ing.amount) > 0
+                        ? <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {ing.amount}</span>
+                        : <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>⚠ Quantité manquante</span>}
                       {ing.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {ing.unit}</span>}
                       {ing.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{ing.name}</span>}
                       {ing.dbId
