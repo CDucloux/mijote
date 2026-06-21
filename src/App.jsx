@@ -151,6 +151,55 @@ function cleanRecipeForExport(recipe) {
   return cleaned;
 }
 
+// Validation stricte du schéma d'une recette importée. Retourne la liste des
+// erreurs (vide = conforme). Évite d'injecter des données corrompues dans la base
+// (champs au mauvais type, structures inattendues, valeurs aberrantes).
+function validateRecipeSchema(r, label) {
+  const errs = [];
+  if (typeof r !== "object" || r === null || Array.isArray(r)) return [`${label} : ce n'est pas un objet recette.`];
+  if (typeof r.name !== "string" || !r.name.trim()) errs.push(`${label} : champ "name" manquant ou vide.`);
+  else if (r.name.length > 200) errs.push(`${label} : "name" trop long (max 200 caractères).`);
+  ["prepTime", "cookTime", "servings"].forEach(k => {
+    if (r[k] != null && (typeof r[k] !== "number" || Number.isNaN(r[k]) || r[k] < 0 || r[k] > 100000))
+      errs.push(`${label} : "${k}" doit être un nombre positif raisonnable.`);
+  });
+  if (r.image != null && typeof r.image !== "string") errs.push(`${label} : "image" doit être une chaîne.`);
+  if (r.source != null && typeof r.source !== "string") errs.push(`${label} : "source" doit être une chaîne.`);
+  if (r.tags != null && (!Array.isArray(r.tags) || r.tags.some(t => typeof t !== "string")))
+    errs.push(`${label} : "tags" doit être un tableau de chaînes.`);
+  if (r.collections != null && (!Array.isArray(r.collections) || r.collections.some(c => typeof c !== "string")))
+    errs.push(`${label} : "collections" doit être un tableau de chaînes.`);
+  if (r.ingredients != null) {
+    if (!Array.isArray(r.ingredients)) errs.push(`${label} : "ingredients" doit être un tableau.`);
+    else r.ingredients.forEach((ing, j) => {
+      const who = `ingrédient #${j + 1}`;
+      if (typeof ing !== "object" || ing === null || Array.isArray(ing)) { errs.push(`${label} : ${who} invalide.`); return; }
+      if (typeof ing.name !== "string" || !ing.name.trim()) errs.push(`${label} : ${who} sans nom.`);
+      if (ing.amount != null && (typeof ing.amount !== "number" || Number.isNaN(ing.amount) || ing.amount < 0))
+        errs.push(`${label} : ${who} "${ing.name || ""}" → "amount" doit être un nombre positif.`);
+      if (ing.unit != null && typeof ing.unit !== "string") errs.push(`${label} : ${who} → "unit" doit être une chaîne.`);
+    });
+  }
+  if (r.utensils != null) {
+    if (!Array.isArray(r.utensils)) errs.push(`${label} : "utensils" doit être un tableau.`);
+    else r.utensils.forEach((u, j) => {
+      if (typeof u !== "object" || u === null || Array.isArray(u) || typeof u.name !== "string" || !u.name.trim())
+        errs.push(`${label} : ustensile #${j + 1} invalide (nom requis).`);
+    });
+  }
+  if (r.steps != null) {
+    if (!Array.isArray(r.steps)) errs.push(`${label} : "steps" doit être un tableau.`);
+    else r.steps.forEach((s, j) => {
+      const who = `étape #${j + 1}`;
+      if (typeof s !== "object" || s === null || Array.isArray(s)) { errs.push(`${label} : ${who} invalide.`); return; }
+      if (s.text != null && typeof s.text !== "string") errs.push(`${label} : ${who} → "text" doit être une chaîne.`);
+      if (s.ingredients != null && !Array.isArray(s.ingredients)) errs.push(`${label} : ${who} → "ingredients" doit être un tableau.`);
+      if (s.utensils != null && !Array.isArray(s.utensils)) errs.push(`${label} : ${who} → "utensils" doit être un tableau.`);
+    });
+  }
+  return errs;
+}
+
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GLOBAL_STYLE = `
@@ -1559,17 +1608,34 @@ function AppInner() {
   };
 
   const importJSON = json => {
+    let data;
+    try { data = JSON.parse(json); }
+    catch { notify("JSON invalide : fichier illisible", "error"); return; }
+    const incoming = (Array.isArray(data) ? data : [data]);
+    if (!incoming.length) { notify("Aucune recette dans le fichier", "error"); return; }
+
+    // Validation de schéma : on écarte les recettes non conformes plutôt que
+    // d'injecter des données corrompues. Import refusé si TOUT est invalide.
+    const validRecipes = [], schemaErrors = [];
+    incoming.forEach((r, i) => {
+      const label = `Recette ${r && typeof r === "object" && r.name ? `« ${r.name} »` : `#${i + 1}`}`;
+      const e = validateRecipeSchema(r, label);
+      if (e.length) schemaErrors.push(...e); else validRecipes.push(r);
+    });
+    if (!validRecipes.length) {
+      notify(`Import refusé — schéma invalide : ${schemaErrors[0]}`, "error");
+      return;
+    }
+
     try {
-      const data = JSON.parse(json);
-      const incoming = (Array.isArray(data) ? data : [data]);
+      const incomingValid = validRecipes;
       const matchIng = buildNameMatcher(ingredientDB);
       const matchUt = buildNameMatcher(utensilDB);
       let linked = 0;
       // Pour chaque recette : remplit les dbId vides par rapprochement de nom
       // contre la base de l'utilisateur, puis recalcule le score santé à partir
       // des ingrédients désormais reliés. Un dbId déjà présent est respecté.
-      const prepared = incoming
-        .filter(r => r.name)
+      const prepared = incomingValid
         .map(r => {
           const ingredients = (r.ingredients || []).map(ing => {
             if (ing.dbId) return ing;
@@ -1591,15 +1657,21 @@ function AppInner() {
             ...(() => { const { score, letter } = computeNutriInfo(ingredients, ingredientDB); return { healthScore: score, nutriLetter: letter }; })(),
           };
         });
+      const rejected = incoming.length - validRecipes.length;
       setRecipes(prev => {
         const existingNames = new Set(prev.map(r => r.name.toLowerCase().trim()));
         const newOnes = prepared.filter(r => !existingNames.has(r.name.toLowerCase().trim()));
-        const skipped = incoming.length - newOnes.length;
-        if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${linked > 0 ? ` · ${linked} élément(s) reliés à ta base` : ""}${skipped > 0 ? ` · ${skipped} doublon(s) ignoré(s)` : ""} ✓`);
-        else notify(`Aucune recette importée${skipped > 0 ? ` — ${skipped} doublon(s) ignoré(s)` : ""}`, "error");
+        const dupes = prepared.length - newOnes.length;
+        const extras = [
+          linked > 0 ? `${linked} élément(s) reliés à ta base` : "",
+          dupes > 0 ? `${dupes} doublon(s) ignoré(s)` : "",
+          rejected > 0 ? `${rejected} recette(s) non conforme(s) écartée(s)` : "",
+        ].filter(Boolean).join(" · ");
+        if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${extras ? ` · ${extras}` : ""} ✓`);
+        else notify(`Aucune recette importée${extras ? ` — ${extras}` : ""}`, "error");
         return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
       });
-    } catch { notify("JSON invalide", "error"); }
+    } catch { notify("Erreur lors de l'import", "error"); }
   };
 
   const exportPDF = recipe => {
@@ -2173,23 +2245,20 @@ const MACRO_COLORS = { protein: "#5b8def", carbs: "#f0b429", fat: "#e8703a" };
 const Donut = ({ segments, size = 130, stroke = 18, centerLabel, centerSub }) => {
   const r = (size - stroke) / 2, circ = 2 * Math.PI * r;
   const total = segments.reduce((s, x) => s + x.value, 0) || 1;
-  // Animate from 0 on mount
-  const [progress, setProgress] = React.useState(0);
-  React.useEffect(() => { const t = requestAnimationFrame(() => setProgress(1)); return () => cancelAnimationFrame(t); }, []);
   let acc = 0;
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface2)" strokeWidth={stroke} />
         {segments.map((seg, i) => {
-          const frac = (seg.value / total) * progress;
+          const frac = seg.value / total;
           const dash = frac * circ;
           const el = (
             <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={seg.color} strokeWidth={stroke}
-              strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-acc * circ * progress}
-              style={{ transition: "stroke-dasharray 0.7s cubic-bezier(0.34,1.56,0.64,1), stroke-dashoffset 0.7s cubic-bezier(0.34,1.56,0.64,1)" }} />
+              strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-acc * circ}
+              style={{ transition: "stroke-dasharray 0.5s ease" }} />
           );
-          acc += seg.value / total;
+          acc += frac;
           return el;
         })}
       </svg>
@@ -4080,6 +4149,82 @@ function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantr
 const MAX_LIST_ITEMS = 50;                   // nb max d'articles ajoutés en une fois (collage)
 const MAX_ITEM_CHARS = 200;                  // longueur max du nom d'un article (saisie unique)
 const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractères en moyenne
+
+// Ligne d'article de course. Gère le swipe-droite mobile (= « j'achète ») et
+// l'animation de passage dans « Acheté » (l'article glisse vers le bas en
+// s'estompant avant de rejoindre la section).
+const SWIPE_MAX = 100, SWIPE_TRIGGER = 64;
+function ShoppingItemRow({ item, striking, onBuy, onEdit, onDelete, imageSrc }) {
+  const [dx, setDx] = React.useState(0);
+  const [animating, setAnimating] = React.useState(false); // true pendant le retour élastique
+  const startX = React.useRef(0), startY = React.useRef(0), axis = React.useRef(null);
+  const struck = item.checked || striking;
+
+  const onTouchStart = e => { startX.current = e.touches[0].clientX; startY.current = e.touches[0].clientY; axis.current = null; setAnimating(false); };
+  const onTouchMove = e => {
+    if (item.checked) return; // un article déjà acheté ne se swipe pas
+    const dX = e.touches[0].clientX - startX.current, dY = e.touches[0].clientY - startY.current;
+    if (!axis.current) { if (Math.abs(dX) > 8 || Math.abs(dY) > 8) axis.current = Math.abs(dX) > Math.abs(dY) ? "h" : "v"; }
+    if (axis.current === "h") setDx(Math.max(0, Math.min(SWIPE_MAX, dX)));
+  };
+  const onTouchEnd = () => {
+    if (axis.current === "h") {
+      setAnimating(true);
+      if (!item.checked && dx >= SWIPE_TRIGGER) onBuy(item);
+      setDx(0);
+    }
+    axis.current = null;
+  };
+
+  const reveal = Math.min(1, dx / SWIPE_TRIGGER);
+  return (
+    <div style={{ position: "relative", marginBottom: 8, borderRadius: 12, overflow: "hidden" }}>
+      {/* Fond vert révélé pendant le swipe */}
+      <div style={{ position: "absolute", inset: 0, background: "var(--green)", display: "flex", alignItems: "center", paddingLeft: 18, opacity: dx > 0 ? 1 : 0, transition: dx > 0 ? "none" : "opacity 0.2s" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + reveal * 0.3})`, opacity: reveal }}>
+          <Icon name="check" size={18} color="#fff" />
+          <span style={{ fontSize: 13, fontWeight: 700 }}>J'achète</span>
+        </div>
+      </div>
+      {/* Avant-plan : la ligne elle-même */}
+      <div
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+        style={{
+          position: "relative", display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px",
+          background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
+          opacity: item.checked ? 0.55 : (striking ? 0 : 1),
+          transform: `translateX(${dx}px) translateY(${striking ? 14 : 0}px)`,
+          transition: (dx === 0 || animating)
+            ? "transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease"
+            : "none",
+        }}>
+        <button onClick={() => onBuy(item)}
+          style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: struck ? "var(--green)" : "transparent", border: `2px solid ${struck ? "var(--green)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" }}>
+            {struck && <Icon name="check" size={11} color="#fff" />}
+          </div>
+          <IngImage src={imageSrc} alt={item.name} size={40} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{item.name}</span>
+              <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: struck ? "100%" : "0%", transition: "width 0.25s ease" }} />
+            </div>
+            {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
+          </div>
+        </button>
+        <button onClick={() => onEdit(item)} title="Modifier"
+          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)" }}>
+          <Icon name="edit" size={13} />
+        </button>
+        <button onClick={() => onDelete(item)} title="Supprimer"
+          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}>
+          <Icon name="trash" size={13} color="var(--red)" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, directory = [], syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
   const [activeListId, setActiveListId] = useState(null);
   const [newListName, setNewListName] = useState("");
@@ -4157,46 +4302,25 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
     </div>
   );
 
-  // Ligne d'article : zone principale = bascule coché ; boutons modifier / supprimer à droite.
-  const renderItem = item => {
-    const striking = pending.has(item.id);
-    const struck = item.checked || striking;
-    return (
-      <div key={item.id}
-        style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", background: "var(--surface)", borderRadius: 12, marginBottom: 8, border: "1px solid var(--border)", opacity: item.checked ? 0.55 : (striking ? 0.75 : 1), transition: "opacity 0.25s ease" }}>
-        <button onClick={() => {
-          if (item.checked) { toggleItem(activeList.id, item.id); return; } // décocher : immédiat
-          if (striking) return;
-          setPending(prev => { const n = new Set(prev); n.add(item.id); return n; }); // 1) barre sur place
-          setTimeout(() => {
-            toggleItem(activeList.id, item.id);                              // 2) puis déplace vers « Acheté »
-            setPending(prev => { const n = new Set(prev); n.delete(item.id); return n; });
-          }, 320);
-        }}
-          style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
-          <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: struck ? "var(--green)" : "transparent", border: `2px solid ${struck ? "var(--green)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" }}>
-            {struck && <Icon name="check" size={11} color="#fff" />}
-          </div>
-          <IngImage src={item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""} alt={item.name} size={40} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
-              <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{item.name}</span>
-              <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: struck ? "100%" : "0%", transition: "width 0.25s ease" }} />
-            </div>
-            {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
-          </div>
-        </button>
-        <button onClick={() => setEditItem(item)} title="Modifier"
-          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)" }}>
-          <Icon name="edit" size={13} />
-        </button>
-        <button onClick={() => deleteItem(activeList.id, item.id)} title="Supprimer"
-          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}>
-          <Icon name="trash" size={13} color="var(--red)" />
-        </button>
-      </div>
-    );
+  // Achat d'un article : barre sur place + glisse vers le bas, puis bascule dans « Acheté ».
+  // Décocher un article déjà acheté est immédiat.
+  const buyItem = item => {
+    if (!activeList) return;
+    if (item.checked) { toggleItem(activeList.id, item.id); return; }
+    if (pending.has(item.id)) return;
+    setPending(prev => { const n = new Set(prev); n.add(item.id); return n; });
+    setTimeout(() => {
+      toggleItem(activeList.id, item.id);
+      setPending(prev => { const n = new Set(prev); n.delete(item.id); return n; });
+    }, 300);
   };
+
+  // Ligne d'article : zone principale = achat ; swipe droite mobile = achat ; modifier / supprimer à droite.
+  const renderItem = item => (
+    <ShoppingItemRow key={item.id} item={item} striking={pending.has(item.id)}
+      imageSrc={item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""}
+      onBuy={buyItem} onEdit={setEditItem} onDelete={it => deleteItem(activeList.id, it.id)} />
+  );
 
 
   const checked = activeList ? activeList.items.filter(i => i.checked).length : 0;
@@ -4436,7 +4560,7 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
             const over = count > MAX_LIST_ITEMS;
             return (
               <>
-                <textarea className="field-input" value={pasteText} autoFocus maxLength={MAX_LIST_CHARS}
+                <textarea className="field-input" value={pasteText} maxLength={MAX_LIST_CHARS}
                   onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
                   placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
                   style={{ minHeight: 140, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
@@ -4455,7 +4579,6 @@ function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, dire
             <>
               <input className="field-input" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
                 value={newItemName} onChange={e => setNewItemName(e.target.value)}
-                autoFocus
                 onKeyDown={e => { if (e.key === "Enter") { addManualItem(); setShowAddModal(false); } }}
                 onPaste={e => {
                   const t = (e.clipboardData || window.clipboardData)?.getData("text") || "";
