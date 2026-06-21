@@ -221,8 +221,6 @@ const GLOBAL_STYLE = `
     --text:#2c2420;--text2:#5a5250;--text3:#887870;
   }
   html.light,html.light body{background:#f5f0eb;color:#2c2420;}
-  /* Fiche recette : fond blanc en thème clair, plus propre que le beige */
-  html.light .recipe-detail-root{background:#ffffff;}
   html.light .field-input{color:#2c2420;background:#ede8e2;}
   html.light select option{background:#ede8e2;color:#1a1614;}
   *,*::before,*::after{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.1s ease;}
