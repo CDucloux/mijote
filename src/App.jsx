@@ -2435,12 +2435,29 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [actionsOpen]);
 
+  const scrollRef = useRef(null);
+  const heroSentinelRef = useRef(null);
+  const [heroCollapsed, setHeroCollapsed] = useState(false);
+
+  useEffect(() => {
+    const sentinel = heroSentinelRef.current;
+    if (!sentinel || isDesktop) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setHeroCollapsed(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, [isDesktop]);
+
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ position: "relative", height: isDesktop ? 160 : 220, flexShrink: 0, color: "#fff" }}>
+      {/* ── DESKTOP HERO ── */}
+      {isDesktop && (
+      <div style={{ position: "relative", height: 160, flexShrink: 0, color: "#fff" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
         <button onClick={onBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="back" size={18} /></button>
@@ -2467,8 +2484,10 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           </div>
         </div>
       </div>
+      )}
 
-      {/* Info bar */}
+      {/* ── DESKTOP INFO BAR ── */}
+      {isDesktop && (
       <div style={{ display: "flex", alignItems: "stretch", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "12px 16px", flexShrink: 0 }}>
         {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Nutri-Score", value: <NutriScoreBadge letter={recipe.nutriLetter} />, icon: null, onClick: () => setShowNutrition(true) }].map((item, i) => (
           <div key={i} onClick={item.onClick} role={item.onClick ? "button" : undefined} title={item.onClick ? "Analyse nutritionnelle" : undefined}
@@ -2489,9 +2508,10 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
           <span style={{ fontSize: 10, color: "var(--text3)" }}>Portions</span>
         </div>
       </div>
+      )}
 
-      {/* Action bar — inline on mobile, collapsible floating panel (bottom-right) on desktop */}
-      {isDesktop ? (
+      {/* Desktop FAB */}
+      {isDesktop && (
         <div ref={actionsRef} style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
           {actionsOpen ? (
             <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, minWidth: 232, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)", boxShadow: "0 16px 42px -8px rgba(0,0,0,0.28)" }}>
@@ -2510,27 +2530,200 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
             </button>
           )}
         </div>
-      ) : (
-        <div style={{ display: "flex", gap: 8, padding: "10px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
-            <Icon name="shopping" size={14} color="#fff" /> Courses
-          </button>
-          <button onClick={() => setShowMealModal(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 30, background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
-            <Icon name="calendar" size={14} color="var(--text)" /> Planifier
-          </button>
-        </div>
       )}
 
-      {/* Mobile tabs / Desktop 2-col */}
+      {/* Desktop tabs */}
+      {isDesktop && (
       <div className="detail-tabs-mobile" style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
-        {["Ingrédients", "Ustensiles", "Étapes"].map((t, i) => (
+        {["Ingrédients", "Ustensiles", "Étapes"].map(t => (
           <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, transition: "color 0.15s, border-color 0.15s" }}>{t}</button>
         ))}
       </div>
+      )}
 
       <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex" }}>
-        {/* ── MOBILE: swiper ── */}
-        <div id="detail-swiper" className="detail-mobile-content"
+        {/* ── MOBILE: scrollable hero + sticky bar + tabs + content ── */}
+        <div className="detail-mobile-content" ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          {/* Hero image — grand et beau */}
+          <div style={{ position: "relative", height: 260, flexShrink: 0, color: "#fff" }}>
+            <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 40%,rgba(0,0,0,0.72) 100%)" }} />
+            {/* Boutons overlay */}
+            <button onClick={onBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
+            <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
+              <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
+              <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
+              <button onClick={() => setShowDeleteConfirm(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(224,82,82,0.5)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="trash" size={16} color="#fff" /></button>
+            </div>
+            {/* Titre + source + tags */}
+            <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
+              <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff" }}>{recipe.name}</h1>
+              {recipe.source && (
+                <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source} target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginBottom: 6 }}>
+                  {(() => { try { return new URL(recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source).hostname.replace(/^www\./, ""); } catch { return recipe.source.replace(/^https?:\/\/(?:www\.)?/, "").split("/")[0]; } })()}
+                  <Icon name="externalLink" size={10} color="rgba(255,255,255,0.65)" />
+                </a>
+              )}
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
+                {recipe.tags?.map(t => <span key={t} className="tag" style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}>{t}</span>)}
+                {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
+                <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><Icon name="plus" size={10} color="#fff" /> Collection</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sentinelle invisible juste sous le hero — dès qu'elle sort du viewport la barre compacte apparaît */}
+          <div ref={heroSentinelRef} style={{ height: 1, flexShrink: 0 }} />
+
+          {/* Barre compacte sticky */}
+          <div style={{
+            position: "sticky", top: 0, zIndex: 30, flexShrink: 0,
+            background: heroCollapsed ? "rgba(var(--bg-rgb,14,14,15),0.88)" : "transparent",
+            backdropFilter: heroCollapsed ? "blur(16px)" : "none",
+            borderBottom: heroCollapsed ? "1px solid var(--border)" : "none",
+            transition: "background 0.25s, border-color 0.25s",
+            pointerEvents: heroCollapsed ? "auto" : "none",
+            height: 52,
+            display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px",
+          }}>
+            {heroCollapsed && <>
+              <button onClick={onBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
+              <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipe.name}</span>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>
+              </div>
+            </>}
+          </div>
+
+          {/* Onglets sticky sous la barre */}
+          <div style={{ position: "sticky", top: 52, zIndex: 29, background: "var(--surface)", borderBottom: "1px solid var(--border)", display: "flex", flexShrink: 0 }}>
+            {["Ingrédients", "Ustensiles", "Étapes"].map(t => (
+              <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "11px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, transition: "color 0.15s, border-color 0.15s", background: "none", border: "none", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, cursor: "pointer" }}>{t}</button>
+            ))}
+          </div>
+
+          {/* Contenu selon onglet actif */}
+          {activeTab === "Ingrédients" && (
+            <div style={{ padding: "16px 16px 32px" }}>
+              {/* Nutri-Score + portions — ici sur mobile ils ont toute la place */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", borderRadius: 16, padding: "14px 16px", marginBottom: 14, border: "1px solid var(--border)" }}>
+                <div style={{ flex: 1, display: "flex", gap: 16 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                    <Icon name="clock" size={13} color="var(--text3)" />
+                    <span style={{ fontSize: 15, fontWeight: 600 }}>{fmtTime(recipe.prepTime)}</span>
+                    <span style={{ fontSize: 10, color: "var(--text3)" }}>Prép.</span>
+                  </div>
+                  <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                    <Icon name="fire" size={13} color="var(--text3)" />
+                    <span style={{ fontSize: 15, fontWeight: 600 }}>{fmtTime(recipe.cookTime)}</span>
+                    <span style={{ fontSize: 10, color: "var(--text3)" }}>Cuisson</span>
+                  </div>
+                  <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+                  {/* Portions */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 16, border: "none", cursor: "pointer" }}>−</button>
+                      <span style={{ fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: "center" }}>{servings}</span>
+                      <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 16, border: "none", cursor: "pointer" }}>+</button>
+                    </div>
+                    <span style={{ fontSize: 10, color: "var(--text3)" }}>Portions</span>
+                  </div>
+                </div>
+                {/* Nutri-Score — a maintenant tout l'espace qu'il veut */}
+                <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch", marginLeft: 4 }} />
+                <button onClick={() => setShowNutrition(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, paddingLeft: 12, background: "none", border: "none", cursor: "pointer" }}>
+                  <NutriScoreBadge letter={recipe.nutriLetter} />
+                  <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 2 }}>Nutri-Score <Icon name="forward" size={9} color="var(--text3)" /></span>
+                </button>
+              </div>
+              {/* Boutons actions */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
+                  <Icon name="shopping" size={14} color="#fff" /> Courses
+                </button>
+                <button onClick={() => setShowMealModal(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 30, background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
+                  <Icon name="calendar" size={14} color="var(--text)" /> Planifier
+                </button>
+              </div>
+              {/* Liste ingrédients */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {recipe.ingredients.map(ing => (
+                  <div key={ing.id} onClick={() => ing.dbId && navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)", cursor: ing.dbId ? "pointer" : "default" }}>
+                    <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={50} />
+                    <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
+                    </div>
+                    {ing.dbId && <Icon name="forward" size={13} color="var(--text3)" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {activeTab === "Ustensiles" && (
+            <div style={{ padding: "16px 16px 32px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {(recipe.utensils || []).map(u => (
+                  <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "#fff" }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
+                  </div>
+                ))}
+                {(!recipe.utensils || recipe.utensils.length === 0) && <p style={{ color: "var(--text3)", fontSize: 14, gridColumn: "1/-1" }}>Aucun ustensile.</p>}
+              </div>
+            </div>
+          )}
+          {activeTab === "Étapes" && (
+            <div style={{ padding: "16px 16px 32px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {recipe.steps && recipe.steps.length > 0 && (
+                  <button className="btn btn-primary" style={{ width: "100%", borderRadius: 14, padding: "13px 18px", fontSize: 15, fontWeight: 600, gap: 10 }} onClick={() => setCookMode(true)}>
+                    <Icon name="fire" size={17} /> Mode pas à pas
+                  </button>
+                )}
+                {(recipe.steps || []).map((step, i) => {
+                  const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
+                  const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
+                  const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
+                  return (
+                    <div key={step.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: step.text ? 8 : hasPills ? 10 : 0 }}>
+                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {i + 1}</span>
+                      </div>
+                      {step.text && (
+                        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: hasPills ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>
+                      )}
+                      {hasPills && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                          {linkedIngs.map(ing => (
+                            <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
+                              <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={22} />
+                              {ing.name}
+                              <span style={{ color: "var(--text3)", fontWeight: 400, marginLeft: 2 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
+                            </span>
+                          ))}
+                          {linkedUts.map(u => (
+                            <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
+                              <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                              {u.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── MOBILE SWIPER (ancien) — remplacé ci-dessus, stub vide pour ne pas casser la structure ── */}
+        <div id="detail-swiper" className="detail-mobile-content-old" style={{ display: "none" }}
           onTouchStart={e => {
             const el = e.currentTarget;
             el._tx = e.touches[0].clientX;
@@ -2646,10 +2839,9 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
                   );
                 })}
               </div>
-              <div style={{ height: 16 }} />
             </div>
           </div>{/* end swiper-inner */}
-        </div>
+        </div>{/* end detail-swiper (hidden) */}
 
         {/* ── DESKTOP: 2-column layout (hidden on mobile via CSS) ── */}
         <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: 16, gap: 16 }}>
