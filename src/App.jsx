@@ -2513,26 +2513,39 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
       </div>
       )}
 
-      {/* ── DESKTOP INFO BAR ── */}
+      {/* ── DESKTOP INFO BAR — carte arrondie façon mobile ── */}
       {isDesktop && (
-      <div style={{ display: "flex", alignItems: "stretch", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "12px 16px", flexShrink: 0 }}>
-        {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Nutri-Score", value: <NutriScoreBadge letter={recipe.nutriLetter} />, icon: null, onClick: () => setShowNutrition(true) }].map((item, i) => (
-          <div key={i} onClick={item.onClick} role={item.onClick ? "button" : undefined} title={item.onClick ? "Analyse nutritionnelle" : undefined}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, borderRight: i < 2 ? "1px solid var(--border)" : "none", cursor: item.onClick ? "pointer" : "default" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flex: 1, justifyContent: "center" }}>
-              {item.icon && <Icon name={item.icon} size={13} color="var(--text3)" />}
-              {typeof item.value === "string" ? <span style={{ fontSize: 14, fontWeight: 600 }}>{item.value}</span> : item.value}
+      <div style={{ padding: "16px 16px 4px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "stretch", background: "var(--surface)", borderRadius: 18, border: "1px solid var(--border)", padding: "16px 8px", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
+          {/* Prép. */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <Icon name="clock" size={15} color="var(--text3)" />
+            <span style={{ fontSize: 17, fontWeight: 700 }}>{fmtTime(recipe.prepTime)}</span>
+            <span style={{ fontSize: 11, color: "var(--text3)" }}>Prép.</span>
+          </div>
+          <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+          {/* Cuisson */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <Icon name="fire" size={15} color="var(--text3)" />
+            <span style={{ fontSize: 17, fontWeight: 700 }}>{fmtTime(recipe.cookTime)}</span>
+            <span style={{ fontSize: 11, color: "var(--text3)" }}>Cuisson</span>
+          </div>
+          <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+          {/* Nutri-Score */}
+          <button onClick={() => setShowNutrition(true)} title="Analyse nutritionnelle" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, background: "none", border: "none", cursor: "pointer" }}>
+            <NutriScoreBadge letter={recipe.nutriLetter} />
+            <span style={{ fontSize: 11, color: "var(--text3)", display: "flex", alignItems: "center", gap: 3 }}>Nutri-Score <Icon name="forward" size={10} color="var(--text3)" /></span>
+          </button>
+          <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+          {/* Portions */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 17, border: "none", cursor: "pointer" }}>−</button>
+              <span style={{ fontSize: 17, fontWeight: 700, minWidth: 22, textAlign: "center" }}>{servings}</span>
+              <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 17, border: "none", cursor: "pointer" }}>+</button>
             </div>
-            <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 3 }}>{item.label}{item.onClick && <Icon name="forward" size={9} color="var(--text3)" />}</span>
+            <span style={{ fontSize: 11, color: "var(--text3)" }}>Portions</span>
           </div>
-        ))}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, flex: 1 }}>
-            <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 14 }}>−</button>
-            <span style={{ fontSize: 14, fontWeight: 600, minWidth: 18, textAlign: "center" }}>{servings}</span>
-            <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14 }}>+</button>
-          </div>
-          <span style={{ fontSize: 10, color: "var(--text3)" }}>Portions</span>
         </div>
       </div>
       )}
