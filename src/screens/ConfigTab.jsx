@@ -25,7 +25,7 @@ import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tab
 
 
 
-export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isDark, onToggleTheme, user, onSignOut, syncStatus, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
+export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
   const navigate = useNavigate();
   const location = useLocation();
   const configSectionParam = location.pathname.startsWith("/config/")
@@ -234,7 +234,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Configuration</h1>
             <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span>
           </div>
-          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
+          <UserAvatar />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
           {["ingredients", "ustensiles", "collections", "données", "nouveautés"].map(s => (

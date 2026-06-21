@@ -4,6 +4,7 @@ import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { HealthRing } from "../components/HealthRing.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── MEAL PLAN — module-level constants & pure helpers ────────────────────────
 const MP_DAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -62,7 +63,8 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, user, syncStatus, onSignOut, isDark, onToggleTheme, notify }) {
+export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB }) {
+  const { notify } = useAppShell();
   const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
@@ -176,7 +178,7 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning repas</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span></div>
-          <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
+          <UserAvatar />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => navigate(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>

@@ -7,6 +7,7 @@ import { ShoppingItemRow } from "../components/ShoppingItemRow.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // Bornes pour limiter les écritures Firestore.
 const MAX_LIST_ITEMS = 50;                   // nb max d'articles ajoutés en une fois (collage)
@@ -17,7 +18,8 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // l'animation de passage dans « Acheté » (l'article glisse vers le bas en
 // s'estompant avant de rejoindre la section).
 
-export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, user, directory = [], syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES }) {
+export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES }) {
+  const { user } = useAppShell();
   const [activeListId, setActiveListId] = useState(null);
   const [newListName, setNewListName] = useState("");
   const [showNewList, setShowNewList] = useState(false);
@@ -129,7 +131,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, use
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => setShowNewList(true)}><Icon name="plus" size={16} /> Nouvelle liste</button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
+            <UserAvatar />
           </div>
         </div>
 

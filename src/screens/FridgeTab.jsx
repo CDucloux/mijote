@@ -6,6 +6,7 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr, parseIngredientInput } from "../lib/parseIngredient.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── FRIDGE CONSTANTS ─────────────────────────────────────────────────────────
 const FRIDGE_THRESHOLDS = {
@@ -36,7 +37,8 @@ const FRIDGE_STATUS_BG = { ok: "rgba(76,175,125,0.12)", warn: "rgba(240,192,96,0
 const FRIDGE_STATUS_LABEL = { ok: "Frais", warn: "À utiliser bientôt", danger: "À jeter" };
 
 // ─── FRIDGE TAB ───────────────────────────────────────────────────────────────
-export function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantry, setPantry, recipes, ingredientDB, onSelectRecipe, user, syncStatus, onSignOut, isDark, onToggleTheme, categories = DEFAULT_CATEGORIES, notify }) {
+export function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings, pantry, setPantry, recipes, ingredientDB, onSelectRecipe, categories = DEFAULT_CATEGORIES }) {
+  const { notify } = useAppShell();
   const [view, setView] = useState("stock"); // "stock" | "pantry" | "recipes"
   const [showAdd, setShowAdd] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -131,7 +133,7 @@ export function FridgeTab({ fridge, setFridge, fridgeSettings, setFridgeSettings
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => setShowSettings(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="settings" size={16} color="var(--text2)" /></button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
+            <UserAvatar />
           </div>
         </div>
 

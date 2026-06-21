@@ -7,7 +7,7 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 // ─── HOME TAB ─────────────────────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
-export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, user, syncStatus, onSignOut, isDark, onToggleTheme }) {
+export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
   const [search, setSearch] = useState("");
   const [filterTag, setFilterTag] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
@@ -51,7 +51,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mes Recettes</h1><span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={onNewRecipe}><Icon name="plus" size={16} /> Nouvelle</button>
-            <UserAvatar user={user} syncStatus={syncStatus} onSignOut={onSignOut} isDark={isDark} onToggleTheme={onToggleTheme} />
+            <UserAvatar />
           </div>
         </div>
         <div style={{ position: "relative", marginBottom: 12 }}>

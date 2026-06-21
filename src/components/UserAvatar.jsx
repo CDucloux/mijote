@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 import { useOnline } from "../hooks/useOnline.js";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
-export function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
+export function UserAvatar() {
+  const { user, syncStatus, signOut: onSignOut, isDark, toggleTheme: onToggleTheme } = useAppShell();
   const [open, setOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const online = useOnline();
