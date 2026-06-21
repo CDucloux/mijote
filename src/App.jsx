@@ -5247,7 +5247,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           onDelete={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setConfirmDel({ type: "ing", item: it }); }}
         />
       ) : (
-      <div key={section} className="editor-enter" style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+      <>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -5309,12 +5309,12 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                 {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12 }}>✓ {mdInfo}</p>}
               </div>
             )}
-            {sortedCategoryEntries(categories).map(([catKey, cat]) => {
+            {sortedCategoryEntries(categories).map(([catKey, cat], ci) => {
               const catIngs = ingredientDB.filter(d => d.category === catKey)
                 .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" }));
               const isOpen = openCats[catKey];
               return (
-                <div key={catKey}
+                <div key={catKey} className="slide-up"
                   draggable={isAdmin}
                   onDragStart={isAdmin ? (e) => { setDragCat(catKey); e.dataTransfer.effectAllowed = "move"; } : undefined}
                   onDragOver={isAdmin ? (e) => { e.preventDefault(); if (catKey !== overCat) setOverCat(catKey); } : undefined}
@@ -5327,6 +5327,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                     opacity: dragCat === catKey ? 0.4 : 1,
                     boxShadow: overCat === catKey && dragCat && dragCat !== catKey ? "0 0 0 2px var(--accent)" : "none",
                     transition: "border-color 0.15s, box-shadow 0.15s, opacity 0.15s",
+                    animationDelay: `${ci * 0.04}s`,
                   }}>
                   {/* Category header */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px" }}>
@@ -5391,8 +5392,8 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
           <div>
             {isAdmin && <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditUt({ id: "", name: "", image: "" })}><Icon name="plus" size={14} /> Nouvel ustensile</button>}
             <div className="config-ut-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {[...utensilDB].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr")).map(item => (
-                <div key={item.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+              {[...utensilDB].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr")).map((item, ui) => (
+                <div key={item.id} className="slide-up" style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, animationDelay: `${ui * 0.03}s` }}>
                   <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "#fff" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%" }} /></div>
                   <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -5526,7 +5527,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
 
         {section === "nouveautés" && <ChangelogSection />}
       </div>
-      </div>
+      </>
       )}
 
       {/* Ingredient editor modal */}
