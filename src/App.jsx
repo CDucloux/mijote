@@ -635,25 +635,25 @@ const HealthRing = ({ score, size = 56 }) => {
 
 const NUTRI_COLORS = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
 
+// Badge Nutri-Score façon étiquette officielle : barre blanche, 5 lettres,
+// la lettre active surélevée et pleine, les autres réduites et atténuées.
 const NutriScoreBadge = ({ letter }) => {
   if (!letter) return <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>—</span>;
   const letters = ["A", "B", "C", "D", "E"];
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 2, background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 6, padding: "3px 4px", boxShadow: "0 1px 3px rgba(0,0,0,0.14)" }}>
       {letters.map(l => {
         const active = l === letter;
-        const color = NUTRI_COLORS[l];
         return (
-          <div key={l} style={{
-            width: active ? 22 : 16,
-            height: active ? 28 : 20,
-            borderRadius: 5,
-            background: active ? color : color + "40",
+          <span key={l} style={{
+            width: active ? 21 : 15, height: active ? 25 : 18,
+            borderRadius: active ? 5 : 3,
+            background: NUTRI_COLORS[l],
+            opacity: active ? 1 : 0.5,
             display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: active ? 14 : 10, fontWeight: 800, color: "#fff", lineHeight: 1,
             transition: "all 0.2s",
-          }}>
-            <span style={{ fontSize: active ? 13 : 9, fontWeight: 800, color: active ? "#fff" : color, lineHeight: 1 }}>{l}</span>
-          </div>
+          }}>{l}</span>
         );
       })}
     </div>
@@ -2200,17 +2200,18 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
       </div>
 
       {/* Info bar */}
-      <div style={{ display: "flex", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "10px 16px", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "stretch", background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "12px 16px", flexShrink: 0 }}>
         {[{ label: "Prép.", value: fmtTime(recipe.prepTime), icon: "clock" }, { label: "Cuisson", value: fmtTime(recipe.cookTime), icon: "fire" }, { label: "Nutri-Score", value: <NutriScoreBadge letter={recipe.nutriLetter} />, icon: null }].map((item, i) => (
-          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 1, borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
-            {item.icon && <Icon name={item.icon} size={13} color="var(--text3)" />}
-            {typeof item.value === "string" ? <span style={{ fontSize: 14, fontWeight: 600 }}>{item.value}</span> : item.value}
+          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flex: 1, justifyContent: "center" }}>
+              {item.icon && <Icon name={item.icon} size={13} color="var(--text3)" />}
+              {typeof item.value === "string" ? <span style={{ fontSize: 14, fontWeight: 600 }}>{item.value}</span> : item.value}
+            </div>
             <span style={{ fontSize: 10, color: "var(--text3)" }}>{item.label}</span>
           </div>
         ))}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-          <div style={{ height: 13 }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flex: 1 }}>
             <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 14 }}>−</button>
             <span style={{ fontSize: 14, fontWeight: 600, minWidth: 18, textAlign: "center" }}>{servings}</span>
             <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14 }}>+</button>
