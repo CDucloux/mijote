@@ -1607,7 +1607,6 @@ function AppInner() {
         </div>`;
     }).join("");
     const utPills = (recipe.utensils || []).map(u => pill(utImg(u.dbId), u.name, "")).join("");
-    const tags = (recipe.tags || []).map(t => `<span class="tag">${t}</span>`).join("");
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1624,13 +1623,11 @@ function AppInner() {
     .header { padding-bottom: 16px; margin-bottom: 20px; }
     h1 { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
     .title-rule { width: 48px; height: 4px; border-radius: 4px; background: var(--accent); margin-bottom: 22px; }
-    .meta { display: flex; gap: 38px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 16px; }
+    .meta { display: flex; gap: 38px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 0; }
     .meta-item { display: flex; flex-direction: column; }
     .meta-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
     .meta-val { height: 27px; display: flex; align-items: center; }
     .meta-value { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1; }
-    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; margin-bottom: 0; }
-    .tag { font-size: 11px; font-weight: 500; color: var(--accent); background: rgba(232,112,58,0.1); border: 1px solid rgba(232,112,58,0.25); border-radius: 20px; padding: 2px 10px; }
     /* Nutri-Score badge */
     .nutri-badge { display: inline-flex; align-items: center; gap: 2px; background: #f9f6f2; border: 1px solid #e8e0d8; border-radius: 6px; padding: 3px 4px; }
     .nl { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; line-height: 1; }
@@ -1679,7 +1676,6 @@ function AppInner() {
       <div class="meta-item"><span class="meta-label">Portions</span><div class="meta-val"><span class="meta-value">${recipe.servings}</span></div></div>
       ${recipe.nutriLetter ? `<div class="meta-item"><span class="meta-label">Nutri-Score</span><div class="meta-val">${nutriBadge(recipe.nutriLetter)}</div></div>` : ""}
     </div>
-    ${tags ? `<div class="tags">${tags}</div>` : ""}
   </div>
 
   ${recipe.ingredients?.length ? `
