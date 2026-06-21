@@ -4907,6 +4907,13 @@ function parseIngredientsMarkdown(text) {
   return out;
 }
 
+// Types de conseils d'un ingrédient (source unique : affichage + éditeur).
+const TIP_TYPES = {
+  prep: { label: "Préparation", icon: "🔪", color: "#e8703a" },
+  usage: { label: "Utilisation", icon: "🍳", color: "#f0b429" },
+  benefit: { label: "Bienfaits", icon: "🌿", color: "#4caf7d" },
+};
+
 // ─── INGREDIENT DETAIL (fiche aliment) ────────────────────────────────────────
 // Page publique /config/ingredients/{id} : tout utilisateur peut consulter la
 // fiche ; seul l'admin dispose des actions Modifier / Supprimer.
@@ -5029,6 +5036,27 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
         ) : (
           <div style={{ fontSize: 13, color: "var(--text3)", fontStyle: "italic", padding: "16px 0" }}>Aucune donnée nutritionnelle renseignée pour cet ingrédient.</div>
         )}
+
+        {/* Conseils */}
+        {Array.isArray(ingredient.tips) && ingredient.tips.length > 0 && (
+          <>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "28px 0 12px" }}>Conseils</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {ingredient.tips.map((tip, i) => {
+                const t = TIP_TYPES[tip.type] || TIP_TYPES.prep;
+                return (
+                  <div key={i} style={{ display: "flex", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 14, borderLeft: `3px solid ${t.color}` }}>
+                    <span style={{ fontSize: 18, lineHeight: 1.3, flexShrink: 0 }}>{t.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: t.color, marginBottom: 2 }}>{t.label}</div>
+                      <div style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.5 }}>{tip.text}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -5068,7 +5096,11 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
   const mdFileRef = useRef();
   const toggleCat = k => setOpenCats(p => ({ ...p, [k]: !p[k] }));
 
-  const saveIng = item => {
+  const saveIng = raw => {
+    // Conseils : on retire les lignes vides, on supprime le champ si plus rien.
+    const tips = (raw.tips || []).map(t => ({ type: t.type, text: (t.text || "").trim() })).filter(t => t.text);
+    const item = { ...raw };
+    if (tips.length) item.tips = tips; else delete item.tips;
     if (ingredientDB.find(d => d.id === item.id)) setIngredientDB(prev => prev.map(d => d.id === item.id ? item : d));
     else setIngredientDB(prev => [...prev, { ...item, id: "db_i" + Date.now() }]);
     setEditIng(null);
@@ -5537,6 +5569,33 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
               ))}
             </div>
           </div>
+
+          {/* Conseils (préparation / utilisation / bienfaits) */}
+          <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)" }}>Conseils (optionnel)</div>
+              <button className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 9px", fontSize: 11 }}
+                onClick={() => setEditIng(p => ({ ...p, tips: [...(p.tips || []), { type: "prep", text: "" }] }))}>
+                <Icon name="plus" size={12} /> Ajouter
+              </button>
+            </div>
+            {(editIng.tips || []).length === 0 && <div style={{ fontSize: 11, color: "var(--text3)", fontStyle: "italic" }}>Aucun conseil. Astuces de préparation, d'utilisation ou bienfaits.</div>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {(editIng.tips || []).map((tip, idx) => (
+                <div key={idx} style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                  <select className="field-input" value={tip.type} style={{ width: 120, flexShrink: 0, padding: "6px 8px", fontSize: 12 }}
+                    onChange={e => setEditIng(p => ({ ...p, tips: p.tips.map((t, i) => i === idx ? { ...t, type: e.target.value } : t) }))}>
+                    {Object.entries(TIP_TYPES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+                  </select>
+                  <textarea className="field-input" rows={2} placeholder="Conseil utile…" value={tip.text}
+                    onChange={e => setEditIng(p => ({ ...p, tips: p.tips.map((t, i) => i === idx ? { ...t, text: e.target.value } : t) }))}
+                    style={{ flex: 1, padding: "6px 10px", fontSize: 12, resize: "vertical", minHeight: 38 }} />
+                  <button onClick={() => setEditIng(p => ({ ...p, tips: p.tips.filter((_, i) => i !== idx) }))} style={{ color: "var(--red)", flexShrink: 0, marginTop: 6 }}><Icon name="trash" size={14} color="var(--red)" /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditIng(null)}>Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveIng(editIng)}>Sauvegarder</button>
