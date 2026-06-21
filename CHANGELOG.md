@@ -1,5 +1,18 @@
 # Changelog — Mijoté
 
+## v2.0.0 — Industrialisation & Architecture
+
+- Refonte complète de l'architecture : le fichier monolithe `App.jsx` (6000+ lignes) éclaté en une structure en couches (61 fichiers)
+- Couche logique métier isolée et découplée de l'interface : Nutri-Score, rapprochement d'ingrédients, parsing, import et export PDF/JSON
+- Synchronisation Firebase regroupée dans un hook dédié (auth, chargement, sauvegardes, partage temps réel)
+- Contexte applicatif partagé : fin du passage en cascade des infos de session, thème et notifications à travers les écrans
+- Styles extraits dans une feuille CSS dédiée
+- Écrans de connexion et de chargement isolés en composants propres
+- Changelog unifié : une seule source de vérité (`CHANGELOG.md`)
+- Nettoyage du code mort et des fichiers de gabarit inutilisés
+- Nouveau README complet (fonctionnalités, configuration, scripts, architecture)
+- Aucune régression fonctionnelle : refonte purement interne
+
 ## v1.0.7 — Nutrition & Ingrédients
 
 - Score de santé amélioré : pondération des nutriments et intégration du Nutri-Score
