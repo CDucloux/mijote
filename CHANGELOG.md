@@ -1,8 +1,20 @@
 # Changelog — Mijoté
 
-## v1.0.6 — en cours
+## v1.0.7 — Nutrition & Ingrédients
 
-- Routage URL complet : chaque recette a son propre lien `/recipes/:id`
+- Score de santé amélioré : pondération des nutriments et intégration du Nutri-Score
+- Export PDF revu et amélioré
+- Section détaillée sur les apports nutritionnels dans le détail d'une recette
+- Page dédiée par ingrédient
+- Navigation directe vers la page d'un ingrédient depuis la liste des ingrédients d'une recette
+- Refonte du menu recette sur mobile
+- Validation du schéma JSON
+- Corrections de bugs d'interface
+- Mode master : export de la liste des ingrédients (nom, aliases, dbid, catégorie) en table Markdown
+
+## v1.0.6 —  Navigation & Corrections
+
+- Routage URL complet : chaque recette a son propre lien `/recipes/id`
 - Écran de chargement animé avec spinner après connexion Google
 - En-tête fixe dans le détail d'une recette lors du scroll
 - Suppression du mode "Mois" dans le planning

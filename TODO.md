@@ -1,24 +1,37 @@
 
 # Listes des fontionnalités à mijoter
 
+## 🔜 Backlog — v1.0.8
+
+- [ ] Système saisonnier
+
+- [ ] Notifications ? à mette en place (Comment gérer pour le PWA ?)
+
+- [ ] Refactoring des composants / modularisartion
+
+- [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
+
+- [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
+
+- [ ] App & légal
+  - [ ] Page À propos — licence, crédits, copyright
+
 ## 🔜 Backlog — v1.0.7
 
 - [x] Qualité & contenu
   - [x] Score de santé plus élaboré (pondération, Nutri-Score)
   - [x] Export PDF revu et amélioré ?
 
-- [x] Section détaillée sur les apports nutri
+- [x] Section détaillée sur les apports nutritionnels
 - [x] Disposer d'une page "Ingrédient"
   - [x] Animation mise en place
-  - [ ] Pouvoir dans les recettes cliquer sur un ingrédient (dans la partie "Ingrédient") => emmène vers la page de l'ingrédient 
-- [x] Fixes de bugs d'UI
+  - [x] Pouvoir dans les recettes cliquer sur un ingrédient (dans la partie "Ingrédient") => emmène vers la page de l'ingrédient
 
-- [ ] Notifications ? à mette en place (Comment gérer pour le PWA ?)
+- [x] Rework du Frontend menu recette sur mobile
+- [x] Fixes de bugs d'UI
+- [x] Validation de schéma JSON
 
 - [x] (En mode master uniquement) Pouvoir télécharger la liste de tous les ingrédients implémentés pour feed à Claude précisément (en tant que table dans un fichier markdown) ? (Nom + Aliases + dbid + catégorie pour ingrédients)
-
-- [ ] Validation de schéma JSON
-- [ ] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
 
 ## 🔜 Backlog — v1.0.6
 
@@ -132,12 +145,9 @@ DB:
 ## 🔭 Horizon — v1.2+
 
 - [ ] Liste partagées => Maximum 3 personnes qui peuvent etre ajoutées et à qui on peut partager
+- [x] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
 
 - [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
-
-- [ ] Refactoring des composants / modularisartion
-
-- [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
 
 - [ ] Mode Frigo + Etageres
 
@@ -148,6 +158,3 @@ DB:
   - [ ] Filtre saisonnier (été / hiver / …)
 
   - [ ] Génération de recette via API Claude / ChatGPT (clé API utilisateur)
-
-- [ ] App & légal
-  - [ ] Page À propos — licence, crédits, copyright
