@@ -625,6 +625,8 @@ const Icon = ({ name, size = 20, color = "currentColor" }) => {
     warning: <svg {...p} strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
     sparkle: <svg {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>,
     externalLink: <svg {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></svg>,
+    leaf: <svg {...p}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>,
+    fileText: <svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="13" x2="8" y1="17" y2="17"/></svg>,
   };
   return icons[name] || null;
 };
@@ -1770,7 +1772,6 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      <AnnouncementPopup />
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} user={user} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} notify={notify} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} user={user} directory={directory} syncStatus={syncStatus} onSignOut={handleSignOut} isDark={isDark} onToggleTheme={toggleTheme} categories={categories} />}
@@ -2172,20 +2173,23 @@ const MACRO_COLORS = { protein: "#5b8def", carbs: "#f0b429", fat: "#e8703a" };
 const Donut = ({ segments, size = 130, stroke = 18, centerLabel, centerSub }) => {
   const r = (size - stroke) / 2, circ = 2 * Math.PI * r;
   const total = segments.reduce((s, x) => s + x.value, 0) || 1;
+  // Animate from 0 on mount
+  const [progress, setProgress] = React.useState(0);
+  React.useEffect(() => { const t = requestAnimationFrame(() => setProgress(1)); return () => cancelAnimationFrame(t); }, []);
   let acc = 0;
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface2)" strokeWidth={stroke} />
         {segments.map((seg, i) => {
-          const frac = seg.value / total;
+          const frac = (seg.value / total) * progress;
           const dash = frac * circ;
           const el = (
             <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={seg.color} strokeWidth={stroke}
-              strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-acc * circ}
-              style={{ transition: "stroke-dasharray 0.5s ease" }} />
+              strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-acc * circ * progress}
+              style={{ transition: "stroke-dasharray 0.7s cubic-bezier(0.34,1.56,0.64,1), stroke-dashoffset 0.7s cubic-bezier(0.34,1.56,0.64,1)" }} />
           );
-          acc += frac;
+          acc += seg.value / total;
           return el;
         })}
       </svg>
@@ -4756,36 +4760,48 @@ function ChangelogSection() {
   const [open, setOpen] = React.useState({});
   const toggle = v => setOpen(p => ({ ...p, [v]: !p[v] }));
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       {CHANGELOG.map((entry, i) => {
         const isLatest = i === 0;
-        const isOpen = isLatest || !!open[entry.version];
+        const isExpanded = isLatest || !!open[entry.version];
+        const accent = isLatest ? "var(--accent)" : "var(--text3)";
         return (
-          <div key={entry.version} style={{ borderRadius: 14, border: isLatest ? "1px solid rgba(232,112,58,0.4)" : "1px solid var(--border)", background: isLatest ? "linear-gradient(135deg,rgba(232,112,58,0.10),rgba(232,112,58,0.03))" : "var(--surface)", overflow: "hidden" }}>
-            <button onClick={() => !isLatest && toggle(entry.version)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 16px", background: "none", border: "none", cursor: isLatest ? "default" : "pointer", textAlign: "left" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: isLatest ? "var(--accent)" : "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: isLatest ? "#fff" : "var(--text3)", letterSpacing: "-0.02em" }}>v{entry.version}</span>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: isLatest ? "var(--accent)" : "var(--text)" }}>v{entry.version}</span>
-                  {isLatest && <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 5, padding: "1px 7px", letterSpacing: "0.04em" }}>NOUVEAU</span>}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 1 }}>{entry.label}</div>
-              </div>
-              {!isLatest && <Icon name={isOpen ? "back" : "forward"} size={14} color="var(--text3)" />}
-            </button>
-            {isOpen && (
-              <div style={{ padding: "0 16px 14px 62px", display: "flex", flexDirection: "column", gap: 6 }}>
-                {entry.items.map((item, j) => (
-                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--text3)", marginTop: 6, flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: isLatest ? "var(--text)" : "var(--text2)", lineHeight: 1.5 }}>{item}</span>
+          <div key={entry.version} className="slide-up" style={{ display: "flex", gap: 0, animationDelay: `${i * 0.05}s` }}>
+            {/* Timeline rail */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 36, flexShrink: 0 }}>
+              <div style={{ width: isLatest ? 13 : 9, height: isLatest ? 13 : 9, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--border)", border: isLatest ? "3px solid var(--accent)" : "2px solid var(--border)", boxShadow: isLatest ? "0 0 0 4px rgba(232,112,58,0.18)" : "none", marginTop: isLatest ? 14 : 16, zIndex: 1, flexShrink: 0 }} />
+              {i < CHANGELOG.length - 1 && <div style={{ flex: 1, width: 2, background: "var(--border)", marginTop: 4, marginBottom: 0 }} />}
+            </div>
+            {/* Card */}
+            <div style={{ flex: 1, marginBottom: 16, marginLeft: 10 }}>
+              <button onClick={() => !isLatest && toggle(entry.version)}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: isLatest ? "14px 16px 12px" : "12px 16px", background: isLatest ? "linear-gradient(135deg,rgba(232,112,58,0.10),rgba(232,112,58,0.03))" : "var(--surface)", border: isLatest ? "1px solid rgba(232,112,58,0.35)" : "1px solid var(--border)", borderRadius: isExpanded ? "14px 14px 0 0" : 14, cursor: isLatest ? "default" : "pointer", textAlign: "left", transition: "border-radius 0.2s" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
+                    <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, color: isLatest ? "var(--accent)" : "var(--text)" }}>v{entry.version}</span>
+                    {isLatest
+                      ? <span style={{ fontSize: 9, fontWeight: 800, color: "#fff", background: "var(--accent)", borderRadius: 6, padding: "2px 8px", letterSpacing: "0.06em" }}>DERNIÈRE VERSION</span>
+                      : <span style={{ fontSize: 11, color: "var(--text3)" }}>{entry.label}</span>}
                   </div>
-                ))}
-              </div>
-            )}
+                  {isLatest && <div style={{ fontSize: 12, color: "var(--text2)" }}>{entry.label}</div>}
+                </div>
+                {!isLatest && (
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.25s", transform: isExpanded ? "rotate(-90deg)" : "rotate(90deg)", flexShrink: 0 }}>
+                    <Icon name="forward" size={11} color="var(--text3)" />
+                  </div>
+                )}
+              </button>
+              {isExpanded && (
+                <div style={{ background: isLatest ? "linear-gradient(135deg,rgba(232,112,58,0.06),rgba(232,112,58,0.01))" : "var(--surface)", border: isLatest ? "1px solid rgba(232,112,58,0.35)" : "1px solid var(--border)", borderTop: "none", borderRadius: "0 0 14px 14px", padding: "10px 16px 14px", animation: "expandDown 0.2s ease", display: "flex", flexDirection: "column", gap: 7 }}>
+                  {entry.items.map((item, j) => (
+                    <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                      <div style={{ width: 4, height: 4, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--border)", marginTop: 7, flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: isLatest ? "var(--text)" : "var(--text2)", lineHeight: 1.55 }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         );
       })}
@@ -4975,8 +4991,10 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
       <div style={{ maxWidth: 580, margin: "0 auto", padding: "16px 20px 48px" }}>
         {/* Barre haute : retour + actions admin */}
         <div className="slide-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, animationDelay: "0.04s" }}>
-          <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, padding: "6px 14px", cursor: "pointer" }}>
-            <Icon name="back" size={14} color="var(--text2)" /> Ingrédients
+          <button onClick={onBack} className="btn-back-ing" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, padding: "6px 14px", cursor: "pointer", transition: "background 0.15s, color 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--surface2)"; e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text2)"; }}>
+            <Icon name="back" size={14} color="currentColor" /> Retour
           </button>
           {isAdmin ? (
             <div style={{ display: "flex", gap: 8 }}>
@@ -5078,11 +5096,13 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
 
         {/* Source des données nutritionnelles — attribution Ciqual (obligatoire) */}
         <a className="slide-up" href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer"
-          style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 32, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textDecoration: "none", animationDelay: "0.32s" }}>
-          <span style={{ fontSize: 20, flexShrink: 0 }}>📊</span>
+          style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 32, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textDecoration: "none", animationDelay: "0.32s" }}>
+          <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#1a8a3c,#4caf7d)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(26,138,60,0.35)" }}>
+            <Icon name="leaf" size={16} color="#fff" />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text2)" }}>Source des données nutritionnelles</div>
-            <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.45, marginTop: 1 }}>Anses · Table de composition nutritionnelle Ciqual 2025</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text)", letterSpacing: "0.01em" }}>Ciqual 2025</div>
+            <div style={{ fontSize: 10, color: "var(--text3)", lineHeight: 1.4, marginTop: 1 }}>Table de composition nutritionnelle · Anses</div>
           </div>
           <Icon name="externalLink" size={13} color="var(--text3)" />
         </a>
@@ -5304,9 +5324,8 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
           {["ingredients", "ustensiles", "collections", "données", "nouveautés"].map(s => (
-            <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}`, position: "relative" }}>
-              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : s === "données" ? "Données" : "Nouveautés"}
-              {s === "nouveautés" && section !== "nouveautés" && <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", border: "2px solid var(--bg)" }} />}
+            <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
+              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : s === "données" ? "Données" : "Changelog"}
             </button>
           ))}
         </div>
@@ -5386,15 +5405,19 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                         </div>
                       )}
                       {catIngs.map((item, i) => (
-                        <button key={item.id} onClick={() => navigate(`/config/ingredients/${encodeURIComponent(item.id)}`)} title="Voir la fiche" style={{
+                        <button key={item.id} onClick={() => navigate(`/config/ingredients/${encodeURIComponent(item.id)}`)} title="Voir la fiche" className="ing-row-btn" style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
                           borderTop: i > 0 ? "1px solid var(--border)" : "none",
-                          background: "var(--surface)", textAlign: "left", cursor: "pointer", border: "none",
-                        }}>
+                          background: "var(--surface)", textAlign: "left", cursor: "pointer", border: "none", transition: "background 0.15s",
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "var(--surface2)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; }}>
                           <IngImage src={item.image} alt={item.name} size={42} />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</div>
-                            <div style={{ fontSize: 10, color: "var(--accent)", marginTop: 1, fontWeight: 500 }}>Découvrir la fiche ingrédient</div>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--accent)", marginTop: 2, fontWeight: 600 }}>
+                              <Icon name="fileText" size={10} color="var(--accent)" /> Découvrir la fiche
+                            </div>
                           </div>
                           {item._ro && <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8, flexShrink: 0 }}>Master</span>}
                           <Icon name="forward" size={14} color="var(--text3)" />
