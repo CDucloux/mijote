@@ -1556,6 +1556,12 @@ function AppInner() {
   };
 
   const saveRecipe = r => {
+    const missingQty = (r.ingredients || []).filter(ing => (ing.name || ing.dbId) && !(Number(ing.amount) > 0));
+    if (missingQty.length > 0) {
+      const names = missingQty.map(i => i.name || "sans nom").join(", ");
+      notify(`Quantité manquante pour : ${names}`, "error");
+      return;
+    }
     const { score, letter } = computeNutriInfo(r.ingredients, ingredientDB);
     const withScore = { ...r, healthScore: score, nutriLetter: letter };
     let updatedRecipes;
@@ -3204,13 +3210,7 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
   // Un ingrédient renseigné doit avoir une quantité strictement positive.
   const ingIsMissingQty = ing => (ing.name || ing.dbId) && !(Number(ing.amount) > 0);
   const handleSave = () => {
-    const bad = form.ingredients.filter(ingIsMissingQty);
-    if (bad.length > 0) {
-      setSection("ingrédients");
-      const names = bad.map(i => i.name || "sans nom").join(", ");
-      alert(`Quantité manquante ou nulle pour : ${names}.\nIndique une quantité (ex: « 1 botte coriandre ») avant de sauvegarder.`);
-      return;
-    }
+    if (form.ingredients.some(ingIsMissingQty)) setSection("ingrédients");
     onSave(form);
   };
 
