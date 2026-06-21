@@ -4955,10 +4955,10 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
   ];
 
   return (
-    <div style={{ flex: 1, overflowY: "auto" }}>
+    <div key={ingredient.id} className="editor-enter" style={{ flex: 1, overflowY: "auto" }}>
       <div style={{ maxWidth: 580, margin: "0 auto", padding: "16px 20px 48px" }}>
         {/* Barre haute : retour + actions admin */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div className="slide-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, animationDelay: "0.04s" }}>
           <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, padding: "6px 14px", cursor: "pointer" }}>
             <Icon name="back" size={14} color="var(--text2)" /> Ingrédients
           </button>
@@ -4973,7 +4973,7 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
         </div>
 
         {/* En-tête : image + nom + catégorie + Nutri-Score */}
-        <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 22 }}>
+        <div className="slide-up" style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 22, animationDelay: "0.1s" }}>
           <IngImage src={ingredient.image} alt={ingredient.name} size={88} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 27, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8 }}>{ingredient.name}</h1>
@@ -4988,12 +4988,13 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
         </div>
 
         {ingredient.gramsPerPiece != null && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text2)", background: "var(--surface2)", borderRadius: 10, padding: "8px 12px", marginBottom: 18 }}>
+          <div className="slide-up" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text2)", background: "var(--surface2)", borderRadius: 10, padding: "8px 12px", marginBottom: 18, animationDelay: "0.16s" }}>
             <Icon name="portions" size={14} color="var(--text3)" /> 1 pièce ≈ <strong>{ingredient.gramsPerPiece} g</strong>
           </div>
         )}
 
         {/* Nutrition pour 100 g */}
+        <div className="slide-up" style={{ animationDelay: "0.2s" }}>
         <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, marginBottom: 12 }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
 
         {hasNutrition ? (
@@ -5036,10 +5037,11 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
         ) : (
           <div style={{ fontSize: 13, color: "var(--text3)", fontStyle: "italic", padding: "16px 0" }}>Aucune donnée nutritionnelle renseignée pour cet ingrédient.</div>
         )}
+        </div>
 
         {/* Conseils */}
         {Array.isArray(ingredient.tips) && ingredient.tips.length > 0 && (
-          <>
+          <div className="slide-up" style={{ animationDelay: "0.26s" }}>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "28px 0 12px" }}>Conseils</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {ingredient.tips.map((tip, i) => {
@@ -5055,8 +5057,19 @@ function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEG
                 );
               })}
             </div>
-          </>
+          </div>
         )}
+
+        {/* Source des données nutritionnelles — attribution Ciqual (obligatoire) */}
+        <a className="slide-up" href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer"
+          style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 32, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textDecoration: "none", animationDelay: "0.32s" }}>
+          <span style={{ fontSize: 20, flexShrink: 0 }}>📊</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text2)" }}>Source des données nutritionnelles</div>
+            <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.45, marginTop: 1 }}>Anses · Table de composition nutritionnelle Ciqual 2025</div>
+          </div>
+          <Icon name="externalLink" size={13} color="var(--text3)" />
+        </a>
       </div>
     </div>
   );
@@ -5358,15 +5371,7 @@ function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, col
                           <IngImage src={item.image} alt={item.name} size={42} />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</div>
-                            {item.nutrition && (
-                              <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>
-                                Score personnalisé · {[
-                                  item.nutrition.protein && `P:${item.nutrition.protein}g`,
-                                  item.nutrition.fiber && `F:${item.nutrition.fiber}g`,
-                                  item.nutrition.sugar && `S:${item.nutrition.sugar}g`,
-                                ].filter(Boolean).join(" · ")}
-                              </div>
-                            )}
+                            <div style={{ fontSize: 10, color: "var(--accent)", marginTop: 1, fontWeight: 500 }}>Découvrir la fiche ingrédient</div>
                           </div>
                           {item._ro && <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8, flexShrink: 0 }}>Master</span>}
                           <Icon name="forward" size={14} color="var(--text3)" />
