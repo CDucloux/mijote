@@ -1621,12 +1621,13 @@ function AppInner() {
     body { font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; margin-bottom: 24px; display: block; }
     /* Header */
-    .header { padding-bottom: 22px; margin-bottom: 26px; position: relative; }
-    .header::after { content: ""; position: absolute; left: 0; bottom: 0; width: 48px; height: 4px; border-radius: 4px; background: var(--accent); }
+    .header { padding-bottom: 22px; margin-bottom: 26px; }
     h1 { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
-    .meta { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+    .title-rule { width: 48px; height: 4px; border-radius: 4px; background: var(--accent); margin-bottom: 22px; }
+    .meta { display: flex; gap: 38px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 16px; }
     .meta-item { display: flex; flex-direction: column; }
-    .meta-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .meta-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .meta-val { height: 27px; display: flex; align-items: flex-end; }
     .meta-value { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1; }
     .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
     .tag { font-size: 11px; font-weight: 500; color: var(--accent); background: rgba(232,112,58,0.1); border: 1px solid rgba(232,112,58,0.25); border-radius: 20px; padding: 2px 10px; }
@@ -1671,11 +1672,12 @@ function AppInner() {
   ${recipe.image ? `<img class="hero" src="${recipe.image}" alt="${recipe.name}" />` : ""}
   <div class="header">
     <h1>${recipe.name}</h1>
+    <div class="title-rule"></div>
     <div class="meta">
-      <div class="meta-item"><span class="meta-label">Préparation</span><span class="meta-value">${recipe.prepTime} min</span></div>
-      <div class="meta-item"><span class="meta-label">Cuisson</span><span class="meta-value">${recipe.cookTime} min</span></div>
-      <div class="meta-item"><span class="meta-label">Portions</span><span class="meta-value">${recipe.servings}</span></div>
-      ${recipe.nutriLetter ? `<div class="meta-item"><span class="meta-label">Nutri-Score</span>${nutriBadge(recipe.nutriLetter)}</div>` : ""}
+      <div class="meta-item"><span class="meta-label">Préparation</span><div class="meta-val"><span class="meta-value">${recipe.prepTime} min</span></div></div>
+      <div class="meta-item"><span class="meta-label">Cuisson</span><div class="meta-val"><span class="meta-value">${recipe.cookTime} min</span></div></div>
+      <div class="meta-item"><span class="meta-label">Portions</span><div class="meta-val"><span class="meta-value">${recipe.servings}</span></div></div>
+      ${recipe.nutriLetter ? `<div class="meta-item"><span class="meta-label">Nutri-Score</span><div class="meta-val">${nutriBadge(recipe.nutriLetter)}</div></div>` : ""}
     </div>
     ${tags ? `<div class="tags">${tags}</div>` : ""}
   </div>
