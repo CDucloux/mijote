@@ -11,7 +11,7 @@ import {
   toSharedListDoc, loadMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
 } from "./lib/firestore.js";
 import { cleanRecipeForExport, validateRecipeSchema } from "./lib/recipeSchema.js";
-import { uploadImage, deleteImageByUrl, compressImage } from "./lib/storage.js";
+import { deleteImageByUrl } from "./lib/storage.js";
 import { computeNutriInfo, computeNutritionDetail } from "./lib/nutriscore.js";
 import { findIngredientMatch, buildNameMatcher } from "./lib/nameMatcher.js";
 import { normalizeStr, parseIngredientInput } from "./lib/parseIngredient.js";
@@ -20,10 +20,18 @@ import {
 } from "./constants/categories.js";
 import { useLS } from "./hooks/useLS.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
-import { useOnline } from "./hooks/useOnline.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
 import { PullToRefresh } from "./components/PullToRefresh.jsx";
+import { Icon } from "./components/Icon.jsx";
+import { Img, IngImage } from "./components/Img.jsx";
+import { HealthRing } from "./components/HealthRing.jsx";
+import { NutriScoreBadge } from "./components/NutriScoreBadge.jsx";
+import { ImageUpload } from "./components/ImageUpload.jsx";
+import { UserAvatar } from "./components/UserAvatar.jsx";
+import { TagInput } from "./components/TagInput.jsx";
+import { AutoResizeTextarea } from "./components/AutoResizeTextarea.jsx";
+import { fmtTime } from "./lib/format.js";
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GLOBAL_STYLE = `
@@ -175,267 +183,6 @@ const GLOBAL_STYLE = `
     .detail-desktop-content{display:flex!important;}
   }
 `;
-
-// ─── ICONS ────────────────────────────────────────────────────────────────────
-const Icon = ({ name, size = 20, color = "currentColor" }) => {
-  const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" };
-  const icons = {
-    home: <svg {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
-    search: <svg {...p}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>,
-    calendar: <svg {...p}><rect width="18" height="18" x="3" y="4" rx="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>,
-    book: <svg {...p}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
-    plus: <svg {...p} strokeWidth="2"><line x1="12" x2="12" y1="5" y2="19" /><line x1="5" x2="19" y1="12" y2="12" /></svg>,
-    edit: <svg {...p}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
-    trash: <svg {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>,
-    download: <svg {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>,
-    share: <svg {...p}><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></svg>,
-    clock: <svg {...p}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-    fire: <svg {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>,
-    check: <svg {...p} strokeWidth="2.2"><polyline points="20 6 9 17 4 12" /></svg>,
-    back: <svg {...p}><polyline points="15 18 9 12 15 6" /></svg>,
-    forward: <svg {...p}><polyline points="9 18 15 12 9 6" /></svg>,
-    close: <svg {...p}><line x1="18" x2="6" y1="6" y2="18" /><line x1="6" x2="18" y1="6" y2="18" /></svg>,
-    import: <svg {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>,
-    shopping: <svg {...p}><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>,
-    settings: <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
-    drag: <svg {...p}><circle cx="9" cy="5" r="1" fill={color} /><circle cx="9" cy="12" r="1" fill={color} /><circle cx="9" cy="19" r="1" fill={color} /><circle cx="15" cy="5" r="1" fill={color} /><circle cx="15" cy="12" r="1" fill={color} /><circle cx="15" cy="19" r="1" fill={color} /></svg>,
-    fridge: <svg {...p}><rect x="3" y="2" width="18" height="20" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="2" x2="9" y2="9" /><line x1="8" y1="14" x2="8" y2="18" /></svg>,
-    pdf: <svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>,
-    photo: <svg {...p}><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
-    portions: <svg {...p}><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="16" /><line x1="8" x2="16" y1="12" y2="12" /></svg>,
-    grid: <svg {...p}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>,
-    list2: <svg {...p}><line x1="8" x2="21" y1="6" y2="6" /><line x1="8" x2="21" y1="12" y2="12" /><line x1="8" x2="21" y1="18" y2="18" /><line x1="3" x2="3.01" y1="6" y2="6" /><line x1="3" x2="3.01" y1="12" y2="12" /><line x1="3" x2="3.01" y1="18" y2="18" /></svg>,
-    sun: <svg {...p}><circle cx="12" cy="12" r="5" /><line x1="12" x2="12" y1="1" y2="3" /><line x1="12" x2="12" y1="21" y2="23" /><line x1="4.22" x2="5.64" y1="4.22" y2="5.64" /><line x1="18.36" x2="19.78" y1="18.36" y2="19.78" /><line x1="1" x2="3" y1="12" y2="12" /><line x1="21" x2="23" y1="12" y2="12" /><line x1="4.22" x2="5.64" y1="19.78" y2="18.36" /><line x1="18.36" x2="19.78" y1="5.64" y2="4.22" /></svg>,
-    moon: <svg {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
-    logout: <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>,
-    warning: <svg {...p} strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-    sparkle: <svg {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>,
-    externalLink: <svg {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></svg>,
-    leaf: <svg {...p}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>,
-    fileText: <svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="13" x2="8" y1="17" y2="17"/></svg>,
-  };
-  return icons[name] || null;
-};
-
-
-// ─── TIME FORMATTER ───────────────────────────────────────────────────────────
-function fmtTime(min) {
-  if (!min && min !== 0) return "—";
-  if (min < 60) return min + "m";
-  const h = Math.floor(min / 60), m = min % 60;
-  return m === 0 ? h + "h" : h + "h" + String(m).padStart(2, "0");
-}
-
-// ─── HEALTH RING ──────────────────────────────────────────────────────────────
-const HealthRing = ({ score, size = 56 }) => {
-  const r = (size - 8) / 2, circ = 2 * Math.PI * r;
-  const offset = circ - (score / 100) * circ;
-  const color = score >= 70 ? "var(--green)" : score >= 50 ? "var(--yellow)" : "var(--red)";
-  return (
-    <div style={{ position: "relative", width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface2)" strokeWidth="5" />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="5"
-          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.6s ease" }} />
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: size < 48 ? 11 : 13, fontWeight: 600, color }}>{score}</span>
-      </div>
-    </div>
-  );
-};
-
-const NUTRI_COLORS = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
-
-// Badge Nutri-Score façon étiquette officielle : barre blanche, 5 lettres,
-// la lettre active surélevée et pleine, les autres réduites et atténuées.
-const NutriScoreBadge = ({ letter, compact }) => {
-  if (!letter) return <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>—</span>;
-  if (compact) {
-    return (
-      <span style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: 22, height: 22, borderRadius: 6,
-        background: NUTRI_COLORS[letter],
-        fontSize: 13, fontWeight: 800, color: "#fff", lineHeight: 1,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
-      }}>{letter}</span>
-    );
-  }
-  const letters = ["A", "B", "C", "D", "E"];
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 2, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "3px 4px", boxShadow: "0 1px 3px rgba(0,0,0,0.14)" }}>
-      {letters.map(l => {
-        const active = l === letter;
-        return (
-          <span key={l} style={{
-            width: active ? 21 : 15, height: active ? 25 : 18,
-            borderRadius: active ? 5 : 3,
-            background: NUTRI_COLORS[l],
-            opacity: active ? 1 : 0.5,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: active ? 14 : 10, fontWeight: 800, color: "#fff", lineHeight: 1,
-            transition: "all 0.2s",
-          }}>{l}</span>
-        );
-      })}
-    </div>
-  );
-};
-
-// ─── IMAGE (with fallback) ────────────────────────────────────────────────────
-const Img = ({ src, alt, style }) => {
-  const [err, setErr] = useState(false);
-  useEffect(() => { setErr(false); }, [src]);
-  if (!src || err) return (
-    <div style={{ background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)", ...style }}>
-      <Icon name="photo" size={20} />
-    </div>
-  );
-  return <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer" style={{ objectFit: "cover", ...style }} />;
-};
-
-// ─── INGREDIENT IMAGE (round, slightly larger, transparent-friendly) ──────────
-// Used everywhere an ingredient image appears, for a consistent circular look.
-const IngImage = ({ src, alt, size = 48 }) => {
-  const [err, setErr] = useState(false);
-  useEffect(() => { setErr(false); }, [src]);
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: "#fff", border: "1px solid var(--border)",
-      display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
-    }}>
-      {src && !err
-        ? <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer"
-          loading="lazy" decoding="async"
-          style={{ width: "82%", height: "82%", objectFit: "contain" }} />
-        : <Icon name="photo" size={Math.round(size * 0.42)} color="#b3afaa" />}
-    </div>
-  );
-};
-
-// ─── IMAGE UPLOAD ─────────────────────────────────────────────────────────────
-function ImageUpload({ value, onChange, style, pathPrefix = "misc" }) {
-  const inputId = useRef("img_" + Math.random().toString(36).slice(2)).current;
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-  const handleFile = async e => {
-    const file = e.target.files[0]; if (!file) return;
-    setError("");
-    setUploading(true);
-    try {
-      const url = await uploadImage(file, pathPrefix);
-      onChange(url);
-    } catch (err) {
-      // Fallback: if Storage upload fails, keep working with compressed base64
-      try {
-        const { blob } = await compressImage(file);
-        const reader = new FileReader();
-        reader.onload = ev => onChange(ev.target.result);
-        reader.readAsDataURL(blob);
-      } catch {
-        setError("Échec de l'upload");
-      }
-    } finally {
-      setUploading(false);
-      e.target.value = ""; // allow re-selecting the same file
-    }
-  };
-  return (
-    <div style={{ position: "relative", ...style }}>
-      {value ? (
-        <div style={{ position: "relative" }}>
-          <Img src={value} style={{ width: "100%", height: style?.height || 120, borderRadius: 12 }} />
-          <button onClick={() => onChange("")} style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-            <Icon name="close" size={13} />
-          </button>
-          <label htmlFor={inputId} style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: 8, padding: "4px 8px", fontSize: 11, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-            <Icon name="photo" size={12} color="#fff" /> {uploading ? "…" : "Changer"}
-          </label>
-        </div>
-      ) : (
-        <label htmlFor={inputId} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: style?.height || 80, background: "var(--surface2)", border: "2px dashed rgba(255,255,255,0.12)", borderRadius: 12, color: "var(--text3)", cursor: "pointer" }}>
-          {uploading ? (
-            <>
-              <div style={{ width: 22, height: 22, border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-              <span style={{ fontSize: 13, fontWeight: 500 }}>Compression & upload…</span>
-            </>
-          ) : (
-            <>
-              <Icon name="photo" size={22} />
-              <span style={{ fontSize: 13, fontWeight: 500 }}>Choisir une photo</span>
-              <span style={{ fontSize: 11, color: "var(--text3)" }}>{error || "Galerie ou appareil photo"}</span>
-            </>
-          )}
-        </label>
-      )}
-      <input id={inputId} type="file" accept="image/*" onChange={handleFile} disabled={uploading} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
-    </div>
-  );
-}
-
-// ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
-function UserAvatar({ user, syncStatus, onSignOut, isDark, onToggleTheme }) {
-  const [open, setOpen] = useState(false);
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
-  const online = useOnline();
-  if (!user) return null;
-  const offline = !online;
-  const syncLabel = offline ? "⚡ Hors ligne — synchro à la reconnexion"
-    : syncStatus === "syncing" ? "Synchronisation…" : syncStatus === "synced" ? "✓ Synchronisé" : syncStatus === "error" ? "⚠ Erreur sync" : null;
-  const syncColor = offline ? "var(--orange)" : syncStatus === "synced" ? "var(--green)" : syncStatus === "error" ? "var(--red)" : "var(--text3)";
-  const showDot = offline || syncStatus !== "idle";
-  return (
-    <div style={{ position: "relative", flexShrink: 0 }}>
-      <button onClick={() => { setOpen(o => !o); setConfirmSignOut(false); }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="Mon compte">
-        {user.photoURL
-          ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: "2px solid var(--border)" }} />
-          : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>{(user.displayName || "?")[0].toUpperCase()}</div>
-        }
-        <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none" }} />
-      </button>
-      {open && (
-        <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => { setOpen(false); setConfirmSignOut(false); }} />
-          <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: "expandDown 0.2s ease" }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{(user.displayName || "").toUpperCase()}</div>
-            <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>{user.email}</div>
-            {syncLabel && <div style={{ fontSize: 11, color: syncColor, marginBottom: 10 }}>{syncLabel}</div>}
-            {onToggleTheme && (
-              <>
-                <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
-                <button onClick={onToggleTheme} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
-                  onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
-                  onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
-                  <Icon name={isDark ? "sun" : "moon"} size={13} color="currentColor" />
-                  {isDark ? "Mode clair" : "Mode sombre"}
-                </button>
-                <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
-              </>
-            )}
-            {!confirmSignOut
-              ? <button onClick={() => setConfirmSignOut(true)}
-                style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.18)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.10)"; }}>
-                <Icon name="logout" size={16} color="var(--red)" /> Se déconnecter
-              </button>
-              : <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 8, textAlign: "center" }}>Confirmer la déconnexion ?</div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: "center" }} onClick={() => setConfirmSignOut(false)}>Annuler</button>
-                  <button className="btn btn-danger btn-sm" style={{ flex: 1, justifyContent: "center" }} onClick={() => { setOpen(false); setConfirmSignOut(false); onSignOut(); }}>Confirmer</button>
-                </div>
-              </div>
-            }
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 const TABS = [
@@ -2238,57 +1985,6 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
 
 
-// ─── TAG INPUT ────────────────────────────────────────────────────────────────
-function TagInput({ tags, onChange, allTags, label = "Tags", placeholder = "Végétarien, Rapide…", inputId = "tag-input-field", commitOnBlur = false, dedupeInsensitive = false }) {
-  const [input, setInput] = useState("");
-  const [focused, setFocused] = useState(false);
-  const inputRef = useRef("");
-  inputRef.current = input;
-  const suggestions = allTags.filter(t =>
-    t.toLowerCase().includes(input.toLowerCase()) && !tags.includes(t) && input.length > 0
-  );
-
-  const addTag = tag => {
-    const t = tag.trim();
-    if (!t) { setInput(""); return; }
-    const isDup = dedupeInsensitive
-      ? tags.some(x => x.localeCompare(t, undefined, { sensitivity: "base" }) === 0) // ignore casse + accents
-      : tags.includes(t);
-    if (!isDup) onChange([...tags, t]);
-    setInput("");
-  };
-  const removeTag = t => onChange(tags.filter(x => x !== t));
-
-  return (
-    <div>
-      {label ? <div className="field-label">{label}</div> : null}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "8px 10px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", minHeight: 42, cursor: "text" }}
-        onClick={() => document.getElementById(inputId).focus()}>
-        {tags.map(t => (
-          <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)" }}>
-            {t}
-            <button onClick={e => { e.stopPropagation(); removeTag(t); }} style={{ fontSize: 14, lineHeight: 1, color: "var(--accent)", padding: 0 }}>×</button>
-          </span>
-        ))}
-        <input id={inputId} value={input} onChange={e => setInput(e.target.value)}
-          onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => { setFocused(false); if (commitOnBlur && inputRef.current.trim()) addTag(inputRef.current); }, 150)}
-          onKeyDown={e => { if ((e.key === "," || e.key === "Enter") && input.trim()) { e.preventDefault(); addTag(input); } if (e.key === "Backspace" && !input && tags.length) removeTag(tags[tags.length - 1]); }}
-          placeholder={tags.length === 0 ? placeholder : ""}
-          style={{ border: "none", background: "none", outline: "none", fontSize: 14, color: "var(--text)", minWidth: 100, flex: 1, fontFamily: "var(--ff-body)", padding: "1px 2px" }} />
-      </div>
-      {focused && suggestions.length > 0 && (
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, marginTop: 4, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.2)" }}>
-          {suggestions.slice(0, 6).map(s => (
-            <button key={s} onMouseDown={() => addTag(s)}
-              style={{ display: "block", width: "100%", padding: "9px 14px", fontSize: 13, textAlign: "left", color: "var(--text2)" }}>
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 function UtensilPicker({ utensilDB, selected, onChange }) {
@@ -2577,19 +2273,6 @@ function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, colle
 }
 
 // ─── AUTO-RESIZE TEXTAREA ─────────────────────────────────────────────────────
-function AutoResizeTextarea({ value, onChange, placeholder, className, style }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
-  }, [value]);
-  return (
-    <textarea ref={ref} className={className} placeholder={placeholder} value={value} onChange={onChange}
-      style={{ resize: "none", overflow: "hidden", minHeight: 76, ...style }} />
-  );
-}
 
 // ─── DRAGGABLE STEP ───────────────────────────────────────────────────────────
 function DraggableStep({ step, index, total, ingredients, utensils, onUpdate, onRemove, onMove }) {
