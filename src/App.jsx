@@ -2515,36 +2515,42 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
       {/* ── DESKTOP INFO BAR — carte arrondie façon mobile ── */}
       {isDesktop && (
-      <div style={{ padding: "10px 16px 4px", flexShrink: 0 }}>
+      <div style={{ padding: "12px 16px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "stretch", background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", padding: "10px 0", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
           {/* Prép. */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-            <Icon name="clock" size={12} color="var(--text3)" />
-            <span style={{ fontSize: 14, fontWeight: 700 }}>{fmtTime(recipe.prepTime)}</span>
-            <span style={{ fontSize: 10, color: "var(--text3)" }}>Prép.</span>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3 }}>
+              <Icon name="clock" size={12} color="var(--text3)" />
+              <span style={{ fontSize: 14, fontWeight: 700 }}>{fmtTime(recipe.prepTime)}</span>
+            </div>
+            <span style={{ fontSize: 10, color: "var(--text3)", marginTop: 3 }}>Prép.</span>
           </div>
           <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
           {/* Cuisson */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-            <Icon name="fire" size={12} color="var(--text3)" />
-            <span style={{ fontSize: 14, fontWeight: 700 }}>{fmtTime(recipe.cookTime)}</span>
-            <span style={{ fontSize: 10, color: "var(--text3)" }}>Cuisson</span>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3 }}>
+              <Icon name="fire" size={12} color="var(--text3)" />
+              <span style={{ fontSize: 14, fontWeight: 700 }}>{fmtTime(recipe.cookTime)}</span>
+            </div>
+            <span style={{ fontSize: 10, color: "var(--text3)", marginTop: 3 }}>Cuisson</span>
           </div>
           <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
           {/* Nutri-Score */}
-          <button onClick={() => setShowNutrition(true)} title="Analyse nutritionnelle" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, background: "none", border: "none", cursor: "pointer" }}>
-            <NutriScoreBadge letter={recipe.nutriLetter} />
-            <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 2 }}>Nutri-Score <Icon name="forward" size={9} color="var(--text3)" /></span>
+          <button onClick={() => setShowNutrition(true)} title="Analyse nutritionnelle" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <NutriScoreBadge letter={recipe.nutriLetter} />
+            </div>
+            <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 2, marginTop: 3 }}>Nutri-Score <Icon name="forward" size={9} color="var(--text3)" /></span>
           </button>
           <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
           {/* Portions */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
               <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 15, border: "none", cursor: "pointer" }}>−</button>
               <span style={{ fontSize: 14, fontWeight: 700, minWidth: 18, textAlign: "center" }}>{servings}</span>
               <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, border: "none", cursor: "pointer" }}>+</button>
             </div>
-            <span style={{ fontSize: 10, color: "var(--text3)" }}>Portions</span>
+            <span style={{ fontSize: 10, color: "var(--text3)", marginTop: 3 }}>Portions</span>
           </div>
         </div>
       </div>
@@ -2764,7 +2770,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAdd
 
 
         {/* ── DESKTOP: 2-column layout (hidden on mobile via CSS) ── */}
-        <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: "10px 16px 16px", gap: 16 }}>
+        <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: "12px 16px 16px", gap: 16 }}>
           {/* Left col: ingrédients + ustensiles (card) */}
           <div style={{ width: 300, minWidth: 300, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
             <div>
