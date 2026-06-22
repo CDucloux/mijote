@@ -1,5 +1,6 @@
 import { Icon } from "./Icon.jsx";
 import { TABS } from "../constants/tabs.js";
+import { codenameFor } from "../constants/changelog.js";
 
 // ─── DESKTOP SIDEBAR ──────────────────────────────────────────────────────────
 export function DesktopSidebar({ tab, setTab, onNewRecipe }) {
@@ -27,7 +28,7 @@ export function DesktopSidebar({ tab, setTab, onNewRecipe }) {
           fontSize: 11, fontWeight: 500, fontFamily: "var(--ff-body)", letterSpacing: "0.01em"
         }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#8fba7a", flexShrink: 0 }} />
-          {`v${__APP_VERSION__} — Safran`}
+          {`v${__APP_VERSION__}${codenameFor(__APP_VERSION__) ? ` — ${codenameFor(__APP_VERSION__)}` : ""}`}
         </span>
       </div>
       <div style={{ borderTop: "1px solid var(--border)", margin: "0 10px 14px" }} />

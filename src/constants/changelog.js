@@ -27,11 +27,21 @@ function parseChangelog(md) {
   }
   // L'entrée en tête (la plus récente) est mise en avant ; `highlights` reprend
   // ses deux premières lignes pour le bandeau d'annonce de nouveautés.
+  // `codename` = nom de code de la version, soit la partie du libellé avant un
+  // « · » (convention « Safran · Industrialisation »), sinon aucun.
   return entries.map((entry, i) => ({
     ...entry,
     accent: i === 0,
     highlights: entry.items.slice(0, 2),
+    codename: entry.label.includes("·") ? entry.label.split("·")[0].trim() : null,
   }));
 }
 
 export const CHANGELOG = parseChangelog(raw);
+
+// Nom de code associé à une version (pour le badge de l'app). Retombe sur la
+// version la plus récente si la version exacte n'est pas trouvée.
+export function codenameFor(version) {
+  const entry = CHANGELOG.find(e => e.version === version) || CHANGELOG[0];
+  return entry?.codename || null;
+}
