@@ -212,3 +212,20 @@ input,textarea,select{font-family:var(--ff-body);}
 .login-toggle-thumb.dark{left:17px;}
 .login-toggle-thumb.light{left:3px;}
 .login-copyright{position:absolute;bottom:16px;right:20px;font-size:11px;color:var(--text3);line-height:1.5;text-align:right;pointer-events:none;}
+
+/* ─── MEAL PLAN : bouton d'ajout extensible (desktop) ──────────────────────── */
+.mp-add-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:26px;padding:0 7px;border-radius:13px;flex-shrink:0;cursor:pointer;
+  background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+  transition:background 0.18s,border-color 0.18s,color 0.18s;
+}
+.mp-add-btn .mp-add-label{
+  max-width:0;opacity:0;overflow:hidden;white-space:nowrap;margin-right:0;
+  font-size:12px;font-weight:600;font-family:var(--ff-body);
+  transition:max-width 0.3s cubic-bezier(0.25,0.46,0.45,1),opacity 0.22s,margin-right 0.3s;
+}
+@media (hover:hover){
+  .mp-add-btn:hover{background:rgba(232,112,58,0.15);border-color:rgba(232,112,58,0.4);color:var(--accent);}
+  .mp-add-btn:hover .mp-add-label{max-width:240px;opacity:1;margin-right:6px;}
+}

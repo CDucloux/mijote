@@ -208,8 +208,9 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
                       </span>
                       {isToday && <span style={{ fontSize: 10, background: "rgba(232,112,58,0.2)", color: "var(--accent)", padding: "2px 7px", borderRadius: 10 }}>Aujourd'hui</span>}
                     </div>
-                    <button onClick={() => openAdd(date, ["midi", "soir"])} style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Icon name="plus" size={13} color="var(--text2)" />
+                    <button onClick={() => openAdd(date, ["midi", "soir"])} className="mp-add-btn" title="Ajouter une recette au planning">
+                      <span className="mp-add-label">Ajouter une recette au planning</span>
+                      <Icon name="plus" size={13} color="currentColor" />
                     </button>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
