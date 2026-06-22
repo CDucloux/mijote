@@ -261,7 +261,7 @@ function AppInner() {
     setRecipes(updatedRecipes);
     setCollections(prev => recomputeCollectionCounts(prev, updatedRecipes));
     setEditingRecipe(null);
-    notify("Recette sauvegardée ✓");
+    notify("Recette sauvegardée");
   };
 
   const deleteRecipe = id => {
@@ -304,7 +304,7 @@ function AppInner() {
         dupes > 0 ? `${dupes} doublon(s) ignoré(s)` : "",
         rejected > 0 ? `${rejected} recette(s) non conforme(s) écartée(s)` : "",
       ].filter(Boolean).join(" · ");
-      if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${extras ? ` · ${extras}` : ""} ✓`);
+      if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${extras ? ` · ${extras}` : ""}`);
       else notify(`Aucune recette importée${extras ? ` — ${extras}` : ""}`, "error");
       return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
     });
