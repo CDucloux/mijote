@@ -561,10 +561,13 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
           <div className="field-label">Photo</div>
           <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} pathPrefix={isAdmin ? "master/ingredients" : "ingredients"} />
           <div className="field-label">Poids moyen d'une pièce (g)</div>
-          <input className="field-input" type="number" min="0" step="1" placeholder="ex. 125 pour une tomate — optionnel"
-            value={editIng.gramsPerPiece ?? ""}
-            onChange={e => setEditIng(p => ({ ...p, gramsPerPiece: e.target.value === "" ? undefined : +e.target.value }))}
-            style={{ marginBottom: 4 }} />
+          <div style={{ position: "relative", marginBottom: 4 }}>
+            <input className="field-input" type="number" min="0" step="1" placeholder="ex. 125 pour une tomate — optionnel"
+              value={editIng.gramsPerPiece ?? ""}
+              onChange={e => setEditIng(p => ({ ...p, gramsPerPiece: e.target.value === "" ? undefined : +e.target.value }))}
+              style={{ paddingRight: 32 }} />
+            <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "var(--text3)", pointerEvents: "none" }}>g</span>
+          </div>
           <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 12 }}>Utilisé pour le score quand la quantité est en pièces, tranches, gousses…</div>
           {SEASONAL_CATEGORIES.has(editIng.category) && (() => {
             const sel = new Set(editIng.months || []);
