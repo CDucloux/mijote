@@ -16,6 +16,7 @@ import {
   splitMarkdownRow, parseIngredientsMarkdown,
 } from "../lib/ingredientsMarkdown.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
+import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "../lib/seasonality.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
 
@@ -64,6 +65,8 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
     const tips = (raw.tips || []).map(t => ({ type: t.type, text: (t.text || "").trim() })).filter(t => t.text);
     const item = { ...raw };
     if (tips.length) item.tips = tips; else delete item.tips;
+    if (Array.isArray(item.months) && item.months.length) item.months = [...new Set(item.months)].sort((a, b) => a - b);
+    else delete item.months;
     if (ingredientDB.find(d => d.id === item.id)) setIngredientDB(prev => prev.map(d => d.id === item.id ? item : d));
     else setIngredientDB(prev => [...prev, { ...item, id: "db_i" + Date.now() }]);
     setEditIng(null);
@@ -133,6 +136,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
     const cell = (r, col) => {
       if (col.nut) { const v = r.nutrition?.[col.key]; return v == null || v === "" ? "" : esc(v); }
       if (col.key === "aliases") return esc((r.aliases || []).join(", "));
+      if (col.months) return esc(formatMonths(r.months));
       if (col.key === "category") return esc(r.category || "other");
       return esc(r[col.key]);
     };
@@ -562,6 +566,39 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
             onChange={e => setEditIng(p => ({ ...p, gramsPerPiece: e.target.value === "" ? undefined : +e.target.value }))}
             style={{ marginBottom: 4 }} />
           <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 12 }}>Utilisé pour le score quand la quantité est en pièces, tranches, gousses…</div>
+          {SEASONAL_CATEGORIES.has(editIng.category) && (() => {
+            const sel = new Set(editIng.months || []);
+            const toggle = m => setEditIng(p => {
+              const s = new Set(p.months || []);
+              s.has(m) ? s.delete(m) : s.add(m);
+              const arr = [...s].sort((a, b) => a - b);
+              return { ...p, months: arr.length ? arr : undefined };
+            });
+            return (
+              <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)" }}>Mois de saison</div>
+                  {sel.size > 0 && <button className="btn btn-ghost btn-sm" style={{ padding: "2px 8px", fontSize: 11 }} onClick={() => setEditIng(p => ({ ...p, months: undefined }))}>Effacer</button>}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 6 }}>
+                  {MONTHS_SHORT_FR.map((lbl, i) => {
+                    const m = i + 1, on = sel.has(m);
+                    return (
+                      <button key={m} title={MONTHS_FR[i]} onClick={() => toggle(m)} style={{
+                        padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                        background: on ? "var(--green)" : "var(--surface)", color: on ? "#fff" : "var(--text3)",
+                        border: `1px solid ${on ? "var(--green)" : "var(--border)"}`, transition: "background 0.12s, color 0.12s",
+                      }}>{lbl}</button>
+                    );
+                  })}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>
+                  {sel.size === 0 ? "Aucun mois : ignoré pour la saisonnalité (produit disponible toute l'année)."
+                    : `De saison : ${formatMonths([...sel])}.`}
+                </div>
+              </div>
+            );
+          })()}
           <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>

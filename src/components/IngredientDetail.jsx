@@ -4,6 +4,7 @@ import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
 import { computeNutriInfo } from "../lib/nutriscore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
+import { ingredientMonths, isIngredientInSeason, MONTHS_SHORT_FR, MONTHS_FR, currentMonth } from "../lib/seasonality.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
 
@@ -87,6 +88,39 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
             <Icon name="portions" size={14} color="var(--text3)" /> 1 pièce ≈ <strong>{ingredient.gramsPerPiece} g</strong>
           </div>
         )}
+
+        {/* Saisonnalité : bandeau des 12 mois + statut du mois courant */}
+        {(() => {
+          const months = ingredientMonths(ingredient);
+          if (!months) return null;
+          const set = new Set(months);
+          const inSeason = isIngredientInSeason(ingredient);
+          const cm = currentMonth();
+          return (
+            <div className="slide-up" style={{ background: "var(--surface2)", borderRadius: 12, padding: "12px 14px", marginBottom: 18, animationDelay: "0.18s" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>
+                  <span style={{ fontSize: 15 }}>🗓️</span> Saisonnalité
+                </div>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+                  background: inSeason ? "rgba(76,175,125,0.14)" : "var(--surface)", color: inSeason ? "var(--green)" : "var(--text3)",
+                  border: `1px solid ${inSeason ? "rgba(76,175,125,0.4)" : "var(--border)"}` }}>
+                  {inSeason ? "● De saison" : "○ Hors saison"}
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: 3 }}>
+                {MONTHS_SHORT_FR.map((lbl, i) => {
+                  const m = i + 1, on = set.has(m), now = m === cm;
+                  return (
+                    <div key={m} title={MONTHS_FR[i]} style={{ textAlign: "center", padding: "5px 0", borderRadius: 6, fontSize: 11, fontWeight: now ? 800 : 600,
+                      background: on ? "var(--green)" : "var(--surface)", color: on ? "#fff" : "var(--text3)",
+                      border: now ? "1.5px solid var(--accent)" : "1px solid var(--border)" }}>{lbl}</div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Nutrition pour 100 g */}
         <div className="slide-up" style={{ animationDelay: "0.2s" }}>

@@ -2,11 +2,14 @@
 // Source unique des colonnes : l'export et l'import partagent cette spec, pour
 // garantir un aller-retour fidèle. `nut: true` = champ rangé dans `nutrition`.
 // `isVegetable` n'est pas une colonne : il est recalculé depuis la catégorie.
+import { parseMonths } from "./seasonality.js";
+
 export const ING_MD_COLUMNS = [
   { key: "name", label: "Nom" },
   { key: "aliases", label: "Aliases" },
   { key: "id", label: "dbid" },
   { key: "category", label: "Catégorie" },
+  { key: "months", label: "Mois", months: true },
   { key: "gramsPerPiece", label: "g/pièce", num: true },
   { key: "image", label: "Image" },
   { key: "calories", label: "kcal", nut: true },
@@ -76,6 +79,9 @@ export function parseIngredientsMarkdown(text) {
       } else if (key === "aliases") {
         const arr = val.split(",").map(a => a.trim()).filter(Boolean);
         if (arr.length) row.aliases = arr;
+      } else if (col.months) {
+        const arr = parseMonths(val);
+        if (arr.length) row.months = arr;
       } else {
         row[key] = val;
       }

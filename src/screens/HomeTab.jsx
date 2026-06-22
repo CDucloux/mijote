@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
 import { normalizeStr } from "../lib/parseIngredient.js";
+import { createIngredientResolver } from "../lib/nameMatcher.js";
+import { isRecipeInSeason } from "../lib/seasonality.js";
 
 // ─── HOME TAB ─────────────────────────────────────────────────────────────────
 const PAGE_SIZE = 8;
@@ -12,8 +14,11 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   const [filterTag, setFilterTag] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
   const [sortBy, setSortBy] = useState("name");
+  const [seasonOnly, setSeasonOnly] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef(null);
+
+  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
 
   const allTags = [...new Set(recipes.flatMap(r => r.tags || []))];
   const filtered = recipes
@@ -27,11 +32,12 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
       }
       if (filterTag && !r.tags?.includes(filterTag)) return false;
       if (filterCol && !r.collections?.includes(filterCol)) return false;
+      if (seasonOnly && !isRecipeInSeason(r, resolver)) return false;
       return true;
     })
     .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt));
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterTag, filterCol, sortBy]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterTag, filterCol, sortBy, seasonOnly]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -65,6 +71,10 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
               {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
             </button>
           ))}
+          <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />
+          <button onClick={() => setSeasonOnly(s => !s)} title="Recettes de saison ce mois-ci" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: seasonOnly ? "rgba(76,175,125,0.18)" : "var(--surface2)", color: seasonOnly ? "var(--green)" : "var(--text2)", border: `1px solid ${seasonOnly ? "rgba(76,175,125,0.5)" : "var(--border)"}` }}>
+            <span style={{ fontSize: 13, lineHeight: 1 }}>🌱</span> De saison
+          </button>
           {allTags.length > 0 && <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />}
           {allTags.map(t => (
             <button key={t} onClick={() => setFilterTag(filterTag === t ? null : t)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: filterTag === t ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: filterTag === t ? "var(--accent)" : "var(--text2)", border: `1px solid ${filterTag === t ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{t}</button>
