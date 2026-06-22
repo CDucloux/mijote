@@ -3,6 +3,35 @@
 // garantir un aller-retour fidèle. `nut: true` = champ rangé dans `nutrition`.
 // `isVegetable` n'est pas une colonne : il est recalculé depuis la catégorie.
 import { parseMonths } from "./seasonality.js";
+import { TIP_TYPES } from "../constants/tipTypes.js";
+
+// ─── TIPS (conseils) ↔ MARKDOWN ─────────────────────────────────────────────
+// Sérialisation dans une cellule unique. Chaque conseil = "type: texte",
+// conseils séparés par " ;; ". Le pipe est échappé en amont par l'export.
+const TIP_TYPE_KEYS = new Set(Object.keys(TIP_TYPES));
+
+export function formatTips(tips) {
+  if (!Array.isArray(tips)) return "";
+  return tips
+    .filter(t => t && t.type && (t.text || "").trim())
+    .map(t => `${t.type}: ${t.text.trim().replace(/\s*;;\s*/g, ", ")}`)
+    .join(" ;; ");
+}
+
+export function parseTips(str) {
+  if (!str) return [];
+  return str
+    .split(/\s*;;\s*/)
+    .map(seg => {
+      const i = seg.indexOf(":");
+      if (i < 0) return null;
+      const type = seg.slice(0, i).trim().toLowerCase();
+      const text = seg.slice(i + 1).trim();
+      if (!text || !TIP_TYPE_KEYS.has(type)) return null;
+      return { type, text };
+    })
+    .filter(Boolean);
+}
 
 export const ING_MD_COLUMNS = [
   { key: "name", label: "Nom" },
@@ -10,6 +39,7 @@ export const ING_MD_COLUMNS = [
   { key: "id", label: "dbid" },
   { key: "category", label: "Catégorie" },
   { key: "months", label: "Mois", months: true },
+  { key: "tips", label: "Tips", tips: true },
   { key: "gramsPerPiece", label: "g/pièce", num: true },
   { key: "image", label: "Image" },
   { key: "calories", label: "kcal", nut: true },
@@ -82,6 +112,9 @@ export function parseIngredientsMarkdown(text) {
       } else if (col.months) {
         const arr = parseMonths(val);
         if (arr.length) row.months = arr;
+      } else if (col.tips) {
+        const arr = parseTips(val);
+        if (arr.length) row.tips = arr;
       } else {
         row[key] = val;
       }

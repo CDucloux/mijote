@@ -13,7 +13,7 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { deleteImageByUrl } from "../lib/storage.js";
 import {
   ING_MD_COLUMNS, ING_MD_REQUIRED_LABELS, ING_MD_BOUNDS,
-  splitMarkdownRow, parseIngredientsMarkdown,
+  splitMarkdownRow, parseIngredientsMarkdown, formatTips,
 } from "../lib/ingredientsMarkdown.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "../lib/seasonality.js";
@@ -137,6 +137,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
       if (col.nut) { const v = r.nutrition?.[col.key]; return v == null || v === "" ? "" : esc(v); }
       if (col.key === "aliases") return esc((r.aliases || []).join(", "));
       if (col.months) return esc(formatMonths(r.months));
+      if (col.tips) return esc(formatTips(r.tips));
       if (col.key === "category") return esc(r.category || "other");
       return esc(r[col.key]);
     };
