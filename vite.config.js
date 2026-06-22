@@ -8,11 +8,27 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      // Don't generate a full PWA manifest — just use the SW for caching
-      manifest: false,
+      includeAssets: ['apple-touch-icon.png', 'favicon.svg', 'icons.svg'],
+      manifest: {
+        name: 'Mijoté',
+        short_name: 'Mijoté',
+        description: 'Cuisinez mieux, organisez moins — recettes, planning repas et courses.',
+        lang: 'fr',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#0e0e0f',
+        theme_color: '#e8703a',
+        icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
       workbox: {
         // Cache JS/CSS/HTML app shell
-        globPatterns: ['**/*.{js,css,html,svg,ico}'],
+        globPatterns: ['**/*.{js,css,html,svg,ico,png}'],
         runtimeCaching: [
           {
             // Images from Firebase Storage and any other origin
