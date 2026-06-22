@@ -13,6 +13,7 @@ import { TIP_TYPES, TIP_ORDER } from "../constants/tipTypes.js";
 // Page publique /config/ingredients/{id} : tout utilisateur peut consulter la
 // fiche ; seul l'admin dispose des actions Modifier / Supprimer.
 export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEGORIES, isAdmin, onBack, onEdit, onDelete }) {
+  const [detailOpen, setDetailOpen] = useState(false);
   if (!ingredient) {
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 40, textAlign: "center" }}>
@@ -22,7 +23,6 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
       </div>
     );
   }
-  const [detailOpen, setDetailOpen] = useState(false);
   const cat = categories[ingredient.category] || DEFAULT_CATEGORIES.other;
   const n = ingredient.nutrition || {};
   const hasNutrition = !!ingredient.nutrition;
