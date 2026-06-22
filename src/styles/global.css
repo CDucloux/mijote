@@ -222,7 +222,7 @@ input,textarea,select{font-family:var(--ff-body);}
 }
 .mp-add-btn .mp-add-label{
   max-width:0;opacity:0;overflow:hidden;white-space:nowrap;margin-right:0;
-  font-size:12px;font-weight:600;font-family:var(--ff-body);
+  font-size:12px;font-weight:400;font-family:var(--ff-body);
   transition:max-width 0.55s cubic-bezier(0.25,0.46,0.45,1),opacity 0.5s ease 0.12s,margin-right 0.55s cubic-bezier(0.25,0.46,0.45,1);
 }
 @media (hover:hover){
