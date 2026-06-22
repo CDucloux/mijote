@@ -12,9 +12,7 @@
 - [x] App & légal
   - [x] Page À propos — licence, crédits, copyright
 
-- [ ] Notifications ? à mette en place (Comment gérer pour le PWA ?)
-
-- [ ] Système saisonnier
+- [x] Système saisonnier
 
 - [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
 
