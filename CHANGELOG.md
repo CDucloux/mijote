@@ -1,5 +1,24 @@
 # Changelog — Mijoté
 
+## v2.1.0 — Saisonnalité & Conseils Ingrédients
+
+### Saisonnalité des recettes
+- Calendrier saisonnier par ingrédient (France métropole, mois 1-12), éditable dans la fiche ingrédient
+- Filtre **🌱 De saison** dans la liste des recettes : affiche uniquement les recettes dont ≥ 50 % des ingrédients saisonniers sont de saison ce mois-ci
+- Indicateur de saisonnalité dans la fiche ingrédient : bandeau 12 mois colorés + badge "De saison / Hors saison"
+- Colonne `Mois` dans l'export/import Markdown de la base d'ingrédients (round-trip fidèle, format `1-3,11-12`)
+- Sélecteur de mois dans l'éditeur d'ingrédient (pour les catégories : légume, fruit, herbes, champignon)
+
+### Conseils ingrédients (Tips)
+- Section **Tips utiles** dans la fiche ingrédient, avec 5 catégories : 🔪 Préparation, 🛒 Choix & conservation, 🍳 Utilisation, ❄️ Congélation, 💡 Astuce anti-gaspi
+- Design restylé : icône en pastille colorée arrondie, ordonnancement automatique par catégorie
+- Colonne `Tips` dans l'export/import Markdown (format `type: texte ;; type: texte`)
+- Détail par nutriment (barres + % AJR) replié par défaut sous le graphique donut
+- Base pré-remplie de 47 ingrédients saisonniers (légumes, fruits, herbes, champignons)
+
+### Divers
+- Champ « Poids moyen d'une pièce » de l'éditeur d'ingrédient affiche le suffixe `g`
+
 ## v2.0.0 — Safran · Industrialisation & Architecture
 
 - Refonte complète de l'architecture : le fichier monolithe `App.jsx` (6000+ lignes) éclaté en une structure en couches (61 fichiers)
