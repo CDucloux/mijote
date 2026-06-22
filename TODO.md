@@ -1,13 +1,11 @@
 
 # Listes des fontionnalités à mijoter
 
-## 🔜 Backlog — v1.0.8
-
 - [ ] Système saisonnier
 
 - [ ] Notifications ? à mette en place (Comment gérer pour le PWA ?)
 
-- [ ] Refactoring des composants / modularisartion
+- [ ] Attention avec les notify de bien gérer les icones en double
 
 - [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
 
@@ -15,6 +13,10 @@
 
 - [ ] App & légal
   - [ ] Page À propos — licence, crédits, copyright
+
+## 🔜 Backlog — v2.0.0
+
+- [x] Refactoring des composants / modularisartion
 
 ## 🔜 Backlog — v1.0.7
 
