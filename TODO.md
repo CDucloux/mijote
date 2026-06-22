@@ -1,22 +1,26 @@
 
 # Listes des fontionnalités à mijoter
 
-- [ ] Système saisonnier
+- [x] Sur mobile, bug de la swipeable sheet Nouvel ingrédient qui n'est pas scrollable à partir des valeurs nutrtionnelles précises
+- [x] Sur mobile, dans la swipeablesheet "Ajouter une recette" -> ne pas ouvrir le clavier initialement (car prend trop de view)
+  - [x] Dans cette swipeablesheet, il faut aussi retirer le healthring et le remplacer par le nutriscore plus clean et remplacer le séparateur "." par "|"
 
-- [ ] Sur mobile, bug de la swipeable sheet Nouvel ingrédient qui n'est pas scrollable à partir des valeurs nutrtionnelles précises
-- [ ] Sur mobile, dans la swipeablesheet "Ajouter une recette" -> ne pas ouvrir le clavier initialement (car prend trop de view)
-  - [ ] Dans cette swipeablesheet, il faut aussi retirer le healthring et le remplacer par le nutriscore plus clean et remplacer le séparateur "." par "|"
+- [x] Attention avec les notify de bien gérer les icones en double
+
+- [x] README plus moderne à construire
+
+- [x] App & légal
+  - [x] Page À propos — licence, crédits, copyright
 
 - [ ] Notifications ? à mette en place (Comment gérer pour le PWA ?)
 
-- [ ] Attention avec les notify de bien gérer les icones en double
+- [ ] Système saisonnier
 
 - [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
 
 - [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
 
-- [ ] App & légal
-  - [ ] Page À propos — licence, crédits, copyright
+- [ ] Blabla sur le traitement des données ?
 
 ## 🔜 Backlog — v2.0.0
 

@@ -6,7 +6,7 @@ export function SwipeableSheet({ onClose, children, style }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div ref={sheetRef} className="modal-sheet"
-        style={{ touchAction: "none", ...style }}
+        style={{ touchAction: "pan-y", ...style }}
         onClick={e => e.stopPropagation()}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}

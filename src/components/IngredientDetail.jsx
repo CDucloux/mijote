@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
 import { computeNutriInfo } from "../lib/nutriscore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
+import { ingredientMonths, isIngredientInSeason, MONTHS_SHORT_FR, MONTHS_FR, currentMonth } from "../lib/seasonality.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
-import { TIP_TYPES } from "../constants/tipTypes.js";
+import { TIP_TYPES, TIP_ORDER } from "../constants/tipTypes.js";
 
 // ─── INGREDIENT DETAIL (fiche aliment) ────────────────────────────────────────
 // Page publique /config/ingredients/{id} : tout utilisateur peut consulter la
@@ -20,6 +22,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
       </div>
     );
   }
+  const [detailOpen, setDetailOpen] = useState(false);
   const cat = categories[ingredient.category] || DEFAULT_CATEGORIES.other;
   const n = ingredient.nutrition || {};
   const hasNutrition = !!ingredient.nutrition;
@@ -88,6 +91,39 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           </div>
         )}
 
+        {/* Saisonnalité : bandeau des 12 mois + statut du mois courant */}
+        {(() => {
+          const months = ingredientMonths(ingredient);
+          if (!months) return null;
+          const set = new Set(months);
+          const inSeason = isIngredientInSeason(ingredient);
+          const cm = currentMonth();
+          return (
+            <div className="slide-up" style={{ background: "var(--surface2)", borderRadius: 12, padding: "12px 14px", marginBottom: 18, animationDelay: "0.18s" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>
+                  <span style={{ fontSize: 15 }}>🗓️</span> Saisonnalité
+                </div>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+                  background: inSeason ? "rgba(76,175,125,0.14)" : "var(--surface)", color: inSeason ? "var(--green)" : "var(--text3)",
+                  border: `1px solid ${inSeason ? "rgba(76,175,125,0.4)" : "var(--border)"}` }}>
+                  {inSeason ? "● De saison" : "○ Hors saison"}
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: 3 }}>
+                {MONTHS_SHORT_FR.map((lbl, i) => {
+                  const m = i + 1, on = set.has(m), now = m === cm;
+                  return (
+                    <div key={m} title={MONTHS_FR[i]} style={{ textAlign: "center", padding: "5px 0", borderRadius: 6, fontSize: 11, fontWeight: now ? 800 : 600,
+                      background: on ? "var(--green)" : "var(--surface)", color: on ? "#fff" : "var(--text3)",
+                      border: now ? "1.5px solid var(--accent)" : "1px solid var(--border)" }}>{lbl}</div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Nutrition pour 100 g */}
         <div className="slide-up" style={{ animationDelay: "0.2s" }}>
         <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, marginBottom: 12 }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
@@ -108,49 +144,64 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                 ))}
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 8 }}>
-              {rows.map(row => {
-                const pct = riPct(row.key, row.value);
-                return (
-                  <div key={row.key} style={{ paddingLeft: row.sub ? 14 : 0 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: row.sub ? 400 : 600, color: row.sub ? "var(--text2)" : "var(--text)" }}>{row.label}</span>
-                      <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                        <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: 600 }}>{fmt(row.value)}</span>
-                        {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", minWidth: 46, flexShrink: 0, whiteSpace: "nowrap", textAlign: "right" }}>{pct}% AJR</span>}
-                      </span>
-                    </div>
-                    <div style={{ height: 6, borderRadius: 3, background: "var(--surface)", overflow: "hidden" }}>
-                      <div style={{ width: `${Math.min(100, pct || 0)}%`, height: "100%", borderRadius: 3, background: row.color, transition: "width 0.4s ease" }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 12 }}>% AJR = apports journaliers recommandés (régime de référence 2000 kcal)</div>
+            <button onClick={() => setDetailOpen(o => !o)} aria-expanded={detailOpen}
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, cursor: "pointer", color: "var(--text2)" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600 }}>
+                <Icon name="fileText" size={14} color="var(--text3)" /> Détail par nutriment
+              </span>
+              <span style={{ display: "inline-flex", transition: "transform 0.2s ease", transform: detailOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
+                <Icon name="forward" size={16} color="var(--text3)" />
+              </span>
+            </button>
+            {detailOpen && (
+              <>
+                <div style={{ display: "flex", flexDirection: "column", gap: 11, margin: "14px 0 8px" }}>
+                  {rows.map(row => {
+                    const pct = riPct(row.key, row.value);
+                    return (
+                      <div key={row.key} style={{ paddingLeft: row.sub ? 14 : 0 }}>
+                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: row.sub ? 400 : 600, color: row.sub ? "var(--text2)" : "var(--text)" }}>{row.label}</span>
+                          <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                            <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: 600 }}>{fmt(row.value)}</span>
+                            {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", minWidth: 46, flexShrink: 0, whiteSpace: "nowrap", textAlign: "right" }}>{pct}% AJR</span>}
+                          </span>
+                        </div>
+                        <div style={{ height: 6, borderRadius: 3, background: "var(--surface)", overflow: "hidden" }}>
+                          <div style={{ width: `${Math.min(100, pct || 0)}%`, height: "100%", borderRadius: 3, background: row.color, transition: "width 0.4s ease" }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 12 }}>% AJR = apports journaliers recommandés (régime de référence 2000 kcal)</div>
+              </>
+            )}
           </>
         ) : (
           <div style={{ fontSize: 13, color: "var(--text3)", fontStyle: "italic", padding: "16px 0" }}>Aucune donnée nutritionnelle renseignée pour cet ingrédient.</div>
         )}
         </div>
 
-        {/* Conseils */}
+        {/* Tips utiles */}
         {Array.isArray(ingredient.tips) && ingredient.tips.length > 0 && (
           <div className="slide-up" style={{ animationDelay: "0.26s" }}>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "28px 0 12px" }}>Conseils</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "28px 0 12px" }}>Tips utiles</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {ingredient.tips.map((tip, i) => {
-                const t = TIP_TYPES[tip.type] || TIP_TYPES.prep;
-                return (
-                  <div key={i} style={{ display: "flex", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 14, borderLeft: `3px solid ${t.color}` }}>
-                    <span style={{ fontSize: 18, lineHeight: 1.3, flexShrink: 0 }}>{t.icon}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: t.color, marginBottom: 2 }}>{t.label}</div>
-                      <div style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.5 }}>{tip.text}</div>
+              {[...ingredient.tips]
+                .sort((a, b) => TIP_ORDER.indexOf(a.type) - TIP_ORDER.indexOf(b.type))
+                .map((tip, i) => {
+                  const t = TIP_TYPES[tip.type] || TIP_TYPES.prep;
+                  return (
+                    <div key={i} style={{ display: "flex", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 14, alignItems: "flex-start" }}>
+                      <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: t.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>{t.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: t.color, marginBottom: 3 }}>{t.label}</div>
+                        <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>{tip.text}</div>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         )}
