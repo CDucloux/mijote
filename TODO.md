@@ -3,6 +3,10 @@
 
 - [ ] Système saisonnier
 
+- [ ] Sur mobile, bug de la swipeable sheet Nouvel ingrédient qui n'est pas scrollable à partir des valeurs nutrtionnelles précises
+- [ ] Sur mobile, dans la swipeablesheet "Ajouter une recette" -> ne pas ouvrir le clavier initialement (car prend trop de view)
+  - [ ] Dans cette swipeablesheet, il faut aussi retirer le healthring et le remplacer par le nutriscore plus clean et remplacer le séparateur "." par "|"
+
 - [ ] Notifications ? à mette en place (Comment gérer pour le PWA ?)
 
 - [ ] Attention avec les notify de bien gérer les icones en double
