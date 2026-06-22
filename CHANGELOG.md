@@ -1,6 +1,6 @@
 # Changelog — Mijoté
 
-## v2.1.0 — Safran · Saisonnalité & Conseils Ingrédients
+## v2.2.0 — Safran · Saisonnalité & Conseils Ingrédients
 
 ### Saisonnalité des recettes
 - Calendrier saisonnier par ingrédient (France métropole, mois 1-12), éditable dans la fiche ingrédient
