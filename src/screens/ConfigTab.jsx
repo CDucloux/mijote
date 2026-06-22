@@ -156,7 +156,19 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
     URL.revokeObjectURL(a.href);
   };
 
-  // Import Markdown : réinjecte / met à jour la base. Match par dbid sinon par nom.
+  const exportUtensilsMarkdown = () => {
+    const esc = s => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
+    const rows = [...utensilDB].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
+    const header = `| Nom | dbid | Image |\n|---|---|---|`;
+    const body = rows.map(r => `| ${esc(r.name)} | ${esc(r.id)} | ${esc(r.image)} |`).join("\n");
+    const md = `# Base d'ustensiles Mijoté (${rows.length})\n\n${header}\n${body}\n`;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
+    a.download = "ustensiles_mijote.md";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   const importIngredientsMarkdown = (text) => {
     setMdInfo("");
     // 1. Garde-fou en-tête : le fichier doit ressembler à un export Mijoté.
@@ -412,6 +424,24 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                 </div>
               ))}
             </div>
+
+            {/* ── Export Markdown de la base ustensiles (admin) — en bas ── */}
+            {isAdmin && (
+              <>
+                <div style={{ height: 6 }} />
+                <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter la base</h3>
+                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{utensilDB.length} ustensile{utensilDB.length > 1 ? "s" : ""} · format Markdown</p>
+                    </div>
+                    <button className="btn btn-ghost btn-sm" onClick={exportUtensilsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      <Icon name="download" size={14} /> Exporter
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
