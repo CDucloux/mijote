@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
-import { HealthRing } from "../components/HealthRing.jsx";
+import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
@@ -252,7 +252,7 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
           </div>
           <div style={{ position: "relative", marginBottom: 12 }}>
             <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
-            <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{ paddingLeft: 34 }} autoFocus />
+            <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{ paddingLeft: 34 }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "44vh" }}>
             {filteredRecipes.map(r => (
@@ -261,9 +261,9 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
                 <div style={{ width: 44, height: 44, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 500 }}>{r.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min · {r.servings} portions</div>
+                  <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min | {r.servings} portions</div>
                 </div>
-                <HealthRing score={r.healthScore || 50} size={30} />
+                <NutriScoreBadge letter={r.nutriLetter} compact />
               </button>
             ))}
             {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
