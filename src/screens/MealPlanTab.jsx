@@ -232,23 +232,36 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
             {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
           </div>
           <div style={{ marginBottom: 14 }}>
-            <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection possible)</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["midi", "soir"].map(s => {
-                const active = addModal.slots.includes(s);
-                const toggle = () => setAddModal(p => {
-                  const cur = p.slots.includes(s) ? p.slots.filter(x => x !== s) : [...p.slots, s];
-                  return { ...p, slots: cur.length ? cur : p.slots };
-                });
-                return (
-                  <button key={s} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? MP_SLOT_TEXT[s] : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? MP_SLOT_TEXT[s] : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
-                    {active && <Icon name="check" size={14} color="#000" />}
-                    {MP_SLOT_LABEL[s]}
-                  </button>
-                );
-              })}
-            </div>
-            {addModal.slots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6, textAlign: "center" }}>La recette sera ajoutée aux deux repas</div>}
+            <div className="field-label" style={{ marginBottom: 8 }}>Repas</div>
+            {(() => {
+              const slots = addModal.slots;
+              const both = slots.length === 2;
+              const sel = both ? "both" : slots[0];
+              const OPTS = [
+                { key: "midi", label: "Midi", emoji: "🌤", slots: ["midi"], fill: "linear-gradient(135deg,#f5cf6a,#f0c060)" },
+                { key: "both", label: "Les deux", emoji: "🍽", slots: ["midi", "soir"], fill: "linear-gradient(135deg,#f0c060,#5b9cf6)" },
+                { key: "soir", label: "Soir", emoji: "🌙", slots: ["soir"], fill: "linear-gradient(135deg,#6fa8f7,#5b9cf6)" },
+              ];
+              return (
+                <div style={{ display: "flex", gap: 5, padding: 5, background: "var(--surface2)", borderRadius: 14, border: "1px solid var(--border)" }}>
+                  {OPTS.map(o => {
+                    const active = sel === o.key;
+                    return (
+                      <button key={o.key} onClick={() => setAddModal(p => ({ ...p, slots: o.slots }))}
+                        style={{ flex: 1, padding: "9px 6px", borderRadius: 10, fontSize: 13.5, fontWeight: 700,
+                          background: active ? o.fill : "transparent",
+                          color: active ? "#1a1410" : "var(--text2)",
+                          border: "none", cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                          boxShadow: active ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+                          transition: "all 0.18s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
+                        <span style={{ fontSize: 15 }}>{o.emoji}</span>{o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
           <div style={{ position: "relative", marginBottom: 12 }}>
             <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
