@@ -7,11 +7,35 @@
 Toutes vos recettes, votre planning repas et vos courses — au même endroit,
 toujours avec vous.
 
-React 19 · Vite 8 · Firebase · PWA
+<br />
+
+![Version](https://img.shields.io/badge/version-2.0.0-e8703a?style=for-the-badge)
+![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
+![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
+
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-12-FFCA28?style=flat-square&logo=firebase&logoColor=black)
+![React Router](https://img.shields.io/badge/React_Router-7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-10-4B32C3?style=flat-square&logo=eslint&logoColor=white)
 
 </div>
 
 ---
+
+## Sommaire
+
+- [✨ Fonctionnalités](#-fonctionnalités)
+- [🛠️ Stack technique](#️-stack-technique)
+- [🚀 Démarrage](#-démarrage)
+  - [Prérequis](#prérequis)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+  - [Lancer en développement](#lancer-en-développement)
+- [📜 Scripts](#-scripts)
+- [🔖 Versionner](#-versionner)
+- [🏗️ Architecture](#️-architecture)
+- [📄 Licence](#-licence)
 
 ## ✨ Fonctionnalités
 
@@ -72,6 +96,14 @@ VITE_ALLOWED_EMAIL=...   # restreint la connexion à cet e-mail
 VITE_ADMIN_EMAIL=...     # e-mail admin (édition de la base de référence partagée)
 ```
 
+> [!IMPORTANT]
+> Sans ces variables, Firebase ne s'initialise pas et la connexion échoue.
+> Le fichier `.env` ne doit **jamais** être commité — il est ignoré par git.
+
+> [!NOTE]
+> `VITE_ALLOWED_EMAIL` verrouille l'application à une seule adresse Google.
+> Laissez la variable vide pour autoriser n'importe quel compte Google.
+
 ### Lancer en développement
 
 ```shell
@@ -79,6 +111,11 @@ npm run dev
 ```
 
 L'application est disponible sur `http://localhost:5173`.
+
+> [!TIP]
+> Mijoté est une PWA : depuis le navigateur (mobile ou desktop), utilisez
+> « Installer l'application » pour l'épingler comme une app native, avec un
+> fonctionnement hors-ligne.
 
 ## 📜 Scripts
 
@@ -99,6 +136,11 @@ npm version major   # changement incompatible        (1.0.7 → 2.0.0)
 npm version minor   # nouvelle fonctionnalité          (1.0.7 → 1.1.0)
 npm version patch   # correction de bug                (1.0.7 → 1.0.8)
 ```
+
+> [!NOTE]
+> Le nom de code de version (ex. « Safran ») et l'historique affichés dans
+> l'app sont dérivés automatiquement de [`CHANGELOG.md`](./CHANGELOG.md) — une
+> seule source de vérité à maintenir.
 
 ## 🏗️ Architecture
 
@@ -122,6 +164,13 @@ src/
 La logique métier (calcul nutritionnel, rapprochement d'ingrédients, génération
 PDF, import de recettes) vit dans `lib/` et est découplée de React, donc
 testable en isolation.
+
+## 📄 Licence
+
+> [!WARNING]
+> Logiciel **propriétaire** — tous droits réservés. Le code source, le design
+> et les contenus associés ne peuvent être copiés, distribués ou modifiés sans
+> autorisation écrite. Voir [`LICENSE`](./LICENSE).
 
 ---
 
