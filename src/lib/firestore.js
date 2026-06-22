@@ -1,4 +1,4 @@
-import { doc, getDoc, collection, getDocs, writeBatch } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs, writeBatch, arrayUnion } from "firebase/firestore";
 import { db } from "./firebase.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 
@@ -39,6 +39,12 @@ export function toSharedListDoc(list, { ownerEmail, ownerUid }) {
     memberEmails,
     updatedAt: Date.now(),
   };
+}
+
+// Enregistre un token de push FCM pour l'utilisateur (dédupliqué via arrayUnion).
+// Lu plus tard par une Cloud Function pour cibler les appareils de l'utilisateur.
+export async function savePushToken(uid, token) {
+  await setDoc(metaDoc(uid, "pushTokens"), { tokens: arrayUnion(token), updatedAt: Date.now() }, { merge: true });
 }
 
 // Read the shared Master reference DB (ingredients + utensils + categories).

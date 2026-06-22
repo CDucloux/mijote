@@ -1,16 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Icon } from "./Icon.jsx";
 import { useOnline } from "../hooks/useOnline.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { AboutModal } from "./AboutModal.jsx";
+import { notificationState, enablePushNotifications } from "../lib/messaging.js";
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
 export function UserAvatar() {
-  const { user, syncStatus, signOut: onSignOut, isDark, toggleTheme: onToggleTheme } = useAppShell();
+  const { user, syncStatus, signOut: onSignOut, isDark, toggleTheme: onToggleTheme, notify } = useAppShell();
   const [open, setOpen] = useState(false);
   const [about, setAbout] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [pushState, setPushState] = useState(null); // null|"unsupported"|"default"|"granted"|"denied"|"loading"
   const online = useOnline();
+
+  // Détermine l'état des notifications à l'ouverture du menu.
+  useEffect(() => { if (open && pushState === null) notificationState().then(setPushState); }, [open, pushState]);
+
+  const enablePush = async () => {
+    setPushState("loading");
+    const res = await enablePushNotifications(user?.uid);
+    if (res.ok) { setPushState("granted"); notify?.("Notifications activées"); }
+    else {
+      setPushState(res.reason === "denied" ? "denied" : "default");
+      notify?.(res.reason === "no-vapid" ? "Clé VAPID manquante (config)"
+        : res.reason === "denied" ? "Notifications refusées dans le navigateur"
+        : "Activation impossible pour le moment", "error");
+    }
+  };
+
   if (!user) return null;
   const offline = !online;
   const syncLabel = offline ? "⚡ Hors ligne — synchro à la reconnexion"
@@ -44,6 +62,21 @@ export function UserAvatar() {
                 </button>
                 <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
               </>
+            )}
+            {pushState && pushState !== "unsupported" && (
+              <button onClick={pushState === "granted" || pushState === "loading" ? undefined : enablePush}
+                disabled={pushState === "granted" || pushState === "loading" || pushState === "denied"}
+                style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none",
+                  color: pushState === "granted" ? "var(--green)" : pushState === "denied" ? "var(--text3)" : "var(--text3)",
+                  fontSize: 12, fontFamily: "var(--ff-body)", cursor: pushState === "default" ? "pointer" : "default", transition: "color 0.15s" }}
+                onMouseEnter={e => { if (pushState === "default") e.currentTarget.style.color = "var(--text)"; }}
+                onMouseLeave={e => { if (pushState === "default") e.currentTarget.style.color = "var(--text3)"; }}>
+                <Icon name="sparkle" size={13} color="currentColor" />
+                {pushState === "granted" ? "Notifications activées"
+                  : pushState === "loading" ? "Activation…"
+                  : pushState === "denied" ? "Notifications bloquées"
+                  : "Activer les notifications"}
+              </button>
             )}
             <button onClick={() => { setOpen(false); setAbout(true); }}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}

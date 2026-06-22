@@ -8,6 +8,7 @@ import { sharedListDoc, toSharedListDoc } from "./lib/firestore.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
+import { listenForegroundMessages } from "./lib/messaging.js";
 import { prepareRecipeImport } from "./lib/recipeImport.js";
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
 import {
@@ -253,6 +254,13 @@ function AppInner() {
     setNotification({ msg, type });
     setTimeout(() => setNotification(null), 2800);
   };
+
+  // Push reçu pendant que l'app est ouverte : on l'affiche en toast.
+  useEffect(() => {
+    let unsub = () => {};
+    listenForegroundMessages(({ title, body }) => notify(body ? `${title} — ${body}` : title)).then(fn => { unsub = fn; });
+    return () => unsub();
+  }, []);
 
   const saveRecipe = r => {
     const result = prepareRecipeForSave(r, { recipes, ingredientDB });

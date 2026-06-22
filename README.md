@@ -91,10 +91,20 @@ VITE_FIREBASE_STORAGE_BUCKET=...
 VITE_FIREBASE_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_APP_ID=...
 
+# Notifications push (optionnel — voir Cloud Messaging)
+VITE_FIREBASE_VAPID_KEY=...   # clé publique VAPID du projet (Web Push)
+
 # Contrôle d'accès (optionnel)
 VITE_ALLOWED_EMAIL=...   # restreint la connexion à cet e-mail
 VITE_ADMIN_EMAIL=...     # e-mail admin (édition de la base de référence partagée)
 ```
+
+> [!NOTE]
+> Les notifications push utilisent Firebase Cloud Messaging. Récupérez la clé
+> **VAPID** dans la console Firebase (_Paramètres du projet → Cloud Messaging →
+> Certificats Web push_). Sans elle, le bouton « Activer les notifications »
+> reste inactif. Sur iPhone, le push requiert iOS 16.4+ **et** l'app ajoutée à
+> l'écran d'accueil.
 
 > [!IMPORTANT]
 > Sans ces variables, Firebase ne s'initialise pas et la connexion échoue.
