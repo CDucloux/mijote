@@ -15,6 +15,8 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   const [filterCol, setFilterCol] = useState(null);
   const [sortBy, setSortBy] = useState("name");
   const [seasonOnly, setSeasonOnly] = useState(false);
+  const [libView, setLibView] = useState("plats"); // "plats" = recettes | "comp" = composants
+  const componentCount = useMemo(() => recipes.filter(r => r.isComponent).length, [recipes]);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef(null);
 
@@ -23,6 +25,8 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   const allTags = [...new Set(recipes.flatMap(r => r.tags || []))];
   const filtered = recipes
     .filter(r => {
+      // Vue par défaut = plats uniquement ; les composants sont isolés dans leur onglet.
+      if (libView === "comp" ? !r.isComponent : !!r.isComponent) return false;
       if (search) {
         const q = normalizeStr(search);
         const inName = normalizeStr(r.name).includes(q);
@@ -37,7 +41,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
     })
     .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt));
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterTag, filterCol, sortBy, seasonOnly]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterTag, filterCol, sortBy, seasonOnly, libView]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -65,6 +69,17 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
+        {/* Bascule bibliothèque : plats vs préparations de base (composants) */}
+        {(componentCount > 0 || libView === "comp") && (
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            {[["plats", "Plats", recipes.length - componentCount], ["comp", "Composants", componentCount]].map(([k, label, n]) => (
+              <button key={k} onClick={() => { setLibView(k); setFilterCol(null); setFilterTag(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500, background: libView === k ? "var(--accent)" : "var(--surface2)", color: libView === k ? "#fff" : "var(--text2)", border: `1px solid ${libView === k ? "var(--accent)" : "var(--border)"}`, transition: "all 0.15s" }}>
+                {k === "comp" && <span style={{ fontSize: 14, lineHeight: 1 }}>🧈</span>}{label}
+                <span style={{ fontSize: 11, fontWeight: 500, padding: "1px 7px", borderRadius: 10, background: libView === k ? "rgba(255,255,255,0.25)" : "var(--surface3)", color: libView === k ? "#fff" : "var(--text3)" }}>{n}</span>
+              </button>
+            ))}
+          </div>
+        )}
         <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6 }}>
           {["name", "health", "date"].map(s => (
             <button key={s} onClick={() => setSortBy(s)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: sortBy === s ? "var(--accent)" : "var(--surface2)", color: sortBy === s ? "#fff" : "var(--text2)", border: `1px solid ${sortBy === s ? "transparent" : "var(--border)"}` }}>
@@ -82,7 +97,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
-        {!search && !filterTag && !filterCol && (
+        {!search && !filterTag && !filterCol && libView !== "comp" && (
           <div style={{ marginBottom: 24 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Collections</h2>
             <div className="collections-row" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>

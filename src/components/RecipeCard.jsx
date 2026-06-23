@@ -10,6 +10,9 @@ export function RecipeCard({ recipe, onClick, style }) {
       <div className="recipe-card-thumb" style={{ aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.65),transparent)" }} />
+        {recipe.isComponent && (
+          <span style={{ position: "absolute", top: 6, left: 6, display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 8, fontSize: 10, fontWeight: 700, background: "rgba(232,112,58,0.92)", color: "#fff" }}>🧈 Prépa</span>
+        )}
       </div>
       <div style={{ padding: "10px 12px 12px" }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, lineHeight: 1.3, letterSpacing: "-0.01em", height: "2.6em", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>

@@ -27,8 +27,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const [selectedIngs, setSelectedIngs] = useState([]);
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
+  const recipesById = useMemo(() => new Map((recipes || []).map(r => [r.id, r])), [recipes]);
+  // Résout une ligne composant → { comp, missing }. comp = recette source (cache name).
+  const resolveComp = (ing) => ing.recipeId ? { comp: recipesById.get(ing.recipeId), missing: !recipesById.get(ing.recipeId) } : null;
   // Retourne true si l'ingrédient de recette est trouvé dans le stock
   const isInStock = (ing) => {
+    if (ing.recipeId) return stockSet.has(ing.recipeId); // composant stocké = déjà préparé
     const match = findIngredientMatch(ing.name, ingredientDB);
     return match ? stockSet.has(match.id) : false;
   };
@@ -309,7 +313,23 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               </div>
               {/* Liste ingrédients */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {recipe.ingredients.map(ing => (
+                {recipe.ingredients.map(ing => {
+                  const rc = resolveComp(ing);
+                  if (rc) return (
+                    <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: rc.missing ? "var(--surface2)" : "rgba(232,112,58,0.07)", borderRadius: 12, padding: "10px 14px", border: `1px solid ${rc.missing ? "var(--border)" : "rgba(232,112,58,0.35)"}`, cursor: rc.comp ? "pointer" : "default" }}>
+                      <span style={{ fontSize: 26, width: 50, textAlign: "center", flexShrink: 0 }}>🧈</span>
+                      <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>
+                        {rc.comp ? rc.comp.name : (ing.name || "Préparation")}
+                        <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "PRÉPA"}</span>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
+                      </div>
+                      {rc.comp && <Icon name="forward" size={13} color="var(--text3)" />}
+                    </div>
+                  );
+                  return (
                   <div key={ing.id} onClick={() => ing.dbId && navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)", cursor: ing.dbId ? "pointer" : "default" }}>
                     <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={50} />
                     <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
@@ -319,7 +339,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     </div>
                     {ing.dbId && <Icon name="forward" size={13} color="var(--text3)" />}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -393,7 +414,22 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {recipe.ingredients.map(ing => (
+                {recipe.ingredients.map(ing => {
+                  const rc = resolveComp(ing);
+                  if (rc) return (
+                    <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (rc.comp) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
+                      <span style={{ fontSize: 26, width: 48, textAlign: "center", flexShrink: 0 }}>🧈</span>
+                      <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
+                      </div>
+                      <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>
+                        {rc.comp ? rc.comp.name : (ing.name || "Préparation")}
+                        <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "PRÉPA"}</span>
+                      </div>
+                    </div>
+                  );
+                  return (
                   <div key={ing.id} onClick={() => ing.dbId && navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: ing.dbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (ing.dbId) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
                     <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                     <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
@@ -402,7 +438,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     </div>
                     <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{ing.name}</div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
             {recipe.utensils && recipe.utensils.length > 0 && (
