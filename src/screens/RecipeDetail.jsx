@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
@@ -12,7 +12,7 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { fmtTime } from "../lib/format.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection }) {
+export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, stock = [] }) {
   const navigate = useNavigate();
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
@@ -25,6 +25,17 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
   const [showCollModal, setShowCollModal] = useState(false);
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
+  const stockSet = useMemo(() => new Set(stock), [stock]);
+  // Retourne true si l'ingrédient de recette est trouvé dans le stock
+  const isInStock = (ing) => {
+    const match = findIngredientMatch(ing.name, ingredientDB);
+    return match ? stockSet.has(match.id) : false;
+  };
+  const openShoppingModal = () => {
+    // Pré-cocher tout sauf ce qui est déjà en stock
+    setSelectedIngs(recipe.ingredients.filter(i => !isInStock(i)).map(i => i.id));
+    setShowShoppingModal(true);
+  };
   const [cookMode, setCookMode] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -165,7 +176,7 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
                   <Icon name="close" size={13} color="var(--text3)" />
                 </button>
               </div>
-              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }}><Icon name="shopping" size={15} /> Courses</button>
+              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => { openShoppingModal(); }}><Icon name="shopping" size={15} /> Courses</button>
               <button className="btn btn-ghost" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
             </div>
           ) : (
@@ -235,7 +246,7 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
               <button onClick={onBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
               <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipe.name}</span>
               <div style={{ display: "flex", gap: 6 }}>
-                <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>
+                <button onClick={() => { openShoppingModal(); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>
               </div>
             </>}
           </div>
@@ -261,7 +272,7 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
               </button>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => { setSelectedIngs(recipe.ingredients.map(i => i.id)); setShowShoppingModal(true); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
+              <button onClick={() => { openShoppingModal(); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
                 <Icon name="shopping" size={14} color="#fff" /> Courses
               </button>
               <button onClick={() => setShowMealModal(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
