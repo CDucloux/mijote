@@ -90,8 +90,8 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
           </span>
           <input className="field-input" placeholder="Rechercher un ingrédient…" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           {search && (
-            <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text3)" }}>
-              <Icon name="close" size={14} />
+            <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}>
+              <Icon name="close" size={13} />
             </button>
           )}
         </div>
