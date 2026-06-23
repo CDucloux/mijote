@@ -215,6 +215,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
                           fontSize: 11, fontWeight: has ? 600 : 400,
                           color: has ? accentCol : "var(--text2)",
                           textAlign: "center", lineHeight: 1.3,
+                          height: "2.6em", // 2 lignes réservées : hauteur constante quel que soit le poids
                           transition: "color 0.35s ease",
                           display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
                         }}>
