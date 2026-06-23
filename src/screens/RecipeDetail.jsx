@@ -504,15 +504,22 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
                     <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
                     <span style={{ fontSize: 12, color: "var(--text2)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
                     {inStock && (
-                      low ? (
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 8, background: "rgba(232,112,58,0.15)", color: "var(--accent)", marginLeft: "auto", flexShrink: 0 }}>
-                          ⚠️ bientôt vide
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        marginLeft: "auto", flexShrink: 0,
+                        fontSize: 10, fontWeight: 600,
+                        color: low ? "var(--accent)" : "var(--green)",
+                      }}>
+                        {/* Même pastille circulaire que dans l'onglet Stock */}
+                        <span style={{
+                          width: 16, height: 16, borderRadius: "50%",
+                          background: low ? "var(--accent)" : "var(--green)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
                         </span>
-                      ) : (
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 8, background: "rgba(76,175,125,0.15)", color: "var(--green)", marginLeft: "auto", flexShrink: 0 }}>
-                          📦 stock
-                        </span>
-                      )
+                        {low ? "bientôt vide" : "en stock"}
+                      </span>
                     )}
                   </div>
                 </button>

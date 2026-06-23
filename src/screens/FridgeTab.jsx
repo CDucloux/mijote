@@ -176,7 +176,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
 
                 {/* Grille d'ingrédients */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 8 }}>
-                  {ings.map(ing => {
+                  {ings.map((ing, i) => {
                     const has = stockSet.has(ing.id);
                     const low = lowSet.has(ing.id);
                     // Couleurs selon l'état : bientôt vide (orange) > en stock (vert) > absent
@@ -196,6 +196,9 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
                           cursor: "pointer",
                           transition: "background 0.55s cubic-bezier(0.4,0,0.2,1), border-color 0.55s cubic-bezier(0.4,0,0.2,1), color 0.35s ease",
                           position: "relative",
+                          // Arrivée échelonnée des cards (plafonnée pour rester fluide)
+                          animation: "stockCardIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94) both",
+                          animationDelay: `${Math.min(i, 14) * 0.025}s`,
                         }}
                       >
                         {/* Badge d'état : ⚠ bientôt vide / ✓ en stock */}
