@@ -194,7 +194,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
                           border: `1.5px solid ${borderCol}`,
                           background: bgCol,
                           cursor: "pointer",
-                          transition: "all 0.15s",
+                          transition: "background 0.35s ease, border-color 0.35s ease, color 0.35s ease",
                           position: "relative",
                         }}
                       >
@@ -204,15 +204,18 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
                             position: "absolute", top: 6, right: 6,
                             width: 16, height: 16, borderRadius: "50%",
                             background: accentCol, display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "background 0.35s ease",
+                            animation: "popIn 0.32s cubic-bezier(0.25,0.46,0.45,0.94) both",
                           }}>
                             <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
                           </span>
                         )}
-                        <IngImage src={ing.image} alt={ing.name} size={44} style={{ borderRadius: 10, opacity: has ? 1 : 0.65 }} />
+                        <IngImage src={ing.image} alt={ing.name} size={44} style={{ borderRadius: 10, opacity: has ? 1 : 0.65, transition: "opacity 0.35s ease" }} />
                         <span style={{
                           fontSize: 11, fontWeight: has ? 600 : 400,
                           color: has ? accentCol : "var(--text2)",
                           textAlign: "center", lineHeight: 1.3,
+                          transition: "color 0.35s ease",
                           display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
                         }}>
                           {ing.name}
