@@ -15,7 +15,9 @@ export const Img = ({ src, alt, style }) => {
 
 // ─── INGREDIENT IMAGE (round, slightly larger, transparent-friendly) ──────────
 // Used everywhere an ingredient image appears, for a consistent circular look.
-export const IngImage = ({ src, alt, size = 48 }) => {
+// `cover` fills the whole circle (real photos, e.g. base recipes) instead of the
+// default contain-on-white used for transparent ingredient PNGs.
+export const IngImage = ({ src, alt, size = 48, cover = false }) => {
   const [err, setErr] = useState(false);
   useEffect(() => { setErr(false); }, [src]);
   return (
@@ -27,7 +29,9 @@ export const IngImage = ({ src, alt, size = 48 }) => {
       {src && !err
         ? <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer"
           loading="lazy" decoding="async"
-          style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+          style={cover
+            ? { width: "100%", height: "100%", objectFit: "cover" }
+            : { width: "82%", height: "82%", objectFit: "contain" }} />
         : <Icon name="photo" size={Math.round(size * 0.42)} color="#b3afaa" />}
     </div>
   );
