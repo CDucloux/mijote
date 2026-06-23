@@ -18,6 +18,7 @@ const STOCK_CATEGORIES = new Set([
 ]);
 export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
   const [search, setSearch] = useState("");
+  const [view, setView] = useState("all"); // "all" = tout ce qu'on peut chercher | "stock" = ce que j'ai
 
   const stockSet = useMemo(() => new Set(stock), [stock]);
 
@@ -29,13 +30,19 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
 
   const clearAll = () => setStock([]);
 
-  // Ingrédients filtrés par recherche, uniquement catégories stock, hors ingrédients sans nom
+  // Tous les ingrédients stockables (catégories non-périssables, avec nom)
+  const stockable = useMemo(() =>
+    ingredientDB.filter(i => i.name && STOCK_CATEGORIES.has(i.category || "other")),
+    [ingredientDB]);
+
+  // Ingrédients filtrés par recherche + vue active (tous / en stock)
   const filtered = useMemo(() => {
     const q = normalizeStr(search);
-    return ingredientDB
-      .filter(i => i.name && STOCK_CATEGORIES.has(i.category || "other") && (!q || normalizeStr(i.name).includes(q) || (i.aliases || []).some(a => normalizeStr(a).includes(q))))
+    return stockable
+      .filter(i => (view === "all" || stockSet.has(i.id))
+        && (!q || normalizeStr(i.name).includes(q) || (i.aliases || []).some(a => normalizeStr(a).includes(q))))
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
-  }, [ingredientDB, search]);
+  }, [stockable, search, view, stockSet]);
 
   // Regroupement par catégorie
   const grouped = useMemo(() => {
@@ -65,11 +72,6 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {inStockCount > 0 && (
-              <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 10, background: "rgba(76,175,125,0.15)", color: "var(--green)" }}>
-                {inStockCount} en stock
-              </span>
-            )}
-            {inStockCount > 0 && (
               <button onClick={clearAll} style={{ fontSize: 12, color: "var(--text3)", padding: "6px 10px", borderRadius: 10, background: "var(--surface2)", border: "1px solid var(--border)" }}>
                 Tout effacer
               </button>
@@ -90,6 +92,34 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
             </button>
           )}
         </div>
+
+        {/* Pills de filtre : tout ce qu'on peut chercher / ce que j'ai en stock */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          {[
+            { key: "all", label: "À chercher", count: stockable.length },
+            { key: "stock", label: "En stock", count: inStockCount },
+          ].map(p => {
+            const active = view === p.key;
+            return (
+              <button key={p.key} onClick={() => setView(p.key)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
+                  background: active ? "var(--accent)" : "var(--surface2)",
+                  color: active ? "#fff" : "var(--text2)",
+                  border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
+                  cursor: "pointer", transition: "all 0.15s",
+                }}>
+                {p.label}
+                <span style={{
+                  fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 10,
+                  background: active ? "rgba(255,255,255,0.25)" : "var(--surface3)",
+                  color: active ? "#fff" : "var(--text3)",
+                }}>{p.count}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Corps scrollable */}
@@ -101,8 +131,10 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}>
-            <Icon name="search" size={32} />
-            <p style={{ fontSize: 14, marginTop: 8 }}>Aucun ingrédient trouvé</p>
+            <Icon name={view === "stock" && !search ? "box" : "search"} size={32} />
+            <p style={{ fontSize: 14, marginTop: 8 }}>
+              {view === "stock" && !search ? "Aucun article en stock" : "Aucun ingrédient trouvé"}
+            </p>
           </div>
         ) : (
           grouped.map(([catKey, ings]) => {
@@ -134,7 +166,7 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
                           padding: "10px 6px 8px",
                           borderRadius: 14,
                           border: `1.5px solid ${has ? "rgba(76,175,125,0.6)" : "var(--border)"}`,
-                          background: has ? "rgba(76,175,125,0.10)" : "var(--surface2)",
+                          background: has ? "rgba(76,175,125,0.10)" : "var(--surface)",
                           cursor: "pointer",
                           transition: "all 0.15s",
                           position: "relative",
