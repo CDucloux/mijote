@@ -43,7 +43,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editCol, setEditCol] = useState(null);
-  const [editCat, setEditCat] = useState(null); // { key, label, score(0-100), color, icon, isNew }
+  const [editCat, setEditCat] = useState(null); // { key, label, color, icon, isNew }
   const [confirmDelCat, setConfirmDelCat] = useState(null); // { key, label }
   const [confirmDel, setConfirmDel] = useState(null); // { type: "ing" | "ut", item }
   const [dragCat, setDragCat] = useState(null); // key being dragged
@@ -87,7 +87,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
     setUtensilDB(prev => prev.filter(d => d.id !== id));
   };
 
-  // ── Categories (admin only) — score entered on 0-100, stored on 0-10 scale ──
+  // ── Categories (admin only) ─────────────────────────────────────────────────────
   const slugifyCat = (label) => "cat_" + label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 32);
   const saveCat = (form) => {
     const label = (form.label || "").trim();
@@ -99,7 +99,6 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
     }
     const entry = {
       label,
-      score: Math.max(0, Math.min(10, Math.round((Number(form.score) || 0) / 10))),
       color: form.color || "#9a9490",
       icon: form.icon || "📦",
       order: form.isNew
