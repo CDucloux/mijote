@@ -8,6 +8,14 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categori
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
 // Gestion binaire du stock (placards / étagères) : j'en ai / j'en ai pas.
 // Chaque ingrédient de la base est listable ; le stock = tableau d'IDs.
+
+// Catégories non-périssables stockables en placard (clés techniques explicites,
+// indépendantes de l'ordre d'affichage). Les produits frais (légumes, fruits,
+// laitiers, herbes, champignons, viandes, poissons) sont volontairement exclus.
+const STOCK_CATEGORIES = new Set([
+  "legume", "grain", "oil", "acid", "sauce", "condiment",
+  "nuts_seeds", "sugar", "baking", "alcohol", "other",
+]);
 export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
   const [search, setSearch] = useState("");
 
@@ -21,20 +29,13 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
 
   const clearAll = () => setStock([]);
 
-  // Catégories éligibles au stock : à partir de legume (order >= 7 = non-périssables)
-  const stockCatKeys = useMemo(() => new Set(
-    sortedCategoryEntries(categories)
-      .filter(([, cat]) => (cat.order ?? 99) >= 7)
-      .map(([k]) => k)
-  ), [categories]);
-
   // Ingrédients filtrés par recherche, uniquement catégories stock, hors ingrédients sans nom
   const filtered = useMemo(() => {
     const q = normalizeStr(search);
     return ingredientDB
-      .filter(i => i.name && stockCatKeys.has(i.category || "other") && (!q || normalizeStr(i.name).includes(q) || (i.aliases || []).some(a => normalizeStr(a).includes(q))))
+      .filter(i => i.name && STOCK_CATEGORIES.has(i.category || "other") && (!q || normalizeStr(i.name).includes(q) || (i.aliases || []).some(a => normalizeStr(a).includes(q))))
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
-  }, [ingredientDB, search, stockCatKeys]);
+  }, [ingredientDB, search]);
 
   // Regroupement par catégorie
   const grouped = useMemo(() => {
