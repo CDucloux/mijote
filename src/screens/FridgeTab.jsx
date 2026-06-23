@@ -162,7 +162,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
                   )}
                   {lowInCat > 0 && (
                     <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(232,112,58,0.15)", color: "var(--accent)" }}>
-                      {lowInCat} à racheter
+                      {lowInCat} bientôt vide
                     </span>
                   )}
                 </div>
