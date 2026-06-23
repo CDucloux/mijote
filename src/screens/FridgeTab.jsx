@@ -205,7 +205,10 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
                             width: 16, height: 16, borderRadius: "50%",
                             background: accentCol, display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
-                            <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
+                            {/* Le triangle « warning » est bottom-heavy : léger décalage optique vers le haut */}
+                            <span style={{ display: "flex", transform: low ? "translateY(-1px)" : "none" }}>
+                              <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
+                            </span>
                           </span>
                         )}
                         <IngImage src={ing.image} alt={ing.name} size={44} style={{ borderRadius: 10, opacity: has ? 1 : 0.65 }} />
