@@ -458,7 +458,7 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
       {showShoppingModal && (
         <SwipeableSheet onClose={() => setShowShoppingModal(false)} style={{ maxHeight: "85dvh" }}>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Ajouter aux courses</h3>
-          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Décoche les ingrédients que tu as déjà.</p>
+          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--green)" }}>📦 en stock</span> sont décochés par défaut.</p>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
             <button style={{ fontSize: 12, color: "var(--accent)" }} onClick={() => setSelectedIngs(recipe.ingredients.map(i => i.id))}>Tout sélectionner</button>
             <button style={{ fontSize: 12, color: "var(--text3)" }} onClick={() => setSelectedIngs([])}>Tout décocher</button>
@@ -466,6 +466,7 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
           <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto", maxHeight: "52vh", marginBottom: 16 }}>
             {recipe.ingredients.map(ing => {
               const selected = selectedIngs.includes(ing.id);
+              const inStock = isInStock(ing);
               return (
                 <button key={ing.id} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing.id) : [...prev, ing.id])}
                   style={{
@@ -481,9 +482,14 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
                   }}>
                     {selected && <Icon name="check" size={11} color="#fff" />}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
-                    <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 8 }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
+                    <span style={{ fontSize: 12, color: "var(--text2)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
+                    {inStock && (
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 8, background: "rgba(76,175,125,0.15)", color: "var(--green)", marginLeft: "auto", flexShrink: 0 }}>
+                        📦 stock
+                      </span>
+                    )}
                   </div>
                 </button>
               );
