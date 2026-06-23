@@ -102,9 +102,8 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
 
     if (annexeBlocks) {
       annexeHtml = `
-        <div class="annexe-break"></div>
-        <div class="section-title" style="margin-top:32px">Préparations de base</div>
-        <p style="font-size:13px;color:var(--text3);margin-bottom:20px">Quantités ajustées pour cette recette (${recipe.servings || 1} portion${(recipe.servings || 1) > 1 ? "s" : ""}).</p>
+        <div class="section-title">Préparations de base</div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:20px">À réaliser avant de commencer. Quantités ajustées pour cette recette (${recipe.servings || 1} portion${(recipe.servings || 1) > 1 ? "s" : ""}).</p>
         ${annexeBlocks}`;
     }
   }
@@ -150,7 +149,6 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     .step-text { color: var(--text2); line-height: 1.65; padding-left: 40px; }
     .step-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-left: 40px; }
     /* Annexe composants */
-    .annexe-break { page-break-before: always; break-before: page; }
     .comp-block { margin-bottom: 28px; padding: 16px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
     .comp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .comp-icon { font-size: 18px; }
@@ -196,11 +194,11 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   <div class="section-title">Ustensiles</div>
   <div class="ing-pills" style="margin-bottom:20px">${utPills}</div>` : ""}
 
+  ${annexeHtml}
+
   ${(recipe.steps || []).length ? `
   <div class="section-title">Étapes</div>
   ${stepLines}` : ""}
-
-  ${annexeHtml}
 
   <div class="footer">
     <span class="footer-brand">Mijoté<span class="dot">·</span></span>
