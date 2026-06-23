@@ -107,7 +107,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {[
             { key: "stock", label: "En stock", count: inStockCount },
-            { key: "low", label: "À racheter", count: lowStock.length },
+            { key: "low", label: "Bientôt vide", count: lowStock.length },
             { key: "all", label: "Tous", count: stockable.length },
           ].map(p => {
             const active = view === p.key;
