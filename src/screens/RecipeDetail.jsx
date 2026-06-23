@@ -319,8 +319,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: rc.missing ? "var(--surface2)" : "rgba(232,112,58,0.07)", borderRadius: 12, padding: "10px 14px", border: `1px solid ${rc.missing ? "var(--border)" : "rgba(232,112,58,0.35)"}`, cursor: rc.comp ? "pointer" : "default" }}>
                       <span style={{ fontSize: 26, width: 50, textAlign: "center", flexShrink: 0 }}>🧈</span>
                       <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>
-                        {rc.comp ? rc.comp.name : (ing.name || "Préparation")}
-                        <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "PRÉPA"}</span>
+                        {rc.comp ? rc.comp.name : (ing.name || "Base")}
+                        <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
                         <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
@@ -424,8 +424,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
                       </div>
                       <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>
-                        {rc.comp ? rc.comp.name : (ing.name || "Préparation")}
-                        <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "PRÉPA"}</span>
+                        {rc.comp ? rc.comp.name : (ing.name || "Base")}
+                        <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>
                       </div>
                     </div>
                   );

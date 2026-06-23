@@ -96,7 +96,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
             <div style={{ fontSize: 72, lineHeight: 1 }}>🍳</div>
           </div>
           <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 500, letterSpacing: "-0.02em", marginBottom: 12, animation: "popIn 0.6s 0.2s both cubic-bezier(0.34,1.56,0.64,1)" }}>
-            {isNested ? "Préparation terminée !" : "Félicitations !"}
+            {isNested ? "Base terminée !" : "Félicitations !"}
           </h1>
           <p style={{ fontSize: 16, color: "var(--text2)", lineHeight: 1.6, marginBottom: 32, maxWidth: 300, animation: "popIn 0.5s 0.35s both ease" }}>
             {isNested
@@ -121,7 +121,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
               {recipe.name}
             </div>
             <div style={{ fontSize: 12, color: "var(--text3)" }}>
-              {isStepZero ? "Préparations de base" : `Étape ${stepIdx + (STEP_ZERO ? 0 : 1)} / ${realStepCount}`}
+              {isStepZero ? "Bases" : `Étape ${stepIdx + (STEP_ZERO ? 0 : 1)} / ${realStepCount}`}
             </div>
           </div>
         </div>
@@ -141,7 +141,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                 <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: stepIdx === 0 ? "var(--accent)" : stepIdx > 0 ? "var(--green)" : "var(--surface2)", color: stepIdx >= 0 ? "#fff" : "var(--text3)" }}>
                   {stepIdx > 0 ? <Icon name="check" size={11} color="#fff" /> : "🧈"}
                 </div>
-                <span style={{ fontSize: 13, color: stepIdx === 0 ? "var(--accent)" : "var(--text3)", fontWeight: stepIdx === 0 ? 600 : 400, lineHeight: 1.4 }}>Préparations</span>
+                <span style={{ fontSize: 13, color: stepIdx === 0 ? "var(--accent)" : "var(--text3)", fontWeight: stepIdx === 0 ? 600 : 400, lineHeight: 1.4 }}>Bases</span>
               </button>
             )}
             {(recipe.steps || []).map((s, i) => {
@@ -166,10 +166,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🧈</div>
-                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Préparations de base</h2>
+                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Bases</h2>
                   </div>
                   <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
-                    Ces préparations ne sont pas en stock. Réalisez-les avant de commencer la recette principale.
+                    Ces bases ne sont pas en stock. Réalisez-les avant de commencer la recette principale.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {pendingComponents.map(({ line, comp, nestedMult }) => (
@@ -241,7 +241,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
             <Icon name="back" size={16} /> Précédent
           </button>
           <span style={{ fontSize: 12, color: "var(--text3)", minWidth: 60, textAlign: "center" }}>
-            {isStepZero ? "Prépa" : `${realIdx + 1} / ${realStepCount}`}
+            {isStepZero ? "Bases" : `${realIdx + 1} / ${realStepCount}`}
           </span>
           {stepIdx < totalSteps - 1
             ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)}>Suivant <Icon name="forward" size={16} /></button>

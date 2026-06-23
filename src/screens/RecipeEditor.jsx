@@ -135,7 +135,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     <span style={{ position: "absolute", top: 2, left: form.isComponent ? 20 : 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
                   </button>
                   <div style={{ flex: 1 }} onClick={() => up("isComponent", !form.isComponent)}>
-                    <div style={{ fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>🧈 Préparation de base</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>🧈 Base</div>
                     <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Réutilisable comme ingrédient dans d'autres recettes (béchamel, sauce, pâte…)</div>
                   </div>
                 </label>
@@ -185,8 +185,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <span style={{ fontSize: 18, flexShrink: 0 }}>🧈</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {(recipes || []).find(r => r.id === ing.recipeId)?.name || ing.name || "Composant supprimé"}
-                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", marginLeft: 6 }}>PRÉPARATION</span>
+                    {(recipes || []).find(r => r.id === ing.recipeId)?.name || ing.name || "Base supprimée"}
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", marginLeft: 6 }}>BASE</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
                     <input className="field-input" type="number" min="0" step="any" placeholder="Quantité" value={ing.amount} onChange={e => updIng(ing.id, "amount", e.target.value === "" ? "" : +e.target.value)} style={{ marginBottom: 0, maxWidth: 120 }} />
@@ -240,14 +240,14 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             {!form.isComponent ? (
               <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 10 }}>
                 <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-                  {[["ing", "Ingrédient"], ["comp", "Composant"]].map(([k, label]) => (
+                  {[["ing", "Ingrédient"], ["comp", "Base"]].map(([k, label]) => (
                     <button key={k} onClick={() => setAddMode(k)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 13, fontWeight: 500, background: addMode === k ? "var(--accent)" : "var(--surface2)", color: addMode === k ? "#fff" : "var(--text2)", border: `1px solid ${addMode === k ? "var(--accent)" : "var(--border)"}`, transition: "all 0.15s" }}>{label}</button>
                   ))}
                 </div>
                 {addMode === "ing" ? (
                   <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
                 ) : availableComponents.length === 0 ? (
-                  <p style={{ fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "8px 0" }}>Aucune préparation disponible. Crée une recette en « préparation de base » d'abord.</p>
+                  <p style={{ fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "8px 0" }}>Aucune base disponible. Crée une recette en « base » d'abord.</p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {availableComponents.map(comp => (

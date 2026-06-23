@@ -274,7 +274,7 @@ function AppInner() {
         const names = refs.slice(0, 3).map(x => `« ${x.name} »`).join(", ");
         const extra = refs.length > 3 ? ` et ${refs.length - 3} autre(s)` : "";
         const ok = window.confirm(
-          `Cette préparation est utilisée dans ${refs.length} recette(s) : ${names}${extra}.\n\nLes lignes qui y font référence seront supprimées. Continuer ?`
+          `Cette base est utilisée dans ${refs.length} recette(s) : ${names}${extra}.\n\nLes lignes qui y font référence seront supprimées. Continuer ?`
         );
         if (!ok) return;
         // Délie les lignes orphelines dans les recettes référencées
@@ -287,7 +287,7 @@ function AppInner() {
         }).filter(recipe => recipe.id !== id));
         if (r?.image) deleteImageByUrl(r.image);
         navigate("/recipes");
-        notify("Préparation supprimée");
+        notify("Base supprimée");
         return;
       }
     }

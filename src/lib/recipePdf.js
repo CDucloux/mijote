@@ -102,7 +102,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
 
     if (annexeBlocks) {
       annexeHtml = `
-        <div class="section-title">Préparations de base</div>
+        <div class="section-title">Bases</div>
         <p style="font-size:13px;color:var(--text3);margin-bottom:20px">À réaliser avant de commencer. Quantités ajustées pour cette recette (${recipe.servings || 1} portion${(recipe.servings || 1) > 1 ? "s" : ""}).</p>
         ${annexeBlocks}`;
     }

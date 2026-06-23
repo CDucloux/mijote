@@ -15,8 +15,6 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   const [filterCol, setFilterCol] = useState(null);
   const [sortBy, setSortBy] = useState("name");
   const [seasonOnly, setSeasonOnly] = useState(false);
-  const [libView, setLibView] = useState("plats"); // "plats" = recettes | "comp" = composants
-  const componentCount = useMemo(() => recipes.filter(r => r.isComponent).length, [recipes]);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef(null);
 
@@ -25,8 +23,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   const allTags = [...new Set(recipes.flatMap(r => r.tags || []))];
   const filtered = recipes
     .filter(r => {
-      // Vue par défaut = plats uniquement ; les composants sont isolés dans leur onglet.
-      if (libView === "comp" ? !r.isComponent : !!r.isComponent) return false;
+      // Plats et bases cohabitent dans la même grille ; le badge en coin les distingue.
       if (search) {
         const q = normalizeStr(search);
         const inName = normalizeStr(r.name).includes(q);
@@ -41,7 +38,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
     })
     .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt));
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterTag, filterCol, sortBy, seasonOnly, libView]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterTag, filterCol, sortBy, seasonOnly]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -86,7 +83,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
-        {!search && !filterTag && !filterCol && libView !== "comp" && (
+        {!search && !filterTag && !filterCol && (
           <div style={{ marginBottom: 24 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Collections</h2>
             <div className="collections-row" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
@@ -106,21 +103,9 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           </div>
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
-          {(componentCount > 0 || libView === "comp") ? (
-            /* Switch segmenté Plats / Composants en lieu et place du titre de liste */
-            <div style={{ display: "inline-flex", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, padding: 3, gap: 3 }}>
-              {[["plats", "Plats", recipes.length - componentCount], ["comp", "Composants", componentCount]].map(([k, label, n]) => (
-                <button key={k} onClick={() => { setLibView(k); setFilterCol(null); setFilterTag(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9, fontSize: 13, fontWeight: 600, background: libView === k ? "var(--accent)" : "transparent", color: libView === k ? "#fff" : "var(--text2)", border: "none", cursor: "pointer", transition: "all 0.15s" }}>
-                  {k === "comp" && <span style={{ fontSize: 14, lineHeight: 1 }}>🧈</span>}{label}
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: "1px 7px", borderRadius: 10, background: libView === k ? "rgba(255,255,255,0.25)" : "var(--surface3)", color: libView === k ? "#fff" : "var(--text3)" }}>{n}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
-            </h2>
-          )}
+          <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
+          </h2>
           {filterCol && (() => { const ac = collections.find(c => c.id === filterCol); return (
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               {ac && (

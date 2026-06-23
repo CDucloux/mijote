@@ -239,7 +239,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
         <div style={{ marginTop: grouped.length > 0 || filtered.length === 0 ? 32 : 0, borderTop: "1px solid var(--border)", paddingTop: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 15 }}>🧈</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)", letterSpacing: "0.01em" }}>Mes Préparations</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)", letterSpacing: "0.01em" }}>Mes Bases</span>
             {components.length > 0 && (
               <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(76,175,125,0.15)", color: "var(--green)" }}>
                 {components.filter(c => stockSet.has(c.id)).length}/{components.length}
@@ -248,7 +248,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
           </div>
           {components.length === 0 ? (
             <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5 }}>
-              Crée une préparation de base dans la bibliothèque pour l'afficher ici.
+              Crée une base dans la bibliothèque pour l'afficher ici.
             </p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
