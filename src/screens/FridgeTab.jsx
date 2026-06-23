@@ -212,7 +212,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
                         )}
                         <IngImage src={ing.image} alt={ing.name} size={44} style={{ borderRadius: 10, opacity: has ? 1 : 0.65, transition: "opacity 0.35s ease" }} />
                         <span style={{
-                          fontSize: 11, fontWeight: has ? 600 : 400,
+                          fontSize: 11, fontWeight: 400,
                           color: has ? accentCol : "var(--text2)",
                           textAlign: "center", lineHeight: 1.3,
                           height: "2.6em", // 2 lignes réservées : hauteur constante quel que soit le poids
