@@ -27,11 +27,20 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
 
   // Ingredients
+  const [addMode, setAddMode] = useState("ing"); // "ing" = ingrédient brut | "comp" = composant
   const addIng = () => {
     up("ingredients", [...form.ingredients, { id: "i" + Date.now(), dbId: "", name: "", amount: "", unit: "", _raw: "" }]);
   };
   const updIng = (id, f, v) => up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i));
   const remIng = id => up("ingredients", form.ingredients.filter(i => i.id !== id));
+
+  // Composants disponibles (préparations de base), hors la recette courante et hors
+  // celles déjà référencées. Indisponible si on édite soi-même un composant (mono-niveau v1).
+  const usedRecipeIds = new Set(form.ingredients.filter(i => i.recipeId).map(i => i.recipeId));
+  const availableComponents = (recipes || []).filter(r => r.isComponent && r.id !== form.id && !usedRecipeIds.has(r.id));
+  const addComponent = (comp) => {
+    up("ingredients", [...form.ingredients, { id: "i" + Date.now(), recipeId: comp.id, name: comp.name, amount: "", unit: comp.yield?.unit || "g" }]);
+  };
 
   // Utensils
   const addUt = () => {
@@ -170,7 +179,28 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
         {/* Slide 2 — Ingrédients */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {form.ingredients.map(ing => (
+            {form.ingredients.map(ing => ing.recipeId ? (
+              /* Ligne composant : préparation de base référencée */
+              <div key={ing.id} style={{ background: "rgba(232,112,58,0.06)", borderRadius: 12, padding: 12, border: "1px solid rgba(232,112,58,0.4)", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18, flexShrink: 0 }}>🧈</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {(recipes || []).find(r => r.id === ing.recipeId)?.name || ing.name || "Composant supprimé"}
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", marginLeft: 6 }}>PRÉPARATION</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                    <input className="field-input" type="number" min="0" step="any" placeholder="Quantité" value={ing.amount} onChange={e => updIng(ing.id, "amount", e.target.value === "" ? "" : +e.target.value)} style={{ marginBottom: 0, maxWidth: 120 }} />
+                    <span style={{ fontSize: 13, color: "var(--text2)", fontWeight: 500 }}>{ing.unit}</span>
+                    {(() => {
+                      const comp = (recipes || []).find(r => r.id === ing.recipeId);
+                      if (!comp) return <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 600 }}>⚠ introuvable</span>;
+                      return comp.yield?.amount ? <span style={{ fontSize: 11, color: "var(--text3)" }}>/ {comp.yield.amount} {comp.yield.unit} produits</span> : null;
+                    })()}
+                  </div>
+                </div>
+                <button onClick={() => remIng(ing.id)} style={{ flexShrink: 0 }}><Icon name="trash" size={14} color="var(--red)" /></button>
+              </div>
+            ) : (
               <div key={ing.id} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: "1px solid var(--border)", display: "flex", alignItems: "flex-start", gap: 10 }}>
                 <div style={{ flex: 1 }}>
                   <input className="field-input" placeholder="ex: 500g pois chiches, 2 oeufs, 1 c. à soupe huile…"
@@ -205,7 +235,35 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <button onClick={() => remIng(ing.id)} style={{ flexShrink: 0, paddingTop: 10 }}><Icon name="trash" size={14} color="var(--red)" /></button>
               </div>
             ))}
-            <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
+            {/* Zone d'ajout : bascule ingrédient brut / composant (préparation de base).
+                Onglet Composants masqué quand on édite soi-même un composant (mono-niveau v1). */}
+            {!form.isComponent ? (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 10 }}>
+                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                  {[["ing", "Ingrédient"], ["comp", "Composant"]].map(([k, label]) => (
+                    <button key={k} onClick={() => setAddMode(k)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 13, fontWeight: 500, background: addMode === k ? "var(--accent)" : "var(--surface2)", color: addMode === k ? "#fff" : "var(--text2)", border: `1px solid ${addMode === k ? "var(--accent)" : "var(--border)"}`, transition: "all 0.15s" }}>{label}</button>
+                  ))}
+                </div>
+                {addMode === "ing" ? (
+                  <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
+                ) : availableComponents.length === 0 ? (
+                  <p style={{ fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "8px 0" }}>Aucune préparation disponible. Crée une recette en « préparation de base » d'abord.</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {availableComponents.map(comp => (
+                      <button key={comp.id} onClick={() => addComponent(comp)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: "var(--surface2)", border: "1px solid var(--border)", textAlign: "left" }}>
+                        <span style={{ fontSize: 16 }}>🧈</span>
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{comp.name}</span>
+                        <span style={{ fontSize: 11, color: "var(--text3)" }}>{comp.yield?.amount} {comp.yield?.unit}</span>
+                        <Icon name="plus" size={15} color="var(--accent)" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
+            )}
           </div>
           <div style={{ height: 20 }} />
         </div>
