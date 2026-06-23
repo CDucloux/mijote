@@ -242,7 +242,7 @@ function AppInner() {
 
   // Update document title on tab change
   useEffect(() => {
-    const titles = { "home": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Stock", "config": "Configuration" };
+    const titles = { "home": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration" };
     document.title = `Mijoté | ${titles[tab] || "Recettes"}`;
   }, [tab]);
 
@@ -432,6 +432,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/recipes" replace />} />
+      <Route path="/fridge" element={<Navigate to="/stock" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout
           remontage (et donc le flicker de l'écran de chargement) lors de la navigation. */}

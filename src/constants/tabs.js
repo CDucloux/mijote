@@ -3,7 +3,7 @@ export const TABS = [
   { id: "home", label: "Recettes", icon: "book", path: "/recipes" },
   { id: "meal-plan", label: "Planning", icon: "calendar", path: "/meal-plan" },
   { id: "shopping", label: "Courses", icon: "shopping", path: "/shopping-lists" },
-  { id: "fridge", label: "Stock", icon: "box", path: "/fridge" },
+  { id: "fridge", label: "Stock", icon: "box", path: "/stock" },
   { id: "config", label: "Config", icon: "settings", path: "/config" },
 ];
 export const TAB_BY_PATH = Object.fromEntries(TABS.map(t => [t.path, t.id]));

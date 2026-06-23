@@ -21,13 +21,20 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
 
   const clearAll = () => setStock([]);
 
-  // Ingrédients filtrés par recherche, hors ingrédients sans nom
+  // Catégories éligibles au stock : à partir de legume (order >= 7 = non-périssables)
+  const stockCatKeys = useMemo(() => new Set(
+    sortedCategoryEntries(categories)
+      .filter(([, cat]) => (cat.order ?? 99) >= 7)
+      .map(([k]) => k)
+  ), [categories]);
+
+  // Ingrédients filtrés par recherche, uniquement catégories stock, hors ingrédients sans nom
   const filtered = useMemo(() => {
     const q = normalizeStr(search);
     return ingredientDB
-      .filter(i => i.name && (!q || normalizeStr(i.name).includes(q) || (i.aliases || []).some(a => normalizeStr(a).includes(q))))
+      .filter(i => i.name && stockCatKeys.has(i.category || "other") && (!q || normalizeStr(i.name).includes(q) || (i.aliases || []).some(a => normalizeStr(a).includes(q))))
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
-  }, [ingredientDB, search]);
+  }, [ingredientDB, search, stockCatKeys]);
 
   // Regroupement par catégorie
   const grouped = useMemo(() => {
@@ -53,11 +60,14 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mon Stock</h1>
-            <span style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em" }}>
-              {inStockCount > 0 ? `${inStockCount} ingrédient${inStockCount > 1 ? "s" : ""} en stock` : "Aucun article en stock"}
-            </span>
+            <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {inStockCount > 0 && (
+              <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 10, background: "rgba(76,175,125,0.15)", color: "var(--green)" }}>
+                {inStockCount} en stock
+              </span>
+            )}
             {inStockCount > 0 && (
               <button onClick={clearAll} style={{ fontSize: 12, color: "var(--text3)", padding: "6px 10px", borderRadius: 10, background: "var(--surface2)", border: "1px solid var(--border)" }}>
                 Tout effacer
