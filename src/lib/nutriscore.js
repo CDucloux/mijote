@@ -67,11 +67,64 @@ export function ingredientGrams(recipeIng, dbItem) {
   return Math.max(amount * perUnit, 1);
 }
 
-export function computeNutriInfo(ingredients, ingredientDB) {
+// ─── COMPOSANTS (préparations de base) ───────────────────────────────────────
+// Une ligne d'ingrédient référence soit un ingrédient brut (dbId), soit un
+// composant = une autre recette (recipeId). v1 : composition mono-niveau (un
+// composant ne contient que des ingrédients bruts), donc pas de cycle possible.
+const num = v => parseFloat(String(v).replace(",", ".")) || 0;
+export const isComponentLine = (line) => !!line && !!line.recipeId && !line.dbId;
+export const buildRecipeIndex = (recipes) => new Map((recipes || []).map(r => [r.id, r]));
+
+// Agrège les ingrédients BRUTS d'une liste (ignore toute sous-référence composant).
+function aggregateRaw(ingredients, ingredientDB, keys, wantVeg) {
+  const tot = Object.fromEntries(keys.map(k => [k, 0]));
+  let mass = 0, covered = 0, vegMass = 0;
+  for (const ci of ingredients || []) {
+    if (!ci || ci.recipeId) continue;
+    const di = ingredientDB.find(d => d.id === ci.dbId);
+    if (!di) continue;
+    const cm = ingredientGrams(ci, di);
+    mass += cm;
+    if (di.nutrition) {
+      for (const k of keys) tot[k] += (di.nutrition[k] || 0) * cm / 100;
+      covered += cm;
+      if (wantVeg && di.nutrition.isVegetable) vegMass += cm;
+    }
+  }
+  return { tot, mass, covered, vegMass };
+}
+
+// Contribution nutritionnelle d'une ligne composant à sa recette parente.
+// fraction f = consommé / rendement ; masse finie = consommé (g/ml, ≈1g/ml)
+// ou f×masseBrute (pièce, faute d'équivalence directe). La réduction est ainsi
+// reflétée : nutriments = totauxBruts×f répartis sur la masse FINIE → densité ↑.
+function componentContribution(line, recipesById, ingredientDB, keys, wantVeg) {
+  const comp = recipesById && recipesById.get(line.recipeId);
+  if (!comp || !(comp.yield && comp.yield.amount > 0)) return null; // orphelin → ignoré
+  const f = num(line.amount) / comp.yield.amount;
+  const agg = aggregateRaw(comp.ingredients, ingredientDB, keys, wantVeg);
+  const unit = (comp.yield.unit || "g").toLowerCase();
+  const finished = (unit === "g" || unit === "ml") ? num(line.amount) : f * agg.mass;
+  const covFrac = agg.mass ? agg.covered / agg.mass : 0;
+  const vegFrac = agg.mass ? agg.vegMass / agg.mass : 0;
+  const totAdd = Object.fromEntries(keys.map(k => [k, agg.tot[k] * f]));
+  return { totAdd, massAdd: finished, coveredAdd: finished * covFrac, vegAdd: finished * vegFrac };
+}
+
+const NS_KEYS = ["calories", "sugar", "saturatedFat", "salt", "fiber", "protein"];
+export function computeNutriInfo(ingredients, ingredientDB, recipesById) {
   if (!ingredients || ingredients.length === 0) return { score: 50, letter: null };
   let mass = 0, vegMass = 0;
   const tot = { calories: 0, sugar: 0, saturatedFat: 0, salt: 0, fiber: 0, protein: 0 };
   for (const recipeIng of ingredients) {
+    if (isComponentLine(recipeIng)) { // composant → contribution agrégée (sur sa masse couverte)
+      const c = componentContribution(recipeIng, recipesById, ingredientDB, NS_KEYS, true);
+      if (!c) continue;
+      for (const k of NS_KEYS) tot[k] += c.totAdd[k];
+      vegMass += c.vegAdd;
+      mass += c.coveredAdd;
+      continue;
+    }
     const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
     if (!dbItem || !dbItem.nutrition) continue; // maille ingrédient : pas de nutrition → ignoré
     const m = ingredientGrams(recipeIng, dbItem);
@@ -105,18 +158,26 @@ export function computeNutriInfo(ingredients, ingredientDB) {
   return { score: nutriToScore100(ns), letter };
 }
 
-export function computeHealthScore(ingredients, ingredientDB) {
-  return computeNutriInfo(ingredients, ingredientDB).score;
+export function computeHealthScore(ingredients, ingredientDB, recipesById) {
+  return computeNutriInfo(ingredients, ingredientDB, recipesById).score;
 }
 
 // Agrégation nutritionnelle complète d'une recette : totaux, par portion et
 // pour 100 g de plat fini. `coverage` = part de la masse (ingrédients reconnus)
 // disposant réellement de données nutritionnelles → transparence sur la fiabilité.
 const NUTRI_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat", "omega3", "fiber", "salt"];
-export function computeNutritionDetail(ingredients, ingredientDB, servings) {
+export function computeNutritionDetail(ingredients, ingredientDB, servings, recipesById) {
   const tot = Object.fromEntries(NUTRI_KEYS.map(k => [k, 0]));
   let mass = 0, covered = 0;
   for (const recipeIng of ingredients || []) {
+    if (isComponentLine(recipeIng)) { // composant → ingrédient virtuel (masse finie au dénominateur)
+      const c = componentContribution(recipeIng, recipesById, ingredientDB, NUTRI_KEYS, false);
+      if (!c) continue;
+      for (const k of NUTRI_KEYS) tot[k] += c.totAdd[k];
+      mass += c.massAdd;
+      covered += c.coveredAdd;
+      continue;
+    }
     const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
     if (!dbItem) continue;
     const m = ingredientGrams(recipeIng, dbItem);

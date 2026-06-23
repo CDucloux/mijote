@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
-import { computeNutritionDetail } from "../lib/nutriscore.js";
+import { computeNutritionDetail, buildRecipeIndex } from "../lib/nutriscore.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 
 // ─── NUTRITION ANALYSIS MODAL ─────────────────────────────────────────────────
@@ -14,9 +14,10 @@ const NUTRI_LETTER_DESC = {
   E: "Qualité nutritionnelle très faible",
 };
 
-export function NutritionModal({ recipe, ingredientDB, servings, onClose }) {
+export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, onClose }) {
   const [basis, setBasis] = useState("portion"); // "portion" | "100g"
-  const detail = useMemo(() => computeNutritionDetail(recipe.ingredients, ingredientDB, servings), [recipe.ingredients, ingredientDB, servings]);
+  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
+  const detail = useMemo(() => computeNutritionDetail(recipe.ingredients, ingredientDB, servings, recipesById), [recipe.ingredients, ingredientDB, servings, recipesById]);
   const letter = recipe.nutriLetter;
   const data = basis === "portion" ? detail.perServing : detail.per100;
   const kcal = Math.round(data.calories);

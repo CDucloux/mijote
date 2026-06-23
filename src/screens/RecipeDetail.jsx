@@ -12,7 +12,7 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { fmtTime } from "../lib/format.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, stock = [], lowStock = [] }) {
+export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, stock = [], lowStock = [] }) {
   const navigate = useNavigate();
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
@@ -465,7 +465,7 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
 
       {/* ── COOK MODE — fullscreen step-by-step ── */}
       {showNutrition && (
-        <NutritionModal recipe={recipe} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
+        <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
       )}
       {cookMode && recipe.steps?.length > 0 && (
         <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} onClose={() => setCookMode(false)} />
