@@ -36,8 +36,6 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
     }
   };
 
-  const clearAll = () => { setStock([]); setLowStock([]); };
-
   // Tous les ingrédients stockables (catégories non-périssables, avec nom)
   const stockable = useMemo(() =>
     ingredientDB.filter(i => i.name && STOCK_CATEGORIES.has(i.category || "other")),
@@ -81,11 +79,6 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
             <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {inStockCount > 0 && (
-              <button onClick={clearAll} style={{ fontSize: 12, color: "var(--text3)", padding: "6px 10px", borderRadius: 10, background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                Tout effacer
-              </button>
-            )}
             <UserAvatar />
           </div>
         </div>
@@ -162,7 +155,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "4px 0" }}>
                   <span style={{ fontSize: 15 }}>{cat.icon}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)", letterSpacing: "0.01em" }}>{cat.label}</span>
-                  {inStockInCat > 0 && (
+                  {view === "all" && inStockInCat > 0 && (
                     <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(76,175,125,0.15)", color: "var(--green)" }}>
                       {inStockInCat}/{ings.length}
                     </span>
