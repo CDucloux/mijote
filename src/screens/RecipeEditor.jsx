@@ -11,15 +11,19 @@ import { parseIngredientInput } from "../lib/parseIngredient.js";
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
 export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, collections, recipes }) {
-  const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], tags: recipe.tags || [], collections: recipe.collections || [] });
+  const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], tags: recipe.tags || [], collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
   const [section, setSection] = useState("info");
   const up = (f, v) => setForm(p => ({ ...p, [f]: v }));
+  const upYield = (f, v) => setForm(p => ({ ...p, yield: { ...(p.yield || { amount: "", unit: "g" }), [f]: v } }));
 
   // Un ingrédient renseigné doit avoir une quantité strictement positive.
-  const ingIsMissingQty = ing => (ing.name || ing.dbId) && !(Number(ing.amount) > 0);
+  const ingIsMissingQty = ing => (ing.name || ing.dbId || ing.recipeId) && !(Number(ing.amount) > 0);
   const handleSave = () => {
     if (form.ingredients.some(ingIsMissingQty)) setSection("ingrédients");
-    onSave(form);
+    const out = { ...form };
+    if (out.isComponent) out.yield = { amount: Number(form.yield?.amount) || 0, unit: form.yield?.unit || "g" };
+    else { delete out.yield; out.isComponent = false; }
+    onSave(out);
   };
 
   // Ingredients
@@ -111,6 +115,35 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
                 <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
                 <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" max="24" value={form.servings} onChange={e => up("servings", Math.min(24, Math.max(1, +e.target.value)))} /></div>
+              </div>
+
+              {/* Préparation de base (composant) : peut être réutilisée comme ingrédient
+                  dans d'autres recettes. Le rendement déclare ce qu'elle produit. */}
+              <div style={{ background: "var(--surface)", border: `1px solid ${form.isComponent ? "var(--accent)" : "var(--border)"}`, borderRadius: 12, padding: 14, transition: "border-color 0.2s" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                  <button type="button" onClick={() => up("isComponent", !form.isComponent)}
+                    style={{ width: 42, height: 24, borderRadius: 12, flexShrink: 0, background: form.isComponent ? "var(--accent)" : "var(--surface3)", position: "relative", transition: "background 0.2s" }}>
+                    <span style={{ position: "absolute", top: 2, left: form.isComponent ? 20 : 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+                  </button>
+                  <div style={{ flex: 1 }} onClick={() => up("isComponent", !form.isComponent)}>
+                    <div style={{ fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>🧈 Préparation de base</div>
+                    <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Réutilisable comme ingrédient dans d'autres recettes (béchamel, sauce, pâte…)</div>
+                  </div>
+                </label>
+                {form.isComponent && (
+                  <div style={{ marginTop: 14 }}>
+                    <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>— ce que produit la préparation</span></div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <input className="field-input" type="number" min="0" step="any" placeholder="ex: 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2 }} />
+                      <select className="field-input" value={form.yield?.unit || "g"} onChange={e => upYield("unit", e.target.value)} style={{ flex: 1 }}>
+                        <option value="g">g</option>
+                        <option value="ml">ml</option>
+                        <option value="pièce">pièce(s)</option>
+                      </select>
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6 }}>Les recettes qui l'utilisent en consommeront une partie (ex : 150 {form.yield?.unit || "g"}).</div>
+                  </div>
+                )}
               </div>
               <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
               <div>
