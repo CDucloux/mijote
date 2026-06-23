@@ -76,6 +76,7 @@ export async function loadUserData(uid) {
     mealPlan: mealPlanSnap.exists() ? (mealPlanSnap.data().data || {}) : null,
     shoppingLists: shoppingSnap.exists() ? (shoppingSnap.data().items || []) : null,
     stock: stockSnap.exists() ? (stockSnap.data().items || []) : null,
+    lowStock: stockSnap.exists() ? (stockSnap.data().low || []) : null,
     userDB: userDBSnap.exists() ? userDBSnap.data() : null,
   };
 }

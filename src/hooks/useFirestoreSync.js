@@ -18,6 +18,7 @@ export function useFirestoreSync({
   setSharedLists,
   setDirectory,
   stock, setStock,
+  lowStock, setLowStock,
   masterDB, setMasterDB,
   userDB, setUserDB,
 }) {
@@ -58,6 +59,7 @@ export function useFirestoreSync({
           if (data.mealPlan) setMealPlan(data.mealPlan);
           if (data.shoppingLists) setShoppingLists(data.shoppingLists);
           if (data.stock) setStock(data.stock);
+          if (data.lowStock) setLowStock(data.lowStock);
           setUserDB(data.userDB || { ingredients: [], utensils: [] });
           const freshMaster = await masterPromise;
           setMasterDB(freshMaster);
@@ -73,7 +75,7 @@ export function useFirestoreSync({
               setDoc(metaDoc(u.uid, "collections"), { items: data.collections || [] }),
               setDoc(metaDoc(u.uid, "mealPlan"), { data: data.mealPlan || {} }),
               setDoc(metaDoc(u.uid, "shoppingLists"), { items: data.shoppingLists || [] }),
-              setDoc(metaDoc(u.uid, "stock"), { items: [] }),
+              setDoc(metaDoc(u.uid, "stock"), { items: [], low: [] }),
               setDoc(metaDoc(u.uid, "userDB"), data.userDB || { ingredients: [], utensils: [] }),
             ]);
           }
@@ -112,7 +114,7 @@ export function useFirestoreSync({
   useEffect(() => { saveMeta("collections", { items: collections }); }, [collections]);
   useEffect(() => { saveMeta("mealPlan", { data: mealPlan }); }, [mealPlan]);
   useEffect(() => { saveMeta("shoppingLists", { items: shoppingLists }); }, [shoppingLists]);
-  useEffect(() => { saveMeta("stock", { items: stock }); }, [stock]);
+  useEffect(() => { saveMeta("stock", { items: stock, low: lowStock }); }, [stock, lowStock]);
 
   useEffect(() => {
     if (!user?.email) { setSharedLists([]); return; }

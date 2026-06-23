@@ -16,33 +16,43 @@ const STOCK_CATEGORIES = new Set([
   "legume", "grain", "oil", "acid", "sauce", "condiment",
   "nuts_seeds", "sugar", "baking", "alcohol", "other",
 ]);
-export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
+export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
   const [search, setSearch] = useState("");
-  const [view, setView] = useState("all"); // "all" = tout ce qu'on peut chercher | "stock" = ce que j'ai
+  const [view, setView] = useState("all"); // "all" = tout | "stock" = ce que j'ai | "low" = à racheter
 
   const stockSet = useMemo(() => new Set(stock), [stock]);
+  const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
 
-  const toggle = (id) => {
-    setStock(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
+  // Cycle à 3 états : pas en stock → en stock → bientôt vide → pas en stock
+  const cycle = (id) => {
+    const inStock = stockSet.has(id), isLow = lowSet.has(id);
+    if (!inStock) {
+      setStock(prev => [...prev, id]);                       // → en stock
+    } else if (!isLow) {
+      setLowStock(prev => [...prev, id]);                    // → bientôt vide
+    } else {
+      setStock(prev => prev.filter(x => x !== id));          // → pas en stock
+      setLowStock(prev => prev.filter(x => x !== id));
+    }
   };
 
-  const clearAll = () => setStock([]);
+  const clearAll = () => { setStock([]); setLowStock([]); };
 
   // Tous les ingrédients stockables (catégories non-périssables, avec nom)
   const stockable = useMemo(() =>
     ingredientDB.filter(i => i.name && STOCK_CATEGORIES.has(i.category || "other")),
     [ingredientDB]);
 
-  // Ingrédients filtrés par recherche + vue active (tous / en stock)
+  // Ingrédients filtrés par recherche + vue active (tous / en stock / à racheter)
   const filtered = useMemo(() => {
     const q = normalizeStr(search);
+    const matchView = (i) =>
+      view === "all" ? true : view === "stock" ? stockSet.has(i.id) : lowSet.has(i.id);
     return stockable
-      .filter(i => (view === "all" || stockSet.has(i.id))
+      .filter(i => matchView(i)
         && (!q || normalizeStr(i.name).includes(q) || (i.aliases || []).some(a => normalizeStr(a).includes(q))))
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
-  }, [stockable, search, view, stockSet]);
+  }, [stockable, search, view, stockSet, lowSet]);
 
   // Regroupement par catégorie
   const grouped = useMemo(() => {
@@ -97,7 +107,8 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {[
             { key: "stock", label: "En stock", count: inStockCount },
-            { key: "all", label: "Tous les ingrédients", count: stockable.length },
+            { key: "low", label: "À racheter", count: lowStock.length },
+            { key: "all", label: "Tous", count: stockable.length },
           ].map(p => {
             const active = view === p.key;
             return (
@@ -132,18 +143,19 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text3)", gap: 12, padding: "0 40px", textAlign: "center" }}>
-            <Icon name={view === "stock" && !search ? "box" : "search"} size={44} />
+            <Icon name={!search && view === "low" ? "warning" : !search && view === "stock" ? "box" : "search"} size={44} />
             <p style={{ fontSize: 15, fontWeight: 500 }}>
-              {view === "stock" && !search ? "Aucun article en stock" : "Aucun ingrédient trouvé"}
+              {!search && view === "low" ? "Rien à racheter" : !search && view === "stock" ? "Aucun article en stock" : "Aucun ingrédient trouvé"}
             </p>
             <p style={{ fontSize: 13 }}>
-              {view === "stock" && !search ? "Ajoute des ingrédients depuis l'onglet « Tous les ingrédients »." : "Essaie un autre terme de recherche."}
+              {!search && view === "low" ? "Marque un ingrédient « bientôt vide » en tapant deux fois dessus." : !search && view === "stock" ? "Ajoute des ingrédients depuis l'onglet « Tous »." : "Essaie un autre terme de recherche."}
             </p>
           </div>
         ) : (
           grouped.map(([catKey, ings]) => {
             const cat = categories[catKey] || DEFAULT_CATEGORIES.other;
             const inStockInCat = ings.filter(i => stockSet.has(i.id)).length;
+            const lowInCat = ings.filter(i => lowSet.has(i.id)).length;
             return (
               <div key={catKey} style={{ marginBottom: 24 }}>
                 {/* En-tête catégorie */}
@@ -155,41 +167,51 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
                       {inStockInCat}/{ings.length}
                     </span>
                   )}
+                  {lowInCat > 0 && (
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(232,112,58,0.15)", color: "var(--accent)" }}>
+                      {lowInCat} à racheter
+                    </span>
+                  )}
                 </div>
 
                 {/* Grille d'ingrédients */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 8 }}>
                   {ings.map(ing => {
                     const has = stockSet.has(ing.id);
+                    const low = lowSet.has(ing.id);
+                    // Couleurs selon l'état : bientôt vide (orange) > en stock (vert) > absent
+                    const accentCol = low ? "var(--accent)" : "var(--green)";
+                    const borderCol = low ? "rgba(232,112,58,0.6)" : has ? "rgba(76,175,125,0.6)" : "var(--border)";
+                    const bgCol = low ? "rgba(232,112,58,0.10)" : has ? "rgba(76,175,125,0.10)" : "var(--surface)";
                     return (
                       <button
                         key={ing.id}
-                        onClick={() => toggle(ing.id)}
+                        onClick={() => cycle(ing.id)}
                         style={{
                           display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
                           padding: "10px 6px 8px",
                           borderRadius: 14,
-                          border: `1.5px solid ${has ? "rgba(76,175,125,0.6)" : "var(--border)"}`,
-                          background: has ? "rgba(76,175,125,0.10)" : "var(--surface)",
+                          border: `1.5px solid ${borderCol}`,
+                          background: bgCol,
                           cursor: "pointer",
                           transition: "all 0.15s",
                           position: "relative",
                         }}
                       >
-                        {/* Badge ✓ */}
+                        {/* Badge d'état : ⚠ bientôt vide / ✓ en stock */}
                         {has && (
                           <span style={{
                             position: "absolute", top: 6, right: 6,
                             width: 16, height: 16, borderRadius: "50%",
-                            background: "var(--green)", display: "flex", alignItems: "center", justifyContent: "center",
+                            background: accentCol, display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
-                            <Icon name="check" size={9} color="#fff" />
+                            <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
                           </span>
                         )}
                         <IngImage src={ing.image} alt={ing.name} size={44} style={{ borderRadius: 10, opacity: has ? 1 : 0.65 }} />
                         <span style={{
                           fontSize: 11, fontWeight: has ? 600 : 400,
-                          color: has ? "var(--green)" : "var(--text2)",
+                          color: has ? accentCol : "var(--text2)",
                           textAlign: "center", lineHeight: 1.3,
                           display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
                         }}>

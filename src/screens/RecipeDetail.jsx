@@ -12,7 +12,7 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { fmtTime } from "../lib/format.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, stock = [] }) {
+export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, stock = [], lowStock = [] }) {
   const navigate = useNavigate();
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
@@ -26,10 +26,16 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
   const stockSet = useMemo(() => new Set(stock), [stock]);
+  const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
   // Retourne true si l'ingrédient de recette est trouvé dans le stock
   const isInStock = (ing) => {
     const match = findIngredientMatch(ing.name, ingredientDB);
     return match ? stockSet.has(match.id) : false;
+  };
+  // Retourne true si l'ingrédient est marqué « bientôt vide »
+  const isLowStock = (ing) => {
+    const match = findIngredientMatch(ing.name, ingredientDB);
+    return match ? lowSet.has(match.id) : false;
   };
   const openShoppingModal = () => {
     // Pré-cocher tout sauf ce qui est déjà en stock
@@ -478,6 +484,7 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
             {recipe.ingredients.map(ing => {
               const selected = selectedIngs.includes(ing.id);
               const inStock = isInStock(ing);
+              const low = isLowStock(ing);
               return (
                 <button key={ing.id} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing.id) : [...prev, ing.id])}
                   style={{
@@ -497,9 +504,15 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
                     <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
                     <span style={{ fontSize: 12, color: "var(--text2)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
                     {inStock && (
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 8, background: "rgba(76,175,125,0.15)", color: "var(--green)", marginLeft: "auto", flexShrink: 0 }}>
-                        📦 stock
-                      </span>
+                      low ? (
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 8, background: "rgba(232,112,58,0.15)", color: "var(--accent)", marginLeft: "auto", flexShrink: 0 }}>
+                          ⚠️ bientôt vide
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 8, background: "rgba(76,175,125,0.15)", color: "var(--green)", marginLeft: "auto", flexShrink: 0 }}>
+                          📦 stock
+                        </span>
+                      )
                     )}
                   </div>
                 </button>
