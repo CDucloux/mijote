@@ -317,7 +317,9 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   const rc = resolveComp(ing);
                   if (rc) return (
                     <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: rc.missing ? "var(--surface2)" : "rgba(232,112,58,0.07)", borderRadius: 12, padding: "10px 14px", border: `1px solid ${rc.missing ? "var(--border)" : "rgba(232,112,58,0.35)"}`, cursor: rc.comp ? "pointer" : "default" }}>
-                      <span style={{ fontSize: 26, width: 50, textAlign: "center", flexShrink: 0 }}>🧈</span>
+                      {rc.comp?.image
+                        ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={50} />
+                        : <span style={{ fontSize: 26, width: 50, textAlign: "center", flexShrink: 0 }}>🧈</span>}
                       <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>
                         {rc.comp ? rc.comp.name : (ing.name || "Base")}
                         <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>
@@ -418,7 +420,9 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   const rc = resolveComp(ing);
                   if (rc) return (
                     <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (rc.comp) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
-                      <span style={{ fontSize: 26, width: 48, textAlign: "center", flexShrink: 0 }}>🧈</span>
+                      {rc.comp?.image
+                        ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={48} />
+                        : <span style={{ fontSize: 26, width: 48, textAlign: "center", flexShrink: 0 }}>🧈</span>}
                       <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                         <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
                         <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
