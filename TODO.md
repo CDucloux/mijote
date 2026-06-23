@@ -40,6 +40,8 @@
 
 ### Préparations de base
 
+Fonds ; appareils ; sauces mères-filles
+
 Franchement, c'est la meilleure idée que tu aies lancée jusqu'ici. Et pas seulement parce que c'est pratique : c'est le concept qui unifie tout le reste. Les cuisiniers sérieux pensent déjà comme ça — en préparations de base et en composants. C'est littéralement la logique des sauces mères de la cuisine française (Escoffier), et de la mise en place pro. Tu ne crées pas une feature gadget, tu modélises la façon dont ces gens-là raisonnent vraiment.
 Ce qui la rend forte, c'est l'effet de levier. Aujourd'hui, si quelqu'un a sa béchamel parfaite, il la recopie dans dix gratins, et le jour où il l'améliore, il doit corriger dix recettes. Avec un composant lié, il maintient une source de vérité et toutes les recettes en héritent. C'est exactement le bénéfice du journal d'itérations qu'on évoquait, mais factorisé : tu retravailles ton caramel beurre salé une fois, et tes 6 desserts qui l'appellent en profitent.
 L'insight architectural à ne pas rater : une mini-recette n'est pas un type d'objet à part. C'est une recette normale qui peut être référencée comme un ingrédient. Si tu pars là-dessus, tout devient cohérent avec ton modèle existant :
