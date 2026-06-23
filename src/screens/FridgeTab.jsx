@@ -96,8 +96,8 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
         {/* Pills de filtre : tout ce qu'on peut chercher / ce que j'ai en stock */}
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {[
-            { key: "all", label: "À chercher", count: stockable.length },
             { key: "stock", label: "En stock", count: inStockCount },
+            { key: "all", label: "Tous les ingrédients", count: stockable.length },
           ].map(p => {
             const active = view === p.key;
             return (
@@ -137,7 +137,7 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
               {view === "stock" && !search ? "Aucun article en stock" : "Aucun ingrédient trouvé"}
             </p>
             <p style={{ fontSize: 13 }}>
-              {view === "stock" && !search ? "Ajoute des ingrédients depuis l'onglet « À chercher »." : "Essaie un autre terme de recherche."}
+              {view === "stock" && !search ? "Ajoute des ingrédients depuis l'onglet « Tous les ingrédients »." : "Essaie un autre terme de recherche."}
             </p>
           </div>
         ) : (
