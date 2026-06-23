@@ -336,7 +336,7 @@ function AppInner() {
   };
 
   const exportPDF = recipe => {
-    printRecipe(recipe, { ingredientDB, utensilDB });
+    printRecipe(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes) });
     notify("PDF en cours de génération…");
   };
 
