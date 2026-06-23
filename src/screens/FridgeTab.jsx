@@ -104,7 +104,7 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
               <button key={p.key} onClick={() => setView(p.key)}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
+                  padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500,
                   background: active ? "var(--accent)" : "var(--surface2)",
                   color: active ? "#fff" : "var(--text2)",
                   border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
@@ -112,7 +112,7 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
                 }}>
                 {p.label}
                 <span style={{
-                  fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 10,
+                  fontSize: 11, fontWeight: 500, padding: "1px 7px", borderRadius: 10,
                   background: active ? "rgba(255,255,255,0.25)" : "var(--surface3)",
                   color: active ? "#fff" : "var(--text3)",
                 }}>{p.count}</span>
@@ -125,15 +125,19 @@ export function FridgeTab({ stock = [], setStock, ingredientDB = [], categories 
       {/* Corps scrollable */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
         {ingredientDB.length === 0 ? (
-          <div style={{ textAlign: "center", color: "var(--text3)", padding: "60px 0" }}>
-            <Icon name="box" size={36} color="var(--text3)" />
-            <p style={{ fontSize: 14, marginTop: 12 }}>Base d'ingrédients vide.<br />Importe-la dans Config → Ingrédients.</p>
+          <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text3)", gap: 12, padding: "0 40px", textAlign: "center" }}>
+            <Icon name="box" size={44} />
+            <p style={{ fontSize: 15, fontWeight: 500 }}>Base d'ingrédients vide</p>
+            <p style={{ fontSize: 13 }}>Importe-la dans Config → Ingrédients.</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}>
-            <Icon name={view === "stock" && !search ? "box" : "search"} size={32} />
-            <p style={{ fontSize: 14, marginTop: 8 }}>
+          <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text3)", gap: 12, padding: "0 40px", textAlign: "center" }}>
+            <Icon name={view === "stock" && !search ? "box" : "search"} size={44} />
+            <p style={{ fontSize: 15, fontWeight: 500 }}>
               {view === "stock" && !search ? "Aucun article en stock" : "Aucun ingrédient trouvé"}
+            </p>
+            <p style={{ fontSize: 13 }}>
+              {view === "stock" && !search ? "Ajoute des ingrédients depuis l'onglet « À chercher »." : "Essaie un autre terme de recherche."}
             </p>
           </div>
         ) : (
