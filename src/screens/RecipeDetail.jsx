@@ -475,7 +475,7 @@ export function RecipeDetail({ recipe, onBack, onEdit, onDelete, onAddToShopping
       {showShoppingModal && (
         <SwipeableSheet onClose={() => setShowShoppingModal(false)} style={{ maxHeight: "85dvh" }}>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Ajouter aux courses</h3>
-          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--green)" }}>📦 en stock</span> sont décochés par défaut.</p>
+          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--green)" }}>en stock</span> sont décochés par défaut.</p>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
             <button style={{ fontSize: 12, color: "var(--accent)" }} onClick={() => setSelectedIngs(recipe.ingredients.map(i => i.id))}>Tout sélectionner</button>
             <button style={{ fontSize: 12, color: "var(--text3)" }} onClick={() => setSelectedIngs([])}>Tout décocher</button>
