@@ -10,6 +10,7 @@ import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
 import { prepareRecipeImport } from "./lib/recipeImport.js";
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
+import { recipesReferencing } from "./lib/components.js";
 import { buildRecipeIndex } from "./lib/nutriscore.js";
 import {
   DEFAULT_CATEGORIES, SAMPLE_RECIPES, SAMPLE_COLLECTIONS,
@@ -267,6 +268,29 @@ function AppInner() {
 
   const deleteRecipe = id => {
     const r = recipes.find(x => x.id === id);
+    if (r?.isComponent) {
+      const refs = recipesReferencing(id, recipes);
+      if (refs.length > 0) {
+        const names = refs.slice(0, 3).map(x => `« ${x.name} »`).join(", ");
+        const extra = refs.length > 3 ? ` et ${refs.length - 3} autre(s)` : "";
+        const ok = window.confirm(
+          `Cette préparation est utilisée dans ${refs.length} recette(s) : ${names}${extra}.\n\nLes lignes qui y font référence seront supprimées. Continuer ?`
+        );
+        if (!ok) return;
+        // Délie les lignes orphelines dans les recettes référencées
+        setRecipes(prev => prev.map(recipe => {
+          if (!refs.some(x => x.id === recipe.id)) return recipe;
+          return {
+            ...recipe,
+            ingredients: (recipe.ingredients || []).filter(ing => ing.recipeId !== id),
+          };
+        }).filter(recipe => recipe.id !== id));
+        if (r?.image) deleteImageByUrl(r.image);
+        navigate("/recipes");
+        notify("Préparation supprimée");
+        return;
+      }
+    }
     if (r?.image) deleteImageByUrl(r.image);
     setRecipes(prev => prev.filter(r => r.id !== id));
     navigate("/recipes");
@@ -357,7 +381,7 @@ function AppInner() {
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} />}
-      {tab === "fridge" && <FridgeTab stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} />}
+      {tab === "fridge" && <FridgeTab stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
   );
