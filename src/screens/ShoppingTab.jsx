@@ -492,7 +492,11 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                       <div key={e} style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10, padding: "6px 10px" }}>
                         <Avatar d={dirByEmail[e]} />
                         <span style={{ flex: 1, fontSize: 13, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{dirByEmail[e]?.displayName ? `${dirByEmail[e].displayName} · ${e}` : e}</span>
-                        <button onClick={() => setConfigList(p => ({ ...p, sharedWith: p.sharedWith.filter(x => x !== e) }))} style={{ flexShrink: 0, color: "var(--red)" }} title="Retirer"><Icon name="close" size={14} /></button>
+                        <button onClick={() => setConfigList(p => ({ ...p, sharedWith: p.sharedWith.filter(x => x !== e) }))}
+                          style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: "transparent", border: "none", color: "var(--text3)", cursor: "pointer", transition: "background 0.15s, color 0.15s" }}
+                          onMouseEnter={ev => { ev.currentTarget.style.background = "rgba(224,82,82,0.12)"; ev.currentTarget.style.color = "var(--red)"; }}
+                          onMouseLeave={ev => { ev.currentTarget.style.background = "transparent"; ev.currentTarget.style.color = "var(--text3)"; }}
+                          title="Retirer"><Icon name="close" size={15} color="currentColor" /></button>
                       </div>
                     ))}
                   </div>
