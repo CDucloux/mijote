@@ -64,7 +64,7 @@ export function UserAvatar() {
       {confirmSignOut && (
         <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.18s ease" }}
           onClick={() => setConfirmSignOut(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 340, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "26px 22px 20px", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", textAlign: "center", animation: "popIn 0.28s cubic-bezier(0.34,1.4,0.64,1)" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 340, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "26px 22px 20px", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", textAlign: "center", animation: "modalIn 0.32s cubic-bezier(0.16,1,0.3,1)" }}>
             <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
               <Icon name="logout" size={24} color="var(--red)" />
             </div>
