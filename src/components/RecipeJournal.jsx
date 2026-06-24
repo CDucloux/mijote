@@ -2,18 +2,11 @@ import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
-import { addVersion, restoreVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots } from "../lib/history.js";
+import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots } from "../lib/history.js";
 
 const fmtDate = iso => {
   try { return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }); }
   catch { return ""; }
-};
-
-const fmtTime = min => {
-  if (!min) return "—";
-  if (min < 60) return `${min} min`;
-  const h = Math.floor(min / 60), m = min % 60;
-  return m ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
 };
 
 const ratingColor = r => r >= 8 ? "var(--green)" : r >= 5 ? "var(--accent)" : "var(--red)";
@@ -46,67 +39,82 @@ const DIFF = {
   changed: { bg: "rgba(240,153,42,0.12)", border: "var(--orange)", text: "var(--orange)", sign: "~" },
 };
 
+const DiffRow = ({ sign, text, bg, border, children }) => (
+  <div style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "8px 12px", background: bg, borderLeft: `3px solid ${border}`, borderRadius: "0 8px 8px 0" }}>
+    <span style={{ fontSize: 13, fontWeight: 800, color: text, flexShrink: 0, width: 12, fontFamily: "monospace", lineHeight: 1.45 }}>{sign}</span>
+    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+  </div>
+);
+
+const DiffSection = ({ title, children }) => (
+  <div>
+    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{title}</div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{children}</div>
+  </div>
+);
+
 // Vue « git diff » entre un snapshot de base et le snapshot affiché.
 function DiffView({ diff, baseLabel }) {
   if (!diff.hasChanges) {
-    return <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.6, padding: "20px 0", textAlign: "center" }}>Aucune différence avec <strong style={{ color: "var(--text2)" }}>{baseLabel}</strong>.</p>;
+    return <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.6, padding: "24px 0", textAlign: "center" }}>Aucune différence avec <strong style={{ color: "var(--text2)" }}>{baseLabel}</strong>.</p>;
   }
-  const Row = ({ d, sign, text, bg, border, children }) => (
-    <div style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "8px 12px", background: bg, borderLeft: `3px solid ${border}`, borderRadius: "0 8px 8px 0" }}>
-      <span style={{ fontSize: 13, fontWeight: 800, color: text, flexShrink: 0, width: 12, fontFamily: "monospace", lineHeight: 1.45 }}>{sign}</span>
-      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-    </div>
-  );
-  const Section = ({ title, children }) => (
-    <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{title}</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{children}</div>
-    </div>
-  );
   return (
-    <div style={{ overflowY: "auto", maxHeight: "58vh", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ overflowY: "auto", maxHeight: "62vh", display: "flex", flexDirection: "column", gap: 16 }}>
       <p style={{ fontSize: 12, color: "var(--text3)", margin: 0 }}>Différences par rapport à <strong style={{ color: "var(--text2)" }}>{baseLabel}</strong></p>
 
       {diff.scalars.length > 0 && (
-        <Section title="Temps & portions">
+        <DiffSection title="Temps & portions">
           {diff.scalars.map((s, i) => {
             const c = DIFF.changed;
             return (
-              <Row key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
+              <DiffRow key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{s.label} : </span>
                 <span style={{ fontSize: 13, color: "var(--text3)", textDecoration: "line-through" }}>{s.from}</span>
                 <span style={{ fontSize: 13, color: "var(--text3)" }}> → </span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{s.to}</span>
-              </Row>
+              </DiffRow>
             );
           })}
-        </Section>
+        </DiffSection>
       )}
 
       {diff.ingredients.some(i => i.type !== "same") && (
-        <Section title="Ingrédients">
+        <DiffSection title="Ingrédients">
           {diff.ingredients.filter(i => i.type !== "same").map((ing, i) => {
             const c = DIFF[ing.type];
             return (
-              <Row key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
+              <DiffRow key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{ing.name}</span>
                 {ing.type === "changed" ? (
                   <span> <span style={{ fontSize: 12, color: "var(--text3)", textDecoration: "line-through" }}>{ing.from || "—"}</span>
                   <span style={{ fontSize: 12, color: "var(--text3)" }}> → </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{ing.to || "—"}</span></span>
                 ) : ing.qty ? <span style={{ fontSize: 12, color: "var(--text3)", marginLeft: 6 }}>{ing.qty}</span> : null}
-              </Row>
+              </DiffRow>
             );
           })}
-        </Section>
+        </DiffSection>
+      )}
+
+      {diff.utensils.some(u => u.type !== "same") && (
+        <DiffSection title="Ustensiles">
+          {diff.utensils.filter(u => u.type !== "same").map((ut, i) => {
+            const c = DIFF[ut.type];
+            return (
+              <DiffRow key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{ut.name}</span>
+              </DiffRow>
+            );
+          })}
+        </DiffSection>
       )}
 
       {diff.steps.some(s => s.type !== "same") && (
-        <Section title="Étapes">
+        <DiffSection title="Étapes">
           {diff.steps.filter(s => s.type !== "same").map((step, i) => {
             const c = DIFF[step.type];
             return (
-              <Row key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
+              <DiffRow key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>Étape {step.index + 1}</span>
                 {step.type === "changed" ? (
                   <div style={{ marginTop: 4 }}>
@@ -116,20 +124,18 @@ function DiffView({ diff, baseLabel }) {
                 ) : (
                   <p style={{ fontSize: 12.5, color: "var(--text2)", margin: "3px 0 0", lineHeight: 1.5 }}>{step.description}</p>
                 )}
-              </Row>
+              </DiffRow>
             );
           })}
-        </Section>
+        </DiffSection>
       )}
     </div>
   );
 }
 
-// Prévisualisation d'une version : aperçu complet (lecture seule) OU diff « git ».
-function SnapshotPreview({ entry, recipe, onRestore, onClose }) {
+// Comparaison d'une version : diff « git » par rapport à une base au choix.
+function VersionDiff({ entry, recipe, onClose }) {
   const s = entry.snapshot || {};
-  const [confirmRestore, setConfirmRestore] = useState(false);
-  const [mode, setMode] = useState("apercu"); // "apercu" | "diff"
 
   // Bases comparables : versions chronologiques (sauf celle affichée) + recette actuelle.
   const chronological = recipe.history || [];
@@ -143,33 +149,15 @@ function SnapshotPreview({ entry, recipe, onRestore, onClose }) {
   const baseOpt = baseOptions.find(o => o.id === baseId) || baseOptions[0];
   const diff = diffSnapshots(baseOpt.snapshot, s);
 
-  if (confirmRestore) return (
-    <SwipeableSheet onClose={() => setConfirmRestore(false)}>
-      <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Restaurer « {entry.label} » ?</h3>
-      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, marginBottom: 18 }}>
-        Les ingrédients, étapes et temps de la recette seront remplacés par ceux de cette version. L'état actuel sera automatiquement sauvegardé en nouvelle version pour ne rien perdre.
-      </p>
-      <div style={{ display: "flex", gap: 10 }}>
-        <button className="btn" style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)" }} onClick={() => setConfirmRestore(false)}>Annuler</button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={onRestore}>Restaurer</button>
-      </div>
-    </SwipeableSheet>
-  );
-
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "90dvh" }}>
       {/* En-tête */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--accent)", letterSpacing: "-0.01em" }}>{entry.label}</div>
-          <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>
-            {fmtDate(entry.createdAt)}
-            {entry.rating != null && <span style={{ marginLeft: 8, fontWeight: 700, color: ratingColor(entry.rating) }}>{entry.rating}/10</span>}
-          </div>
-        </div>
-        <button className="btn btn-primary" style={{ gap: 7, fontSize: 13 }} onClick={() => setConfirmRestore(true)}>
-          <Icon name="back" size={14} /> Restaurer
-        </button>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "var(--accent)", borderRadius: 8, padding: "3px 10px", flexShrink: 0 }}>{entry.label}</span>
+        <span style={{ fontSize: 12, color: "var(--text3)" }}>{fmtDate(entry.createdAt)}</span>
+        {entry.rating != null && (
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
+        )}
       </div>
 
       {entry.notes && (
@@ -178,87 +166,16 @@ function SnapshotPreview({ entry, recipe, onRestore, onClose }) {
         </p>
       )}
 
-      {/* Bascule Aperçu / Comparer */}
-      <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 12, marginBottom: 16 }}>
-        {[["apercu", "Aperçu"], ["diff", "Comparer"]].map(([m, lbl]) => (
-          <button key={m} onClick={() => setMode(m)}
-            style={{ flex: 1, padding: "8px 0", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none",
-              background: mode === m ? "var(--surface)" : "transparent",
-              color: mode === m ? "var(--text)" : "var(--text3)",
-              boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.1)" : "none", transition: "all 0.15s" }}>{lbl}</button>
-        ))}
+      {/* Sélecteur de base */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <span style={{ fontSize: 13, color: "var(--text2)", flexShrink: 0 }}>Comparer à</span>
+        <select value={baseId} onChange={e => setBaseId(e.target.value)} className="field-input"
+          style={{ flex: 1, marginBottom: 0, padding: "8px 12px", fontSize: 13, cursor: "pointer" }}>
+          {baseOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+        </select>
       </div>
 
-      {mode === "diff" && (
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 13, color: "var(--text2)", flexShrink: 0 }}>Comparer à</span>
-            <select value={baseId} onChange={e => setBaseId(e.target.value)} className="field-input"
-              style={{ flex: 1, marginBottom: 0, padding: "8px 12px", fontSize: 13, cursor: "pointer" }}>
-              {baseOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-            </select>
-          </div>
-        </div>
-      )}
-
-      {mode === "diff" ? <DiffView diff={diff} baseLabel={baseOpt.label} /> : (
-      <div style={{ overflowY: "auto", maxHeight: "60vh", display: "flex", flexDirection: "column", gap: 16 }}>
-        {/* Temps */}
-        {(s.prepTime != null || s.cookTime != null) && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Temps</div>
-            <div style={{ display: "flex", gap: 12 }}>
-              <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "10px 14px" }}>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 2 }}>Préparation</div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>{fmtTime(s.prepTime)}</div>
-              </div>
-              <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "10px 14px" }}>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 2 }}>Cuisson</div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>{fmtTime(s.cookTime)}</div>
-              </div>
-              {s.servings && (
-                <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 2 }}>Portions</div>
-                  <div style={{ fontSize: 16, fontWeight: 700 }}>{s.servings}</div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Ingrédients */}
-        {s.ingredients?.length > 0 && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Ingrédients</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {s.ingredients.map((ing, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "var(--surface2)", borderRadius: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>{ing.name}</span>
-                  {(ing.amount || ing.unit) && (
-                    <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 600 }}>{ing.amount}{ing.unit}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Étapes */}
-        {s.steps?.length > 0 && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Étapes</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {s.steps.map((step, i) => (
-                <div key={i} style={{ display: "flex", gap: 10 }}>
-                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>{i + 1}</span>
-                  <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: 0 }}>{step.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      )}
+      <DiffView diff={diff} baseLabel={baseOpt.label} />
     </SwipeableSheet>
   );
 }
@@ -266,27 +183,22 @@ function SnapshotPreview({ entry, recipe, onRestore, onClose }) {
 export function RecipeJournal({ recipe, onUpdateRecipe }) {
   const history = [...(recipe.history || [])].reverse();
   const [showForm, setShowForm] = useState(false);
-  const [label, setLabel] = useState("");
+  const [formLabel, setFormLabel] = useState("");
   const [rating, setRating] = useState(null);
   const [notes, setNotes] = useState("");
-  const [previewEntry, setPreviewEntry] = useState(null);
+  const [diffEntry, setDiffEntry] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const openForm = () => {
-    setLabel(nextVersionLabel(recipe.history));
+    setFormLabel(nextVersionLabel(recipe.history));
     setRating(null);
     setNotes("");
     setShowForm(true);
   };
 
   const saveVersion = () => {
-    onUpdateRecipe(addVersion(recipe, { label, rating, notes }));
+    onUpdateRecipe(addVersion(recipe, { label: formLabel, rating, notes }));
     setShowForm(false);
-  };
-
-  const doRestore = () => {
-    onUpdateRecipe(restoreVersion(recipe, previewEntry.id));
-    setPreviewEntry(null);
   };
 
   const doDelete = () => {
@@ -302,13 +214,13 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
 
       {history.length === 0 ? (
         <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.6, marginTop: 16 }}>
-          Aucune itération enregistrée. À chaque fois que tu retravailles cette recette, fige une version : ce que tu as changé, le résultat à la dégustation et une note. Tu pourras comparer et revenir en arrière.
+          Aucune itération enregistrée. À chaque fois que tu retravailles cette recette, fige une version : ce que tu as changé, le résultat à la dégustation et une note. Tu pourras comparer les versions entre elles pour voir précisément ce qui a évolué.
         </p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {history.map(entry => (
             <div key={entry.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", cursor: "pointer" }}
-              onClick={() => setPreviewEntry(entry)}>
+              onClick={() => setDiffEntry(entry)}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>{entry.label}</span>
                 <span style={{ fontSize: 12, color: "var(--text3)" }}>{fmtDate(entry.createdAt)}</span>
@@ -316,7 +228,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
                   <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
                 )}
                 <div style={{ marginLeft: "auto", display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}>
-                  <button onClick={() => setPreviewEntry(entry)} title="Visualiser cette version"
+                  <button onClick={() => setDiffEntry(entry)} title="Comparer cette version"
                     style={{ width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
                     <Icon name="forward" size={14} color="var(--text2)" />
                   </button>
@@ -335,11 +247,11 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
       {/* Feuille de création de version */}
       {showForm && (
         <SwipeableSheet onClose={() => setShowForm(false)} style={{ maxHeight: "88dvh" }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Figer une version</h3>
-          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>L'état actuel de la recette (ingrédients, étapes, temps) est enregistré tel quel.</p>
-
-          <div className="field-label">Nom de la version</div>
-          <input className="field-input" value={label} onChange={e => setLabel(e.target.value)} placeholder="v2" style={{ marginBottom: 14 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 600 }}>Figer une version</h3>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "var(--accent)", borderRadius: 8, padding: "3px 10px" }}>{formLabel}</span>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>L'état actuel de la recette (ingrédients, ustensiles, étapes, temps) est enregistré tel quel.</p>
 
           <div className="field-label">Note du résultat (optionnel)</div>
           <div style={{ marginBottom: 16 }}><RatingPicker value={rating} onChange={setRating} /></div>
@@ -353,9 +265,9 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
         </SwipeableSheet>
       )}
 
-      {/* Prévisualisation du snapshot */}
-      {previewEntry && (
-        <SnapshotPreview entry={previewEntry} recipe={recipe} onRestore={doRestore} onClose={() => setPreviewEntry(null)} />
+      {/* Comparaison (diff) */}
+      {diffEntry && (
+        <VersionDiff entry={diffEntry} recipe={recipe} onClose={() => setDiffEntry(null)} />
       )}
 
       {/* Confirmation de suppression */}

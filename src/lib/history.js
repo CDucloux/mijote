@@ -5,7 +5,7 @@
 // recette (recipe.history[]), donc aucun impact sur la sync Firestore (1 doc/recette).
 
 // Champs « live » capturés dans un snapshot — ceux qui définissent la préparation.
-const SNAPSHOT_FIELDS = ["ingredients", "steps", "prepTime", "cookTime", "servings", "yield", "nutriLetter", "healthScore"];
+const SNAPSHOT_FIELDS = ["ingredients", "utensils", "steps", "prepTime", "cookTime", "servings", "yield", "nutriLetter", "healthScore"];
 
 // Snapshot de l'état courant d'une recette (copie défensive des tableaux).
 export function snapshotOf(recipe) {
@@ -84,6 +84,18 @@ export function diffSnapshots(base, target) {
     if (!targetIng.has(k)) ingredients.push({ type: "removed", name: bi.name, qty: qtyOf(bi) });
   }
 
+  // Ustensiles — appariés par nom normalisé (ajout / retrait, pas de quantité).
+  const baseUt = new Map((base.utensils || []).map(u => [diffKey(u.name), u]));
+  const targetUt = new Map((target.utensils || []).map(u => [diffKey(u.name), u]));
+  const utensils = [];
+  for (const [k, tu] of targetUt) {
+    if (!baseUt.has(k)) utensils.push({ type: "added", name: tu.name });
+    else utensils.push({ type: "same", name: tu.name });
+  }
+  for (const [k, bu] of baseUt) {
+    if (!targetUt.has(k)) utensils.push({ type: "removed", name: bu.name });
+  }
+
   // Étapes — comparées par position.
   const bs = base.steps || [], ts = target.steps || [];
   const steps = [];
@@ -105,7 +117,8 @@ export function diffSnapshots(base, target) {
 
   const hasChanges = scalars.length > 0
     || ingredients.some(i => i.type !== "same")
+    || utensils.some(u => u.type !== "same")
     || steps.some(s => s.type !== "same");
 
-  return { ingredients, steps, scalars, hasChanges };
+  return { ingredients, utensils, steps, scalars, hasChanges };
 }
