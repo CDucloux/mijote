@@ -1,7 +1,7 @@
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 
-const INTRO = "En cuisine professionnelle, une préparation de base (ou « fond ») est un élément élaboré à l'avance, indépendamment d'un plat précis, qui sert de brique de construction pour plusieurs recettes. On parle aussi d'appareils, de liaisons ou de compositions.";
+const INTRO = "En cuisine professionnelle, une préparation de base est un élément élaboré à l'avance, indépendamment d'un plat précis, qui sert de brique de construction pour plusieurs recettes.";
 
 const FAMILIES = [
   { label: "Fonds", desc: "Fond brun, fond blanc, fumet de poisson, fond de volaille — la colonne vertébrale des sauces. Ils se préparent à l'avance et se congèlent." },
@@ -31,7 +31,7 @@ export function BaseInfoModal({ onClose }) {
           </span>
           <div>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>Préparation de base</div>
-            <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>La cuisine professionnelle expliquée</div>
+            <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>Principes de composition</div>
           </div>
         </div>
       </div>
@@ -62,20 +62,9 @@ export function BaseInfoModal({ onClose }) {
           ))}
         </div>
 
-        {/* Pourquoi en haute cuisine — callout */}
-        <div style={{
-          marginTop: 24, padding: "16px 18px", borderRadius: 16,
-          background: "var(--surface2)", borderLeft: "3px solid var(--accent)",
-        }}>
-          <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)", marginBottom: 7, letterSpacing: "-0.01em" }}>Pourquoi en haute cuisine ?</div>
-          <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>
-            Les grands chefs travaillent en brigades : un cuisinier se consacre aux fonds toute la journée pendant qu'un autre monte les plats. Chaque base est calibrée une fois (qualité, concentration, assaisonnement) et réutilisée à l'infini — c'est ce qui garantit la régularité du restaurant.
-          </p>
-        </div>
-
         {/* Dans Mijoté — carte accent */}
         <div style={{
-          marginTop: 14, padding: "16px 18px", borderRadius: 16,
+          marginTop: 24, padding: "16px 18px", borderRadius: 16,
           background: "linear-gradient(135deg, rgba(232,112,58,0.13), rgba(232,112,58,0.05))",
           border: "1px solid rgba(232,112,58,0.25)",
         }}>
