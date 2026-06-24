@@ -12,6 +12,7 @@ export function snapshotOf(recipe) {
   const snap = {};
   for (const f of SNAPSHOT_FIELDS) {
     const v = recipe[f];
+    if (v === undefined) continue; // Firestore refuse les valeurs undefined
     snap[f] = Array.isArray(v) ? JSON.parse(JSON.stringify(v)) : v;
   }
   return snap;
