@@ -258,14 +258,15 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 Onglet Composants masqué quand on édite soi-même un composant (mono-niveau v1). */}
             {!form.isComponent ? (
               <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 10 }}>
-                <div style={{ position: "relative", display: "flex", width: "fit-content", marginLeft: "auto", marginBottom: 10, background: "var(--surface2)", borderRadius: 8, padding: 3 }}>
-                  {/* Indicateur glissant discret */}
-                  <div style={{ position: "absolute", top: 3, bottom: 3, left: addMode === "ing" ? 3 : "calc(50% + 0px)", width: "calc(50% - 3px)", background: "var(--surface)", borderRadius: 6, boxShadow: "0 1px 3px rgba(0,0,0,0.12)", transition: "left 0.24s cubic-bezier(0.4,0,0.2,1)" }} />
-                  {[["ing", "Ingrédient", null], ["comp", "Base", "base"]].map(([k, label, icon]) => (
-                    <button key={k} onClick={() => setAddMode(k)} style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500, background: "transparent", color: addMode === k ? "var(--accent)" : "var(--text3)", border: "none", cursor: "pointer", transition: "color 0.2s" }}>
-                      {icon === "base" ? <BaseIcon size={13} color={addMode === k ? "var(--accent)" : "var(--text3)"} /> : <Icon name="leaf" size={12} color={addMode === k ? "var(--accent)" : "var(--text3)"} />}
-                      {label}
-                    </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, justifyContent: "flex-end" }}>
+                  {[["ing", "Ingrédient", null], ["comp", "Base", "base"]].map(([k, label, icon], i) => (
+                    <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      {i > 0 && <span style={{ color: "var(--border)", fontSize: 11 }}>·</span>}
+                      <button onClick={() => setAddMode(k)} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: 0, fontSize: 12, fontWeight: addMode === k ? 600 : 500, background: "transparent", color: addMode === k ? "var(--accent)" : "var(--text3)", border: "none", cursor: "pointer", transition: "color 0.15s" }}>
+                        {icon === "base" ? <BaseIcon size={12} color={addMode === k ? "var(--accent)" : "var(--text3)"} /> : <Icon name="leaf" size={11} color={addMode === k ? "var(--accent)" : "var(--text3)"} />}
+                        {label}
+                      </button>
+                    </span>
                   ))}
                 </div>
                 {addMode === "ing" ? (
