@@ -10,8 +10,9 @@
   - [x] Dans cette swipeablesheet, il faut aussi retirer le healthring et le remplacer par le nutriscore plus clean et remplacer le séparateur "." par "|"
 
 - [ ] Partage des recettes (mode public / privé)
-- [ ] PDF : Pas de saut de page dans la génération
-- [ ] PWA et réduire la taille du truc packagé
+- [x] PDF : Pas de saut de page dans la génération
+- [x] PWA et réduire la taille du truc packagé
+- [x] CI/CD (GitHub Actions) + tests unitaires sur les libs critiques (Vitest)
 
 - [x] Attention avec les notify de bien gérer les icones en double
 
