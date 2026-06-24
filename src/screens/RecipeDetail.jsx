@@ -7,6 +7,7 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { NutritionModal } from "../components/NutritionModal.jsx";
 import { BaseInfoModal } from "../components/BaseInfoModal.jsx";
+import { RecipeJournal } from "../components/RecipeJournal.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
@@ -15,7 +16,7 @@ import { fmtTime } from "../lib/format.js";
 import { flattenForShopping } from "../lib/components.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, stock = [], lowStock = [] }) {
+export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, stock = [], lowStock = [] }) {
   const navigate = useNavigate();
   const location = useLocation();
   const handleBack = location.state?.from
@@ -87,7 +88,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const heroSentinelRef = useRef(null);
   const [heroCollapsed, setHeroCollapsed] = useState(false);
   const swipeStart = useRef(null);
-  const TAB_ORDER = ["Ingrédients", "Ustensiles", "Étapes"];
+  const TAB_ORDER = ["Ingrédients", "Ustensiles", "Étapes", "Journal"];
   const swipeHandlers = {
     onTouchStart: e => { swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, axis: null }; },
     onTouchMove: e => {
@@ -226,7 +227,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       {/* Desktop tabs */}
       {isDesktop && (
       <div className="detail-tabs-mobile" style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
-        {["Ingrédients", "Ustensiles", "Étapes"].map(t => (
+        {TAB_ORDER.map(t => (
           <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, transition: "color 0.15s, border-color 0.15s" }}>{t}</button>
         ))}
       </div>
@@ -482,6 +483,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               </div>
             </div>
           )}
+          {activeTab === "Journal" && (
+            <div style={{ padding: "16px 16px 32px" }}>
+              <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
+            </div>
+          )}
           </div>{/* end swipe wrapper */}
         </div>
 
@@ -626,6 +632,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 );
               })}
             </div>
+          </div>
+          {/* Right col: journal d'itérations (card) */}
+          <div style={{ width: 340, minWidth: 340, overflowY: "auto", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 34, marginBottom: 16 }}>
+              <Icon name="sparkle" size={18} color="var(--accent)" />
+              <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Journal</span>
+            </div>
+            <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
           </div>
         </div>
       </div>
