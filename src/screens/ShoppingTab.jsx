@@ -389,16 +389,18 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
         const email = shareEmail.trim().toLowerCase();
         const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         const alreadyShared = configList.sharedWith.includes(email);
+        const maxReached = configList.sharedWith.length >= 3;
         const addEmail = (e) => {
           const v = (e || email).trim().toLowerCase();
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || configList.sharedWith.includes(v) || v === myEmail) return;
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || configList.sharedWith.includes(v) || v === myEmail || configList.sharedWith.length >= 3) return;
           setConfigList(p => ({ ...p, sharedWith: [...p.sharedWith, v] }));
           setShareEmail("");
         };
-        // Avatars proposés : utilisateurs connus, hors moi et hors déjà-partagés.
+        // Avatars proposés : utilisateurs connus, hors moi et hors déjà-partagés (3 max).
         const suggestions = directory
           .map(d => ({ ...d, email: (d.email || "").toLowerCase() }))
-          .filter(d => d.email && d.email !== myEmail && !configList.sharedWith.includes(d.email));
+          .filter(d => d.email && d.email !== myEmail && !configList.sharedWith.includes(d.email))
+          .slice(0, 3);
         const dirByEmail = Object.fromEntries(directory.map(d => [(d.email || "").toLowerCase(), d]));
         const Avatar = ({ d, size = 28 }) => d?.photoURL
           ? <img src={d.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} />
@@ -440,16 +442,19 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
             ) : (
               <>
                 <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.4, marginBottom: 10 }}>
-                  Ajoute les personnes qui pourront voir et modifier cette liste.
+                  Ajoute les personnes qui pourront voir et modifier cette liste.{" "}
+                  <span style={{ color: maxReached ? "var(--accent)" : "inherit" }}>({configList.sharedWith.length}/3 invité{configList.sharedWith.length > 1 ? "s" : ""})</span>
                 </p>
-                <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                  <input className="field-input" type="email" inputMode="email" placeholder="email@exemple.com"
-                    value={shareEmail} onChange={e => setShareEmail(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && addEmail()} style={{ flex: 1 }} />
-                  <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={() => addEmail()} disabled={!emailValid || alreadyShared}>
-                    <Icon name="plus" size={15} /> Ajouter
-                  </button>
-                </div>
+                {!maxReached && (
+                  <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                    <input className="field-input" type="email" inputMode="email" placeholder="email@exemple.com"
+                      value={shareEmail} onChange={e => setShareEmail(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && addEmail()} style={{ flex: 1 }} />
+                    <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={() => addEmail()} disabled={!emailValid || alreadyShared}>
+                      <Icon name="plus" size={15} /> Ajouter
+                    </button>
+                  </div>
+                )}
 
                 {suggestions.length > 0 && (
                   <div style={{ marginBottom: 12 }}>
