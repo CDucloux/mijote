@@ -18,7 +18,7 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // l'animation de passage dans « Acheté » (l'article glisse vers le bas en
 // s'estompant avant de rejoindre la section).
 
-export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock }) {
+export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
   const { user, notify } = useAppShell();
   const [activeListId, setActiveListId] = useState(null);
   const [newItemName, setNewItemName] = useState("");
@@ -53,7 +53,11 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
         .map(i => findIngredientMatch(i.name, ingredientDB))
         .filter(m => m && STOCK_CATEGORIES.has(m.category))
         .map(m => m.id);
-      if (toStock.length) setStock(prev => Array.from(new Set([...prev, ...toStock])));
+      if (toStock.length) {
+        setStock(prev => Array.from(new Set([...prev, ...toStock])));
+        // Un réachat remet les articles à "en stock" (retire du lowStock).
+        if (setLowStock) setLowStock(prev => prev.filter(id => !toStock.includes(id)));
+      }
     }
     updateList(listId, l => ({ ...l, items: l.items.filter(i => !i.checked) }));
   };
