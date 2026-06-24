@@ -35,6 +35,18 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
   const recipesById = useMemo(() => new Map((recipes || []).map(r => [r.id, r])), [recipes]);
+  // Préparations de base utilisées dans la recette qui ont leurs propres étapes,
+  // dédupliquées par id → affichées avant les étapes de la recette mère.
+  const baseSteps = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const ing of recipe?.ingredients || []) {
+      if (!ing.recipeId || seen.has(ing.recipeId)) continue;
+      const comp = recipesById.get(ing.recipeId);
+      if (comp?.steps?.length > 0) { seen.add(ing.recipeId); out.push(comp); }
+    }
+    return out;
+  }, [recipe, recipesById]);
   // Résout une ligne composant → { comp, missing }. comp = recette source (cache name).
   const resolveComp = (ing) => ing.recipeId ? { comp: recipesById.get(ing.recipeId), missing: !recipesById.get(ing.recipeId) } : null;
   // Retourne true si l'ingrédient de recette est trouvé dans le stock
@@ -387,6 +399,26 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     <Icon name="fire" size={17} /> Mode pas à pas
                   </button>
                 )}
+                {baseSteps.map(comp => (
+                  <div key={comp.id} style={{ background: "rgba(232,112,58,0.05)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 14, padding: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <BaseIcon size={18} />
+                      <span style={{ fontSize: 14, fontWeight: 700 }}>Préparer la {comp.name}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      {comp.steps.map((cstep, ci) => (
+                        <div key={cstep.id}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)" }}>Étape {ci + 1}</span>
+                          {cstep.text && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }}>{cstep.text}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {baseSteps.length > 0 && recipe.steps?.length > 0 && (
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>Montage de la recette</div>
+                )}
                 {(recipe.steps || []).map((step, i) => {
                   const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                   const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
@@ -495,6 +527,26 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+              {baseSteps.map(comp => (
+                <div key={comp.id} style={{ background: "rgba(232,112,58,0.05)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 12, padding: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <BaseIcon size={18} />
+                    <span style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 600 }}>Préparer la {comp.name}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {comp.steps.map((cstep, ci) => (
+                      <div key={cstep.id}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>Étape {ci + 1}</div>
+                        {cstep.text && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{cstep.text}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {baseSteps.length > 0 && recipe.steps?.length > 0 && (
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", borderTop: "1px solid var(--border)", paddingTop: 16 }}>Montage de la recette</div>
+              )}
               {(recipe.steps || []).map((step, i) => {
                 const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                 const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
