@@ -240,9 +240,14 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 Onglet Composants masqué quand on édite soi-même un composant (mono-niveau v1). */}
             {!form.isComponent ? (
               <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 10 }}>
-                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-                  {[["ing", "Ingrédient"], ["comp", "Base"]].map(([k, label]) => (
-                    <button key={k} onClick={() => setAddMode(k)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 13, fontWeight: 500, background: addMode === k ? "var(--accent)" : "var(--surface2)", color: addMode === k ? "#fff" : "var(--text2)", border: `1px solid ${addMode === k ? "var(--accent)" : "var(--border)"}`, transition: "all 0.15s" }}>{label}</button>
+                <div style={{ position: "relative", display: "flex", background: "var(--surface2)", borderRadius: 12, padding: 4, marginBottom: 10, border: "1px solid var(--border)" }}>
+                  {/* Indicateur glissant */}
+                  <div style={{ position: "absolute", top: 4, bottom: 4, left: addMode === "ing" ? 4 : "calc(50% + 0px)", width: "calc(50% - 4px)", background: "var(--accent)", borderRadius: 9, boxShadow: "0 2px 8px -2px rgba(232,112,58,0.55)", transition: "left 0.28s cubic-bezier(0.34,1.45,0.64,1)" }} />
+                  {[["ing", "Ingrédient", null], ["comp", "Base", "base"]].map(([k, label, icon]) => (
+                    <button key={k} onClick={() => setAddMode(k)} style={{ position: "relative", zIndex: 1, flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0", borderRadius: 9, fontSize: 13, fontWeight: 600, background: "transparent", color: addMode === k ? "#fff" : "var(--text2)", border: "none", cursor: "pointer", transition: "color 0.2s" }}>
+                      {icon === "base" ? <BaseIcon size={15} color={addMode === k ? "#fff" : "var(--text2)"} /> : <Icon name="leaf" size={14} color={addMode === k ? "#fff" : "var(--text2)"} />}
+                      {label}
+                    </button>
                   ))}
                 </div>
                 {addMode === "ing" ? (
