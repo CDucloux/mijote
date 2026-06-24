@@ -1,14 +1,13 @@
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 
-const INTRO = "En cuisine professionnelle, une préparation de base est un élément élaboré à l'avance, indépendamment d'un plat précis, qui sert de brique de construction pour plusieurs recettes.";
+const INTRO = "Une préparation de base est un élément élaboré à l'avance, indépendamment d'un plat précis, qui sert de brique de construction pour plusieurs recettes.";
 
 const FAMILIES = [
   { label: "Fonds", desc: "Fond brun, fond blanc, fumet de poisson, fond de volaille — la colonne vertébrale des sauces. Ils se préparent à l'avance et se congèlent." },
   { label: "Sauces mères", desc: "Béchamel, velouté, espagnole, hollandaise, tomate. Toute la sauce-cuisine classique en découle." },
   { label: "Appareils", desc: "Mélanges prêts à l'emploi : appareil à crème brûlée, à quiche, à financier… On les prépare la veille pour gagner du temps service." },
   { label: "Liaisons", desc: "Roux, beurre manié, liaison à la crème ou aux jaunes — des texturants qu'on intègre dans d'autres préparations." },
-  { label: "Farces & duxelles", desc: "Prêtes à garnir, farcir ou incorporer dans une autre recette." },
 ];
 
 export function BaseInfoModal({ onClose }) {
