@@ -52,23 +52,32 @@ export function UserAvatar() {
               <Icon name="leaf" size={13} color="currentColor" /> À propos
             </button>
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
-            {!confirmSignOut
-              ? <button onClick={() => setConfirmSignOut(true)}
-                style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.18)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.10)"; }}>
-                <Icon name="logout" size={16} color="var(--red)" /> Se déconnecter
-              </button>
-              : <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 8, textAlign: "center" }}>Confirmer la déconnexion ?</div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: "center" }} onClick={() => setConfirmSignOut(false)}>Annuler</button>
-                  <button className="btn btn-danger btn-sm" style={{ flex: 1, justifyContent: "center" }} onClick={() => { setOpen(false); setConfirmSignOut(false); onSignOut(); }}>Confirmer</button>
-                </div>
-              </div>
-            }
+            <button onClick={() => { setOpen(false); setConfirmSignOut(true); }}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.18)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.10)"; }}>
+              <Icon name="logout" size={16} color="var(--red)" /> Se déconnecter
+            </button>
           </div>
         </>
+      )}
+      {confirmSignOut && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.18s ease" }}
+          onClick={() => setConfirmSignOut(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 340, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "26px 22px 20px", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", textAlign: "center", animation: "popIn 0.28s cubic-bezier(0.34,1.4,0.64,1)" }}>
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+              <Icon name="logout" size={24} color="var(--red)" />
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Se déconnecter ?</div>
+            <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
+              Vos recettes restent synchronisées. Vous pourrez vous reconnecter à tout moment.
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setConfirmSignOut(false)} style={{ flex: 1, padding: "11px 0", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
+              <button onClick={() => { setConfirmSignOut(false); onSignOut(); }} style={{ flex: 1, padding: "11px 0", borderRadius: 12, background: "var(--red)", border: "1px solid var(--red)", color: "#fff", fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Déconnexion</button>
+            </div>
+          </div>
+        </div>
       )}
       {about && <AboutModal onClose={() => setAbout(false)} />}
     </div>
