@@ -17,6 +17,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
   const [subCook, setSubCook] = useState(null); // { recipe, mult }
+  const [doneComponents, setDoneComponents] = useState(new Set());
 
   // Composants épuisés référencés par cette recette (étape 0)
   const pendingComponents = useMemo(() => {
@@ -84,7 +85,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           recipesById={recipesById}
           stockSet={stockSet}
           isNested
-          onClose={() => setSubCook(null)}
+          onClose={() => { setDoneComponents(prev => new Set([...prev, subCook.recipe.id])); setSubCook(null); }}
         />
       )}
 
@@ -187,13 +188,17 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                           </div>
                         </div>
                         {comp.steps?.length > 0 && (
-                          <button
-                            className="btn btn-primary btn-sm"
-                            style={{ gap: 6, flexShrink: 0, borderRadius: 10 }}
-                            onClick={() => setSubCook({ recipe: comp, mult: nestedMult })}
-                          >
-                            <Icon name="fire" size={13} /> Réaliser
-                          </button>
+                          doneComponents.has(comp.id)
+                            ? <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: "rgba(52,199,89,0.12)", border: "1px solid rgba(52,199,89,0.35)", color: "var(--green)", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
+                                <Icon name="check" size={13} color="var(--green)" /> Terminé
+                              </span>
+                            : <button
+                                className="btn btn-primary btn-sm"
+                                style={{ gap: 6, flexShrink: 0, borderRadius: 10 }}
+                                onClick={() => setSubCook({ recipe: comp, mult: nestedMult })}
+                              >
+                                <Icon name="fire" size={13} /> Réaliser
+                              </button>
                         )}
                       </div>
                     ))}
