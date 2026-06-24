@@ -67,7 +67,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 4 }}>
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 2 }}>
           {["name", "health", "date"].map(s => (
             <button key={s} onClick={() => setSortBy(s)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: sortBy === s ? "var(--accent)" : "var(--surface2)", color: sortBy === s ? "#fff" : "var(--text2)", border: `1px solid ${sortBy === s ? "transparent" : "var(--border)"}` }}>
               {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
@@ -82,11 +82,11 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
               <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>{showTags ? "−" : "+"}</span> Tags
             </button>
           )}
-        </div>
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, maxHeight: showTags ? 48 : 0, overflow: "hidden", transition: "max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease", opacity: showTags ? 1 : 0 }}>
-          {allTags.map(t => (
-            <button key={t} onClick={() => setFilterTag(filterTag === t ? null : t)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: filterTag === t ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: filterTag === t ? "var(--accent)" : "var(--text2)", border: `1px solid ${filterTag === t ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{t}</button>
-          ))}
+          <div style={{ display: "flex", gap: 6, flexShrink: 0, maxWidth: showTags ? 2000 : 0, opacity: showTags ? 1 : 0, overflow: "hidden", transition: "max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease" }}>
+            {allTags.map(t => (
+              <button key={t} onClick={() => setFilterTag(filterTag === t ? null : t)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: filterTag === t ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: filterTag === t ? "var(--accent)" : "var(--text2)", border: `1px solid ${filterTag === t ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{t}</button>
+            ))}
+          </div>
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
