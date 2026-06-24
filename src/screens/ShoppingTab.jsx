@@ -19,7 +19,7 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // s'estompant avant de rejoindre la section).
 
 export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock }) {
-  const { user } = useAppShell();
+  const { user, notify } = useAppShell();
   const [activeListId, setActiveListId] = useState(null);
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("");
@@ -303,14 +303,19 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
               <h3 style={{ fontSize: 18, fontWeight: 600 }}>Valider l'achat ?</h3>
             </div>
             <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.55 }}>
-              Les <strong>{checked.length}</strong> article{checked.length > 1 ? "s" : ""} acheté{checked.length > 1 ? "s" : ""} vont être retirés de la liste.
+              Les articles achetés vont être retirés de la liste.
               {toStock.length > 0
                 ? <> Parmi eux, <strong>{toStock.length}</strong> produit{toStock.length > 1 ? "s" : ""} de placard rejoindront ton stock (les produits frais sont exclus).</>
                 : <> Aucun produit de placard à ajouter au stock (uniquement des produits frais).</>}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmClearId(null)}>Annuler</button>
-              <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => { clearChecked(confirmClearId); setConfirmClearId(null); }}>
+              <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => {
+                clearChecked(confirmClearId);
+                setConfirmClearId(null);
+                // Un toast de succès par produit ajouté au stock, en cascade.
+                toStock.forEach((m, idx) => setTimeout(() => notify?.(`${m.name} ajouté à ton stock`), idx * 900));
+              }}>
                 <Icon name="check" size={15} color="#fff" /> Valider
               </button>
             </div>
