@@ -113,7 +113,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
           <div class="comp-header">
             <span class="comp-icon">${baseIconSvg(20)}</span>
             <span class="comp-name">${comp.name}</span>
-            <span class="comp-yield">→ ${yieldScaled} ${comp.yield.unit}</span>
+            <span class="comp-yield">${yieldScaled} ${comp.yield.unit}</span>
           </div>
           ${scaledIngPills ? `<div class="ing-pills" style="margin-bottom:14px">${scaledIngPills}</div>` : ""}
           ${compStepLines}

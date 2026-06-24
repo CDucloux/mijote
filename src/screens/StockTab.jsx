@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
-import { BaseIcon } from "../components/BaseIcon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { normalizeStr } from "../lib/parseIngredient.js";
@@ -10,21 +9,12 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../
 // Gestion binaire du stock (placards / étagères) : j'en ai / j'en ai pas.
 // Chaque ingrédient de la base est listable ; le stock = tableau d'IDs.
 
-export function StockTab({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, components = [] }) {
+export function StockTab({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("all"); // "all" = tout | "stock" = ce que j'ai | "low" = à racheter
 
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
-
-  // Toggle binaire pour les préparations (composants) : en stock / pas en stock
-  const toggleComp = (id) => {
-    if (stockSet.has(id)) {
-      setStock(prev => prev.filter(x => x !== id));
-    } else {
-      setStock(prev => [...prev, id]);
-    }
-  };
 
   // Cycle à 3 états : pas en stock → en stock → bientôt vide → pas en stock
   const cycle = (id) => {
@@ -228,69 +218,6 @@ export function StockTab({ stock = [], setStock, lowStock = [], setLowStock, ing
             );
           })
         )}
-
-        {/* ── Section Préparations (toujours visible) ──────────────────────── */}
-        <div style={{ marginTop: grouped.length > 0 || filtered.length === 0 ? 32 : 0, borderTop: "1px solid var(--border)", paddingTop: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <span style={{ display: "flex", alignItems: "center" }}><BaseIcon size={16} color="var(--text2)" /></span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)", letterSpacing: "0.01em" }}>Mes Bases</span>
-            {components.length > 0 && (
-              <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(76,175,125,0.15)", color: "var(--green)" }}>
-                {components.filter(c => stockSet.has(c.id)).length}/{components.length}
-              </span>
-            )}
-          </div>
-          {components.length === 0 ? (
-            <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5 }}>
-              Crée une base dans la bibliothèque pour l'afficher ici.
-            </p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {components.map((comp, i) => {
-                const has = stockSet.has(comp.id);
-                return (
-                  <button
-                    key={comp.id}
-                    onClick={() => toggleComp(comp.id)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "10px 14px",
-                      borderRadius: 14,
-                      border: `1.5px solid ${has ? "rgba(76,175,125,0.6)" : "var(--border)"}`,
-                      background: has ? "rgba(76,175,125,0.10)" : "var(--surface)",
-                      cursor: "pointer", textAlign: "left",
-                      transition: "background 0.35s ease, border-color 0.35s ease",
-                      animation: "stockCardIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94) both",
-                      animationDelay: `${Math.min(i, 10) * 0.04}s`,
-                    }}
-                  >
-                    <span style={{
-                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                      background: has ? "var(--green)" : "var(--surface3)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "background 0.35s ease",
-                    }}>
-                      <Icon name={has ? "check" : "close"} size={13} color={has ? "#fff" : "var(--text3)"} />
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: has ? "var(--green)" : "var(--text1)", transition: "color 0.35s ease", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {comp.name}
-                      </div>
-                      {comp.yield && (
-                        <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>
-                          Rendement : {comp.yield.amount} {comp.yield.unit}
-                        </div>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: has ? "var(--green)" : "var(--text3)", flexShrink: 0 }}>
-                      {has ? "Disponible" : "Épuisée"}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
