@@ -8,6 +8,7 @@ import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { NutritionModal } from "../components/NutritionModal.jsx";
 import { BaseInfoModal } from "../components/BaseInfoModal.jsx";
 import { RecipeJournal } from "../components/RecipeJournal.jsx";
+import { HeroMenu } from "../components/HeroMenu.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
@@ -133,7 +134,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="edit" size={16} /></button>
           <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="pdf" size={16} /></button>
           <button onClick={() => onExportJSON(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="download" size={16} /></button>
-          <button onClick={() => setShowDeleteConfirm(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(224,82,82,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="trash" size={16} /></button>
+          <HeroMenu
+            btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
+            items={[
+              { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
+              { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
+            ]} />
         </div>
         <div style={{ position: "absolute", bottom: 14, left: 20, right: 20 }}>
           <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2 }}>{recipe.name}</h1>
@@ -246,7 +252,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
               <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
               <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
-              <button onClick={() => setShowDeleteConfirm(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(224,82,82,0.5)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="trash" size={16} color="#fff" /></button>
+              <HeroMenu
+                btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
+                items={[
+                  { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
+                  { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
+                ]} />
             </div>
             {/* Titre + source + tags */}
             <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
@@ -634,8 +645,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               })}
             </div>
           </div>
-          {/* Right col: journal d'itérations — réduit par défaut, déplié au clic */}
-          {journalOpen ? (
+          {/* Right col: journal d'itérations — ouvert via le menu « … » du hero */}
+          {journalOpen && (
             <div style={{ width: 340, minWidth: 340, overflowY: "auto", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 34, marginBottom: 16 }}>
                 <Icon name="history" size={18} color="var(--accent)" />
@@ -646,10 +657,6 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               </div>
               <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
             </div>
-          ) : (
-            <button onClick={() => setJournalOpen(true)} title="Ouvrir le journal d'itérations" style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: "var(--radius)", background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", color: "var(--text2)", fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>
-              <Icon name="history" size={16} color="var(--accent)" /> Journal
-            </button>
           )}
         </div>
       </div>
