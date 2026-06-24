@@ -10,9 +10,12 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   const ingImg = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
   const utImg = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
 
+  // Icône « base » (casserole) — SVG inline, cohérente avec l'app.
+  const baseIconSvg = (size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#e8703a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.5 9H7.5L6 8Z"/><line x1="5" y1="8" x2="19" y2="8"/><path d="M6 10H3.5a1.5 1.5 0 0 0 0 3H6"/><path d="M18 10h2.5a1.5 1.5 0 0 1 0 3H18"/><path d="M10 5c0-1 1-1 1-2"/><path d="M14 5c0-1 1-1 1-2"/></svg>`;
+
   const pill = (imgOrEmoji, name, qty, isComp = false) => {
     const imgHtml = isComp
-      ? `<span class="pill-comp-icon">🧈</span>`
+      ? `<span class="pill-comp-icon">${baseIconSvg(15)}</span>`
       : (imgOrEmoji ? `<span class="pill-img"><img src="${imgOrEmoji}" alt="" /></span>` : `<span class="pill-img"></span>`);
     return `<span class="pill${isComp ? " pill-comp" : ""}">
       ${imgHtml}
@@ -78,12 +81,12 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
       }).join("");
 
       const compStepLines = (comp.steps || []).map((s, i) => `
-        <div class="step" style="margin-bottom:14px">
-          <div class="step-header">
+        <div class="step comp-step" style="margin-bottom:12px">
+          <div class="step-header" style="gap:10px;margin-bottom:3px">
             <div class="step-num" style="width:22px;height:22px;font-size:11px">${i + 1}</div>
             <div class="step-title" style="font-size:13px">Étape ${i + 1}</div>
           </div>
-          ${s.text ? `<p class="step-text" style="font-size:13px">${s.text}</p>` : ""}
+          ${s.text ? `<p class="step-text" style="font-size:13px;padding-left:32px;line-height:1.5">${s.text}</p>` : ""}
         </div>`).join("");
 
       const yieldScaled = +(comp.yield.amount * f).toFixed(1);
@@ -91,7 +94,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
       return `
         <div class="comp-block">
           <div class="comp-header">
-            <span class="comp-icon">🧈</span>
+            <span class="comp-icon">${baseIconSvg(20)}</span>
             <span class="comp-name">${comp.name}</span>
             <span class="comp-yield">→ ${yieldScaled} ${comp.yield.unit}</span>
           </div>
@@ -151,7 +154,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     /* Annexe composants */
     .comp-block { margin-bottom: 28px; padding: 16px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
     .comp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .comp-icon { font-size: 18px; }
+    .comp-icon { display: inline-flex; align-items: center; }
     .comp-name { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
     .comp-yield { font-size: 12px; color: var(--text3); background: rgba(232,112,58,0.1); border-radius: 20px; padding: 3px 10px; }
     /* Footer */
