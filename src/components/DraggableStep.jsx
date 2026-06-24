@@ -18,12 +18,14 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
     >
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ color: "var(--text3)", cursor: "grab" }}><Icon name="drag" size={16} color="var(--text3)" /></span>
+          {isDraggable && <span style={{ color: "var(--text3)", cursor: "grab" }}><Icon name="drag" size={16} color="var(--text3)" /></span>}
           <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>{index + 1}</span>
-          <div style={{ display: "flex", gap: 4 }}>
-            {index > 0 && <button onClick={() => onMove(index, index - 1)} style={{ padding: "2px 6px", borderRadius: 6, background: "var(--surface2)", fontSize: 11, border: "1px solid var(--border)" }}>↑</button>}
-            {index < total - 1 && <button onClick={() => onMove(index, index + 1)} style={{ padding: "2px 6px", borderRadius: 6, background: "var(--surface2)", fontSize: 11, border: "1px solid var(--border)" }}>↓</button>}
-          </div>
+          {!isDraggable && (
+            <div style={{ display: "flex", gap: 4 }}>
+              {index > 0 && <button onClick={() => onMove(index, index - 1)} style={{ padding: "2px 6px", borderRadius: 6, background: "var(--surface2)", fontSize: 11, border: "1px solid var(--border)" }}>↑</button>}
+              {index < total - 1 && <button onClick={() => onMove(index, index + 1)} style={{ padding: "2px 6px", borderRadius: 6, background: "var(--surface2)", fontSize: 11, border: "1px solid var(--border)" }}>↓</button>}
+            </div>
+          )}
         </div>
         <button onClick={() => onRemove(step.id)}><Icon name="trash" size={14} color="var(--red)" /></button>
       </div>

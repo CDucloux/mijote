@@ -1,10 +1,10 @@
 import { useState, useRef } from "react";
 import { Icon } from "../components/Icon.jsx";
-import { IngImage } from "../components/Img.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { TagInput } from "../components/TagInput.jsx";
 import { UtensilPicker } from "../components/UtensilPicker.jsx";
 import { DraggableStep } from "../components/DraggableStep.jsx";
+import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
 import { BaseIcon } from "../components/BaseIcon.jsx";
@@ -43,9 +43,11 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
 
   // Ingredients
   const [addMode, setAddMode] = useState("ing"); // "ing" = ingrédient brut | "comp" = composant
+  const lastAddedIdRef = useRef(null);
   const addIng = () => {
-    pendingFocusRef.current = true;
-    up("ingredients", [...form.ingredients, { id: "i" + Date.now(), dbId: "", name: "", amount: "", unit: "", _raw: "" }]);
+    const id = "i" + Date.now();
+    lastAddedIdRef.current = id;
+    up("ingredients", [...form.ingredients, { id, dbId: "", name: "", amount: "", unit: "", _raw: "" }]);
   };
   const moveIng = (fromIdx, toIdx) => {
     const arr = [...form.ingredients];
@@ -55,6 +57,16 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
   const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
   const remIng = id => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.filter(i => i.id !== id)); };
+  // Parse + rapprochement base d'ingrédients à chaque frappe dans le champ « raw ».
+  const handleRawChange = (id, raw) => {
+    if (saveError) setSaveError("");
+    const parsed = parseIngredientInput(raw);
+    const match = parsed.name ? findIngredientMatch(parsed.name, ingredientDB) : null;
+    up("ingredients", form.ingredients.map(x => x.id === id ? {
+      ...x, _raw: raw, name: parsed.name, amount: parsed.amount, unit: parsed.unit,
+      dbId: match ? match.id : "",
+    } : x));
+  };
 
   // Composants disponibles (préparations de base), hors la recette courante et hors
   // celles déjà référencées. Indisponible si on édite soi-même un composant (mono-niveau v1).
@@ -84,7 +96,6 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
 
   const isDesktop = useIsDesktop();
-  const pendingFocusRef = useRef(false);
   const isProgrammaticScroll = useRef(false);
   const scrollTimer = useRef(null);
 
@@ -154,7 +165,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     <div className="field-label">{label}</div>
                     <div style={{ display: "flex" }}>
                       <button type="button" onClick={() => up(field, Math.max(min, (form[field]||0) - step))} style={{ flexShrink: 0, width: 30, height: 36, borderRadius: "8px 0 0 8px", background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>−</button>
-                      <input className="field-input" type="number" min={min} max={max} value={form[field]}
+                      <input className="field-input no-spin" type="number" min={min} max={max} value={form[field]}
                         onChange={e => up(field, Math.min(max, Math.max(min, +e.target.value || 0)))}
                         style={{ borderRadius: 0, textAlign: "center", minWidth: 0, flex: 1, marginBottom: 0, borderLeft: "none", borderRight: "none" }} />
                       <button type="button" onClick={() => up(field, Math.min(max, (form[field]||0) + step))} style={{ flexShrink: 0, width: 30, height: 36, borderRadius: "0 8px 8px 0", background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>+</button>
@@ -221,80 +232,14 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="warning" size={16} color="var(--red)" /> {saveError}
               </div>
             )}
-            {form.ingredients.map((ing, i) => {
-              const isLast = i === form.ingredients.length - 1;
-              const moveButtons = (
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, flexShrink: 0, alignSelf: "center" }}>
-                  <button onClick={() => i > 0 && moveIng(i, i - 1)} disabled={i === 0} style={{ width: 22, height: 22, borderRadius: 5, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: i > 0 ? "pointer" : "default", opacity: i === 0 ? 0.3 : 1 }}>↑</button>
-                  <button onClick={() => !isLast && moveIng(i, i + 1)} disabled={isLast} style={{ width: 22, height: 22, borderRadius: 5, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: !isLast ? "pointer" : "default", opacity: isLast ? 0.3 : 1 }}>↓</button>
-                </div>
-              );
-              return ing.recipeId ? (
-              /* Ligne composant : préparation de base référencée */
-              <div key={ing.id} style={{ background: "rgba(232,112,58,0.06)", borderRadius: 12, padding: 12, border: "1px solid rgba(232,112,58,0.4)", display: "flex", alignItems: "center", gap: 10 }}>
-                {moveButtons}
-                <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><BaseIcon size={20} /></span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {(recipes || []).find(r => r.id === ing.recipeId)?.name || ing.name || "Base supprimée"}
-                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", marginLeft: 6 }}>BASE</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                    <input className="field-input" type="number" min="0" step="any" placeholder="Quantité" value={ing.amount} onChange={e => updIng(ing.id, "amount", e.target.value === "" ? "" : +e.target.value)} style={{ marginBottom: 0, maxWidth: 120 }} />
-                    <span style={{ fontSize: 13, color: "var(--text2)", fontWeight: 500 }}>{ing.unit}</span>
-                    {(() => {
-                      const comp = (recipes || []).find(r => r.id === ing.recipeId);
-                      if (!comp) return <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 600 }}>⚠ introuvable</span>;
-                      return comp.yield?.amount ? <span style={{ fontSize: 11, color: "var(--text3)" }}>/ {comp.yield.amount} {comp.yield.unit} produits</span> : null;
-                    })()}
-                  </div>
-                </div>
-                <button onClick={() => remIng(ing.id)} style={{ flexShrink: 0 }}><Icon name="trash" size={14} color="var(--red)" /></button>
-              </div>
-            ) : (
-              <div key={ing.id} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: "1px solid var(--border)", display: "flex", alignItems: "flex-start", gap: 10 }}>
-                {moveButtons}
-                <div style={{ flex: 1 }}>
-                  <input className="field-input" placeholder="ex: 500g pois chiches, 2 oeufs, 1 c. à soupe huile…"
-                    ref={el => {
-                      if (el && pendingFocusRef.current && isLast) {
-                        el.focus();
-                        pendingFocusRef.current = false;
-                      }
-                    }}
-                    value={ing._raw !== undefined ? ing._raw : ""}
-                    onChange={e => {
-                      const raw = e.target.value;
-                      const parsed = parseIngredientInput(raw);
-                      const match = parsed.name ? findIngredientMatch(parsed.name, ingredientDB) : null;
-                      up("ingredients", form.ingredients.map(x => x.id === ing.id ? {
-                        ...x, _raw: raw, name: parsed.name, amount: parsed.amount, unit: parsed.unit,
-                        dbId: match ? match.id : ""
-                      } : x));
-                    }}
-                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addIng(); } }}
-                    style={{ marginBottom: 0 }} />
-                  {(ing.name || ing.amount) && (
-                    <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
-                      {ing.dbId && (() => {
-                        const img = ingredientDB.find(d => d.id === ing.dbId)?.image;
-                        return img ? <IngImage src={img} alt={ing.name} size={32} /> : null;
-                      })()}
-                      {Number(ing.amount) > 0
-                        ? <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {ing.amount}</span>
-                        : <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>⚠ Quantité manquante</span>}
-                      {ing.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {ing.unit}</span>}
-                      {ing.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{ing.name}</span>}
-                      {ing.dbId
-                        ? <span style={{ fontSize: 11, background: "rgba(76,175,125,0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Ingrédient reconnu</span>
-                        : ing.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✕ Non référencé</span> : null}
-                    </div>
-                  )}
-                </div>
-                <button onClick={() => remIng(ing.id)} style={{ flexShrink: 0, paddingTop: 10 }}><Icon name="trash" size={14} color="var(--red)" /></button>
-              </div>
-            );
-            })}
+            {form.ingredients.map((ing, i) => (
+              <DraggableIngredient key={ing.id} ing={ing} index={i} total={form.ingredients.length}
+                draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
+                autoFocus={ing.id === lastAddedIdRef.current}
+                onRawChange={handleRawChange}
+                onUpdateAmount={(id, v) => updIng(id, "amount", v)}
+                onRemove={remIng} onMove={moveIng} onEnter={addIng} />
+            ))}
             {/* Zone d'ajout : bascule ingrédient brut / composant (préparation de base).
                 Onglet Composants masqué quand on édite soi-même un composant (mono-niveau v1). */}
             {!form.isComponent ? (
@@ -340,9 +285,11 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
         {/* Slide 4 — Étapes */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ fontSize: 12, color: "var(--text3)", background: "var(--surface2)", padding: "8px 12px", borderRadius: 10 }}>
-              ↕ Glissez les étapes pour les réorganiser
-            </div>
+            {!isDesktop && (
+              <div style={{ fontSize: 12, color: "var(--text3)", background: "var(--surface2)", padding: "8px 12px", borderRadius: 10 }}>
+                ↕ Glissez les étapes pour les réorganiser
+              </div>
+            )}
             {form.steps.map((step, i) => (
               <DraggableStep key={step.id} step={step} index={i} total={form.steps.length}
                 ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
