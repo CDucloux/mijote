@@ -195,7 +195,10 @@ input,textarea,select{font-family:var(--ff-body);}
 }
 .loading-emoji{
   position:absolute;inset:0;display:flex;align-items:center;
-  justify-content:center;font-size:22px;
+  justify-content:center;font-size:22px;line-height:1;
+  /* Correction optique : le glyph 🫕 est dessiné légèrement décentré
+     dans sa boîte (espace interne asymétrique), on le recale. */
+  transform:translate(0.5px,-0.5px);
 }
 .loading-label{
   font-size:13px;color:var(--text3);font-family:var(--ff-body);
