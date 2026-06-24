@@ -288,3 +288,12 @@ input,textarea,select{font-family:var(--ff-body);}
   .mp-add-btn:hover{background:var(--surface3);border-color:var(--text3);color:var(--text);}
   .mp-add-btn:hover .mp-add-label{max-width:240px;opacity:1;margin-right:6px;}
 }
+/* Bouton « retirer du planning » — pastille discrète qui rougit au survol */
+.mp-remove-btn{
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+  width:26px;height:26px;border-radius:50%;cursor:pointer;
+  background:transparent;border:none;color:var(--text3);
+  opacity:0.55;transition:background 0.16s,color 0.16s,opacity 0.16s,transform 0.12s;
+}
+.mp-remove-btn:hover{background:rgba(224,82,82,0.12);color:var(--red);opacity:1;}
+.mp-remove-btn:active{transform:scale(0.88);}

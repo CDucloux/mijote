@@ -54,7 +54,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
               <div style={{ fontSize: 10, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{MP_SLOT_LABEL[slot]}</div>
               {meal.portions > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{meal.portions}</div>}
             </button>
-            <button onClick={() => onRemoveMeal(date, globalIdx)} style={{ color: "var(--text3)", flexShrink: 0, padding: 2 }}><Icon name="close" size={11} /></button>
+            <button className="mp-remove-btn" onClick={() => onRemoveMeal(date, globalIdx)} title="Retirer du planning"><Icon name="close" size={13} /></button>
           </div>
         );
       })}
