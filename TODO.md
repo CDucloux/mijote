@@ -3,9 +3,15 @@
 
 # Listes des fontionnalités à mijoter
 
+- [x] Liste partagées => Maximum 3 personnes qui peuvent etre ajoutées et à qui on peut partager
+
 - [x] Sur mobile, bug de la swipeable sheet Nouvel ingrédient qui n'est pas scrollable à partir des valeurs nutrtionnelles précises
 - [x] Sur mobile, dans la swipeablesheet "Ajouter une recette" -> ne pas ouvrir le clavier initialement (car prend trop de view)
   - [x] Dans cette swipeablesheet, il faut aussi retirer le healthring et le remplacer par le nutriscore plus clean et remplacer le séparateur "." par "|"
+
+- [ ] Partage des recettes (mode public / privé)
+- [ ] PDF : Pas de saut de page dans la génération
+- [ ] PWA et réduire la taille du truc packagé
 
 - [x] Attention avec les notify de bien gérer les icones en double
 
@@ -37,9 +43,7 @@
 
 4. Mode ratios / baker's %. En pâtisserie surtout, on pense en pourcentages (hydratation, ratio sucre/farine), pas en grammes absolus. Affiche la recette en % de la farine, et gère la mise à l'échelle non-linéaire : doubler une pâte ne double pas le sel d'une fermentation, ni le temps de cuisson, ni la taille du moule. Un simple bandeau "tu passes de 4 à 12 parts → attention à la levure et au temps" évite des ratés que ta mise à l'échelle actuelle (linéaire) laisse passer.
 
-6. Journal d'itérations. Les vrais cuisiniers retravaillent une recette : "v3 — -10 g de sucre, +zeste de citron vert, cuit 4 min de moins → meilleur". Versionner une recette avec notes de dégustation et note de résultat. Tes recettes sont déjà des docs Firestore diffés un par un — tu as quasiment l'infra pour un historique. C'est énorme pour la reproductibilité, le point faible de tous les carnets papier.
-
-8. Conversions exactes + calculatrices d'atelier. Poids ↔ volume ↔ pièce (ton champ gramsPerPiece fait déjà la moitié du boulot), plus densités par ingrédient (1 cup de farine ≠ 1 cup de miel). Et un petit set de calculatrices que ce public réutilise sans arrêt : % de sel pour une saumure, fermentation lacto (2–3 % du poids des légumes), ratio sucre/eau d'un sirop, stades du caramel par température. Ce sont des "mini-recettes" exactes, très demandées, faciles à coder sur ta lib métier.
+5. Conversions exactes + calculatrices d'atelier. Poids ↔ volume ↔ pièce (ton champ gramsPerPiece fait déjà la moitié du boulot), plus densités par ingrédient (1 cup de farine ≠ 1 cup de miel). Et un petit set de calculatrices que ce public réutilise sans arrêt : % de sel pour une saumure, fermentation lacto (2–3 % du poids des légumes), ratio sucre/eau d'un sirop, stades du caramel par température. Ce sont des "mini-recettes" exactes, très demandées, faciles à coder sur ta lib métier.
 
 ### Exécution sous pression — quand on cuisine gros
 
@@ -178,12 +182,9 @@ DB:
 
 ## 🔭 Horizon — v1.2+
 
-- [ ] Liste partagées => Maximum 3 personnes qui peuvent etre ajoutées et à qui on peut partager
 - [x] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
 
 - [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
-
-- [ ] Mode Frigo + Etageres
 
 - [ ] Communauté de mijoteurs !
 
