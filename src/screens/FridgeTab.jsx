@@ -107,7 +107,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
         </div>
 
         {/* Pills de filtre : tout ce qu'on peut chercher / ce que j'ai en stock */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
           {[
             { key: "stock", label: "En stock", count: inStockCount },
             { key: "low", label: "Bientôt vide", count: lowStock.length },
@@ -118,7 +118,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
               <button key={p.key} onClick={() => setView(p.key)}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500,
+                  padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
                   background: active ? "var(--accent)" : "var(--surface2)",
                   color: active ? "#fff" : "var(--text2)",
                   border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
