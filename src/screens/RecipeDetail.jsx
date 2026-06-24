@@ -129,7 +129,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       <div style={{ position: "relative", height: 160, flexShrink: 0, color: "#fff" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
-        <button onClick={handleBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="back" size={18} /></button>
+        <button onClick={handleBack} className="hero-back" style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} /></button>
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
           <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="edit" size={16} /></button>
           <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="pdf" size={16} /></button>
@@ -214,15 +214,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       {isDesktop && (
         <div ref={actionsRef} style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
           {actionsOpen ? (
-            <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, minWidth: 232, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)", boxShadow: "0 16px 42px -8px rgba(0,0,0,0.28)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Actions</span>
-                <button className="icon-btn-soft" title="Réduire" onClick={() => setActionsOpen(false)} style={{ width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", color: "var(--text3)" }}>
-                  <Icon name="close" size={13} color="var(--text3)" />
-                </button>
-              </div>
-              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => { openShoppingModal(); }}><Icon name="shopping" size={15} /> Courses</button>
-              <button className="btn btn-ghost" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => setShowMealModal(true)}><Icon name="calendar" size={15} /> Planifier</button>
+            <div className="slide-up action-dock">
+              <button className="action-dock-btn action-dock-primary" onClick={() => { openShoppingModal(); }}><Icon name="shopping" size={16} color="#fff" /> Courses</button>
+              <button className="action-dock-btn action-dock-ghost" onClick={() => setShowMealModal(true)}><Icon name="calendar" size={16} /> Planifier</button>
+              <button className="action-dock-close" title="Réduire" onClick={() => setActionsOpen(false)}><Icon name="close" size={15} /></button>
             </div>
           ) : (
             <button className="fab-toggle" title="Actions" onClick={() => setActionsOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 26px -4px rgba(232,112,58,0.5)" }}>
@@ -608,7 +603,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 </div>
               ))}
               {baseSteps.length > 0 && recipe.steps?.length > 0 && (
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", borderTop: "1px solid var(--border)", paddingTop: 16 }}>Montage de la recette</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
               )}
               {(recipe.steps || []).map((step, i) => {
                 const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
