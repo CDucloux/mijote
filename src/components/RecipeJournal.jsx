@@ -18,6 +18,13 @@ function MiniAvatar({ user, size = 28 }) {
     : <div style={{ width: size, height: size, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{(user.displayName || "?")[0].toUpperCase()}</div>;
 }
 
+const VersionBadge = ({ label }) => (
+  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 800, color: "var(--bg)", background: "var(--text)", borderRadius: 8, padding: "3px 9px 3px 6px", flexShrink: 0 }}>
+    <Icon name="history" size={11} color="var(--bg)" />
+    {label}
+  </span>
+);
+
 const ratingColor = r => r >= 8 ? "var(--green)" : r >= 5 ? "var(--accent)" : "var(--red)";
 
 function RatingPicker({ value, onChange }) {
@@ -163,7 +170,7 @@ function VersionDiff({ entry, recipe, onClose }) {
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "90dvh" }}>
       {/* En-tête */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "var(--accent)", borderRadius: 8, padding: "3px 10px", flexShrink: 0 }}>{entry.label}</span>
+        <VersionBadge label={entry.label} />
         <span style={{ fontSize: 12, color: "var(--text3)" }}>{fmtDate(entry.createdAt)}</span>
         {entry.rating != null && (
           <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
@@ -171,10 +178,14 @@ function VersionDiff({ entry, recipe, onClose }) {
       </div>
 
       {entry.notes && (
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16 }}>
-          <MiniAvatar user={user} size={28} />
-          <div style={{ flex: 1, minWidth: 0, background: "var(--surface2)", border: "1px solid var(--border)", borderLeft: "3px solid var(--accent)", borderRadius: "0 10px 10px 0", padding: "9px 13px" }}>
-            <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, margin: 0, fontStyle: "italic", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{entry.notes}</p>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
+          <MiniAvatar user={user} size={30} />
+          <div style={{ flex: 1, minWidth: 0, background: "var(--surface2)", borderLeft: "3px solid var(--accent)", borderRadius: "0 10px 10px 0", padding: "10px 14px" }}>
+            <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, margin: 0, fontStyle: "italic", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              <span style={{ fontSize: 20, color: "var(--accent)", lineHeight: 0, verticalAlign: "-0.25em", marginRight: 5, fontStyle: "normal" }}>«</span>
+              {entry.notes}
+              <span style={{ fontSize: 20, color: "var(--accent)", lineHeight: 0, verticalAlign: "-0.25em", marginLeft: 5, fontStyle: "normal" }}>»</span>
+            </p>
           </div>
         </div>
       )}
@@ -247,7 +258,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
                   <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", cursor: "pointer" }}
                     onClick={() => setDiffEntry(entry)}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "var(--accent)", borderRadius: 7, padding: "2px 9px", flexShrink: 0 }}>{entry.label}</span>
+                      <VersionBadge label={entry.label} />
                       {entry.rating != null && (
                         <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
                       )}
@@ -281,7 +292,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
         <SwipeableSheet onClose={() => setShowForm(false)} style={{ maxHeight: "88dvh" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
             <h3 style={{ fontSize: 18, fontWeight: 600 }}>Figer une version</h3>
-            <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "var(--accent)", borderRadius: 8, padding: "3px 10px" }}>{formLabel}</span>
+            <VersionBadge label={formLabel} />
           </div>
           <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>L'état actuel de la recette (ingrédients, ustensiles, étapes, temps) est enregistré tel quel.</p>
 
