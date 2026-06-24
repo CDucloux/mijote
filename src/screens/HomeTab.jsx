@@ -121,8 +121,8 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
             ) : null; })()}
           </div>
           {filterCol && (
-            <button onClick={() => setFilterCol(null)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}>
-              <Icon name="close" size={11} color="var(--text3)" /> Quitter la collection
+            <button onClick={() => setFilterCol(null)} title="Revenir à toutes les recettes" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}>
+              <Icon name="back" size={14} color="var(--text2)" /> Retour
             </button>
           )}
         </div>
