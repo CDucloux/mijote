@@ -15,6 +15,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   const [filterCol, setFilterCol] = useState(null);
   const [sortBy, setSortBy] = useState("name");
   const [seasonOnly, setSeasonOnly] = useState(false);
+  const [showTags, setShowTags] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef(null);
 
@@ -74,10 +75,15 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           ))}
           <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />
           <button onClick={() => setSeasonOnly(s => !s)} title="Recettes de saison ce mois-ci" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: seasonOnly ? "rgba(76,175,125,0.18)" : "var(--surface2)", color: seasonOnly ? "var(--green)" : "var(--text2)", border: `1px solid ${seasonOnly ? "rgba(76,175,125,0.5)" : "var(--border)"}` }}>
-            <span style={{ fontSize: 13, lineHeight: 1 }}>🌱</span> De saison
+            De saison
           </button>
           {allTags.length > 0 && <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />}
-          {allTags.map(t => (
+          {allTags.length > 0 && (
+            <button onClick={() => { setShowTags(v => { if (v) setFilterTag(null); return !v; }); }} title={showTags ? "Masquer les tags" : "Afficher les tags"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: showTags ? "var(--surface3)" : "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
+              <Icon name={showTags ? "close" : "plus"} size={11} color="var(--text2)" /> Tags
+            </button>
+          )}
+          {showTags && allTags.map(t => (
             <button key={t} onClick={() => setFilterTag(filterTag === t ? null : t)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: filterTag === t ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: filterTag === t ? "var(--accent)" : "var(--text2)", border: `1px solid ${filterTag === t ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{t}</button>
           ))}
         </div>
