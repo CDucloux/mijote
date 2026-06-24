@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=Manrope:wght@300;400;500;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --bg:#0e0e0f;--bg-rgb:14,14,15;--surface:#171718;--surface2:#1f1f21;--surface3:#252527;
@@ -6,7 +6,7 @@
   --text:#f0ede8;--text2:#9a9490;--text3:#5a5754;
   --green:#4caf7d;--red:#e05252;--yellow:#f0c060;--blue:#5b9cf6;--orange:#f0992a;
   --radius:16px;--radius-sm:10px;
-  --ff-display:'Fraunces',serif;--ff-body:'Plus Jakarta Sans',sans-serif;
+  --ff-display:'Fraunces',serif;--ff-body:'Manrope',sans-serif;
   --tab-h:72px;
 }
 /* ── LIGHT THEME ── */
