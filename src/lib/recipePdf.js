@@ -180,18 +180,14 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     .footer-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; text-align: right; }
     .footer-brand .dot { color: var(--accent); }
     .footer-gen { display: inline-flex; align-items: center; gap: 8px; }
-    .version-badge { font-size: 10px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 6px; padding: 2px 7px; letter-spacing: 0.02em; }
+    .version-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #fff; background: var(--text); border-radius: 6px; padding: 2px 7px 2px 5px; letter-spacing: 0.02em; }
+    .version-badge svg { width: 10px; height: 10px; }
     @page { margin: 16mm 14mm; }
     @media print {
       body { max-width: none; margin: 0; padding: 0; font-size: 12px; }
-      .hero { height: 200px; break-inside: avoid; }
-      .header { break-inside: avoid; }
+      .hero { height: 200px; }
       .section-title { break-after: avoid; page-break-after: avoid; }
-      .pill { break-inside: avoid; page-break-inside: avoid; }
-      .step { break-inside: avoid; page-break-inside: avoid; }
-      .step-pills { break-inside: avoid; page-break-inside: avoid; }
-      .comp-block { break-inside: avoid; page-break-inside: avoid; }
-      .footer { break-inside: avoid; page-break-inside: avoid; }
+      .step-header { break-after: avoid; page-break-after: avoid; }
       p { orphans: 3; widows: 3; }
     }
   </style>
@@ -226,7 +222,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   <div class="footer">
     <span class="footer-brand">Mijoté<span class="dot">·</span></span>
     <span class="footer-meta">
-      <span class="footer-gen">Généré le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}${recipe.history?.length ? `<span class="version-badge">${recipe.history[recipe.history.length - 1].label}</span>` : ""}</span>
+      <span class="footer-gen">Généré le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}${recipe.history?.length ? `<span class="version-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="14"/></svg>${recipe.history[recipe.history.length - 1].label}</span>` : ""}</span>
       ${recipe.source ? `<span>Source : <a href="${recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}" style="color:var(--accent)">${recipe.source.replace(/^https?:\/\//, "")}</a></span>` : ""}
     </span>
   </div>
