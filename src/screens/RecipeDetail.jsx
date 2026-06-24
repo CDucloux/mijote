@@ -401,13 +401,16 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                       )}
                       {hasPills && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                          {linkedIngs.map(ing => (
+                          {linkedIngs.map(ing => {
+                            const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
+                            return (
                             <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                              <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={22} />
-                              {ing.name}
+                              <IngImage src={getIngImage(ing.dbId, ing.name)} alt={displayName} size={22} />
+                              {displayName}
                               <span style={{ color: "var(--text3)", fontWeight: 400, marginLeft: 2 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
                             </span>
-                          ))}
+                          );
+                          })}
                           {linkedUts.map(u => (
                             <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
                               <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
@@ -500,13 +503,16 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     {step.text && <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 12, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
                     {(linkedIngs.length > 0 || linkedUts.length > 0) && (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                        {linkedIngs.map(ing => (
+                        {linkedIngs.map(ing => {
+                          const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
+                          return (
                           <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={24} />
-                            {ing.name}
+                            <IngImage src={getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} />
+                            {displayName}
                             <span style={{ color: "var(--text3)", fontWeight: 500 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
                           </span>
-                        ))}
+                          );
+                        })}
                         {linkedUts.map(u => (
                           <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
                             <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
