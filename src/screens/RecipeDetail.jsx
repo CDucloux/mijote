@@ -371,9 +371,13 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)", borderRadius: 14, padding: "12px 16px", marginBottom: 14, border: "1px solid var(--border)" }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>Portions</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 18, border: "none", cursor: "pointer" }}>−</button>
+                  <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", border: "none", cursor: "pointer" }}>
+                    <svg width="11" height="2" viewBox="0 0 11 2"><rect x="0" y="0" width="11" height="2" rx="1" fill="currentColor"/></svg>
+                  </button>
                   <span style={{ fontSize: 18, fontWeight: 700, minWidth: 24, textAlign: "center" }}>{servings}</span>
-                  <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, border: "none", cursor: "pointer" }}>+</button>
+                  <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", border: "none", cursor: "pointer" }}>
+                    <svg width="11" height="11" viewBox="0 0 11 11"><rect x="4.5" y="0" width="2" height="11" rx="1" fill="currentColor"/><rect x="0" y="4.5" width="11" height="2" rx="1" fill="currentColor"/></svg>
+                  </button>
                 </div>
               </div>
               {/* Liste ingrédients */}
