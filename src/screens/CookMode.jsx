@@ -41,6 +41,11 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
   const realIdx = STEP_ZERO ? stepIdx - 1 : stepIdx;
   const step = isStepZero ? null : (recipe.steps || [])[realIdx];
 
+  // Toutes les bases avec étapes doivent être réalisées avant de passer à la suite.
+  const allComponentsDone = pendingComponents
+    .filter(({ comp }) => comp.steps?.length > 0)
+    .every(({ comp }) => doneComponents.has(comp.id));
+
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
   const progress = ((stepIdx + 1) / totalSteps) * 100;
@@ -175,7 +180,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {pendingComponents.map(({ line, comp, nestedMult }) => (
-                      <div key={comp.id} style={{ background: "var(--surface)", border: "1.5px solid rgba(232,112,58,0.3)", borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
+                      <div key={comp.id} style={{ background: "var(--surface)", border: `1.5px solid ${doneComponents.has(comp.id) ? "rgba(76,175,125,0.45)" : "rgba(232,112,58,0.3)"}`, borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 14, transition: "border-color 0.25s" }}>
                         {comp.image
                           ? <Img src={comp.image} alt={comp.name} style={{ width: 52, height: 52, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
                           : <span style={{ width: 52, height: 52, borderRadius: 10, background: "rgba(232,112,58,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={28} /></span>
@@ -250,7 +255,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
             {isStepZero ? "Bases" : `${realIdx + 1} / ${realStepCount}`}
           </span>
           {stepIdx < totalSteps - 1
-            ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)}>Suivant <Icon name="forward" size={16} /></button>
+            ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)} disabled={isStepZero && !allComponentsDone}>Suivant <Icon name="forward" size={16} /></button>
             : <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
           }
         </div>
