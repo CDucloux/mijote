@@ -12,9 +12,9 @@ export function RecipeCard({ recipe, onClick, style }) {
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.65),transparent)" }} />
         {recipe.isComponent && (
-          <span style={{ position: "absolute", top: 8, right: 8, display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px 3px 6px", borderRadius: 20, background: "rgba(210,96,40,0.88)", backdropFilter: "blur(4px)", pointerEvents: "none" }}>
-            <BaseIcon size={11} color="#fff" />
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: "0.03em" }}>Base</span>
+          <span style={{ position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px 4px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", pointerEvents: "none" }}>
+            <BaseIcon size={12} color="#fff" />
+            <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
           </span>
         )}
       </div>
