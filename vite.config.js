@@ -48,4 +48,17 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   appType: 'spa',
+  build: {
+    rollupOptions: {
+      output: {
+        // Sépare les dépendances stables dans leurs propres chunks : elles ne
+        // bougent quasiment jamais → mises en cache durablement par le
+        // navigateur, seul le code applicatif est re-téléchargé à chaque deploy.
+        manualChunks(id) {
+          if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) return 'firebase';
+          if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)) return 'react';
+        },
+      },
+    },
+  },
 });
