@@ -77,11 +77,16 @@ input,textarea,select{font-family:var(--ff-body);}
   *{scrollbar-width:thin;scrollbar-color:var(--surface3) transparent;}
 
   html,body{overflow:auto;}
-  #root{margin:0;width:calc(100% / var(--page-zoom,1));height:calc(100dvh / var(--page-zoom,1));max-width:none;zoom:var(--page-zoom,1);flex-direction:row;overflow:hidden;}
+  /* Mise à l'échelle de toute l'UI sur grands écrans : on agrandit l'espace de
+     travail "logique" (largeur/hauteur ÷ zoom) puis on le scale pour remplir le
+     viewport. transform (et non zoom) garantit une sémantique de layout
+     déterministe ; les enfants doivent donc dimensionner en % du #root, pas en
+     dvh/vh. */
+  #root{margin:0;max-width:none;width:calc(100vw / var(--page-zoom,1));height:calc(100dvh / var(--page-zoom,1));transform-origin:top left;transform:scale(var(--page-zoom,1));flex-direction:row;overflow:hidden;}
 
   /* Sidebar */
   .desktop-sidebar{
-    width:220px;min-width:220px;height:100dvh;
+    width:220px;min-width:220px;height:100%;
     background:var(--surface);border-right:1px solid var(--border);
     display:flex;flex-direction:column;padding:28px 0 20px;
     flex-shrink:0;
@@ -120,7 +125,7 @@ input,textarea,select{font-family:var(--ff-body);}
 
   /* Modal on desktop: centered dialog instead of bottom sheet */
   .modal-backdrop{justify-content:center;align-items:center;}
-  .modal-sheet{border-radius:20px!important;max-width:480px;width:100%;margin:0 auto;max-height:80dvh;}
+  .modal-sheet{border-radius:20px!important;max-width:480px;width:100%;margin:0 auto;max-height:80%;}
   .modal-handle{display:none;}
 
   /* Editor wider */
