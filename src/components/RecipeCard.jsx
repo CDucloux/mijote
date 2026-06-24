@@ -1,21 +1,25 @@
+import { useState } from "react";
 import { Img } from "./Img.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
+import { BaseInfoModal } from "./BaseInfoModal.jsx";
 import { Icon } from "./Icon.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { fmtTime } from "../lib/format.js";
 
 export function RecipeCard({ recipe, onClick, style }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+  const [showBaseInfo, setShowBaseInfo] = useState(false);
   return (
+    <>
     <button className="slide-up recipe-card" onClick={onClick} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", ...style }}>
       <div className="recipe-card-thumb" style={{ aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.65),transparent)" }} />
         {recipe.isComponent && (
-          <span style={{ position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px 4px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", pointerEvents: "none" }}>
+          <button onClick={e => { e.stopPropagation(); setShowBaseInfo(true); }} style={{ position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px 4px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", cursor: "pointer" }}>
             <BaseIcon size={12} color="#fff" />
             <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
-          </span>
+          </button>
         )}
       </div>
       <div style={{ padding: "10px 12px 12px" }}>
@@ -30,5 +34,7 @@ export function RecipeCard({ recipe, onClick, style }) {
         </div>
       </div>
     </button>
+    {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
+    </>
   );
 }

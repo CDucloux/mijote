@@ -6,6 +6,7 @@ import { BaseIcon } from "../components/BaseIcon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { NutritionModal } from "../components/NutritionModal.jsx";
+import { BaseInfoModal } from "../components/BaseInfoModal.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
@@ -54,6 +55,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const [cookMode, setCookMode] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [showBaseInfo, setShowBaseInfo] = useState(false);
   const actionsRef = useRef(null);
   const isProgrammaticScroll = useRef(false);
   const mult = servings / (recipe.servings || 2);
@@ -120,6 +122,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         </div>
         <div style={{ position: "absolute", bottom: 14, left: 20, right: 20 }}>
           <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2 }}>{recipe.name}</h1>
+          {recipe.isComponent && (
+            <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 4, cursor: "pointer" }}>
+              <BaseIcon size={11} color="#fff" />
+              <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
+            </button>
+          )}
           {recipe.source && (
             <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}
               target="_blank" rel="noopener noreferrer"
@@ -228,6 +236,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             {/* Titre + source + tags */}
             <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
               <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff" }}>{recipe.name}</h1>
+              {recipe.isComponent && (
+                <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 4, cursor: "pointer" }}>
+                  <BaseIcon size={11} color="#fff" />
+                  <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
+                </button>
+              )}
               {recipe.source && (
                 <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source} target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginBottom: 6 }}>
@@ -629,6 +643,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           </div>
         </SwipeableSheet>
       )}
+      {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
       {showCollModal && (
         <SwipeableSheet onClose={() => setShowCollModal(false)}>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Collections</h3>
