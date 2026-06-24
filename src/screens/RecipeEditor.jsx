@@ -164,11 +164,15 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                   <div key={field}>
                     <div className="field-label">{label}</div>
                     <div style={{ display: "flex" }}>
-                      <button type="button" onClick={() => up(field, Math.max(min, (form[field]||0) - step))} style={{ flexShrink: 0, width: 30, height: 36, borderRadius: "8px 0 0 8px", background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>−</button>
+                      <button type="button" onClick={() => up(field, Math.max(min, (form[field]||0) - step))} style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "8px 0 0 8px", background: "var(--surface2)", border: "1px solid var(--border)", borderRight: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>
+                        <svg width="10" height="2" viewBox="0 0 10 2"><rect x="0" y="0" width="10" height="2" rx="1" fill="currentColor"/></svg>
+                      </button>
                       <input className="field-input no-spin" type="number" min={min} max={max} value={form[field]}
                         onChange={e => up(field, Math.min(max, Math.max(min, +e.target.value || 0)))}
-                        style={{ borderRadius: 0, textAlign: "center", minWidth: 0, flex: 1, marginBottom: 0, borderLeft: "none", borderRight: "none" }} />
-                      <button type="button" onClick={() => up(field, Math.min(max, (form[field]||0) + step))} style={{ flexShrink: 0, width: 30, height: 36, borderRadius: "0 8px 8px 0", background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>+</button>
+                        style={{ borderRadius: 0, textAlign: "center", minWidth: 0, flex: 1, marginBottom: 0, borderLeft: "none", borderRight: "none", background: "var(--surface2)" }} />
+                      <button type="button" onClick={() => up(field, Math.min(max, (form[field]||0) + step))} style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "0 8px 8px 0", background: "var(--surface2)", border: "1px solid var(--border)", borderLeft: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>
+                        <svg width="10" height="10" viewBox="0 0 10 10"><rect x="4" y="0" width="2" height="10" rx="1" fill="currentColor"/><rect x="0" y="4" width="10" height="2" rx="1" fill="currentColor"/></svg>
+                      </button>
                     </div>
                   </div>
                 ))}

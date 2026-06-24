@@ -218,9 +218,13 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           {/* Portions */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontSize: 15, border: "none", cursor: "pointer" }}>−</button>
+              <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", border: "none", cursor: "pointer", lineHeight: 1 }}>
+                <svg width="10" height="2" viewBox="0 0 10 2"><rect x="0" y="0" width="10" height="2" rx="1" fill="currentColor"/></svg>
+              </button>
               <span style={{ fontSize: 14, fontWeight: 700, minWidth: 18, textAlign: "center" }}>{servings}</span>
-              <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, border: "none", cursor: "pointer" }}>+</button>
+              <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", border: "none", cursor: "pointer", lineHeight: 1 }}>
+                <svg width="10" height="10" viewBox="0 0 10 10"><rect x="4" y="0" width="2" height="10" rx="1" fill="currentColor"/><rect x="0" y="4" width="10" height="2" rx="1" fill="currentColor"/></svg>
+              </button>
             </div>
             <span style={{ fontSize: 10, color: "var(--text3)", marginTop: 3 }}>Portions</span>
           </div>
