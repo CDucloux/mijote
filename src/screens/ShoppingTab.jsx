@@ -260,7 +260,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
                         {!activeList.hideClear && (
-                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat — les produits d'épicerie rejoignent ton stock">
+                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat — les produits de placard rejoignent ton stock">
                             <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
                           </button>
                         )}
@@ -302,19 +302,12 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 600 }}>Valider l'achat ?</h3>
             </div>
-            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 14, lineHeight: 1.55 }}>
+            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.55 }}>
               Les <strong>{checked.length}</strong> article{checked.length > 1 ? "s" : ""} acheté{checked.length > 1 ? "s" : ""} vont être retirés de la liste.
               {toStock.length > 0
-                ? <> Parmi eux, <strong>{toStock.length}</strong> produit{toStock.length > 1 ? "s" : ""} d'épicerie rejoindront ton stock (les produits frais sont exclus).</>
-                : <> Aucun produit d'épicerie à ajouter au stock (uniquement des produits frais).</>}
+                ? <> Parmi eux, <strong>{toStock.length}</strong> produit{toStock.length > 1 ? "s" : ""} de placard rejoindront ton stock (les produits frais sont exclus).</>
+                : <> Aucun produit de placard à ajouter au stock (uniquement des produits frais).</>}
             </p>
-            {toStock.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
-                {toStock.map(m => (
-                  <span key={m.id} style={{ fontSize: 12, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 16, padding: "3px 10px" }}>{m.name}</span>
-                ))}
-              </div>
-            )}
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmClearId(null)}>Annuler</button>
               <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => { clearChecked(confirmClearId); setConfirmClearId(null); }}>
