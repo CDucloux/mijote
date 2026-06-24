@@ -90,7 +90,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const heroSentinelRef = useRef(null);
   const [heroCollapsed, setHeroCollapsed] = useState(false);
   const swipeStart = useRef(null);
-  const TAB_ORDER = ["Ingrédients", "Ustensiles", "Étapes", "Journal"];
+  const TAB_ORDER = ["Ingrédients", "Ustensiles", "Étapes"];
   const swipeHandlers = {
     onTouchStart: e => { swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, axis: null }; },
     onTouchMove: e => {
@@ -255,6 +255,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               <HeroMenu
                 btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
                 items={[
+                  { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
                   { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
                   { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
                 ]} />
@@ -495,11 +496,6 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               </div>
             </div>
           )}
-          {activeTab === "Journal" && (
-            <div style={{ padding: "16px 16px 32px" }}>
-              <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
-            </div>
-          )}
           </div>{/* end swipe wrapper */}
         </div>
 
@@ -645,19 +641,6 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               })}
             </div>
           </div>
-          {/* Right col: journal d'itérations — ouvert via le menu « … » du hero */}
-          {journalOpen && (
-            <div style={{ width: 340, minWidth: 340, overflowY: "auto", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 34, marginBottom: 16 }}>
-                <Icon name="history" size={18} color="var(--accent)" />
-                <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Journal</span>
-                <button onClick={() => setJournalOpen(false)} title="Fermer" style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                  <Icon name="close" size={13} color="var(--text3)" />
-                </button>
-              </div>
-              <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
-            </div>
-          )}
         </div>
       </div>
 
@@ -798,6 +781,15 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
             <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
           </div>
+        </SwipeableSheet>
+      )}
+      {journalOpen && (
+        <SwipeableSheet onClose={() => setJournalOpen(false)} style={{ maxHeight: "88dvh" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <Icon name="history" size={20} color="var(--accent)" />
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Journal d'itérations</h3>
+          </div>
+          <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
         </SwipeableSheet>
       )}
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}

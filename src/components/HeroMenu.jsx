@@ -3,7 +3,7 @@ import { Icon } from "./Icon.jsx";
 
 // Menu « trois points » des actions secondaires d'une recette (hero).
 // items : [{ label, icon, onClick, danger }]. Se ferme au clic extérieur / Échap.
-export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 16 }) {
+export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 

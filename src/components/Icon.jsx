@@ -38,7 +38,7 @@ export const Icon = ({ name, size = 20, color = "currentColor" }) => {
     box: <svg {...p}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><line x1="12" x2="12" y1="22" y2="12"/></svg>,
     wifiOff: <svg {...p}><line x1="2" x2="22" y1="2" y2="22"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 4.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="M16.85 11.25a10 10 0 0 1 2.22 1.68"/><path d="M5 13a10 10 0 0 1 5.24-2.76"/><line x1="12" x2="12.01" y1="20" y2="20"/></svg>,
     history: <svg {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="14"/></svg>,
-    more: <svg {...p}><circle cx="12" cy="5" r="1.6" fill={color} stroke="none"/><circle cx="12" cy="12" r="1.6" fill={color} stroke="none"/><circle cx="12" cy="19" r="1.6" fill={color} stroke="none"/></svg>,
+    more: <svg {...p}><circle cx="12" cy="5" r="2.3" fill={color} stroke="none"/><circle cx="12" cy="12" r="2.3" fill={color} stroke="none"/><circle cx="12" cy="19" r="2.3" fill={color} stroke="none"/></svg>,
   };
   return icons[name] || null;
 };
