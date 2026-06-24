@@ -110,19 +110,21 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           </div>
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
-          </h2>
-          {filterCol && (() => { const ac = collections.find(c => c.id === filterCol); return (
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              {ac && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: ac.color + "22", color: ac.color, border: `1px solid ${ac.color}55`, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  <span style={{ fontSize: 13, lineHeight: 1 }}>{ac.icon || "📁"}</span>{ac.name}
-                </span>
-              )}
-              <button onClick={() => setFilterCol(null)} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 500, color: "var(--accent)", background: "none", border: "none", cursor: "pointer" }}><Icon name="close" size={13} color="var(--accent)" /> Quitter</button>
-            </div>
-          ); })()}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexWrap: "wrap" }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+              Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
+            </h2>
+            {filterCol && (() => { const ac = collections.find(c => c.id === filterCol); return ac ? (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: ac.color + "22", color: ac.color, border: `1px solid ${ac.color}55`, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 13, lineHeight: 1 }}>{ac.icon || "📁"}</span>{ac.name}
+              </span>
+            ) : null; })()}
+          </div>
+          {filterCol && (
+            <button onClick={() => setFilterCol(null)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}>
+              <Icon name="close" size={11} color="var(--text3)" /> Quitter la collection
+            </button>
+          )}
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
           {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
