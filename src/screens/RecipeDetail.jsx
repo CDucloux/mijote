@@ -138,6 +138,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
             items={[
               { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
+              { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
               { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
             ]} />
         </div>
