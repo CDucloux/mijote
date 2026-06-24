@@ -441,7 +441,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   </div>
                 ))}
                 {baseSteps.length > 0 && recipe.steps?.length > 0 && (
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>Montage de la recette</div>
+                  <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
                 )}
                 {(recipe.steps || []).map((step, i) => {
                   const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
@@ -593,7 +593,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 </div>
               ))}
               {baseSteps.length > 0 && recipe.steps?.length > 0 && (
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", borderTop: "1px solid var(--border)", paddingTop: 16 }}>Montage de la recette</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", borderTop: "1px solid var(--border)", paddingTop: 16 }}>Montage de la recette</div>
               )}
               {(recipe.steps || []).map((step, i) => {
                 const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
