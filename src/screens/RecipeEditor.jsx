@@ -69,7 +69,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   return (
     <div className="editor-enter" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "var(--surface)" }}>
-        <button onClick={onCancel} style={{ flexShrink: 0, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "var(--surface2)" }}><Icon name="close" size={15} /></button>
+        <button onClick={onCancel} style={{ flexShrink: 0, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "var(--surface2)" }}><Icon name="close" size={12} /></button>
         <h2 style={{ flex: 1, minWidth: 0, fontSize: 17, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{recipe.id ? "Modifier" : (form.name.trim() || "Nouvelle recette")}</h2>
         <button className="btn btn-primary" style={{ flexShrink: 0, padding: "8px 16px", fontSize: 13 }} onClick={handleSave}><Icon name="check" size={15} /> Sauvegarder</button>
       </div>
