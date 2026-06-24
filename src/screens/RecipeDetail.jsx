@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
@@ -15,6 +15,10 @@ import { fmtTime } from "../lib/format.js";
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
 export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, stock = [], lowStock = [] }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const handleBack = location.state?.from
+    ? () => navigate(`/recipes/${location.state.from}`)
+    : onBack;
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
   const isDesktop = useIsDesktop();
@@ -107,7 +111,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       <div style={{ position: "relative", height: 160, flexShrink: 0, color: "#fff" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
-        <button onClick={onBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="back" size={18} /></button>
+        <button onClick={handleBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="back" size={18} /></button>
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
           <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="edit" size={16} /></button>
           <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="pdf" size={16} /></button>
@@ -215,7 +219,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 40%,rgba(0,0,0,0.72) 100%)" }} />
             {/* Boutons overlay */}
-            <button onClick={onBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
+            <button onClick={handleBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
             <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
               <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
               <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
@@ -254,7 +258,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px",
           }}>
             {heroCollapsed && <>
-              <button onClick={onBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
+              <button onClick={handleBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
               <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipe.name}</span>
               <div style={{ display: "flex", gap: 6 }}>
                 <button onClick={() => { openShoppingModal(); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>
@@ -317,7 +321,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 {recipe.ingredients.map(ing => {
                   const rc = resolveComp(ing);
                   if (rc) return (
-                    <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: rc.missing ? "var(--surface2)" : "rgba(232,112,58,0.07)", borderRadius: 12, padding: "10px 14px", border: `1px solid ${rc.missing ? "var(--border)" : "rgba(232,112,58,0.35)"}`, cursor: rc.comp ? "pointer" : "default" }}>
+                    <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} style={{ display: "flex", alignItems: "center", gap: 12, background: rc.missing ? "var(--surface2)" : "rgba(232,112,58,0.07)", borderRadius: 12, padding: "10px 14px", border: `1px solid ${rc.missing ? "var(--border)" : "rgba(232,112,58,0.35)"}`, cursor: rc.comp ? "pointer" : "default" }}>
                       {rc.comp?.image
                         ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={50} cover />
                         : <span style={{ width: 50, height: 50, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={24} /></span>}
@@ -420,7 +424,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 {recipe.ingredients.map(ing => {
                   const rc = resolveComp(ing);
                   if (rc) return (
-                    <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (rc.comp) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
+                    <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (rc.comp) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
                       {rc.comp?.image
                         ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={48} cover />
                         : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
