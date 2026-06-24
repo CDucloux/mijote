@@ -9,10 +9,15 @@ const fmtDate = iso => {
   catch { return ""; }
 };
 
-// Couleur de la note /10 : rouge → orange → vert.
+const fmtTime = min => {
+  if (!min) return "—";
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60), m = min % 60;
+  return m ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
+};
+
 const ratingColor = r => r >= 8 ? "var(--green)" : r >= 5 ? "var(--accent)" : "var(--red)";
 
-// Sélecteur de note /10 : 10 pastilles cliquables, re-clic sur la valeur = effacer.
 function RatingPicker({ value, onChange }) {
   return (
     <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
@@ -34,15 +39,113 @@ function RatingPicker({ value, onChange }) {
   );
 }
 
-// Journal d'itérations d'une recette : versions figées (snapshot + dégustation),
-// avec restauration (rollback) et suppression. onUpdateRecipe persiste la recette.
+// Prévisualisation en lecture seule du snapshot d'une version.
+function SnapshotPreview({ entry, onRestore, onClose }) {
+  const s = entry.snapshot || {};
+  const [confirmRestore, setConfirmRestore] = useState(false);
+
+  if (confirmRestore) return (
+    <SwipeableSheet onClose={() => setConfirmRestore(false)}>
+      <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Restaurer « {entry.label} » ?</h3>
+      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, marginBottom: 18 }}>
+        Les ingrédients, étapes et temps de la recette seront remplacés par ceux de cette version. L'état actuel sera automatiquement sauvegardé en nouvelle version pour ne rien perdre.
+      </p>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button className="btn" style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)" }} onClick={() => setConfirmRestore(false)}>Annuler</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={onRestore}>Restaurer</button>
+      </div>
+    </SwipeableSheet>
+  );
+
+  return (
+    <SwipeableSheet onClose={onClose} style={{ maxHeight: "90dvh" }}>
+      {/* En-tête */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--accent)", letterSpacing: "-0.01em" }}>{entry.label}</div>
+          <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>
+            {fmtDate(entry.createdAt)}
+            {entry.rating != null && <span style={{ marginLeft: 8, fontWeight: 700, color: ratingColor(entry.rating) }}>{entry.rating}/10</span>}
+          </div>
+        </div>
+        <button className="btn btn-primary" style={{ gap: 7, fontSize: 13 }} onClick={() => setConfirmRestore(true)}>
+          <Icon name="back" size={14} /> Restaurer
+        </button>
+      </div>
+
+      {entry.notes && (
+        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, marginBottom: 16, padding: "10px 14px", background: "var(--surface2)", borderRadius: 10, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+          {entry.notes}
+        </p>
+      )}
+
+      <div style={{ overflowY: "auto", maxHeight: "60vh", display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* Temps */}
+        {(s.prepTime != null || s.cookTime != null) && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Temps</div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "10px 14px" }}>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 2 }}>Préparation</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{fmtTime(s.prepTime)}</div>
+              </div>
+              <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "10px 14px" }}>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 2 }}>Cuisson</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{fmtTime(s.cookTime)}</div>
+              </div>
+              {s.servings && (
+                <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "10px 14px" }}>
+                  <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 2 }}>Portions</div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>{s.servings}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Ingrédients */}
+        {s.ingredients?.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Ingrédients</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {s.ingredients.map((ing, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "var(--surface2)", borderRadius: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>{ing.name}</span>
+                  {(ing.amount || ing.unit) && (
+                    <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 600 }}>{ing.amount}{ing.unit}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Étapes */}
+        {s.steps?.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Étapes</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {s.steps.map((step, i) => (
+                <div key={i} style={{ display: "flex", gap: 10 }}>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--accent)", color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>{i + 1}</span>
+                  <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: 0 }}>{step.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </SwipeableSheet>
+  );
+}
+
 export function RecipeJournal({ recipe, onUpdateRecipe }) {
-  const history = [...(recipe.history || [])].reverse(); // plus récent en premier
+  const history = [...(recipe.history || [])].reverse();
   const [showForm, setShowForm] = useState(false);
   const [label, setLabel] = useState("");
   const [rating, setRating] = useState(null);
   const [notes, setNotes] = useState("");
-  const [restoreTarget, setRestoreTarget] = useState(null);
+  const [previewEntry, setPreviewEntry] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const openForm = () => {
@@ -58,8 +161,8 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
   };
 
   const doRestore = () => {
-    onUpdateRecipe(restoreVersion(recipe, restoreTarget.id));
-    setRestoreTarget(null);
+    onUpdateRecipe(restoreVersion(recipe, previewEntry.id));
+    setPreviewEntry(null);
   };
 
   const doDelete = () => {
@@ -80,23 +183,26 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {history.map(entry => (
-            <div key={entry.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: entry.notes ? 8 : 0 }}>
+            <div key={entry.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", cursor: "pointer" }}
+              onClick={() => setPreviewEntry(entry)}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>{entry.label}</span>
                 <span style={{ fontSize: 12, color: "var(--text3)" }}>{fmtDate(entry.createdAt)}</span>
                 {entry.rating != null && (
                   <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
                 )}
-                <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                  <button onClick={() => setRestoreTarget(entry)} title="Restaurer cette version" style={{ width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                    <Icon name="back" size={14} color="var(--text2)" />
+                <div style={{ marginLeft: "auto", display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}>
+                  <button onClick={() => setPreviewEntry(entry)} title="Visualiser cette version"
+                    style={{ width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                    <Icon name="forward" size={14} color="var(--text2)" />
                   </button>
-                  <button onClick={() => setDeleteTarget(entry)} title="Supprimer" style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <button onClick={() => setDeleteTarget(entry)} title="Supprimer"
+                    style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
                     <Icon name="trash" size={13} color="var(--red)" />
                   </button>
                 </div>
               </div>
-              {entry.notes && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{entry.notes}</p>}
+              {entry.notes && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: "8px 0 0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{entry.notes}</p>}
             </div>
           ))}
         </div>
@@ -123,18 +229,9 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
         </SwipeableSheet>
       )}
 
-      {/* Confirmation de restauration */}
-      {restoreTarget && (
-        <SwipeableSheet onClose={() => setRestoreTarget(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Restaurer « {restoreTarget.label} » ?</h3>
-          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, marginBottom: 18 }}>
-            Les ingrédients, étapes et temps de la recette seront remplacés par ceux de cette version. L'état actuel sera automatiquement sauvegardé en nouvelle version pour ne rien perdre.
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn" style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)" }} onClick={() => setRestoreTarget(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={doRestore}>Restaurer</button>
-          </div>
-        </SwipeableSheet>
+      {/* Prévisualisation du snapshot */}
+      {previewEntry && (
+        <SnapshotPreview entry={previewEntry} onRestore={doRestore} onClose={() => setPreviewEntry(null)} />
       )}
 
       {/* Confirmation de suppression */}
