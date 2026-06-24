@@ -31,6 +31,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const [mealSlots, setMealSlots] = useState(["midi"]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCollModal, setShowCollModal] = useState(false);
+  const [journalOpen, setJournalOpen] = useState(false);
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
   const stockSet = useMemo(() => new Set(stock), [stock]);
@@ -633,14 +634,23 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               })}
             </div>
           </div>
-          {/* Right col: journal d'itérations (card) */}
-          <div style={{ width: 340, minWidth: 340, overflowY: "auto", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 34, marginBottom: 16 }}>
-              <Icon name="sparkle" size={18} color="var(--accent)" />
-              <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Journal</span>
+          {/* Right col: journal d'itérations — réduit par défaut, déplié au clic */}
+          {journalOpen ? (
+            <div style={{ width: 340, minWidth: 340, overflowY: "auto", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 34, marginBottom: 16 }}>
+                <Icon name="history" size={18} color="var(--accent)" />
+                <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Journal</span>
+                <button onClick={() => setJournalOpen(false)} title="Fermer" style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <Icon name="close" size={13} color="var(--text3)" />
+                </button>
+              </div>
+              <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
             </div>
-            <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
-          </div>
+          ) : (
+            <button onClick={() => setJournalOpen(true)} title="Ouvrir le journal d'itérations" style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: "var(--radius)", background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", color: "var(--text2)", fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>
+              <Icon name="history" size={16} color="var(--accent)" /> Journal
+            </button>
+          )}
         </div>
       </div>
 
