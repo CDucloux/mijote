@@ -214,14 +214,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       {isDesktop && (
         <div ref={actionsRef} style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
           {actionsOpen ? (
-            <div className="slide-up action-dock">
+            <div className="action-dock">
               <button className="action-dock-btn action-dock-primary" onClick={() => { openShoppingModal(); }}><Icon name="shopping" size={16} color="#fff" /> Courses</button>
               <button className="action-dock-btn action-dock-ghost" onClick={() => setShowMealModal(true)}><Icon name="calendar" size={16} /> Planifier</button>
               <button className="action-dock-close" title="Réduire" onClick={() => setActionsOpen(false)}><Icon name="close" size={15} /></button>
             </div>
           ) : (
             <button className="fab-toggle" title="Actions" onClick={() => setActionsOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 26px -4px rgba(232,112,58,0.5)" }}>
-              <Icon name="shopping" size={22} color="#fff" />
+              <Icon name="plus" size={24} color="#fff" />
             </button>
           )}
         </div>
