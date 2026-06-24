@@ -31,6 +31,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
   const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
   const [shareEmail, setShareEmail] = useState("");    // saisie e-mail dans la section partage
+  const [showAllSuggestions, setShowAllSuggestions] = useState(false); // déplier toutes les suggestions de partage
   const [showAddModal, setShowAddModal] = useState(false);
 
   const activeList = shoppingLists.find(l => l.id === activeListId) || shoppingLists[0] || null;
@@ -396,11 +397,13 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
           setConfigList(p => ({ ...p, sharedWith: [...p.sharedWith, v] }));
           setShareEmail("");
         };
-        // Avatars proposés : utilisateurs connus, hors moi et hors déjà-partagés (3 max).
-        const suggestions = directory
+        // Avatars proposés : utilisateurs connus, hors moi et hors déjà-partagés.
+        // On en montre 3 par défaut, le reste derrière un chip « … ».
+        const allSuggestions = directory
           .map(d => ({ ...d, email: (d.email || "").toLowerCase() }))
-          .filter(d => d.email && d.email !== myEmail && !configList.sharedWith.includes(d.email))
-          .slice(0, 3);
+          .filter(d => d.email && d.email !== myEmail && !configList.sharedWith.includes(d.email));
+        const suggestions = showAllSuggestions ? allSuggestions : allSuggestions.slice(0, 3);
+        const extraSuggestions = allSuggestions.length - suggestions.length;
         const dirByEmail = Object.fromEntries(directory.map(d => [(d.email || "").toLowerCase(), d]));
         const Avatar = ({ d, size = 28 }) => d?.photoURL
           ? <img src={d.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} />
@@ -456,7 +459,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                   </div>
                 )}
 
-                {suggestions.length > 0 && (
+                {!maxReached && suggestions.length > 0 && (
                   <div style={{ marginBottom: 12 }}>
                     <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 6 }}>Suggestions</div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -467,6 +470,18 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                           <span style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.displayName || d.email}</span>
                         </button>
                       ))}
+                      {extraSuggestions > 0 && (
+                        <button onClick={() => setShowAllSuggestions(true)} title={`Voir ${extraSuggestions} suggestion${extraSuggestions > 1 ? "s" : ""} de plus`}
+                          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 20, background: "var(--surface2)", border: "1px dashed var(--border)", cursor: "pointer", color: "var(--text2)", fontSize: 12, fontWeight: 600 }}>
+                          +{extraSuggestions}
+                        </button>
+                      )}
+                      {showAllSuggestions && allSuggestions.length > 3 && (
+                        <button onClick={() => setShowAllSuggestions(false)} title="Réduire"
+                          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 20, background: "var(--surface2)", border: "1px dashed var(--border)", cursor: "pointer", color: "var(--text3)", fontSize: 12, fontWeight: 600 }}>
+                          −
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
