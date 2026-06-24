@@ -16,7 +16,10 @@
 
 - [x] Système saisonnier
 
-- [ ] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
+- [x] Journal d'itérations
+- [x] Préparations de base
+
+- [x] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
 
 - [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
 
@@ -37,32 +40,6 @@
 6. Journal d'itérations. Les vrais cuisiniers retravaillent une recette : "v3 — -10 g de sucre, +zeste de citron vert, cuit 4 min de moins → meilleur". Versionner une recette avec notes de dégustation et note de résultat. Tes recettes sont déjà des docs Firestore diffés un par un — tu as quasiment l'infra pour un historique. C'est énorme pour la reproductibilité, le point faible de tous les carnets papier.
 
 8. Conversions exactes + calculatrices d'atelier. Poids ↔ volume ↔ pièce (ton champ gramsPerPiece fait déjà la moitié du boulot), plus densités par ingrédient (1 cup de farine ≠ 1 cup de miel). Et un petit set de calculatrices que ce public réutilise sans arrêt : % de sel pour une saumure, fermentation lacto (2–3 % du poids des légumes), ratio sucre/eau d'un sirop, stades du caramel par température. Ce sont des "mini-recettes" exactes, très demandées, faciles à coder sur ta lib métier.
-
-### Préparations de base
-
-Fonds ; appareils ; sauces mères-filles
-
-Franchement, c'est la meilleure idée que tu aies lancée jusqu'ici. Et pas seulement parce que c'est pratique : c'est le concept qui unifie tout le reste. Les cuisiniers sérieux pensent déjà comme ça — en préparations de base et en composants. C'est littéralement la logique des sauces mères de la cuisine française (Escoffier), et de la mise en place pro. Tu ne crées pas une feature gadget, tu modélises la façon dont ces gens-là raisonnent vraiment.
-Ce qui la rend forte, c'est l'effet de levier. Aujourd'hui, si quelqu'un a sa béchamel parfaite, il la recopie dans dix gratins, et le jour où il l'améliore, il doit corriger dix recettes. Avec un composant lié, il maintient une source de vérité et toutes les recettes en héritent. C'est exactement le bénéfice du journal d'itérations qu'on évoquait, mais factorisé : tu retravailles ton caramel beurre salé une fois, et tes 6 desserts qui l'appellent en profitent.
-L'insight architectural à ne pas rater : une mini-recette n'est pas un type d'objet à part. C'est une recette normale qui peut être référencée comme un ingrédient. Si tu pars là-dessus, tout devient cohérent avec ton modèle existant :
-
-une ligne d'ingrédient pointe soit vers un dbId de ta base, soit vers un recipeId (le composant) ;
-ta computeNutritionDetail calcule déjà le per100 et le perServing d'une recette → un composant expose donc sa nutrition "pour 100 g de prépa finie", et se comporte alors comme un ingrédient virtuel dans la recette parente. Ton moteur Nutri-Score remonte tout seul, sans nouvelle logique ;
-pour les courses, ta buildShoppingItems doit juste "exploser" le composant en ses ingrédients bruts, mis à l'échelle. La béchamel disparaît de la liste, le lait/beurre/farine apparaissent (et se cumulent si deux recettes en utilisent).
-
-Des exemples au-delà des tiens, pour montrer l'étendue :
-Salé — sauce tomate base, fond/bouillon, roux, velouté, hollandaise, beurre blanc, mayonnaise, vinaigrette mère, pesto, bolognaise, oignons confits, ail confit, demi-glace, pâte brisée/feuilletée, marinade, pâte de curry, et même les mélanges secs (dukkah, gomasio, épices à tajine).
-Sucré — crème pâtissière, crème anglaise, ganache, praliné, pâte sucrée/sablée, frangipane, lemon curd, sirop de base, compotée, meringue, pâte à choux, glaçage miroir.
-Tu remarqueras que beaucoup sont des briques de briques : une frangipane = crème d'amande + crème pâtissière. Donc ton système doit gérer la composition récursive, ce qui amène aux trois pièges à traiter dès la conception :
-
-Le rendement (yield). Un composant "fait 400 g de béchamel", la recette parente en utilise 150 g. Il faut un champ rendement sur le composant et une conversion à l'appel. Sans ça, la nutrition et les courses sont fausses. C'est la partie la moins triviale.
-Les références circulaires. A appelle B qui appelle A → boucle infinie au calcul. Une simple détection de cycle à l'enregistrement suffit, mais il faut y penser dès le départ.
-L'éclatement des courses. Décider du comportement : on achète les ingrédients bruts du composant (par défaut) ou on coche "je l'ai déjà fait / je l'achète tout prêt". Les pros voudront souvent dire "mon fond de veau, je l'ai déjà au congélo" → un toggle par composant dans la liste.
-
-Côté UX, le seul vrai arbitrage : est-ce que les composants vivent dans la même bibliothèque que les recettes (avec un filtre "composant") ou dans un onglet dédié ? Mon avis : même bibliothèque, juste un flag isComponent, parce qu'une sauce est une recette qu'on peut aussi cuisiner seule — et ça t'évite de dupliquer toute l'UI d'édition.
-Le seul point d'attention business : ça augmente la richesse mais aussi la courbe d'apprentissage. Garde l'entrée simple — un cuisinier débutant doit pouvoir ignorer totalement la feature, un cuisinier avancé doit pouvoir la découvrir naturellement (genre "transformer cette recette en composant réutilisable" depuis une recette existante).
-Bref : oui, à fond, et je la mettrais même avant certaines features de la famille A, parce qu'elle change la structure de données de manière fondatrice — autant la poser tôt.
-Tu veux que je te fasse la spec produit + le modèle de données (champ ingrédient ref: {type: "recipe", id, yieldUsed}, champ yield sur la recette, détection de cycle, règle d'éclatement courses, propagation nutrition) ? C'est le genre de feature où 80 % de la valeur se joue dans la justesse du modèle de départ.
 
 ### Exécution sous pression — quand on cuisine gros
 
