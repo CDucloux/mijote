@@ -29,7 +29,11 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     if (isComp) {
       const comp = recipesById?.get(ing.recipeId);
       const name = comp?.name || ing.name || "Préparation";
-      return pill(null, name, `${ing.amount}${ing.unit || ""}`, true);
+      const img = comp?.image || null;
+      // Si on a une image de la recette de base, on l'affiche ; sinon icône casserole.
+      return img
+        ? pill(img, name, `${ing.amount}${ing.unit || ""}`)
+        : pill(null, name, `${ing.amount}${ing.unit || ""}`, true);
     }
     return pill(ingImg(ing.dbId), ing.name, `${ing.amount}${ing.unit || ""}`);
   };
