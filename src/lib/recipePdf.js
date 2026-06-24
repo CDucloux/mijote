@@ -177,6 +177,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     /* Footer */
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); }
     .footer-brand { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
+    .footer-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; text-align: right; }
     .footer-brand .dot { color: var(--accent); }
     @page { margin: 16mm 14mm; }
     @media print {
@@ -222,7 +223,11 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
 
   <div class="footer">
     <span class="footer-brand">Mijoté<span class="dot">·</span></span>
-    ${recipe.source ? `<span>Source : <a href="${recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}" style="color:var(--accent)">${recipe.source.replace(/^https?:\/\//, "")}</a></span>` : ""}
+    <span class="footer-meta">
+      <span>Généré le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span>
+      ${recipe.history?.length ? `<span>Version ${recipe.history[recipe.history.length - 1].label}</span>` : ""}
+      ${recipe.source ? `<span>Source : <a href="${recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}" style="color:var(--accent)">${recipe.source.replace(/^https?:\/\//, "")}</a></span>` : ""}
+    </span>
   </div>
 </body>
 </html>`;
