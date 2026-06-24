@@ -24,6 +24,7 @@ import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
 import { PullToRefresh } from "./components/PullToRefresh.jsx";
 import { Icon } from "./components/Icon.jsx";
 import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
+import { OfflineModal } from "./components/OfflineModal.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
 import { HomeTab } from "./screens/HomeTab.jsx";
@@ -450,6 +451,7 @@ function AppInner() {
             </div>
           </SwipeableSheet>
         )}
+        <OfflineModal />
       </div>
     </AppShellProvider>
   );
