@@ -407,12 +407,36 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                       <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                      {comp.steps.map((cstep, ci) => (
+                      {comp.steps.map((cstep, ci) => {
+                        const cIngs = (comp.ingredients || []).filter(ing => cstep.ingredients?.includes(ing.id));
+                        const cUts = (comp.utensils || []).filter(u => cstep.utensils?.includes(u.id));
+                        return (
                         <div key={cstep.id}>
                           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)" }}>Étape {ci + 1}</span>
                           {cstep.text && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }}>{cstep.text}</p>}
+                          {(cIngs.length > 0 || cUts.length > 0) && (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 8 }}>
+                              {cIngs.map(ing => {
+                                const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
+                                return (
+                                <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
+                                  <IngImage src={getIngImage(ing.dbId, ing.name)} alt={displayName} size={22} />
+                                  {displayName}
+                                  <span style={{ color: "var(--text3)", fontWeight: 400, marginLeft: 2 }}>{ing.amount}{ing.unit}</span>
+                                </span>
+                                );
+                              })}
+                              {cUts.map(u => (
+                                <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
+                                  <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                                  {u.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -535,12 +559,36 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                    {comp.steps.map((cstep, ci) => (
+                    {comp.steps.map((cstep, ci) => {
+                      const cIngs = (comp.ingredients || []).filter(ing => cstep.ingredients?.includes(ing.id));
+                      const cUts = (comp.utensils || []).filter(u => cstep.utensils?.includes(u.id));
+                      return (
                       <div key={cstep.id}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>Étape {ci + 1}</div>
-                        {cstep.text && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{cstep.text}</p>}
+                        {cstep.text && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 8px", wordBreak: "break-word", overflowWrap: "break-word" }}>{cstep.text}</p>}
+                        {(cIngs.length > 0 || cUts.length > 0) && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                            {cIngs.map(ing => {
+                              const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
+                              return (
+                              <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                                <IngImage src={getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} />
+                                {displayName}
+                                <span style={{ color: "var(--text3)", fontWeight: 500 }}>{ing.amount}{ing.unit}</span>
+                              </span>
+                              );
+                            })}
+                            {cUts.map(u => (
+                              <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                                <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                                {u.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}
