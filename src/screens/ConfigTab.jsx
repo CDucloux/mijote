@@ -269,7 +269,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                 <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{n}</span>
                 <span>{noun}{n > 1 ? "s" : ""} dans la base</span>
               </div>
-              {isAdmin ? <AdminBanner style={{ marginBottom: 16 }} /> : <ReadOnlyBanner style={{ marginBottom: 16 }} />}
+              {isAdmin ? <AdminBanner /> : <ReadOnlyBanner />}
             </div>
           );
         })()}

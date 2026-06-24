@@ -17,7 +17,7 @@ const STOCK_CATEGORIES = new Set([
   "legume", "grain", "oil", "acid", "sauce", "condiment",
   "nuts_seeds", "sugar", "baking", "alcohol", "other",
 ]);
-export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, components = [] }) {
+export function StockTab({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, components = [] }) {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("all"); // "all" = tout | "stock" = ce que j'ai | "low" = à racheter
 

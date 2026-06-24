@@ -29,7 +29,7 @@ import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
 import { HomeTab } from "./screens/HomeTab.jsx";
 import { MealPlanTab } from "./screens/MealPlanTab.jsx";
-import { FridgeTab } from "./screens/FridgeTab.jsx";
+import { StockTab } from "./screens/StockTab.jsx";
 import { ShoppingTab } from "./screens/ShoppingTab.jsx";
 import { RecipeEditor } from "./screens/RecipeEditor.jsx";
 import { RecipeDetail } from "./screens/RecipeDetail.jsx";
@@ -382,7 +382,7 @@ function AppInner() {
       {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, tags: [], ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} />}
-      {tab === "fridge" && <FridgeTab stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
+      {tab === "fridge" && <StockTab stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
     </div>
   );
