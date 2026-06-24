@@ -8,6 +8,7 @@ import { DraggableStep } from "../components/DraggableStep.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
 import { BaseIcon } from "../components/BaseIcon.jsx";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
@@ -43,7 +44,14 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   // Ingredients
   const [addMode, setAddMode] = useState("ing"); // "ing" = ingrédient brut | "comp" = composant
   const addIng = () => {
+    pendingFocusRef.current = true;
     up("ingredients", [...form.ingredients, { id: "i" + Date.now(), dbId: "", name: "", amount: "", unit: "", _raw: "" }]);
+  };
+  const moveIng = (fromIdx, toIdx) => {
+    const arr = [...form.ingredients];
+    const [removed] = arr.splice(fromIdx, 1);
+    arr.splice(toIdx, 0, removed);
+    up("ingredients", arr);
   };
   const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
   const remIng = id => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.filter(i => i.id !== id)); };
@@ -75,7 +83,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
     up("steps", arr);
   };
 
-  const dragRef = useRef(null);
+  const isDesktop = useIsDesktop();
+  const pendingFocusRef = useRef(false);
   const isProgrammaticScroll = useRef(false);
   const scrollTimer = useRef(null);
 
@@ -112,7 +121,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           if (el._lockAxis === null) {
             const dx = Math.abs(e.touches[0].clientX - el._touchStartX);
             const dy = Math.abs(e.touches[0].clientY - el._touchStartY);
-            if (dx > 6 || dy > 6) el._lockAxis = dx > dy ? "x" : "y";
+            // Seuil relevé + dominance horizontale requise pour éviter les faux déclenchements
+            if (dx > 16 || dy > 16) el._lockAxis = (dx > dy * 2) ? "x" : "y";
           }
           if (el._lockAxis === "y") el.style.overflowX = "hidden";
           else el.style.overflowX = "auto";
@@ -135,9 +145,22 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <ImageUpload value={form.image} onChange={v => up("image", v)} style={{ height: 140 }} pathPrefix="recipes" />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                <div><div className="field-label">Prép. (min)</div><input className="field-input" type="number" min="0" value={form.prepTime} onChange={e => up("prepTime", +e.target.value)} /></div>
-                <div><div className="field-label">Cuisson (min)</div><input className="field-input" type="number" min="0" value={form.cookTime} onChange={e => up("cookTime", +e.target.value)} /></div>
-                <div><div className="field-label">Portions</div><input className="field-input" type="number" min="1" max="24" value={form.servings} onChange={e => up("servings", Math.min(24, Math.max(1, +e.target.value)))} /></div>
+                {[
+                  ["Prép. (min)", "prepTime", 5, 0, 999],
+                  ["Cuisson (min)", "cookTime", 5, 0, 999],
+                  ["Portions", "servings", 1, 1, 24],
+                ].map(([label, field, step, min, max]) => (
+                  <div key={field}>
+                    <div className="field-label">{label}</div>
+                    <div style={{ display: "flex" }}>
+                      <button type="button" onClick={() => up(field, Math.max(min, (form[field]||0) - step))} style={{ flexShrink: 0, width: 30, height: 36, borderRadius: "8px 0 0 8px", background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>−</button>
+                      <input className="field-input" type="number" min={min} max={max} value={form[field]}
+                        onChange={e => up(field, Math.min(max, Math.max(min, +e.target.value || 0)))}
+                        style={{ borderRadius: 0, textAlign: "center", minWidth: 0, flex: 1, marginBottom: 0, borderLeft: "none", borderRight: "none" }} />
+                      <button type="button" onClick={() => up(field, Math.min(max, (form[field]||0) + step))} style={{ flexShrink: 0, width: 30, height: 36, borderRadius: "0 8px 8px 0", background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>+</button>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Préparation de base (composant) : peut être réutilisée comme ingrédient
@@ -198,9 +221,18 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="warning" size={16} color="var(--red)" /> {saveError}
               </div>
             )}
-            {form.ingredients.map(ing => ing.recipeId ? (
+            {form.ingredients.map((ing, i) => {
+              const isLast = i === form.ingredients.length - 1;
+              const moveButtons = (
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, flexShrink: 0, alignSelf: "center" }}>
+                  <button onClick={() => i > 0 && moveIng(i, i - 1)} disabled={i === 0} style={{ width: 22, height: 22, borderRadius: 5, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: i > 0 ? "pointer" : "default", opacity: i === 0 ? 0.3 : 1 }}>↑</button>
+                  <button onClick={() => !isLast && moveIng(i, i + 1)} disabled={isLast} style={{ width: 22, height: 22, borderRadius: 5, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: !isLast ? "pointer" : "default", opacity: isLast ? 0.3 : 1 }}>↓</button>
+                </div>
+              );
+              return ing.recipeId ? (
               /* Ligne composant : préparation de base référencée */
               <div key={ing.id} style={{ background: "rgba(232,112,58,0.06)", borderRadius: 12, padding: 12, border: "1px solid rgba(232,112,58,0.4)", display: "flex", alignItems: "center", gap: 10 }}>
+                {moveButtons}
                 <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><BaseIcon size={20} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -221,8 +253,15 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               </div>
             ) : (
               <div key={ing.id} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: "1px solid var(--border)", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                {moveButtons}
                 <div style={{ flex: 1 }}>
                   <input className="field-input" placeholder="ex: 500g pois chiches, 2 oeufs, 1 c. à soupe huile…"
+                    ref={el => {
+                      if (el && pendingFocusRef.current && isLast) {
+                        el.focus();
+                        pendingFocusRef.current = false;
+                      }
+                    }}
                     value={ing._raw !== undefined ? ing._raw : ""}
                     onChange={e => {
                       const raw = e.target.value;
@@ -233,6 +272,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                         dbId: match ? match.id : ""
                       } : x));
                     }}
+                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addIng(); } }}
                     style={{ marginBottom: 0 }} />
                   {(ing.name || ing.amount) && (
                     <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -253,7 +293,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </div>
                 <button onClick={() => remIng(ing.id)} style={{ flexShrink: 0, paddingTop: 10 }}><Icon name="trash" size={14} color="var(--red)" /></button>
               </div>
-            ))}
+            );
+            })}
             {/* Zone d'ajout : bascule ingrédient brut / composant (préparation de base).
                 Onglet Composants masqué quand on édite soi-même un composant (mono-niveau v1). */}
             {!form.isComponent ? (
@@ -304,7 +345,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             </div>
             {form.steps.map((step, i) => (
               <DraggableStep key={step.id} step={step} index={i} total={form.steps.length}
-                ingredients={form.ingredients} utensils={form.utensils}
+                ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
+                draggable={!isDesktop}
                 onUpdate={updStep} onRemove={remStep} onMove={moveStep} />
             ))}
             <button className="btn btn-ghost" style={{ width: "100%" }} onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>

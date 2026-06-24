@@ -2,19 +2,19 @@ import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
 
-export function DraggableStep({ step, index, total, ingredients, utensils, onUpdate, onRemove, onMove }) {
+export function DraggableStep({ step, index, total, ingredients, utensils, recipes, draggable: isDraggable = true, onUpdate, onRemove, onMove }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
 
   return (
     <div
-      draggable
-      onDragStart={e => { e.dataTransfer.setData("stepIdx", String(index)); setDragging(true); }}
-      onDragEnd={() => setDragging(false)}
-      onDragOver={e => { e.preventDefault(); setOver(true); }}
-      onDragLeave={() => setOver(false)}
-      onDrop={e => { e.preventDefault(); setOver(false); const from = +e.dataTransfer.getData("stepIdx"); if (from !== index) onMove(from, index); }}
-      style={{ background: "var(--surface)", borderRadius: 12, padding: 14, border: `1px solid ${over ? "var(--accent)" : "var(--border)"}`, opacity: dragging ? 0.5 : 1, transition: "opacity 0.15s, border-color 0.15s", cursor: "grab" }}
+      draggable={isDraggable}
+      onDragStart={isDraggable ? e => { e.dataTransfer.setData("stepIdx", String(index)); setDragging(true); } : undefined}
+      onDragEnd={isDraggable ? () => setDragging(false) : undefined}
+      onDragOver={isDraggable ? e => { e.preventDefault(); setOver(true); } : undefined}
+      onDragLeave={isDraggable ? () => setOver(false) : undefined}
+      onDrop={isDraggable ? e => { e.preventDefault(); setOver(false); const from = +e.dataTransfer.getData("stepIdx"); if (from !== index) onMove(from, index); } : undefined}
+      style={{ background: "var(--surface)", borderRadius: 12, padding: 14, border: `1px solid ${over ? "var(--accent)" : "var(--border)"}`, opacity: dragging ? 0.5 : 1, transition: "opacity 0.15s, border-color 0.15s", cursor: isDraggable ? "grab" : "default" }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -31,10 +31,14 @@ export function DraggableStep({ step, index, total, ingredients, utensils, onUpd
       <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ingrédients liés</div>
       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
         {ingredients.map(ing => {
-          const linked = step.ingredients?.includes(ing.id); return (
+          const linked = step.ingredients?.includes(ing.id);
+          const displayName = ing.recipeId
+            ? ((recipes || []).find(r => r.id === ing.recipeId)?.name || ing.name || "Base")
+            : (ing.name || "?");
+          return (
             <button key={ing.id} onClick={() => onUpdate(step.id, "ingredients", linked ? step.ingredients.filter(x => x !== ing.id) : [...(step.ingredients || []), ing.id])}
               style={{ padding: "3px 9px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: linked ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: linked ? "var(--accent)" : "var(--text3)", border: `1px solid ${linked ? "rgba(232,112,58,0.5)" : "var(--border)"}`, display: "flex", alignItems: "center", gap: 4 }}>
-              {ing.name || "?"}
+              {displayName}
               {linked && <span style={{ fontSize: 10, color: "var(--accent2)" }}>{ing.amount}{ing.unit}</span>}
             </button>
           );
