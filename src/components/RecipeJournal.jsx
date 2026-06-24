@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
-import { addVersion, restoreVersion, deleteVersion, nextVersionLabel } from "../lib/history.js";
+import { addVersion, restoreVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots } from "../lib/history.js";
 
 const fmtDate = iso => {
   try { return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }); }
@@ -39,10 +39,109 @@ function RatingPicker({ value, onChange }) {
   );
 }
 
-// Prévisualisation en lecture seule du snapshot d'une version.
-function SnapshotPreview({ entry, onRestore, onClose }) {
+// Couleurs des trois états de diff.
+const DIFF = {
+  added: { bg: "rgba(76,175,125,0.12)", border: "var(--green)", text: "var(--green)", sign: "+" },
+  removed: { bg: "rgba(224,82,82,0.1)", border: "var(--red)", text: "var(--red)", sign: "−" },
+  changed: { bg: "rgba(240,153,42,0.12)", border: "var(--orange)", text: "var(--orange)", sign: "~" },
+};
+
+// Vue « git diff » entre un snapshot de base et le snapshot affiché.
+function DiffView({ diff, baseLabel }) {
+  if (!diff.hasChanges) {
+    return <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.6, padding: "20px 0", textAlign: "center" }}>Aucune différence avec <strong style={{ color: "var(--text2)" }}>{baseLabel}</strong>.</p>;
+  }
+  const Row = ({ d, sign, text, bg, border, children }) => (
+    <div style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "8px 12px", background: bg, borderLeft: `3px solid ${border}`, borderRadius: "0 8px 8px 0" }}>
+      <span style={{ fontSize: 13, fontWeight: 800, color: text, flexShrink: 0, width: 12, fontFamily: "monospace", lineHeight: 1.45 }}>{sign}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+    </div>
+  );
+  const Section = ({ title, children }) => (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{title}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{children}</div>
+    </div>
+  );
+  return (
+    <div style={{ overflowY: "auto", maxHeight: "58vh", display: "flex", flexDirection: "column", gap: 16 }}>
+      <p style={{ fontSize: 12, color: "var(--text3)", margin: 0 }}>Différences par rapport à <strong style={{ color: "var(--text2)" }}>{baseLabel}</strong></p>
+
+      {diff.scalars.length > 0 && (
+        <Section title="Temps & portions">
+          {diff.scalars.map((s, i) => {
+            const c = DIFF.changed;
+            return (
+              <Row key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{s.label} : </span>
+                <span style={{ fontSize: 13, color: "var(--text3)", textDecoration: "line-through" }}>{s.from}</span>
+                <span style={{ fontSize: 13, color: "var(--text3)" }}> → </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{s.to}</span>
+              </Row>
+            );
+          })}
+        </Section>
+      )}
+
+      {diff.ingredients.some(i => i.type !== "same") && (
+        <Section title="Ingrédients">
+          {diff.ingredients.filter(i => i.type !== "same").map((ing, i) => {
+            const c = DIFF[ing.type];
+            return (
+              <Row key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{ing.name}</span>
+                {ing.type === "changed" ? (
+                  <span> <span style={{ fontSize: 12, color: "var(--text3)", textDecoration: "line-through" }}>{ing.from || "—"}</span>
+                  <span style={{ fontSize: 12, color: "var(--text3)" }}> → </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{ing.to || "—"}</span></span>
+                ) : ing.qty ? <span style={{ fontSize: 12, color: "var(--text3)", marginLeft: 6 }}>{ing.qty}</span> : null}
+              </Row>
+            );
+          })}
+        </Section>
+      )}
+
+      {diff.steps.some(s => s.type !== "same") && (
+        <Section title="Étapes">
+          {diff.steps.filter(s => s.type !== "same").map((step, i) => {
+            const c = DIFF[step.type];
+            return (
+              <Row key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>Étape {step.index + 1}</span>
+                {step.type === "changed" ? (
+                  <div style={{ marginTop: 4 }}>
+                    <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0, textDecoration: "line-through", lineHeight: 1.5 }}>{step.from}</p>
+                    <p style={{ fontSize: 12.5, color: "var(--text)", margin: "3px 0 0", lineHeight: 1.5 }}>{step.to}</p>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: 12.5, color: "var(--text2)", margin: "3px 0 0", lineHeight: 1.5 }}>{step.description}</p>
+                )}
+              </Row>
+            );
+          })}
+        </Section>
+      )}
+    </div>
+  );
+}
+
+// Prévisualisation d'une version : aperçu complet (lecture seule) OU diff « git ».
+function SnapshotPreview({ entry, recipe, onRestore, onClose }) {
   const s = entry.snapshot || {};
   const [confirmRestore, setConfirmRestore] = useState(false);
+  const [mode, setMode] = useState("apercu"); // "apercu" | "diff"
+
+  // Bases comparables : versions chronologiques (sauf celle affichée) + recette actuelle.
+  const chronological = recipe.history || [];
+  const myIdx = chronological.findIndex(h => h.id === entry.id);
+  const prev = myIdx > 0 ? chronological[myIdx - 1] : null;
+  const baseOptions = [
+    { id: "__current__", label: "Recette actuelle", snapshot: snapshotOf(recipe) },
+    ...chronological.filter(h => h.id !== entry.id).map(h => ({ id: h.id, label: h.label, snapshot: h.snapshot })),
+  ];
+  const [baseId, setBaseId] = useState(prev ? prev.id : "__current__");
+  const baseOpt = baseOptions.find(o => o.id === baseId) || baseOptions[0];
+  const diff = diffSnapshots(baseOpt.snapshot, s);
 
   if (confirmRestore) return (
     <SwipeableSheet onClose={() => setConfirmRestore(false)}>
@@ -79,6 +178,30 @@ function SnapshotPreview({ entry, onRestore, onClose }) {
         </p>
       )}
 
+      {/* Bascule Aperçu / Comparer */}
+      <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 12, marginBottom: 16 }}>
+        {[["apercu", "Aperçu"], ["diff", "Comparer"]].map(([m, lbl]) => (
+          <button key={m} onClick={() => setMode(m)}
+            style={{ flex: 1, padding: "8px 0", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none",
+              background: mode === m ? "var(--surface)" : "transparent",
+              color: mode === m ? "var(--text)" : "var(--text3)",
+              boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.1)" : "none", transition: "all 0.15s" }}>{lbl}</button>
+        ))}
+      </div>
+
+      {mode === "diff" && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, color: "var(--text2)", flexShrink: 0 }}>Comparer à</span>
+            <select value={baseId} onChange={e => setBaseId(e.target.value)} className="field-input"
+              style={{ flex: 1, marginBottom: 0, padding: "8px 12px", fontSize: 13, cursor: "pointer" }}>
+              {baseOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {mode === "diff" ? <DiffView diff={diff} baseLabel={baseOpt.label} /> : (
       <div style={{ overflowY: "auto", maxHeight: "60vh", display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Temps */}
         {(s.prepTime != null || s.cookTime != null) && (
@@ -135,6 +258,7 @@ function SnapshotPreview({ entry, onRestore, onClose }) {
           </div>
         )}
       </div>
+      )}
     </SwipeableSheet>
   );
 }
@@ -231,7 +355,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
 
       {/* Prévisualisation du snapshot */}
       {previewEntry && (
-        <SnapshotPreview entry={previewEntry} onRestore={doRestore} onClose={() => setPreviewEntry(null)} />
+        <SnapshotPreview entry={previewEntry} recipe={recipe} onRestore={doRestore} onClose={() => setPreviewEntry(null)} />
       )}
 
       {/* Confirmation de suppression */}

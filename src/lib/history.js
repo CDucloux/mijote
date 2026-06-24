@@ -58,3 +58,54 @@ export function restoreVersion(recipe, entryId) {
 export function deleteVersion(recipe, entryId) {
   return { ...recipe, history: (recipe.history || []).filter(h => h.id !== entryId) };
 }
+
+// ─── DIFF ENTRE DEUX SNAPSHOTS ────────────────────────────────────────────────
+// Compare un snapshot `base` (ancien) à `target` (le plus récent) et renvoie un
+// résumé « git diff » : ingrédients ajoutés/retirés/modifiés, étapes (par index),
+// et champs scalaires (temps, portions). Utilisé par la prévisualisation du journal.
+const diffKey = n => (n || "").trim().toLowerCase();
+
+export function diffSnapshots(base, target) {
+  base = base || {};
+  target = target || {};
+
+  // Ingrédients — appariés par nom normalisé.
+  const baseIng = new Map((base.ingredients || []).map(i => [diffKey(i.name), i]));
+  const targetIng = new Map((target.ingredients || []).map(i => [diffKey(i.name), i]));
+  const qtyOf = i => `${i.amount ?? ""}${i.unit ? " " + i.unit : ""}`.trim();
+  const ingredients = [];
+  for (const [k, ti] of targetIng) {
+    const bi = baseIng.get(k);
+    if (!bi) ingredients.push({ type: "added", name: ti.name, qty: qtyOf(ti) });
+    else if (qtyOf(bi) !== qtyOf(ti)) ingredients.push({ type: "changed", name: ti.name, from: qtyOf(bi), to: qtyOf(ti) });
+    else ingredients.push({ type: "same", name: ti.name, qty: qtyOf(ti) });
+  }
+  for (const [k, bi] of baseIng) {
+    if (!targetIng.has(k)) ingredients.push({ type: "removed", name: bi.name, qty: qtyOf(bi) });
+  }
+
+  // Étapes — comparées par position.
+  const bs = base.steps || [], ts = target.steps || [];
+  const steps = [];
+  for (let i = 0; i < Math.max(bs.length, ts.length); i++) {
+    const b = bs[i], t = ts[i];
+    if (b && t) {
+      if ((b.description || "") !== (t.description || "")) steps.push({ type: "changed", index: i, from: b.description, to: t.description });
+      else steps.push({ type: "same", index: i, description: t.description });
+    } else if (t) steps.push({ type: "added", index: i, description: t.description });
+    else steps.push({ type: "removed", index: i, description: b.description });
+  }
+
+  // Scalaires — temps & portions.
+  const scalars = [];
+  for (const [field, label, unit] of [["prepTime", "Préparation", " min"], ["cookTime", "Cuisson", " min"], ["servings", "Portions", ""]]) {
+    const bv = base[field] ?? null, tv = target[field] ?? null;
+    if (bv !== tv) scalars.push({ label, from: bv != null ? bv + unit : "—", to: tv != null ? tv + unit : "—" });
+  }
+
+  const hasChanges = scalars.length > 0
+    || ingredients.some(i => i.type !== "same")
+    || steps.some(s => s.type !== "same");
+
+  return { ingredients, steps, scalars, hasChanges };
+}
