@@ -25,6 +25,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
   const [newItemAmount, setNewItemAmount] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [confirmClearId, setConfirmClearId] = useState(null);
   const [editItem, setEditItem] = useState(null);      // article en cours d'édition
   const [pending, setPending] = useState(() => new Set()); // articles en cours d'animation → « Acheté »
   const [listMode, setListMode] = useState(false);     // false = article par article ; true = coller une liste
@@ -259,7 +260,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
                         {!activeList.hideClear && (
-                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => clearChecked(activeList.id)} title="Confirme l'achat — les produits d'épicerie rejoignent ton stock">
+                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat — les produits d'épicerie rejoignent ton stock">
                             <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
                           </button>
                         )}
@@ -286,6 +287,43 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
           </div>
         </SwipeableSheet>
       )}
+      {/* Confirmation : valider l'achat (déversement dans le stock) */}
+      {confirmClearId && (() => {
+        const list = shoppingLists.find(l => l.id === confirmClearId);
+        const checked = (list?.items || []).filter(i => i.checked);
+        const toStock = checked
+          .map(i => findIngredientMatch(i.name, ingredientDB))
+          .filter(m => m && STOCK_CATEGORIES.has(m.category));
+        return (
+          <SwipeableSheet onClose={() => setConfirmClearId(null)}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(76,175,125,0.14)", border: "1px solid rgba(76,175,125,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="shopping" size={20} color="var(--green)" />
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 600 }}>Valider l'achat ?</h3>
+            </div>
+            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 14, lineHeight: 1.55 }}>
+              Les <strong>{checked.length}</strong> article{checked.length > 1 ? "s" : ""} acheté{checked.length > 1 ? "s" : ""} vont être retirés de la liste.
+              {toStock.length > 0
+                ? <> Parmi eux, <strong>{toStock.length}</strong> produit{toStock.length > 1 ? "s" : ""} d'épicerie rejoindront ton stock (les produits frais sont exclus).</>
+                : <> Aucun produit d'épicerie à ajouter au stock (uniquement des produits frais).</>}
+            </p>
+            {toStock.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+                {toStock.map(m => (
+                  <span key={m.id} style={{ fontSize: 12, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 16, padding: "3px 10px" }}>{m.name}</span>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmClearId(null)}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => { clearChecked(confirmClearId); setConfirmClearId(null); }}>
+                <Icon name="check" size={15} color="#fff" /> Valider
+              </button>
+            </div>
+          </SwipeableSheet>
+        );
+      })()}
       {/* Édition d'un article */}
       {editItem && activeList && (
         <SwipeableSheet onClose={() => setEditItem(null)}>
