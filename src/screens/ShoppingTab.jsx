@@ -6,7 +6,7 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ShoppingItemRow } from "../components/ShoppingItemRow.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
-import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
+import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
 // Bornes pour limiter les écritures Firestore.
@@ -18,7 +18,7 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // l'animation de passage dans « Acheté » (l'article glisse vers le bas en
 // s'estompant avant de rejoindre la section).
 
-export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES }) {
+export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock }) {
   const { user } = useAppShell();
   const [activeListId, setActiveListId] = useState(null);
   const [newItemName, setNewItemName] = useState("");
@@ -42,7 +42,20 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
     if (activeListId === id) setActiveListId(null);
   };
   const toggleItem = (listId, itemId) => updateList(listId, l => ({ ...l, items: l.items.map(i => i.id === itemId ? { ...i, checked: !i.checked } : i) }));
-  const clearChecked = listId => updateList(listId, l => ({ ...l, items: l.items.filter(i => !i.checked) }));
+  // Confirme l'achat : les articles cochés non-périssables (placard) rejoignent le
+  // stock, puis la liste est purgée de tout ce qui est coché.
+  const clearChecked = listId => {
+    const list = shoppingLists.find(l => l.id === listId);
+    if (list && setStock) {
+      const toStock = (list.items || [])
+        .filter(i => i.checked)
+        .map(i => findIngredientMatch(i.name, ingredientDB))
+        .filter(m => m && STOCK_CATEGORIES.has(m.category))
+        .map(m => m.id);
+      if (toStock.length) setStock(prev => Array.from(new Set([...prev, ...toStock])));
+    }
+    updateList(listId, l => ({ ...l, items: l.items.filter(i => !i.checked) }));
+  };
 
   const addManualItem = () => {
     if (!newItemName.trim() || !activeList) return;
@@ -246,8 +259,8 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
                         {!activeList.hideClear && (
-                          <button className="btn btn-ghost btn-sm" style={{ padding: "3px 10px", fontSize: 11, flexShrink: 0 }} onClick={() => clearChecked(activeList.id)}>
-                            <Icon name="check" size={11} /> Vider
+                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => clearChecked(activeList.id)} title="Confirme l'achat — les produits d'épicerie rejoignent ton stock">
+                            <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
                           </button>
                         )}
                       </div>
@@ -420,8 +433,8 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
             <button onClick={() => setConfigList(p => ({ ...p, hideClear: !p.hideClear }))}
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: "12px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 18, cursor: "pointer", textAlign: "left" }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Cacher le bouton « Vider »</div>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Évite d'effacer les articles achetés par mégarde.</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Cacher le bouton « Valider l'achat »</div>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Évite de valider les articles achetés par mégarde.</div>
               </div>
               <span style={{ position: "relative", flexShrink: 0, width: 38, height: 22, borderRadius: 12, background: configList.hideClear ? "var(--accent)" : "var(--surface3)", transition: "background 0.15s" }}>
                 <span style={{ position: "absolute", top: 2, left: configList.hideClear ? 18 : 2, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />

@@ -4,19 +4,12 @@ import { BaseIcon } from "../components/BaseIcon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { normalizeStr } from "../lib/parseIngredient.js";
-import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
+import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
 // Gestion binaire du stock (placards / étagères) : j'en ai / j'en ai pas.
 // Chaque ingrédient de la base est listable ; le stock = tableau d'IDs.
 
-// Catégories non-périssables stockables en placard (clés techniques explicites,
-// indépendantes de l'ordre d'affichage). Les produits frais (légumes, fruits,
-// laitiers, herbes, champignons, viandes, poissons) sont volontairement exclus.
-const STOCK_CATEGORIES = new Set([
-  "legume", "grain", "oil", "acid", "sauce", "condiment",
-  "nuts_seeds", "sugar", "baking", "alcohol", "other",
-]);
 export function StockTab({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, components = [] }) {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("all"); // "all" = tout | "stock" = ce que j'ai | "low" = à racheter
