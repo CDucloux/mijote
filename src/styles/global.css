@@ -133,6 +133,12 @@ input,textarea,select{font-family:var(--ff-body);}
   .btn-ghost:hover{background:var(--surface3);border-color:var(--text3);color:var(--text);}
   .btn-danger:hover{background:rgba(224,82,82,0.22);border-color:rgba(224,82,82,0.5);}
   .btn:active{filter:brightness(0.95);}
+  /* Collection cards — subtle lift + icon pop on hover (desktop only) */
+  .collection-card{transition:transform .22s cubic-bezier(0.34,1.4,0.64,1),box-shadow .22s ease,border-color .18s ease;}
+  .collection-card .collection-card-icon{display:inline-block;transition:transform .25s cubic-bezier(0.34,1.56,0.64,1);}
+  .collection-card:hover{transform:translateY(-3px);box-shadow:0 10px 22px -10px rgba(0,0,0,0.3);border-color:var(--text3);}
+  .collection-card:hover .collection-card-icon{transform:scale(1.18) rotate(-4deg);}
+  .collection-card:active{transform:translateY(-1px);}
   /* Floating action FAB + soft icon button (no lift) */
   .fab-toggle{transition:filter .18s ease,box-shadow .2s ease;}
   .fab-toggle:hover{filter:brightness(1.06);box-shadow:0 12px 30px -6px rgba(232,112,58,0.6);}

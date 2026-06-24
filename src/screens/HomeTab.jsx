@@ -73,7 +73,6 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
               {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
             </button>
           ))}
-          <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />
           <button onClick={() => setSeasonOnly(s => !s)} title="Recettes de saison ce mois-ci" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: seasonOnly ? "rgba(76,175,125,0.18)" : "var(--surface2)", color: seasonOnly ? "var(--green)" : "var(--text2)", border: `1px solid ${seasonOnly ? "rgba(76,175,125,0.5)" : "var(--border)"}` }}>
             De saison
           </button>
@@ -94,9 +93,9 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
             <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Collections</h2>
             <div className="collections-row" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
               {collections.map((col, i) => (
-                <button key={col.id} onClick={() => setFilterCol(filterCol === col.id ? null : col.id)} style={{ flexShrink: 0, width: 120, background: filterCol === col.id ? "rgba(232,112,58,0.15)" : "var(--surface)", border: `1px solid ${filterCol === col.id ? "rgba(232,112,58,0.4)" : "var(--border)"}`, borderRadius: 16, overflow: "hidden" }}>
+                <button key={col.id} className="collection-card" onClick={() => setFilterCol(filterCol === col.id ? null : col.id)} style={{ flexShrink: 0, width: 120, background: filterCol === col.id ? "rgba(232,112,58,0.15)" : "var(--surface)", border: `1px solid ${filterCol === col.id ? "rgba(232,112,58,0.4)" : "var(--border)"}`, borderRadius: 16, overflow: "hidden" }}>
                   <div style={{ aspectRatio: "3/2", position: "relative", background: col.color + "33", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                    <span style={{ fontSize: 26, lineHeight: 1 }}>{col.icon || "📁"}</span>
+                    <span className="collection-card-icon" style={{ fontSize: 26, lineHeight: 1 }}>{col.icon || "📁"}</span>
                     <div style={{ position: "absolute", top: 6, right: 6, minWidth: 20, height: 20, borderRadius: 10, background: col.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff", padding: "0 5px" }}>{col.count}</div>
                   </div>
                   <div style={{ padding: "8px 10px" }}>
