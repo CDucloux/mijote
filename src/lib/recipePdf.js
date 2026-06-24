@@ -80,14 +80,27 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
         return pill(ingImg(ci.dbId), ci.name, `${qty}${ci.unit || ""}`);
       }).join("");
 
-      const compStepLines = (comp.steps || []).map((s, i) => `
+      // Pill d'un ingrédient du composant, quantité mise à l'échelle par f.
+      const compIngPill = ci => {
+        if (ci.recipeId) return ""; // v1 : pas d'imbrication
+        const qty = +(num(ci.amount) * f).toFixed(2);
+        return pill(ingImg(ci.dbId), ci.name, `${qty}${ci.unit || ""}`);
+      };
+
+      const compStepLines = (comp.steps || []).map((s, i) => {
+        const stepIngs = (comp.ingredients || []).filter(x => s.ingredients?.includes(x.id)).map(compIngPill).join("");
+        const stepUts = (comp.utensils || []).filter(u => s.utensils?.includes(u.id)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
+        const stepPills = stepIngs + stepUts;
+        return `
         <div class="step comp-step" style="margin-bottom:12px">
           <div class="step-header" style="gap:10px;margin-bottom:3px">
             <div class="step-num" style="width:22px;height:22px;font-size:11px">${i + 1}</div>
             <div class="step-title" style="font-size:13px">Étape ${i + 1}</div>
           </div>
           ${s.text ? `<p class="step-text" style="font-size:13px;padding-left:32px;line-height:1.5">${s.text}</p>` : ""}
-        </div>`).join("");
+          ${stepPills ? `<div class="step-pills" style="padding-left:32px;margin-top:8px">${stepPills}</div>` : ""}
+        </div>`;
+      }).join("");
 
       const yieldScaled = +(comp.yield.amount * f).toFixed(1);
 
