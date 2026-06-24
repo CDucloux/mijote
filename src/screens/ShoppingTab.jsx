@@ -21,8 +21,6 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES }) {
   const { user } = useAppShell();
   const [activeListId, setActiveListId] = useState(null);
-  const [newListName, setNewListName] = useState("");
-  const [showNewList, setShowNewList] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
@@ -44,14 +42,6 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
   };
   const toggleItem = (listId, itemId) => updateList(listId, l => ({ ...l, items: l.items.map(i => i.id === itemId ? { ...i, checked: !i.checked } : i) }));
   const clearChecked = listId => updateList(listId, l => ({ ...l, items: l.items.filter(i => !i.checked) }));
-
-  const createList = () => {
-    if (!newListName.trim()) return;
-    const l = { id: "sl" + Date.now(), name: newListName.trim(), type: "free", items: [] };
-    setShoppingLists(prev => [...prev, l]);
-    setActiveListId(l.id);
-    setNewListName(""); setShowNewList(false);
-  };
 
   const addManualItem = () => {
     if (!newItemName.trim() || !activeList) return;
@@ -130,20 +120,10 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
             <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => setShowNewList(true)}><Icon name="plus" size={16} /> Nouvelle liste</button>
+            <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => { setConfigList({ isNew: true, name: "", type: "free", hideClear: false, sharedWith: [] }); setShareEmail(""); }}><Icon name="plus" size={16} /> Nouvelle liste</button>
             <UserAvatar />
           </div>
         </div>
-
-        {/* New list input */}
-        {showNewList && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-            <input className="field-input" placeholder="Nom de la liste…" value={newListName} onChange={e => setNewListName(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && createList()} autoFocus style={{ flex: 1 }} />
-            <button className="btn btn-primary btn-sm" onClick={createList}>Créer</button>
-            <button className="btn btn-ghost btn-sm" onClick={() => { setShowNewList(false); setNewListName(""); }}>✕</button>
-          </div>
-        )}
 
         {/* List selector tabs */}
         {shoppingLists.length > 0 && (
@@ -425,7 +405,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
           : <span style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 700 }}>{((d?.displayName || d?.email || "?")[0] || "?").toUpperCase()}</span>;
         return (
           <SwipeableSheet onClose={() => setConfigList(null)}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Configurer la liste</h3>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{configList.isNew ? "Nouvelle liste" : "Configurer la liste"}</h3>
 
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom de la liste</div>
             <input className="field-input" value={configList.name} maxLength={60} autoFocus
@@ -509,9 +489,15 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfigList(null)}>Annuler</button>
               <button className="btn btn-primary" style={{ flex: 1 }} disabled={!configList.name.trim()} onClick={() => {
                 const name = configList.name.trim();
-                updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear, sharedWith: configList.sharedWith }));
+                if (configList.isNew) {
+                  const l = { id: "sl" + Date.now(), name, type: "free", items: [], hideClear: !!configList.hideClear, sharedWith: configList.sharedWith };
+                  setShoppingLists(prev => [...prev, l]);
+                  setActiveListId(l.id);
+                } else {
+                  updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear, sharedWith: configList.sharedWith }));
+                }
                 setConfigList(null);
-              }}>Enregistrer</button>
+              }}>{configList.isNew ? "Créer" : "Enregistrer"}</button>
             </div>
           </SwipeableSheet>
         );
