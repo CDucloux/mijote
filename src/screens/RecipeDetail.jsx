@@ -17,7 +17,7 @@ import { fmtTime } from "../lib/format.js";
 import { flattenForShopping } from "../lib/components.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, stock = [], lowStock = [] }) {
+export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [] }) {
   const navigate = useNavigate();
   const location = useLocation();
   const handleBack = location.state?.from
@@ -71,8 +71,26 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const [cookMode, setCookMode] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [dockClosing, setDockClosing] = useState(false);
   const [showBaseInfo, setShowBaseInfo] = useState(false);
   const actionsRef = useRef(null);
+  // Repli animé du dock : on joue l'animation inverse avant de démonter (évite le flicker).
+  const closeDock = () => {
+    setDockClosing(true);
+    setTimeout(() => { setActionsOpen(false); setDockClosing(false); }, 240);
+  };
+  // Partage le lien de la recette (Web Share si dispo, sinon copie dans le presse-papier).
+  const shareRecipe = async () => {
+    const url = `${window.location.origin}/recipes/${recipe.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: recipe.name, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        notify?.("Lien copié dans le presse-papier");
+      }
+    } catch { /* partage annulé par l'utilisateur — silencieux */ }
+  };
   const isProgrammaticScroll = useRef(false);
   const mult = servings / (recipe.servings || 2);
 
@@ -80,7 +98,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   useEffect(() => {
     if (!actionsOpen) return;
     const handlePointerDown = e => {
-      if (actionsRef.current && !actionsRef.current.contains(e.target)) setActionsOpen(false);
+      if (actionsRef.current && !actionsRef.current.contains(e.target)) closeDock();
     };
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
@@ -133,11 +151,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
           <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="edit" size={16} /></button>
           <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="pdf" size={16} /></button>
-          <button onClick={() => onExportJSON(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="download" size={16} /></button>
           <HeroMenu
             btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
             items={[
               { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
+              { label: "Partager le lien", icon: "share", onClick: shareRecipe },
               { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
               { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
             ]} />
@@ -214,10 +232,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       {isDesktop && (
         <div ref={actionsRef} style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
           {actionsOpen ? (
-            <div className="action-dock">
+            <div className={`action-dock${dockClosing ? " closing" : ""}`}>
               <button className="action-dock-btn action-dock-primary" onClick={() => { openShoppingModal(); }}><Icon name="shopping" size={16} color="#fff" /> Courses</button>
               <button className="action-dock-btn action-dock-ghost" onClick={() => setShowMealModal(true)}><Icon name="calendar" size={16} /> Planifier</button>
-              <button className="action-dock-close" title="Réduire" onClick={() => setActionsOpen(false)}><Icon name="close" size={15} /></button>
+              <button className="action-dock-close" title="Réduire" onClick={closeDock}><Icon name="close" size={15} /></button>
             </div>
           ) : (
             <button className="fab-toggle" title="Actions" onClick={() => setActionsOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 26px -4px rgba(232,112,58,0.5)" }}>
@@ -252,6 +270,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
                 items={[
                   { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
+                  { label: "Partager le lien", icon: "share", onClick: shareRecipe },
                   { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
                   { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
                 ]} />

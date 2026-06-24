@@ -22,7 +22,7 @@ export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20 })
         <Icon name="more" size={iconSize} color={iconColor} />
       </button>
       {open && (
-        <div style={{
+        <div className="hero-menu-pop" style={{
           position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 50,
           minWidth: 190, background: "var(--surface)", borderRadius: 12,
           border: "1px solid var(--border)", boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
