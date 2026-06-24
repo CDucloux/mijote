@@ -17,11 +17,24 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const up = (f, v) => setForm(p => ({ ...p, [f]: v }));
   const upYield = (f, v) => setForm(p => ({ ...p, yield: { ...(p.yield || { amount: "", unit: "g" }), [f]: v } }));
 
-  // Un ingrédient renseigné doit avoir une quantité strictement positive.
+  const [saveError, setSaveError] = useState("");
+  // Une ligne totalement vide est ignorée ; une ligne nommée doit avoir une quantité > 0.
+  const ingIsEmpty = ing => !ing.name && !ing.dbId && !ing.recipeId && !(Number(ing.amount) > 0);
   const ingIsMissingQty = ing => (ing.name || ing.dbId || ing.recipeId) && !(Number(ing.amount) > 0);
   const handleSave = () => {
-    if (form.ingredients.some(ingIsMissingQty)) setSection("ingrédients");
-    const out = { ...form };
+    // On retire silencieusement les lignes complètement vides.
+    const cleaned = form.ingredients.filter(i => !ingIsEmpty(i));
+    const invalid = cleaned.filter(ingIsMissingQty);
+    if (invalid.length > 0) {
+      setForm(p => ({ ...p, ingredients: cleaned }));
+      setSection("ingrédients");
+      setSaveError(`${invalid.length} ingrédient${invalid.length > 1 ? "s" : ""} sans quantité valide. Renseigne une quantité ou supprime la ligne.`);
+      const el = document.getElementById("editor-swiper");
+      if (el) el.scrollTo({ left: el.offsetWidth, behavior: "smooth" });
+      return;
+    }
+    setSaveError("");
+    const out = { ...form, ingredients: cleaned };
     if (out.isComponent) out.yield = { amount: Number(form.yield?.amount) || 0, unit: form.yield?.unit || "g" };
     else { delete out.yield; out.isComponent = false; }
     onSave(out);
@@ -32,8 +45,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const addIng = () => {
     up("ingredients", [...form.ingredients, { id: "i" + Date.now(), dbId: "", name: "", amount: "", unit: "", _raw: "" }]);
   };
-  const updIng = (id, f, v) => up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i));
-  const remIng = id => up("ingredients", form.ingredients.filter(i => i.id !== id));
+  const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
+  const remIng = id => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.filter(i => i.id !== id)); };
 
   // Composants disponibles (préparations de base), hors la recette courante et hors
   // celles déjà référencées. Indisponible si on édite soi-même un composant (mono-niveau v1).
@@ -180,6 +193,11 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
         {/* Slide 2 — Ingrédients */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {saveError && (
+              <div className="shake" style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 10, background: "rgba(224,82,82,0.12)", border: "1px solid rgba(224,82,82,0.4)", color: "var(--red)", fontSize: 12.5, fontWeight: 500, lineHeight: 1.4 }}>
+                <Icon name="warning" size={16} color="var(--red)" /> {saveError}
+              </div>
+            )}
             {form.ingredients.map(ing => ing.recipeId ? (
               /* Ligne composant : préparation de base référencée */
               <div key={ing.id} style={{ background: "rgba(232,112,58,0.06)", borderRadius: 12, padding: 12, border: "1px solid rgba(232,112,58,0.4)", display: "flex", alignItems: "center", gap: 10 }}>

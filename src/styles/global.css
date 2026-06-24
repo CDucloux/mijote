@@ -61,6 +61,9 @@ input,textarea,select{font-family:var(--ff-body);}
 .search-clear-btn:hover{background:var(--accent);color:#fff;}
 .detail-scroll-fix{min-height:0;}
 
+@keyframes shake{10%,90%{transform:translateX(-1px);}20%,80%{transform:translateX(2px);}30%,50%,70%{transform:translateX(-4px);}40%,60%{transform:translateX(4px);}}
+.shake{animation:shake 0.4s cubic-bezier(0.36,0.07,0.19,0.97) both;}
+
 /* ── DESKTOP LAYOUT ── */
 .app-brand{display:inline-flex;align-items:center;gap:3px;}
 @media(min-width:768px){.app-brand{display:none!important;}
