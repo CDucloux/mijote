@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { CHANGELOG } from "../constants/changelog.js";
+import { renderInline } from "../lib/markdownInline.jsx";
 
 const ANNOUNCE_SEEN_KEY = "rf_announce_seen";
 
@@ -55,7 +56,7 @@ export function AnnouncementPopup() {
           {highlights.map((h, i) => (
             <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "var(--text1)", lineHeight: 1.4 }}>
               <span style={{ marginTop: 5, flexShrink: 0, width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "block" }} />
-              {h}
+              <span>{renderInline(h)}</span>
             </li>
           ))}
         </ul>

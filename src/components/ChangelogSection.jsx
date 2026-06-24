@@ -1,6 +1,7 @@
 import React from "react";
 import { Icon } from "./Icon.jsx";
 import { CHANGELOG } from "../constants/changelog.js";
+import { renderInline } from "../lib/markdownInline.jsx";
 
 export function ChangelogSection() {
   const [open, setOpen] = React.useState({});
@@ -41,7 +42,7 @@ export function ChangelogSection() {
                   {entry.items.map((item, j) => (
                     <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
                       <div style={{ width: 4, height: 4, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--border)", marginTop: 7, flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: isLatest ? "var(--text)" : "var(--text2)", lineHeight: 1.55 }}>{item}</span>
+                      <span style={{ fontSize: 13, color: isLatest ? "var(--text)" : "var(--text2)", lineHeight: 1.55 }}>{renderInline(item)}</span>
                     </div>
                   ))}
                 </div>

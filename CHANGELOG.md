@@ -1,5 +1,24 @@
 # Changelog — Mijoté
 
+## v3.0.0 — Tonka · Journal d'itérations & Raffinements
+
+### Journal d'itérations
+- **Figer une version** d'une recette à chaque retravail : note de dégustation (/10) et commentaire libre
+- Visualisation **diff « git »** entre deux versions : ingrédients, ustensiles et étapes *ajoutés*, *retirés* ou *modifiés* d'un coup d'œil
+- Comparaison libre : choisir n'importe quelle version (ou la recette actuelle) comme base de comparaison
+- Liste des itérations en **timeline** verticale (date & heure), commentaires en style citation avec avatar
+
+### Design & ergonomie
+- Nouvelle police de texte **Hanken Grotesk** pour un rendu plus élégant
+- Menu d'actions desktop modernisé (dock animé) et menu recette « ⋯ » avec animation d'ouverture/repliement fluide
+- Partage du lien d'une recette depuis le menu
+- Sélecteurs de quantité (`-` / `+`) unifiés et correctement alignés sur mobile et desktop
+- Modale **Préparations de base** repensée (principes de composition, fermeture au clic extérieur / swipe)
+
+### PDF & divers
+- Pied de page PDF enrichi : date de génération, badge de version, source
+- Changelog : rendu du Markdown formaté (**gras**, *italique*, `code`)
+
 ## v2.2.0 — Safran · Saisonnalité & Conseils Ingrédients
 
 ### Saisonnalité des recettes

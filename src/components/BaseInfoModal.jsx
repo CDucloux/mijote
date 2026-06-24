@@ -76,8 +76,6 @@ export function BaseInfoModal({ onClose }) {
           </p>
         </div>
       </div>
-
-      <button className="btn btn-ghost" style={{ width: "100%", marginTop: 16 }} onClick={onClose}>Fermer</button>
     </SwipeableSheet>
   );
 }

@@ -23,7 +23,7 @@ function parseChangelog(md) {
       continue;
     }
     const bullet = line.match(BULLET);
-    if (bullet && current) current.items.push(bullet[1].replace(/`/g, "").trim());
+    if (bullet && current) current.items.push(bullet[1].trim());
   }
   // L'entrée en tête (la plus récente) est mise en avant ; `highlights` reprend
   // ses deux premières lignes pour le bandeau d'annonce de nouveautés.
