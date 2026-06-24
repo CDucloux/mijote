@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
+import { BaseIcon } from "../components/BaseIcon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { normalizeStr } from "../lib/parseIngredient.js";
@@ -238,7 +239,7 @@ export function FridgeTab({ stock = [], setStock, lowStock = [], setLowStock, in
         {/* ── Section Préparations (toujours visible) ──────────────────────── */}
         <div style={{ marginTop: grouped.length > 0 || filtered.length === 0 ? 32 : 0, borderTop: "1px solid var(--border)", paddingTop: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 15 }}>🧈</span>
+            <span style={{ display: "flex", alignItems: "center" }}><BaseIcon size={16} color="var(--text2)" /></span>
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)", letterSpacing: "0.01em" }}>Mes Bases</span>
             {components.length > 0 && (
               <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(76,175,125,0.15)", color: "var(--green)" }}>

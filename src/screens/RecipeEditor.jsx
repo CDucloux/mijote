@@ -7,6 +7,7 @@ import { UtensilPicker } from "../components/UtensilPicker.jsx";
 import { DraggableStep } from "../components/DraggableStep.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
+import { BaseIcon } from "../components/BaseIcon.jsx";
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
@@ -67,10 +68,10 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
 
   return (
     <div className="editor-enter" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "var(--surface)" }}>
-        <button onClick={onCancel}><Icon name="close" size={20} /></button>
-        <h2 style={{ flex: 1, fontSize: 18, fontWeight: 600 }}>{recipe.id ? "Modifier" : (form.name.trim() || "Nouvelle recette")}</h2>
-        <button className="btn btn-primary" style={{ padding: "8px 16px" }} onClick={handleSave}><Icon name="check" size={15} /> Sauvegarder</button>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "var(--surface)" }}>
+        <button onClick={onCancel} style={{ flexShrink: 0, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "var(--surface2)" }}><Icon name="close" size={18} /></button>
+        <h2 style={{ flex: 1, minWidth: 0, fontSize: 17, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{recipe.id ? "Modifier" : (form.name.trim() || "Nouvelle recette")}</h2>
+        <button className="btn btn-primary" style={{ flexShrink: 0, padding: "8px 16px", fontSize: 13 }} onClick={handleSave}><Icon name="check" size={15} /> Sauvegarder</button>
       </div>
       <div style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, overflowX: "auto" }}>
         {["info", "ingrédients", "ustensiles", "étapes"].map((s, i) => (
@@ -135,7 +136,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     <span style={{ position: "absolute", top: 2, left: form.isComponent ? 20 : 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
                   </button>
                   <div style={{ flex: 1 }} onClick={() => up("isComponent", !form.isComponent)}>
-                    <div style={{ fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>🧈 Base</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}><BaseIcon size={18} /> Préparation de base</div>
                     <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Réutilisable comme ingrédient dans d'autres recettes (béchamel, sauce, pâte…)</div>
                   </div>
                 </label>
@@ -182,7 +183,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             {form.ingredients.map(ing => ing.recipeId ? (
               /* Ligne composant : préparation de base référencée */
               <div key={ing.id} style={{ background: "rgba(232,112,58,0.06)", borderRadius: 12, padding: 12, border: "1px solid rgba(232,112,58,0.4)", display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 18, flexShrink: 0 }}>🧈</span>
+                <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><BaseIcon size={20} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {(recipes || []).find(r => r.id === ing.recipeId)?.name || ing.name || "Base supprimée"}
@@ -252,7 +253,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {availableComponents.map(comp => (
                       <button key={comp.id} onClick={() => addComponent(comp)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: "var(--surface2)", border: "1px solid var(--border)", textAlign: "left" }}>
-                        <span style={{ fontSize: 16 }}>🧈</span>
+                        <span style={{ display: "flex", alignItems: "center" }}><BaseIcon size={16} /></span>
                         <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{comp.name}</span>
                         <span style={{ fontSize: 11, color: "var(--text3)" }}>{comp.yield?.amount} {comp.yield?.unit}</span>
                         <Icon name="plus" size={15} color="var(--accent)" />

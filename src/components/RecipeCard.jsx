@@ -1,4 +1,5 @@
 import { Img } from "./Img.jsx";
+import { BaseIcon } from "./BaseIcon.jsx";
 import { Icon } from "./Icon.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { fmtTime } from "../lib/format.js";
@@ -12,7 +13,7 @@ export function RecipeCard({ recipe, onClick, style }) {
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to top,rgba(0,0,0,0.65),transparent)" }} />
         {recipe.isComponent && (
           <span style={{ position: "absolute", top: 0, right: 0, width: 0, height: 0, borderStyle: "solid", borderWidth: "0 42px 42px 0", borderColor: `transparent rgba(210,96,40,0.92) transparent transparent`, pointerEvents: "none" }}>
-            <span style={{ position: "absolute", top: 5, right: -38, fontSize: 13, lineHeight: 1 }}>🧈</span>
+            <span style={{ position: "absolute", top: 4, right: -37, display: "flex" }}><BaseIcon size={14} color="#fff" /></span>
           </span>
         )}
       </div>

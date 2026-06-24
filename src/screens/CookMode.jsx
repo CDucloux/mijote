@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/Icon.jsx";
+import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
@@ -60,7 +61,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
     return (
       <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {isComp
-          ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(232,112,58,0.1)", border: "1.5px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🧈</span>
+          ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(232,112,58,0.1)", border: "1.5px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={22} /></span>
           : <IngImage src={imgSrc} alt={displayName} size={42} />
         }
         <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{displayName}</span>
@@ -117,7 +118,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           </button>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 15, fontWeight: 600 }}>
-              {isNested && <span style={{ fontSize: 13, color: "var(--accent)", marginRight: 6 }}>🧈</span>}
+              {isNested && <span style={{ display: "inline-flex", alignItems: "center", marginRight: 6 }}><BaseIcon size={14} /></span>}
               {recipe.name}
             </div>
             <div style={{ fontSize: 12, color: "var(--text3)" }}>
@@ -139,7 +140,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
               <button onClick={() => setStepIdx(0)}
                 style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", background: stepIdx === 0 ? "rgba(232,112,58,0.1)" : "none", borderLeft: `3px solid ${stepIdx === 0 ? "var(--accent)" : "transparent"}`, textAlign: "left", transition: "all 0.15s" }}>
                 <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: stepIdx === 0 ? "var(--accent)" : stepIdx > 0 ? "var(--green)" : "var(--surface2)", color: stepIdx >= 0 ? "#fff" : "var(--text3)" }}>
-                  {stepIdx > 0 ? <Icon name="check" size={11} color="#fff" /> : "🧈"}
+                  {stepIdx > 0 ? <Icon name="check" size={11} color="#fff" /> : <BaseIcon size={12} color="#fff" />}
                 </div>
                 <span style={{ fontSize: 13, color: stepIdx === 0 ? "var(--accent)" : "var(--text3)", fontWeight: stepIdx === 0 ? 600 : 400, lineHeight: 1.4 }}>Bases</span>
               </button>
@@ -165,7 +166,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                 /* ── Étape 0 : préparations de base à réaliser ── */
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🧈</div>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={20} color="#fff" /></div>
                     <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Bases</h2>
                   </div>
                   <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
@@ -176,7 +177,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                       <div key={comp.id} style={{ background: "var(--surface)", border: "1.5px solid rgba(232,112,58,0.3)", borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
                         {comp.image
                           ? <Img src={comp.image} alt={comp.name} style={{ width: 52, height: 52, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
-                          : <span style={{ width: 52, height: 52, borderRadius: 10, background: "rgba(232,112,58,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>🧈</span>
+                          : <span style={{ width: 52, height: 52, borderRadius: 10, background: "rgba(232,112,58,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={28} /></span>
                         }
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>{comp.name}</div>
