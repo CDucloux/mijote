@@ -3,11 +3,20 @@ import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
 import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots } from "../lib/history.js";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 const fmtDate = iso => {
-  try { return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }); }
-  catch { return ""; }
+  try {
+    return new Date(iso).toLocaleString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  } catch { return ""; }
 };
+
+function MiniAvatar({ user, size = 28 }) {
+  if (!user) return null;
+  return user.photoURL
+    ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, border: "1.5px solid var(--border)" }} />
+    : <div style={{ width: size, height: size, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{(user.displayName || "?")[0].toUpperCase()}</div>;
+}
 
 const ratingColor = r => r >= 8 ? "var(--green)" : r >= 5 ? "var(--accent)" : "var(--red)";
 
@@ -135,6 +144,7 @@ function DiffView({ diff, baseLabel }) {
 
 // Comparaison d'une version : diff « git » par rapport à une base au choix.
 function VersionDiff({ entry, recipe, onClose }) {
+  const { user } = useAppShell();
   const s = entry.snapshot || {};
 
   // Bases comparables : versions chronologiques (sauf celle affichée) + recette actuelle.
@@ -161,9 +171,12 @@ function VersionDiff({ entry, recipe, onClose }) {
       </div>
 
       {entry.notes && (
-        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, marginBottom: 16, padding: "10px 14px", background: "var(--surface2)", borderRadius: 10, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-          {entry.notes}
-        </p>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16 }}>
+          <MiniAvatar user={user} size={28} />
+          <div style={{ flex: 1, minWidth: 0, background: "var(--surface2)", border: "1px solid var(--border)", borderLeft: "3px solid var(--accent)", borderRadius: "0 10px 10px 0", padding: "9px 13px" }}>
+            <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, margin: 0, fontStyle: "italic", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{entry.notes}</p>
+          </div>
+        </div>
       )}
 
       {/* Sélecteur de base */}
@@ -188,6 +201,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
   const [notes, setNotes] = useState("");
   const [diffEntry, setDiffEntry] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const { user } = useAppShell();
 
   const openForm = () => {
     setFormLabel(nextVersionLabel(recipe.history));
@@ -217,30 +231,48 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
           Aucune itération enregistrée. À chaque fois que tu retravailles cette recette, fige une version : ce que tu as changé, le résultat à la dégustation et une note. Tu pourras comparer les versions entre elles pour voir précisément ce qui a évolué.
         </p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {history.map(entry => (
-            <div key={entry.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", cursor: "pointer" }}
-              onClick={() => setDiffEntry(entry)}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>{entry.label}</span>
-                <span style={{ fontSize: 12, color: "var(--text3)" }}>{fmtDate(entry.createdAt)}</span>
-                {entry.rating != null && (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
-                )}
-                <div style={{ marginLeft: "auto", display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}>
-                  <button onClick={() => setDiffEntry(entry)} title="Comparer cette version"
-                    style={{ width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                    <Icon name="forward" size={14} color="var(--text2)" />
-                  </button>
-                  <button onClick={() => setDeleteTarget(entry)} title="Supprimer"
-                    style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                    <Icon name="trash" size={13} color="var(--red)" />
-                  </button>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {history.map((entry, idx) => {
+            const isLast = idx === history.length - 1;
+            return (
+              <div key={entry.id} style={{ display: "flex", gap: 0 }}>
+                {/* Timeline */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 36, flexShrink: 0, paddingTop: 2 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--accent)", border: "2px solid var(--bg)", flexShrink: 0, zIndex: 1 }} />
+                  {!isLast && <div style={{ flex: 1, width: 2, background: "var(--border)", marginTop: 2 }} />}
+                </div>
+                {/* Card */}
+                <div style={{ flex: 1, minWidth: 0, marginBottom: isLast ? 0 : 14 }}>
+                  <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 5, marginTop: 0, lineHeight: 1 }}>{fmtDate(entry.createdAt)}</div>
+                  <div style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", cursor: "pointer" }}
+                    onClick={() => setDiffEntry(entry)}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", background: "var(--accent)", borderRadius: 7, padding: "2px 9px", flexShrink: 0 }}>{entry.label}</span>
+                      {entry.rating != null && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
+                      )}
+                      {entry.notes && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 2 }}>
+                          <MiniAvatar user={user} size={20} />
+                          <span style={{ fontSize: 11, color: "var(--text3)", fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 100 }}>{entry.notes}</span>
+                        </div>
+                      )}
+                      <div style={{ marginLeft: "auto", display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setDiffEntry(entry)} title="Comparer cette version"
+                          style={{ width: 28, height: 28, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                          <Icon name="forward" size={13} color="var(--text2)" />
+                        </button>
+                        <button onClick={() => setDeleteTarget(entry)} title="Supprimer"
+                          style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                          <Icon name="trash" size={12} color="var(--red)" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              {entry.notes && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: "8px 0 0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{entry.notes}</p>}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
