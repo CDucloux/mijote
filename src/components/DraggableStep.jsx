@@ -6,6 +6,9 @@ import { ImageUpload } from "./ImageUpload.jsx";
 export function DraggableStep({ step, index, total, ingredients, utensils, recipes, draggable: isDraggable = true, onUpdate, onRemove, onMove }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
+  // Champs optionnels repliés par défaut pour garder une carte d'étape compacte.
+  const [showPhoto, setShowPhoto] = useState(!!step.image);
+  const [showTip, setShowTip] = useState(!!step.tip);
 
   return (
     <div
@@ -32,17 +35,43 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
       </div>
       <AutoResizeTextarea className="field-input" placeholder="Instructions…" value={step.text} onChange={e => onUpdate(step.id, "text", e.target.value)} style={{ marginBottom: 10 }} />
 
-      {/* Astuce du chef */}
-      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
-        <Icon name="bulb" size={12} color="var(--accent2)" /> Astuce <span style={{ textTransform: "none", fontWeight: 400, color: "var(--text3)" }}>(optionnel)</span>
-      </div>
-      <AutoResizeTextarea className="field-input" placeholder="Un conseil pour réussir cette étape…" value={step.tip || ""} onChange={e => onUpdate(step.id, "tip", e.target.value)} style={{ marginBottom: 12 }} />
+      {/* Add-ons optionnels : repliés en puces tant qu'ils ne sont pas utilisés */}
+      {(!showPhoto || !showTip) && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          {!showPhoto && (
+            <button onClick={() => setShowPhoto(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "var(--surface2)", color: "var(--text2)", border: "1px dashed var(--border)", cursor: "pointer" }}>
+              <Icon name="photo" size={13} color="var(--text3)" /> Photo
+            </button>
+          )}
+          {!showTip && (
+            <button onClick={() => setShowTip(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "var(--surface2)", color: "var(--text2)", border: "1px dashed var(--border)", cursor: "pointer" }}>
+              <Icon name="bulb" size={13} color="var(--blue)" /> Astuce
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Photo de l'étape */}
-      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
-        <Icon name="photo" size={12} color="var(--text3)" /> Photo <span style={{ textTransform: "none", fontWeight: 400, color: "var(--text3)" }}>(optionnel)</span>
-      </div>
-      <ImageUpload value={step.image} onChange={v => onUpdate(step.id, "image", v)} style={{ height: 120, marginBottom: 12 }} pathPrefix="steps" />
+      {showPhoto && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: 5 }}><Icon name="photo" size={12} color="var(--text3)" /> Photo</span>
+            <button onClick={() => { onUpdate(step.id, "image", ""); setShowPhoto(false); }} style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="close" size={11} color="var(--text3)" /> Retirer</button>
+          </div>
+          <ImageUpload value={step.image} onChange={v => onUpdate(step.id, "image", v)} style={{ height: 120 }} pathPrefix="steps" />
+        </div>
+      )}
+
+      {/* Astuce du chef — sous la photo */}
+      {showTip && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: 5 }}><Icon name="bulb" size={12} color="var(--blue)" /> Astuce</span>
+            <button onClick={() => { onUpdate(step.id, "tip", ""); setShowTip(false); }} style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="close" size={11} color="var(--text3)" /> Retirer</button>
+          </div>
+          <AutoResizeTextarea className="field-input" placeholder="Un conseil pour réussir cette étape…" value={step.tip || ""} onChange={e => onUpdate(step.id, "tip", e.target.value)} />
+        </div>
+      )}
 
       <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ingrédients liés</div>
       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>

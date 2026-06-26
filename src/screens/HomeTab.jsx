@@ -142,7 +142,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           )}
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
+          {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} inSeason={isRecipeInSeason(r, resolver)} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
         </div>
         {visibleCount < filtered.length && (
           <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>

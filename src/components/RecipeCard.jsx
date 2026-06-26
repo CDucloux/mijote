@@ -6,7 +6,7 @@ import { Icon } from "./Icon.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { fmtTime } from "../lib/format.js";
 
-export function RecipeCard({ recipe, onClick, style }) {
+export function RecipeCard({ recipe, onClick, style, inSeason = false }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const [showBaseInfo, setShowBaseInfo] = useState(false);
   return (
@@ -20,6 +20,12 @@ export function RecipeCard({ recipe, onClick, style }) {
             <BaseIcon size={12} color="#fff" />
             <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
           </button>
+        )}
+        {inSeason && (
+          <span title="De saison ce mois-ci" style={{ position: "absolute", top: 8, right: 8, display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 9px 4px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.3)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
+            <Icon name="leaf" size={11} color="#fff" />
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
+          </span>
         )}
       </div>
       <div style={{ padding: "10px 12px 12px" }}>

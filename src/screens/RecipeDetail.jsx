@@ -11,8 +11,9 @@ import { RecipeJournal } from "../components/RecipeJournal.jsx";
 import { HeroMenu } from "../components/HeroMenu.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
-import { findIngredientMatch } from "../lib/nameMatcher.js";
+import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
+import { isRecipeInSeason } from "../lib/seasonality.js";
 import { fmtTime } from "../lib/format.js";
 import { flattenForShopping } from "../lib/components.js";
 
@@ -93,6 +94,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   };
   const isProgrammaticScroll = useRef(false);
   const mult = servings / (recipe.servings || 2);
+  const seasonResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);
 
   // Collapse the desktop actions panel when clicking anywhere outside it.
   useEffect(() => {
@@ -177,6 +180,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             </a>
           )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            {recipeInSeason && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
+                <Icon name="leaf" size={11} color="#fff" />
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
+              </span>
+            )}
             {recipe.tags?.map(t => <span key={t} className="tag" style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}>{t}</span>)}
             {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
             <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", gap: 4 }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>
@@ -296,6 +305,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 </a>
               )}
               <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
+                {recipeInSeason && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
+                    <Icon name="leaf" size={11} color="#fff" />
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
+                  </span>
+                )}
                 {recipe.tags?.map(t => <span key={t} className="tag" style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}>{t}</span>)}
                 {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
                 <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>
@@ -496,7 +511,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                       {step.tip && (
                         <div style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 10, padding: "9px 11px", marginBottom: (hasPills || step.image) ? 10 : 0 }}>
                           <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={15} color="var(--blue)" /></span>
-                          <p style={{ fontSize: 12.5, color: "var(--text)", lineHeight: 1.5, margin: 0, fontStyle: "italic", wordBreak: "break-word", overflowWrap: "break-word" }}>{step.tip}</p>
+                          <p style={{ fontSize: 12.5, color: "var(--text)", lineHeight: 1.5, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}><span style={{ fontWeight: 700, color: "var(--blue)" }}>Astuce</span><span style={{ color: "var(--text3)", margin: "0 5px" }}>·</span><span style={{ fontStyle: "italic" }}>{step.tip}</span></p>
                         </div>
                       )}
                       {hasPills && (
@@ -651,7 +666,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     {step.tip && (
                       <div style={{ display: "flex", gap: 9, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
                         <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={16} color="var(--blue)" /></span>
-                        <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.55, margin: 0, fontStyle: "italic", wordBreak: "break-word", overflowWrap: "break-word" }}>{step.tip}</p>
+                        <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.55, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}><span style={{ fontWeight: 700, color: "var(--blue)" }}>Astuce</span><span style={{ color: "var(--text3)", margin: "0 6px" }}>·</span><span style={{ fontStyle: "italic" }}>{step.tip}</span></p>
                       </div>
                     )}
                     {(linkedIngs.length > 0 || linkedUts.length > 0) && (
