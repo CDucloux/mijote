@@ -1,0 +1,44 @@
+rules_version = '2';
+
+// ─── Règles Firebase Storage — Mijoté ────────────────────────────────────────
+// Arborescence :
+//   users/{uid}/**   images privées de chaque utilisateur (photos de recettes…)
+//   master/**        images de la base partagée (lecture tous, écriture admin)
+//
+// Déploiement : `npx firebase deploy --only storage`
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn()
+             && request.auth.token.email_verified == true
+             && request.auth.token.email == 'corentin.ducloux.edifice@gmail.com';
+    }
+    // Upload valide : une image de moins de 5 Mo. `request.resource` est null lors
+    // d'une suppression → on laisse passer (la restriction de propriété suffit).
+    function isValidImageUpload() {
+      return request.resource == null
+             || (request.resource.size < 5 * 1024 * 1024
+                 && request.resource.contentType.matches('image/.*'));
+    }
+
+    // ── Images perso : chacun dans son dossier ───────────────────────────────
+    match /users/{userId}/{allPaths=**} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow write: if isSignedIn()
+                   && request.auth.uid == userId
+                   && isValidImageUpload();
+    }
+
+    // ── Images Master : lecture pour tous les connectés, écriture admin only ──
+    match /master/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() && isValidImageUpload();
+    }
+  }
+}

@@ -9,14 +9,16 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-2.0.0-e8703a?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.0.0-e8703a?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
+![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-12-FFCA28?style=flat-square&logo=firebase&logoColor=black)
 ![React Router](https://img.shields.io/badge/React_Router-7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-4-6E9F18?style=flat-square&logo=vitest&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-10-4B32C3?style=flat-square&logo=eslint&logoColor=white)
 
 </div>
@@ -41,15 +43,18 @@ toujours avec vous.
 
 - 📖 **Recettes** — éditeur complet (ingrédients, ustensiles, étapes liées),
   recherche, tri, tags et collections.
+- 📓 **Journal d'itérations** — chaque modification de recette est versionnée
+  avec un diff visuel, un commentaire et l'avatar de l'auteur.
 - 🥗 **Nutri-Score & score santé** — calculé automatiquement à partir des
   ingrédients et de la base nutritionnelle (données Ciqual).
 - 📅 **Planning repas** — semainier glisser-déposer, export `.ics` vers votre
   calendrier.
 - 🛒 **Listes de courses** — ajout par collage, tri par rayon, et **partage
-  temps réel** entre plusieurs membres.
+  temps réel** entre plusieurs membres (jusqu'à 4 personnes).
 - 🧊 **Frigo** — inventaire avec suivi de fraîcheur et suggestions de recettes.
 - 👨‍🍳 **Mode cuisine** — guidage pas-à-pas plein écran.
-- 🖨️ **Export** — PDF imprimable et JSON (import/export de recettes).
+- 🖨️ **Export** — PDF imprimable (sans sauts de page intempestifs) et JSON
+  (import/export de recettes).
 - ☁️ **Synchro cloud** — persistance Firestore hors-ligne (IndexedDB), connexion
   Google.
 - 🌗 **Thème clair / sombre** et interface responsive mobile + desktop (PWA
@@ -60,15 +65,17 @@ toujours avec vous.
 | Domaine | Technologie |
 |---|---|
 | UI | React 19, React Router 7 |
-| Build | Vite 8, `vite-plugin-pwa` |
-| Backend | Firebase (Auth, Firestore, Storage) |
+| Build | Vite 8 (Rolldown), `vite-plugin-pwa` |
+| Backend | Firebase 12 (Auth, Firestore, Storage) |
+| Tests | Vitest 4 (58 tests unitaires sur les libs critiques) |
+| CI | GitHub Actions (test + build sur chaque push) |
 | Qualité | ESLint 10 |
 
 ## 🚀 Démarrage
 
 ### Prérequis
 
-- Node.js 18+ et npm
+- Node.js 22+ et npm
 - Un projet [Firebase](https://console.firebase.google.com/) (Auth Google +
   Firestore + Storage activés)
 
@@ -124,6 +131,7 @@ L'application est disponible sur `http://localhost:5173`.
 | `npm run dev` | Serveur de développement (HMR) |
 | `npm run build` | Build de production dans `dist/` |
 | `npm run preview` | Prévisualise le build de production |
+| `npm test` | Lance la suite de tests Vitest |
 | `npm run lint` | Analyse statique ESLint |
 
 ## 🔖 Versionner
