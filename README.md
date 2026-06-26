@@ -42,17 +42,28 @@ toujours avec vous.
 ## ✨ Fonctionnalités
 
 - 📖 **Recettes** — éditeur complet (ingrédients, ustensiles, étapes liées),
-  recherche, tri, tags et collections.
+  recherche, tri, et **étapes enrichies** : chaque étape peut porter une photo
+  et une astuce, reprises dans la fiche et le mode pas-à-pas.
+- 📓 **Carnets** — rangez vos recettes dans des carnets colorés (ex-collections),
+  avec création rapide depuis la page Recettes.
+- 🌍 **Style de cuisine** — un champ unique parmi une liste prédéfinie
+  (Française, Italienne, Marocaine, Japonaise…) qui sert aussi de filtre.
 - 📓 **Journal d'itérations** — chaque modification de recette est versionnée
   avec un diff visuel, un commentaire et l'avatar de l'auteur.
 - 🥗 **Nutri-Score & score santé** — calculé automatiquement à partir des
   ingrédients et de la base nutritionnelle (données Ciqual).
+- 🌿 **Saisonnalité** — déduite des ingrédients ; badge « De saison » sur les
+  cartes et filtre dédié.
 - 📅 **Planning repas** — semainier glisser-déposer, export `.ics` vers votre
   calendrier.
-- 🛒 **Listes de courses** — ajout par collage, tri par rayon, et **partage
-  temps réel** entre plusieurs membres (jusqu'à 4 personnes).
-- 🧊 **Frigo** — inventaire avec suivi de fraîcheur et suggestions de recettes.
-- 👨‍🍳 **Mode cuisine** — guidage pas-à-pas plein écran.
+- 🛒 **Listes de courses** — ajout par collage, tri par rayon, gestes de swipe
+  (→ j'achète, ← je supprime) et **partage temps réel** entre plusieurs membres
+  (jusqu'à 4 personnes).
+- 📦 **Stock** — inventaire « en stock / bientôt vide » ; les achats non
+  périssables rejoignent automatiquement le stock, et le détail recette signale
+  ce que vous avez déjà.
+- 👨‍🍳 **Mode cuisine** — guidage pas-à-pas plein écran, photos et astuces
+  d'étape incluses.
 - 🖨️ **Export** — PDF imprimable (sans sauts de page intempestifs) et JSON
   (import/export de recettes).
 - ☁️ **Synchro cloud** — persistance Firestore hors-ligne (IndexedDB), connexion
@@ -165,7 +176,7 @@ src/
 │                    #   import/export) + infra Firebase
 ├── constants/       # Données figées (catégories, onglets, changelog)
 ├── components/      # Composants de présentation réutilisables
-├── screens/         # Écrans (Home, MealPlan, Shopping, Fridge, Config…)
+├── screens/         # Écrans (Home, MealPlan, Shopping, Stock, Config…)
 └── styles/          # global.css
 ```
 
