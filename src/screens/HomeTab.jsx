@@ -92,20 +92,35 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
         {!search && !filterTag && !filterCol && (
           <div style={{ marginBottom: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Collections</h2>
-            <div className="collections-row" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
-              {collections.map((col, i) => (
-                <button key={col.id} className="collection-card" onClick={() => setFilterCol(filterCol === col.id ? null : col.id)} style={{ flexShrink: 0, width: 120, background: filterCol === col.id ? "rgba(232,112,58,0.15)" : "var(--surface)", border: `1px solid ${filterCol === col.id ? "rgba(232,112,58,0.4)" : "var(--border)"}`, borderRadius: 16, overflow: "hidden" }}>
-                  <div style={{ aspectRatio: "3/2", position: "relative", background: col.color + "33", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                    <span className="collection-card-icon" style={{ fontSize: 26, lineHeight: 1 }}>{col.icon || "📁"}</span>
-                    <div style={{ position: "absolute", top: 6, right: 6, minWidth: 20, height: 20, borderRadius: 10, background: col.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff", padding: "0 5px" }}>{col.count}</div>
-                  </div>
-                  <div style={{ padding: "8px 10px" }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, textAlign: "left" }}>{col.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--text2)", textAlign: "left" }}>{col.count} recettes</div>
+            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Carnets</h2>
+            <div className="collections-row" style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 6 }}>
+              {collections.map((col) => {
+                const active = filterCol === col.id;
+                const count = col.count || 0;
+                return (
+                <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined} onClick={() => setFilterCol(active ? null : col.id)} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
+                  <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 8px 22px -10px ${col.color}, 0 0 0 2px ${col.color}` : "0 6px 16px -10px rgba(0,0,0,0.35)" }}>
+                    {/* Page lignée + reliure colorée */}
+                    <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${col.color}1f 0%, ${col.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${col.color}00 0 27px, ${col.color}22 27px 28px)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {/* Reliure */}
+                      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 11, background: `linear-gradient(180deg, ${col.color} 0%, ${col.color}cc 100%)` }} />
+                      <div style={{ position: "absolute", left: 3, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: 3 }}>
+                        {[0, 1, 2].map(d => <span key={d} style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.85)" }} />)}
+                      </div>
+                      {/* Pastille compteur */}
+                      <div style={{ position: "absolute", top: 8, right: 8, minWidth: 22, height: 22, borderRadius: 11, background: count ? col.color : "var(--surface3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: count ? "#fff" : "var(--text3)", padding: "0 6px", boxShadow: count ? `0 2px 6px -1px ${col.color}99` : "none" }}>{count}</div>
+                      {/* Icône */}
+                      <span className="notebook-card-icon" style={{ fontSize: 34, lineHeight: 1, filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.18))" }}>{col.icon || "📓"}</span>
+                    </div>
+                    {/* Tranche basse blanche */}
+                    <div style={{ padding: "9px 11px 11px", background: "var(--surface)", borderTop: `1px solid ${col.color}22` }}>
+                      <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{col.name}</div>
+                      <div style={{ fontSize: 11, color: count ? "var(--text2)" : "var(--text3)", textAlign: "left", marginTop: 1 }}>{count === 0 ? "Vide" : `${count} recette${count > 1 ? "s" : ""}`}</div>
+                    </div>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -116,7 +131,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
             </h2>
             {filterCol && (() => { const ac = collections.find(c => c.id === filterCol); return ac ? (
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: ac.color + "22", color: ac.color, border: `1px solid ${ac.color}55`, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                <span style={{ fontSize: 13, lineHeight: 1 }}>{ac.icon || "📁"}</span>{ac.name}
+                <span style={{ fontSize: 13, lineHeight: 1 }}>{ac.icon || "📓"}</span>{ac.name}
               </span>
             ) : null; })()}
           </div>

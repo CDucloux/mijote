@@ -207,8 +207,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               </div>
               <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
               <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Collections</div>
-                {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucune collection — créez-en dans Config.</p>}
+                <div className="field-label" style={{ marginBottom: 8 }}>Carnets</div>
+                {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucun carnet — créez-en dans Config.</p>}
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {collections.map(col => {
                     const active = (form.collections || []).includes(col.id);

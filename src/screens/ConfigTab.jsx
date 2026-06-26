@@ -255,7 +255,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
           {["ingredients", "ustensiles", "collections", "données", "nouveautés"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Collections" : s === "données" ? "Données" : "Changelog"}
+              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
             </button>
           ))}
         </div>
@@ -446,12 +446,12 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
 
         {section === "collections" && (
           <div>
-            <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditCol({ id: "", name: "", color: "#e8703a", icon: "📁" })}><Icon name="plus" size={14} /> Nouvelle collection</button>
+            <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditCol({ id: "", name: "", color: "#e8703a", icon: "📓" })}><Icon name="plus" size={14} /> Nouveau carnet</button>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {collections.map(col => (
                 <div key={col.id} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: col.color + "33", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
-                    <span style={{ fontSize: 18, lineHeight: 1 }}>{col.icon || "📁"}</span>
+                    <span style={{ fontSize: 18, lineHeight: 1 }}>{col.icon || "📓"}</span>
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500 }}>{col.name}</div>
@@ -462,7 +462,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                   <button onClick={() => setCollections(prev => prev.filter(c => c.id !== col.id))} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
                 </div>
               ))}
-              {collections.length === 0 && <p style={{ fontSize: 13, color: "var(--text3)" }}>Aucune collection. Créez-en une !</p>}
+              {collections.length === 0 && <p style={{ fontSize: 13, color: "var(--text3)" }}>Aucun carnet. Créez-en un !</p>}
             </div>
           </div>
         )}
@@ -713,7 +713,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
       {/* Collection editor modal */}
       {editCol && (
         <SwipeableSheet onClose={() => setEditCol(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCol.id ? "Modifier" : "Nouvelle"} collection</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCol.id ? "Modifier le" : "Nouveau"} carnet</h3>
           <div style={{ marginBottom: 12 }}>
             <div className="field-label">Nom</div>
             <input className="field-input" placeholder="ex: Plats végétariens" value={editCol.name} onChange={e => setEditCol(p => ({ ...p, name: e.target.value }))} />
@@ -731,9 +731,9 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
             ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: editCol.color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{editCol.icon || "📁"}</div>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: editCol.color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{editCol.icon || "📓"}</div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{editCol.name || "Nom de la collection"}</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{editCol.name || "Nom du carnet"}</div>
               <div style={{ fontSize: 11, color: "var(--text3)" }}>Aperçu</div>
             </div>
           </div>
