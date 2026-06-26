@@ -169,6 +169,8 @@ input,textarea,select{font-family:var(--ff-body);}
   .notebook-card:hover{transform:translateY(-4px) rotate(-0.6deg);}
   .notebook-card:hover .notebook-card-icon{transform:scale(1.16) rotate(-5deg);}
   .notebook-card:active{transform:translateY(-1px);}
+  .notebook-card-add:hover>div{border-color:var(--accent)!important;}
+  .notebook-card-add:hover{transform:translateY(-3px);}
   /* Floating action FAB + soft icon button (no lift) */
   .fab-toggle{transition:filter .18s ease,box-shadow .2s ease;}
   .fab-toggle:hover{filter:brightness(1.06);box-shadow:0 12px 30px -6px rgba(232,112,58,0.6);}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
+import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
@@ -17,6 +18,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   const [seasonOnly, setSeasonOnly] = useState(false);
   const [showTags, setShowTags] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const sentinelRef = useRef(null);
 
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
@@ -121,6 +123,18 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
                 </button>
                 );
               })}
+              {/* Carte « ajouter un carnet » — même gabarit que les carnets */}
+              <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#e8703a", icon: "📓" })} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
+                <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", border: "2px dashed var(--border)" }}>
+                  <div style={{ position: "relative", aspectRatio: "1/1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text3)" }}>
+                    <span style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="plus" size={20} color="var(--text2)" /></span>
+                  </div>
+                  <div style={{ padding: "9px 11px 11px", background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
+                    <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", color: "var(--text2)" }}>Nouveau</div>
+                    <div style={{ fontSize: 11, color: "var(--text3)", textAlign: "left", marginTop: 1 }}>Créer un carnet</div>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
         )}
@@ -151,6 +165,37 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
         )}
         {filtered.length === 0 && <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}><Icon name="search" size={32} /><br /><span style={{ fontSize: 14, marginTop: 8, display: "block" }}>Aucune recette trouvée</span></div>}
       </div>
+
+      {/* Création rapide d'un carnet (mêmes pickers que Config) */}
+      {newCarnet && (
+        <SwipeableSheet onClose={() => setNewCarnet(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Nouveau carnet</h3>
+          <div style={{ marginBottom: 12 }}>
+            <div className="field-label">Nom</div>
+            <input className="field-input" placeholder="ex: Plats végétariens" value={newCarnet.name} autoFocus onChange={e => setNewCarnet(p => ({ ...p, name: e.target.value }))} />
+          </div>
+          <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+            {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => (
+              <button key={c} onClick={() => setNewCarnet(p => ({ ...p, color: c }))} style={{ width: 32, height: 32, borderRadius: "50%", background: c, border: `3px solid ${newCarnet.color === c ? "#fff" : "transparent"}`, boxShadow: newCarnet.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
+            ))}
+          </div>
+          <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+            {["🍽️", "🥗", "🍝", "🍰", "🥩", "🥦", "🥐", "🍜", "🍛", "🫕", "🥘", "🧁", "🍣", "🫙", "🥚", "🧀", "🫒", "🌮", "🍲"].map(ico => (
+              <button key={ico} onClick={() => setNewCarnet(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: newCarnet.icon === ico ? newCarnet.color + "33" : "var(--surface2)", border: `2px solid ${newCarnet.icon === ico ? newCarnet.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setNewCarnet(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
+              if (!newCarnet.name.trim()) return;
+              setCollections(prev => [...prev, { ...newCarnet, name: newCarnet.name.trim(), id: "c" + Date.now(), count: 0 }]);
+              setNewCarnet(null);
+            }}>Créer</button>
+          </div>
+        </SwipeableSheet>
+      )}
     </div>
   );
 }
