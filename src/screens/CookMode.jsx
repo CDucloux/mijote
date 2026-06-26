@@ -6,6 +6,7 @@ import { Img, IngImage } from "../components/Img.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { consumptionFraction } from "../lib/components.js";
+import { capitalize } from "../lib/format.js";
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
 // `recipes` + `stockSet` permettent de gérer les composants (préparations de base) :
@@ -70,7 +71,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(232,112,58,0.1)", border: "1.5px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={22} /></span>
           : <IngImage src={imgSrc} alt={displayName} size={42} />
         }
-        <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{displayName}</span>
+        <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{capitalize(displayName)}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: isComp ? "var(--accent)" : "var(--accent)" }}>
           {+(ing.amount * (mult || 1)).toFixed(2)} {ing.unit}
         </span>
@@ -218,6 +219,16 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                   </div>
                   <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 24 }}>{step.text}</p>
 
+                  {step.tip && (
+                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
+                      <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={20} color="var(--blue)" /></span>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--blue)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>Astuce</div>
+                        <p style={{ fontSize: 15, color: "var(--text)", lineHeight: 1.6, margin: 0 }}>{step.tip}</p>
+                      </div>
+                    </div>
+                  )}
+
                   {linkedIngs.length > 0 && (
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Pour cette étape</div>
@@ -239,6 +250,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                         ))}
                       </div>
                     </div>
+                  )}
+
+                  {step.image && (
+                    <Img src={step.image} alt={`Étape ${realIdx + 1}`} style={{ width: "100%", maxHeight: 320, objectFit: "cover", borderRadius: 16, marginBottom: 20 }} />
                   )}
                 </>
               )}

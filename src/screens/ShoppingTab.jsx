@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -20,13 +20,14 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 
 export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
   const { user, notify } = useAppShell();
+  // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
+  const focusNoScroll = useCallback(el => el?.focus({ preventScroll: true }), []);
   const [activeListId, setActiveListId] = useState(null);
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [confirmClearId, setConfirmClearId] = useState(null);
-  const [editItem, setEditItem] = useState(null);      // article en cours d'édition
   const [pending, setPending] = useState(() => new Set()); // articles en cours d'animation → « Acheté »
   const [listMode, setListMode] = useState(false);     // false = article par article ; true = coller une liste
   const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
@@ -74,8 +75,6 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
 
   // Catégorie d'un article : résolue depuis la Master DB via le nom (sinon "other").
   const catOf = name => (findIngredientMatch(name, ingredientDB)?.category) || "other";
-  const updateItem = (listId, itemId, patch) =>
-    updateList(listId, l => ({ ...l, items: l.items.map(i => i.id === itemId ? { ...i, ...patch } : i) }));
   const deleteItem = (listId, itemId) =>
     updateList(listId, l => ({ ...l, items: l.items.filter(i => i.id !== itemId) }));
 
@@ -118,11 +117,12 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
     }, 300);
   };
 
-  // Ligne d'article : zone principale = achat ; swipe droite mobile = achat ; modifier / supprimer à droite.
+  // Ligne d'article : zone principale = achat ; swipe droite = achat, swipe gauche = supprime
+  // (mobile) ; sur desktop la suppression passe par le bouton corbeille.
   const renderItem = item => (
     <ShoppingItemRow key={item.id} item={item} striking={pending.has(item.id)}
       imageSrc={item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""}
-      onBuy={buyItem} onEdit={setEditItem} onDelete={it => deleteItem(activeList.id, it.id)} />
+      onBuy={buyItem} onDelete={it => deleteItem(activeList.id, it.id)} />
   );
 
 
@@ -136,7 +136,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Courses</h1>
-            <span className="app-brand" style={{ fontSize: 11, fontWeight: 500, color: "var(--text3)", letterSpacing: "0.04em", fontFamily: "var(--ff-body)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span> <span style={{ opacity: 0.5 }}>{`v${__APP_VERSION__}`}</span></span>
+            
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => { setConfigList({ isNew: true, name: "", type: "free", hideClear: false, sharedWith: [] }); setShareEmail(""); }}><Icon name="plus" size={16} /> Nouvelle liste</button>
@@ -326,34 +326,6 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
           </SwipeableSheet>
         );
       })()}
-      {/* Édition d'un article */}
-      {editItem && activeList && (
-        <SwipeableSheet onClose={() => setEditItem(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 14 }}>Modifier l'article</h3>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom</div>
-          <input className="field-input" value={editItem.name} onChange={e => setEditItem(p => ({ ...p, name: e.target.value }))} autoFocus style={{ marginBottom: 12 }} />
-          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Quantité</div>
-              <input className="field-input" value={editItem.amount} onChange={e => setEditItem(p => ({ ...p, amount: e.target.value }))} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Unité</div>
-              <input className="field-input" value={editItem.unit} onChange={e => setEditItem(p => ({ ...p, unit: e.target.value }))} />
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditItem(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
-              const name = (editItem.name || "").trim();
-              if (!name) return;
-              const m = findIngredientMatch(name, ingredientDB);
-              updateItem(activeList.id, editItem.id, { name, amount: editItem.amount, unit: editItem.unit, image: m?.image || editItem.image || "" });
-              setEditItem(null);
-            }}>Enregistrer</button>
-          </div>
-        </SwipeableSheet>
-      )}
       {/* Modal ajout d'article / liste */}
       {showAddModal && activeList?.type === "free" && (
         <SwipeableSheet onClose={() => { setShowAddModal(false); setListMode(false); setNewItemName(""); setPasteText(""); }}>
@@ -466,7 +438,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
             <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{configList.isNew ? "Nouvelle liste" : "Configurer la liste"}</h3>
 
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom de la liste</div>
-            <input className="field-input" value={configList.name} maxLength={60} autoFocus
+            <input className="field-input" value={configList.name} maxLength={60} ref={focusNoScroll}
               onChange={e => setConfigList(p => ({ ...p, name: e.target.value }))}
               onKeyDown={e => e.key === "Enter" && e.target.blur()} style={{ marginBottom: 18 }} />
 

@@ -1,10 +1,12 @@
 import React from "react";
 import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
 const SWIPE_MAX = 100, SWIPE_TRIGGER = 64;
 
-export function ShoppingItemRow({ item, striking, onBuy, onEdit, onDelete, imageSrc }) {
+export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
+  const isDesktop = useIsDesktop();
   const [dx, setDx] = React.useState(0);
   const [animating, setAnimating] = React.useState(false); // true pendant le retour élastique
   const startX = React.useRef(0), startY = React.useRef(0), axis = React.useRef(null);
@@ -12,28 +14,41 @@ export function ShoppingItemRow({ item, striking, onBuy, onEdit, onDelete, image
 
   const onTouchStart = e => { startX.current = e.touches[0].clientX; startY.current = e.touches[0].clientY; axis.current = null; setAnimating(false); };
   const onTouchMove = e => {
-    if (item.checked) return; // un article déjà acheté ne se swipe pas
     const dX = e.touches[0].clientX - startX.current, dY = e.touches[0].clientY - startY.current;
     if (!axis.current) { if (Math.abs(dX) > 8 || Math.abs(dY) > 8) axis.current = Math.abs(dX) > Math.abs(dY) ? "h" : "v"; }
-    if (axis.current === "h") setDx(Math.max(0, Math.min(SWIPE_MAX, dX)));
+    // Droite = j'achète (interdit si déjà acheté) ; gauche = je supprime (toujours possible).
+    if (axis.current === "h") {
+      const lo = item.checked ? -SWIPE_MAX : -SWIPE_MAX;
+      const hi = item.checked ? 0 : SWIPE_MAX;
+      setDx(Math.max(lo, Math.min(hi, dX)));
+    }
   };
   const onTouchEnd = () => {
     if (axis.current === "h") {
       setAnimating(true);
       if (!item.checked && dx >= SWIPE_TRIGGER) onBuy(item);
+      else if (dx <= -SWIPE_TRIGGER) { onDelete(item); return; }
       setDx(0);
     }
     axis.current = null;
   };
 
-  const reveal = Math.min(1, dx / SWIPE_TRIGGER);
+  const revealBuy = Math.min(1, Math.max(0, dx) / SWIPE_TRIGGER);
+  const revealDel = Math.min(1, Math.max(0, -dx) / SWIPE_TRIGGER);
   return (
     <div style={{ position: "relative", marginBottom: 8, borderRadius: 12, overflow: "hidden" }}>
-      {/* Fond vert révélé pendant le swipe */}
+      {/* Fond vert révélé en swipe droite (j'achète) */}
       <div style={{ position: "absolute", inset: 0, background: "var(--green)", display: "flex", alignItems: "center", paddingLeft: 18, opacity: dx > 0 ? 1 : 0, transition: dx > 0 ? "none" : "opacity 0.2s" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + reveal * 0.3})`, opacity: reveal }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + revealBuy * 0.3})`, opacity: revealBuy }}>
           <Icon name="check" size={18} color="#fff" />
           <span style={{ fontSize: 13, fontWeight: 700 }}>J'achète</span>
+        </div>
+      </div>
+      {/* Fond rouge révélé en swipe gauche (je supprime) */}
+      <div style={{ position: "absolute", inset: 0, background: "var(--red)", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 18, opacity: dx < 0 ? 1 : 0, transition: dx < 0 ? "none" : "opacity 0.2s" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + revealDel * 0.3})`, opacity: revealDel }}>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>Je supprime</span>
+          <Icon name="trash" size={17} color="#fff" />
         </div>
       </div>
       {/* Avant-plan : la ligne elle-même */}
@@ -62,14 +77,13 @@ export function ShoppingItemRow({ item, striking, onBuy, onEdit, onDelete, image
             {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
           </div>
         </button>
-        <button onClick={() => onEdit(item)} title="Modifier"
-          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)" }}>
-          <Icon name="edit" size={13} />
-        </button>
-        <button onClick={() => onDelete(item)} title="Supprimer"
-          style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}>
-          <Icon name="trash" size={13} color="var(--red)" />
-        </button>
+        {/* Suppression : bouton uniquement sur desktop (mobile = swipe gauche) */}
+        {isDesktop && (
+          <button onClick={() => onDelete(item)} title="Supprimer"
+            style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}>
+            <Icon name="trash" size={13} color="var(--red)" />
+          </button>
+        )}
       </div>
     </div>
   );

@@ -8,12 +8,15 @@ import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { NutritionModal } from "../components/NutritionModal.jsx";
 import { BaseInfoModal } from "../components/BaseInfoModal.jsx";
 import { RecipeJournal } from "../components/RecipeJournal.jsx";
+import { RecipePlaceholder } from "../components/RecipePlaceholder.jsx";
 import { HeroMenu } from "../components/HeroMenu.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
-import { findIngredientMatch } from "../lib/nameMatcher.js";
+import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
-import { fmtTime } from "../lib/format.js";
+import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
+import { fmtTime, capitalize } from "../lib/format.js";
+import { cuisineEmoji } from "../constants/cuisines.js";
 import { flattenForShopping } from "../lib/components.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
@@ -93,6 +96,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   };
   const isProgrammaticScroll = useRef(false);
   const mult = servings / (recipe.servings || 2);
+  const seasonResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);
 
   // Collapse the desktop actions panel when clicking anywhere outside it.
   useEffect(() => {
@@ -145,7 +150,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       {/* ── DESKTOP HERO ── */}
       {isDesktop && (
       <div style={{ position: "relative", height: 160, flexShrink: 0, color: "#fff" }}>
-        <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} />
+        <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={72} style={{ width: "100%", height: "100%" }} />} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
         <button onClick={handleBack} className="hero-back" style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} /></button>
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
@@ -177,9 +182,15 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             </a>
           )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-            {recipe.tags?.map(t => <span key={t} className="tag" style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}>{t}</span>)}
+            {recipeInSeason && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
+                <Icon name="leaf" size={11} color="#fff" />
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
+              </span>
+            )}
+            {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
             {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
-            <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", gap: 4 }}><Icon name="plus" size={10} color="#fff" /> Collection</button>
+            <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", gap: 4 }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>
           </div>
         </div>
       </div>
@@ -263,7 +274,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         <div className="detail-mobile-content" ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
           {/* Hero image — grand et beau */}
           <div style={{ position: "relative", height: 260, flexShrink: 0, color: "#fff" }}>
-            <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={104} style={{ width: "100%", height: "100%" }} />} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 40%,rgba(0,0,0,0.72) 100%)" }} />
             {/* Boutons overlay */}
             <button onClick={handleBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
@@ -296,9 +307,15 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 </a>
               )}
               <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
-                {recipe.tags?.map(t => <span key={t} className="tag" style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}>{t}</span>)}
+                {recipeInSeason && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
+                    <Icon name="leaf" size={11} color="#fff" />
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
+                  </span>
+                )}
+                {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
                 {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
-                <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><Icon name="plus" size={10} color="#fff" /> Collection</button>
+                <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>
               </div>
             </div>
           </div>
@@ -380,36 +397,44 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   </button>
                 </div>
               </div>
-              {/* Liste ingrédients */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {recipe.ingredients.map(ing => {
+              {/* Liste ingrédients — carte unique, lignes séparées par un filet */}
+              <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
+                {recipe.ingredients.map((ing, idx) => {
                   const rc = resolveComp(ing);
-                  if (rc) return (
-                    <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} style={{ display: "flex", alignItems: "center", gap: 12, background: rc.missing ? "var(--surface2)" : "rgba(232,112,58,0.07)", borderRadius: 12, padding: "10px 14px", border: `1px solid ${rc.missing ? "var(--border)" : "rgba(232,112,58,0.35)"}`, cursor: rc.comp ? "pointer" : "default" }}>
-                      {rc.comp?.image
-                        ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={50} cover />
-                        : <span style={{ width: 50, height: 50, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={24} /></span>}
-                      <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>
-                        {rc.comp ? rc.comp.name : (ing.name || "Base")}
-                        <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>
-                      </div>
-                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
-                        <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
-                      </div>
-                      {rc.comp && <Icon name="forward" size={13} color="var(--text3)" />}
-                    </div>
-                  );
+                  const isComp = !!rc;
+                  const last = idx === recipe.ingredients.length - 1;
+                  // Sous-titre statut : stock prioritaire, sinon saison.
+                  const inStock = isInStock(ing);
+                  const low = isLowStock(ing);
+                  const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason(it) === true : false; })();
+                  let badge = null;
+                  if (inStock) badge = { text: low ? "bientôt vide" : "en stock", color: low ? "var(--accent)" : "var(--green)" };
+                  else if (inSeason) badge = { text: "de saison", color: "var(--green)" };
+
+                  const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;
+                  const clickable = isComp ? !!rc.comp : !!ing.dbId;
+                  const onClick = () => {
+                    if (isComp && rc.comp) navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } });
+                    else if (!isComp && ing.dbId) navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`);
+                  };
                   return (
-                  <div key={ing.id} onClick={() => ing.dbId && navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)", cursor: ing.dbId ? "pointer" : "default" }}>
-                    <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={50} />
-                    <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
-                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
+                    <div key={ing.id} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
+                      {isComp && !rc.comp?.image
+                        ? <span style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
+                        : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(name)}</span>
+                          {isComp && <span style={{ fontSize: 9.5, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
+                        </div>
+                        {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 1 }}>{badge.text}</div>}
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)" }}>{ing.unit}</span>
+                      </div>
+                      {clickable && <Icon name="forward" size={14} color="var(--text3)" />}
                     </div>
-                    {ing.dbId && <Icon name="forward" size={13} color="var(--text3)" />}
-                  </div>
                   );
                 })}
               </div>
@@ -486,15 +511,21 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
                   return (
                     <div key={step.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: step.text ? 8 : hasPills ? 10 : 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: (step.text || step.image || step.tip || hasPills) ? 8 : 0 }}>
                         <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {i + 1}</span>
                       </div>
                       {step.text && (
-                        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: hasPills ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>
+                        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: (step.tip || hasPills || step.image) ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>
+                      )}
+                      {step.tip && (
+                        <div style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 10, padding: "9px 11px", marginBottom: (hasPills || step.image) ? 10 : 0 }}>
+                          <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={15} color="var(--blue)" /></span>
+                          <p style={{ fontSize: 12.5, color: "var(--text)", lineHeight: 1.5, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}><span style={{ fontWeight: 700, color: "var(--blue)" }}>Astuce</span><span style={{ color: "var(--text3)", margin: "0 5px" }}>·</span><span style={{ fontStyle: "italic" }}>{step.tip}</span></p>
+                        </div>
                       )}
                       {hasPills && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: step.image ? 10 : 0 }}>
                           {linkedIngs.map(ing => {
                             const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
                             return (
@@ -512,6 +543,9 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                             </span>
                           ))}
                         </div>
+                      )}
+                      {step.image && (
+                        <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12 }} />
                       )}
                     </div>
                   );
@@ -544,7 +578,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
                       </div>
                       <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>
-                        {rc.comp ? rc.comp.name : (ing.name || "Base")}
+                        {capitalize(rc.comp ? rc.comp.name : (ing.name || "Base"))}
                         <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>
                       </div>
                     </div>
@@ -556,7 +590,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                       <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
                       <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
                     </div>
-                    <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{ing.name}</div>
+                    <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.name)}</div>
                   </div>
                   );
                 })}
@@ -639,8 +673,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   <div key={step.id}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>Étape {i + 1}</div>
                     {step.text && <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 12, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
+                    {step.tip && (
+                      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
+                        <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={16} color="var(--blue)" /></span>
+                        <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.55, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}><span style={{ fontWeight: 700, color: "var(--blue)" }}>Astuce</span><span style={{ color: "var(--text3)", margin: "0 6px" }}>·</span><span style={{ fontStyle: "italic" }}>{step.tip}</span></p>
+                      </div>
+                    )}
                     {(linkedIngs.length > 0 || linkedUts.length > 0) && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: step.image ? 12 : 0 }}>
                         {linkedIngs.map(ing => {
                           const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
                           return (
@@ -659,6 +699,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         ))}
                       </div>
                     )}
+                    {step.image && <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} />}
                   </div>
                 );
               })}
@@ -818,8 +859,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
       {showCollModal && (
         <SwipeableSheet onClose={() => setShowCollModal(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Collections</h3>
-          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Sélectionne les collections pour <strong>{recipe.name}</strong></p>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Carnets</h3>
+          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Range <strong>{recipe.name}</strong> dans tes carnets</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
             {(collections || []).map(col => {
               const active = (recipe.collections || []).includes(col.id);
@@ -834,7 +875,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 </button>
               );
             })}
-            {(!collections || collections.length === 0) && <p style={{ color: "var(--text3)", fontSize: 13 }}>Aucune collection. Créez-en dans l'onglet Config.</p>}
+            {(!collections || collections.length === 0) && <p style={{ color: "var(--text3)", fontSize: 13 }}>Aucun carnet. Créez-en dans l'onglet Config.</p>}
           </div>
           <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowCollModal(false)}>Fermer</button>
         </SwipeableSheet>

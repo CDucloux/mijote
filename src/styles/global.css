@@ -63,9 +63,9 @@ input,textarea,select{font-family:var(--ff-body);}
 .hero-menu-pop>button:nth-child(3){animation-delay:.08s;}
 .hero-menu-pop>button:nth-child(4){animation-delay:.11s;}
 @keyframes heroMenuItem{from{opacity:0;transform:translateX(8px);}to{opacity:1;transform:translateX(0);}}
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn 0.2s;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn 0.2s backwards;}
 @keyframes toastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
-.modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:20px;max-height:92dvh;overflow-y:auto;animation:sheetUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94);}
+.modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:20px;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;animation:sheetUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) backwards;will-change:transform;}
 @keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
 @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
@@ -163,12 +163,15 @@ input,textarea,select{font-family:var(--ff-body);}
   .btn-ghost:hover{background:var(--surface3);border-color:var(--text3);color:var(--text);}
   .btn-danger:hover{background:rgba(224,82,82,0.22);border-color:rgba(224,82,82,0.5);}
   .btn:active{filter:brightness(0.95);}
-  /* Collection cards — subtle lift + icon pop on hover (desktop only) */
-  .collection-card{transition:transform .22s cubic-bezier(0.34,1.4,0.64,1),box-shadow .22s ease,border-color .18s ease;}
-  .collection-card .collection-card-icon{display:inline-block;transition:transform .25s cubic-bezier(0.34,1.56,0.64,1);}
-  .collection-card:hover{transform:translateY(-3px);box-shadow:0 10px 22px -10px rgba(0,0,0,0.3);border-color:var(--text3);}
-  .collection-card:hover .collection-card-icon{transform:scale(1.18) rotate(-4deg);}
-  .collection-card:active{transform:translateY(-1px);}
+  /* Notebook cards — subtle lift + icon pop on hover (desktop only) */
+  .notebook-card{transition:transform .22s cubic-bezier(0.34,1.4,0.64,1);}
+  .notebook-card .notebook-card-icon{display:inline-block;transition:transform .25s cubic-bezier(0.34,1.56,0.64,1);}
+  .notebook-card:hover{transform:translateY(-4px) rotate(-0.6deg);}
+  .notebook-card:hover .notebook-card-icon{transform:scale(1.16) rotate(-5deg);}
+  .notebook-card:active{transform:translateY(-1px);}
+  .notebook-card-add:hover{transform:translateY(-3px);}
+  .notebook-add-plus{transition:background-color .18s ease,color .18s ease,transform .2s cubic-bezier(0.34,1.56,0.64,1);}
+  .notebook-card-add:hover .notebook-add-plus{background:var(--accent)!important;color:#fff!important;transform:scale(1.08);}
   /* Floating action FAB + soft icon button (no lift) */
   .fab-toggle{transition:filter .18s ease,box-shadow .2s ease;}
   .fab-toggle:hover{filter:brightness(1.06);box-shadow:0 12px 30px -6px rgba(232,112,58,0.6);}

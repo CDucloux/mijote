@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { Icon } from "./Icon.jsx";
 
 // ─── IMAGE (with fallback) ────────────────────────────────────────────────────
-export const Img = ({ src, alt, style }) => {
+export const Img = ({ src, alt, style, fallback }) => {
   const [err, setErr] = useState(false);
   useEffect(() => { setErr(false); }, [src]);
-  if (!src || err) return (
+  if (!src || err) return fallback ?? (
     <div style={{ background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)", ...style }}>
       <Icon name="photo" size={20} />
     </div>
