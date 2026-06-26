@@ -491,19 +491,16 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {i + 1}</span>
                       </div>
                       {step.text && (
-                        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: (step.image || step.tip || hasPills) ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>
-                      )}
-                      {step.image && (
-                        <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12, marginBottom: (step.tip || hasPills) ? 10 : 0 }} />
+                        <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: (step.tip || hasPills || step.image) ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>
                       )}
                       {step.tip && (
-                        <div style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "rgba(240,168,96,0.12)", border: "1px solid rgba(240,168,96,0.35)", borderRadius: 10, padding: "9px 11px", marginBottom: hasPills ? 10 : 0 }}>
-                          <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={15} color="var(--accent2)" /></span>
+                        <div style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 10, padding: "9px 11px", marginBottom: (hasPills || step.image) ? 10 : 0 }}>
+                          <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={15} color="var(--blue)" /></span>
                           <p style={{ fontSize: 12.5, color: "var(--text)", lineHeight: 1.5, margin: 0, fontStyle: "italic", wordBreak: "break-word", overflowWrap: "break-word" }}>{step.tip}</p>
                         </div>
                       )}
                       {hasPills && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: step.image ? 10 : 0 }}>
                           {linkedIngs.map(ing => {
                             const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
                             return (
@@ -521,6 +518,9 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                             </span>
                           ))}
                         </div>
+                      )}
+                      {step.image && (
+                        <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12 }} />
                       )}
                     </div>
                   );
@@ -648,15 +648,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   <div key={step.id}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>Étape {i + 1}</div>
                     {step.text && <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 12, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
-                    {step.image && <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12, marginBottom: 12 }} />}
                     {step.tip && (
-                      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", background: "rgba(240,168,96,0.12)", border: "1px solid rgba(240,168,96,0.35)", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
-                        <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={16} color="var(--accent2)" /></span>
+                      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
+                        <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={16} color="var(--blue)" /></span>
                         <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.55, margin: 0, fontStyle: "italic", wordBreak: "break-word", overflowWrap: "break-word" }}>{step.tip}</p>
                       </div>
                     )}
                     {(linkedIngs.length > 0 || linkedUts.length > 0) && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: step.image ? 12 : 0 }}>
                         {linkedIngs.map(ing => {
                           const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
                           return (
@@ -675,6 +674,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         ))}
                       </div>
                     )}
+                    {step.image && <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} />}
                   </div>
                 );
               })}
