@@ -16,6 +16,7 @@ import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatche
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { fmtTime, capitalize } from "../lib/format.js";
+import { cuisineEmoji } from "../constants/cuisines.js";
 import { flattenForShopping } from "../lib/components.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
@@ -187,7 +188,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
               </span>
             )}
-            {recipe.tags?.map(t => <span key={t} className="tag" style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}>{t}</span>)}
+            {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
             {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
             <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", gap: 4 }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>
           </div>
@@ -312,7 +313,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
                   </span>
                 )}
-                {recipe.tags?.map(t => <span key={t} className="tag" style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}>{t}</span>)}
+                {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
                 {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
                 <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>
               </div>

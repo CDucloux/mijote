@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
-import { TagInput } from "../components/TagInput.jsx";
+import { CUISINES } from "../constants/cuisines.js";
 import { UtensilPicker } from "../components/UtensilPicker.jsx";
 import { DraggableStep } from "../components/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
@@ -13,7 +13,7 @@ import { useIsDesktop } from "../hooks/useIsDesktop.js";
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
 export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, collections, recipes }) {
-  const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], tags: recipe.tags || [], collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
+  const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
   const [section, setSection] = useState("info");
   const up = (f, v) => setForm(p => ({ ...p, [f]: v }));
   const upYield = (f, v) => setForm(p => ({ ...p, yield: { ...(p.yield || { amount: "", unit: "g" }), [f]: v } }));
@@ -205,7 +205,20 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                   </div>
                 )}
               </div>
-              <TagInput tags={form.tags || []} onChange={v => up("tags", v)} allTags={[...new Set(recipes?.flatMap(r => r.tags || []) || [])]} />
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Style de cuisine</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {CUISINES.map(c => {
+                    const active = form.cuisine === c.label;
+                    return (
+                      <button key={c.label} type="button" onClick={() => up("cuisine", active ? "" : c.label)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: active ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>{c.emoji}</span>{c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div>
                 <div className="field-label" style={{ marginBottom: 8 }}>Carnets</div>
                 {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucun carnet — créez-en dans Config.</p>}

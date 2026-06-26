@@ -530,7 +530,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                         '  <span style="color:#5b9cf6">"prepTime"</span><span style="color:#9a9490">:</span> <span style="color:#f0c060">number</span>  <span style="color:#5a5754;font-style:italic">← minutes</span>',
                         '  <span style="color:#5b9cf6">"cookTime"</span><span style="color:#9a9490">:</span> <span style="color:#f0c060">number</span>  <span style="color:#5a5754;font-style:italic">← minutes</span>',
                         '  <span style="color:#5b9cf6">"servings"</span><span style="color:#9a9490">:</span> <span style="color:#f0c060">number</span>',
-                        '  <span style="color:#5b9cf6">"tags"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[</span><span style="color:#4caf7d">"string"</span><span style="color:#9a9490">]</span>',
+                        '  <span style="color:#5b9cf6">"cuisine"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>  <span style="color:#5a5754;font-style:italic">← style de cuisine</span>',
                         '  <span style="color:#5b9cf6">"source"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"url"</span>  <span style="color:#5a5754;font-style:italic">← lien de la recette originale</span>',
                         '  <span style="color:#5b9cf6">"collections"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[</span><span style="color:#4caf7d">"collection_id"</span><span style="color:#9a9490">]</span>',
                         '  <span style="color:#5b9cf6">"ingredients"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[{</span>',

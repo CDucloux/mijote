@@ -3,6 +3,7 @@ import { Icon } from "../components/Icon.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { CUISINES } from "../constants/cuisines.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
@@ -12,11 +13,11 @@ const PAGE_SIZE = 8;
 
 export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
   const [search, setSearch] = useState("");
-  const [filterTag, setFilterTag] = useState(null);
+  const [filterCuisine, setFilterCuisine] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
   const [sortBy, setSortBy] = useState("name");
   const [seasonOnly, setSeasonOnly] = useState(false);
-  const [showTags, setShowTags] = useState(false);
+  const [showCuisines, setShowCuisines] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const sentinelRef = useRef(null);
@@ -25,25 +26,26 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
   const focusNoScroll = useCallback(el => el?.focus({ preventScroll: true }), []);
 
-  const allTags = [...new Set(recipes.flatMap(r => r.tags || []))];
+  // Styles de cuisine réellement utilisés, dans l'ordre canonique de la liste.
+  const usedCuisines = CUISINES.filter(c => recipes.some(r => r.cuisine === c.label));
   const filtered = recipes
     .filter(r => {
       // Plats et bases cohabitent dans la même grille ; le badge en coin les distingue.
       if (search) {
         const q = normalizeStr(search);
         const inName = normalizeStr(r.name).includes(q);
-        const inTags = r.tags?.some(t => normalizeStr(t).includes(q));
+        const inCuisine = r.cuisine && normalizeStr(r.cuisine).includes(q);
         const inIngredients = r.ingredients?.some(i => normalizeStr(i.name).includes(q));
-        if (!inName && !inTags && !inIngredients) return false;
+        if (!inName && !inCuisine && !inIngredients) return false;
       }
-      if (filterTag && !r.tags?.includes(filterTag)) return false;
+      if (filterCuisine && r.cuisine !== filterCuisine) return false;
       if (filterCol && !r.collections?.includes(filterCol)) return false;
       if (seasonOnly && !isRecipeInSeason(r, resolver)) return false;
       return true;
     })
     .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt));
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterTag, filterCol, sortBy, seasonOnly]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCuisine, filterCol, sortBy, seasonOnly]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -80,21 +82,21 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           <button onClick={() => setSeasonOnly(s => !s)} title="Recettes de saison ce mois-ci" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: seasonOnly ? "rgba(76,175,125,0.18)" : "var(--surface2)", color: seasonOnly ? "var(--green)" : "var(--text2)", border: `1px solid ${seasonOnly ? "rgba(76,175,125,0.5)" : "var(--border)"}` }}>
             De saison
           </button>
-          {allTags.length > 0 && <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />}
-          {allTags.length > 0 && (
-            <button onClick={() => { setShowTags(v => { if (v) setFilterTag(null); return !v; }); }} title={showTags ? "Masquer les tags" : "Afficher les tags"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: showTags ? "var(--surface3)" : "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-              <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>{showTags ? "−" : "+"}</span> Tags
+          {usedCuisines.length > 0 && <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />}
+          {usedCuisines.length > 0 && (
+            <button onClick={() => { setShowCuisines(v => { if (v) setFilterCuisine(null); return !v; }); }} title={showCuisines ? "Masquer les styles" : "Filtrer par style de cuisine"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: showCuisines ? "var(--surface3)" : "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
+              <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>{showCuisines ? "−" : "+"}</span> Cuisine
             </button>
           )}
-          <div style={{ display: "flex", gap: 6, flexShrink: 0, maxWidth: showTags ? 2000 : 0, opacity: showTags ? 1 : 0, overflow: "hidden", transition: "max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease" }}>
-            {allTags.map(t => (
-              <button key={t} onClick={() => setFilterTag(filterTag === t ? null : t)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: filterTag === t ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: filterTag === t ? "var(--accent)" : "var(--text2)", border: `1px solid ${filterTag === t ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{t}</button>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0, maxWidth: showCuisines ? 2000 : 0, opacity: showCuisines ? 1 : 0, overflow: "hidden", transition: "max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease" }}>
+            {usedCuisines.map(c => (
+              <button key={c.label} onClick={() => setFilterCuisine(filterCuisine === c.label ? null : c.label)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: filterCuisine === c.label ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: filterCuisine === c.label ? "var(--accent)" : "var(--text2)", border: `1px solid ${filterCuisine === c.label ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}><span style={{ fontSize: 13, lineHeight: 1 }}>{c.emoji}</span>{c.label}</button>
             ))}
           </div>
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 20px" }}>
-        {!search && !filterTag && !filterCol && (
+        {!search && !filterCuisine && !filterCol && (
           <div style={{ marginBottom: 24 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Carnets</h2>
             <div className="collections-row" style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 6 }}>
