@@ -6,6 +6,7 @@ import { Img, IngImage } from "../components/Img.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { consumptionFraction } from "../lib/components.js";
+import { capitalize } from "../lib/format.js";
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
 // `recipes` + `stockSet` permettent de gérer les composants (préparations de base) :
@@ -70,7 +71,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(232,112,58,0.1)", border: "1.5px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={22} /></span>
           : <IngImage src={imgSrc} alt={displayName} size={42} />
         }
-        <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{displayName}</span>
+        <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{capitalize(displayName)}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: isComp ? "var(--accent)" : "var(--accent)" }}>
           {+(ing.amount * (mult || 1)).toFixed(2)} {ing.unit}
         </span>

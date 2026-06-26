@@ -69,7 +69,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
             <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: 5 }}><Icon name="bulb" size={12} color="var(--blue)" /> Astuce</span>
             <button onClick={() => { onUpdate(step.id, "tip", ""); setShowTip(false); }} style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="close" size={11} color="var(--text3)" /> Retirer</button>
           </div>
-          <AutoResizeTextarea className="field-input" placeholder="Un conseil pour réussir cette étape…" value={step.tip || ""} onChange={e => onUpdate(step.id, "tip", e.target.value)} />
+          <input className="field-input" placeholder="Un conseil pour réussir cette étape…" value={step.tip || ""} onChange={e => onUpdate(step.id, "tip", e.target.value)} />
         </div>
       )}
 
