@@ -218,6 +218,20 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                   </div>
                   <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 24 }}>{step.text}</p>
 
+                  {step.image && (
+                    <Img src={step.image} alt={`Étape ${realIdx + 1}`} style={{ width: "100%", maxHeight: 320, objectFit: "cover", borderRadius: 16, marginBottom: 20 }} />
+                  )}
+
+                  {step.tip && (
+                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "rgba(240,168,96,0.12)", border: "1px solid rgba(240,168,96,0.35)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
+                      <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={20} color="var(--accent2)" /></span>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent2)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>Astuce</div>
+                        <p style={{ fontSize: 15, color: "var(--text)", lineHeight: 1.6, margin: 0 }}>{step.tip}</p>
+                      </div>
+                    </div>
+                  )}
+
                   {linkedIngs.length > 0 && (
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Pour cette étape</div>

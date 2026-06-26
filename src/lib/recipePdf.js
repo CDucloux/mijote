@@ -61,6 +61,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
           <div class="step-title">Étape ${i + 1}</div>
         </div>
         ${s.text ? `<p class="step-text">${s.text}</p>` : ""}
+        ${s.tip ? `<p class="step-tip">💡 ${s.tip}</p>` : ""}
         ${pills ? `<div class="step-pills">${pills}</div>` : ""}
       </div>`;
   }).join("");
@@ -167,6 +168,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .step-title { font-weight: 700; font-size: 14px; color: var(--accent); }
     .step-text { color: var(--text2); line-height: 1.65; padding-left: 40px; }
+    .step-tip { color: var(--text2); font-style: italic; line-height: 1.55; padding: 7px 11px; margin: 8px 0 0 40px; background: rgba(240,168,96,0.13); border: 1px solid rgba(240,168,96,0.4); border-radius: 8px; font-size: 12.5px; }
     .step-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-left: 40px; }
     /* Annexe composants */
     .comp-block { margin-bottom: 28px; padding: 16px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }

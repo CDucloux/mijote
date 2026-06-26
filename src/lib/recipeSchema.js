@@ -52,6 +52,8 @@ export function validateRecipeSchema(r, label) {
       const who = `étape #${j + 1}`;
       if (typeof s !== "object" || s === null || Array.isArray(s)) { errs.push(`${label} : ${who} invalide.`); return; }
       if (s.text != null && typeof s.text !== "string") errs.push(`${label} : ${who} → "text" doit être une chaîne.`);
+      if (s.tip != null && typeof s.tip !== "string") errs.push(`${label} : ${who} → "tip" doit être une chaîne.`);
+      if (s.image != null && typeof s.image !== "string") errs.push(`${label} : ${who} → "image" doit être une chaîne.`);
       if (s.ingredients != null && !Array.isArray(s.ingredients)) errs.push(`${label} : ${who} → "ingredients" doit être un tableau.`);
       if (s.utensils != null && !Array.isArray(s.utensils)) errs.push(`${label} : ${who} → "utensils" doit être un tableau.`);
     });

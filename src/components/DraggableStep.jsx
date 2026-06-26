@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
+import { ImageUpload } from "./ImageUpload.jsx";
 
 export function DraggableStep({ step, index, total, ingredients, utensils, recipes, draggable: isDraggable = true, onUpdate, onRemove, onMove }) {
   const [dragging, setDragging] = useState(false);
@@ -30,6 +31,19 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         <button onClick={() => onRemove(step.id)}><Icon name="trash" size={14} color="var(--red)" /></button>
       </div>
       <AutoResizeTextarea className="field-input" placeholder="Instructions…" value={step.text} onChange={e => onUpdate(step.id, "text", e.target.value)} style={{ marginBottom: 10 }} />
+
+      {/* Astuce du chef */}
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+        <Icon name="bulb" size={12} color="var(--accent2)" /> Astuce <span style={{ textTransform: "none", fontWeight: 400, color: "var(--text3)" }}>(optionnel)</span>
+      </div>
+      <AutoResizeTextarea className="field-input" placeholder="Un conseil pour réussir cette étape…" value={step.tip || ""} onChange={e => onUpdate(step.id, "tip", e.target.value)} style={{ marginBottom: 12 }} />
+
+      {/* Photo de l'étape */}
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+        <Icon name="photo" size={12} color="var(--text3)" /> Photo <span style={{ textTransform: "none", fontWeight: 400, color: "var(--text3)" }}>(optionnel)</span>
+      </div>
+      <ImageUpload value={step.image} onChange={v => onUpdate(step.id, "image", v)} style={{ height: 120, marginBottom: 12 }} pathPrefix="steps" />
+
       <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ingrédients liés</div>
       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
         {ingredients.map(ing => {
