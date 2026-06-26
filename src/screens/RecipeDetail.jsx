@@ -14,7 +14,7 @@ import { CookMode } from "./CookMode.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
-import { isRecipeInSeason } from "../lib/seasonality.js";
+import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { fmtTime } from "../lib/format.js";
 import { flattenForShopping } from "../lib/components.js";
 
@@ -396,36 +396,44 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   </button>
                 </div>
               </div>
-              {/* Liste ingrédients */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {recipe.ingredients.map(ing => {
+              {/* Liste ingrédients — carte unique, lignes séparées par un filet */}
+              <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
+                {recipe.ingredients.map((ing, idx) => {
                   const rc = resolveComp(ing);
-                  if (rc) return (
-                    <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} style={{ display: "flex", alignItems: "center", gap: 12, background: rc.missing ? "var(--surface2)" : "rgba(232,112,58,0.07)", borderRadius: 12, padding: "10px 14px", border: `1px solid ${rc.missing ? "var(--border)" : "rgba(232,112,58,0.35)"}`, cursor: rc.comp ? "pointer" : "default" }}>
-                      {rc.comp?.image
-                        ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={50} cover />
-                        : <span style={{ width: 50, height: 50, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={24} /></span>}
-                      <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>
-                        {rc.comp ? rc.comp.name : (ing.name || "Base")}
-                        <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>
-                      </div>
-                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
-                        <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
-                      </div>
-                      {rc.comp && <Icon name="forward" size={13} color="var(--text3)" />}
-                    </div>
-                  );
+                  const isComp = !!rc;
+                  const last = idx === recipe.ingredients.length - 1;
+                  // Sous-titre statut : stock prioritaire, sinon saison.
+                  const inStock = isInStock(ing);
+                  const low = isLowStock(ing);
+                  const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason(it) === true : false; })();
+                  let badge = null;
+                  if (inStock) badge = { text: low ? "bientôt vide" : "en stock", color: low ? "var(--accent)" : "var(--green)" };
+                  else if (inSeason) badge = { text: "de saison", color: "var(--green)" };
+
+                  const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;
+                  const clickable = isComp ? !!rc.comp : !!ing.dbId;
+                  const onClick = () => {
+                    if (isComp && rc.comp) navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } });
+                    else if (!isComp && ing.dbId) navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`);
+                  };
                   return (
-                  <div key={ing.id} onClick={() => ing.dbId && navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)", cursor: ing.dbId ? "pointer" : "default" }}>
-                    <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={50} />
-                    <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{ing.name}</div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
-                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 4 }}>{ing.unit}</span>
+                    <div key={ing.id} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
+                      {isComp && !rc.comp?.image
+                        ? <span style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
+                        : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+                          {isComp && <span style={{ fontSize: 9.5, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
+                        </div>
+                        {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 1 }}>{badge.text}</div>}
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
+                        <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)" }}>{ing.unit}</span>
+                      </div>
+                      {clickable && <Icon name="forward" size={14} color="var(--text3)" />}
                     </div>
-                    {ing.dbId && <Icon name="forward" size={13} color="var(--text3)" />}
-                  </div>
                   );
                 })}
               </div>
