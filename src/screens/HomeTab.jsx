@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
@@ -22,6 +22,8 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
   const sentinelRef = useRef(null);
 
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
+  const focusNoScroll = useCallback(el => el?.focus({ preventScroll: true }), []);
 
   const allTags = [...new Set(recipes.flatMap(r => r.tags || []))];
   const filtered = recipes
@@ -172,7 +174,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Nouveau carnet</h3>
           <div style={{ marginBottom: 12 }}>
             <div className="field-label">Nom</div>
-            <input className="field-input" placeholder="ex: Plats végétariens" value={newCarnet.name} autoFocus onChange={e => setNewCarnet(p => ({ ...p, name: e.target.value }))} />
+            <input className="field-input" placeholder="ex: Plats végétariens" value={newCarnet.name} ref={focusNoScroll} onChange={e => setNewCarnet(p => ({ ...p, name: e.target.value }))} />
           </div>
           <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>

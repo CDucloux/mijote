@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -20,6 +20,8 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 
 export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
   const { user, notify } = useAppShell();
+  // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
+  const focusNoScroll = useCallback(el => el?.focus({ preventScroll: true }), []);
   const [activeListId, setActiveListId] = useState(null);
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("");
@@ -331,7 +333,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
         <SwipeableSheet onClose={() => setEditItem(null)}>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 14 }}>Modifier l'article</h3>
           <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom</div>
-          <input className="field-input" value={editItem.name} onChange={e => setEditItem(p => ({ ...p, name: e.target.value }))} autoFocus style={{ marginBottom: 12 }} />
+          <input className="field-input" value={editItem.name} onChange={e => setEditItem(p => ({ ...p, name: e.target.value }))} ref={focusNoScroll} style={{ marginBottom: 12 }} />
           <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Quantité</div>
@@ -466,7 +468,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
             <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{configList.isNew ? "Nouvelle liste" : "Configurer la liste"}</h3>
 
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom de la liste</div>
-            <input className="field-input" value={configList.name} maxLength={60} autoFocus
+            <input className="field-input" value={configList.name} maxLength={60} ref={focusNoScroll}
               onChange={e => setConfigList(p => ({ ...p, name: e.target.value }))}
               onKeyDown={e => e.key === "Enter" && e.target.blur()} style={{ marginBottom: 18 }} />
 
