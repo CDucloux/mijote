@@ -3,7 +3,7 @@ import { Icon } from "./Icon.jsx";
 
 // Menu « trois points » des actions secondaires d'une recette (hero).
 // items : [{ label, icon, onClick, danger }]. Se ferme au clic extérieur / Échap.
-export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20 }) {
+export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, icon = "more", className, align = "right" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -18,12 +18,12 @@ export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20 })
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <button onClick={() => setOpen(o => !o)} style={btnStyle} title="Plus d'actions">
-        <Icon name="more" size={iconSize} color={iconColor} />
+      <button onClick={() => setOpen(o => !o)} style={btnStyle} className={className} title="Plus d'actions">
+        <Icon name={icon} size={iconSize} color={iconColor} />
       </button>
       {open && (
         <div className="hero-menu-pop" style={{
-          position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 50,
+          position: "absolute", top: "calc(100% + 8px)", [align]: 0, zIndex: 50,
           minWidth: 190, background: "var(--surface)", borderRadius: 12,
           border: "1px solid var(--border)", boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
           padding: 6, display: "flex", flexDirection: "column", gap: 2,

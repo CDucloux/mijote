@@ -186,18 +186,20 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
       {/* Active list content */}
       {activeList && (
         <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-          {/* List header — barre de progression + menu d'actions (⋯) */}
-          <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-            <div style={{ flex: 1, height: 4, background: "var(--surface2)", borderRadius: 2, overflow: "hidden" }}>
+          {/* List header — le trait de séparation EST la barre de progression ; ⋯ posé dessus */}
+          <div style={{ position: "relative", height: 34, margin: "2px 20px 6px", flexShrink: 0 }}>
+            <div style={{ position: "absolute", left: 0, right: 44, top: "50%", transform: "translateY(-50%)", height: 3, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
               {total > 0 && <div style={{ height: "100%", background: "var(--green)", borderRadius: 2, width: `${(checked / total) * 100}%`, transition: "width 0.3s" }} />}
             </div>
-            <HeroMenu
-              iconColor="var(--text2)" iconSize={18}
-              btnStyle={{ flexShrink: 0, width: 32, height: 32, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-              items={[
-                { label: "Paramètres de la liste", icon: "settings", onClick: () => { setConfigList({ ...activeList, sharedWith: activeList.sharedWith || [] }); setShareEmail(""); } },
-                { label: "Supprimer la liste", icon: "trash", danger: true, onClick: () => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id) },
-              ]} />
+            <div style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)" }}>
+              <HeroMenu
+                icon="ellipsis" iconColor="var(--text2)" iconSize={18} className="icon-btn-soft"
+                btnStyle={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                items={[
+                  { label: "Paramètres de la liste", icon: "settings", onClick: () => { setConfigList({ ...activeList, sharedWith: activeList.sharedWith || [] }); setShareEmail(""); } },
+                  { label: "Supprimer la liste", icon: "trash", danger: true, onClick: () => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id) },
+                ]} />
+            </div>
           </div>
 
           {/* FAB — absolute inside the list container */}

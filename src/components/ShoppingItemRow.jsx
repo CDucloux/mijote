@@ -2,6 +2,7 @@ import React from "react";
 import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
+import { capitalize } from "../lib/format.js";
 
 const SWIPE_MAX = 100, SWIPE_TRIGGER = 64;
 
@@ -71,7 +72,7 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
           <IngImage src={imageSrc} alt={item.name} size={40} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
-              <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{item.name}</span>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{capitalize(item.name)}</span>
               <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: struck ? "100%" : "0%", transition: "width 0.25s ease" }} />
             </div>
             {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
