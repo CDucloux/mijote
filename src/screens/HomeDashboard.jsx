@@ -155,9 +155,7 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
         </section>
 
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
-        <div className="slide-up" style={{ animationDelay: "0.22s" }}>
-          <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} />
-        </div>
+        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} />
       </div>
     </div>
   );

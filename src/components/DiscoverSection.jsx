@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Icon } from "./Icon.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
@@ -76,6 +76,19 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const [showNutri, setShowNutri] = useState(false);
   const [showCuisine, setShowCuisine] = useState(false);
   const [spinning, setSpinning] = useState(false);
+  const [stuck, setStuck] = useState(false);
+  const sentinelRef = useRef(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStuck(!entry.isIntersecting && entry.boundingClientRect.top < 0),
+      { root: null, threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // pubId des recettes déjà dans MA bibliothèque (clonées) ou publiées par moi.
   const ownedIds = useMemo(() => {
@@ -125,33 +138,47 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const noPublic = pubs.length === 0; // aucun contenu public (ni recette, ni base)
 
   return (
-    <section>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 7 }}>
-          <Icon name="sparkle" size={16} color="var(--accent)" /> Découvrir
-          {!online && !noPublic && <span style={{ fontSize: 11, fontWeight: 500, color: "var(--orange)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="wifiOff" size={11} color="var(--orange)" /> en cache</span>}
-        </h2>
-        <button
-          onClick={() => { if (!online || spinning) return; setSpinning(true); reload(); setTimeout(() => setSpinning(false), 1500); }}
-          disabled={!online}
-          title={online ? "Rafraîchir" : "Indisponible hors ligne"}
-          style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: spinning ? "var(--accent)" : "var(--text3)", background: "none", border: "none", cursor: online ? "pointer" : "not-allowed", opacity: online ? 1 : 0.45, transition: "color 0.2s" }}>
-          <span style={{ display: "inline-flex", animation: spinning ? "spin 0.75s linear infinite" : undefined }}>
-            <Icon name="history" size={14} color={spinning ? "var(--accent)" : "var(--text3)"} />
-          </span>
-          Rafraîchir
-        </button>
-      </div>
+    <section className="slide-up" style={{ animationDelay: "0.22s" }}>
+      {/* Sentinelle pour détecter le sticky */}
+      <div ref={sentinelRef} style={{ height: 1, marginBottom: -1, pointerEvents: "none" }} />
 
-      {/* Recherche */}
-      <div style={{ position: "relative", marginBottom: 10 }}>
-        <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
-        <input className="field-input" placeholder="Rechercher par recette, chef, ingrédient…" value={text} onChange={e => setText(e.target.value)} style={{ paddingLeft: 38 }} />
-        {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
-      </div>
+      {/* En-tête sticky */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 10,
+        background: stuck ? "var(--bg)" : "transparent",
+        boxShadow: stuck ? "0 2px 10px rgba(0,0,0,0.08)" : "none",
+        padding: stuck ? "8px 0 6px" : "0 0 0",
+        margin: stuck ? "0 -20px" : "0",
+        paddingLeft: stuck ? 20 : 0,
+        paddingRight: stuck ? 20 : 0,
+        transition: "background 0.2s, box-shadow 0.2s, padding 0.2s",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 7 }}>
+            <Icon name="sparkle" size={16} color="var(--accent)" /> Découvrir
+            {!online && !noPublic && <span style={{ fontSize: 11, fontWeight: 500, color: "var(--orange)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="wifiOff" size={11} color="var(--orange)" /> en cache</span>}
+          </h2>
+          <button
+            onClick={() => { if (!online || spinning) return; setSpinning(true); reload(); setTimeout(() => setSpinning(false), 1500); }}
+            disabled={!online}
+            title={online ? "Rafraîchir" : "Indisponible hors ligne"}
+            style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: spinning ? "var(--accent)" : "var(--text3)", background: "none", border: "none", cursor: online ? "pointer" : "not-allowed", opacity: online ? 1 : 0.45, transition: "color 0.2s" }}>
+            <span style={{ display: "inline-flex", animation: spinning ? "spin 0.75s linear infinite" : undefined }}>
+              <Icon name="history" size={14} color={spinning ? "var(--accent)" : "var(--text3)"} />
+            </span>
+            Rafraîchir
+          </button>
+        </div>
 
-      {/* Filtres progressifs */}
-      <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
+        {/* Recherche */}
+        <div style={{ position: "relative", marginBottom: 10 }}>
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
+          <input className="field-input" placeholder="Rechercher par recette, chef, ingrédient…" value={text} onChange={e => setText(e.target.value)} style={{ paddingLeft: 38 }} />
+          {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
+        </div>
+
+        {/* Filtres progressifs */}
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
         {chip(seasonOnly, () => setSeasonOnly(v => !v), <><Icon name="leaf" size={13} color="currentColor" /> De saison</>)}
         {preferences?.diet && chip(usePrefs, () => setUsePrefs(v => !v), <><Icon name="heart" size={13} color="currentColor" /> Selon mes préférences</>)}
         {chip(!!nutriMax || showNutri, () => setShowNutri(v => !v), <>{nutriMax ? `Nutri ≤ ${nutriMax}` : "Nutri-Score"} <span style={{ fontSize: 9 }}>{showNutri ? "▲" : "▼"}</span></>)}
@@ -168,6 +195,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           {cuisines.map(c => chip(cuisine === c, () => setCuisine(cuisine === c ? null : c), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>))}
         </div>
       )}
+      </div>{/* fin sticky header */}
 
       {/* Résultats */}
       {loading && !loadedOnce ? (
@@ -203,7 +231,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       ) : !activeFilters ? (
         // ── Mode navigation : feed éditorial ──
         <>
-          <Carousel icon="sparkle" title="À la une" items={featured} renderItem={card} />
+          <Carousel icon="fire" title="À la une" items={featured} renderItem={card} />
           <Carousel iconNode={<BaseIcon size={15} />} title="Préparations de base" items={bases} renderItem={card} />
           <Carousel icon="leaf" title="De saison" items={seasonal} renderItem={card} />
           <Carousel icon="heart" title="Pour toi" items={forYou} renderItem={card} />

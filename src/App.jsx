@@ -493,6 +493,7 @@ function AppInner() {
           authorUid={publicDocs.pub.authorUid}
           onClone={() => cloneFromPublic(publicDocs.pub)}
           onBack={() => navigate("/home")}
+          onExportPDF={exportPDF}
           ingredientDB={ingredientDB} utensilDB={utensilDB} collections={[]} notify={notify}
         />
       </div>
