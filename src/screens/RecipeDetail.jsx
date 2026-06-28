@@ -39,11 +39,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
   const [pendingPublish, setPendingPublish] = useState(false);
+  const [confirmClone, setConfirmClone] = useState(false);
   const isPublished = recipe.visibility === "public";
-  // CTA « Garder » réutilisé (lecture seule d'une recette publique).
+  // CTA d'ajout réutilisé (lecture seule d'une recette publique) → ouvre une confirmation.
   const keepCta = owned
     ? <button className="btn btn-ghost" disabled style={{ width: "100%", borderRadius: 30, opacity: 0.85 }}><Icon name="check" size={15} color="var(--green)" /> Déjà dans tes recettes</button>
-    : <button className="btn btn-primary" onClick={onClone} style={{ width: "100%", borderRadius: 30 }}><Icon name="plus" size={15} /> Garder dans mes recettes</button>;
+    : <button className="btn btn-primary" onClick={() => setConfirmClone(true)} style={{ width: "100%", borderRadius: 30 }}><Icon name="plus" size={15} /> Ajouter à mes recettes</button>;
   // Pastille d'attribution affichée dans le hero en mode public.
   const authorChip = publicMode && (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 11px 3px 4px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 6 }}>
@@ -884,6 +885,26 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
             <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
+          </div>
+        </SwipeableSheet>
+      )}
+      {confirmClone && (
+        <SwipeableSheet onClose={() => setConfirmClone(false)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Ajouter à mes recettes ?</h3>
+          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 14, lineHeight: 1.5 }}>
+            Une <strong>copie personnelle</strong> est créée dans ta bibliothèque. C'est elle qui te permet de la planifier, de l'ajouter à tes courses, de la cuisiner en pas-à-pas et de l'<strong>adapter librement</strong> — même hors-ligne. L'auteur d'origine reste crédité.
+          </p>
+          {componentDeps.length > 0 && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 20 }}>
+              <Icon name="info" size={16} color="var(--accent)" />
+              <span style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.45 }}>
+                Ses <strong>{componentDeps.length} préparation{componentDeps.length > 1 ? "s" : ""} de base</strong> ({componentDeps.map(c => c.name).join(", ")}) ser{componentDeps.length > 1 ? "ont" : "a"} ajoutée{componentDeps.length > 1 ? "s" : ""} avec, pour que la recette soit complète.
+              </span>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 6 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmClone(false)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { setConfirmClone(false); onClone?.(); }}>Ajouter</button>
           </div>
         </SwipeableSheet>
       )}
