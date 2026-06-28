@@ -18,6 +18,7 @@ import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { fmtTime, capitalize } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { flattenForShopping } from "../lib/components.js";
+import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
 export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto }) {
@@ -108,9 +109,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     setDockClosing(true);
     setTimeout(() => { setActionsOpen(false); setDockClosing(false); }, 240);
   };
-  // Partage le lien de la recette (Web Share si dispo, sinon copie dans le presse-papier).
+  // Partage le LIEN PUBLIC de la recette (page communauté), jamais le lien privé.
+  // L'option n'est proposée que lorsque la recette est publiée (cf. menus).
   const shareRecipe = async () => {
-    const url = `${window.location.origin}/recipes/${recipe.id}`;
+    if (!recipe.publicId) return;
+    const url = `${window.location.origin}${DISCOVER_PREFIX}${encodeURIComponent(recipe.publicId)}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: recipe.name, url });
@@ -188,7 +191,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             items={[
               { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
               ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "sparkle", onClick: togglePublish }] : []),
-              { label: "Partager le lien", icon: "share", onClick: shareRecipe },
+              ...(isPublished ? [{ label: "Partager le lien public", icon: "share", onClick: shareRecipe }] : []),
               { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
               { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
             ]} />
@@ -320,7 +323,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 items={[
                   { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
                   ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "sparkle", onClick: togglePublish }] : []),
-                  { label: "Partager le lien", icon: "share", onClick: shareRecipe },
+                  ...(isPublished ? [{ label: "Partager le lien public", icon: "share", onClick: shareRecipe }] : []),
                   { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
                   { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
                 ]} />
