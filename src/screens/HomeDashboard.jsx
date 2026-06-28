@@ -3,6 +3,7 @@ import { Icon } from "../components/Icon.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
+import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
@@ -15,14 +16,6 @@ import { buildDashboardSummary } from "../lib/dashboard.js";
 
 const SLOT_LABEL = { midi: "🌤 Ce midi", soir: "🌙 Ce soir" };
 const SLOT_TINT = { midi: "rgba(240,192,96,0.16)", soir: "rgba(91,156,246,0.16)" };
-const DISCOVER_FILTERS = [
-  { icon: "👨‍🍳", label: "Chef" },
-  { icon: "🧑‍🤝‍🧑", label: "Créateur" },
-  { icon: "🍽️", label: "Cuisine" },
-  { icon: "🌿", label: "De saison" },
-  { icon: "🥗", label: "Nutri-Score" },
-  { icon: "❤️", label: "Selon mes préférences" },
-];
 
 function greeting(date = new Date()) {
   const h = date.getHours();
@@ -49,7 +42,7 @@ function NotifRow({ icon, color, title, subtitle, onClick }) {
   );
 }
 
-export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], onSelectRecipe, setTab, onNewRecipe }) {
+export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onClonePublic }) {
   const { user } = useAppShell();
   const firstName = (user?.displayName || "").trim().split(" ")[0] || "";
 
@@ -148,38 +141,8 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
           </section>
         )}
 
-        {/* ── Découvrir la communauté (teaser — moteur réel en PR2) ────────── */}
-        <section>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Découvrir</h2>
-          <div style={{ position: "relative", padding: 18, borderRadius: 18, background: "linear-gradient(155deg, rgba(232,112,58,0.10), rgba(91,156,246,0.07))", border: "1px solid var(--border)", overflow: "hidden" }}>
-            {/* Barre de recherche (inerte en PR1) */}
-            <div style={{ position: "relative", marginBottom: 12 }}>
-              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
-              <input className="field-input" placeholder="Rechercher une recette publique…" disabled aria-label="Recherche communautaire (bientôt)" style={{ paddingLeft: 38, opacity: 0.7, cursor: "not-allowed" }} />
-            </div>
-            {/* Chips de filtres prévus */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-              {DISCOVER_FILTERS.map(f => (
-                <span key={f.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "var(--surface2)", color: "var(--text3)", border: "1px solid var(--border)" }}>
-                  <span style={{ fontSize: 13, lineHeight: 1 }}>{f.icon}</span>{f.label}
-                </span>
-              ))}
-            </div>
-            {/* État vide soigné */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "10px 8px 4px" }}>
-              <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(232,112,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                <Icon name="sparkle" size={22} color="var(--accent)" />
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>La communauté de mijoteurs arrive bientôt</div>
-              <div style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, maxWidth: 320 }}>
-                Bientôt, explore les recettes publiques d'autres cuisiniers — par chef, par cuisine, de saison, selon ton Nutri-Score et tes préférences — et garde tes coups de cœur dans ta bibliothèque.
-              </div>
-              <button className="btn btn-ghost" style={{ marginTop: 14, borderRadius: 12 }} onClick={onNewRecipe}>
-                <Icon name="plus" size={15} /> En attendant, crée une recette
-              </button>
-            </div>
-          </div>
-        </section>
+        {/* ── Découvrir la communauté ─────────────────────────────────────── */}
+        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onClonePublic={onClonePublic} />
       </div>
     </div>
   );

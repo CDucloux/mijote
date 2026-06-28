@@ -11,7 +11,10 @@
 
 - [x] Onglet Accueil (dashboard de notifications + idées de saison + teaser découverte)
 - [x] Préférences alimentaires gérées dans l'espace avatar (Configuration déplacée dans l'avatar)
-- [ ] Partage des recettes (mode public / privé) — PR2 : collection `publicRecipes`, règles Firestore, publication, moteur de découverte (chef/créateur/cuisine/saison/Nutri-Score/préférences), clone hybride avec attribution
+- [x] Partage des recettes (mode public / privé) — collection `publicRecipes` + règles Firestore, publication en cascade des bases, moteur de découverte (créateur/cuisine/saison/Nutri-Score/préférences), clone hybride avec attribution et anti-doublon
+  - [ ] À déployer : `npx firebase deploy --only firestore:rules` (nouvelles règles `publicRecipes`)
+  - [ ] Re-liaison des `dbId` au clone si l'auteur a utilisé des ingrédients privés (via nameMatcher)
+  - [ ] Modération / signalement des recettes publiques
 - [x] PDF : Pas de saut de page dans la génération
 - [x] PWA et réduire la taille du truc packagé
 - [x] CI/CD (GitHub Actions) + tests unitaires sur les libs critiques (Vitest)

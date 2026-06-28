@@ -1,0 +1,159 @@
+import { useState, useMemo } from "react";
+import { Icon } from "./Icon.jsx";
+import { Img } from "./Img.jsx";
+import { RecipeCard } from "./RecipeCard.jsx";
+import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
+import { SwipeableSheet } from "./SwipeableSheet.jsx";
+import { useAppShell } from "../context/AppShellContext.jsx";
+import { useDiscoverRecipes } from "../hooks/useDiscoverRecipes.js";
+import { filterPublicRecipes } from "../lib/publicRecipes.js";
+import { createIngredientResolver } from "../lib/nameMatcher.js";
+import { isRecipeInSeason } from "../lib/seasonality.js";
+
+const NUTRI_LETTERS = ["A", "B", "C", "D", "E"];
+
+// ─── DÉCOUVRIR — recettes publiques de la communauté ──────────────────────────
+export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onClonePublic }) {
+  const { user } = useAppShell();
+  const { recipes: pubs, loading, error, loadedOnce, reload } = useDiscoverRecipes(user);
+  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+
+  const [text, setText] = useState("");
+  const [cuisine, setCuisine] = useState(null);
+  const [seasonOnly, setSeasonOnly] = useState(false);
+  const [nutriMax, setNutriMax] = useState(null);
+  const [usePrefs, setUsePrefs] = useState(false);
+  const [authorUid, setAuthorUid] = useState(null);
+  const [preview, setPreview] = useState(null); // doc public sélectionné
+
+  // pubId des recettes déjà dans MA bibliothèque (clonées) ou publiées par moi.
+  const ownedIds = useMemo(() => {
+    const s = new Set();
+    for (const r of recipes) { if (r.clonedFrom?.publicId) s.add(r.clonedFrom.publicId); }
+    return s;
+  }, [recipes]);
+  const isOwned = (p) => ownedIds.has(p.pubId) || p.authorUid === user?.uid;
+
+  const isInSeason = (payload) => isRecipeInSeason(payload, resolver);
+  const filtered = useMemo(() => filterPublicRecipes(pubs, {
+    text, cuisine, seasonOnly, nutriMax, authorUid,
+    diet: usePrefs ? preferences?.diet : null,
+  }, { isInSeason }), [pubs, text, cuisine, seasonOnly, nutriMax, authorUid, usePrefs, preferences, resolver]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cuisines réellement présentes dans les résultats (pour le filtre).
+  const cuisines = useMemo(() => [...new Set(pubs.filter(p => !p.isComponent && p.cuisine).map(p => p.cuisine))].sort(), [pubs]);
+  const activeFilters = !!(cuisine || seasonOnly || nutriMax || usePrefs || authorUid || text);
+
+  const chip = (active, onClick, content, tint) => (
+    <button onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? (tint || "var(--accent)") : "var(--surface2)", color: active ? (tint ? "var(--accent)" : "#fff") : "var(--text2)", border: `1px solid ${active ? (tint ? "rgba(232,112,58,0.5)" : "transparent") : "var(--border)"}` }}>{content}</button>
+  );
+
+  return (
+    <section>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 7 }}>
+          <Icon name="sparkle" size={16} color="var(--accent)" /> Découvrir
+        </h2>
+        <button onClick={reload} title="Rafraîchir" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>
+          <Icon name="history" size={14} color="var(--text3)" /> Rafraîchir
+        </button>
+      </div>
+
+      {/* Recherche */}
+      <div style={{ position: "relative", marginBottom: 10 }}>
+        <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
+        <input className="field-input" placeholder="Rechercher par recette, chef, ingrédient…" value={text} onChange={e => setText(e.target.value)} style={{ paddingLeft: 38 }} />
+        {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
+      </div>
+
+      {/* Filtres */}
+      <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 6 }}>
+        {chip(seasonOnly, () => setSeasonOnly(v => !v), <><span style={{ fontSize: 13, lineHeight: 1 }}>🌿</span> De saison</>, "rgba(232,112,58,0.2)")}
+        {preferences?.diet && chip(usePrefs, () => setUsePrefs(v => !v), <><span style={{ fontSize: 13, lineHeight: 1 }}>❤️</span> Selon mes préférences</>, "rgba(232,112,58,0.2)")}
+        {NUTRI_LETTERS.map(L => chip(nutriMax === L, () => setNutriMax(nutriMax === L ? null : L), <>Nutri ≤ {L}</>, "rgba(232,112,58,0.2)"))}
+      </div>
+      {cuisines.length > 0 && (
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 6 }}>
+          {cuisines.map(c => chip(cuisine === c, () => setCuisine(cuisine === c ? null : c), c, "rgba(232,112,58,0.2)"))}
+        </div>
+      )}
+      {authorUid && (
+        <div style={{ marginBottom: 10 }}>
+          {chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Filtré par créateur</>, "rgba(232,112,58,0.2)")}
+        </div>
+      )}
+
+      {/* Résultats */}
+      {loading && !loadedOnce ? (
+        <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
+          <div style={{ width: 22, height: 22, border: "2.5px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
+        </div>
+      ) : error ? (
+        <div style={{ textAlign: "center", color: "var(--text3)", padding: "28px 0", fontSize: 13 }}>
+          Impossible de charger les recettes publiques.<br />
+          <button onClick={reload} className="btn btn-ghost" style={{ marginTop: 10, borderRadius: 12 }}>Réessayer</button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "26px 16px", borderRadius: 16, background: "var(--surface)", border: "1px dashed var(--border)" }}>
+          <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(232,112,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+            <Icon name="sparkle" size={22} color="var(--accent)" />
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{activeFilters ? "Aucun résultat" : "Encore aucune recette publique"}</div>
+          <div style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, maxWidth: 300 }}>
+            {activeFilters ? "Essaie d'élargir tes filtres." : "Sois le premier à partager : ouvre une de tes recettes et choisis « Rendre publique »."}
+          </div>
+        </div>
+      ) : (
+        <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
+          {filtered.map((p, idx) => (
+            <div key={p.pubId} style={{ position: "relative" }}>
+              <RecipeCard recipe={p.recipe} onClick={() => setPreview(p)} inSeason={isInSeason(p.recipe)} style={{ animationDelay: `${(idx % 8) * 0.04}s` }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5, padding: "0 2px" }}>
+                {p.authorPhoto
+                  ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
+                  : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
+                <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
+                {isOwned(p) && <Icon name="check" size={12} color="var(--green)" />}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Aperçu + clone */}
+      {preview && (
+        <SwipeableSheet onClose={() => setPreview(null)} style={{ maxHeight: "88dvh" }}>
+          <div style={{ width: "100%", aspectRatio: "16/9", borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+            <Img src={preview.recipe.image} alt={preview.recipe.name} style={{ width: "100%", height: "100%" }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+            <h3 style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.2 }}>{preview.recipe.name}</h3>
+            {preview.nutriLetter && <NutriScoreBadge letter={preview.nutriLetter} compact />}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            {preview.authorPhoto
+              ? <img src={preview.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 26, height: 26, borderRadius: "50%" }} />
+              : <span style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--surface3)" }} />}
+            <span style={{ fontSize: 13, color: "var(--text2)" }}>D'après <strong>{preview.authorName || "Anonyme"}</strong></span>
+            <button onClick={() => { setAuthorUid(preview.authorUid); setPreview(null); }} style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>Voir ses recettes</button>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+            {preview.cuisine && <span className="tag">{preview.cuisine}</span>}
+            <span className="tag">{(preview.recipe.ingredients || []).length} ingrédient(s)</span>
+            {preview.componentRefs?.length > 0 && <span className="tag">+ {preview.componentRefs.length} base(s)</span>}
+          </div>
+          {isOwned(preview) ? (
+            <button className="btn btn-ghost" style={{ width: "100%" }} disabled><Icon name="check" size={16} color="var(--green)" /> Déjà dans tes recettes</button>
+          ) : (
+            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => { onClonePublic?.(preview); setPreview(null); }}>
+              <Icon name="plus" size={16} /> Garder dans mes recettes
+            </button>
+          )}
+          <p style={{ fontSize: 11.5, color: "var(--text3)", textAlign: "center", marginTop: 10, lineHeight: 1.45 }}>
+            Une copie est ajoutée à ta bibliothèque{preview.componentRefs?.length ? " avec ses préparations de base" : ""} — libre à toi de l'adapter.
+          </p>
+        </SwipeableSheet>
+      )}
+    </section>
+  );
+}

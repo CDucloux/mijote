@@ -20,7 +20,7 @@ import { cuisineEmoji } from "../constants/cuisines.js";
 import { flattenForShopping } from "../lib/components.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [] }) {
+export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [] }) {
   const navigate = useNavigate();
   const location = useLocation();
   const handleBack = location.state?.from
@@ -38,6 +38,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const [journalOpen, setJournalOpen] = useState(false);
   const [showShoppingModal, setShowShoppingModal] = useState(false);
   const [selectedIngs, setSelectedIngs] = useState([]);
+  const [pendingPublish, setPendingPublish] = useState(false);
+  const isPublished = recipe.visibility === "public";
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
   const recipesById = useMemo(() => new Map((recipes || []).map(r => [r.id, r])), [recipes]);
@@ -53,6 +55,16 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     }
     return out;
   }, [recipe, recipesById]);
+  // Préparations de base référencées (toutes, pas seulement celles avec étapes) →
+  // sert à prévenir l'utilisateur qu'elles seront publiées avec la recette.
+  const componentDeps = useMemo(() => {
+    const ids = new Set();
+    for (const l of recipe?.ingredients || []) if (l.recipeId) ids.add(l.recipeId);
+    return [...ids].map(id => recipesById.get(id)).filter(Boolean);
+  }, [recipe, recipesById]);
+  const togglePublish = () => isPublished
+    ? onUnpublish?.(recipe)
+    : (componentDeps.length ? setPendingPublish(true) : onPublish?.(recipe));
   // Résout une ligne composant → { comp, missing }. comp = recette source (cache name).
   const resolveComp = (ing) => ing.recipeId ? { comp: recipesById.get(ing.recipeId), missing: !recipesById.get(ing.recipeId) } : null;
   // Retourne true si l'ingrédient de recette est trouvé dans le stock
@@ -160,6 +172,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
             items={[
               { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
+              ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "sparkle", onClick: togglePublish }] : []),
               { label: "Partager le lien", icon: "share", onClick: shareRecipe },
               { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
               { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
@@ -285,6 +298,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
                 items={[
                   { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
+                  ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "sparkle", onClick: togglePublish }] : []),
                   { label: "Partager le lien", icon: "share", onClick: shareRecipe },
                   { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
                   { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
@@ -844,6 +858,24 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
             <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
+          </div>
+        </SwipeableSheet>
+      )}
+      {pendingPublish && (
+        <SwipeableSheet onClose={() => setPendingPublish(false)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Rendre cette recette publique ?</h3>
+          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>
+            Elle sera visible par la communauté de mijoteurs et chacun pourra l'ajouter à ses recettes.
+          </p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 20 }}>
+            <Icon name="info" size={16} color="var(--accent)" />
+            <span style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.45 }}>
+              Cette recette s'appuie sur <strong>{componentDeps.length} préparation{componentDeps.length > 1 ? "s" : ""} de base</strong> ({componentDeps.map(c => c.name).join(", ")}). Elle{componentDeps.length > 1 ? "s" : ""} ser{componentDeps.length > 1 ? "ont" : "a"} publiée{componentDeps.length > 1 ? "s" : ""} avec, pour que le clone reste complet.
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingPublish(false)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { onPublish?.(recipe); setPendingPublish(false); }}>Publier</button>
           </div>
         </SwipeableSheet>
       )}

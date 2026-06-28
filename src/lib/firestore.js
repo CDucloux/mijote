@@ -1,4 +1,4 @@
-import { doc, getDoc, collection, getDocs, writeBatch } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, writeBatch, query, orderBy, limit } from "firebase/firestore";
 import { db } from "./firebase.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 
@@ -22,6 +22,40 @@ export const sharedListsCol = () => collection(db, "sharedLists");
 export const sharedListDoc = (id) => doc(db, "sharedLists", id);
 export const userDirCol = () => collection(db, "userDirectory");
 export const userDirDoc = (uid) => doc(db, "userDirectory", uid);
+
+// Recettes publiques (communauté) : collection top-level lisible par tous les
+// connectés, écrite uniquement par l'auteur (cf. firestore.rules).
+export const publicRecipesCol = () => collection(db, "publicRecipes");
+export const publicRecipeDoc = (pubId) => doc(db, "publicRecipes", pubId);
+
+// Publie un bundle (recette + ses composants) en une transaction batch.
+export async function publishPublicBundle(docs) {
+  const batch = writeBatch(db);
+  for (const d of docs) batch.set(publicRecipeDoc(d.pubId), d);
+  await batch.commit();
+}
+
+// Dépublie un ensemble de docs publics (par pubId) en une transaction batch.
+export async function unpublishPublicDocs(pubIds) {
+  if (!pubIds.length) return;
+  const batch = writeBatch(db);
+  for (const id of pubIds) batch.delete(publicRecipeDoc(id));
+  await batch.commit();
+}
+
+// Charge les N recettes publiques les plus récentes (composants inclus ; le
+// filtrage/affichage les écarte). Tri sur createdAt → index simple automatique.
+export async function fetchPublicRecipes(max = 120) {
+  const snap = await getDocs(query(publicRecipesCol(), orderBy("createdAt", "desc"), limit(max)));
+  return snap.docs.map(d => d.data());
+}
+
+// Récupère des composants publics par leurs pubId (pour le clone en cascade).
+export async function fetchPublicDocsByIds(pubIds) {
+  const unique = [...new Set(pubIds)].filter(Boolean);
+  const snaps = await Promise.all(unique.map(id => getDoc(publicRecipeDoc(id))));
+  return snaps.filter(s => s.exists()).map(s => s.data());
+}
 
 // Nettoie une liste avant écriture dans sharedLists (retire les champs internes _*).
 export function toSharedListDoc(list, { ownerEmail, ownerUid }) {

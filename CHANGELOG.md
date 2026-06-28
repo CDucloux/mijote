@@ -1,12 +1,17 @@
 # Changelog — Mijoté
 
-## Non publié — Accueil & fondations communauté
+## Non publié — Accueil & communauté de mijoteurs
+
+### Recettes publiques (communauté)
+- **Publier une recette** : depuis son menu, « Rendre publique » la partage avec la communauté ; « Rendre privée » la retire
+- **Publication en cascade** : les préparations de base d'une recette sont publiées avec elle (confirmation explicite), pour que le partage reste complet
+- **Découverte** dans l'Accueil : recherche (recette, chef, ingrédient) et filtres **par créateur, cuisine, de saison, Nutri-Score** et **selon tes préférences alimentaires**
+- **Garder dans mes recettes** : aperçu de la recette publique puis clonage dans ta bibliothèque (avec ses bases), attribution à l'auteur et anti-doublon — la copie s'intègre à tout (planning, courses, stock, pas-à-pas) et reste modifiable
 
 ### Nouvel onglet Accueil
 - **Page d'atterrissage repensée** : un vrai onglet **Accueil** distinct de « Mes Recettes »
 - Bloc **« Aujourd'hui »** dérivé de tes données : recette planifiée ce midi/ce soir, articles de courses à acheter, ingrédients à racheter bientôt — avec un état « rien d'urgent » soigné
 - Rangée **🌿 Idées de saison** puisées dans ta bibliothèque
-- Aperçu de la **future découverte communautaire** (recherche par chef, cuisine, saison, Nutri-Score, préférences) — moteur à venir
 
 ### Navigation & préférences
 - La **Configuration** quitte la barre d'onglets et rejoint le menu **avatar** (5 onglets max, mobile comme desktop)

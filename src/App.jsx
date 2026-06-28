@@ -4,7 +4,8 @@ import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 import { setDoc, deleteDoc } from "firebase/firestore";
 
 import { auth, provider } from "./lib/firebase.js";
-import { sharedListDoc, toSharedListDoc } from "./lib/firestore.js";
+import { sharedListDoc, toSharedListDoc, publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "./lib/firestore.js";
+import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "./lib/publicRecipes.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
@@ -315,6 +316,60 @@ function AppInner() {
     notify(`${items.length} ingrédient(s) ajoutés aux courses`);
   };
 
+  // ── Recettes publiques (communauté) ──────────────────────────────────────────
+  // Publication en cascade : la recette + ses préparations de base partent ensemble
+  // (sinon le clone serait cassé, les bases vivant dans l'espace privé de l'auteur).
+  const publishRecipe = async (recipe) => {
+    if (!user) return;
+    try {
+      const recipesById = buildRecipeIndex(recipes);
+      const { docs } = buildPublishBundle(recipe, user, { ingredientDB, recipesById });
+      await publishPublicBundle(docs);
+      setRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, visibility: "public", publicId: publicId(user.uid, recipe.id) } : r));
+      const bases = docs.length - 1;
+      notify(bases > 0 ? `Recette publiée (+ ${bases} base${bases > 1 ? "s" : ""})` : "Recette publiée");
+    } catch { notify("Publication refusée — règles Firestore déployées ?", "error"); }
+  };
+
+  const unpublishRecipe = async (recipe) => {
+    if (!user) return;
+    try {
+      const recipesById = buildRecipeIndex(recipes);
+      const myPub = publicId(user.uid, recipe.id);
+      const myComps = collectComponentDeps(recipe, recipesById).map(c => publicId(user.uid, c.id));
+      // On ne retire une base que si plus AUCUNE de mes autres recettes publiques ne l'utilise.
+      const stillUsed = new Set();
+      for (const r of recipes) {
+        if (r.id === recipe.id || r.visibility !== "public") continue;
+        for (const c of collectComponentDeps(r, recipesById)) stillUsed.add(publicId(user.uid, c.id));
+      }
+      await unpublishPublicDocs([myPub, ...myComps.filter(id => !stillUsed.has(id))]);
+      setRecipes(prev => prev.map(r => {
+        if (r.id !== recipe.id) return r;
+        const { visibility, publicId: _p, ...rest } = r; void visibility; void _p; return rest;
+      }));
+      notify("Recette dépubliée");
+    } catch { notify("Échec de la dépublication", "error"); }
+  };
+
+  // Clone hybride : récupère la recette publique + ses bases publiques et les
+  // installe comme recettes locales (ids remappés, attribution, anti-doublon).
+  const cloneFromPublic = async (pub) => {
+    if (!pub) return;
+    try {
+      const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
+      const comps = compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : [];
+      const { added, mainId, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
+      if (alreadyOwned) { notify("Déjà dans tes recettes"); navigate(`/recipes/${mainId}`); return; }
+      const updated = [...added, ...recipes];
+      setRecipes(updated);
+      setCollections(prev => recomputeCollectionCounts(prev, updated));
+      const bases = added.length - 1;
+      notify(bases > 0 ? `Ajoutée à tes recettes (+ ${bases} base${bases > 1 ? "s" : ""})` : "Ajoutée à tes recettes");
+      navigate(`/recipes/${mainId}`);
+    } catch { notify("Échec du clonage", "error"); }
+  };
+
   const exportJSON = recipe => {
     const blob = new Blob([JSON.stringify(cleanRecipeForExport(recipe), null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${recipe.name.split(" ").join("_")}.json`; a.click();
@@ -383,7 +438,7 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "accueil" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
+      {tab === "accueil" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onClonePublic={cloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
@@ -398,7 +453,7 @@ function AppInner() {
     </div>
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
+      <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
   ) : selectedRecipe && !currentRecipe && cloudLoaded.current ? (
     <RecipeNotFound onBack={() => navigate("/recipes")} />

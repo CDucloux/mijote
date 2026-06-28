@@ -53,11 +53,12 @@ export function UserAvatar() {
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
               <Icon name="settings" size={13} color="currentColor" /> Configuration
             </button>
+            <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
             <button onClick={() => { setOpen(false); setAbout(true); }}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
-              <Icon name="leaf" size={13} color="currentColor" /> À propos
+              <Icon name="info" size={13} color="currentColor" /> À propos
             </button>
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
             <button onClick={() => { setOpen(false); setConfirmSignOut(true); }}
