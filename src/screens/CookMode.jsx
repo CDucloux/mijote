@@ -182,7 +182,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                     <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Bases</h2>
                   </div>
                   <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
-                    Ces bases ne sont pas en stock. Réalisez-les avant de commencer la recette principale.
+                    Réalise ces préparations de base avant de commencer la recette principale.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {pendingComponents.map(({ line, comp, nestedMult }) => (

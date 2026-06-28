@@ -226,9 +226,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
             {recipe.isComponent && (
-              <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", cursor: "pointer" }}>
-                <BaseIcon size={11} color="#fff" />
-                <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
+              <button onClick={() => setShowBaseInfo(true)} className="tag" style={{ gap: 5, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.92)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer" }}>
+                <BaseIcon size={12} color="#fff" /> Base
               </button>
             )}
             {recipeInSeason && (
@@ -358,9 +357,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               )}
               <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
                 {recipe.isComponent && (
-                  <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", cursor: "pointer" }}>
-                    <BaseIcon size={11} color="#fff" />
-                    <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
+                  <button onClick={() => setShowBaseInfo(true)} className="tag" style={{ gap: 5, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.92)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer" }}>
+                    <BaseIcon size={12} color="#fff" /> Base
                   </button>
                 )}
                 {recipeInSeason && (
