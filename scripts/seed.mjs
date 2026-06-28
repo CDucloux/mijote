@@ -10,12 +10,14 @@
 //
 //   export GOOGLE_APPLICATION_CREDENTIALS=/chemin/serviceAccount.json
 //   export FIREBASE_PROJECT_ID=mon-projet        # si absent de la clé
-//   npm run seed                  # tout
+//   npm run seed                  # défaut : techniques + bases (contenu canonique)
+//   npm run seed -- --ingredients # pousse aussi l'échantillon ingredients.yaml
 //   npm run seed -- --techniques  # un sous-ensemble (techniques|ingredients|utensils|bases)
 //   npm run seed -- --dry-run     # valide et affiche, n'écrit rien (sans credentials)
 //
-// Merge non destructif : ingrédients/ustensiles/techniques sont mis à jour par id
-// (repli sur le nom), jamais l'inverse — on n'efface pas la base existante.
+// Merge NON destructif : chaque entrée est mise à jour (par id, sinon par nom) ou
+// ajoutée — aucune entrée existante n'est jamais supprimée. `ingredients.yaml` et
+// `utensils.yaml` sont des échantillons de format, hors du seed par défaut.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -38,7 +40,12 @@ const DRY = argv.includes("--dry-run");
 const ONLY = new Set(argv.filter(a => !a.startsWith("--")).concat(
   ["techniques", "ingredients", "utensils", "bases"].filter(k => argv.includes("--" + k))
 ));
-const wants = (k) => ONLY.size === 0 || ONLY.has(k);
+// Sans flag, on ne seede QUE le contenu canonique (glossaire + bases Escoffier).
+// `ingredients.yaml` / `utensils.yaml` sont des ÉCHANTILLONS de format : on ne les
+// pousse que si explicitement demandé (`--ingredients` / `--utensils`), pour ne
+// jamais injecter de données d'exemple dans la vraie base master par accident.
+const DEFAULT_KEYS = new Set(["techniques", "bases"]);
+const wants = (k) => (ONLY.size ? ONLY.has(k) : DEFAULT_KEYS.has(k));
 
 const log = (...a) => console.log(...a);
 const fail = (msg) => { console.error("\n✗ " + msg); process.exit(1); };

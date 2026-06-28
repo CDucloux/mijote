@@ -28,11 +28,19 @@ opération **manuelle** qui nécessite des droits d'administration.
 export GOOGLE_APPLICATION_CREDENTIALS=/chemin/vers/serviceAccount.json
 export FIREBASE_PROJECT_ID=mijote-xxxx     # facultatif si présent dans la clé
 
-npm run seed                 # tout
-npm run seed -- --techniques # un sous-ensemble (techniques, ingredients,
-                             # utensils, bases)
-npm run seed -- --dry-run    # valide et affiche sans écrire
+npm run seed                  # défaut : techniques + bases (contenu canonique)
+npm run seed -- --ingredients # pousse aussi l'échantillon ingredients.yaml
+npm run seed -- --dry-run     # valide et affiche sans écrire
 ```
+
+> **L'import ne supprime jamais rien.** Côté app (Configuration) comme côté
+> script, chaque entrée est **mise à jour** (par id, sinon par nom) ou **ajoutée** :
+> c'est une fusion, pas un remplacement. Importer un petit fichier ne « vide »
+> donc pas la base.
+>
+> `ingredients.yaml` et `utensils.yaml` sont des **échantillons de format** : ils
+> ne sont **pas** poussés par `npm run seed` sans le flag `--ingredients` /
+> `--utensils`, pour ne pas injecter de données d'exemple dans la vraie base.
 
 Le service account n'est **jamais** committé (voir `.gitignore`).
 

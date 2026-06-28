@@ -40,7 +40,7 @@ function YamlImport({ onText, warn }) {
     <>
       {warn && (
         <p style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12, lineHeight: 1.45 }}>
-          <span style={{ color: "var(--red)", fontWeight: 600 }}>⚠️ Écrase la base master</span> : met à jour (par nom / id) ou crée les entrées. À la moindre erreur, l'import est annulé en entier.
+          <span style={{ fontWeight: 600, color: "var(--text)" }}>Fusion dans la base</span> : chaque entrée est mise à jour (par id, sinon par nom) ou ajoutée — <span style={{ fontWeight: 600 }}>aucune entrée existante n'est supprimée</span>. À la moindre erreur, l'import est annulé en entier.
         </p>
       )}
       <input ref={ref} type="file" accept=".yaml,.yml,.txt" style={{ display: "none" }}
