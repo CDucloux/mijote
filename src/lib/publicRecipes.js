@@ -7,6 +7,12 @@
 import { normalizeStr } from "./parseIngredient.js";
 import { isComponentLine } from "./nutriscore.js";
 
+// Compte officiel sous lequel sont publiées les préparations de base seedées.
+// Synthétique (aucune connexion) → seul le script de seed (SDK Admin) l'écrit.
+export const OFFICIAL_AUTHOR_UID = "mijote-official";
+export const OFFICIAL_AUTHOR_NAME = "Mijoté";
+export const isOfficialAuthor = (uid) => uid === OFFICIAL_AUTHOR_UID;
+
 // Identifiant stable d'un doc public : préfixé par l'uid → unicité garantie et
 // vérifiable côté règles Firestore (l'auteur ne peut écrire que sous son uid).
 export function publicId(uid, recipeId) {

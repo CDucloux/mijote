@@ -29,7 +29,7 @@ import { parse as parseYaml } from "yaml";
 
 import { parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml } from "../src/lib/dataYaml.js";
 import { validateRecipeSchema } from "../src/lib/recipeSchema.js";
-import { buildPublishBundle } from "../src/lib/publicRecipes.js";
+import { buildPublishBundle, OFFICIAL_AUTHOR_UID, OFFICIAL_AUTHOR_NAME } from "../src/lib/publicRecipes.js";
 import { createIngredientResolver } from "../src/lib/nameMatcher.js";
 import { computeNutriInfo } from "../src/lib/nutriscore.js";
 import { normalizeCuisine } from "../src/constants/cuisines.js";
@@ -56,7 +56,9 @@ function loadEnvFile(p) {
 [".env.local", ".env"].forEach(f => loadEnvFile(path.join(ROOT, f)));
 
 // Auteur officiel des préparations de base (compte synthétique, sans connexion).
-const MIJOTE_OFFICIAL = { uid: "mijote-official", displayName: "Mijoté × Escoffier", photoURL: "" };
+// La source (« d'après Escoffier… ») est déjà portée par chaque recette → le nom
+// d'auteur reste simplement « Mijoté ».
+const MIJOTE_OFFICIAL = { uid: OFFICIAL_AUTHOR_UID, displayName: OFFICIAL_AUTHOR_NAME, photoURL: "" };
 
 const argv = process.argv.slice(2);
 const DRY = argv.includes("--dry-run");

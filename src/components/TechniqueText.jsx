@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex, annotateText } from "../lib/techniques.js";
 import { TECHNIQUE_CATEGORIES } from "../lib/dataYaml.js";
@@ -9,11 +9,16 @@ import { TECHNIQUE_CATEGORIES } from "../lib/dataYaml.js";
 // glossaire vient du contexte (masterDB.techniques) ; sans glossaire, le texte
 // est rendu tel quel.
 
+// Surlignage « marqueur » discret : fond accent translucide, coins arrondis, pas
+// de soulignage. Lisible et clairement tactile (donc utilisable au tap sur mobile).
 const wordBtn = (active) => ({
-  display: "inline", padding: 0, margin: 0, font: "inherit", color: "var(--accent)",
-  background: active ? "rgba(232,112,58,0.14)" : "transparent",
-  border: "none", borderBottom: "1.5px dotted var(--accent)", borderRadius: 3,
-  cursor: "help", lineHeight: "inherit", textAlign: "left",
+  display: "inline", padding: "1px 4px", margin: "0 -1px", font: "inherit",
+  color: "var(--accent)", fontWeight: 600,
+  background: active ? "rgba(232,112,58,0.26)" : "rgba(232,112,58,0.11)",
+  border: "none", borderRadius: 6, cursor: "pointer",
+  lineHeight: "inherit", textAlign: "left",
+  WebkitBoxDecorationBreak: "clone", boxDecorationBreak: "clone",
+  transition: "background 0.15s ease",
 });
 
 const popover = {
@@ -32,6 +37,14 @@ export function TechniqueText({ text, index: indexProp }) {
   const [openId, setOpenId] = useState(null);   // épinglé au tap (mobile)
   const [hoverId, setHoverId] = useState(null);  // au survol (desktop)
 
+  // Tap hors d'une bulle épinglée → on referme (le tap d'ouverture est stoppé).
+  useEffect(() => {
+    if (openId === null) return;
+    const close = () => setOpenId(null);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [openId]);
+
   // Rien à surligner → on rend le texte brut.
   if (segments.length === 1 && !segments[0].tech) return text;
 
@@ -45,7 +58,7 @@ export function TechniqueText({ text, index: indexProp }) {
         <button
           type="button"
           title={`${t.name} — voir la définition`}
-          onClick={() => setOpenId(openId === key ? null : key)}
+          onClick={e => { e.stopPropagation(); setOpenId(openId === key ? null : key); }}
           onMouseEnter={() => setHoverId(key)}
           onMouseLeave={() => setHoverId(null)}
           style={wordBtn(active)}

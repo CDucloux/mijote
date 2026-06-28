@@ -10,6 +10,7 @@ import { BaseInfoModal } from "../components/BaseInfoModal.jsx";
 import { RecipeJournal } from "../components/RecipeJournal.jsx";
 import { RecipePlaceholder } from "../components/RecipePlaceholder.jsx";
 import { HeroMenu } from "../components/HeroMenu.jsx";
+import { OfficialAvatar } from "../components/OfficialAvatar.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatcher.js";
@@ -18,10 +19,11 @@ import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { fmtTime, capitalize } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { flattenForShopping } from "../lib/components.js";
+import { isOfficialAuthor } from "../lib/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto }) {
+export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
   const navigate = useNavigate();
   const location = useLocation();
   const handleBack = location.state?.from
@@ -50,13 +52,16 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   // suivie, hors pastille, du lien « d'après {source} » (source web d'origine).
   const sourceHref = recipe.source ? (recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source) : null;
   const sourceHost = recipe.source ? (() => { try { return new URL(sourceHref).hostname.replace(/^www\./, ""); } catch { return recipe.source.replace(/^https?:\/\/(?:www\.)?/, "").split("/")[0]; } })() : "";
+  const official = isOfficialAuthor(authorUid);
   const attribution = publicMode && (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 11px 3px 4px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)" }}>
-        {authorPhoto
-          ? <img src={authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 18, height: 18, borderRadius: "50%" }} />
-          : <span style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.25)" }} />}
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>Créé par : {authorName || "un mijoteur"}</span>
+        {official
+          ? <OfficialAvatar size={18} ring />
+          : authorPhoto
+            ? <img src={authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 18, height: 18, borderRadius: "50%" }} />
+            : <span style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.25)" }} />}
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>{official ? "Par" : "Créé par :"} {authorName || "un mijoteur"}</span>
       </span>
       {recipe.source && (
         <a href={sourceHref} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
@@ -211,12 +216,6 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         <div style={{ position: "absolute", bottom: 14, left: 20, right: 20 }}>
           <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2 }}>{recipe.name}</h1>
           {attribution}
-          {recipe.isComponent && (
-            <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 4, cursor: "pointer" }}>
-              <BaseIcon size={11} color="#fff" />
-              <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
-            </button>
-          )}
           {!publicMode && recipe.source && (
             <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}
               target="_blank" rel="noopener noreferrer"
@@ -226,6 +225,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             </a>
           )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            {recipe.isComponent && (
+              <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", cursor: "pointer" }}>
+                <BaseIcon size={11} color="#fff" />
+                <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
+              </button>
+            )}
             {recipeInSeason && (
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
                 <Icon name="leaf" size={11} color="#fff" />
@@ -344,12 +349,6 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
               <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff" }}>{recipe.name}</h1>
               {attribution}
-              {recipe.isComponent && (
-                <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 4, cursor: "pointer" }}>
-                  <BaseIcon size={11} color="#fff" />
-                  <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
-                </button>
-              )}
               {!publicMode && recipe.source && (
                 <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source} target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginBottom: 6 }}>
@@ -358,6 +357,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 </a>
               )}
               <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
+                {recipe.isComponent && (
+                  <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", cursor: "pointer" }}>
+                    <BaseIcon size={11} color="#fff" />
+                    <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
+                  </button>
+                )}
                 {recipeInSeason && (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
                     <Icon name="leaf" size={11} color="#fff" />

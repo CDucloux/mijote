@@ -5,7 +5,7 @@ import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
 import { TechniqueText } from "../components/TechniqueText.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { buildTechniqueIndex, hasTechnique } from "../lib/techniques.js";
+import { buildTechniqueIndex } from "../lib/techniques.js";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { consumptionFraction } from "../lib/components.js";
@@ -222,12 +222,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
                     <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Étape {realIdx + 1}</h2>
                   </div>
-                  <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: hasTechnique(step.text, techIndex) ? 8 : 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
-                  {hasTechnique(step.text, techIndex) && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--text3)", marginBottom: 24 }}>
-                      <Icon name="bulb" size={13} color="var(--text3)" /> Touche un geste souligné pour sa définition
-                    </div>
-                  )}
+                  <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
 
                   {step.tip && (
                     <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>

@@ -475,6 +475,7 @@ function AppInner() {
           owned={recipes.some(r => r.clonedFrom?.publicId === publicDocs.pub.pubId) || publicDocs.pub.authorUid === user?.uid}
           authorName={publicDocs.pub.authorName}
           authorPhoto={publicDocs.pub.authorPhoto}
+          authorUid={publicDocs.pub.authorUid}
           onClone={() => cloneFromPublic(publicDocs.pub)}
           onBack={() => navigate("/home")}
           ingredientDB={ingredientDB} utensilDB={utensilDB} collections={[]} notify={notify}

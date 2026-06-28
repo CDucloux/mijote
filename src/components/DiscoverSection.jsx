@@ -3,7 +3,8 @@ import { Icon } from "./Icon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useDiscoverRecipes } from "../hooks/useDiscoverRecipes.js";
 import { RecipeCard } from "./RecipeCard.jsx";
-import { filterPublicRecipes, publicId } from "../lib/publicRecipes.js";
+import { OfficialAvatar } from "./OfficialAvatar.jsx";
+import { filterPublicRecipes, publicId, isOfficialAuthor } from "../lib/publicRecipes.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
@@ -21,9 +22,11 @@ function PublicRecipeCard({ p, onOpen, onAuthor, owned, inSeason, style }) {
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "0 2px" }}>
         <button onClick={onAuthor} title="Filtrer par ce créateur"
           style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-          {p.authorPhoto
-            ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
-            : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
+          {isOfficialAuthor(p.authorUid)
+            ? <OfficialAvatar size={16} />
+            : p.authorPhoto
+              ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
+              : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
           <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
           {owned && <Icon name="check" size={12} color="var(--green)" />}
         </button>

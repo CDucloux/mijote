@@ -3,7 +3,7 @@
 ## Non publié — Accueil & communauté de mijoteurs
 
 ### Couche de données & glossaire des techniques
-- **Techniques en contexte dans le pas-à-pas** : en mode cuisson, les gestes du glossaire (suer, déglacer, monter au beurre…) sont **soulignés dans le texte de l'étape** ; un survol (ordinateur) ou un appui (mobile) affiche leur définition
+- **Techniques en contexte dans le pas-à-pas** : en mode cuisson, les gestes du glossaire (suer, déglacer, monter au beurre…) sont **mis en évidence dans le texte de l'étape** ; un survol (ordinateur) ou un appui (mobile) affiche leur définition
 - **Données versionnées dans le repo** : la base de référence (ingrédients, ustensiles, techniques) a désormais une source de vérité lisible en YAML sous `data/` — plus simple à éditer et à relire que les constantes
 - **Import en YAML, export en Markdown** : dans la Configuration, l'import des bases se fait par fichier **YAML** (validation stricte, import annulé en entier à la moindre erreur) ; l'export reste un tableau **Markdown** lisible
 - **Glossaire des techniques** : nouvelle section **Techniques** (suer, déglacer, monder, émulsionner…) — gestes culinaires classés par famille (découpe, cuisson, liaison, préparation, dressage), avec définition et formes du verbe ; socle du futur survol des verbes en mode pas-à-pas
