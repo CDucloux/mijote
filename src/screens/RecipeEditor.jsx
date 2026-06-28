@@ -132,8 +132,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           if (el._lockAxis === null) {
             const dx = Math.abs(e.touches[0].clientX - el._touchStartX);
             const dy = Math.abs(e.touches[0].clientY - el._touchStartY);
-            // Seuil relevé + dominance horizontale requise pour éviter les faux déclenchements
-            if (dx > 16 || dy > 16) el._lockAxis = (dx > dy * 2) ? "x" : "y";
+            // Seuil élevé + ratio strict pour éviter les faux déclenchements lors d'un scroll vertical
+            if (dx > 20 || dy > 20) el._lockAxis = (dx > dy * 3 && dx > 24) ? "x" : "y";
           }
           if (el._lockAxis === "y") el.style.overflowX = "hidden";
           else el.style.overflowX = "auto";

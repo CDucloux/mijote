@@ -9,7 +9,8 @@ const SWIPE_MAX = 100, SWIPE_TRIGGER = 64;
 export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
   const isDesktop = useIsDesktop();
   const [dx, setDx] = React.useState(0);
-  const [animating, setAnimating] = React.useState(false); // true pendant le retour élastique
+  const [animating, setAnimating] = React.useState(false);
+  const [exiting, setExiting] = React.useState(false);
   const startX = React.useRef(0), startY = React.useRef(0), axis = React.useRef(null);
   const struck = item.checked || striking;
 
@@ -17,9 +18,8 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
   const onTouchMove = e => {
     const dX = e.touches[0].clientX - startX.current, dY = e.touches[0].clientY - startY.current;
     if (!axis.current) { if (Math.abs(dX) > 8 || Math.abs(dY) > 8) axis.current = Math.abs(dX) > Math.abs(dY) ? "h" : "v"; }
-    // Droite = j'achète (interdit si déjà acheté) ; gauche = je supprime (toujours possible).
     if (axis.current === "h") {
-      const lo = item.checked ? -SWIPE_MAX : -SWIPE_MAX;
+      const lo = -SWIPE_MAX;
       const hi = item.checked ? 0 : SWIPE_MAX;
       setDx(Math.max(lo, Math.min(hi, dX)));
     }
@@ -28,7 +28,11 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
     if (axis.current === "h") {
       setAnimating(true);
       if (!item.checked && dx >= SWIPE_TRIGGER) onBuy(item);
-      else if (dx <= -SWIPE_TRIGGER) { onDelete(item); return; }
+      else if (dx <= -SWIPE_TRIGGER) {
+        setExiting(true);
+        setTimeout(() => onDelete(item), 290);
+        return;
+      }
       setDx(0);
     }
     axis.current = null;
@@ -36,8 +40,14 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
 
   const revealBuy = Math.min(1, Math.max(0, dx) / SWIPE_TRIGGER);
   const revealDel = Math.min(1, Math.max(0, -dx) / SWIPE_TRIGGER);
+
   return (
-    <div style={{ position: "relative", marginBottom: 8, borderRadius: 12, overflow: "hidden" }}>
+    <div style={{
+      position: "relative", borderRadius: 12, overflow: "hidden",
+      maxHeight: exiting ? 0 : 200,
+      marginBottom: exiting ? 0 : 8,
+      transition: exiting ? "max-height 0.26s 0.14s ease, margin-bottom 0.26s 0.14s ease" : undefined,
+    }}>
       {/* Fond vert révélé en swipe droite (j'achète) */}
       <div style={{ position: "absolute", inset: 0, background: "var(--green)", display: "flex", alignItems: "center", paddingLeft: 18, opacity: dx > 0 ? 1 : 0, transition: dx > 0 ? "none" : "opacity 0.2s" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + revealBuy * 0.3})`, opacity: revealBuy }}>
@@ -45,11 +55,11 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
           <span style={{ fontSize: 13, fontWeight: 700 }}>J'achète</span>
         </div>
       </div>
-      {/* Fond rouge révélé en swipe gauche (je supprime) */}
+      {/* Fond rouge révélé en swipe gauche (supprimer) */}
       <div style={{ position: "absolute", inset: 0, background: "var(--red)", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 18, opacity: dx < 0 ? 1 : 0, transition: dx < 0 ? "none" : "opacity 0.2s" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + revealDel * 0.3})`, opacity: revealDel }}>
-          <span style={{ fontSize: 13, fontWeight: 700 }}>Je supprime</span>
           <Icon name="trash" size={17} color="#fff" />
+          <span style={{ fontSize: 13, fontWeight: 700 }}>Supprimer</span>
         </div>
       </div>
       {/* Avant-plan : la ligne elle-même */}
@@ -58,11 +68,15 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
         style={{
           position: "relative", display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px",
           background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
-          opacity: item.checked ? 0.55 : (striking ? 0 : 1),
-          transform: `translateX(${dx}px) translateY(${striking ? 14 : 0}px)`,
-          transition: (dx === 0 || animating)
-            ? "transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease"
-            : "none",
+          opacity: exiting ? 0 : (item.checked ? 0.55 : (striking ? 0 : 1)),
+          transform: exiting
+            ? "translateX(-110%)"
+            : `translateX(${dx}px) translateY(${striking ? 14 : 0}px)`,
+          transition: exiting
+            ? "transform 0.27s cubic-bezier(0.4,0,0.8,0), opacity 0.18s ease"
+            : ((dx === 0 || animating)
+              ? "transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease"
+              : "none"),
         }}>
         <button onClick={() => onBuy(item)}
           style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
@@ -78,7 +92,6 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
             {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
           </div>
         </button>
-        {/* Suppression : bouton uniquement sur desktop (mobile = swipe gauche) */}
         {isDesktop && (
           <button onClick={() => onDelete(item)} title="Supprimer"
             style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}>

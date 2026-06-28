@@ -127,9 +127,6 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
   );
 
 
-  const checked = activeList ? activeList.items.filter(i => i.checked).length : 0;
-  const total = activeList ? activeList.items.length : 0;
-
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
@@ -145,9 +142,9 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
           </div>
         </div>
 
-        {/* List selector tabs */}
+        {/* List selector tabs + menu ⋯ */}
         {shoppingLists.length > 0 && (
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8 }}>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, alignItems: "center" }}>
             {shoppingLists.map((l, idx) => {
               const isActive = (activeListId === l.id) || (!activeListId && shoppingLists[0] === l);
               const lChecked = l.items.filter(i => i.checked).length;
@@ -170,6 +167,17 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                 </button>
               );
             })}
+            {activeList && (
+              <div style={{ flexShrink: 0, marginLeft: "auto" }}>
+                <HeroMenu
+                  icon="ellipsis" iconColor="var(--text2)" iconSize={18} className="icon-btn-soft"
+                  btnStyle={{ width: 34, height: 34, borderRadius: 9, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  items={[
+                    { label: "Paramètres de la liste", icon: "settings", onClick: () => { setConfigList({ ...activeList, sharedWith: activeList.sharedWith || [] }); setShareEmail(""); } },
+                    { label: "Supprimer la liste", icon: "trash", danger: true, onClick: () => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id) },
+                  ]} />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -186,22 +194,6 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
       {/* Active list content */}
       {activeList && (
         <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-          {/* List header — le trait de séparation EST la barre de progression ; ⋯ posé dessus */}
-          <div style={{ position: "relative", height: 34, margin: "2px 20px 6px", flexShrink: 0 }}>
-            <div style={{ position: "absolute", left: 0, right: 44, top: "50%", transform: "translateY(-50%)", height: 3, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
-              {total > 0 && <div style={{ height: "100%", background: "var(--green)", borderRadius: 2, width: `${(checked / total) * 100}%`, transition: "width 0.3s" }} />}
-            </div>
-            <div style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)" }}>
-              <HeroMenu
-                icon="ellipsis" iconColor="var(--text2)" iconSize={18} className="icon-btn-soft"
-                btnStyle={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-                items={[
-                  { label: "Paramètres de la liste", icon: "settings", onClick: () => { setConfigList({ ...activeList, sharedWith: activeList.sharedWith || [] }); setShareEmail(""); } },
-                  { label: "Supprimer la liste", icon: "trash", danger: true, onClick: () => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id) },
-                ]} />
-            </div>
-          </div>
-
           {/* FAB — absolute inside the list container */}
           {activeList.type === "free" && (
             <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}
