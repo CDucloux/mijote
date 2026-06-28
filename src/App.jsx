@@ -384,6 +384,21 @@ function AppInner() {
     } catch { notify("Échec du clonage", "error"); }
   };
 
+  const quickCloneFromPublic = async (pub) => {
+    if (!pub) return;
+    try {
+      const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
+      const comps = compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : [];
+      const { added, mainId, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
+      if (alreadyOwned) { notify("Déjà dans tes recettes"); return; }
+      const updated = [...added, ...recipes];
+      setRecipes(updated);
+      setCollections(prev => recomputeCollectionCounts(prev, updated));
+      const bases = added.length - 1;
+      notify(bases > 0 ? `Ajoutée à tes recettes (+ ${bases} base${bases > 1 ? "s" : ""})` : "Ajoutée à tes recettes");
+    } catch { notify("Échec de l'ajout", "error"); }
+  };
+
   const exportJSON = recipe => {
     const blob = new Blob([JSON.stringify(cleanRecipeForExport(recipe), null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${recipe.name.split(" ").join("_")}.json`; a.click();
@@ -452,7 +467,7 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "home" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
+      {tab === "home" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}

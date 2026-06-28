@@ -203,6 +203,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={72} style={{ width: "100%", height: "100%" }} />} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
         <button onClick={handleBack} className="hero-back" style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} /></button>
+        {publicMode && onExportPDF && (
+        <div style={{ position: "absolute", top: 16, right: 16 }}>
+          <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} /></button>
+        </div>
+        )}
         {!publicMode && (
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
           <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="edit" size={16} /></button>
@@ -334,6 +339,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 40%,rgba(0,0,0,0.72) 100%)" }} />
             {/* Boutons overlay */}
             <button onClick={handleBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
+            {publicMode && onExportPDF && (
+            <div style={{ position: "absolute", top: 16, right: 16 }}>
+              <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
+            </div>
+            )}
             {!publicMode && (
             <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
               <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>

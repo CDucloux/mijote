@@ -4,7 +4,7 @@ import { IngImage } from "./Img.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { capitalize } from "../lib/format.js";
 
-const SWIPE_MAX = 100, SWIPE_TRIGGER = 64;
+const SWIPE_MAX = 130, SWIPE_TRIGGER = 64;
 
 export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
   const isDesktop = useIsDesktop();

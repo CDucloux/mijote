@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Icon } from "./Icon.jsx";
+import { BaseIcon } from "./BaseIcon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useDiscoverRecipes } from "../hooks/useDiscoverRecipes.js";
 import { RecipeCard } from "./RecipeCard.jsx";
@@ -15,7 +16,7 @@ const TINT = "rgba(232,112,58,0.2)";
 const CARD_W = "clamp(150px, 46vw, 200px)"; // largeur des cartes en carrousel (= grille)
 
 // Carte d'une recette publique : visuel (hover-lift) + crédit créateur & date dessous.
-function PublicRecipeCard({ p, onOpen, onAuthor, owned, inSeason, style }) {
+function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, style }) {
   return (
     <div>
       <div className="discover-card"><RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} style={style} /></div>
@@ -30,21 +31,28 @@ function PublicRecipeCard({ p, onOpen, onAuthor, owned, inSeason, style }) {
           <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
           {owned && <Icon name="check" size={12} color="var(--green)" />}
         </button>
-        {p.createdAt && <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 10.5, color: "var(--text3)" }}>{relativeDate(p.createdAt)}</span>}
+        {!owned && onAdd ? (
+          <button onClick={e => { e.stopPropagation(); onAdd(); }}
+            style={{ marginLeft: "auto", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer" }}>
+            <Icon name="plus" size={11} color="#fff" /> Ajouter
+          </button>
+        ) : p.createdAt && (
+          <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 10.5, color: "var(--text3)" }}>{relativeDate(p.createdAt)}</span>
+        )}
       </div>
     </div>
   );
 }
 
 // Rangée éditoriale horizontale (carrousel). Ne s'affiche pas si vide.
-function Carousel({ emoji, title, items, renderItem }) {
+function Carousel({ icon, iconNode, title, items, renderItem }) {
   if (!items.length) return null;
   return (
     <div style={{ marginBottom: 22 }}>
       <h3 style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
-        <span style={{ fontSize: 15, lineHeight: 1 }}>{emoji}</span>{title}
+        {iconNode || (icon && <Icon name={icon} size={15} color="var(--accent)" />)}{title}
       </h3>
-      <div className="discover-row" style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollSnapType: "x proximity" }}>
+      <div className="discover-row" style={{ display: "flex", gap: 12, overflowX: "auto", paddingTop: 6, paddingBottom: 6, scrollSnapType: "x proximity" }}>
         {items.map((it, i) => (
           <div key={it.pubId} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
         ))}
@@ -54,7 +62,7 @@ function Carousel({ emoji, title, items, renderItem }) {
 }
 
 // ─── DÉCOUVRIR — recettes publiques de la communauté ──────────────────────────
-export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic }) {
+export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
@@ -67,6 +75,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const [authorUid, setAuthorUid] = useState(null);
   const [showNutri, setShowNutri] = useState(false);
   const [showCuisine, setShowCuisine] = useState(false);
+  const [spinning, setSpinning] = useState(false);
 
   // pubId des recettes déjà dans MA bibliothèque (clonées) ou publiées par moi.
   const ownedIds = useMemo(() => {
@@ -104,6 +113,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     <PublicRecipeCard
       p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)}
       onOpen={() => onOpenPublic?.(p, componentsFor(p))}
+      onAdd={onClonePublic ? () => onClonePublic(p) : undefined}
       onAuthor={() => setAuthorUid(authorUid === p.authorUid ? null : p.authorUid)}
       style={{ animationDelay: `${(idx % 8) * 0.04}s` }}
     />
@@ -121,8 +131,15 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           <Icon name="sparkle" size={16} color="var(--accent)" /> Découvrir
           {!online && !noPublic && <span style={{ fontSize: 11, fontWeight: 500, color: "var(--orange)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="wifiOff" size={11} color="var(--orange)" /> en cache</span>}
         </h2>
-        <button onClick={online ? reload : undefined} disabled={!online} title={online ? "Rafraîchir" : "Indisponible hors ligne"} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text3)", background: "none", border: "none", cursor: online ? "pointer" : "not-allowed", opacity: online ? 1 : 0.45 }}>
-          <Icon name="history" size={14} color="var(--text3)" /> Rafraîchir
+        <button
+          onClick={() => { if (!online || spinning) return; setSpinning(true); reload(); setTimeout(() => setSpinning(false), 1500); }}
+          disabled={!online}
+          title={online ? "Rafraîchir" : "Indisponible hors ligne"}
+          style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: spinning ? "var(--accent)" : "var(--text3)", background: "none", border: "none", cursor: online ? "pointer" : "not-allowed", opacity: online ? 1 : 0.45, transition: "color 0.2s" }}>
+          <span style={{ display: "inline-flex", animation: spinning ? "spin 0.75s linear infinite" : undefined }}>
+            <Icon name="history" size={14} color={spinning ? "var(--accent)" : "var(--text3)"} />
+          </span>
+          Rafraîchir
         </button>
       </div>
 
@@ -135,8 +152,8 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
       {/* Filtres progressifs */}
       <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
-        {chip(seasonOnly, () => setSeasonOnly(v => !v), <><span style={{ fontSize: 13, lineHeight: 1 }}>🌿</span> De saison</>)}
-        {preferences?.diet && chip(usePrefs, () => setUsePrefs(v => !v), <><span style={{ fontSize: 13, lineHeight: 1 }}>❤️</span> Selon mes préférences</>)}
+        {chip(seasonOnly, () => setSeasonOnly(v => !v), <><Icon name="leaf" size={13} color="currentColor" /> De saison</>)}
+        {preferences?.diet && chip(usePrefs, () => setUsePrefs(v => !v), <><Icon name="heart" size={13} color="currentColor" /> Selon mes préférences</>)}
         {chip(!!nutriMax || showNutri, () => setShowNutri(v => !v), <>{nutriMax ? `Nutri ≤ ${nutriMax}` : "Nutri-Score"} <span style={{ fontSize: 9 }}>{showNutri ? "▲" : "▼"}</span></>)}
         {cuisines.length > 0 && chip(!!cuisine || showCuisine, () => setShowCuisine(v => !v), <>{cuisine || "Cuisine"} <span style={{ fontSize: 9 }}>{showCuisine ? "▲" : "▼"}</span></>)}
         {authorUid && chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Créateur</>)}
@@ -186,14 +203,14 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       ) : !activeFilters ? (
         // ── Mode navigation : feed éditorial ──
         <>
-          <Carousel emoji="✨" title="À la une" items={featured} renderItem={card} />
-          <Carousel emoji="🍲" title="Préparations de base" items={bases} renderItem={card} />
-          <Carousel emoji="🌿" title="De saison" items={seasonal} renderItem={card} />
-          <Carousel emoji="❤️" title="Pour toi" items={forYou} renderItem={card} />
+          <Carousel icon="sparkle" title="À la une" items={featured} renderItem={card} />
+          <Carousel iconNode={<BaseIcon size={15} />} title="Préparations de base" items={bases} renderItem={card} />
+          <Carousel icon="leaf" title="De saison" items={seasonal} renderItem={card} />
+          <Carousel icon="heart" title="Pour toi" items={forYou} renderItem={card} />
           {cuisines.length > 0 && (
             <div style={{ marginBottom: 6 }}>
               <h3 style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ fontSize: 15, lineHeight: 1 }}>🍽️</span>Par cuisine
+                <Icon name="globe" size={15} color="var(--accent)" /> Par cuisine
               </h3>
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, flexWrap: "wrap" }}>
                 {cuisines.map(c => chip(false, () => setCuisine(c), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>))}

@@ -47,7 +47,7 @@ function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }) {
   );
 }
 
-export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic }) {
+export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
   const firstName = (user?.displayName || "").trim().split(" ")[0] || "";
 
@@ -156,7 +156,7 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
 
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
         <div className="slide-up" style={{ animationDelay: "0.22s" }}>
-          <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} />
+          <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} />
         </div>
       </div>
     </div>
