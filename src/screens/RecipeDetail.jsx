@@ -109,9 +109,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     const match = findIngredientMatch(ing.name, ingredientDB);
     return match ? lowSet.has(match.id) : false;
   };
+  // Liste aplatie pour le modal courses : les composants sont éclatés en ingrédients bruts.
+  const flatIngs = useMemo(() => {
+    const raw = flattenForShopping(recipe.ingredients || [], recipesById);
+    return raw.map((ing, i) => ({ ...ing, _fid: String(i) }));
+  }, [recipe.ingredients, recipesById]);
+
   const openShoppingModal = () => {
-    // Pré-cocher tout sauf ce qui est déjà en stock
-    setSelectedIngs(recipe.ingredients.filter(i => !isInStock(i)).map(i => i.id));
+    setSelectedIngs(flatIngs.filter(fi => !isInStock(fi)).map(fi => fi._fid));
     setShowShoppingModal(true);
   };
   const [cookMode, setCookMode] = useState(false);
@@ -780,38 +785,33 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Ajouter aux courses</h3>
           <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 14 }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--green)" }}>en stock</span> sont décochés par défaut.</p>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-            <button style={{ fontSize: 12, color: "var(--accent)" }} onClick={() => setSelectedIngs(recipe.ingredients.map(i => i.id))}>Tout sélectionner</button>
+            <button style={{ fontSize: 12, color: "var(--accent)" }} onClick={() => setSelectedIngs(flatIngs.map(fi => fi._fid))}>Tout sélectionner</button>
             <button style={{ fontSize: 12, color: "var(--text3)" }} onClick={() => setSelectedIngs([])}>Tout décocher</button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto", maxHeight: "52vh", marginBottom: 16 }}>
-            {recipe.ingredients.map(ing => {
-              const selected = selectedIngs.includes(ing.id);
+            {flatIngs.map(ing => {
+              const selected = selectedIngs.includes(ing._fid);
               const inStock = isInStock(ing);
               const low = isLowStock(ing);
-              const isComp = !!ing.recipeId;
-              const compName = isComp ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
-              // Détail des ingrédients bruts d'un composant (éclatement × fraction consommée).
-              // stockSet omis : on montre toujours le détail dans l'aperçu, même si le composant est en stock.
-              const breakdown = isComp ? flattenForShopping([ing], recipesById) : [];
               return (
-                <button key={ing.id} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing.id) : [...prev, ing.id])}
+                <button key={ing._fid} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing._fid) : [...prev, ing._fid])}
                   style={{
-                    display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", borderRadius: 12,
-                    background: "var(--surface2)", border: `1px solid ${isComp ? "rgba(232,112,58,0.4)" : "var(--border)"}`,
+                    display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12,
+                    background: "var(--surface2)", border: "1px solid var(--border)",
                     textAlign: "left", transition: "opacity 0.15s", opacity: selected ? 1 : 0.4
                   }}>
                   <div style={{
-                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
                     background: selected ? "var(--accent)" : "transparent",
                     border: `2px solid ${selected ? "var(--accent)" : "var(--border)"}`,
                     display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
                     {selected && <Icon name="check" size={11} color="#fff" />}
                   </div>
+                  <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={28} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      {isComp && <BaseIcon size={16} />}
-                      <span style={{ fontSize: 14, fontWeight: 500 }}>{compName}</span>
+                      <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
                       <span style={{ fontSize: 12, color: "var(--text2)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
                       {inStock && (
                         <span style={{
@@ -820,7 +820,6 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                           fontSize: 10, fontWeight: 600,
                           color: low ? "var(--accent)" : "var(--green)",
                         }}>
-                          {/* Même pastille circulaire que dans l'onglet Stock */}
                           <span style={{
                             width: 16, height: 16, borderRadius: "50%",
                             background: low ? "var(--accent)" : "var(--green)",
@@ -832,17 +831,6 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         </span>
                       )}
                     </div>
-                    {breakdown.length > 0 && (
-                      <div style={{ marginTop: 8, paddingLeft: 10, borderLeft: "2px solid rgba(232,112,58,0.3)", display: "flex", flexDirection: "column", gap: 4 }}>
-                        {breakdown.map((b, bi) => (
-                          <div key={bi} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "var(--text2)" }}>
-                            <IngImage src={getIngImage(b.dbId, b.name)} alt={b.name} size={18} />
-                            <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.name}</span>
-                            <span style={{ color: "var(--text3)", flexShrink: 0 }}>{+(b.amount * mult).toFixed(2)} {b.unit}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </button>
               );
@@ -850,7 +838,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           </div>
           <button className="btn btn-primary" style={{ width: "100%" }}
             disabled={selectedIngs.length === 0}
-            onClick={() => { onAddToShopping(recipe, recipe.ingredients.filter(i => selectedIngs.includes(i.id)), mult); setShowShoppingModal(false); }}>
+            onClick={() => {
+              onAddToShopping(recipe, flatIngs.filter(fi => selectedIngs.includes(fi._fid)), mult);
+              setShowShoppingModal(false);
+            }}>
             <Icon name="shopping" size={15} /> Ajouter {selectedIngs.length > 0 ? `${selectedIngs.length} article${selectedIngs.length > 1 ? "s" : ""}` : ""}
           </button>
         </SwipeableSheet>

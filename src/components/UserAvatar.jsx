@@ -32,28 +32,23 @@ export function UserAvatar() {
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => { setOpen(false); setConfirmSignOut(false); }} />
           <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: "expandDown 0.2s ease" }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{(user.displayName || "").toUpperCase()}</div>
             <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>{user.email}</div>
-            {syncLabel && <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: syncColor, marginBottom: 10 }}>{offline && <Icon name="wifiOff" size={12} color={syncColor} />}{syncLabel}</div>}
-            {onToggleTheme && (
-              <>
-                <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
-                <button onClick={onToggleTheme} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
-                  onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
-                  onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
-                  <Icon name={isDark ? "sun" : "moon"} size={13} color="currentColor" />
-                  {isDark ? "Mode clair" : "Mode sombre"}
-                </button>
-                <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
-              </>
-            )}
+            {syncLabel && <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: syncColor, marginBottom: 4 }}>{offline && <Icon name="wifiOff" size={12} color={syncColor} />}{syncLabel}</div>}
+            <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
             <button onClick={() => { setOpen(false); navigate("/config/preferences"); }}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
-              <Icon name="settings" size={13} color="currentColor" /> Configuration
+              <Icon name="settings" size={13} color="currentColor" /> Paramètres
             </button>
-            <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
+            {onToggleTheme && (
+              <button onClick={onToggleTheme} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+                onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
+                <Icon name={isDark ? "sun" : "moon"} size={13} color="currentColor" />
+                {isDark ? "Mode clair" : "Mode sombre"}
+              </button>
+            )}
             <button onClick={() => { setOpen(false); setAbout(true); }}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
