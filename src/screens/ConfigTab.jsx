@@ -14,7 +14,8 @@ import { deleteImageByUrl } from "../lib/storage.js";
 import { ING_MD_COLUMNS, formatTips } from "../lib/ingredientsMarkdown.js";
 import {
   parseIngredientsYaml, parseUtensilsYaml, parseTechniquesYaml,
-  formatTechniquesMarkdown, TECHNIQUE_CATEGORIES,
+  formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
+  TECHNIQUE_CATEGORIES,
 } from "../lib/dataYaml.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
@@ -23,6 +24,15 @@ import { TIP_TYPES } from "../constants/tipTypes.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
+
+// Déclenche le téléchargement d'un fichier texte généré (export).
+function downloadText(filename, text, type = "text/plain") {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 // Zone d'import YAML réutilisable (ingrédients / ustensiles / techniques).
 // Gère son propre input fichier et son état de survol ; délègue la lecture à
@@ -288,14 +298,13 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
     setMdInfo(`${created} créée${created > 1 ? "s" : ""}, ${updated} mise${updated > 1 ? "s" : ""} à jour.`);
   };
 
-  const exportTechniquesMarkdown = () => {
-    const md = formatTechniquesMarkdown(techniques);
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
-    a.download = "techniques_mijote.md";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
+  const exportTechniquesMarkdown = () => downloadText("techniques_mijote.md", formatTechniquesMarkdown(techniques), "text/markdown");
+
+  // Exports YAML réimportables (à committer dans data/). Aller-retour fidèle.
+  const catOrder = sortedCategoryEntries(categories).map(([k]) => k);
+  const exportIngredientsYaml = () => downloadText("ingredients.yaml", formatIngredientsYaml(ingredientDB.map(({ _ro, ...r }) => r), { categoryOrder: catOrder }), "text/yaml");
+  const exportUtensilsYaml = () => downloadText("utensils.yaml", formatUtensilsYaml(utensilDB.map(({ _ro, ...r }) => r)), "text/yaml");
+  const exportTechniquesYaml = () => downloadText("techniques.yaml", formatTechniquesYaml(techniques), "text/yaml");
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -508,11 +517,16 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                     <div style={{ minWidth: 0 }}>
                       <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter la base</h3>
-                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{ingredientDB.length} ingrédient{ingredientDB.length > 1 ? "s" : ""} · format Markdown</p>
+                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{ingredientDB.length} ingrédient{ingredientDB.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
                     </div>
-                    <button className="btn btn-ghost btn-sm" onClick={exportIngredientsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      <Icon name="download" size={14} /> Exporter
-                    </button>
+                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      <button className="btn btn-primary btn-sm" onClick={exportIngredientsYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="download" size={14} /> YAML
+                      </button>
+                      <button className="btn btn-ghost btn-sm" onClick={exportIngredientsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="download" size={14} /> Markdown
+                      </button>
+                    </div>
                   </div>
                 </div>
                 {/* Import YAML (l'export reste en Markdown) */}
@@ -556,11 +570,16 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                     <div style={{ minWidth: 0 }}>
                       <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter la base</h3>
-                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{utensilDB.length} ustensile{utensilDB.length > 1 ? "s" : ""} · format Markdown</p>
+                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{utensilDB.length} ustensile{utensilDB.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
                     </div>
-                    <button className="btn btn-ghost btn-sm" onClick={exportUtensilsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      <Icon name="download" size={14} /> Exporter
-                    </button>
+                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      <button className="btn btn-primary btn-sm" onClick={exportUtensilsYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="download" size={14} /> YAML
+                      </button>
+                      <button className="btn btn-ghost btn-sm" onClick={exportUtensilsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="download" size={14} /> Markdown
+                      </button>
+                    </div>
                   </div>
                 </div>
                 {/* Import YAML */}
@@ -620,11 +639,16 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                       <div style={{ minWidth: 0 }}>
                         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter le glossaire</h3>
-                        <p style={{ fontSize: 12, color: "var(--text2)" }}>{techniques.length} technique{techniques.length > 1 ? "s" : ""} · format Markdown</p>
+                        <p style={{ fontSize: 12, color: "var(--text2)" }}>{techniques.length} technique{techniques.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
                       </div>
-                      <button className="btn btn-ghost btn-sm" onClick={exportTechniquesMarkdown} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                        <Icon name="download" size={14} /> Exporter
-                      </button>
+                      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                        <button className="btn btn-primary btn-sm" onClick={exportTechniquesYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name="download" size={14} /> YAML
+                        </button>
+                        <button className="btn btn-ghost btn-sm" onClick={exportTechniquesMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name="download" size={14} /> Markdown
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>

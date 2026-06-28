@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml,
-  formatTechniquesMarkdown, slugifyId, TECHNIQUE_CATEGORIES,
+  formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
+  slugifyId, TECHNIQUE_CATEGORIES,
 } from "../dataYaml.js";
 
 describe("slugifyId", () => {
@@ -126,6 +127,58 @@ describe("parseIngredientsYaml", () => {
 - aliases: [x]
 `);
     expect(errors.join(" ")).toMatch(/name/);
+  });
+});
+
+describe("YAML export round-trips (parse ∘ format = identity)", () => {
+  it("techniques survive format → parse", () => {
+    const src = parseTechniquesYaml(`
+- name: Suer
+  category: cuisson
+  definition: Cuire doucement sans coloration.
+  aliases: [suer, faire suer]
+  source: Escoffier
+`).items;
+    const back = parseTechniquesYaml(formatTechniquesYaml(src));
+    expect(back.errors).toEqual([]);
+    expect(back.items).toEqual(src);
+  });
+
+  it("ingredients (with tips + nutrition) survive format → parse", () => {
+    const src = parseIngredientsYaml(`
+- name: Carotte
+  category: vegetable
+  months: [1, 2, 12]
+  gramsPerPiece: 120
+  tips:
+    - { type: prep, text: Éplucher au économe. }
+  nutrition: { calories: 41, protein: 0.9 }
+`, { validCategories: ["vegetable"] }).items;
+    const back = parseIngredientsYaml(formatIngredientsYaml(src), { validCategories: ["vegetable"] });
+    expect(back.errors).toEqual([]);
+    expect(back.items).toEqual(src);
+    expect(back.items[0].tips).toEqual([{ type: "prep", text: "Éplucher au économe." }]);
+    expect(back.items[0].nutrition.isVegetable).toBe(true);
+  });
+
+  it("utensils survive format → parse (export sorts by name)", () => {
+    const src = parseUtensilsYaml(`
+- name: Fouet
+  id: db_u_fouet
+- name: Casserole
+`).items;
+    const back = parseUtensilsYaml(formatUtensilsYaml(src));
+    expect(back.errors).toEqual([]);
+    const byName = arr => [...arr].sort((a, b) => a.name.localeCompare(b.name));
+    expect(byName(back.items)).toEqual(byName(src));
+  });
+
+  it("rejects an unknown tip type on import", () => {
+    expect(parseIngredientsYaml(`
+- name: X
+  tips:
+    - { type: bogus, text: hello }
+`).errors.join(" ")).toMatch(/conseil inconnu/);
   });
 });
 

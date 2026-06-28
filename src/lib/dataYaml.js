@@ -7,8 +7,15 @@
 // l'appelant DOIT annuler l'import en entier (jamais d'écrasement partiel de la
 // base master), comme le faisait déjà l'import Markdown.
 
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { ING_MD_BOUNDS } from "./ingredientsMarkdown.js";
+import { TIP_TYPES } from "../constants/tipTypes.js";
+
+// Clés nutritionnelles exportées (ordre stable), hors `isVegetable` qui est recalculé.
+const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat", "omega3", "fiber", "salt"];
+// stringify sans repli de ligne : les définitions/tips restent sur une ligne, plus
+// lisibles dans une revue de diff Git.
+const dumpYaml = (rows, header) => header + stringifyYaml(rows, { lineWidth: 0 });
 
 // Catégories du glossaire des techniques (clé → libellé affiché).
 export const TECHNIQUE_CATEGORIES = {
@@ -96,6 +103,58 @@ export function formatTechniquesMarkdown(list) {
   return `# Glossaire des techniques Mijoté (${rows.length})\n\n${header}\n${body}\n`;
 }
 
+// Export YAML du glossaire — réimportable (round-trip fidèle avec parseTechniquesYaml).
+export function formatTechniquesYaml(list) {
+  const cats = Object.keys(TECHNIQUE_CATEGORIES);
+  const rows = [...(list || [])]
+    .sort((a, b) => { const ca = cats.indexOf(a.category), cb = cats.indexOf(b.category); return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr"); })
+    .map(t => {
+      const o = { id: t.id, name: t.name, category: t.category };
+      if (t.aliases?.length) o.aliases = t.aliases;
+      o.definition = t.definition;
+      if (t.source) o.source = t.source;
+      return o;
+    });
+  return dumpYaml(rows, `# Glossaire des techniques Mijoté (${rows.length}) — généré, réimportable.\n`);
+}
+
+// ─── EXPORTS YAML (réimportables, pour versionner dans data/) ──────────────────
+// Inverses de parse*Yaml : on retire les champs dérivés/internes (_ro, isVegetable)
+// pour que parse(format(x)) redonne x.
+export function formatIngredientsYaml(list, { categoryOrder = [] } = {}) {
+  const order = categoryOrder.length ? categoryOrder : null;
+  const rows = [...(list || [])]
+    .sort((a, b) => {
+      if (order) { const ca = order.indexOf(a.category || "other"), cb = order.indexOf(b.category || "other"); if (ca !== cb) return ca - cb; }
+      return (a.name || "").localeCompare(b.name || "", "fr");
+    })
+    .map(d => {
+      const o = {};
+      if (d.id) o.id = d.id;
+      o.name = d.name;
+      if (d.aliases?.length) o.aliases = d.aliases;
+      if (d.category) o.category = d.category;
+      if (d.months?.length) o.months = d.months;
+      if (d.gramsPerPiece != null) o.gramsPerPiece = d.gramsPerPiece;
+      if (d.image) o.image = d.image;
+      if (d.tips?.length) o.tips = d.tips.map(t => ({ type: t.type, text: t.text }));
+      if (d.nutrition) {
+        const n = {};
+        for (const k of NUT_KEYS) if (d.nutrition[k] != null) n[k] = d.nutrition[k];
+        if (Object.keys(n).length) o.nutrition = n;
+      }
+      return o;
+    });
+  return dumpYaml(rows, `# Base d'ingrédients Mijoté (${rows.length}) — généré, réimportable. Valeurs pour 100 g.\n`);
+}
+
+export function formatUtensilsYaml(list) {
+  const rows = [...(list || [])]
+    .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
+    .map(d => { const o = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.image) o.image = d.image; return o; });
+  return dumpYaml(rows, `# Base d'ustensiles Mijoté (${rows.length}) — généré, réimportable.\n`);
+}
+
 // ─── INGRÉDIENTS ──────────────────────────────────────────────────────────────
 // `validCategories` : Set ou tableau des clés de catégories acceptées.
 export function parseIngredientsYaml(text, { validCategories } = {}) {
@@ -120,6 +179,18 @@ export function parseIngredientsYaml(text, { validCategories } = {}) {
     if (Array.isArray(raw.aliases)) {
       const a = raw.aliases.map(x => str(x)).filter(Boolean);
       if (a.length) row.aliases = a;
+    }
+    if (Array.isArray(raw.tips)) {
+      const tips = [];
+      raw.tips.forEach(t => {
+        if (!isObj(t)) { errors.push(`${where} : tip invalide.`); return; }
+        const type = str(t.type).toLowerCase();
+        const text = str(t.text);
+        if (!type || !(type in TIP_TYPES)) errors.push(`${where} : type de conseil inconnu « ${type || "?"} » (${Object.keys(TIP_TYPES).join(", ")}).`);
+        else if (!text) errors.push(`${where} : conseil « ${type} » sans texte.`);
+        else tips.push({ type, text });
+      });
+      if (tips.length) row.tips = tips;
     }
     if (Array.isArray(raw.months)) {
       const m = raw.months.filter(x => Number.isInteger(x) && x >= 1 && x <= 12);
