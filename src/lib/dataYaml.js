@@ -14,8 +14,13 @@ import { TIP_TYPES } from "../constants/tipTypes.js";
 // Clés nutritionnelles exportées (ordre stable), hors `isVegetable` qui est recalculé.
 const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat", "omega3", "fiber", "salt"];
 // stringify sans repli de ligne : les définitions/tips restent sur une ligne, plus
-// lisibles dans une revue de diff Git.
-const dumpYaml = (rows, header) => header + stringifyYaml(rows, { lineWidth: 0 });
+// lisibles dans une revue de diff Git. On aère ensuite le rendu : une ligne vide
+// après l'en-tête et entre chaque entrée de 1er niveau (les marqueurs `- ` en
+// colonne 0). Sans incidence au ré-import — YAML ignore les lignes vides.
+const dumpYaml = (rows, header) => {
+  const body = stringifyYaml(rows, { lineWidth: 0 }).replace(/\n(- )/g, "\n\n$1");
+  return header.replace(/\s*$/, "") + "\n\n" + body;
+};
 
 // Catégories du glossaire des techniques (clé → libellé affiché).
 export const TECHNIQUE_CATEGORIES = {

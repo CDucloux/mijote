@@ -161,6 +161,19 @@ describe("YAML export round-trips (parse ∘ format = identity)", () => {
     expect(back.items[0].nutrition.isVegetable).toBe(true);
   });
 
+  it("separates top-level entries with a blank line for readability", () => {
+    const src = parseUtensilsYaml(`
+- name: Aaa
+- name: Bbb
+`).items;
+    const out = formatUtensilsYaml(src);
+    // un saut de ligne vide avant chaque entrée suivante, pas avant la première
+    expect(out).toMatch(/\n\n- name: Bbb/);
+    expect(out).not.toMatch(/- name: Aaa\n- name: Bbb/);
+    // toujours réimportable malgré les lignes vides
+    expect(parseUtensilsYaml(out).errors).toEqual([]);
+  });
+
   it("utensils survive format → parse (export sorts by name)", () => {
     const src = parseUtensilsYaml(`
 - name: Fouet
