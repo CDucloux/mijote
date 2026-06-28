@@ -47,7 +47,7 @@ function AppInner() {
   const location = useLocation();
   const navigate = useNavigate();
   const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : "accueil");
-  const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/"), [navigate]);
+  const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/accueil"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
   // Au remontage du composant lors d'une navigation, Firebase est déjà initialisé :
@@ -219,16 +219,22 @@ function AppInner() {
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [notification, setNotification] = useState(null);
-  // Recette publique consultée en lecture seule (depuis la découverte) : { pub, components }.
-  const [publicView, setPublicView] = useState(null);
+  // ── Recette publique consultée via URL (/decouvrir/:pubId) ───────────────────
+  // pubId = "{authorUid}__{recipeId}" → l'auteur est lisible dans l'URL, la vue est
+  // deep-linkable et le bouton « retour » du navigateur fonctionne.
+  const publicPubId = location.pathname.startsWith("/decouvrir/")
+    ? decodeURIComponent(location.pathname.slice("/decouvrir/".length)) || null
+    : null;
+  const [publicDocs, setPublicDocs] = useState(null); // null = aucun · undefined = chargement · { pub, components }
+  const publicCacheRef = useRef(new Map());
   const openPublic = useCallback((pub, components) => {
-    // Ma propre recette : ouvrir directement ma version locale, pleinement éditable
-    // (toutes les options habituelles) plutôt que l'aperçu public en lecture seule.
+    // Ma propre recette : ouvrir ma version locale, pleinement éditable.
     if (pub?.authorUid === user?.uid && recipes.some(r => r.id === pub.originalId)) {
       navigate(`/recipes/${pub.originalId}`);
       return;
     }
-    setPublicView({ pub, components: components || [] });
+    publicCacheRef.current.set(pub.pubId, { pub, components: components || [] });
+    navigate(`/decouvrir/${encodeURIComponent(pub.pubId)}`);
   }, [user, recipes, navigate]);
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
@@ -267,10 +273,30 @@ function AppInner() {
     document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
   }, [tab]);
 
-  // Quitter la consultation d'une recette publique dès qu'on change d'URL (onglet,
-  // ouverture d'une recette perso…), pour ne pas « piéger » la navigation.
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronisation à l'URL
-  useEffect(() => { setPublicView(null); }, [location.pathname]);
+  // Résout la recette publique de l'URL : cache (clic interne) sinon fetch (deep-link
+  // / rafraîchissement), avec ses préparations de base.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- chargement piloté par l'URL
+  useEffect(() => {
+    if (!publicPubId) { setPublicDocs(null); return; }
+    const cached = publicCacheRef.current.get(publicPubId);
+    if (cached) { setPublicDocs(cached); return; }
+    let alive = true;
+    setPublicDocs(undefined);
+    (async () => {
+      try {
+        const [pub] = await fetchPublicDocsByIds([publicPubId]);
+        if (!alive) return;
+        if (!pub) { setPublicDocs(null); return; }
+        const compIds = (pub.componentRefs || []).map(o => publicId(pub.authorUid, o));
+        const comps = compIds.length ? await fetchPublicDocsByIds(compIds) : [];
+        if (!alive) return;
+        const v = { pub, components: comps.map(c => c.recipe) };
+        publicCacheRef.current.set(publicPubId, v);
+        setPublicDocs(v);
+      } catch { if (alive) setPublicDocs(null); }
+    })();
+    return () => { alive = false; };
+  }, [publicPubId]);
 
 
   const notify = (msg, type = "success") => {
@@ -467,20 +493,28 @@ function AppInner() {
     <div className={isDesktop ? "desktop-content editor-layout" : ""} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
       <RecipeEditor recipe={editingRecipe} onSave={saveRecipe} onCancel={() => setEditingRecipe(null)} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
     </div>
-  ) : publicView ? (
-    <div key={publicView.pub.pubId} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail
-        recipe={publicView.pub.recipe}
-        recipes={publicView.components}
-        publicMode
-        owned={recipes.some(r => r.clonedFrom?.publicId === publicView.pub.pubId) || publicView.pub.authorUid === user?.uid}
-        authorName={publicView.pub.authorName}
-        authorPhoto={publicView.pub.authorPhoto}
-        onClone={() => { const pub = publicView.pub; setPublicView(null); cloneFromPublic(pub); }}
-        onBack={() => setPublicView(null)}
-        ingredientDB={ingredientDB} utensilDB={utensilDB} collections={[]} notify={notify}
-      />
-    </div>
+  ) : publicPubId ? (
+    publicDocs ? (
+      <div key={publicDocs.pub.pubId} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
+        <RecipeDetail
+          recipe={publicDocs.pub.recipe}
+          recipes={publicDocs.components}
+          publicMode
+          owned={recipes.some(r => r.clonedFrom?.publicId === publicDocs.pub.pubId) || publicDocs.pub.authorUid === user?.uid}
+          authorName={publicDocs.pub.authorName}
+          authorPhoto={publicDocs.pub.authorPhoto}
+          onClone={() => cloneFromPublic(publicDocs.pub)}
+          onBack={() => navigate("/accueil")}
+          ingredientDB={ingredientDB} utensilDB={utensilDB} collections={[]} notify={notify}
+        />
+      </div>
+    ) : publicDocs === undefined ? (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 26, height: 26, border: "3px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
+      </div>
+    ) : (
+      <RecipeNotFound onBack={() => navigate("/accueil")} />
+    )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
       <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
@@ -550,6 +584,7 @@ function AppInner() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/accueil" replace />} />
       <Route path="/fridge" element={<Navigate to="/stock" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout

@@ -3,7 +3,7 @@
 // onglet « home » (Mes Recettes) devient « recipes » et garde son path /recipes.
 // La Configuration n'est plus un onglet : on y accède via le menu avatar.
 export const TABS = [
-  { id: "accueil", label: "Accueil", icon: "home", path: "/" },
+  { id: "accueil", label: "Accueil", icon: "home", path: "/accueil" },
   { id: "recipes", label: "Recettes", icon: "book", path: "/recipes" },
   { id: "meal-plan", label: "Planning", icon: "calendar", path: "/meal-plan" },
   { id: "shopping", label: "Courses", icon: "shopping", path: "/shopping-lists" },
