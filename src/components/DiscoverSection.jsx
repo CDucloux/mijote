@@ -1,19 +1,16 @@
 import { useState, useMemo } from "react";
 import { Icon } from "./Icon.jsx";
-import { Img } from "./Img.jsx";
-import { RecipeCard } from "./RecipeCard.jsx";
-import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
-import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useDiscoverRecipes } from "../hooks/useDiscoverRecipes.js";
-import { filterPublicRecipes } from "../lib/publicRecipes.js";
+import { RecipeCard } from "./RecipeCard.jsx";
+import { filterPublicRecipes, publicId } from "../lib/publicRecipes.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 
 const NUTRI_LETTERS = ["A", "B", "C", "D", "E"];
 
 // ─── DÉCOUVRIR — recettes publiques de la communauté ──────────────────────────
-export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onClonePublic }) {
+export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic }) {
   const { user } = useAppShell();
   const { recipes: pubs, loading, error, loadedOnce, reload } = useDiscoverRecipes(user);
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
@@ -24,7 +21,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const [nutriMax, setNutriMax] = useState(null);
   const [usePrefs, setUsePrefs] = useState(false);
   const [authorUid, setAuthorUid] = useState(null);
-  const [preview, setPreview] = useState(null); // doc public sélectionné
 
   // pubId des recettes déjà dans MA bibliothèque (clonées) ou publiées par moi.
   const ownedIds = useMemo(() => {
@@ -33,6 +29,13 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     return s;
   }, [recipes]);
   const isOwned = (p) => ownedIds.has(p.pubId) || p.authorUid === user?.uid;
+
+  // Payloads des bases (composants) référencées par une recette, retrouvées parmi
+  // les docs publics déjà chargés → permet d'afficher leurs étapes dans le détail.
+  const componentsFor = (p) => (p.componentRefs || [])
+    .map(origId => pubs.find(x => x.pubId === publicId(p.authorUid, origId)))
+    .filter(Boolean)
+    .map(x => x.recipe);
 
   const isInSeason = (payload) => isRecipeInSeason(payload, resolver);
   const filtered = useMemo(() => filterPublicRecipes(pubs, {
@@ -107,52 +110,18 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
           {filtered.map((p, idx) => (
             <div key={p.pubId} style={{ position: "relative" }}>
-              <RecipeCard recipe={p.recipe} onClick={() => setPreview(p)} inSeason={isInSeason(p.recipe)} style={{ animationDelay: `${(idx % 8) * 0.04}s` }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5, padding: "0 2px" }}>
+              <RecipeCard recipe={p.recipe} onClick={() => onOpenPublic?.(p, componentsFor(p))} inSeason={isInSeason(p.recipe)} style={{ animationDelay: `${(idx % 8) * 0.04}s` }} />
+              <button onClick={() => setAuthorUid(authorUid === p.authorUid ? null : p.authorUid)} title="Filtrer par ce créateur"
+                style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5, padding: "0 2px", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
                 {p.authorPhoto
                   ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
                   : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
                 <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
                 {isOwned(p) && <Icon name="check" size={12} color="var(--green)" />}
-              </div>
+              </button>
             </div>
           ))}
         </div>
-      )}
-
-      {/* Aperçu + clone */}
-      {preview && (
-        <SwipeableSheet onClose={() => setPreview(null)} style={{ maxHeight: "88dvh" }}>
-          <div style={{ width: "100%", aspectRatio: "16/9", borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
-            <Img src={preview.recipe.image} alt={preview.recipe.name} style={{ width: "100%", height: "100%" }} />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-            <h3 style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.2 }}>{preview.recipe.name}</h3>
-            {preview.nutriLetter && <NutriScoreBadge letter={preview.nutriLetter} compact />}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            {preview.authorPhoto
-              ? <img src={preview.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 26, height: 26, borderRadius: "50%" }} />
-              : <span style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--surface3)" }} />}
-            <span style={{ fontSize: 13, color: "var(--text2)" }}>D'après <strong>{preview.authorName || "Anonyme"}</strong></span>
-            <button onClick={() => { setAuthorUid(preview.authorUid); setPreview(null); }} style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>Voir ses recettes</button>
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-            {preview.cuisine && <span className="tag">{preview.cuisine}</span>}
-            <span className="tag">{(preview.recipe.ingredients || []).length} ingrédient(s)</span>
-            {preview.componentRefs?.length > 0 && <span className="tag">+ {preview.componentRefs.length} base(s)</span>}
-          </div>
-          {isOwned(preview) ? (
-            <button className="btn btn-ghost" style={{ width: "100%" }} disabled><Icon name="check" size={16} color="var(--green)" /> Déjà dans tes recettes</button>
-          ) : (
-            <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => { onClonePublic?.(preview); setPreview(null); }}>
-              <Icon name="plus" size={16} /> Garder dans mes recettes
-            </button>
-          )}
-          <p style={{ fontSize: 11.5, color: "var(--text3)", textAlign: "center", marginTop: 10, lineHeight: 1.45 }}>
-            Une copie est ajoutée à ta bibliothèque{preview.componentRefs?.length ? " avec ses préparations de base" : ""} — libre à toi de l'adapter.
-          </p>
-        </SwipeableSheet>
       )}
     </section>
   );

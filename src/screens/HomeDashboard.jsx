@@ -2,17 +2,13 @@ import { useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
-import { RecipeCard } from "../components/RecipeCard.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { createIngredientResolver } from "../lib/nameMatcher.js";
-import { isRecipeInSeason } from "../lib/seasonality.js";
 import { buildDashboardSummary } from "../lib/dashboard.js";
 
 // ─── HOME / ACCUEIL ───────────────────────────────────────────────────────────
 // Page d'atterrissage : un en-tête « Aujourd'hui » (notifications dérivées de
-// l'état local) + des idées de saison depuis la bibliothèque + un teaser de la
-// découverte communautaire (moteur réel en PR2).
+// l'état local) suivi directement de la découverte communautaire.
 
 const SLOT_LABEL = { midi: "🌤 Ce midi", soir: "🌙 Ce soir" };
 const SLOT_TINT = { midi: "rgba(240,192,96,0.16)", soir: "rgba(91,156,246,0.16)" };
@@ -42,22 +38,15 @@ function NotifRow({ icon, color, title, subtitle, onClick }) {
   );
 }
 
-export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onClonePublic }) {
+export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic }) {
   const { user } = useAppShell();
   const firstName = (user?.displayName || "").trim().split(" ")[0] || "";
 
-  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const summary = useMemo(
     () => buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowStock, ingredientDB }),
     [mealPlan, recipes, shoppingLists, lowStock, ingredientDB]
   );
   const { meals, shoppingTodo, lowStockNames, isCalm } = summary;
-
-  // Idées de saison : recettes de la bibliothèque (hors bases) qui sont de saison ce mois-ci.
-  const seasonalIdeas = useMemo(
-    () => recipes.filter(r => !r.isComponent && isRecipeInSeason(r, resolver)).slice(0, 8),
-    [recipes, resolver]
-  );
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -124,25 +113,8 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
           )}
         </section>
 
-        {/* ── Idées de saison (depuis la bibliothèque) ────────────────────── */}
-        {seasonalIdeas.length > 0 && (
-          <section style={{ marginBottom: 26 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ fontSize: 15 }}>🌿</span> Idées de saison
-              </h2>
-              <button onClick={() => setTab?.("recipes")} style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", background: "none", border: "none", cursor: "pointer" }}>Tout voir</button>
-            </div>
-            <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-              {seasonalIdeas.map((r, idx) => (
-                <RecipeCard key={r.id} recipe={r} onClick={() => onSelectRecipe?.(r.id)} inSeason style={{ animationDelay: `${idx * 0.04}s` }} />
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
-        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onClonePublic={onClonePublic} />
+        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} />
       </div>
     </div>
   );

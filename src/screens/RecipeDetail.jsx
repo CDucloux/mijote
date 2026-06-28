@@ -20,7 +20,7 @@ import { cuisineEmoji } from "../constants/cuisines.js";
 import { flattenForShopping } from "../lib/components.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [] }) {
+export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto }) {
   const navigate = useNavigate();
   const location = useLocation();
   const handleBack = location.state?.from
@@ -40,6 +40,19 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const [selectedIngs, setSelectedIngs] = useState([]);
   const [pendingPublish, setPendingPublish] = useState(false);
   const isPublished = recipe.visibility === "public";
+  // CTA « Garder » réutilisé (lecture seule d'une recette publique).
+  const keepCta = owned
+    ? <button className="btn btn-ghost" disabled style={{ width: "100%", borderRadius: 30, opacity: 0.85 }}><Icon name="check" size={15} color="var(--green)" /> Déjà dans tes recettes</button>
+    : <button className="btn btn-primary" onClick={onClone} style={{ width: "100%", borderRadius: 30 }}><Icon name="plus" size={15} /> Garder dans mes recettes</button>;
+  // Pastille d'attribution affichée dans le hero en mode public.
+  const authorChip = publicMode && (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 11px 3px 4px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 6 }}>
+      {authorPhoto
+        ? <img src={authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 18, height: 18, borderRadius: "50%" }} />
+        : <span style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.25)" }} />}
+      <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>D'après {authorName || "un mijoteur"}</span>
+    </span>
+  );
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
   const recipesById = useMemo(() => new Map((recipes || []).map(r => [r.id, r])), [recipes]);
@@ -165,6 +178,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={72} style={{ width: "100%", height: "100%" }} />} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
         <button onClick={handleBack} className="hero-back" style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} /></button>
+        {!publicMode && (
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
           <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="edit" size={16} /></button>
           <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="pdf" size={16} /></button>
@@ -178,8 +192,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
             ]} />
         </div>
+        )}
         <div style={{ position: "absolute", bottom: 14, left: 20, right: 20 }}>
           <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2 }}>{recipe.name}</h1>
+          {authorChip}
           {recipe.isComponent && (
             <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 4, cursor: "pointer" }}>
               <BaseIcon size={11} color="#fff" />
@@ -203,7 +219,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             )}
             {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
             {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
-            <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", gap: 4 }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>
+            {!publicMode && <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", gap: 4 }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>}
           </div>
         </div>
       </div>
@@ -256,8 +272,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       </div>
       )}
 
-      {/* Desktop FAB */}
-      {isDesktop && (
+      {/* Desktop : « Garder » en mode public, sinon dock d'actions */}
+      {isDesktop && publicMode && (
+        <div style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, width: 280 }}>{keepCta}</div>
+      )}
+      {isDesktop && !publicMode && (
         <div ref={actionsRef} style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
           {actionsOpen ? (
             <div className={`action-dock${dockClosing ? " closing" : ""}`}>
@@ -291,6 +310,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 40%,rgba(0,0,0,0.72) 100%)" }} />
             {/* Boutons overlay */}
             <button onClick={handleBack} style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
+            {!publicMode && (
             <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
               <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
               <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
@@ -304,9 +324,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
                 ]} />
             </div>
+            )}
             {/* Titre + source + tags */}
             <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
               <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff" }}>{recipe.name}</h1>
+              {authorChip}
               {recipe.isComponent && (
                 <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 4, cursor: "pointer" }}>
                   <BaseIcon size={11} color="#fff" />
@@ -329,7 +351,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 )}
                 {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
                 {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
-                <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>
+                {!publicMode && <button onClick={() => setShowCollModal(true)} style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>}
               </div>
             </div>
           </div>
@@ -352,7 +374,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               <button onClick={handleBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
               <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipe.name}</span>
               <div style={{ display: "flex", gap: 6 }}>
-                <button onClick={() => { openShoppingModal(); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>
+                {!publicMode && <button onClick={() => { openShoppingModal(); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>}
               </div>
             </>}
           </div>
@@ -377,6 +399,9 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 2 }}>Nutri-Score <Icon name="forward" size={9} color="var(--text3)" /></span>
               </button>
             </div>
+            {publicMode ? (
+              <div>{keepCta}</div>
+            ) : (
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => { openShoppingModal(); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
                 <Icon name="shopping" size={14} color="#fff" /> Courses
@@ -385,6 +410,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 <Icon name="calendar" size={14} color="var(--text)" /> Planifier
               </button>
             </div>
+            )}
           </div>
 
           {/* Onglets sticky sous la barre */}

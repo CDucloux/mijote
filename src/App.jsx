@@ -219,6 +219,9 @@ function AppInner() {
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [notification, setNotification] = useState(null);
+  // Recette publique consultée en lecture seule (depuis la découverte) : { pub, components }.
+  const [publicView, setPublicView] = useState(null);
+  const openPublic = useCallback((pub, components) => setPublicView({ pub, components: components || [] }), []);
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
   const { cloudLoaded } = useFirestoreSync({
@@ -255,6 +258,11 @@ function AppInner() {
     const titles = { "accueil": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration" };
     document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
   }, [tab]);
+
+  // Quitter la consultation d'une recette publique dès qu'on change d'URL (onglet,
+  // ouverture d'une recette perso…), pour ne pas « piéger » la navigation.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronisation à l'URL
+  useEffect(() => { setPublicView(null); }, [location.pathname]);
 
 
   const notify = (msg, type = "success") => {
@@ -438,7 +446,7 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "accueil" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onClonePublic={cloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
+      {tab === "accueil" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
@@ -450,6 +458,20 @@ function AppInner() {
   const mainScreen = editingRecipe !== null ? (
     <div className={isDesktop ? "desktop-content editor-layout" : ""} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
       <RecipeEditor recipe={editingRecipe} onSave={saveRecipe} onCancel={() => setEditingRecipe(null)} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
+    </div>
+  ) : publicView ? (
+    <div key={publicView.pub.pubId} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
+      <RecipeDetail
+        recipe={publicView.pub.recipe}
+        recipes={publicView.components}
+        publicMode
+        owned={recipes.some(r => r.clonedFrom?.publicId === publicView.pub.pubId) || publicView.pub.authorUid === user?.uid}
+        authorName={publicView.pub.authorName}
+        authorPhoto={publicView.pub.authorPhoto}
+        onClone={() => { const pub = publicView.pub; setPublicView(null); cloneFromPublic(pub); }}
+        onBack={() => setPublicView(null)}
+        ingredientDB={ingredientDB} utensilDB={utensilDB} collections={[]} notify={notify}
+      />
     </div>
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
