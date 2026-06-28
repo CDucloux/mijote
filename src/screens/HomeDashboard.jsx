@@ -5,8 +5,6 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildDashboardSummary } from "../lib/dashboard.js";
-import { createIngredientResolver } from "../lib/nameMatcher.js";
-import { isRecipeInSeason } from "../lib/seasonality.js";
 
 // ─── HOME / ACCUEIL ───────────────────────────────────────────────────────────
 // Page d'atterrissage : un en-tête « Aujourd'hui » (notifications dérivées de
@@ -50,28 +48,16 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
   );
   const { meals, shoppingTodo, lowStockNames, isCalm } = summary;
 
-  // Accroche du hero : quelques stats de bibliothèque (donne une raison de rester/explorer).
-  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
-  const libraryCount = useMemo(() => recipes.filter(r => !r.isComponent).length, [recipes]);
-  const seasonalCount = useMemo(
-    () => recipes.filter(r => !r.isComponent && isRecipeInSeason(r, resolver)).length,
-    [recipes, resolver]
-  );
-  const subtitle = libraryCount === 0
-    ? "Explore la communauté ou crée ta première recette"
-    : `${libraryCount} recette${libraryCount > 1 ? "s" : ""} dans ta bibliothèque${seasonalCount > 0 ? ` · ${seasonalCount} de saison ce mois-ci` : ""}`;
-
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* En-tête — léger dégradé chaleureux + accroche contextuelle */}
       <div style={{ padding: "20px 20px 8px", flexShrink: 0, background: "linear-gradient(180deg, rgba(232,112,58,0.07), transparent)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500 }}>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName}` : greeting()}</h1>
+            <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
               Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 600, color: "var(--text2)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span></span>
             </span>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName}` : greeting()}</h1>
-            <span style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</span>
           </div>
           <UserAvatar />
         </div>
