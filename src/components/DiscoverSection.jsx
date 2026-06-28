@@ -53,7 +53,7 @@ function Carousel({ emoji, title, items, renderItem }) {
 // ─── DÉCOUVRIR — recettes publiques de la communauté ──────────────────────────
 export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic }) {
   const { user } = useAppShell();
-  const { recipes: pubs, loading, error, loadedOnce, reload } = useDiscoverRecipes(user);
+  const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
 
   const [text, setText] = useState("");
@@ -113,8 +113,9 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 7 }}>
           <Icon name="sparkle" size={16} color="var(--accent)" /> Découvrir
+          {!online && !noPublic && <span style={{ fontSize: 11, fontWeight: 500, color: "var(--orange)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="wifiOff" size={11} color="var(--orange)" /> en cache</span>}
         </h2>
-        <button onClick={reload} title="Rafraîchir" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>
+        <button onClick={online ? reload : undefined} disabled={!online} title={online ? "Rafraîchir" : "Indisponible hors ligne"} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text3)", background: "none", border: "none", cursor: online ? "pointer" : "not-allowed", opacity: online ? 1 : 0.45 }}>
           <Icon name="history" size={14} color="var(--text3)" /> Rafraîchir
         </button>
       </div>
@@ -154,6 +155,17 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         <div style={{ textAlign: "center", color: "var(--text3)", padding: "28px 0", fontSize: 13 }}>
           Impossible de charger les recettes publiques.<br />
           <button onClick={reload} className="btn btn-ghost" style={{ marginTop: 10, borderRadius: 12 }}>Réessayer</button>
+        </div>
+      ) : noPublic && !online ? (
+        // Hors-ligne sans rien en cache : on ne fait pas croire qu'il n'y a aucune recette.
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "26px 16px", borderRadius: 16, background: "var(--surface)", border: "1px dashed var(--border)" }}>
+          <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(240,153,42,0.14)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+            <Icon name="wifiOff" size={22} color="var(--orange)" />
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Hors ligne</div>
+          <div style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, maxWidth: 300 }}>
+            La découverte des recettes de la communauté reviendra automatiquement dès le retour de la connexion.
+          </div>
         </div>
       ) : noPublic ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "26px 16px", borderRadius: 16, background: "var(--surface)", border: "1px dashed var(--border)" }}>
