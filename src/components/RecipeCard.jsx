@@ -7,7 +7,7 @@ import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { fmtTime } from "../lib/format.js";
 
-export function RecipeCard({ recipe, onClick, style, inSeason = false, author = null, onAuthorClick }) {
+export function RecipeCard({ recipe, onClick, style, inSeason = false }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const [showBaseInfo, setShowBaseInfo] = useState(false);
   return (
@@ -30,19 +30,6 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, author = 
                 <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
               </button>
             )}
-          </div>
-        )}
-        {/* Crédit créateur (recettes publiques) — pastille avatar en bas à gauche de l'image */}
-        {author && (
-          <div
-            onClick={onAuthorClick ? (e => { e.stopPropagation(); onAuthorClick(e); }) : undefined}
-            title={onAuthorClick ? "Filtrer par ce créateur" : undefined}
-            style={{ position: "absolute", bottom: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 5, maxWidth: "calc(100% - 16px)", padding: "3px 9px 3px 3px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", cursor: onAuthorClick ? "pointer" : "default" }}>
-            {author.photo
-              ? <img src={author.photo} alt="" referrerPolicy="no-referrer" style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0 }} />
-              : <span style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.25)", flexShrink: 0 }} />}
-            <span style={{ fontSize: 10.5, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{author.name || "Anonyme"}</span>
-            {author.owned && <Icon name="check" size={11} color="#7bd6a0" />}
           </div>
         )}
       </div>

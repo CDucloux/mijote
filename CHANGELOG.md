@@ -14,7 +14,7 @@
 - **Page d'atterrissage repensée** : un vrai onglet **Accueil** distinct de « Mes Recettes »
 - En-tête plus chaleureux : salutation personnalisée « Bonjour, {prénom} » sous-titrée d'un **« Bienvenue sur Mijoté »** de marque, sur un léger dégradé
 - Bloc **« Aujourd'hui »** dérivé de tes données : recette planifiée ce midi/ce soir, articles de courses à acheter, ingrédients à racheter bientôt — réduit à un **bandeau fin** quand tout est à jour, pour laisser place à la découverte
-- **Découverte façon feed** : rangées éditoriales **✨ À la une · 🌿 De saison · ❤️ Pour toi · 🍽️ Par cuisine** en navigation, grille filtrée complète dès qu'on cherche/filtre ; filtres **progressifs** (Nutri-Score & cuisines repliés), **avatar du créateur intégré à la carte** et léger survol
+- **Découverte façon feed** : rangées éditoriales **✨ À la une · 🌿 De saison · ❤️ Pour toi · 🍽️ Par cuisine** en navigation, grille filtrée complète dès qu'on cherche/filtre ; filtres **progressifs** (Nutri-Score & cuisines repliés), **avatar du créateur et date de publication** (« aujourd'hui », « il y a 2 jours »…) sous chaque carte, et léger survol
 
 ### Navigation & préférences
 - La **Configuration** quitte la barre d'onglets et rejoint le menu **avatar** (5 onglets max, mobile comme desktop)

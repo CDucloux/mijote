@@ -7,20 +7,28 @@ import { filterPublicRecipes, publicId } from "../lib/publicRecipes.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
+import { relativeDate } from "../lib/format.js";
 
 const NUTRI_LETTERS = ["A", "B", "C", "D", "E"];
 const TINT = "rgba(232,112,58,0.2)";
 const CARD_W = "clamp(150px, 46vw, 200px)"; // largeur des cartes en carrousel (= grille)
 
-// Carte d'une recette publique : visuel + crédit créateur intégré + hover-lift.
+// Carte d'une recette publique : visuel (hover-lift) + crédit créateur & date dessous.
 function PublicRecipeCard({ p, onOpen, onAuthor, owned, inSeason, style }) {
   return (
-    <div className="discover-card">
-      <RecipeCard
-        recipe={p.recipe} onClick={onOpen} inSeason={inSeason} style={style}
-        author={{ name: p.authorName, photo: p.authorPhoto, owned }}
-        onAuthorClick={onAuthor}
-      />
+    <div>
+      <div className="discover-card"><RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} style={style} /></div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "0 2px" }}>
+        <button onClick={onAuthor} title="Filtrer par ce créateur"
+          style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+          {p.authorPhoto
+            ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
+            : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
+          <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
+          {owned && <Icon name="check" size={12} color="var(--green)" />}
+        </button>
+        {p.createdAt && <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 10.5, color: "var(--text3)" }}>{relativeDate(p.createdAt)}</span>}
+      </div>
     </div>
   );
 }
