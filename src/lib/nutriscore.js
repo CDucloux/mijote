@@ -138,7 +138,7 @@ export function computeNutriInfo(ingredients, ingredientDB, recipesById) {
     if (n.isVegetable) vegMass += m;
     mass += m;
   }
-  if (mass === 0) return 50;
+  if (mass === 0) return { score: 50, letter: null }; // aucune maille avec nutrition
   // Profil pour 100g de plat fini
   const per100 = k => tot[k] / mass * 100;
   // Points négatifs (énergie en kJ, sucres, AG saturés, sel)

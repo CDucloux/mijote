@@ -30,6 +30,8 @@ import { parse as parseYaml } from "yaml";
 import { parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml } from "../src/lib/dataYaml.js";
 import { validateRecipeSchema } from "../src/lib/recipeSchema.js";
 import { buildPublishBundle } from "../src/lib/publicRecipes.js";
+import { createIngredientResolver } from "../src/lib/nameMatcher.js";
+import { computeNutriInfo } from "../src/lib/nutriscore.js";
 import { DEFAULT_CATEGORIES } from "../src/constants/categories.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -129,13 +131,30 @@ if (wants("bases")) {
   log(`✓ base-preparations.yaml — ${bases.length} préparations de base`);
 }
 
-// Pré-construit les docs publics des bases (réutilise la logique de l'app).
-const baseDocs = (parsed.bases || []).flatMap(b => buildPublishBundle(b, MIJOTE_OFFICIAL, {}).docs);
+// Lie les lignes d'une base à la base d'ingrédients master (par nom) et calcule
+// son Nutri-Score, comme le fait l'app à la sauvegarde (prepareRecipeForSave).
+// Le `dbId` rattaché est celui de la base master PARTAGÉE → valable pour tous les
+// utilisateurs (donc fidèle après clonage) et exploitable par la fiche nutrition.
+function enrichBase(recipe, masterIngredients, resolve) {
+  let linked = 0;
+  const ingredients = (recipe.ingredients || []).map(line => {
+    if (line.dbId || line.recipeId) return line;
+    const m = resolve(line.name);
+    if (!m) return line;
+    linked++;
+    return { ...line, dbId: m.id, image: line.image || m.image || "" };
+  });
+  const { score, letter } = computeNutriInfo(ingredients, masterIngredients, new Map());
+  // Coercition en null : Firestore rejette `undefined` (la recette est sérialisée telle quelle).
+  return { recipe: { ...recipe, ingredients, healthScore: typeof score === "number" ? score : null, nutriLetter: letter || null }, linked };
+}
 
 if (DRY) {
+  // Sans Firestore (donc sans base master), on ne peut pas scorer : aperçu seul.
+  const docs = (parsed.bases || []).flatMap(b => buildPublishBundle(b, MIJOTE_OFFICIAL, {}).docs);
   log("\n— DRY RUN — rien n'est écrit.");
-  if (parsed.bases) log(`  Bases → ${baseDocs.length} docs publics sous ${MIJOTE_OFFICIAL.uid} :`);
-  for (const d of baseDocs) log(`    publicRecipes/${d.pubId}  (${d.name})`);
+  if (parsed.bases) log(`  Bases → ${docs.length} docs publics sous ${MIJOTE_OFFICIAL.uid} (Nutri-Score calculé au seed réel) :`);
+  for (const d of docs) log(`    publicRecipes/${d.pubId}  (${d.name})`);
   log("\n✓ Validation OK.");
   process.exit(0);
 }
@@ -199,7 +218,21 @@ try {
   if (parsed.ingredients) await writeMaster("ingredients", parsed.ingredients);
   if (parsed.utensils) await writeMaster("utensils", parsed.utensils);
 
-  if (baseDocs.length) {
+  if (parsed.bases) {
+    // Base d'ingrédients master (partagée) : sert à lier les bases et à les scorer.
+    // On y intègre l'éventuel échantillon qu'on vient de pousser.
+    const masterSnap = await dbAdmin.doc("master/ingredients").get();
+    const masterIngredients = [...(masterSnap.exists ? (masterSnap.data().items || []) : []), ...(parsed.ingredients || [])];
+    const resolve = createIngredientResolver(masterIngredients);
+    if (!masterIngredients.length) log("  ⚠ master/ingredients est vide → Nutri-Score non calculable (« — »). Seed les ingrédients d'abord.");
+
+    let totalLines = 0, linkedLines = 0;
+    const baseDocs = parsed.bases.flatMap(b => {
+      const { recipe, linked } = enrichBase(b, masterIngredients, resolve);
+      totalLines += (b.ingredients || []).length; linkedLines += linked;
+      return buildPublishBundle(recipe, MIJOTE_OFFICIAL, { ingredientDB: masterIngredients }).docs;
+    });
+
     let batch = dbAdmin.batch();
     let n = 0;
     for (const d of baseDocs) {
@@ -207,7 +240,7 @@ try {
       if (++n % 400 === 0) { await batch.commit(); batch = dbAdmin.batch(); }
     }
     await batch.commit();
-    log(`  publicRecipes ← ${baseDocs.length} doc(s) publié(s) sous ${MIJOTE_OFFICIAL.uid}`);
+    log(`  publicRecipes ← ${baseDocs.length} doc(s) publié(s) sous ${MIJOTE_OFFICIAL.uid} · ${linkedLines}/${totalLines} ingrédients liés (Nutri-Score)`);
   }
 } catch (e) {
   const auth = /credential|authenticat|UNAUTHENTICATED|permission|PERMISSION_DENIED|default credentials|invalid_grant/i.test(e.message || "");
