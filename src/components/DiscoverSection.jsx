@@ -6,8 +6,48 @@ import { RecipeCard } from "./RecipeCard.jsx";
 import { filterPublicRecipes, publicId } from "../lib/publicRecipes.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
+import { cuisineEmoji } from "../constants/cuisines.js";
 
 const NUTRI_LETTERS = ["A", "B", "C", "D", "E"];
+const TINT = "rgba(232,112,58,0.2)";
+const NEW_MS = 14 * 24 * 60 * 60 * 1000; // « Nouveau » : publiée il y a moins de 14 jours
+
+// Carte d'une recette publique : visuel + auteur cliquable + badge « Nouveau » + hover-lift.
+function PublicRecipeCard({ p, onOpen, onAuthor, owned, inSeason, isNew, style }) {
+  return (
+    <div className="discover-card" style={{ position: "relative", ...style }}>
+      {isNew && (
+        <span style={{ position: "absolute", top: 8, left: 8, zIndex: 2, padding: "2px 8px", borderRadius: 20, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", background: "var(--accent)", color: "#fff", boxShadow: "0 2px 6px -1px rgba(232,112,58,0.6)" }}>Nouveau</span>
+      )}
+      <RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} />
+      <button onClick={onAuthor} title="Filtrer par ce créateur"
+        style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5, padding: "0 2px", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
+        {p.authorPhoto
+          ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
+          : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
+        <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
+        {owned && <Icon name="check" size={12} color="var(--green)" />}
+      </button>
+    </div>
+  );
+}
+
+// Rangée éditoriale horizontale (carrousel). Ne s'affiche pas si vide.
+function Carousel({ emoji, title, items, renderItem }) {
+  if (!items.length) return null;
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <h3 style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
+        <span style={{ fontSize: 15, lineHeight: 1 }}>{emoji}</span>{title}
+      </h3>
+      <div className="discover-row" style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollSnapType: "x proximity" }}>
+        {items.map((it, i) => (
+          <div key={it.pubId} style={{ flex: "0 0 156px", scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ─── DÉCOUVRIR — recettes publiques de la communauté ──────────────────────────
 export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic }) {
@@ -21,6 +61,9 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const [nutriMax, setNutriMax] = useState(null);
   const [usePrefs, setUsePrefs] = useState(false);
   const [authorUid, setAuthorUid] = useState(null);
+  const [showNutri, setShowNutri] = useState(false);
+  const [showCuisine, setShowCuisine] = useState(false);
+  const [now] = useState(() => Date.now()); // figé au montage → « Nouveau » stable (pureté du rendu)
 
   // pubId des recettes déjà dans MA bibliothèque (clonées) ou publiées par moi.
   const ownedIds = useMemo(() => {
@@ -29,27 +72,42 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     return s;
   }, [recipes]);
   const isOwned = (p) => ownedIds.has(p.pubId) || p.authorUid === user?.uid;
+  const isInSeason = (payload) => isRecipeInSeason(payload, resolver);
+  const isNew = (p) => p.createdAt && (now - p.createdAt) < NEW_MS;
 
-  // Payloads des bases (composants) référencées par une recette, retrouvées parmi
-  // les docs publics déjà chargés → permet d'afficher leurs étapes dans le détail.
+  // Payloads des bases référencées, retrouvées parmi les docs déjà chargés.
   const componentsFor = (p) => (p.componentRefs || [])
     .map(origId => pubs.find(x => x.pubId === publicId(p.authorUid, origId)))
     .filter(Boolean)
     .map(x => x.recipe);
 
-  const isInSeason = (payload) => isRecipeInSeason(payload, resolver);
   const filtered = useMemo(() => filterPublicRecipes(pubs, {
     text, cuisine, seasonOnly, nutriMax, authorUid,
     diet: usePrefs ? preferences?.diet : null,
   }, { isInSeason }), [pubs, text, cuisine, seasonOnly, nutriMax, authorUid, usePrefs, preferences, resolver]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cuisines réellement présentes dans les résultats (pour le filtre).
   const cuisines = useMemo(() => [...new Set(pubs.filter(p => !p.isComponent && p.cuisine).map(p => p.cuisine))].sort(), [pubs]);
   const activeFilters = !!(cuisine || seasonOnly || nutriMax || usePrefs || authorUid || text);
 
-  const chip = (active, onClick, content, tint) => (
-    <button onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? (tint || "var(--accent)") : "var(--surface2)", color: active ? (tint ? "var(--accent)" : "#fff") : "var(--text2)", border: `1px solid ${active ? (tint ? "rgba(232,112,58,0.5)" : "transparent") : "var(--border)"}` }}>{content}</button>
+  // Rangées éditoriales (mode navigation, sans recherche ni filtre actif).
+  const featured = useMemo(() => pubs.filter(p => !p.isComponent).slice(0, 12), [pubs]);
+  const seasonal = useMemo(() => filterPublicRecipes(pubs, { seasonOnly: true }, { isInSeason }).slice(0, 12), [pubs, resolver]); // eslint-disable-line react-hooks/exhaustive-deps
+  const forYou = useMemo(() => (preferences?.diet && preferences.diet !== "omnivore")
+    ? filterPublicRecipes(pubs, { diet: preferences.diet }).slice(0, 12) : [], [pubs, preferences]);
+
+  const card = (p, idx) => (
+    <PublicRecipeCard
+      p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)} isNew={isNew(p)}
+      onOpen={() => onOpenPublic?.(p, componentsFor(p))}
+      onAuthor={() => setAuthorUid(authorUid === p.authorUid ? null : p.authorUid)}
+      style={{ animationDelay: `${(idx % 8) * 0.04}s` }}
+    />
   );
+
+  const chip = (active, onClick, content) => (
+    <button onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? TINT : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{content}</button>
+  );
+  const noPublic = pubs.filter(p => !p.isComponent).length === 0;
 
   return (
     <section>
@@ -69,20 +127,22 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
       </div>
 
-      {/* Filtres */}
-      <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 6 }}>
-        {chip(seasonOnly, () => setSeasonOnly(v => !v), <><span style={{ fontSize: 13, lineHeight: 1 }}>🌿</span> De saison</>, "rgba(232,112,58,0.2)")}
-        {preferences?.diet && chip(usePrefs, () => setUsePrefs(v => !v), <><span style={{ fontSize: 13, lineHeight: 1 }}>❤️</span> Selon mes préférences</>, "rgba(232,112,58,0.2)")}
-        {NUTRI_LETTERS.map(L => chip(nutriMax === L, () => setNutriMax(nutriMax === L ? null : L), <>Nutri ≤ {L}</>, "rgba(232,112,58,0.2)"))}
+      {/* Filtres progressifs */}
+      <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
+        {chip(seasonOnly, () => setSeasonOnly(v => !v), <><span style={{ fontSize: 13, lineHeight: 1 }}>🌿</span> De saison</>)}
+        {preferences?.diet && chip(usePrefs, () => setUsePrefs(v => !v), <><span style={{ fontSize: 13, lineHeight: 1 }}>❤️</span> Selon mes préférences</>)}
+        {chip(!!nutriMax || showNutri, () => setShowNutri(v => !v), <>{nutriMax ? `Nutri ≤ ${nutriMax}` : "Nutri-Score"} <span style={{ fontSize: 9 }}>{showNutri ? "▲" : "▼"}</span></>)}
+        {cuisines.length > 0 && chip(!!cuisine || showCuisine, () => setShowCuisine(v => !v), <>{cuisine || "Cuisine"} <span style={{ fontSize: 9 }}>{showCuisine ? "▲" : "▼"}</span></>)}
+        {authorUid && chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Créateur</>)}
       </div>
-      {cuisines.length > 0 && (
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 6 }}>
-          {cuisines.map(c => chip(cuisine === c, () => setCuisine(cuisine === c ? null : c), c, "rgba(232,112,58,0.2)"))}
+      {showNutri && (
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
+          {NUTRI_LETTERS.map(L => chip(nutriMax === L, () => setNutriMax(nutriMax === L ? null : L), <>≤ {L}</>))}
         </div>
       )}
-      {authorUid && (
-        <div style={{ marginBottom: 10 }}>
-          {chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Filtré par créateur</>, "rgba(232,112,58,0.2)")}
+      {showCuisine && cuisines.length > 0 && (
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
+          {cuisines.map(c => chip(cuisine === c, () => setCuisine(cuisine === c ? null : c), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>))}
         </div>
       )}
 
@@ -96,31 +156,41 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           Impossible de charger les recettes publiques.<br />
           <button onClick={reload} className="btn btn-ghost" style={{ marginTop: 10, borderRadius: 12 }}>Réessayer</button>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : noPublic ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "26px 16px", borderRadius: 16, background: "var(--surface)", border: "1px dashed var(--border)" }}>
           <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(232,112,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
             <Icon name="sparkle" size={22} color="var(--accent)" />
           </div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{activeFilters ? "Aucun résultat" : "Encore aucune recette publique"}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Encore aucune recette publique</div>
           <div style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, maxWidth: 300 }}>
-            {activeFilters ? "Essaie d'élargir tes filtres." : "Sois le premier à partager : ouvre une de tes recettes et choisis « Rendre publique »."}
+            Sois le premier à partager : ouvre une de tes recettes et choisis « Rendre publique ».
           </div>
         </div>
-      ) : (
-        <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.map((p, idx) => (
-            <div key={p.pubId} style={{ position: "relative" }}>
-              <RecipeCard recipe={p.recipe} onClick={() => onOpenPublic?.(p, componentsFor(p))} inSeason={isInSeason(p.recipe)} style={{ animationDelay: `${(idx % 8) * 0.04}s` }} />
-              <button onClick={() => setAuthorUid(authorUid === p.authorUid ? null : p.authorUid)} title="Filtrer par ce créateur"
-                style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5, padding: "0 2px", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
-                {p.authorPhoto
-                  ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
-                  : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
-                <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
-                {isOwned(p) && <Icon name="check" size={12} color="var(--green)" />}
-              </button>
+      ) : !activeFilters ? (
+        // ── Mode navigation : feed éditorial ──
+        <>
+          <Carousel emoji="✨" title="À la une" items={featured} renderItem={card} />
+          <Carousel emoji="🌿" title="De saison" items={seasonal} renderItem={card} />
+          <Carousel emoji="❤️" title="Pour toi" items={forYou} renderItem={card} />
+          {cuisines.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <h3 style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{ fontSize: 15, lineHeight: 1 }}>🍽️</span>Par cuisine
+              </h3>
+              <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, flexWrap: "wrap" }}>
+                {cuisines.map(c => chip(false, () => setCuisine(c), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>))}
+              </div>
             </div>
-          ))}
+          )}
+        </>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: "center", color: "var(--text3)", padding: "32px 16px", fontSize: 13 }}>
+          Aucun résultat — essaie d'élargir tes filtres.
+        </div>
+      ) : (
+        // ── Mode recherche / filtre : grille complète ──
+        <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
+          {filtered.map((p, idx) => <div key={p.pubId}>{card(p, idx)}</div>)}
         </div>
       )}
     </section>

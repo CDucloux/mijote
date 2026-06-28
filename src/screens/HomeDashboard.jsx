@@ -5,6 +5,8 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildDashboardSummary } from "../lib/dashboard.js";
+import { createIngredientResolver } from "../lib/nameMatcher.js";
+import { isRecipeInSeason } from "../lib/seasonality.js";
 
 // ─── HOME / ACCUEIL ───────────────────────────────────────────────────────────
 // Page d'atterrissage : un en-tête « Aujourd'hui » (notifications dérivées de
@@ -48,14 +50,26 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
   );
   const { meals, shoppingTodo, lowStockNames, isCalm } = summary;
 
+  // Accroche du hero : quelques stats de bibliothèque (donne une raison de rester/explorer).
+  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  const libraryCount = useMemo(() => recipes.filter(r => !r.isComponent).length, [recipes]);
+  const seasonalCount = useMemo(
+    () => recipes.filter(r => !r.isComponent && isRecipeInSeason(r, resolver)).length,
+    [recipes, resolver]
+  );
+  const subtitle = libraryCount === 0
+    ? "Explore la communauté ou crée ta première recette"
+    : `${libraryCount} recette${libraryCount > 1 ? "s" : ""} dans ta bibliothèque${seasonalCount > 0 ? ` · ${seasonalCount} de saison ce mois-ci` : ""}`;
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* En-tête */}
-      <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+      {/* En-tête — léger dégradé chaleureux + accroche contextuelle */}
+      <div style={{ padding: "20px 20px 8px", flexShrink: 0, background: "linear-gradient(180deg, rgba(232,112,58,0.07), transparent)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
             <span style={{ fontSize: 13, color: "var(--text3)", fontWeight: 500 }}>{greeting()}{firstName ? "," : ""}</span>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName || "Bienvenue"}</h1>
+            <span style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</span>
           </div>
           <UserAvatar />
         </div>
@@ -64,22 +78,21 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
       {/* Corps défilant */}
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 24px" }}>
         {/* ── Aujourd'hui ─────────────────────────────────────────────────── */}
-        <section style={{ marginBottom: 26 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Aujourd'hui</h2>
+        <section style={{ marginBottom: isCalm ? 18 : 26 }}>
+          {!isCalm && <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Aujourd'hui</h2>}
 
           {isCalm ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "28px 20px", borderRadius: 16, background: "var(--surface)", border: "1px dashed var(--border)" }}>
-              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(76,175,125,0.14)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <Icon name="check" size={24} color="var(--green)" />
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Rien d'urgent au menu</div>
-              <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 280 }}>
-                Pas de repas planifié, courses à jour et placards bien remplis. Et si tu planifiais ta semaine&nbsp;?
-              </div>
-              <button className="btn btn-ghost" style={{ marginTop: 14, borderRadius: 12 }} onClick={() => setTab?.("meal-plan")}>
-                <Icon name="calendar" size={15} /> Planifier la semaine
-              </button>
-            </div>
+            // Calme → bandeau fin (libère la ligne de flottaison pour la découverte).
+            <button onClick={() => setTab?.("meal-plan")} style={{ display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
+              <span style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "rgba(76,175,125,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="check" size={15} color="var(--green)" />
+              </span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <strong style={{ fontWeight: 600 }}>Tout est à jour</strong>
+                <span style={{ color: "var(--text3)" }}> · rien de planifié, courses et stock OK</span>
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 12, fontWeight: 600, color: "var(--accent)", flexShrink: 0 }}>Planifier <Icon name="forward" size={13} color="var(--accent)" /></span>
+            </button>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {/* Repas du jour */}
