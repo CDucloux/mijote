@@ -15,6 +15,7 @@ import { buildRecipeIndex } from "./lib/nutriscore.js";
 import {
   DEFAULT_CATEGORIES, SAMPLE_RECIPES, SAMPLE_COLLECTIONS,
 } from "./constants/categories.js";
+import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
 import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
 import { useLS } from "./hooks/useLS.js";
@@ -27,6 +28,7 @@ import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/OfflineModal.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
+import { HomeDashboard } from "./screens/HomeDashboard.jsx";
 import { HomeTab } from "./screens/HomeTab.jsx";
 import { MealPlanTab } from "./screens/MealPlanTab.jsx";
 import { StockTab } from "./screens/StockTab.jsx";
@@ -43,8 +45,8 @@ function AppInner() {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config/") ? "config" : "home");
-  const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/recipes"), [navigate]);
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : "accueil");
+  const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
   // Au remontage du composant lors d'une navigation, Firebase est déjà initialisé :
@@ -203,6 +205,7 @@ function AppInner() {
   }, [persistSharedDiffs, setShoppingLists, user]);
   const [stock, setStock] = useLS("rf_stock", []);
   const [lowStock, setLowStock] = useLS("rf_lowStock", []);
+  const [preferences, setPreferences] = useLS("rf_preferences", DEFAULT_PREFERENCES);
   // Dérivé du pathname (et non de useParams) pour qu'AppInner reste une instance
   // unique montée sur `path="*"` : pas de remontage entre les onglets.
   const recipeIdParam = location.pathname.startsWith("/recipes/")
@@ -227,6 +230,7 @@ function AppInner() {
     setDirectory,
     stock, setStock,
     lowStock, setLowStock,
+    preferences, setPreferences,
     masterDB, setMasterDB,
     userDB, setUserDB,
   });
@@ -247,8 +251,8 @@ function AppInner() {
 
   // Update document title on tab change
   useEffect(() => {
-    const titles = { "home": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration" };
-    document.title = `Mijoté | ${titles[tab] || "Recettes"}`;
+    const titles = { "accueil": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration" };
+    document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
   }, [tab]);
 
 
@@ -379,11 +383,12 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "home" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
+      {tab === "accueil" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
+      {tab === "recipes" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "fridge" && <StockTab stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
-      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} />}
+      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} />}
     </div>
   );
 
@@ -460,7 +465,6 @@ function AppInner() {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/recipes" replace />} />
       <Route path="/fridge" element={<Navigate to="/stock" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout

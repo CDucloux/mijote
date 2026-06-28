@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { useOnline } from "../hooks/useOnline.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
@@ -7,6 +8,7 @@ import { AboutModal } from "./AboutModal.jsx";
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
 export function UserAvatar() {
   const { user, syncStatus, signOut: onSignOut, isDark, toggleTheme: onToggleTheme } = useAppShell();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [about, setAbout] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -45,6 +47,12 @@ export function UserAvatar() {
                 <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
               </>
             )}
+            <button onClick={() => { setOpen(false); navigate("/config/preferences"); }}
+              style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
+              <Icon name="settings" size={13} color="currentColor" /> Configuration
+            </button>
             <button onClick={() => { setOpen(false); setAbout(true); }}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "6px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 12, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}

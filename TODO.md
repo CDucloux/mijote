@@ -9,7 +9,9 @@
 - [x] Sur mobile, dans la swipeablesheet "Ajouter une recette" -> ne pas ouvrir le clavier initialement (car prend trop de view)
   - [x] Dans cette swipeablesheet, il faut aussi retirer le healthring et le remplacer par le nutriscore plus clean et remplacer le séparateur "." par "|"
 
-- [ ] Partage des recettes (mode public / privé)
+- [x] Onglet Accueil (dashboard de notifications + idées de saison + teaser découverte)
+- [x] Préférences alimentaires gérées dans l'espace avatar (Configuration déplacée dans l'avatar)
+- [ ] Partage des recettes (mode public / privé) — PR2 : collection `publicRecipes`, règles Firestore, publication, moteur de découverte (chef/créateur/cuisine/saison/Nutri-Score/préférences), clone hybride avec attribution
 - [x] PDF : Pas de saut de page dans la génération
 - [x] PWA et réduire la taille du truc packagé
 - [x] CI/CD (GitHub Actions) + tests unitaires sur les libs critiques (Vitest)

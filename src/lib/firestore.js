@@ -62,13 +62,14 @@ export async function loadMasterDB() {
 
 // Load all of a user's data from the split structure.
 export async function loadUserData(uid) {
-  const [recipesSnap, collectionsSnap, mealPlanSnap, shoppingSnap, stockSnap, userDBSnap] = await Promise.all([
+  const [recipesSnap, collectionsSnap, mealPlanSnap, shoppingSnap, stockSnap, userDBSnap, prefsSnap] = await Promise.all([
     getDocs(recipesCol(uid)),
     getDoc(metaDoc(uid, "collections")),
     getDoc(metaDoc(uid, "mealPlan")),
     getDoc(metaDoc(uid, "shoppingLists")),
     getDoc(metaDoc(uid, "stock")),
     getDoc(metaDoc(uid, "userDB")),
+    getDoc(metaDoc(uid, "preferences")),
   ]);
   return {
     recipes: recipesSnap.docs.map(d => d.data()),
@@ -78,6 +79,7 @@ export async function loadUserData(uid) {
     stock: stockSnap.exists() ? (stockSnap.data().items || []) : null,
     lowStock: stockSnap.exists() ? (stockSnap.data().low || []) : null,
     userDB: userDBSnap.exists() ? userDBSnap.data() : null,
+    preferences: prefsSnap.exists() ? prefsSnap.data() : null,
   };
 }
 

@@ -16,6 +16,7 @@ import {
   splitMarkdownRow, parseIngredientsMarkdown, formatTips,
 } from "../lib/ingredientsMarkdown.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
+import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
 import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "../lib/seasonality.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
@@ -26,7 +27,7 @@ import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tab
 
 
 
-export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
+export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences }) {
   const navigate = useNavigate();
   const location = useLocation();
   const configSectionParam = location.pathname.startsWith("/config/")
@@ -253,9 +254,9 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
           <UserAvatar />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
-          {["ingredients", "ustensiles", "collections", "données", "nouveautés"].map(s => (
+          {["préférences", "ingredients", "ustensiles", "collections", "données", "nouveautés"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
+              {s === "préférences" ? "Préférences" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
             </button>
           ))}
         </div>
@@ -276,6 +277,79 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
+        {section === "préférences" && (() => {
+          const prefs = preferences || DEFAULT_PREFERENCES;
+          const setPref = (patch) => setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), ...patch }));
+          const toggleIn = (key, value) => setPref({
+            [key]: (prefs[key] || []).includes(value) ? prefs[key].filter(v => v !== value) : [...(prefs[key] || []), value],
+          });
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 22 }} className="slide-up">
+              <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: 0 }}>
+                Ces choix personnalisent ton expérience. Ils serviront bientôt à filtrer les recettes publiques selon ce que tu manges (régime, allergènes, ingrédients à éviter).
+              </p>
+
+              {/* Régime */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Régime alimentaire</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {DIETS.map(d => {
+                    const active = prefs.diet === d.id;
+                    return (
+                      <button key={d.id} onClick={() => setPref({ diet: d.id })} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 500, background: active ? "var(--accent)" : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? "transparent" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        <span style={{ fontSize: 15, lineHeight: 1 }}>{d.emoji}</span>{d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Allergènes */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Allergènes à éviter</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {COMMON_ALLERGENS.map(a => {
+                    const active = (prefs.allergens || []).includes(a);
+                    return (
+                      <button key={a} onClick={() => toggleIn("allergens", a)} style={{ padding: "7px 13px", borderRadius: 22, fontSize: 13, fontWeight: 500, background: active ? "rgba(224,82,82,0.16)" : "var(--surface2)", color: active ? "var(--red)" : "var(--text2)", border: `1px solid ${active ? "rgba(224,82,82,0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        {active ? "✕ " : ""}{a}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Catégories exclues */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Catégories à ne pas proposer</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {sortedCategoryEntries(categories).map(([key, cat]) => {
+                    const active = (prefs.excludedCategories || []).includes(key);
+                    return (
+                      <button key={key} onClick={() => toggleIn("excludedCategories", key)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, background: active ? cat.color + "26" : "var(--surface2)", color: active ? cat.color : "var(--text2)", border: `1px solid ${active ? cat.color + "88" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>{cat.icon}</span>{cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Ingrédients non aimés */}
+              <div>
+                <TagInput
+                  label="Ingrédients que tu n'aimes pas"
+                  tags={prefs.dislikes || []}
+                  onChange={(tags) => setPref({ dislikes: tags })}
+                  allTags={ingredientDB.map(i => i.name).filter(Boolean)}
+                  placeholder="Coriandre, Olives…"
+                  inputId="pref-dislikes"
+                  commitOnBlur
+                  dedupeInsensitive
+                />
+              </div>
+            </div>
+          );
+        })()}
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {sortedCategoryEntries(categories).map(([catKey, cat], ci) => {
