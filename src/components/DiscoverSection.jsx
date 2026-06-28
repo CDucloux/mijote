@@ -93,6 +93,9 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const seasonal = useMemo(() => filterPublicRecipes(pubs, { seasonOnly: true }, { isInSeason }).slice(0, 12), [pubs, resolver]); // eslint-disable-line react-hooks/exhaustive-deps
   const forYou = useMemo(() => (preferences?.diet && preferences.diet !== "omnivore")
     ? filterPublicRecipes(pubs, { diet: preferences.diet }).slice(0, 12) : [], [pubs, preferences]);
+  // Préparations de base (composants publics) : exclues de la recherche/feed normal
+  // par filterPublicRecipes ; on les met en avant dans leur propre rangée.
+  const bases = useMemo(() => pubs.filter(p => p.isComponent).slice(0, 12), [pubs]);
 
   const card = (p, idx) => (
     <PublicRecipeCard
@@ -106,7 +109,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const chip = (active, onClick, content) => (
     <button onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? TINT : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{content}</button>
   );
-  const noPublic = pubs.filter(p => !p.isComponent).length === 0;
+  const noPublic = pubs.length === 0; // aucun contenu public (ni recette, ni base)
 
   return (
     <section>
@@ -181,6 +184,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         // ── Mode navigation : feed éditorial ──
         <>
           <Carousel emoji="✨" title="À la une" items={featured} renderItem={card} />
+          <Carousel emoji="🍲" title="Préparations de base" items={bases} renderItem={card} />
           <Carousel emoji="🌿" title="De saison" items={seasonal} renderItem={card} />
           <Carousel emoji="❤️" title="Pour toi" items={forYou} renderItem={card} />
           {cuisines.length > 0 && (

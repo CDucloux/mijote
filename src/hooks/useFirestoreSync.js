@@ -152,6 +152,7 @@ export function useFirestoreSync({
       setDoc(doc(db, "master", "ingredients"), { items: masterDB.ingredients }),
       setDoc(doc(db, "master", "utensils"), { items: masterDB.utensils }),
       setDoc(doc(db, "master", "categories"), { map: masterDB.categories || DEFAULT_CATEGORIES }),
+      setDoc(doc(db, "master", "techniques"), { items: masterDB.techniques || [] }),
     ]).then(() => setSyncStatus("synced")).catch(() => setSyncStatus("error"));
   }, [masterDB, user, isAdmin]);
 

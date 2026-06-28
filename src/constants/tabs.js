@@ -17,6 +17,7 @@ export const CONFIG_SECTION_BY_PATH = {
   "preferences": "préférences",
   "ingredients": "ingredients",
   "ustensils": "ustensiles",
+  "techniques": "techniques",
   "collections": "collections",
   "data": "données",
   "changelog": "nouveautés",

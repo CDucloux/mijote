@@ -27,3 +27,7 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Firebase Admin service account (jamais committé — utilisé par scripts/seed.mjs)
+serviceAccount*.json
+*-firebase-adminsdk-*.json

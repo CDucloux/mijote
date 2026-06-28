@@ -37,6 +37,13 @@
 
 - [ ] Blabla sur le traitement des données ?
 
+- [x] Couche de données YAML versionnée (`data/*.yaml`) : source de vérité ingrédients / ustensiles / techniques ; import YAML + export Markdown dans la Config ; script `npm run seed`
+- [x] Glossaire des techniques (Master DB `master/techniques`) — section Configuration › Techniques
+  - [ ] Phase 2 : survol des verbes en mode pas-à-pas (CookMode) → tooltip définition depuis le glossaire
+- [x] Préparations de base publiques pré-initialisées (sauces mères, fonds, farces d'Escoffier) sous le compte `mijote-official`
+  - [ ] À déployer : `npm run seed` (nécessite un compte de service Firebase Admin) pour pousser `master/techniques` + les bases publiques
+  - [ ] Enrichir le glossaire et les bases depuis le Guide Culinaire complet
+
 ## Features différentiatrices
 
 ### Le cœur "saveurs"

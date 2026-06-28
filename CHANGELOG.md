@@ -2,6 +2,13 @@
 
 ## Non publié — Accueil & communauté de mijoteurs
 
+### Couche de données & glossaire des techniques
+- **Données versionnées dans le repo** : la base de référence (ingrédients, ustensiles, techniques) a désormais une source de vérité lisible en YAML sous `data/` — plus simple à éditer et à relire que les constantes
+- **Import en YAML, export en Markdown** : dans la Configuration, l'import des bases se fait par fichier **YAML** (validation stricte, import annulé en entier à la moindre erreur) ; l'export reste un tableau **Markdown** lisible
+- **Glossaire des techniques** : nouvelle section **Techniques** (suer, déglacer, monder, émulsionner…) — gestes culinaires classés par famille (découpe, cuisson, liaison, préparation, dressage), avec définition et formes du verbe ; socle du futur survol des verbes en mode pas-à-pas
+- **Préparations de base d'Escoffier** : un jeu de bases fondamentales (sauces mères Béchamel, Velouté, Espagnole, Tomate ; roux, fond brun, farce mousseline) pré-publiées sous le compte officiel **« Mijoté × Escoffier »**, à découvrir et à cloner — d'après *Le Guide Culinaire* (1903, domaine public), adapté à l'échelle domestique
+- **Script de seed** (`npm run seed`) pour pousser ces données vers le cloud
+
 ### Recettes publiques (communauté)
 - **Publier une recette** : depuis son menu, « Rendre publique » la partage avec la communauté ; « Rendre privée » la retire
 - **Publication en cascade** : les préparations de base d'une recette sont publiées avec elle (confirmation explicite), pour que le partage reste complet

@@ -12,6 +12,7 @@ import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 //   users/{uid}/meta/userDB          — { ingredients: [...], utensils: [...] }
 //   master/ingredients               — { items: [...] } (shared, read-only for users)
 //   master/utensils                  — { items: [...] }
+//   master/techniques                — { items: [...] } (glossaire des techniques)
 
 export const metaDoc = (uid, name) => doc(db, "users", uid, "meta", name);
 export const recipesCol = (uid) => collection(db, "users", uid, "recipes");
@@ -78,19 +79,21 @@ export function toSharedListDoc(list, { ownerEmail, ownerUid }) {
 // Read the shared Master reference DB (ingredients + utensils + categories).
 export async function loadMasterDB() {
   try {
-    const [ing, ut, cat] = await Promise.all([
+    const [ing, ut, cat, tech] = await Promise.all([
       getDoc(doc(db, "master", "ingredients")),
       getDoc(doc(db, "master", "utensils")),
       getDoc(doc(db, "master", "categories")),
+      getDoc(doc(db, "master", "techniques")),
     ]);
     return {
       ingredients: ing.exists() ? (ing.data().items || []) : [],
       utensils: ut.exists() ? (ut.data().items || []) : [],
+      techniques: tech.exists() ? (tech.data().items || []) : [],
       categories: cat.exists() && cat.data().map && Object.keys(cat.data().map).length
         ? Object.fromEntries(Object.entries({ ...DEFAULT_CATEGORIES, ...cat.data().map }).filter(([k]) => k in DEFAULT_CATEGORIES)) : DEFAULT_CATEGORIES,
     };
   } catch {
-    return { ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES };
+    return { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
   }
 }
 

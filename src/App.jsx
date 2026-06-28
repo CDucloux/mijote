@@ -86,7 +86,7 @@ function AppInner() {
       const cached = localStorage.getItem("rf_masterDB_cache");
       if (cached) return JSON.parse(cached);
     } catch { /* ignore */ }
-    return { ingredients: [], utensils: [], categories: DEFAULT_CATEGORIES };
+    return { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
   });
   const [userDB, setUserDB] = useState({ ingredients: [], utensils: [] });
   // Nutrition categories live in the Master (admin-managed). Fall back to defaults.
@@ -126,6 +126,17 @@ function AppInner() {
     setMasterDB(prev => ({ ...prev, utensils: next }));
     if (userDB.utensils.length) setUserDB(prev => ({ ...prev, utensils: [] }));
   }, [masterDB, userDB, isAdmin]);
+  // Glossaire des techniques : entièrement Master (pas de pendant userDB). Lecture
+  // pour tous, écriture admin seulement.
+  const techniques = useMemo(() => masterDB.techniques || [], [masterDB]);
+  const setTechniques = useCallback((updater) => {
+    if (!isAdmin) return;
+    setMasterDB(prev => {
+      const cur = prev.techniques || [];
+      const next = typeof updater === "function" ? updater(cur) : updater;
+      return { ...prev, techniques: next };
+    });
+  }, [isAdmin]);
 
   // Écrit les changements des listes partagées vers Firestore (création/màj/suppression/quitter).
   // Compare l'ancien et le nouvel état fusionné pour n'écrire que ce qui change.
@@ -446,7 +457,7 @@ function AppInner() {
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "fridge" && <StockTab stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
-      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} />}
+      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
     </div>
   );
 

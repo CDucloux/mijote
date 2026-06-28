@@ -1,0 +1,147 @@
+import { describe, it, expect } from "vitest";
+import {
+  parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml,
+  formatTechniquesMarkdown, slugifyId, TECHNIQUE_CATEGORIES,
+} from "../dataYaml.js";
+
+describe("slugifyId", () => {
+  it("slugs and strips accents", () => {
+    expect(slugifyId("tech_", "Déglacer")).toBe("tech_deglacer");
+    expect(slugifyId("tech_", "Tailler en julienne")).toBe("tech_tailler_en_julienne");
+  });
+});
+
+describe("parseTechniquesYaml", () => {
+  it("parses a valid list and generates ids from names", () => {
+    const { items, errors } = parseTechniquesYaml(`
+- name: Suer
+  category: cuisson
+  definition: Cuire doucement sans coloration.
+  aliases: [suer, Faire Suer]
+`);
+    expect(errors).toEqual([]);
+    expect(items).toHaveLength(1);
+    expect(items[0].id).toBe("tech_suer");
+    expect(items[0].aliases).toEqual(["suer", "faire suer"]); // lowercased + deduped
+  });
+
+  it("rejects unknown category and reports the entry", () => {
+    const { items, errors } = parseTechniquesYaml(`
+- name: Truc
+  category: magie
+  definition: x
+`);
+    expect(items).toEqual([]); // all-or-nothing
+    expect(errors.join(" ")).toMatch(/magie/);
+  });
+
+  it("requires name and definition", () => {
+    const { errors } = parseTechniquesYaml(`
+- category: cuisson
+`);
+    expect(errors.join(" ")).toMatch(/name/);
+    expect(errors.join(" ")).toMatch(/definition/);
+  });
+
+  it("flags duplicate ids", () => {
+    const { errors } = parseTechniquesYaml(`
+- id: tech_x
+  name: A
+  category: cuisson
+  definition: a
+- id: tech_x
+  name: B
+  category: cuisson
+  definition: b
+`);
+    expect(errors.join(" ")).toMatch(/double/);
+  });
+
+  it("errors on non-list documents", () => {
+    expect(parseTechniquesYaml("name: x").errors.length).toBeGreaterThan(0);
+    expect(parseTechniquesYaml("").errors.length).toBeGreaterThan(0);
+  });
+
+  it("errors on invalid YAML", () => {
+    expect(parseTechniquesYaml("- name: [unclosed").errors[0]).toMatch(/YAML invalide/);
+  });
+});
+
+describe("formatTechniquesMarkdown", () => {
+  it("renders a sorted table with the human category label", () => {
+    const md = formatTechniquesMarkdown([
+      { name: "Napper", category: "dressage", definition: "Recouvrir de sauce." },
+      { name: "Suer", category: "cuisson", definition: "Cuire doux." },
+    ]);
+    expect(md).toContain("| Technique | Catégorie |");
+    expect(md).toContain(TECHNIQUE_CATEGORIES.cuisson);
+    // cuisson sorts before dressage → Suer row appears before Napper row
+    expect(md.indexOf("Suer")).toBeLessThan(md.indexOf("Napper"));
+  });
+
+  it("escapes pipes and newlines in cells", () => {
+    const md = formatTechniquesMarkdown([
+      { name: "X", category: "cuisson", definition: "a | b\nc" },
+    ]);
+    expect(md).toContain("a \\| b c");
+  });
+});
+
+describe("parseIngredientsYaml", () => {
+  it("parses, recomputes isVegetable, and keeps known nutrients", () => {
+    const { items, errors } = parseIngredientsYaml(`
+- name: Carotte
+  category: vegetable
+  months: [12, 1, 1, 2]
+  nutrition: { calories: 41, protein: 0.9, unknownField: 5 }
+`, { validCategories: ["vegetable"] });
+    expect(errors).toEqual([]);
+    expect(items[0].months).toEqual([1, 2, 12]); // deduped + sorted
+    expect(items[0].nutrition.isVegetable).toBe(true);
+    expect(items[0].nutrition.calories).toBe(41);
+    expect(items[0].nutrition).not.toHaveProperty("unknownField");
+  });
+
+  it("rejects unknown categories and out-of-bounds nutrition", () => {
+    expect(parseIngredientsYaml(`
+- name: X
+  category: nope
+`, { validCategories: ["vegetable"] }).errors.join(" ")).toMatch(/inconnue/);
+
+    expect(parseIngredientsYaml(`
+- name: X
+  nutrition: { calories: 99999 }
+`).errors.join(" ")).toMatch(/hors bornes/);
+  });
+
+  it("rejects months outside 1..12", () => {
+    expect(parseIngredientsYaml(`
+- name: X
+  months: [0, 13]
+`).errors.join(" ")).toMatch(/months/);
+  });
+
+  it("skips items without a name", () => {
+    const { errors } = parseIngredientsYaml(`
+- aliases: [x]
+`);
+    expect(errors.join(" ")).toMatch(/name/);
+  });
+});
+
+describe("parseUtensilsYaml", () => {
+  it("parses name + optional id/image", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: Fouet
+- name: Casserole
+  id: db_u_cass
+`);
+    expect(errors).toEqual([]);
+    expect(items).toHaveLength(2);
+    expect(items[1].id).toBe("db_u_cass");
+  });
+
+  it("requires a name", () => {
+    expect(parseUtensilsYaml(`- image: http://x`).errors.join(" ")).toMatch(/name/);
+  });
+});

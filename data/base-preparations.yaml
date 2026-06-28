@@ -1,0 +1,258 @@
+# ─── Préparations de base (composants publics) ────────────────────────────────
+# Bases fondamentales d'après A. Escoffier, Le Guide Culinaire (1903, domaine
+# public). Proportions adaptées à des quantités domestiques ; rédaction propre
+# (l'OCR du Guide est bruité et sa prose de 1903 n'est pas reprise telle quelle).
+#
+# Chaque entrée est un COMPOSANT (`isComponent: true`) au sens de Mijoté : une
+# préparation réutilisable, dotée d'un rendement (`yield`). `npm run seed` la
+# publie dans `publicRecipes` sous le compte officiel « Mijoté × Escoffier ».
+#
+# Schéma :
+#   id            slug stable, unique (préfixe `base_`).
+#   name          nom affiché.
+#   isComponent   toujours true.
+#   cuisine       libellé de cuisine.
+#   yield         { amount, unit } — ce que produit la préparation.
+#   prepTime/cookTime  minutes (entiers).
+#   tags          mots-clés.
+#   source        attribution.
+#   ingredients   liste de { id, name, amount, unit }. `id` sert à relier les
+#                 étapes (`steps[].ingredients`).
+#   steps         liste de { text, ingredients?: [id], tip? }.
+
+- id: base_roux_brun
+  name: Roux brun
+  isComponent: true
+  cuisine: française
+  yield: { amount: 220, unit: g }
+  prepTime: 2
+  cookTime: 20
+  tags: [base, liaison, sauce]
+  source: "Escoffier, Le Guide Culinaire (1903)"
+  ingredients:
+    - { id: i1, name: Beurre, amount: 100, unit: g }
+    - { id: i2, name: Farine, amount: 120, unit: g }
+  steps:
+    - text: >
+        Faire fondre le beurre à feu doux dans une casserole à fond épais.
+      ingredients: [i1]
+    - text: >
+        Ajouter la farine en une fois et mélanger. Cuire lentement en remuant
+        jusqu'à ce que le roux prenne une couleur noisette soutenue et dégage
+        une odeur de noisette.
+      ingredients: [i2]
+      tip: >
+        La cuisson lente est essentielle : un roux trop vite coloré garde un
+        goût de farine crue et lie moins bien.
+
+- id: base_roux_blanc
+  name: Roux blanc
+  isComponent: true
+  cuisine: française
+  yield: { amount: 110, unit: g }
+  prepTime: 2
+  cookTime: 5
+  tags: [base, liaison, sauce]
+  source: "Escoffier, Le Guide Culinaire (1903)"
+  ingredients:
+    - { id: i1, name: Beurre, amount: 50, unit: g }
+    - { id: i2, name: Farine, amount: 60, unit: g }
+  steps:
+    - text: Faire fondre le beurre à feu doux sans le colorer.
+      ingredients: [i1]
+    - text: >
+        Ajouter la farine et la cuire juste le temps de faire disparaître le
+        goût de farine crue, sans coloration.
+      ingredients: [i2]
+
+- id: base_bechamel
+  name: Sauce Béchamel
+  isComponent: true
+  cuisine: française
+  yield: { amount: 1, unit: L }
+  prepTime: 5
+  cookTime: 20
+  tags: [sauce mère, base, lait]
+  source: "Escoffier, Le Guide Culinaire (1903)"
+  ingredients:
+    - { id: i1, name: Beurre, amount: 50, unit: g }
+    - { id: i2, name: Farine, amount: 60, unit: g }
+    - { id: i3, name: Lait, amount: 1, unit: L }
+    - { id: i4, name: Sel, amount: 5, unit: g }
+    - { id: i5, name: Muscade, amount: 1, unit: pincée }
+  steps:
+    - text: >
+        Préparer un roux blanc : fondre le beurre, ajouter la farine et la cuire
+        sans coloration jusqu'à disparition du goût de farine crue.
+      ingredients: [i1, i2]
+    - text: >
+        Délayer au fouet avec le lait bouillant pour éviter les grumeaux, puis
+        porter à ébullition.
+      ingredients: [i3]
+    - text: >
+        Assaisonner de sel et d'une pointe de muscade. Cuire doucement une
+        quinzaine de minutes, puis passer et beurrer la surface.
+      ingredients: [i4, i5]
+      tip: Beurrer la surface empêche une peau de se former pendant l'attente.
+
+- id: base_veloute
+  name: Sauce Velouté
+  isComponent: true
+  cuisine: française
+  yield: { amount: 1, unit: L }
+  prepTime: 5
+  cookTime: 90
+  tags: [sauce mère, base, fond blanc]
+  source: "Escoffier, Le Guide Culinaire (1903)"
+  ingredients:
+    - { id: i1, name: Beurre, amount: 45, unit: g }
+    - { id: i2, name: Farine, amount: 45, unit: g }
+    - { id: i3, name: Fond blanc, amount: 1.1, unit: L }
+    - { id: i4, name: Champignons de Paris, amount: 40, unit: g }
+    - { id: i5, name: Bouquet garni, amount: 1, unit: pièce }
+  steps:
+    - text: Préparer un roux blond — un roux blanc poussé jusqu'à une teinte dorée.
+      ingredients: [i1, i2]
+    - text: >
+        Délayer au fouet avec le fond blanc bouillant et porter à ébullition en
+        remuant.
+      ingredients: [i3]
+    - text: >
+        Ajouter le bouquet garni et les champignons. Cuire doucement environ
+        une heure et demie en dépouillant régulièrement la surface.
+      ingredients: [i4, i5]
+    - text: Passer à l'étamine et vanner jusqu'au refroidissement.
+      tip: Le dépouillement (retirer l'écume) affine la sauce et la rend limpide.
+
+- id: base_espagnole
+  name: Sauce Espagnole
+  isComponent: true
+  cuisine: française
+  yield: { amount: 1, unit: L }
+  prepTime: 15
+  cookTime: 240
+  tags: [sauce mère, base, fond brun]
+  source: "Escoffier, Le Guide Culinaire (1903)"
+  ingredients:
+    - { id: i1, name: Roux brun, amount: 120, unit: g }
+    - { id: i2, name: Fond brun, amount: 1.6, unit: L }
+    - { id: i3, name: Lard de poitrine, amount: 30, unit: g }
+    - { id: i4, name: Carottes, amount: 50, unit: g }
+    - { id: i5, name: Oignons, amount: 30, unit: g }
+    - { id: i6, name: Purée de tomates, amount: 200, unit: g }
+    - { id: i7, name: Vin blanc, amount: 50, unit: ml }
+  steps:
+    - text: >
+        Porter le fond brun à ébullition et y délayer le roux brun ramolli.
+        Tenir en ébullition douce.
+      ingredients: [i1, i2]
+    - text: >
+        Préparer une mirepoix : faire fondre le lard, y faire revenir carottes
+        et oignons en petits dés jusqu'à léger rissolage, déglacer au vin blanc
+        et réduire de moitié, puis ajouter à la sauce.
+      ingredients: [i3, i4, i5, i7]
+    - text: >
+        Faire sécher la purée de tomates à feu doux jusqu'à ce qu'elle brunisse
+        légèrement, puis l'incorporer : elle détruit l'acidité et donne un ton
+        plus chaud.
+      ingredients: [i6]
+      tip: >
+        Sécher la tomate facilite la clarification et adoucit la sauce.
+    - text: >
+        Cuire longuement à petits frémissements en dépouillant, jusqu'à la
+        consistance voulue. Passer à l'étamine et vanner.
+
+- id: base_sauce_tomate
+  name: Sauce Tomate
+  isComponent: true
+  cuisine: française
+  yield: { amount: 1, unit: L }
+  prepTime: 15
+  cookTime: 120
+  tags: [sauce mère, base, tomate]
+  source: "Escoffier, Le Guide Culinaire (1903)"
+  ingredients:
+    - { id: i1, name: Lard de poitrine, amount: 40, unit: g }
+    - { id: i2, name: Carottes, amount: 50, unit: g }
+    - { id: i3, name: Oignons, amount: 35, unit: g }
+    - { id: i4, name: Beurre, amount: 20, unit: g }
+    - { id: i5, name: Farine, amount: 35, unit: g }
+    - { id: i6, name: Purée de tomates, amount: 700, unit: g }
+    - { id: i7, name: Fond blanc, amount: 500, unit: ml }
+    - { id: i8, name: Ail, amount: 1, unit: gousse }
+    - { id: i9, name: Sel, amount: 5, unit: g }
+    - { id: i10, name: Sucre, amount: 3, unit: g }
+  steps:
+    - text: >
+        Faire revenir au beurre une mirepoix de lard, carottes et oignons en
+        brunoise avec thym et laurier.
+      ingredients: [i1, i2, i3, i4]
+    - text: Singer de farine et la cuire quelques minutes.
+      ingredients: [i5]
+    - text: >
+        Ajouter la purée de tomates, le fond blanc, l'ail écrasé, le sel et le
+        sucre. Porter à ébullition en remuant.
+      ingredients: [i6, i7, i8, i9, i10]
+    - text: >
+        Cuire doucement au four ou à feu très doux une heure et demie à deux
+        heures, puis passer à l'étamine et beurrer la surface.
+      tip: Le sucre corrige l'acidité naturelle de la tomate.
+
+- id: base_fond_brun
+  name: Fond brun de veau
+  isComponent: true
+  cuisine: française
+  yield: { amount: 2, unit: L }
+  prepTime: 20
+  cookTime: 360
+  tags: [fond, base, bouillon]
+  source: "Escoffier, Le Guide Culinaire (1903)"
+  ingredients:
+    - { id: i1, name: Os de veau, amount: 1, unit: kg }
+    - { id: i2, name: Jarret de veau, amount: 500, unit: g }
+    - { id: i3, name: Carottes, amount: 150, unit: g }
+    - { id: i4, name: Oignons, amount: 100, unit: g }
+    - { id: i5, name: Bouquet garni, amount: 1, unit: pièce }
+    - { id: i6, name: Eau, amount: 3, unit: L }
+  steps:
+    - text: >
+        Concasser les os, les faire colorer au four avec carottes et oignons
+        jusqu'à belle teinte brune.
+      ingredients: [i1, i2, i3, i4]
+    - text: >
+        Déglacer la plaque, réunir le tout dans une marmite avec le bouquet
+        garni, mouiller à l'eau froide.
+      ingredients: [i5, i6]
+    - text: >
+        Porter doucement à ébullition, écumer, puis cuire à frémissement cinq à
+        six heures en dépouillant. Passer au chinois.
+      tip: >
+        Un mouillage à l'eau froide et une cuisson sans bouillonnement donnent
+        un fond limpide.
+
+- id: base_farce_mousseline
+  name: Farce mousseline
+  isComponent: true
+  cuisine: française
+  yield: { amount: 500, unit: g }
+  prepTime: 20
+  cookTime: 0
+  tags: [farce, base]
+  source: "Escoffier, Le Guide Culinaire (1903)"
+  ingredients:
+    - { id: i1, name: Chair de volaille, amount: 250, unit: g }
+    - { id: i2, name: Blanc d'œuf, amount: 1, unit: pièce }
+    - { id: i3, name: Crème fraîche, amount: 250, unit: ml }
+    - { id: i4, name: Sel, amount: 4, unit: g }
+  steps:
+    - text: >
+        Piler finement la chair bien froide avec le sel, ajouter le blanc d'œuf,
+        puis passer au tamis.
+      ingredients: [i1, i2, i4]
+    - text: >
+        Travailler la farce sur glace en y incorporant peu à peu la crème très
+        froide, jusqu'à une texture lisse et souple.
+      ingredients: [i3]
+      tip: >
+        Tout doit rester très froid : c'est la condition d'une mousseline qui
+        ne tranche pas.
