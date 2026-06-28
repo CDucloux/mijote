@@ -32,6 +32,7 @@ import { validateRecipeSchema } from "../src/lib/recipeSchema.js";
 import { buildPublishBundle } from "../src/lib/publicRecipes.js";
 import { createIngredientResolver } from "../src/lib/nameMatcher.js";
 import { computeNutriInfo } from "../src/lib/nutriscore.js";
+import { normalizeCuisine } from "../src/constants/cuisines.js";
 import { DEFAULT_CATEGORIES } from "../src/constants/categories.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -146,7 +147,9 @@ function enrichBase(recipe, masterIngredients, resolve) {
   });
   const { score, letter } = computeNutriInfo(ingredients, masterIngredients, new Map());
   // Coercition en null : Firestore rejette `undefined` (la recette est sérialisée telle quelle).
-  return { recipe: { ...recipe, ingredients, healthScore: typeof score === "number" ? score : null, nutriLetter: letter || null }, linked };
+  // Cuisine ramenée à sa forme canonique (« française » → « Française ») pour coller
+  // aux libellés filtrables côté découverte.
+  return { recipe: { ...recipe, cuisine: normalizeCuisine(recipe.cuisine), ingredients, healthScore: typeof score === "number" ? score : null, nutriLetter: letter || null }, linked };
 }
 
 if (DRY) {

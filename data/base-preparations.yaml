@@ -23,7 +23,7 @@
 - id: base_roux_brun
   name: Roux brun
   isComponent: true
-  cuisine: française
+  cuisine: Française
   yield: { amount: 220, unit: g }
   prepTime: 2
   cookTime: 20
@@ -48,7 +48,7 @@
 - id: base_roux_blanc
   name: Roux blanc
   isComponent: true
-  cuisine: française
+  cuisine: Française
   yield: { amount: 110, unit: g }
   prepTime: 2
   cookTime: 5
@@ -68,7 +68,7 @@
 - id: base_bechamel
   name: Sauce Béchamel
   isComponent: true
-  cuisine: française
+  cuisine: Française
   yield: { amount: 1, unit: L }
   prepTime: 5
   cookTime: 20
@@ -98,7 +98,7 @@
 - id: base_veloute
   name: Sauce Velouté
   isComponent: true
-  cuisine: française
+  cuisine: Française
   yield: { amount: 1, unit: L }
   prepTime: 5
   cookTime: 90
@@ -127,7 +127,7 @@
 - id: base_espagnole
   name: Sauce Espagnole
   isComponent: true
-  cuisine: française
+  cuisine: Française
   yield: { amount: 1, unit: L }
   prepTime: 15
   cookTime: 240
@@ -165,7 +165,7 @@
 - id: base_sauce_tomate
   name: Sauce Tomate
   isComponent: true
-  cuisine: française
+  cuisine: Française
   yield: { amount: 1, unit: L }
   prepTime: 15
   cookTime: 120
@@ -201,7 +201,7 @@
 - id: base_fond_brun
   name: Fond brun de veau
   isComponent: true
-  cuisine: française
+  cuisine: Française
   yield: { amount: 2, unit: L }
   prepTime: 20
   cookTime: 360
@@ -233,7 +233,7 @@
 - id: base_farce_mousseline
   name: Farce mousseline
   isComponent: true
-  cuisine: française
+  cuisine: Française
   yield: { amount: 500, unit: g }
   prepTime: 20
   cookTime: 0
