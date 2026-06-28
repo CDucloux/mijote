@@ -221,7 +221,15 @@ function AppInner() {
   const [notification, setNotification] = useState(null);
   // Recette publique consultée en lecture seule (depuis la découverte) : { pub, components }.
   const [publicView, setPublicView] = useState(null);
-  const openPublic = useCallback((pub, components) => setPublicView({ pub, components: components || [] }), []);
+  const openPublic = useCallback((pub, components) => {
+    // Ma propre recette : ouvrir directement ma version locale, pleinement éditable
+    // (toutes les options habituelles) plutôt que l'aperçu public en lecture seule.
+    if (pub?.authorUid === user?.uid && recipes.some(r => r.id === pub.originalId)) {
+      navigate(`/recipes/${pub.originalId}`);
+      return;
+    }
+    setPublicView({ pub, components: components || [] });
+  }, [user, recipes, navigate]);
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
   const { cloudLoaded } = useFirestoreSync({
