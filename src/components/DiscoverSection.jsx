@@ -10,24 +10,17 @@ import { cuisineEmoji } from "../constants/cuisines.js";
 
 const NUTRI_LETTERS = ["A", "B", "C", "D", "E"];
 const TINT = "rgba(232,112,58,0.2)";
-const NEW_MS = 14 * 24 * 60 * 60 * 1000; // « Nouveau » : publiée il y a moins de 14 jours
+const CARD_W = "clamp(150px, 46vw, 200px)"; // largeur des cartes en carrousel (= grille)
 
-// Carte d'une recette publique : visuel + auteur cliquable + badge « Nouveau » + hover-lift.
-function PublicRecipeCard({ p, onOpen, onAuthor, owned, inSeason, isNew, style }) {
+// Carte d'une recette publique : visuel + crédit créateur intégré + hover-lift.
+function PublicRecipeCard({ p, onOpen, onAuthor, owned, inSeason, style }) {
   return (
-    <div className="discover-card" style={{ position: "relative", ...style }}>
-      {isNew && (
-        <span style={{ position: "absolute", top: 8, left: 8, zIndex: 2, padding: "2px 8px", borderRadius: 20, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", background: "var(--accent)", color: "#fff", boxShadow: "0 2px 6px -1px rgba(232,112,58,0.6)" }}>Nouveau</span>
-      )}
-      <RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} />
-      <button onClick={onAuthor} title="Filtrer par ce créateur"
-        style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5, padding: "0 2px", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
-        {p.authorPhoto
-          ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
-          : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
-        <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
-        {owned && <Icon name="check" size={12} color="var(--green)" />}
-      </button>
+    <div className="discover-card">
+      <RecipeCard
+        recipe={p.recipe} onClick={onOpen} inSeason={inSeason} style={style}
+        author={{ name: p.authorName, photo: p.authorPhoto, owned }}
+        onAuthorClick={onAuthor}
+      />
     </div>
   );
 }
@@ -42,7 +35,7 @@ function Carousel({ emoji, title, items, renderItem }) {
       </h3>
       <div className="discover-row" style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollSnapType: "x proximity" }}>
         {items.map((it, i) => (
-          <div key={it.pubId} style={{ flex: "0 0 156px", scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
+          <div key={it.pubId} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
         ))}
       </div>
     </div>
@@ -63,7 +56,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const [authorUid, setAuthorUid] = useState(null);
   const [showNutri, setShowNutri] = useState(false);
   const [showCuisine, setShowCuisine] = useState(false);
-  const [now] = useState(() => Date.now()); // figé au montage → « Nouveau » stable (pureté du rendu)
 
   // pubId des recettes déjà dans MA bibliothèque (clonées) ou publiées par moi.
   const ownedIds = useMemo(() => {
@@ -73,7 +65,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   }, [recipes]);
   const isOwned = (p) => ownedIds.has(p.pubId) || p.authorUid === user?.uid;
   const isInSeason = (payload) => isRecipeInSeason(payload, resolver);
-  const isNew = (p) => p.createdAt && (now - p.createdAt) < NEW_MS;
 
   // Payloads des bases référencées, retrouvées parmi les docs déjà chargés.
   const componentsFor = (p) => (p.componentRefs || [])
@@ -97,7 +88,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
   const card = (p, idx) => (
     <PublicRecipeCard
-      p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)} isNew={isNew(p)}
+      p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)}
       onOpen={() => onOpenPublic?.(p, componentsFor(p))}
       onAuthor={() => setAuthorUid(authorUid === p.authorUid ? null : p.authorUid)}
       style={{ animationDelay: `${(idx % 8) * 0.04}s` }}

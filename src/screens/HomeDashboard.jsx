@@ -67,8 +67,10 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
       <div style={{ padding: "20px 20px 8px", flexShrink: 0, background: "linear-gradient(180deg, rgba(232,112,58,0.07), transparent)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 13, color: "var(--text3)", fontWeight: 500 }}>{greeting()}{firstName ? "," : ""}</span>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName || "Bienvenue"}</h1>
+            <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500 }}>
+              Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 600, color: "var(--text2)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span></span>
+            </span>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName}` : greeting()}</h1>
             <span style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</span>
           </div>
           <UserAvatar />
