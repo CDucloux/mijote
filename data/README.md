@@ -23,14 +23,21 @@ Le format de chaque fichier est documenté en tête du fichier lui-même.
 préparations de base. Comme le déploiement des règles Firestore, c'est une
 opération **manuelle** qui nécessite des droits d'administration.
 
-```bash
-# Authentification : un compte de service Firebase Admin
-export GOOGLE_APPLICATION_CREDENTIALS=/chemin/vers/serviceAccount.json
-export FIREBASE_PROJECT_ID=mijote-xxxx     # facultatif si présent dans la clé
+**Identifiants** (au choix, du plus simple au plus explicite) :
 
+1. dépose la clé sous **`serviceAccount.json`** à la racine du repo → auto-détectée, rien d'autre à faire ;
+2. ou mets le chemin dans **`.env.local`** (copie de `.env.example`) :
+   `GOOGLE_APPLICATION_CREDENTIALS=./serviceAccount.json` ;
+3. ou exporte la variable dans le shell.
+
+Les trois sont gitignorés (`serviceAccount*.json`, `*-firebase-adminsdk-*.json`,
+`secrets/`, `.env.local`) — la clé n'est **jamais** committée.
+
+```bash
 npm run seed                  # défaut : techniques + bases (contenu canonique)
+npm run seed -- --bases       # seulement les préparations de base
 npm run seed -- --ingredients # pousse aussi l'échantillon ingredients.yaml
-npm run seed -- --dry-run     # valide et affiche sans écrire
+npm run seed -- --dry-run     # valide et affiche sans écrire (aucune clé requise)
 ```
 
 > **L'import ne supprime jamais rien.** Côté app (Configuration) comme côté

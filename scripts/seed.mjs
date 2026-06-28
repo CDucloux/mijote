@@ -8,8 +8,11 @@
 // compte de service Firebase Admin — qui CONTOURNE les règles client, seul moyen
 // d'écrire des docs publics sous un authorUid synthétique.
 //
-//   export GOOGLE_APPLICATION_CREDENTIALS=/chemin/serviceAccount.json
-//   export FIREBASE_PROJECT_ID=mon-projet        # si absent de la clé
+// Identifiants admin (au choix, du plus simple au plus explicite) :
+//   • dépose `serviceAccount.json` à la racine du repo (gitignoré) → rien d'autre à faire
+//   • ou mets GOOGLE_APPLICATION_CREDENTIALS / FIREBASE_PROJECT_ID dans `.env.local`
+//   • ou exporte-les dans le shell
+//
 //   npm run seed                  # défaut : techniques + bases (contenu canonique)
 //   npm run seed -- --ingredients # pousse aussi l'échantillon ingredients.yaml
 //   npm run seed -- --techniques  # un sous-ensemble (techniques|ingredients|utensils|bases)
@@ -29,8 +32,25 @@ import { validateRecipeSchema } from "../src/lib/recipeSchema.js";
 import { buildPublishBundle } from "../src/lib/publicRecipes.js";
 import { DEFAULT_CATEGORIES } from "../src/constants/categories.js";
 
-const DATA_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "data");
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const DATA_DIR = path.join(ROOT, "data");
 const read = (f) => fs.readFileSync(path.join(DATA_DIR, f), "utf8");
+
+// Charge les variables d'un fichier .env (sans écraser l'environnement déjà
+// défini). Permet de mettre GOOGLE_APPLICATION_CREDENTIALS / FIREBASE_PROJECT_ID
+// dans un fichier non commité (.env.local / .env, déjà gitignorés) plutôt que de
+// faire `export` à chaque fois.
+function loadEnvFile(p) {
+  if (!fs.existsSync(p)) return;
+  for (const line of fs.readFileSync(p, "utf8").split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (!m || line.trim().startsWith("#")) continue;
+    let val = m[2];
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
+    if (process.env[m[1]] === undefined) process.env[m[1]] = val;
+  }
+}
+[".env.local", ".env"].forEach(f => loadEnvFile(path.join(ROOT, f)));
 
 // Auteur officiel des préparations de base (compte synthétique, sans connexion).
 const MIJOTE_OFFICIAL = { uid: "mijote-official", displayName: "Mijoté × Escoffier", photoURL: "" };
@@ -121,17 +141,44 @@ if (DRY) {
 }
 
 // ── 2. Écriture Firestore (firebase-admin) ───────────────────────────────────
-const { initializeApp, applicationDefault } = await import("firebase-admin/app");
+const { initializeApp, applicationDefault, cert } = await import("firebase-admin/app");
 const { getFirestore } = await import("firebase-admin/firestore");
+
+// Résout les identifiants admin, du plus explicite au plus implicite :
+//   1. GOOGLE_APPLICATION_CREDENTIALS → chemin d'un fichier de clé
+//   2. clé auto-détectée à la racine du repo (gitignorée) : serviceAccount.json,
+//      secrets/serviceAccount.json, ou *-firebase-adminsdk-*.json
+//   3. Application Default Credentials (gcloud auth application-default login)
+function resolveCredential() {
+  const fromFile = (p) => cert(JSON.parse(fs.readFileSync(p, "utf8")));
+  const explicit = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (explicit) {
+    if (!fs.existsSync(explicit)) fail(`GOOGLE_APPLICATION_CREDENTIALS : fichier introuvable « ${explicit} ».`);
+    log(`  clé : ${explicit}`);
+    return fromFile(explicit);
+  }
+  const candidates = [
+    path.join(ROOT, "serviceAccount.json"),
+    path.join(ROOT, "secrets", "serviceAccount.json"),
+    ...fs.readdirSync(ROOT).filter(f => /-firebase-adminsdk-.*\.json$/.test(f)).map(f => path.join(ROOT, f)),
+  ];
+  const found = candidates.find(p => fs.existsSync(p));
+  if (found) { log(`  clé : ${path.relative(ROOT, found)} (auto-détectée)`); return fromFile(found); }
+  log("  clé : Application Default Credentials");
+  return applicationDefault();
+}
 
 let app;
 try {
   app = initializeApp({
-    credential: applicationDefault(),
+    credential: resolveCredential(),
     projectId: process.env.FIREBASE_PROJECT_ID || undefined,
   });
 } catch (e) {
-  fail(`Initialisation Firebase Admin impossible : ${e.message}\n  Renseigne GOOGLE_APPLICATION_CREDENTIALS (compte de service).`);
+  fail(`Initialisation Firebase Admin impossible : ${e.message}\n`
+    + `  Fournis une clé de compte de service, au choix :\n`
+    + `   • dépose serviceAccount.json à la racine du repo (non commité), ou\n`
+    + `   • GOOGLE_APPLICATION_CREDENTIALS=/chemin/cle.json (dans .env.local ou exporté).`);
 }
 const dbAdmin = getFirestore(app);
 
@@ -144,19 +191,31 @@ async function writeMaster(docName, items) {
   log(`  master/${docName} ← ${created} ajout(s), ${updated} maj (total ${next.length})`);
 }
 
-if (parsed.techniques) await writeMaster("techniques", parsed.techniques);
-if (parsed.ingredients) await writeMaster("ingredients", parsed.ingredients);
-if (parsed.utensils) await writeMaster("utensils", parsed.utensils);
+// Les identifiants ne sont réellement vérifiés qu'au premier accès Firestore :
+// on enveloppe les écritures pour transformer un échec d'auth/permission en
+// message clair plutôt qu'une trace de pile.
+try {
+  if (parsed.techniques) await writeMaster("techniques", parsed.techniques);
+  if (parsed.ingredients) await writeMaster("ingredients", parsed.ingredients);
+  if (parsed.utensils) await writeMaster("utensils", parsed.utensils);
 
-if (baseDocs.length) {
-  let batch = dbAdmin.batch();
-  let n = 0;
-  for (const d of baseDocs) {
-    batch.set(dbAdmin.doc(`publicRecipes/${d.pubId}`), d);
-    if (++n % 400 === 0) { await batch.commit(); batch = dbAdmin.batch(); }
+  if (baseDocs.length) {
+    let batch = dbAdmin.batch();
+    let n = 0;
+    for (const d of baseDocs) {
+      batch.set(dbAdmin.doc(`publicRecipes/${d.pubId}`), d);
+      if (++n % 400 === 0) { await batch.commit(); batch = dbAdmin.batch(); }
+    }
+    await batch.commit();
+    log(`  publicRecipes ← ${baseDocs.length} doc(s) publié(s) sous ${MIJOTE_OFFICIAL.uid}`);
   }
-  await batch.commit();
-  log(`  publicRecipes ← ${baseDocs.length} doc(s) publié(s) sous ${MIJOTE_OFFICIAL.uid}`);
+} catch (e) {
+  const auth = /credential|authenticat|UNAUTHENTICATED|permission|PERMISSION_DENIED|default credentials|invalid_grant/i.test(e.message || "");
+  fail(auth
+    ? `Accès Firestore refusé : ${e.message}\n`
+      + `  Vérifie la clé de compte de service (fichier valide, bon projet, rôle suffisant).\n`
+      + `  Aide : dépose serviceAccount.json à la racine, ou renseigne GOOGLE_APPLICATION_CREDENTIALS dans .env.local.`
+    : `Échec de l'écriture : ${e.message}`);
 }
 
 log("\n✓ Seed terminé.");
