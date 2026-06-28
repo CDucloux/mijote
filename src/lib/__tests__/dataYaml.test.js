@@ -26,6 +26,17 @@ describe("parseTechniquesYaml", () => {
     expect(items[0].aliases).toEqual(["suer", "faire suer"]); // lowercased + deduped
   });
 
+  it("omits absent optional fields (no undefined → Firestore-safe)", () => {
+    const { items } = parseTechniquesYaml(`
+- name: Blanchir
+  category: cuisson
+  definition: Plonger dans l'eau bouillante.
+`);
+    expect(items[0]).not.toHaveProperty("source");
+    expect(items[0]).not.toHaveProperty("aliases");
+    expect(Object.values(items[0]).every(v => v !== undefined)).toBe(true);
+  });
+
   it("rejects unknown category and reports the entry", () => {
     const { items, errors } = parseTechniquesYaml(`
 - name: Truc

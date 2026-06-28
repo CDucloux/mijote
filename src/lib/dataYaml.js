@@ -84,11 +84,12 @@ export function parseTechniquesYaml(text) {
     const aliases = Array.isArray(raw.aliases)
       ? [...new Set(raw.aliases.map(a => str(a).toLowerCase()).filter(Boolean))]
       : [];
-    items.push({
-      id, name, category, definition,
-      aliases: aliases.length ? aliases : undefined,
-      source: str(raw.source) || undefined,
-    });
+    // N'inclure que des clés définies : Firestore rejette les valeurs `undefined`.
+    const item = { id, name, category, definition };
+    if (aliases.length) item.aliases = aliases;
+    const source = str(raw.source);
+    if (source) item.source = source;
+    items.push(item);
   });
   return { items: errors.length ? [] : items, errors };
 }
