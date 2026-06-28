@@ -46,14 +46,25 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const keepCta = owned
     ? <button className="btn btn-ghost" disabled style={{ width: "100%", borderRadius: 30, opacity: 0.85 }}><Icon name="check" size={15} color="var(--green)" /> Déjà dans tes recettes</button>
     : <button className="btn btn-primary" onClick={() => setConfirmClone(true)} style={{ width: "100%", borderRadius: 30 }}><Icon name="plus" size={15} /> Ajouter à mes recettes</button>;
-  // Pastille d'attribution affichée dans le hero en mode public.
-  const authorChip = publicMode && (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 11px 3px 4px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 6 }}>
-      {authorPhoto
-        ? <img src={authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 18, height: 18, borderRadius: "50%" }} />
-        : <span style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.25)" }} />}
-      <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>D'après {authorName || "un mijoteur"}</span>
-    </span>
+  // Attribution affichée dans le hero en mode public : pastille « Créé par : {auteur} »
+  // suivie, hors pastille, du lien « d'après {source} » (source web d'origine).
+  const sourceHref = recipe.source ? (recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source) : null;
+  const sourceHost = recipe.source ? (() => { try { return new URL(sourceHref).hostname.replace(/^www\./, ""); } catch { return recipe.source.replace(/^https?:\/\/(?:www\.)?/, "").split("/")[0]; } })() : "";
+  const attribution = publicMode && (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 11px 3px 4px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)" }}>
+        {authorPhoto
+          ? <img src={authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 18, height: 18, borderRadius: "50%" }} />
+          : <span style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.25)" }} />}
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>Créé par : {authorName || "un mijoteur"}</span>
+      </span>
+      {recipe.source && (
+        <a href={sourceHref} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+          d'après {sourceHost}
+          <Icon name="externalLink" size={10} color="rgba(255,255,255,0.7)" />
+        </a>
+      )}
+    </div>
   );
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
@@ -199,14 +210,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         )}
         <div style={{ position: "absolute", bottom: 14, left: 20, right: 20 }}>
           <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2 }}>{recipe.name}</h1>
-          {authorChip}
+          {attribution}
           {recipe.isComponent && (
             <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 4, cursor: "pointer" }}>
               <BaseIcon size={11} color="#fff" />
               <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
             </button>
           )}
-          {recipe.source && (
+          {!publicMode && recipe.source && (
             <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}
               target="_blank" rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginTop: 1, marginBottom: 8 }}>
@@ -332,14 +343,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             {/* Titre + source + tags */}
             <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
               <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff" }}>{recipe.name}</h1>
-              {authorChip}
+              {attribution}
               {recipe.isComponent && (
                 <button onClick={() => setShowBaseInfo(true)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.22)", marginBottom: 4, cursor: "pointer" }}>
                   <BaseIcon size={11} color="#fff" />
                   <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
                 </button>
               )}
-              {recipe.source && (
+              {!publicMode && recipe.source && (
                 <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source} target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginBottom: 6 }}>
                   {(() => { try { return new URL(recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source).hostname.replace(/^www\./, ""); } catch { return recipe.source.replace(/^https?:\/\/(?:www\.)?/, "").split("/")[0]; } })()}
