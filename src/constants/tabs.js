@@ -1,9 +1,9 @@
 // ─── TABS ─────────────────────────────────────────────────────────────────────
-// L'onglet « Accueil » est la page d'atterrissage (dashboard + découverte). L'ancien
-// onglet « home » (Mes Recettes) devient « recipes » et garde son path /recipes.
+// L'onglet « home » est la page d'atterrissage (dashboard + découverte). L'ancien
+// onglet d'accueil (Mes Recettes) devient « recipes » et garde son path /recipes.
 // La Configuration n'est plus un onglet : on y accède via le menu avatar.
 export const TABS = [
-  { id: "accueil", label: "Accueil", icon: "home", path: "/accueil" },
+  { id: "home", label: "Accueil", icon: "home", path: "/home" },
   { id: "recipes", label: "Recettes", icon: "book", path: "/recipes" },
   { id: "meal-plan", label: "Planning", icon: "calendar", path: "/meal-plan" },
   { id: "shopping", label: "Courses", icon: "shopping", path: "/shopping-lists" },

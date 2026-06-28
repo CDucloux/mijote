@@ -19,6 +19,7 @@ import {
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
 import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
+import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
@@ -46,8 +47,8 @@ function AppInner() {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : "accueil");
-  const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/accueil"), [navigate]);
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : "home");
+  const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/home"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
   // Au remontage du composant lors d'une navigation, Firebase est déjà initialisé :
@@ -219,23 +220,8 @@ function AppInner() {
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [notification, setNotification] = useState(null);
-  // ── Recette publique consultée via URL (/decouvrir/:pubId) ───────────────────
-  // pubId = "{authorUid}__{recipeId}" → l'auteur est lisible dans l'URL, la vue est
-  // deep-linkable et le bouton « retour » du navigateur fonctionne.
-  const publicPubId = location.pathname.startsWith("/decouvrir/")
-    ? decodeURIComponent(location.pathname.slice("/decouvrir/".length)) || null
-    : null;
-  const [publicDocs, setPublicDocs] = useState(null); // null = aucun · undefined = chargement · { pub, components }
-  const publicCacheRef = useRef(new Map());
-  const openPublic = useCallback((pub, components) => {
-    // Ma propre recette : ouvrir ma version locale, pleinement éditable.
-    if (pub?.authorUid === user?.uid && recipes.some(r => r.id === pub.originalId)) {
-      navigate(`/recipes/${pub.originalId}`);
-      return;
-    }
-    publicCacheRef.current.set(pub.pubId, { pub, components: components || [] });
-    navigate(`/decouvrir/${encodeURIComponent(pub.pubId)}`);
-  }, [user, recipes, navigate]);
+  // Vue d'une recette publique (route /discover/:pubId) — logique isolée dans son hook.
+  const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
   const { cloudLoaded } = useFirestoreSync({
@@ -269,34 +255,9 @@ function AppInner() {
 
   // Update document title on tab change
   useEffect(() => {
-    const titles = { "accueil": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration" };
+    const titles = { "home": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration" };
     document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
   }, [tab]);
-
-  // Résout la recette publique de l'URL : cache (clic interne) sinon fetch (deep-link
-  // / rafraîchissement), avec ses préparations de base.
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- chargement piloté par l'URL
-  useEffect(() => {
-    if (!publicPubId) { setPublicDocs(null); return; }
-    const cached = publicCacheRef.current.get(publicPubId);
-    if (cached) { setPublicDocs(cached); return; }
-    let alive = true;
-    setPublicDocs(undefined);
-    (async () => {
-      try {
-        const [pub] = await fetchPublicDocsByIds([publicPubId]);
-        if (!alive) return;
-        if (!pub) { setPublicDocs(null); return; }
-        const compIds = (pub.componentRefs || []).map(o => publicId(pub.authorUid, o));
-        const comps = compIds.length ? await fetchPublicDocsByIds(compIds) : [];
-        if (!alive) return;
-        const v = { pub, components: comps.map(c => c.recipe) };
-        publicCacheRef.current.set(publicPubId, v);
-        setPublicDocs(v);
-      } catch { if (alive) setPublicDocs(null); }
-    })();
-    return () => { alive = false; };
-  }, [publicPubId]);
 
 
   const notify = (msg, type = "success") => {
@@ -480,7 +441,7 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "accueil" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
+      {tab === "home" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
@@ -504,7 +465,7 @@ function AppInner() {
           authorName={publicDocs.pub.authorName}
           authorPhoto={publicDocs.pub.authorPhoto}
           onClone={() => cloneFromPublic(publicDocs.pub)}
-          onBack={() => navigate("/accueil")}
+          onBack={() => navigate("/home")}
           ingredientDB={ingredientDB} utensilDB={utensilDB} collections={[]} notify={notify}
         />
       </div>
@@ -513,7 +474,7 @@ function AppInner() {
         <div style={{ width: 26, height: 26, border: "3px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
       </div>
     ) : (
-      <RecipeNotFound onBack={() => navigate("/accueil")} />
+      <RecipeNotFound onBack={() => navigate("/home")} />
     )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
@@ -584,7 +545,7 @@ function AppInner() {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/accueil" replace />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="/fridge" element={<Navigate to="/stock" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout

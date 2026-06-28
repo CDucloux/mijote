@@ -6,8 +6,8 @@
 - **Publier une recette** : depuis son menu, « Rendre publique » la partage avec la communauté ; « Rendre privée » la retire
 - **Publication en cascade** : les préparations de base d'une recette sont publiées avec elle (confirmation explicite), pour que le partage reste complet
 - **Découverte** dans l'Accueil : recherche (recette, chef, ingrédient) et filtres **par créateur, cuisine, de saison, Nutri-Score** et **selon tes préférences alimentaires**
-- **Consultation complète avant de garder** : on ouvre la recette publique dans le même écran détaillé qu'en privé (ingrédients, ustensiles, étapes, Nutri-Score, attribution à l'auteur), en lecture seule, sur une **URL dédiée** `/decouvrir/{auteur}__{recette}` (deep-linkable, retour navigateur)
-- L'**Accueil** a maintenant sa route nommée `/accueil` (`/` y redirige)
+- **Consultation complète avant de garder** : on ouvre la recette publique dans le même écran détaillé qu'en privé (ingrédients, ustensiles, étapes, Nutri-Score, attribution à l'auteur), en lecture seule, sur une **URL dédiée** `/discover/{auteur}__{recette}` (deep-linkable, retour navigateur)
+- L'**Accueil** a maintenant sa route nommée `/home` (`/` y redirige)
 - **Garder dans mes recettes** : clonage dans ta bibliothèque (avec ses bases), attribution à l'auteur et anti-doublon — la copie s'intègre à tout (planning, courses, stock, pas-à-pas) et reste modifiable
 
 ### Nouvel onglet Accueil
