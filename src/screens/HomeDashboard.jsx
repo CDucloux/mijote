@@ -73,7 +73,7 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
       </div>
 
       {/* Corps défilant */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 24px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 24px" }}>
         {/* ── Aujourd'hui ─────────────────────────────────────────────────── */}
         <section style={{ marginBottom: isCalm ? 18 : 26 }}>
           {!isCalm && (

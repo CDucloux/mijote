@@ -1,45 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <!-- Corps de la cocotte -->
-    <linearGradient id="pot" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f8924e"/>
-      <stop offset="0.5" stop-color="#e8703a"/>
-      <stop offset="1" stop-color="#c9551f"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f59042"/>
+      <stop offset="0.55" stop-color="#e8703a"/>
+      <stop offset="1" stop-color="#cf5320"/>
     </linearGradient>
-    <!-- Couvercle -->
-    <linearGradient id="lid" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffa968"/>
-      <stop offset="1" stop-color="#e0651f"/>
-    </linearGradient>
-    <!-- Reflet -->
-    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
-      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
+    <radialGradient id="sheen" cx="0.3" cy="0.2" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-
-  <!-- Vapeur -->
-  <g stroke="#9aa7b3" stroke-width="3.6" stroke-linecap="round" fill="none" opacity="0.85">
-    <path d="M37 36 q-6 -6 0 -12 q6 -6 0 -12"/>
-    <path d="M50 32 q-6 -6 0 -12 q6 -6 0 -12"/>
-    <path d="M63 36 q-6 -6 0 -12 q6 -6 0 -12"/>
+  <rect width="100" height="100" rx="26" fill="url(#bg)"/>
+  <rect width="100" height="100" rx="26" fill="url(#sheen)"/>
+  <!-- Monogramme M (tracé symétrique) + empattements slab -->
+  <g fill="none" stroke="#fff6ee" stroke-width="11.5" stroke-linejoin="round" stroke-linecap="butt">
+    <path d="M27 70 V35 L50 62 L73 35 V70"/>
   </g>
-
-  <!-- Poignées latérales -->
-  <rect x="6" y="58" width="16" height="9" rx="4.5" fill="#c9551f"/>
-  <rect x="78" y="58" width="16" height="9" rx="4.5" fill="#c9551f"/>
-
-  <!-- Corps de la cocotte -->
-  <path d="M16 52 h68 v14 a15 15 0 0 1 -15 15 H31 a15 15 0 0 1 -15 -15 Z" fill="url(#pot)"/>
-
-  <!-- Couvercle -->
-  <ellipse cx="50" cy="52" rx="37" ry="9.5" fill="url(#lid)"/>
-  <ellipse cx="50" cy="50.5" rx="37" ry="8.5" fill="#ffb87d"/>
-  <ellipse cx="50" cy="50" rx="37" ry="8" fill="url(#lid)"/>
-  <!-- Bouton du couvercle -->
-  <ellipse cx="50" cy="42.5" rx="6.5" ry="3" fill="#c9551f"/>
-  <rect x="47.3" y="38" width="5.4" height="5.4" rx="2.7" fill="#ffb87d"/>
-
-  <!-- Reflet sur le corps -->
-  <path d="M23 55 h12 v9 a8 8 0 0 1 -12 -2 Z" fill="url(#shine)"/>
+  <g fill="#fff6ee">
+    <!-- empattements bas, un par patte -->
+    <rect x="18" y="67.5" width="18" height="4" rx="2"/>
+    <rect x="64" y="67.5" width="18" height="4" rx="2"/>
+    <!-- point accent de la marque -->
+    <circle cx="86" cy="69.5" r="4.4"/>
+  </g>
 </svg>
