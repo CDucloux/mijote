@@ -40,6 +40,7 @@ export function useFirestoreSync({
   const activeHidRef = useRef(null);   // hid du workspace partagé chargé (null = solo)
   const migratingRef = useRef(false);  // true pendant la bascule/migration → suspend l'autosave
   const metaSigRef = useRef({});       // signatures JSON des méta partagées (anti-écho push/snapshot)
+  const transitionTargetRef = useRef(undefined); // cible d'une bascule en cours (anti-concurrence)
   const [loadedHid, setLoadedHid] = useState(null); // foyer chargé → déclenche les abonnements temps réel
 
   // Mémorise les signatures des méta partagées chargées (un snapshot identique ne ré-applique rien).
@@ -136,6 +137,8 @@ export function useFirestoreSync({
   useEffect(() => {
     if (!user || !cloudLoaded.current) return;
     if (activeHidRef.current === desiredHid) return; // déjà sur le bon namespace
+    if (transitionTargetRef.current === desiredHid) return; // bascule déjà en cours vers cette cible
+    transitionTargetRef.current = desiredHid;
     let cancelled = false;
     (async () => {
       migratingRef.current = true;
@@ -161,6 +164,7 @@ export function useFirestoreSync({
           }
           activeHidRef.current = desiredHid;
           setLoadedHid(desiredHid);
+          console.debug("[foyer] foyer chargé", desiredHid, "migrated=", householdPointer?.migrated);
         } else {
           const solo = await loadSharedData(soloWorkspace(user.uid)); // retour en solo (départ)
           if (cancelled) return;
@@ -171,8 +175,8 @@ export function useFirestoreSync({
           setLoadedHid(null);
         }
         setSyncStatus("synced");
-      } catch { setSyncStatus("error"); }
-      finally { migratingRef.current = false; }
+      } catch (e) { console.error("[foyer] échec bascule workspace", e); setSyncStatus("error"); }
+      finally { migratingRef.current = false; transitionTargetRef.current = undefined; }
     })();
     return () => { cancelled = true; };
   }, [user, desiredHid, householdPointer, applyShared, setSyncStatus, seedSigs]);
@@ -198,8 +202,11 @@ export function useFirestoreSync({
   // autre membre entre la planification et l'exécution de cet effet.
   useEffect(() => {
     if (!user || !canAutosaveShared()) return;
+    const latest = sharedRef.current.recipes || [];
+    const willDelete = [...recipeSyncMap.current.keys()].filter(id => !latest.some(r => r.id === id));
+    if (willDelete.length) console.debug("[foyer] autosave recettes : suppression de", willDelete, "vers", sharedWsNow(user.uid).segments.join("/"));
     setSyncStatus("syncing");
-    syncRecipes(sharedWsNow(user.uid), sharedRef.current.recipes || [], recipeSyncMap.current)
+    syncRecipes(sharedWsNow(user.uid), latest, recipeSyncMap.current)
       .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
       .catch(() => setSyncStatus("error"));
   }, [recipes, user]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -228,22 +235,27 @@ export function useFirestoreSync({
   // mettent à jour l'état avec garde de signature/diff pour ne pas relancer d'écriture.
   useEffect(() => {
     if (!user || !loadedHid) return;
+    console.debug("[foyer] abonnement temps réel au foyer", loadedHid);
     const ws = householdWorkspace(loadedHid);
     const unsubs = [];
     unsubs.push(onSnapshot(recipesCol(ws), snap => {
       if (snap.metadata.hasPendingWrites) return;
+      if (snap.metadata.fromCache && snap.empty) return; // ne pas écraser des données valides avec un cache vide
       const remote = snap.docs.map(d => d.data());
+      console.debug("[foyer] recipes snapshot", remote.length, { fromCache: snap.metadata.fromCache });
       recipeSyncMap.current = mapOf(remote);
       setRecipes(remote);
-    }, () => {}));
+    }, err => console.error("[foyer] recipes snapshot ERREUR", err)));
     const metaSub = (name, fromSnap, apply) => onSnapshot(metaDoc(ws, name), snap => {
       if (snap.metadata.hasPendingWrites) return;
+      if (snap.metadata.fromCache && !snap.exists()) return; // cache absent : ne pas réinitialiser
       const val = fromSnap(snap.exists() ? snap.data() : {});
       const sig = JSON.stringify(val);
       if (metaSigRef.current[name] === sig) return;
       metaSigRef.current[name] = sig;
+      console.debug("[foyer] meta snapshot", name);
       apply(val);
-    }, () => {});
+    }, err => console.error(`[foyer] meta ${name} snapshot ERREUR`, err));
     unsubs.push(metaSub("collections", d => d.items || [], setCollections));
     unsubs.push(metaSub("mealPlan", d => d.data || {}, setMealPlan));
     unsubs.push(metaSub("shoppingLists", d => d.items || [], setShoppingLists));
