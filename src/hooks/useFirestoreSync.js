@@ -7,6 +7,7 @@ import {
   loadMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
 } from "../lib/firestore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
+import { normalizePreferences } from "../constants/preferences.js";
 
 // ─── COUCHE DE SYNCHRONISATION FIRESTORE ──────────────────────────────────────
 export function useFirestoreSync({
@@ -19,6 +20,7 @@ export function useFirestoreSync({
   setDirectory,
   stock, setStock,
   lowStock, setLowStock,
+  preferences, setPreferences,
   masterDB, setMasterDB,
   userDB, setUserDB,
 }) {
@@ -60,6 +62,7 @@ export function useFirestoreSync({
           if (data.shoppingLists) setShoppingLists(data.shoppingLists);
           if (data.stock) setStock(data.stock);
           if (data.lowStock) setLowStock(data.lowStock);
+          if (data.preferences) setPreferences(normalizePreferences(data.preferences));
           setUserDB(data.userDB || { ingredients: [], utensils: [] });
           const freshMaster = await masterPromise;
           setMasterDB(freshMaster);
@@ -115,6 +118,7 @@ export function useFirestoreSync({
   useEffect(() => { saveMeta("mealPlan", { data: mealPlan }); }, [mealPlan]);
   useEffect(() => { saveMeta("shoppingLists", { items: shoppingLists }); }, [shoppingLists]);
   useEffect(() => { saveMeta("stock", { items: stock, low: lowStock }); }, [stock, lowStock]);
+  useEffect(() => { saveMeta("preferences", preferences); }, [preferences]);
 
   useEffect(() => {
     if (!user?.email) { setSharedLists([]); return; }
@@ -148,6 +152,7 @@ export function useFirestoreSync({
       setDoc(doc(db, "master", "ingredients"), { items: masterDB.ingredients }),
       setDoc(doc(db, "master", "utensils"), { items: masterDB.utensils }),
       setDoc(doc(db, "master", "categories"), { map: masterDB.categories || DEFAULT_CATEGORIES }),
+      setDoc(doc(db, "master", "techniques"), { items: masterDB.techniques || [] }),
     ]).then(() => setSyncStatus("synced")).catch(() => setSyncStatus("error"));
   }, [masterDB, user, isAdmin]);
 

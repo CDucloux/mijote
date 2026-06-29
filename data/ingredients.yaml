@@ -1,0 +1,90 @@
+# ─── Base d'ingrédients (échantillon de format) ───────────────────────────────
+# Source de vérité versionnée pour master/ingredients. Ce fichier montre le
+# FORMAT attendu par l'import YAML (Configuration › Ingrédients) et par
+# `npm run seed`. La base réelle peut rester éditée dans l'app et exportée en
+# Markdown ; ce YAML sert de canon pour les valeurs qu'on veut figer dans le repo.
+#
+# Schéma d'une entrée :
+#   id            dbid stable (facultatif ; généré si absent à l'import).
+#   name          nom affiché (requis).
+#   aliases       autres appellations (pour le rapprochement d'ingrédients).
+#   category      clé de catégorie (voir src/constants/categories.js) — doit
+#                 exister dans les catégories de la base.
+#   months        mois de saison [1..12] (facultatif).
+#   gramsPerPiece poids moyen d'une pièce, en g (facultatif).
+#   image         URL (facultatif).
+#   nutrition     valeurs pour 100 g : calories, protein, carbs, sugar, fat,
+#                 saturatedFat, omega3, fiber, salt.
+#   tips          [{ type, text }] — voir src/constants/tipTypes.js.
+
+- id: db_i_carotte
+  name: Carotte
+  aliases: [carottes]
+  category: vegetable
+  months: [1, 2, 3, 9, 10, 11, 12]
+  gramsPerPiece: 120
+  nutrition:
+    calories: 41
+    protein: 0.9
+    carbs: 9.6
+    sugar: 4.7
+    fat: 0.2
+    saturatedFat: 0.04
+    fiber: 2.8
+    salt: 0.07
+
+- id: db_i_oignon
+  name: Oignon
+  aliases: [oignons]
+  category: vegetable
+  gramsPerPiece: 110
+  nutrition:
+    calories: 40
+    protein: 1.1
+    carbs: 9.3
+    sugar: 4.2
+    fat: 0.1
+    saturatedFat: 0.04
+    fiber: 1.7
+    salt: 0.01
+
+- id: db_i_beurre
+  name: Beurre
+  category: dairy
+  nutrition:
+    calories: 745
+    protein: 0.7
+    carbs: 0.6
+    sugar: 0.6
+    fat: 82
+    saturatedFat: 51
+    fiber: 0
+    salt: 0.02
+
+- id: db_i_farine
+  name: Farine
+  aliases: [farine de blé]
+  category: grain
+  nutrition:
+    calories: 364
+    protein: 10
+    carbs: 76
+    sugar: 0.3
+    fat: 1
+    saturatedFat: 0.2
+    fiber: 2.7
+    salt: 0.01
+
+- id: db_i_lait
+  name: Lait
+  aliases: [lait demi-écrémé]
+  category: dairy
+  nutrition:
+    calories: 47
+    protein: 3.2
+    carbs: 4.8
+    sugar: 4.8
+    fat: 1.6
+    saturatedFat: 1
+    fiber: 0
+    salt: 0.1

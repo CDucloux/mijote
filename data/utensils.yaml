@@ -1,0 +1,23 @@
+# ─── Base d'ustensiles (échantillon de format) ────────────────────────────────
+# Source de vérité versionnée pour master/utensils. Format de l'import YAML
+# (Configuration › Ustensiles) et de `npm run seed`.
+#
+# Schéma : { id?, name, image? }
+#   id     dbid stable (facultatif ; généré si absent).
+#   name   nom affiché (requis).
+#   image  URL (facultatif).
+
+- id: db_u_casserole
+  name: Casserole
+
+- id: db_u_fouet
+  name: Fouet
+
+- id: db_u_chinois
+  name: Chinois
+
+- id: db_u_etamine
+  name: Étamine
+
+- id: db_u_sauteuse
+  name: Sauteuse

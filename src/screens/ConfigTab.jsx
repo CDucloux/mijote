@@ -11,22 +11,68 @@ import { ReadOnlyBanner, AdminBanner } from "../components/Banners.jsx";
 import { IngredientDetail } from "../components/IngredientDetail.jsx";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { deleteImageByUrl } from "../lib/storage.js";
+import { ING_MD_COLUMNS, formatTips } from "../lib/ingredientsMarkdown.js";
 import {
-  ING_MD_COLUMNS, ING_MD_REQUIRED_LABELS, ING_MD_BOUNDS,
-  splitMarkdownRow, parseIngredientsMarkdown, formatTips,
-} from "../lib/ingredientsMarkdown.js";
+  parseIngredientsYaml, parseUtensilsYaml, parseTechniquesYaml,
+  formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
+  TECHNIQUE_CATEGORIES,
+} from "../lib/dataYaml.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
+import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
 import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "../lib/seasonality.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
 
+// Déclenche le téléchargement d'un fichier texte généré (export).
+function downloadText(filename, text, type = "text/plain") {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// Zone d'import YAML réutilisable (ingrédients / ustensiles / techniques).
+// Gère son propre input fichier et son état de survol ; délègue la lecture à
+// `onText(contenu, nomFichier)`. L'export reste en Markdown (boutons dédiés).
+function YamlImport({ onText, warn }) {
+  const ref = useRef();
+  const [over, setOver] = useState(false);
+  const read = (f) => {
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => { try { onText(String(ev.target.result), f.name); } catch { onText("", f.name); } };
+    r.readAsText(f);
+  };
+  return (
+    <>
+      {warn && (
+        <p style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12, lineHeight: 1.45 }}>
+          <span style={{ fontWeight: 600, color: "var(--text)" }}>Fusion dans la base</span> : chaque entrée est mise à jour (par id, sinon par nom) ou ajoutée — <span style={{ fontWeight: 600 }}>aucune entrée existante n'est supprimée</span>. À la moindre erreur, l'import est annulé en entier.
+        </p>
+      )}
+      <input ref={ref} type="file" accept=".yaml,.yml,.txt" style={{ display: "none" }}
+        onChange={e => { read(e.target.files[0]); e.target.value = ""; }} />
+      <div
+        onDragOver={e => { e.preventDefault(); setOver(true); }}
+        onDragLeave={() => setOver(false)}
+        onDrop={e => { e.preventDefault(); setOver(false); read(Array.from(e.dataTransfer.files).find(f => /\.(ya?ml|txt)$/i.test(f.name))); }}
+        onClick={() => ref.current.click()}
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px", borderRadius: 12, border: `2px dashed ${over ? "var(--accent)" : "var(--border)"}`, background: over ? "rgba(232,112,58,0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
+        <Icon name="import" size={28} color={over ? "var(--accent)" : "var(--text3)"} />
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: over ? "var(--accent)" : "var(--text)" }}>Dépose un fichier YAML ici</div>
+          <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>ou clique pour sélectionner</div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 
-
-
-export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories }) {
+export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques }) {
   const navigate = useNavigate();
   const location = useLocation();
   const configSectionParam = location.pathname.startsWith("/config/")
@@ -56,8 +102,6 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
   const fileRef = useRef();
   const [mdError, setMdError] = useState("");
   const [mdInfo, setMdInfo] = useState("");
-  const [mdDragOver, setMdDragOver] = useState(false);
-  const mdFileRef = useRef();
   const toggleCat = k => setOpenCats(p => ({ ...p, [k]: !p[k] }));
 
   const saveIng = raw => {
@@ -168,57 +212,32 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
     URL.revokeObjectURL(a.href);
   };
 
-  const importIngredientsMarkdown = (text) => {
+  // Affiche la liste d'erreurs de validation YAML, tronquée. Annulation totale.
+  const reportErrors = (errors) => {
+    setMdError(`Import annulé — ${errors.length} erreur${errors.length > 1 ? "s" : ""} : ` + errors.slice(0, 3).join(" ") + (errors.length > 3 ? " …" : ""));
+  };
+
+  // Import YAML des ingrédients (master). Upsert par id puis par nom normalisé.
+  const importIngredientsYaml = (text) => {
     setMdInfo("");
-    // 1. Garde-fou en-tête : le fichier doit ressembler à un export Mijoté.
-    const headerOk = (text || "").split(/\r?\n/).some(l =>
-      /\|/.test(l) && (() => {
-        const cells = splitMarkdownRow(l).map(c => c.toLowerCase());
-        return ING_MD_REQUIRED_LABELS.every(lbl => cells.includes(lbl));
-      })());
-    if (!headerOk) {
-      setMdError("Fichier non reconnu : il doit contenir un tableau exporté depuis Mijoté (colonnes Nom, dbid, Catégorie, kcal…). Import annulé pour protéger la base.");
-      return;
-    }
-    const parsed = parseIngredientsMarkdown(text);
-    if (!parsed.length) { setMdError("Aucun ingrédient reconnu dans le fichier Markdown."); return; }
-
-    // 2. Validation stricte ligne par ligne. Au moindre problème on annule TOUT
-    //    l'import : pas d'écrasement partiel de la base master.
-    const validCats = new Set(Object.keys(categories));
-    const errors = [];
-    parsed.forEach(row => {
-      const where = `« ${row.name || "?"} »`;
-      if (!row.name || row.name.length > 120) errors.push(`${where} : nom manquant ou trop long.`);
-      if (row.category && !validCats.has(row.category)) errors.push(`${where} : catégorie inconnue « ${row.category} ».`);
-      const nut = row.nutrition || {};
-      Object.entries(ING_MD_BOUNDS).forEach(([k, [min, max]]) => {
-        const v = k === "gramsPerPiece" ? row.gramsPerPiece : nut[k];
-        if (v != null && (typeof v !== "number" || Number.isNaN(v) || v < min || v > max))
-          errors.push(`${where} : ${k} = ${v} hors bornes (${min}–${max}).`);
-      });
-    });
-    if (errors.length) {
-      setMdError(`Import annulé — ${errors.length} erreur${errors.length > 1 ? "s" : ""} : ` + errors.slice(0, 3).join(" ") + (errors.length > 3 ? " …" : ""));
-      return;
-    }
-
+    const { items: parsed, errors } = parseIngredientsYaml(text, { validCategories: new Set(Object.keys(categories)) });
+    if (errors.length) return reportErrors(errors);
+    if (!parsed.length) { setMdError("Aucun ingrédient reconnu dans le YAML."); return; }
     let created = 0, updated = 0;
     setIngredientDB(prev => {
       const next = [...prev];
       const idxById = new Map(next.map((d, i) => [d.id, i]));
       const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
       parsed.forEach((row, n) => {
-        let idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
+        const idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
           : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
         if (idx >= 0) {
           const cur = next[idx];
           next[idx] = { ...cur, ...row, id: cur.id, nutrition: row.nutrition || cur.nutrition };
           updated++;
         } else {
-          const id = "db_i" + Date.now() + "_" + n;
-          const item = { ...row, id };
-          next.push(item);
+          const id = row.id || ("db_i" + Date.now() + "_" + n);
+          next.push({ ...row, id });
           idxById.set(id, next.length - 1);
           idxByName.set(normalizeStr(row.name), next.length - 1);
           created++;
@@ -229,6 +248,63 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
     setMdError("");
     setMdInfo(`${created} créé${created > 1 ? "s" : ""}, ${updated} mis à jour.`);
   };
+
+  // Import YAML des ustensiles (master). Upsert par id puis par nom.
+  const importUtensilsYaml = (text) => {
+    setMdInfo("");
+    const { items: parsed, errors } = parseUtensilsYaml(text);
+    if (errors.length) return reportErrors(errors);
+    if (!parsed.length) { setMdError("Aucun ustensile reconnu dans le YAML."); return; }
+    let created = 0, updated = 0;
+    setUtensilDB(prev => {
+      const next = [...prev];
+      const idxById = new Map(next.map((d, i) => [d.id, i]));
+      const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
+      parsed.forEach((row, n) => {
+        const idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
+          : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
+        if (idx >= 0) { next[idx] = { ...next[idx], ...row, id: next[idx].id }; updated++; }
+        else {
+          const id = row.id || ("db_u" + Date.now() + "_" + n);
+          next.push({ ...row, id });
+          idxById.set(id, next.length - 1);
+          idxByName.set(normalizeStr(row.name), next.length - 1);
+          created++;
+        }
+      });
+      return next;
+    });
+    setMdError("");
+    setMdInfo(`${created} créé${created > 1 ? "s" : ""}, ${updated} mis à jour.`);
+  };
+
+  // Import YAML du glossaire des techniques (master). Upsert par id.
+  const importTechniquesYaml = (text) => {
+    setMdInfo("");
+    const { items: parsed, errors } = parseTechniquesYaml(text);
+    if (errors.length) return reportErrors(errors);
+    if (!parsed.length) { setMdError("Aucune technique reconnue dans le YAML."); return; }
+    let created = 0, updated = 0;
+    setTechniques?.(prev => {
+      const next = [...prev];
+      const idxById = new Map(next.map((d, i) => [d.id, i]));
+      parsed.forEach(row => {
+        if (idxById.has(row.id)) { next[idxById.get(row.id)] = row; updated++; }
+        else { next.push(row); idxById.set(row.id, next.length - 1); created++; }
+      });
+      return next;
+    });
+    setMdError("");
+    setMdInfo(`${created} créée${created > 1 ? "s" : ""}, ${updated} mise${updated > 1 ? "s" : ""} à jour.`);
+  };
+
+  const exportTechniquesMarkdown = () => downloadText("techniques_mijote.md", formatTechniquesMarkdown(techniques), "text/markdown");
+
+  // Exports YAML réimportables (à committer dans data/). Aller-retour fidèle.
+  const catOrder = sortedCategoryEntries(categories).map(([k]) => k);
+  const exportIngredientsYaml = () => downloadText("ingredients.yaml", formatIngredientsYaml(ingredientDB.map(({ _ro, ...r }) => r), { categoryOrder: catOrder }), "text/yaml");
+  const exportUtensilsYaml = () => downloadText("utensils.yaml", formatUtensilsYaml(utensilDB.map(({ _ro, ...r }) => r)), "text/yaml");
+  const exportTechniquesYaml = () => downloadText("techniques.yaml", formatTechniquesYaml(techniques), "text/yaml");
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -253,9 +329,9 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
           <UserAvatar />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
-          {["ingredients", "ustensiles", "collections", "données", "nouveautés"].map(s => (
+          {["préférences", "ingredients", "ustensiles", "techniques", "collections", "données", "nouveautés"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
+              {s === "préférences" ? "Préférences" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "techniques" ? "Techniques" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
             </button>
           ))}
         </div>
@@ -276,6 +352,79 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
+        {section === "préférences" && (() => {
+          const prefs = preferences || DEFAULT_PREFERENCES;
+          const setPref = (patch) => setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), ...patch }));
+          const toggleIn = (key, value) => setPref({
+            [key]: (prefs[key] || []).includes(value) ? prefs[key].filter(v => v !== value) : [...(prefs[key] || []), value],
+          });
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 22 }} className="slide-up">
+              <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: 0 }}>
+                Ces choix personnalisent ton expérience. Ils serviront bientôt à filtrer les recettes publiques selon ce que tu manges (régime, allergènes, ingrédients à éviter).
+              </p>
+
+              {/* Régime */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Régime alimentaire</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {DIETS.map(d => {
+                    const active = prefs.diet === d.id;
+                    return (
+                      <button key={d.id} onClick={() => setPref({ diet: d.id })} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 500, background: active ? "var(--accent)" : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? "transparent" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        <span style={{ fontSize: 15, lineHeight: 1 }}>{d.emoji}</span>{d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Allergènes */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Allergènes à éviter</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {COMMON_ALLERGENS.map(a => {
+                    const active = (prefs.allergens || []).includes(a);
+                    return (
+                      <button key={a} onClick={() => toggleIn("allergens", a)} style={{ padding: "7px 13px", borderRadius: 22, fontSize: 13, fontWeight: 500, background: active ? "rgba(224,82,82,0.16)" : "var(--surface2)", color: active ? "var(--red)" : "var(--text2)", border: `1px solid ${active ? "rgba(224,82,82,0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        {active ? "✕ " : ""}{a}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Catégories exclues */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Catégories à ne pas proposer</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {sortedCategoryEntries(categories).map(([key, cat]) => {
+                    const active = (prefs.excludedCategories || []).includes(key);
+                    return (
+                      <button key={key} onClick={() => toggleIn("excludedCategories", key)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, background: active ? cat.color + "26" : "var(--surface2)", color: active ? cat.color : "var(--text2)", border: `1px solid ${active ? cat.color + "88" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>{cat.icon}</span>{cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Ingrédients non aimés */}
+              <div>
+                <TagInput
+                  label="Ingrédients que tu n'aimes pas"
+                  tags={prefs.dislikes || []}
+                  onChange={(tags) => setPref({ dislikes: tags })}
+                  allTags={ingredientDB.map(i => i.name).filter(Boolean)}
+                  placeholder="Coriandre, Olives…"
+                  inputId="pref-dislikes"
+                  commitOnBlur
+                  dedupeInsensitive
+                />
+              </div>
+            </div>
+          );
+        })()}
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {sortedCategoryEntries(categories).map(([catKey, cat], ci) => {
@@ -368,33 +517,22 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                     <div style={{ minWidth: 0 }}>
                       <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter la base</h3>
-                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{ingredientDB.length} ingrédient{ingredientDB.length > 1 ? "s" : ""} · format Markdown</p>
+                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{ingredientDB.length} ingrédient{ingredientDB.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
                     </div>
-                    <button className="btn btn-ghost btn-sm" onClick={exportIngredientsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      <Icon name="download" size={14} /> Exporter
-                    </button>
+                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      <button className="btn btn-primary btn-sm" onClick={exportIngredientsYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="download" size={14} /> YAML
+                      </button>
+                      <button className="btn btn-ghost btn-sm" onClick={exportIngredientsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="download" size={14} /> Markdown
+                      </button>
+                    </div>
                   </div>
                 </div>
-                {/* Import drag & drop */}
+                {/* Import YAML (l'export reste en Markdown) */}
                 <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
                   <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Importer dans la base</h3>
-                  <p style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12, lineHeight: 1.45 }}>
-                    <span style={{ color: "var(--red)", fontWeight: 600 }}>⚠️ Écrase la base master</span> : met à jour (par nom / dbid) ou crée les ingrédients. Seuls les fichiers exportés depuis Mijoté et validés sont acceptés.
-                  </p>
-                  <input ref={mdFileRef} type="file" accept=".md,.markdown,.txt" style={{ display: "none" }}
-                    onChange={e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdInfo(""); setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } e.target.value = ""; }} />
-                  <div
-                    onDragOver={e => { e.preventDefault(); setMdDragOver(true); }}
-                    onDragLeave={() => setMdDragOver(false)}
-                    onDrop={e => { e.preventDefault(); setMdDragOver(false); const f = Array.from(e.dataTransfer.files).find(f => /\.(md|markdown|txt)$/i.test(f.name)); if (f) { const r = new FileReader(); r.onload = ev => { try { importIngredientsMarkdown(ev.target.result); } catch { setMdInfo(""); setMdError("Fichier illisible : " + f.name); } }; r.readAsText(f); } }}
-                    onClick={() => mdFileRef.current.click()}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px", borderRadius: 12, border: `2px dashed ${mdDragOver ? "var(--accent)" : "var(--border)"}`, background: mdDragOver ? "rgba(232,112,58,0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
-                    <Icon name="import" size={28} color={mdDragOver ? "var(--accent)" : "var(--text3)"} />
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: mdDragOver ? "var(--accent)" : "var(--text)" }}>Dépose un fichier Markdown ici</div>
-                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>ou clique pour sélectionner</div>
-                    </div>
-                  </div>
+                  <YamlImport warn onText={importIngredientsYaml} />
                   {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
                   {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
                 </div>
@@ -432,17 +570,98 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                     <div style={{ minWidth: 0 }}>
                       <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter la base</h3>
-                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{utensilDB.length} ustensile{utensilDB.length > 1 ? "s" : ""} · format Markdown</p>
+                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{utensilDB.length} ustensile{utensilDB.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
                     </div>
-                    <button className="btn btn-ghost btn-sm" onClick={exportUtensilsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      <Icon name="download" size={14} /> Exporter
-                    </button>
+                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      <button className="btn btn-primary btn-sm" onClick={exportUtensilsYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="download" size={14} /> YAML
+                      </button>
+                      <button className="btn btn-ghost btn-sm" onClick={exportUtensilsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Icon name="download" size={14} /> Markdown
+                      </button>
+                    </div>
                   </div>
+                </div>
+                {/* Import YAML */}
+                <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Importer dans la base</h3>
+                  <YamlImport warn onText={importUtensilsYaml} />
+                  {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
+                  {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
                 </div>
               </>
             )}
           </div>
         )}
+
+        {section === "techniques" && (() => {
+          const cats = Object.keys(TECHNIQUE_CATEGORIES);
+          const byCat = cats.map(c => [c, [...techniques].filter(t => t.category === c).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))]).filter(([, list]) => list.length);
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="slide-up">
+              <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: 0 }}>
+                Glossaire des gestes culinaires (suer, déglacer, monder…). Il servira bientôt à expliquer les verbes d'une étape directement dans le mode pas-à-pas.
+              </p>
+
+              {techniques.length === 0 && (
+                <div style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "24px 16px", background: "var(--surface)", border: "1px dashed var(--border)", borderRadius: 14 }}>
+                  Aucune technique pour l'instant.{isAdmin ? " Importe un fichier YAML ci-dessous." : ""}
+                </div>
+              )}
+
+              {byCat.map(([catKey, list]) => (
+                <div key={catKey}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{TECHNIQUE_CATEGORIES[catKey]}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {list.map(t => (
+                      <div key={t.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: "12px 14px" }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>{t.name}</span>
+                          {t.source && <span style={{ fontSize: 10.5, color: "var(--text3)" }}>· {t.source}</span>}
+                        </div>
+                        <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "5px 0 0" }}>{t.definition}</p>
+                        {t.aliases?.length > 0 && (
+                          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8 }}>
+                            {t.aliases.map(a => <span key={a} style={{ fontSize: 10.5, color: "var(--text3)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "1px 7px" }}>{a}</span>)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Import / Export (admin) */}
+              {isAdmin && (
+                <>
+                  <div style={{ height: 2 }} />
+                  <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter le glossaire</h3>
+                        <p style={{ fontSize: 12, color: "var(--text2)" }}>{techniques.length} technique{techniques.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
+                      </div>
+                      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                        <button className="btn btn-primary btn-sm" onClick={exportTechniquesYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name="download" size={14} /> YAML
+                        </button>
+                        <button className="btn btn-ghost btn-sm" onClick={exportTechniquesMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name="download" size={14} /> Markdown
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Importer le glossaire</h3>
+                    <YamlImport warn onText={importTechniquesYaml} />
+                    {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
+                    {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })()}
 
         {section === "collections" && (
           <div>

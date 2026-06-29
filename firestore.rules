@@ -6,6 +6,8 @@ rules_version = '2';
 //   master/{doc}           base partagée en lecture, écriture réservée à l'admin
 //   userDirectory/{uid}    fiche publique (email/avatar) proposée au partage
 //   sharedLists/{listId}   listes de courses partagées (autorisation par email)
+//   publicRecipes/{pubId}  recettes (et bases) publiées, lisibles par tous les
+//                          connectés ; écriture réservée à leur auteur
 //
 // Déploiement : `npx firebase deploy --only firestore:rules`
 
@@ -76,6 +78,23 @@ service cloud.firestore {
       // Suppression : réservée au propriétaire.
       allow delete: if hasVerifiedEmail()
                     && email() == resource.data.ownerEmail;
+    }
+
+    // ── Recettes publiques (communauté) ───────────────────────────────────────
+    // Lecture par tout utilisateur connecté (découverte). Écriture/suppression
+    // réservées à l'auteur : on exige que `authorUid` soit l'uid courant ET que
+    // l'identifiant du doc soit préfixé « {uid}__ » (défense en profondeur, cohérent
+    // avec publicId() côté client). Les composants publiés suivent les mêmes règles.
+    match /publicRecipes/{pubId} {
+      function ownsDoc() {
+        return hasVerifiedEmail()
+               && request.auth.uid == request.resource.data.authorUid
+               && pubId.split('__')[0] == request.auth.uid;
+      }
+      allow read: if isSignedIn();
+      allow create, update: if ownsDoc();
+      allow delete: if hasVerifiedEmail()
+                    && request.auth.uid == resource.data.authorUid;
     }
   }
 }

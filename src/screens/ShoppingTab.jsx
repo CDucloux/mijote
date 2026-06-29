@@ -4,6 +4,7 @@ import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ShoppingItemRow } from "../components/ShoppingItemRow.jsx";
+import { HeroMenu } from "../components/HeroMenu.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
@@ -126,13 +127,10 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
   );
 
 
-  const checked = activeList ? activeList.items.filter(i => i.checked).length : 0;
-  const total = activeList ? activeList.items.length : 0;
-
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
-      <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
+      <div style={{ padding: "20px 20px 0", flexShrink: 0, position: "relative", zIndex: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Courses</h1>
@@ -144,9 +142,9 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
           </div>
         </div>
 
-        {/* List selector tabs */}
+        {/* List selector tabs + menu ⋯ */}
         {shoppingLists.length > 0 && (
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8 }}>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, alignItems: "center" }}>
             {shoppingLists.map((l, idx) => {
               const isActive = (activeListId === l.id) || (!activeListId && shoppingLists[0] === l);
               const lChecked = l.items.filter(i => i.checked).length;
@@ -169,6 +167,17 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                 </button>
               );
             })}
+            {activeList && (
+              <div style={{ flexShrink: 0, marginLeft: "auto" }}>
+                <HeroMenu
+                  icon="ellipsis" iconColor="var(--text2)" iconSize={18} className="icon-btn-soft"
+                  btnStyle={{ width: 34, height: 34, borderRadius: 9, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  items={[
+                    { label: "Paramètres de la liste", icon: "settings", onClick: () => { setConfigList({ ...activeList, sharedWith: activeList.sharedWith || [] }); setShareEmail(""); } },
+                    { label: "Supprimer la liste", icon: "trash", danger: true, onClick: () => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id) },
+                  ]} />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -185,31 +194,6 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
       {/* Active list content */}
       {activeList && (
         <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-          {/* List header */}
-          <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 15, fontWeight: 600 }}>{activeList.name}</span>
-              {activeList.type === "recipe" && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--text3)" }}>Recette</span>}
-              {activeList._shared && (
-                <span style={{ marginLeft: 8, fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                  <Icon name="share" size={11} color="var(--text3)" />
-                  {(activeList.ownerEmail || "").toLowerCase() === (user?.email || "").toLowerCase()
-                    ? `Partagée · ${(activeList.sharedWith || []).length} invité(s)`
-                    : `Partagée par ${activeList.ownerEmail}`}
-                </span>
-              )}
-              {total > 0 && (
-                <div style={{ height: 3, background: "var(--surface2)", borderRadius: 2, marginTop: 6, overflow: "hidden" }}>
-                  <div style={{ height: "100%", background: "var(--green)", borderRadius: 2, width: `${(checked / total) * 100}%`, transition: "width 0.3s" }} />
-                </div>
-              )}
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button className="btn btn-ghost btn-sm" title="Configurer la liste" onClick={() => { setConfigList({ ...activeList, sharedWith: activeList.sharedWith || [] }); setShareEmail(""); }}><Icon name="settings" size={14} /></button>
-              <button className="btn btn-danger btn-sm" onClick={() => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id)}><Icon name="trash" size={13} /></button>
-            </div>
-          </div>
-
           {/* FAB — absolute inside the list container */}
           {activeList.type === "free" && (
             <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}

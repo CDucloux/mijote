@@ -9,7 +9,12 @@
 - [x] Sur mobile, dans la swipeablesheet "Ajouter une recette" -> ne pas ouvrir le clavier initialement (car prend trop de view)
   - [x] Dans cette swipeablesheet, il faut aussi retirer le healthring et le remplacer par le nutriscore plus clean et remplacer le séparateur "." par "|"
 
-- [ ] Partage des recettes (mode public / privé)
+- [x] Onglet Accueil (dashboard de notifications + idées de saison + teaser découverte)
+- [x] Préférences alimentaires gérées dans l'espace avatar (Configuration déplacée dans l'avatar)
+- [x] Partage des recettes (mode public / privé) — collection `publicRecipes` + règles Firestore, publication en cascade des bases, moteur de découverte (créateur/cuisine/saison/Nutri-Score/préférences), clone hybride avec attribution et anti-doublon
+  - [ ] À déployer : `npx firebase deploy --only firestore:rules` (nouvelles règles `publicRecipes`)
+  - [ ] Re-liaison des `dbId` au clone si l'auteur a utilisé des ingrédients privés (via nameMatcher)
+  - [ ] Modération / signalement des recettes publiques
 - [x] PDF : Pas de saut de page dans la génération
 - [x] PWA et réduire la taille du truc packagé
 - [x] CI/CD (GitHub Actions) + tests unitaires sur les libs critiques (Vitest)
@@ -31,6 +36,14 @@
 - [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
 
 - [ ] Blabla sur le traitement des données ?
+
+- [x] Couche de données YAML versionnée (`data/*.yaml`) : source de vérité ingrédients / ustensiles / techniques ; import YAML + export Markdown dans la Config ; script `npm run seed`
+- [x] Glossaire des techniques (Master DB `master/techniques`) — section Configuration › Techniques
+  - [x] Survol/tap des gestes dans le mode pas-à-pas (CookMode) → définition depuis le glossaire (`TechniqueText` + `lib/techniques.js`)
+  - [ ] Élargir la couverture des aliases (conjugaisons) ; éventuel stemming léger
+- [x] Préparations de base publiques pré-initialisées (sauces mères, fonds, farces d'Escoffier) sous le compte `mijote-official`
+  - [ ] À déployer : `npm run seed` (nécessite un compte de service Firebase Admin) pour pousser `master/techniques` + les bases publiques
+  - [ ] Enrichir le glossaire et les bases depuis le Guide Culinaire complet
 
 ## Features différentiatrices
 

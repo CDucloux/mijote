@@ -3,6 +3,9 @@ import { createPortal } from "react-dom";
 import { Icon } from "../components/Icon.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
+import { TechniqueText } from "../components/TechniqueText.jsx";
+import { useAppShell } from "../context/AppShellContext.jsx";
+import { buildTechniqueIndex } from "../lib/techniques.js";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { consumptionFraction } from "../lib/components.js";
@@ -15,6 +18,8 @@ import { capitalize } from "../lib/format.js";
 // - bouton « Réaliser » → CookMode imbriqué sur le composant mis à l'échelle.
 
 function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipesById, stockSet, isNested = false }) {
+  const { techniques } = useAppShell();
+  const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
   const [subCook, setSubCook] = useState(null); // { recipe, mult }
@@ -177,7 +182,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                     <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Bases</h2>
                   </div>
                   <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
-                    Ces bases ne sont pas en stock. Réalisez-les avant de commencer la recette principale.
+                    Réalise ces préparations de base avant de commencer la recette principale.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {pendingComponents.map(({ line, comp, nestedMult }) => (
@@ -217,7 +222,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
                     <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Étape {realIdx + 1}</h2>
                   </div>
-                  <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 24 }}>{step.text}</p>
+                  <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
 
                   {step.tip && (
                     <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
