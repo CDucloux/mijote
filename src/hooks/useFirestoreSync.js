@@ -164,7 +164,7 @@ export function useFirestoreSync({
           }
           activeHidRef.current = desiredHid;
           setLoadedHid(desiredHid);
-          console.debug("[foyer] foyer chargé", desiredHid, "migrated=", householdPointer?.migrated);
+          console.log("[foyer] foyer chargé", desiredHid, "migrated=", householdPointer?.migrated);
         } else {
           const solo = await loadSharedData(soloWorkspace(user.uid)); // retour en solo (départ)
           if (cancelled) return;
@@ -204,7 +204,7 @@ export function useFirestoreSync({
     if (!user || !canAutosaveShared()) return;
     const latest = sharedRef.current.recipes || [];
     const willDelete = [...recipeSyncMap.current.keys()].filter(id => !latest.some(r => r.id === id));
-    if (willDelete.length) console.debug("[foyer] autosave recettes : suppression de", willDelete, "vers", sharedWsNow(user.uid).segments.join("/"));
+    if (willDelete.length) console.log("[foyer] autosave recettes : suppression de", willDelete, "vers", sharedWsNow(user.uid).segments.join("/"));
     setSyncStatus("syncing");
     syncRecipes(sharedWsNow(user.uid), latest, recipeSyncMap.current)
       .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
@@ -235,14 +235,14 @@ export function useFirestoreSync({
   // mettent à jour l'état avec garde de signature/diff pour ne pas relancer d'écriture.
   useEffect(() => {
     if (!user || !loadedHid) return;
-    console.debug("[foyer] abonnement temps réel au foyer", loadedHid);
+    console.log("[foyer] abonnement temps réel au foyer", loadedHid);
     const ws = householdWorkspace(loadedHid);
     const unsubs = [];
     unsubs.push(onSnapshot(recipesCol(ws), snap => {
       if (snap.metadata.hasPendingWrites) return;
       if (snap.metadata.fromCache && snap.empty) return; // ne pas écraser des données valides avec un cache vide
       const remote = snap.docs.map(d => d.data());
-      console.debug("[foyer] recipes snapshot", remote.length, { fromCache: snap.metadata.fromCache });
+      console.log("[foyer] recipes snapshot", remote.length, { fromCache: snap.metadata.fromCache });
       recipeSyncMap.current = mapOf(remote);
       setRecipes(remote);
     }, err => console.error("[foyer] recipes snapshot ERREUR", err)));
@@ -253,7 +253,7 @@ export function useFirestoreSync({
       const sig = JSON.stringify(val);
       if (metaSigRef.current[name] === sig) return;
       metaSigRef.current[name] = sig;
-      console.debug("[foyer] meta snapshot", name);
+      console.log("[foyer] meta snapshot", name);
       apply(val);
     }, err => console.error(`[foyer] meta ${name} snapshot ERREUR`, err));
     unsubs.push(metaSub("collections", d => d.items || [], setCollections));
