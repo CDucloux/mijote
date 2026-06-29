@@ -9,6 +9,7 @@ import { TagInput } from "../components/TagInput.jsx";
 import { ChangelogSection } from "../components/ChangelogSection.jsx";
 import { ReadOnlyBanner, AdminBanner } from "../components/Banners.jsx";
 import { IngredientDetail } from "../components/IngredientDetail.jsx";
+import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { deleteImageByUrl } from "../lib/storage.js";
 import { ING_MD_COLUMNS, formatTips } from "../lib/ingredientsMarkdown.js";
@@ -329,9 +330,9 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
           <UserAvatar />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
-          {["préférences", "ingredients", "ustensiles", "techniques", "collections", "données", "nouveautés"].map(s => (
+          {["préférences", "foyer", "ingredients", "ustensiles", "techniques", "collections", "données", "nouveautés"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "préférences" ? "Préférences" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "techniques" ? "Techniques" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
+              {s === "préférences" ? "Préférences" : s === "foyer" ? "Foyer" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "techniques" ? "Techniques" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
             </button>
           ))}
         </div>
@@ -352,6 +353,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
+        {section === "foyer" && <HouseholdPanel />}
         {section === "préférences" && (() => {
           const prefs = preferences || DEFAULT_PREFERENCES;
           const setPref = (patch) => setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), ...patch }));

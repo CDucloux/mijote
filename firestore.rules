@@ -80,6 +80,41 @@ service cloud.firestore {
                     && email() == resource.data.ownerEmail;
     }
 
+    // ── Foyers (households) ───────────────────────────────────────────────────
+    // Appartenance par uid (membre) ; invitation par email. Plafond « 4 places »
+    // (membres actifs + invitations en attente) et propriétaire immuable appliqués
+    // côté serveur. Les sous-collections (recettes, méta du foyer — Phase 2) sont
+    // accessibles aux membres via un get() sur le doc parent.
+    match /households/{hid} {
+      function isHMember(rsc) { return isSignedIn() && request.auth.uid in rsc.data.memberUids; }
+      function isHInvited(rsc) { return hasVerifiedEmail() && email() in rsc.data.invitedEmails; }
+      function peopleOk(d) { return d.memberUids.size() <= 4 && d.memberUids.size() + d.invitedEmails.size() <= 4; }
+
+      allow read: if isHMember(resource) || isHInvited(resource);
+
+      // Création : le créateur s'inscrit owner + unique membre, sans invitation préchargée.
+      allow create: if hasVerifiedEmail()
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.memberUids == [request.auth.uid]
+                    && email() in request.resource.data.memberEmails
+                    && request.resource.data.invitedEmails.size() == 0;
+
+      // Mise à jour : un membre ou un invité (qui accepte) édite, MAIS owner immuable
+      // et plafond de 4 places maintenu.
+      allow update: if (isHMember(resource) || isHInvited(resource))
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && peopleOk(request.resource.data);
+
+      // Dissolution : propriétaire uniquement.
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.ownerUid;
+
+      // Sous-collections du foyer (recettes / meta) — accès réservé aux membres.
+      match /{document=**} {
+        allow read, write: if isSignedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/households/$(hid)).data.memberUids;
+      }
+    }
+
     // ── Recettes publiques (communauté) ───────────────────────────────────────
     // Lecture par tout utilisateur connecté (découverte). Écriture/suppression
     // réservées à l'auteur : on exige que `authorUid` soit l'uid courant ET que

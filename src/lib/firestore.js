@@ -1,6 +1,7 @@
-import { doc, getDoc, collection, getDocs, writeBatch, query, orderBy, limit } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, writeBatch, query, orderBy, limit, where, runTransaction, deleteDoc } from "firebase/firestore";
 import { db } from "./firebase.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
+import { newHouseholdDoc, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved, peopleCount, MAX_HOUSEHOLD } from "./household.js";
 
 // ─── FIRESTORE DATA LAYER (split documents) ──────────────────────────────────
 // Structure:
@@ -78,6 +79,83 @@ export function toSharedListDoc(list, { ownerEmail, ownerUid }) {
     memberEmails,
     updatedAt: Date.now(),
   };
+}
+
+// ─── FOYERS (households) ──────────────────────────────────────────────────────
+// households/{hid} : doc d'appartenance (cf. lib/household.js). Le pointeur du
+// foyer actif de chaque utilisateur vit dans son espace privé : users/{uid}/meta/household.
+export const householdsCol = () => collection(db, "households");
+export const householdDoc = (hid) => doc(db, "households", hid);
+const householdPointerDoc = (uid) => doc(db, "users", uid, "meta", "household");
+
+// Requêtes temps réel : mon foyer actif (par uid) et mes invitations (par email).
+export const householdMemberQuery = (uid) => query(householdsCol(), where("memberUids", "array-contains", uid));
+export const householdInviteQuery = (email) => query(householdsCol(), where("invitedEmails", "array-contains", (email || "").toLowerCase()));
+
+// Crée un foyer dont `user` est propriétaire & 1er membre, et pointe son espace dessus.
+export async function createHousehold(user, name) {
+  const ref = doc(householdsCol());
+  const data = newHouseholdDoc({ id: ref.id, owner: user, name });
+  const batch = writeBatch(db);
+  batch.set(ref, data);
+  batch.set(householdPointerDoc(user.uid), { id: ref.id, updatedAt: Date.now() });
+  await batch.commit();
+  return data;
+}
+
+// Invite un email (transaction : relit le doc pour respecter le plafond côté serveur).
+export async function inviteToHousehold(hid, email) {
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(householdDoc(hid));
+    if (!snap.exists()) throw new Error("Foyer introuvable");
+    const next = withInvite(snap.data(), email);
+    if (peopleCount(next) > MAX_HOUSEHOLD) throw new Error("Foyer complet");
+    tx.set(householdDoc(hid), next);
+  });
+}
+
+// Accepte une invitation : invité → membre, et pointe mon espace sur le foyer.
+export async function acceptInvite(hid, user) {
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(householdDoc(hid));
+    if (!snap.exists()) throw new Error("Foyer introuvable");
+    const next = withAcceptedMember(snap.data(), { uid: user.uid, email: user.email });
+    if (next.memberUids.length > MAX_HOUSEHOLD) throw new Error("Foyer complet");
+    tx.set(householdDoc(hid), next);
+    tx.set(householdPointerDoc(user.uid), { id: hid, updatedAt: Date.now() });
+  });
+}
+
+// Refuse / retire une invitation en attente (par email).
+export async function declineInvite(hid, email) {
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(householdDoc(hid));
+    if (!snap.exists()) return;
+    tx.set(householdDoc(hid), withInviteRemoved(snap.data(), email));
+  });
+}
+
+// Un membre quitte le foyer (le propriétaire, lui, dissout via deleteHousehold).
+export async function leaveHousehold(hid, user) {
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(householdDoc(hid));
+    if (snap.exists()) tx.set(householdDoc(hid), withMemberRemoved(snap.data(), { uid: user.uid, email: user.email }));
+    tx.delete(householdPointerDoc(user.uid));
+  });
+}
+
+// Le propriétaire dissout le foyer (les autres membres détectent la disparition via
+// leur abonnement et nettoient leur propre pointeur).
+export async function dissolveHousehold(hid, uid) {
+  const batch = writeBatch(db);
+  batch.delete(householdDoc(hid));
+  batch.delete(householdPointerDoc(uid));
+  await batch.commit();
+}
+
+// Nettoie le pointeur de foyer de l'utilisateur courant (ex. foyer dissous par autrui).
+export async function clearHouseholdPointer(uid) {
+  await deleteDoc(householdPointerDoc(uid)).catch(() => {});
 }
 
 // Read the shared Master reference DB (ingredients + utensils + categories).
