@@ -12,13 +12,15 @@
   </defs>
   <rect width="100" height="100" rx="26" fill="url(#bg)"/>
   <rect width="100" height="100" rx="26" fill="url(#sheen)"/>
-  <!-- Monogramme M, empattements façon Fraunces -->
-  <g fill="#fff6ee">
-    <path d="M24 73 V31 q0-3 3-3 h4 q3 0 4 3 l11 26 11-26 q1-3 4-3 h4 q3 0 3 3 V73 q0 3-3 3 h-3 q-3 0-3-3 V46 l-9 21 q-1 3-4 3 h-1 q-3 0-4-3 l-9-21 V73 q0 3-3 3 h-3 q-3 0-3-3 Z"/>
-    <!-- empattements -->
-    <rect x="20" y="73" width="14" height="3.4" rx="1.7"/>
-    <rect x="66" y="73" width="14" height="3.4" rx="1.7"/>
+  <!-- Monogramme M (tracé symétrique) + empattements slab -->
+  <g fill="none" stroke="#fff6ee" stroke-width="11.5" stroke-linejoin="round" stroke-linecap="butt">
+    <path d="M27 70 V35 L50 62 L73 35 V70"/>
   </g>
-  <!-- point accent de la marque -->
-  <circle cx="83" cy="72" r="4.6" fill="#fff6ee"/>
+  <g fill="#fff6ee">
+    <!-- empattements bas, un par patte -->
+    <rect x="18" y="67.5" width="18" height="4" rx="2"/>
+    <rect x="64" y="67.5" width="18" height="4" rx="2"/>
+    <!-- point accent de la marque -->
+    <circle cx="86" cy="69.5" r="4.4"/>
+  </g>
 </svg>
