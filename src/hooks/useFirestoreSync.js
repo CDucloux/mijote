@@ -57,7 +57,11 @@ export function useFirestoreSync({
   sharedRef.current = { recipes, collections, mealPlan, shoppingLists, stock, lowStock };
 
   const desiredHid = householdPointer?.id || null;
-  const sharedWs = useCallback((uid) => (desiredHid ? householdWorkspace(desiredHid) : soloWorkspace(uid)), [desiredHid]);
+  // Refs « valeur la plus récente » : les effets d'autosave les lisent au moment de
+  // s'exécuter (et non via leur closure, potentiellement périmée), sinon une écriture
+  // tardive réécrirait une vieille valeur par-dessus un changement distant reçu entre-temps.
+  const desiredHidRef = useRef(null); desiredHidRef.current = desiredHid;
+  const sharedWsNow = (uid) => (desiredHidRef.current ? householdWorkspace(desiredHidRef.current) : soloWorkspace(uid));
   const applyShared = useCallback((d) => {
     setRecipes(d.recipes || []);
     setCollections(d.collections || []);
@@ -180,7 +184,7 @@ export function useFirestoreSync({
 
   // Autosave d'un slice partagé : uniquement quand le workspace est totalement chargé
   // (activeHidRef aligné sur desiredHid) et hors fenêtre de migration → pas d'écho.
-  const canAutosaveShared = () => cloudLoaded.current && !migratingRef.current && activeHidRef.current === desiredHid;
+  const canAutosaveShared = () => cloudLoaded.current && !migratingRef.current && activeHidRef.current === desiredHidRef.current;
 
   const saveMeta = useCallback(async (name, payload, ws) => {
     if (!user || !cloudLoaded.current) return;
@@ -189,30 +193,33 @@ export function useFirestoreSync({
     catch (e) { setSyncStatus("error"); }
   }, [user, setSyncStatus]);
 
-  // Recettes (slice partagé) — diff par id vers le workspace actif.
+  // Recettes (slice partagé) — diff par id vers le workspace actif. On lit la
+  // DERNIÈRE valeur (sharedRef) pour ne jamais supprimer une recette arrivée d'un
+  // autre membre entre la planification et l'exécution de cet effet.
   useEffect(() => {
     if (!user || !canAutosaveShared()) return;
     setSyncStatus("syncing");
-    syncRecipes(sharedWs(user.uid), recipes, recipeSyncMap.current)
+    syncRecipes(sharedWsNow(user.uid), sharedRef.current.recipes || [], recipeSyncMap.current)
       .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
       .catch(() => setSyncStatus("error"));
   }, [recipes, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Écrit une méta partagée si elle a changé (signature) : on note la signature avant
   // d'écrire, si bien que le snapshot de notre propre écriture (même JSON) est ignoré.
+  // `localVal` est toujours lu depuis sharedRef (valeur la plus récente).
   const pushSharedMeta = (name, localVal, payload) => {
     if (!user || !canAutosaveShared()) return;
     const sig = JSON.stringify(localVal);
     if (metaSigRef.current[name] === sig) return; // écho ou no-op
     metaSigRef.current[name] = sig;
-    saveMeta(name, payload, sharedWs(user.uid));
+    saveMeta(name, payload, sharedWsNow(user.uid));
   };
 
-  // Méta partagées → workspace actif (anti-écho) ; méta perso (préférences, userDB) → solo.
-  useEffect(() => { pushSharedMeta("collections", collections, { items: collections }); }, [collections]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { pushSharedMeta("mealPlan", mealPlan, { data: mealPlan }); }, [mealPlan]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { pushSharedMeta("shoppingLists", shoppingLists, { items: shoppingLists }); }, [shoppingLists]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { pushSharedMeta("stock", { items: stock, low: lowStock }, { items: stock, low: lowStock }); }, [stock, lowStock]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Méta partagées → workspace actif (anti-écho, valeur la plus récente via sharedRef).
+  useEffect(() => { const v = sharedRef.current.collections || []; pushSharedMeta("collections", v, { items: v }); }, [collections]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const v = sharedRef.current.mealPlan || {}; pushSharedMeta("mealPlan", v, { data: v }); }, [mealPlan]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const v = sharedRef.current.shoppingLists || []; pushSharedMeta("shoppingLists", v, { items: v }); }, [shoppingLists]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const v = { items: sharedRef.current.stock || [], low: sharedRef.current.lowStock || [] }; pushSharedMeta("stock", v, v); }, [stock, lowStock]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (user) saveMeta("preferences", preferences, soloWorkspace(user.uid)); }, [preferences]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (user) saveMeta("userDB", userDB, soloWorkspace(user.uid)); }, [userDB]); // eslint-disable-line react-hooks/exhaustive-deps
 
