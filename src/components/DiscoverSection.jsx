@@ -142,16 +142,15 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       {/* Sentinelle pour détecter le sticky */}
       <div ref={sentinelRef} style={{ height: 1, marginBottom: -1, pointerEvents: "none" }} />
 
-      {/* En-tête sticky */}
+      {/* En-tête sticky — fond toujours opaque & pleine largeur pour masquer le
+          contenu qui défile derrière (l'ombre n'apparaît qu'une fois collé). */}
       <div style={{
-        position: "sticky", top: 0, zIndex: 10,
-        background: stuck ? "var(--bg)" : "transparent",
-        boxShadow: stuck ? "0 2px 10px rgba(0,0,0,0.08)" : "none",
-        padding: stuck ? "8px 0 6px" : "0 0 0",
-        margin: stuck ? "0 -20px" : "0",
-        paddingLeft: stuck ? 20 : 0,
-        paddingRight: stuck ? 20 : 0,
-        transition: "background 0.2s, box-shadow 0.2s, padding 0.2s",
+        position: "sticky", top: 0, zIndex: 20,
+        background: "var(--bg)",
+        boxShadow: stuck ? "0 4px 12px rgba(0,0,0,0.10)" : "none",
+        margin: "0 -20px",
+        padding: "8px 20px 6px",
+        transition: "box-shadow 0.2s",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 7 }}>

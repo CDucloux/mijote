@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { useOnline } from "../hooks/useOnline.js";
@@ -18,9 +19,11 @@ export function UserAvatar() {
 
   const openDropdown = () => {
     if (btnRef.current) {
+      // Le menu est porté dans <body> (hors du #root mis à l'échelle) : on utilise
+      // donc les coordonnées écran brutes de getBoundingClientRect, sans diviser
+      // par --page-zoom. C'est ce portail qui évite que le menu passe sous l'UI.
       const rect = btnRef.current.getBoundingClientRect();
-      const zoom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--page-zoom") || "1") || 1;
-      setDropPos({ top: (rect.bottom + 8) / zoom, right: (window.innerWidth - rect.right) / zoom });
+      setDropPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
     }
     setOpen(true);
   };
@@ -39,10 +42,10 @@ export function UserAvatar() {
         }
         <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none" }} />
       </button>
-      {open && (
+      {open && createPortal(
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => { setOpen(false); setConfirmSignOut(false); }} />
-          <div style={{ position: "fixed", top: dropPos.top, right: dropPos.right, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 500, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: "expandDown 0.2s ease" }}>
+          <div style={{ position: "fixed", inset: 0, zIndex: 1299 }} onClick={() => { setOpen(false); setConfirmSignOut(false); }} />
+          <div style={{ position: "fixed", top: dropPos.top, right: dropPos.right, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 1300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: "expandDown 0.2s ease" }}>
             <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>{user.email}</div>
             {syncLabel && <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: syncColor, marginBottom: 4 }}>{offline && <Icon name="wifiOff" size={12} color={syncColor} />}{syncLabel}</div>}
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
@@ -74,7 +77,8 @@ export function UserAvatar() {
               <Icon name="logout" size={16} color="var(--red)" /> Se déconnecter
             </button>
           </div>
-        </>
+        </>,
+        document.body
       )}
       {confirmSignOut && (
         <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.18s ease" }}
