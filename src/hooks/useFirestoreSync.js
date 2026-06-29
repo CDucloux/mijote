@@ -8,6 +8,7 @@ import {
 } from "../lib/firestore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { normalizePreferences } from "../constants/preferences.js";
+import { soloWorkspace } from "../lib/workspace.js";
 
 // ─── COUCHE DE SYNCHRONISATION FIRESTORE ──────────────────────────────────────
 export function useFirestoreSync({
@@ -38,8 +39,9 @@ export function useFirestoreSync({
         setSyncStatus("syncing");
         try {
           const masterPromise = loadMasterDB();
+          const ws = soloWorkspace(u.uid); // Phase 0 : toujours l'espace perso
 
-          let data = await loadUserData(u.uid);
+          let data = await loadUserData(ws);
           const isEmpty = data.recipes.length === 0 && !data.collections && !data.userDB
             && !data.mealPlan && !data.shoppingLists && !data.fridge;
 
@@ -74,12 +76,12 @@ export function useFirestoreSync({
 
           if (isEmpty && data.recipes && (data.recipes.length || data.userDB)) {
             await Promise.all([
-              syncRecipes(u.uid, data.recipes, new Map()).then(m => { recipeSyncMap.current = m; }),
-              setDoc(metaDoc(u.uid, "collections"), { items: data.collections || [] }),
-              setDoc(metaDoc(u.uid, "mealPlan"), { data: data.mealPlan || {} }),
-              setDoc(metaDoc(u.uid, "shoppingLists"), { items: data.shoppingLists || [] }),
-              setDoc(metaDoc(u.uid, "stock"), { items: [], low: [] }),
-              setDoc(metaDoc(u.uid, "userDB"), data.userDB || { ingredients: [], utensils: [] }),
+              syncRecipes(ws, data.recipes, new Map()).then(m => { recipeSyncMap.current = m; }),
+              setDoc(metaDoc(ws, "collections"), { items: data.collections || [] }),
+              setDoc(metaDoc(ws, "mealPlan"), { data: data.mealPlan || {} }),
+              setDoc(metaDoc(ws, "shoppingLists"), { items: data.shoppingLists || [] }),
+              setDoc(metaDoc(ws, "stock"), { items: [], low: [] }),
+              setDoc(metaDoc(ws, "userDB"), data.userDB || { ingredients: [], utensils: [] }),
             ]);
           }
 
@@ -101,7 +103,7 @@ export function useFirestoreSync({
     if (!user || !cloudLoaded.current) return;
     setSyncStatus("syncing");
     try {
-      await setDoc(metaDoc(user.uid, name), payload);
+      await setDoc(metaDoc(soloWorkspace(user.uid), name), payload);
       setSyncStatus("synced");
     } catch (e) { setSyncStatus("error"); }
   }, [user, setSyncStatus]);
@@ -109,7 +111,7 @@ export function useFirestoreSync({
   useEffect(() => {
     if (!user || !cloudLoaded.current) return;
     setSyncStatus("syncing");
-    syncRecipes(user.uid, recipes, recipeSyncMap.current)
+    syncRecipes(soloWorkspace(user.uid), recipes, recipeSyncMap.current)
       .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
       .catch(() => setSyncStatus("error"));
   }, [recipes, user]);

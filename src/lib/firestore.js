@@ -14,8 +14,12 @@ import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 //   master/utensils                  — { items: [...] }
 //   master/techniques                — { items: [...] } (glossaire des techniques)
 
-export const metaDoc = (uid, name) => doc(db, "users", uid, "meta", name);
-export const recipesCol = (uid) => collection(db, "users", uid, "recipes");
+// Helpers résolus depuis un `workspace` (cf. lib/workspace.js) : `ws.segments` est
+// le préfixe de chemin du namespace actif (users/{uid} en solo, households/{hid}
+// en foyer). On accepte aussi un uid brut (string) pour rétro-compat ponctuelle.
+const segmentsOf = (ws) => (typeof ws === "string" ? ["users", ws] : ws.segments);
+export const metaDoc = (ws, name) => doc(db, ...segmentsOf(ws), "meta", name);
+export const recipesCol = (ws) => collection(db, ...segmentsOf(ws), "recipes");
 // Listes de courses partagées (lecture/écriture entre membres) : collection top-level
 // autorisée par e-mail côté règles Firestore. Annuaire des utilisateurs connus pour
 // proposer les e-mails disponibles avec avatar.
@@ -97,16 +101,16 @@ export async function loadMasterDB() {
   }
 }
 
-// Load all of a user's data from the split structure.
-export async function loadUserData(uid) {
+// Load all of a workspace's data from the split structure.
+export async function loadUserData(ws) {
   const [recipesSnap, collectionsSnap, mealPlanSnap, shoppingSnap, stockSnap, userDBSnap, prefsSnap] = await Promise.all([
-    getDocs(recipesCol(uid)),
-    getDoc(metaDoc(uid, "collections")),
-    getDoc(metaDoc(uid, "mealPlan")),
-    getDoc(metaDoc(uid, "shoppingLists")),
-    getDoc(metaDoc(uid, "stock")),
-    getDoc(metaDoc(uid, "userDB")),
-    getDoc(metaDoc(uid, "preferences")),
+    getDocs(recipesCol(ws)),
+    getDoc(metaDoc(ws, "collections")),
+    getDoc(metaDoc(ws, "mealPlan")),
+    getDoc(metaDoc(ws, "shoppingLists")),
+    getDoc(metaDoc(ws, "stock")),
+    getDoc(metaDoc(ws, "userDB")),
+    getDoc(metaDoc(ws, "preferences")),
   ]);
   return {
     recipes: recipesSnap.docs.map(d => d.data()),
@@ -132,8 +136,9 @@ export async function migrateLegacyDoc(uid) {
 }
 
 // Diff-based recipe sync: write only changed/new recipes, delete removed ones.
-export async function syncRecipes(uid, recipes, lastSyncedMap) {
+export async function syncRecipes(ws, recipes, lastSyncedMap) {
   const batch = writeBatch(db);
+  const col = recipesCol(ws);
   const currentIds = new Set();
   let ops = 0;
   for (const r of recipes) {
@@ -141,12 +146,12 @@ export async function syncRecipes(uid, recipes, lastSyncedMap) {
     currentIds.add(r.id);
     const prev = lastSyncedMap.get(r.id);
     if (!prev || JSON.stringify(prev) !== JSON.stringify(r)) {
-      batch.set(doc(recipesCol(uid), r.id), r);
+      batch.set(doc(col, r.id), r);
       ops++;
     }
   }
   for (const id of lastSyncedMap.keys()) {
-    if (!currentIds.has(id)) { batch.delete(doc(recipesCol(uid), id)); ops++; }
+    if (!currentIds.has(id)) { batch.delete(doc(col, id)); ops++; }
   }
   if (ops > 0) await batch.commit();
   const newMap = new Map();
