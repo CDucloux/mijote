@@ -1,7 +1,8 @@
-import { doc, getDoc, collection, getDocs, writeBatch, query, orderBy, limit, where, runTransaction, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, writeBatch, query, orderBy, limit, where, runTransaction, deleteDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "./firebase.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { newHouseholdDoc, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved, peopleCount, MAX_HOUSEHOLD } from "./household.js";
+import { householdWorkspace } from "./workspace.js";
 
 // ─── FIRESTORE DATA LAYER (split documents) ──────────────────────────────────
 // Structure:
@@ -92,15 +93,48 @@ const householdPointerDoc = (uid) => doc(db, "users", uid, "meta", "household");
 export const householdMemberQuery = (uid) => query(householdsCol(), where("memberUids", "array-contains", uid));
 export const householdInviteQuery = (email) => query(householdsCol(), where("invitedEmails", "array-contains", (email || "").toLowerCase()));
 
-// Crée un foyer dont `user` est propriétaire & 1er membre, et pointe son espace dessus.
-export async function createHousehold(user, name) {
-  const ref = doc(householdsCol());
-  const data = newHouseholdDoc({ id: ref.id, owner: user, name });
+// Pointeur du foyer actif. `migrated` indique si la fusion des données a eu lieu
+// (true dès la création — données déjà semées ; false à l'adhésion — fusion à
+// faire une fois par le coordinateur de sync).
+export function setHouseholdPointer(uid, id, migrated) {
+  return setDoc(householdPointerDoc(uid), { id, migrated: !!migrated, updatedAt: Date.now() });
+}
+
+// Charge uniquement les slices PARTAGÉS d'un workspace (pour la migration/sync foyer).
+export async function loadSharedData(ws) {
+  const d = await loadUserData(ws);
+  return {
+    recipes: d.recipes || [],
+    collections: d.collections || [],
+    mealPlan: d.mealPlan || {},
+    shoppingLists: d.shoppingLists || [],
+    stock: d.stock || [],
+    lowStock: d.lowStock || [],
+  };
+}
+
+// Écrit les slices partagés dans un workspace (recettes en diff + méta en bloc).
+// Renvoie la nouvelle carte de synchro des recettes.
+export async function writeSharedData(ws, data, recipeMap = new Map()) {
+  const newMap = await syncRecipes(ws, data.recipes || [], recipeMap);
   const batch = writeBatch(db);
-  batch.set(ref, data);
-  batch.set(householdPointerDoc(user.uid), { id: ref.id, updatedAt: Date.now() });
+  batch.set(metaDoc(ws, "collections"), { items: data.collections || [] });
+  batch.set(metaDoc(ws, "mealPlan"), { data: data.mealPlan || {} });
+  batch.set(metaDoc(ws, "shoppingLists"), { items: data.shoppingLists || [] });
+  batch.set(metaDoc(ws, "stock"), { items: data.stock || [], low: data.lowStock || [] });
   await batch.commit();
-  return data;
+  return newMap;
+}
+
+// Crée un foyer, y SÈME les données du créateur, puis pointe son espace dessus
+// (pointeur posé EN DERNIER pour éviter toute course avec le coordinateur de sync).
+export async function createHousehold(user, name, sharedData) {
+  const ref = doc(householdsCol());
+  await setDoc(ref, newHouseholdDoc({ id: ref.id, owner: user, name }));
+  const ws = householdWorkspace(ref.id);
+  await writeSharedData(ws, sharedData || {});
+  await setHouseholdPointer(user.uid, ref.id, true); // déjà migré (semé)
+  return ref.id;
 }
 
 // Invite un email (transaction : relit le doc pour respecter le plafond côté serveur).
@@ -122,7 +156,9 @@ export async function acceptInvite(hid, user) {
     const next = withAcceptedMember(snap.data(), { uid: user.uid, email: user.email });
     if (next.memberUids.length > MAX_HOUSEHOLD) throw new Error("Foyer complet");
     tx.set(householdDoc(hid), next);
-    tx.set(householdPointerDoc(user.uid), { id: hid, updatedAt: Date.now() });
+    // migrated:false → la fusion de MES données dans le foyer sera faite une fois
+    // par le coordinateur de sync (writeSharedData), puis le flag passera à true.
+    tx.set(householdPointerDoc(user.uid), { id: hid, migrated: false, updatedAt: Date.now() });
   });
 }
 
@@ -156,6 +192,11 @@ export async function dissolveHousehold(hid, uid) {
 // Nettoie le pointeur de foyer de l'utilisateur courant (ex. foyer dissous par autrui).
 export async function clearHouseholdPointer(uid) {
   await deleteDoc(householdPointerDoc(uid)).catch(() => {});
+}
+
+// Abonnement temps réel au pointeur de foyer actif ({ id, migrated } | null).
+export function subscribeHouseholdPointer(uid, cb) {
+  return onSnapshot(householdPointerDoc(uid), s => cb(s.exists() ? s.data() : null), () => cb(null));
 }
 
 // Read the shared Master reference DB (ingredients + utensils + categories).

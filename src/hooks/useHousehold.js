@@ -13,7 +13,7 @@ import {
 // serveur : transactions + plafond). Phase 1 : gère l'appartenance, sans encore
 // déplacer les données (le basculement de namespace arrive en Phase 2).
 export function useHousehold() {
-  const { user, notify } = useAppShell();
+  const { user, notify, getSharedData } = useAppShell();
   const [household, setHousehold] = useState(null);   // foyer actif ou null
   const [invites, setInvites] = useState([]);          // foyers où je suis invité
   const [loading, setLoading] = useState(true);
@@ -56,7 +56,7 @@ export function useHousehold() {
   }, [online, notify]);
 
   const actions = {
-    create: (name) => run(() => createHousehold(user, name), "Création du foyer échouée"),
+    create: (name) => run(() => createHousehold(user, name, getSharedData?.()), "Création du foyer échouée"),
     invite: (email) => run(() => inviteToHousehold(household.id, email), "Invitation échouée"),
     accept: (hid) => run(() => acceptInvite(hid, user), "Adhésion échouée"),
     decline: (hid) => run(() => declineInvite(hid, user.email), "Refus échoué"),

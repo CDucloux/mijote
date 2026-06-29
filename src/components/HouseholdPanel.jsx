@@ -34,7 +34,7 @@ export function HouseholdPanel() {
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "rgba(91,156,246,0.10)", border: "1px solid rgba(91,156,246,0.3)", borderRadius: 12, padding: "10px 12px" }}>
         <Icon name="info" size={16} color="var(--blue)" />
         <span style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5 }}>
-          Le foyer permet de regrouper jusqu'à {MAX_HOUSEHOLD} personnes. Le <strong>partage des recettes, du stock, des listes et du planning</strong> sera activé prochainement.
+          Jusqu'à {MAX_HOUSEHOLD} personnes partagent <strong>recettes, stock, listes de courses et planning</strong>. En rejoignant un foyer, tes recettes y sont <strong>ajoutées</strong> ; planning, stock et courses du foyer sont adoptés (ta version perso reste sauvegardée).
         </span>
       </div>
 

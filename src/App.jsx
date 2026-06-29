@@ -4,7 +4,7 @@ import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 import { setDoc, deleteDoc } from "firebase/firestore";
 
 import { auth, provider } from "./lib/firebase.js";
-import { sharedListDoc, toSharedListDoc, publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "./lib/firestore.js";
+import { sharedListDoc, toSharedListDoc, publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer } from "./lib/firestore.js";
 import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "./lib/publicRecipes.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
@@ -219,6 +219,12 @@ function AppInner() {
   const [stock, setStock] = useLS("rf_stock", []);
   const [lowStock, setLowStock] = useLS("rf_lowStock", []);
   const [preferences, setPreferences] = useLS("rf_preferences", DEFAULT_PREFERENCES);
+  // Pointeur du foyer actif ({ id, migrated } | null) — pilote le namespace partagé.
+  const [householdPointer, setHouseholdPointer] = useState(null);
+  useEffect(() => {
+    if (!user?.uid) { setHouseholdPointer(null); return; }
+    return subscribeHouseholdPointer(user.uid, setHouseholdPointer);
+  }, [user]);
   // Dérivé du pathname (et non de useParams) pour qu'AppInner reste une instance
   // unique montée sur `path="*"` : pas de remontage entre les onglets.
   const recipeIdParam = location.pathname.startsWith("/recipes/")
@@ -236,7 +242,7 @@ function AppInner() {
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
   const { cloudLoaded } = useFirestoreSync({
-    user, setUser, isAdmin, setSyncStatus,
+    user, setUser, isAdmin, setSyncStatus, householdPointer,
     recipes, setRecipes,
     collections, setCollections,
     mealPlan, setMealPlan,
@@ -429,6 +435,12 @@ function AppInner() {
     notify("PDF en cours de génération…");
   };
 
+  // Snapshot des slices partagés (espace courant) — utilisé pour semer un foyer
+  // à sa création (copie de mes données vers le namespace du foyer).
+  const getSharedData = useCallback(
+    () => ({ recipes, collections, mealPlan, shoppingLists, stock, lowStock }),
+    [recipes, collections, mealPlan, shoppingLists, stock, lowStock]
+  );
   const currentRecipe = recipes.find(r => r.id === selectedRecipe);
   const isDesktop = useIsDesktop();
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
@@ -518,7 +530,7 @@ function AppInner() {
   // Login screen
   if (!user) return <LoginScreen isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques };
+  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData };
 
   return (
     <AppShellProvider value={shellValue}>
