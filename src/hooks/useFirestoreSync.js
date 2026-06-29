@@ -193,8 +193,8 @@ export function useFirestoreSync({
   const saveMeta = useCallback(async (name, payload, ws) => {
     if (!user || !cloudLoaded.current) return;
     setSyncStatus("syncing");
-    try { await setDoc(metaDoc(ws, name), payload); setSyncStatus("synced"); }
-    catch (e) { setSyncStatus("error"); }
+    try { await setDoc(metaDoc(ws, name), payload); setSyncStatus("synced"); if (ws.kind === "household") console.log("[foyer] méta écrite", name, "→", ws.segments.join("/")); }
+    catch (e) { console.error("[foyer] méta ÉCHEC", name, e); setSyncStatus("error"); }
   }, [user, setSyncStatus]);
 
   // Recettes (slice partagé) — diff par id vers le workspace actif. On lit la
@@ -203,12 +203,13 @@ export function useFirestoreSync({
   useEffect(() => {
     if (!user || !canAutosaveShared()) return;
     const latest = sharedRef.current.recipes || [];
+    const ws = sharedWsNow(user.uid);
     const willDelete = [...recipeSyncMap.current.keys()].filter(id => !latest.some(r => r.id === id));
-    if (willDelete.length) console.log("[foyer] autosave recettes : suppression de", willDelete, "vers", sharedWsNow(user.uid).segments.join("/"));
+    console.log("[foyer] autosave recettes →", ws.segments.join("/"), "| total", latest.length, willDelete.length ? `| SUPPRIME ${willDelete.length}` : "");
     setSyncStatus("syncing");
-    syncRecipes(sharedWsNow(user.uid), latest, recipeSyncMap.current)
-      .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
-      .catch(() => setSyncStatus("error"));
+    syncRecipes(ws, latest, recipeSyncMap.current)
+      .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); console.log("[foyer] autosave recettes OK"); })
+      .catch((e) => { console.error("[foyer] autosave recettes ÉCHEC", e); setSyncStatus("error"); });
   }, [recipes, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Écrit une méta partagée si elle a changé (signature) : on note la signature avant
@@ -239,10 +240,10 @@ export function useFirestoreSync({
     const ws = householdWorkspace(loadedHid);
     const unsubs = [];
     unsubs.push(onSnapshot(recipesCol(ws), snap => {
+      console.log("[foyer] recipes snapshot", snap.size, { fromCache: snap.metadata.fromCache, pending: snap.metadata.hasPendingWrites });
       if (snap.metadata.hasPendingWrites) return;
       if (snap.metadata.fromCache && snap.empty) return; // ne pas écraser des données valides avec un cache vide
       const remote = snap.docs.map(d => d.data());
-      console.log("[foyer] recipes snapshot", remote.length, { fromCache: snap.metadata.fromCache });
       recipeSyncMap.current = mapOf(remote);
       setRecipes(remote);
     }, err => console.error("[foyer] recipes snapshot ERREUR", err)));
