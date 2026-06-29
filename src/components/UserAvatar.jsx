@@ -80,8 +80,8 @@ export function UserAvatar() {
         </>,
         document.body
       )}
-      {confirmSignOut && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.18s ease" }}
+      {confirmSignOut && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 1400, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.18s ease" }}
           onClick={() => setConfirmSignOut(false)}>
           <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 340, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "26px 22px 20px", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", textAlign: "center", animation: "modalIn 0.32s cubic-bezier(0.16,1,0.3,1)" }}>
             <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
@@ -96,7 +96,8 @@ export function UserAvatar() {
               <button onClick={() => { setConfirmSignOut(false); onSignOut(); }} style={{ flex: 1, padding: "11px 0", borderRadius: 12, background: "var(--red)", border: "1px solid var(--red)", color: "#fff", fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Déconnexion</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       {about && <AboutModal onClose={() => setAbout(false)} />}
     </div>
