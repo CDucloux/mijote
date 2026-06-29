@@ -34,14 +34,12 @@ describe("invitations & plafond", () => {
     const h = withInvite(base, "bob@x.com");
     expect(canInvite(h, "bob@x.com")).toBe(false);
   });
-  it("plafonne à 4 places (membres + invités)", () => {
-    let h = base;
-    h = withInvite(h, "a@x.com");
-    h = withInvite(h, "b@x.com");
-    h = withInvite(h, "c@x.com");
+  it("plafonne à MAX_HOUSEHOLD places (membres + invités)", () => {
+    let h = base; // owner = 1 place
+    h = withInvite(h, "a@x.com"); // + 1 invité → plein à 2
     expect(peopleCount(h)).toBe(MAX_HOUSEHOLD);
-    expect(canInvite(h, "d@x.com")).toBe(false);
-    expect(withInvite(h, "d@x.com")).toBe(h); // inchangé
+    expect(canInvite(h, "b@x.com")).toBe(false);
+    expect(withInvite(h, "b@x.com")).toBe(h); // inchangé
   });
   it("retire une invitation", () => {
     const h = withInviteRemoved(withInvite(base, "bob@x.com"), "BOB@x.com");

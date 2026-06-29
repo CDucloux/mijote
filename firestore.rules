@@ -88,7 +88,7 @@ service cloud.firestore {
     match /households/{hid} {
       function isHMember(rsc) { return isSignedIn() && request.auth.uid in rsc.data.memberUids; }
       function isHInvited(rsc) { return hasVerifiedEmail() && email() in rsc.data.invitedEmails; }
-      function peopleOk(d) { return d.memberUids.size() <= 4 && d.memberUids.size() + d.invitedEmails.size() <= 4; }
+      function peopleOk(d) { return d.memberUids.size() <= 2 && d.memberUids.size() + d.invitedEmails.size() <= 2; }
 
       allow read: if isHMember(resource) || isHInvited(resource);
 

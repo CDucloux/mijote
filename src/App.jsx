@@ -28,6 +28,7 @@ import { PullToRefresh } from "./components/PullToRefresh.jsx";
 import { Icon } from "./components/Icon.jsx";
 import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/OfflineModal.jsx";
+import { HouseholdWelcome } from "./components/HouseholdWelcome.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
 import { HomeDashboard } from "./screens/HomeDashboard.jsx";
@@ -577,6 +578,7 @@ function AppInner() {
           </SwipeableSheet>
         )}
         <OfflineModal />
+        <HouseholdWelcome />
       </div>
     </AppShellProvider>
   );

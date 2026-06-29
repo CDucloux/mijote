@@ -7,7 +7,7 @@
 // (on ne connaît pas l'uid de l'invité à l'avance). Le plafond compte les membres
 // ACTIFS + les invitations EN ATTENTE : on ne peut pas inviter au-delà de 4 places.
 
-export const MAX_HOUSEHOLD = 4;
+export const MAX_HOUSEHOLD = 2;
 
 const norm = (e) => (e || "").trim().toLowerCase();
 const uniq = (arr) => Array.from(new Set(arr));

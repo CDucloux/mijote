@@ -1,9 +1,9 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, onSnapshot, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "../lib/firebase.js";
 import {
-  metaDoc, sharedListsCol, userDirCol, userDirDoc,
+  metaDoc, recipesCol, sharedListsCol, userDirCol, userDirDoc,
   loadMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
   loadSharedData, writeSharedData, setHouseholdPointer,
 } from "../lib/firestore.js";
@@ -39,6 +39,18 @@ export function useFirestoreSync({
   const recipeSyncMap = useRef(new Map());
   const activeHidRef = useRef(null);   // hid du workspace partagé chargé (null = solo)
   const migratingRef = useRef(false);  // true pendant la bascule/migration → suspend l'autosave
+  const metaSigRef = useRef({});       // signatures JSON des méta partagées (anti-écho push/snapshot)
+  const [loadedHid, setLoadedHid] = useState(null); // foyer chargé → déclenche les abonnements temps réel
+
+  // Mémorise les signatures des méta partagées chargées (un snapshot identique ne ré-applique rien).
+  const seedSigs = useCallback((d) => {
+    metaSigRef.current = {
+      collections: JSON.stringify(d.collections || []),
+      mealPlan: JSON.stringify(d.mealPlan || {}),
+      shoppingLists: JSON.stringify(d.shoppingLists || []),
+      stock: JSON.stringify({ items: d.stock || [], low: d.lowStock || [] }),
+    };
+  }, []);
 
   // Snapshot live des slices partagés (pour capturer l'état local au moment d'une fusion).
   const sharedRef = useRef({});
@@ -132,6 +144,7 @@ export function useFirestoreSync({
           if (householdPointer?.migrated) {
             applyShared(remote);                       // membre déjà à jour : simple chargement
             recipeSyncMap.current = mapOf(remote.recipes);
+            seedSigs(remote);
           } else {
             // 1ère adhésion : fusion additive de MES données (snapshot local) dans le foyer.
             const merged = mergeShared(sharedRef.current, remote);
@@ -139,22 +152,26 @@ export function useFirestoreSync({
             if (cancelled) return;
             applyShared(merged);
             recipeSyncMap.current = newMap;
+            seedSigs(merged);
             await setHouseholdPointer(user.uid, desiredHid, true); // marque la migration faite
           }
           activeHidRef.current = desiredHid;
+          setLoadedHid(desiredHid);
         } else {
           const solo = await loadSharedData(soloWorkspace(user.uid)); // retour en solo (départ)
           if (cancelled) return;
           applyShared(solo);
           recipeSyncMap.current = mapOf(solo.recipes);
+          metaSigRef.current = {};
           activeHidRef.current = null;
+          setLoadedHid(null);
         }
         setSyncStatus("synced");
       } catch { setSyncStatus("error"); }
       finally { migratingRef.current = false; }
     })();
     return () => { cancelled = true; };
-  }, [user, desiredHid, householdPointer, applyShared, setSyncStatus]);
+  }, [user, desiredHid, householdPointer, applyShared, setSyncStatus, seedSigs]);
 
   useEffect(() => {
     if (!masterDB.ingredients.length && !masterDB.utensils.length) return;
@@ -181,13 +198,51 @@ export function useFirestoreSync({
       .catch(() => setSyncStatus("error"));
   }, [recipes, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Méta partagées → workspace actif ; méta perso (préférences, userDB) → solo.
-  useEffect(() => { if (canAutosaveShared() && user) saveMeta("collections", { items: collections }, sharedWs(user.uid)); }, [collections]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (canAutosaveShared() && user) saveMeta("mealPlan", { data: mealPlan }, sharedWs(user.uid)); }, [mealPlan]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (canAutosaveShared() && user) saveMeta("shoppingLists", { items: shoppingLists }, sharedWs(user.uid)); }, [shoppingLists]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (canAutosaveShared() && user) saveMeta("stock", { items: stock, low: lowStock }, sharedWs(user.uid)); }, [stock, lowStock]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Écrit une méta partagée si elle a changé (signature) : on note la signature avant
+  // d'écrire, si bien que le snapshot de notre propre écriture (même JSON) est ignoré.
+  const pushSharedMeta = (name, localVal, payload) => {
+    if (!user || !canAutosaveShared()) return;
+    const sig = JSON.stringify(localVal);
+    if (metaSigRef.current[name] === sig) return; // écho ou no-op
+    metaSigRef.current[name] = sig;
+    saveMeta(name, payload, sharedWs(user.uid));
+  };
+
+  // Méta partagées → workspace actif (anti-écho) ; méta perso (préférences, userDB) → solo.
+  useEffect(() => { pushSharedMeta("collections", collections, { items: collections }); }, [collections]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { pushSharedMeta("mealPlan", mealPlan, { data: mealPlan }); }, [mealPlan]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { pushSharedMeta("shoppingLists", shoppingLists, { items: shoppingLists }); }, [shoppingLists]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { pushSharedMeta("stock", { items: stock, low: lowStock }, { items: stock, low: lowStock }); }, [stock, lowStock]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (user) saveMeta("preferences", preferences, soloWorkspace(user.uid)); }, [preferences]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (user) saveMeta("userDB", userDB, soloWorkspace(user.uid)); }, [userDB]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Temps réel (foyer) : abonnement aux données partagées des autres membres ──
+  // Les écritures locales (hasPendingWrites) sont ignorées ; les changements distants
+  // mettent à jour l'état avec garde de signature/diff pour ne pas relancer d'écriture.
+  useEffect(() => {
+    if (!user || !loadedHid) return;
+    const ws = householdWorkspace(loadedHid);
+    const unsubs = [];
+    unsubs.push(onSnapshot(recipesCol(ws), snap => {
+      if (snap.metadata.hasPendingWrites) return;
+      const remote = snap.docs.map(d => d.data());
+      recipeSyncMap.current = mapOf(remote);
+      setRecipes(remote);
+    }, () => {}));
+    const metaSub = (name, fromSnap, apply) => onSnapshot(metaDoc(ws, name), snap => {
+      if (snap.metadata.hasPendingWrites) return;
+      const val = fromSnap(snap.exists() ? snap.data() : {});
+      const sig = JSON.stringify(val);
+      if (metaSigRef.current[name] === sig) return;
+      metaSigRef.current[name] = sig;
+      apply(val);
+    }, () => {});
+    unsubs.push(metaSub("collections", d => d.items || [], setCollections));
+    unsubs.push(metaSub("mealPlan", d => d.data || {}, setMealPlan));
+    unsubs.push(metaSub("shoppingLists", d => d.items || [], setShoppingLists));
+    unsubs.push(metaSub("stock", d => ({ items: d.items || [], low: d.low || [] }), v => { setStock(v.items); setLowStock(v.low); }));
+    return () => unsubs.forEach(u => u());
+  }, [user, loadedHid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!user?.email) { setSharedLists([]); return; }
