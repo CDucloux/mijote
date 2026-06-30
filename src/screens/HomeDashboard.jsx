@@ -4,6 +4,7 @@ import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
+import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, MAX_HOUSEHOLD } from "../lib/household.js";
@@ -87,11 +88,16 @@ function FoyerSection() {
             {hasInvite && !household && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />}
           </span>
         </span>
-        <span style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s", display: "inline-flex" }}>
+        <span style={{ display: "inline-flex" }}>
           <Icon name="forward" size={16} color="var(--text3)" />
         </span>
       </button>
-      {open && <div style={{ marginTop: 12 }} className="slide-up"><HouseholdPanel /></div>}
+      {open && (
+        <SwipeableSheet onClose={() => setOpen(false)} style={{ maxHeight: "88dvh" }}>
+          <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: "0 0 16px" }}>Foyer</h2>
+          <HouseholdPanel />
+        </SwipeableSheet>
+      )}
     </section>
   );
 }

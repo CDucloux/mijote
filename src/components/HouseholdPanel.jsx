@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
+import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, isOwner, MAX_HOUSEHOLD } from "../lib/household.js";
@@ -108,28 +109,35 @@ export function HouseholdPanel() {
           )}
 
           {/* Quitter / dissoudre */}
-          {!confirmLeave ? (
-            <button className="btn btn-ghost" style={{ color: "var(--red)", borderColor: "rgba(224,82,82,0.3)" }} onClick={() => setConfirmLeave(true)}>
-              <Icon name="logout" size={15} color="var(--red)" /> {owner ? "Dissoudre le foyer" : "Quitter le foyer"}
-            </button>
-          ) : (
-            card(
-              <>
-                <div style={{ fontSize: 13.5, color: "var(--text2)", marginBottom: 12, lineHeight: 1.5 }}>
-                  {owner
-                    ? "Dissoudre le foyer le supprime pour tous les membres. Tes données personnelles ne sont pas effacées."
-                    : "Quitter le foyer : tu n'auras plus accès à ses données partagées."}
-                </div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmLeave(false)}>Annuler</button>
-                  <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { (owner ? actions.dissolve() : actions.leave()); setConfirmLeave(false); }}>
-                    {owner ? "Dissoudre" : "Quitter"}
-                  </button>
-                </div>
-              </>
-            )
-          )}
+          <button className="btn btn-ghost" style={{ color: "var(--red)", borderColor: "rgba(224,82,82,0.3)" }} onClick={() => setConfirmLeave(true)}>
+            <Icon name="logout" size={15} color="var(--red)" /> {owner ? "Dissoudre le foyer" : "Quitter le foyer"}
+          </button>
         </>
+      )}
+
+      {/* Feuille de confirmation quitter / dissoudre */}
+      {confirmLeave && (
+        <SwipeableSheet onClose={() => setConfirmLeave(false)}>
+          <div style={{ textAlign: "center", padding: "4px 4px 0" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Icon name="logout" size={26} color="var(--red)" />
+            </div>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, margin: "0 0 8px" }}>
+              {owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
+            </h3>
+            <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 22px", maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
+              {owner
+                ? <>« {household.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
+                : <>Tu n'auras plus accès aux données partagées de « {household.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmLeave(false)}>Annuler</button>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { (owner ? actions.dissolve() : actions.leave()); setConfirmLeave(false); }}>
+                <Icon name={owner ? "trash" : "logout"} size={15} color="var(--red)" /> {owner ? "Dissoudre" : "Quitter"}
+              </button>
+            </div>
+          </div>
+        </SwipeableSheet>
       )}
     </div>
   );
