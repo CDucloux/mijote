@@ -43,6 +43,7 @@ export function useFirestoreSync({
   const recipesSigRef = useRef(null);  // signature des recettes appliquées (load/snapshot) → l'autosave n'écrit QUE sur une vraie modif utilisateur
   const transitionTargetRef = useRef(undefined); // cible d'une bascule en cours (anti-concurrence)
   const [loadedHid, setLoadedHid] = useState(null); // foyer chargé → déclenche les abonnements temps réel
+  const [bootstrapped, setBootstrapped] = useState(false); // miroir d'état de cloudLoaded → ré-exécute le coordinateur quand le bootstrap finit
 
   // Mémorise les signatures des méta partagées chargées (un snapshot identique ne ré-applique rien).
   const seedSigs = useCallback((d) => {
@@ -78,6 +79,7 @@ export function useFirestoreSync({
     getRedirectResult(auth).catch(() => { });
     const unsub = onAuthStateChanged(auth, async u => {
       cloudLoaded.current = false;
+      setBootstrapped(false);
       recipeSyncMap.current = new Map();
       activeHidRef.current = null;
       setUser(u);
@@ -129,7 +131,7 @@ export function useFirestoreSync({
           ]);
         }
 
-        setTimeout(() => { cloudLoaded.current = true; setSyncStatus("synced"); }, 0);
+        setTimeout(() => { cloudLoaded.current = true; setBootstrapped(true); setSyncStatus("synced"); }, 0);
       } catch (e) { setSyncStatus("error"); }
     });
     return () => unsub();
@@ -137,7 +139,7 @@ export function useFirestoreSync({
 
   // ── Coordinateur de workspace : bascule solo↔foyer + migration unique ─────────
   useEffect(() => {
-    if (!user || !cloudLoaded.current) return;
+    if (!user || !bootstrapped) return;
     if (activeHidRef.current === desiredHid) return; // déjà sur le bon namespace
     if (transitionTargetRef.current === desiredHid) return; // bascule déjà en cours vers cette cible
     transitionTargetRef.current = desiredHid;
@@ -184,7 +186,7 @@ export function useFirestoreSync({
       finally { migratingRef.current = false; transitionTargetRef.current = undefined; }
     })();
     return () => { cancelled = true; };
-  }, [user, desiredHid, householdPointer, applyShared, setSyncStatus, seedSigs]);
+  }, [user, bootstrapped, desiredHid, householdPointer, applyShared, setSyncStatus, seedSigs]);
 
   useEffect(() => {
     if (!masterDB.ingredients.length && !masterDB.utensils.length) return;
