@@ -14,6 +14,13 @@ import { mergeShared } from "../lib/householdMigration.js";
 
 const mapOf = (recipes) => { const m = new Map(); for (const r of (recipes || [])) if (r.id) m.set(r.id, r); return m; };
 
+// Cache local du foyer actif : permet au bootstrap de charger DIRECTEMENT le bon
+// namespace (foyer) au lieu d'afficher le solo une fraction de seconde avant la
+// bascule du coordinateur (anti-flicker solo→foyer au rechargement).
+const hidCacheKey = (uid) => "rf_active_hid_" + uid;
+const readCachedHid = (uid) => { try { return localStorage.getItem(hidCacheKey(uid)) || null; } catch { return null; } };
+const writeCachedHid = (uid, hid) => { try { if (hid) localStorage.setItem(hidCacheKey(uid), hid); else localStorage.removeItem(hidCacheKey(uid)); } catch { /* quota */ } };
+
 // ─── COUCHE DE SYNCHRONISATION FIRESTORE ──────────────────────────────────────
 // Les slices PARTAGÉS (recettes, carnets, planning, listes, stock) sont lus/écrits
 // dans le « workspace actif » : l'espace perso (solo) ou un foyer. Les slices
@@ -92,10 +99,13 @@ export function useFirestoreSync({
       setSyncStatus("syncing");
       try {
         const masterPromise = loadMasterDB();
-        const ws = soloWorkspace(u.uid); // bootstrap : toujours l'espace perso (le foyer arrive via le coordinateur)
+        const ws = soloWorkspace(u.uid); // espace perso (préférences/base + partagé solo)
+        // Foyer connu du dernier passage → on charge DIRECTEMENT ses données partagées
+        // (pas de flash solo→foyer au reload). Le coordinateur confirmera/corrigera.
+        const bootHid = readCachedHid(u.uid);
 
         let data = await loadUserData(ws);
-        const isEmpty = data.recipes.length === 0 && !data.collections && !data.userDB
+        const isEmpty = !bootHid && data.recipes.length === 0 && !data.collections && !data.userDB
           && !data.mealPlan && !data.shoppingLists && !data.stock;
         if (isEmpty) {
           const legacy = await migrateLegacyDoc(u.uid);
@@ -110,22 +120,36 @@ export function useFirestoreSync({
           }
         }
 
-        setRecipes(data.recipes || []);
-        if (data.collections) setCollections(data.collections);
-        if (data.mealPlan) setMealPlan(data.mealPlan);
-        if (data.shoppingLists) setShoppingLists(data.shoppingLists);
-        if (data.stock) setStock(data.stock);
-        if (data.lowStock) setLowStock(data.lowStock);
-        if (data.preferences) setPreferences(normalizePreferences(data.preferences));
-        setUserDB(data.userDB || { ingredients: [], utensils: [] });
+        // Slices PARTAGÉS : depuis le foyer si connu, sinon depuis le solo (`data`).
+        // Si le cache est périmé (foyer quitté/dissous ailleurs), le chargement échoue
+        // → on retombe sur le solo, le coordinateur rebasculera proprement.
+        let shared = data, loadedFromHousehold = false;
+        if (bootHid) {
+          try { shared = await loadSharedData(householdWorkspace(bootHid)); loadedFromHousehold = true; }
+          catch { shared = data; }
+        }
+
+        setRecipes(shared.recipes || []);
+        if (shared.collections) setCollections(shared.collections);
+        if (shared.mealPlan) setMealPlan(shared.mealPlan);
+        if (shared.shoppingLists) setShoppingLists(shared.shoppingLists);
+        if (shared.stock) setStock(shared.stock);
+        if (shared.lowStock) setLowStock(shared.lowStock);
+        if (data.preferences) setPreferences(normalizePreferences(data.preferences)); // perso : toujours solo
+        setUserDB(data.userDB || { ingredients: [], utensils: [] });               // perso : toujours solo
         const freshMaster = await masterPromise;
         setMasterDB(freshMaster);
         try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ }
 
-        recipeSyncMap.current = mapOf(data.recipes);
-        recipesSigRef.current = JSON.stringify(data.recipes || []);
+        recipeSyncMap.current = mapOf(shared.recipes);
+        recipesSigRef.current = JSON.stringify(shared.recipes || []);
 
-        if (isEmpty && data.recipes && (data.recipes.length || data.userDB)) {
+        if (loadedFromHousehold) {
+          // Le foyer est déjà chargé : on s'aligne pour que le coordinateur ne rebascule pas.
+          seedSigs(shared);
+          activeHidRef.current = bootHid;
+          setLoadedHid(bootHid);
+        } else if (isEmpty && data.recipes && (data.recipes.length || data.userDB)) {
           await Promise.all([
             syncRecipes(ws, data.recipes, new Map()).then(m => { recipeSyncMap.current = m; }),
             setDoc(metaDoc(ws, "collections"), { items: data.collections || [] }),
@@ -174,6 +198,7 @@ export function useFirestoreSync({
             await setHouseholdPointer(user.uid, desiredHid, true); // marque la migration faite
           }
           activeHidRef.current = desiredHid;
+          writeCachedHid(user.uid, desiredHid); // mémorise pour un chargement direct au prochain reload
           setLoadedHid(desiredHid);
           console.log("[foyer] foyer chargé", desiredHid, "migrated=", householdPointer?.migrated);
         } else {
@@ -184,6 +209,7 @@ export function useFirestoreSync({
           recipesSigRef.current = JSON.stringify(solo.recipes || []);
           metaSigRef.current = {};
           activeHidRef.current = null;
+          writeCachedHid(user.uid, null); // sorti du foyer → on retire le cache
           setLoadedHid(null);
         }
         setSyncStatus("synced");
