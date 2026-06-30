@@ -40,6 +40,7 @@ export function useFirestoreSync({
   const activeHidRef = useRef(null);   // hid du workspace partagé chargé (null = solo)
   const migratingRef = useRef(false);  // true pendant la bascule/migration → suspend l'autosave
   const metaSigRef = useRef({});       // signatures JSON des méta partagées (anti-écho push/snapshot)
+  const recipesSigRef = useRef(null);  // signature des recettes appliquées (load/snapshot) → l'autosave n'écrit QUE sur une vraie modif utilisateur
   const transitionTargetRef = useRef(undefined); // cible d'une bascule en cours (anti-concurrence)
   const [loadedHid, setLoadedHid] = useState(null); // foyer chargé → déclenche les abonnements temps réel
 
@@ -115,6 +116,7 @@ export function useFirestoreSync({
         try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ }
 
         recipeSyncMap.current = mapOf(data.recipes);
+        recipesSigRef.current = JSON.stringify(data.recipes || []);
 
         if (isEmpty && data.recipes && (data.recipes.length || data.userDB)) {
           await Promise.all([
@@ -151,6 +153,7 @@ export function useFirestoreSync({
           if (householdPointer?.migrated) {
             applyShared(remote);                       // membre déjà à jour : simple chargement
             recipeSyncMap.current = mapOf(remote.recipes);
+            recipesSigRef.current = JSON.stringify(remote.recipes || []);
             seedSigs(remote);
           } else {
             // 1ère adhésion : fusion additive de MES données (snapshot local) dans le foyer.
@@ -159,6 +162,7 @@ export function useFirestoreSync({
             if (cancelled) return;
             applyShared(merged);
             recipeSyncMap.current = newMap;
+            recipesSigRef.current = JSON.stringify(merged.recipes || []);
             seedSigs(merged);
             await setHouseholdPointer(user.uid, desiredHid, true); // marque la migration faite
           }
@@ -170,6 +174,7 @@ export function useFirestoreSync({
           if (cancelled) return;
           applyShared(solo);
           recipeSyncMap.current = mapOf(solo.recipes);
+          recipesSigRef.current = JSON.stringify(solo.recipes || []);
           metaSigRef.current = {};
           activeHidRef.current = null;
           setLoadedHid(null);
@@ -203,6 +208,12 @@ export function useFirestoreSync({
   useEffect(() => {
     if (!user || !canAutosaveShared()) return;
     const latest = sharedRef.current.recipes || [];
+    // N'écrire QUE sur une vraie modif utilisateur : si la signature courante est celle
+    // qu'on vient d'appliquer (chargement / snapshot distant), on ne touche à rien
+    // (évite l'écho et surtout les suppressions destructrices au reload).
+    const sig = JSON.stringify(latest);
+    if (recipesSigRef.current === sig) return;
+    recipesSigRef.current = sig;
     const ws = sharedWsNow(user.uid);
     const willDelete = [...recipeSyncMap.current.keys()].filter(id => !latest.some(r => r.id === id));
     console.log("[foyer] autosave recettes →", ws.segments.join("/"), "| total", latest.length, willDelete.length ? `| SUPPRIME ${willDelete.length}` : "");
@@ -245,6 +256,7 @@ export function useFirestoreSync({
       if (snap.metadata.fromCache && snap.empty) return; // ne pas écraser des données valides avec un cache vide
       const remote = snap.docs.map(d => d.data());
       recipeSyncMap.current = mapOf(remote);
+      recipesSigRef.current = JSON.stringify(remote);
       setRecipes(remote);
     }, err => console.error("[foyer] recipes snapshot ERREUR", err)));
     const metaSub = (name, fromSnap, apply) => onSnapshot(metaDoc(ws, name), snap => {
