@@ -75,5 +75,5 @@ export async function deleteImageByUrl(url) {
   try {
     const sRef = storageRef(storage, url);
     await deleteObject(sRef);
-  } catch { /* already gone or not ours — ignore */ }
+  } catch { /* already gone or not ours – ignore */ }
 }

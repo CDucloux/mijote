@@ -209,7 +209,7 @@ export function useFirestoreSync({
     catch (e) { console.error("[foyer] méta ÉCHEC", name, e); setSyncStatus("error"); }
   }, [user, setSyncStatus]);
 
-  // Recettes (slice partagé) — diff par id vers le workspace actif. On lit la
+  // Recettes (slice partagé) – diff par id vers le workspace actif. On lit la
   // DERNIÈRE valeur (sharedRef) pour ne jamais supprimer une recette arrivée d'un
   // autre membre entre la planification et l'exécution de cet effet.
   useEffect(() => {

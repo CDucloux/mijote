@@ -1,4 +1,4 @@
-// ─── SCORE SANTÉ — Nutri-Score (algorithme 2023, aliments généraux) ─────────
+// ─── SCORE SANTÉ – Nutri-Score (algorithme 2023, aliments généraux) ─────────
 // On agrège les nutriments de TOUTE la recette ramenés à 100g de plat fini,
 // puis on calcule un unique Nutri-Score, mappé sur l'échelle 0-100 du ring.
 // Tables de seuils par 100g : `nsPoints` renvoie l'index du 1er seuil non dépassé.

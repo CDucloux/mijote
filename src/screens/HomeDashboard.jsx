@@ -1,9 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
+import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { useHousehold } from "../hooks/useHousehold.js";
+import { peopleCount, MAX_HOUSEHOLD } from "../lib/household.js";
 import { buildDashboardSummary } from "../lib/dashboard.js";
 import { fmtTime } from "../lib/format.js";
 
@@ -17,7 +20,7 @@ function greeting(date = new Date()) {
   return "Bonsoir";
 }
 
-// Carte de notification compacte (courses, stock bas) — icône + libellé + chevron.
+// Carte de notification compacte (courses, stock bas) – icône + libellé + chevron.
 function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }) {
   return (
     <button onClick={onClick} className="slide-up"
@@ -44,6 +47,52 @@ function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }) {
       </span>
       <Icon name="forward" size={16} color="var(--text3)" />
     </button>
+  );
+}
+
+// Section « Foyer » repliable dans l'Accueil : un résumé d'une ligne (nom du
+// foyer + jauge de places, ou invitation à en créer un) qui se déplie sur le
+// panneau de gestion complet. Évite d'aller fouiller dans la Configuration.
+function FoyerSection() {
+  const { household, invites, loading } = useHousehold();
+  const [open, setOpen] = useState(false);
+  if (loading) return null;
+
+  const hasInvite = invites.length > 0;
+  const summary = household
+    ? `${peopleCount(household)}/${MAX_HOUSEHOLD} ${peopleCount(household) > 1 ? "membres" : "membre"}`
+    : hasInvite ? "Invitation en attente" : "Cuisinez à plusieurs";
+
+  return (
+    <section style={{ marginBottom: 26 }}>
+      <button onClick={() => setOpen(v => !v)}
+        style={{
+          display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
+          padding: "13px 14px", borderRadius: 18, cursor: "pointer",
+          background: "var(--surface)", border: "1px solid var(--border)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+        }}>
+        <span style={{
+          width: 44, height: 44, borderRadius: 13, flexShrink: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.3)",
+          fontSize: 20, lineHeight: 1,
+        }}>🏡</span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: "block", fontSize: 14.5, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {household ? household.name : "Mon foyer"}
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text3)", marginTop: 2 }}>
+            {summary}
+            {hasInvite && !household && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />}
+          </span>
+        </span>
+        <span style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s", display: "inline-flex" }}>
+          <Icon name="forward" size={16} color="var(--text3)" />
+        </span>
+      </button>
+      {open && <div style={{ marginTop: 12 }} className="slide-up"><HouseholdPanel /></div>}
+    </section>
   );
 }
 
@@ -153,6 +202,9 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
             </div>
           )}
         </section>
+
+        {/* ── Mon foyer ───────────────────────────────────────────────────── */}
+        <FoyerSection />
 
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
         <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} />

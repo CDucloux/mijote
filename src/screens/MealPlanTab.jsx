@@ -6,7 +6,7 @@ import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
-// ─── MEAL PLAN — module-level constants & pure helpers ────────────────────────
+// ─── MEAL PLAN – module-level constants & pure helpers ────────────────────────
 const MP_DAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const MP_MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 const MP_SLOT_LABEL = { midi: "🌤 Midi", soir: "🌙 Soir" };
@@ -139,7 +139,7 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
           meal.portions > 1 ? `${recipe.servings} portions sur ${meal.portions} jours` : "",
           `Préparation : ${recipe.prepTime} min`,
           `Cuisson : ${recipe.cookTime} min`,
-          `Score santé : ${recipe.healthScore || "—"}/100`,
+          `Score santé : ${recipe.healthScore || "–"}/100`,
           recipe.ingredients?.map(i => `• ${i.name} ${i.amount} ${i.unit}`).join("\n") || "",
           recipe.source ? `Source : ${recipe.source}` : "",
         ].filter(Boolean).join("\n");
@@ -150,7 +150,7 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
           `DTSTAMP:${dtstamp}`,
           `DTSTART;TZID=Europe/Paris:${toICSDate(date, times.start)}`,
           `DTEND;TZID=Europe/Paris:${toICSDate(date, times.end)}`,
-          `SUMMARY:${escapeICS(slotLabel + " — " + recipe.name)}`,
+          `SUMMARY:${escapeICS(slotLabel + " – " + recipe.name)}`,
           `DESCRIPTION:${escapeICS(descParts)}`,
           `CATEGORIES:${escapeICS(slotLabel)}`,
           "END:VEVENT"
@@ -183,7 +183,7 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => navigate(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
           <span style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
-            {`${new Date(weekDays[0] + "T12:00").getDate()} — ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
+            {`${new Date(weekDays[0] + "T12:00").getDate()} – ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
           </span>
           <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)", flexShrink: 0 }}>Auj.</button>

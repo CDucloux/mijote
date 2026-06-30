@@ -3,7 +3,7 @@ const NUTRI_COLORS = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E
 // Badge Nutri-Score façon étiquette officielle : barre blanche, 5 lettres,
 // la lettre active surélevée et pleine, les autres réduites et atténuées.
 export const NutriScoreBadge = ({ letter, compact }) => {
-  if (!letter) return <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>—</span>;
+  if (!letter) return <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>–</span>;
   if (compact) {
     return (
       <span style={{

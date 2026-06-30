@@ -142,7 +142,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         await navigator.clipboard.writeText(url);
         notify?.("Lien copié dans le presse-papier");
       }
-    } catch { /* partage annulé par l'utilisateur — silencieux */ }
+    } catch { /* partage annulé par l'utilisateur – silencieux */ }
   };
   const isProgrammaticScroll = useRef(false);
   const mult = servings / (recipe.servings || 2);
@@ -254,7 +254,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       </div>
       )}
 
-      {/* ── DESKTOP INFO BAR — carte arrondie façon mobile ── */}
+      {/* ── DESKTOP INFO BAR – carte arrondie façon mobile ── */}
       {isDesktop && (
       <div style={{ padding: "12px 16px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "stretch", background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", padding: "10px 0", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -333,7 +333,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex" }}>
         {/* ── MOBILE: scrollable hero + sticky bar + tabs + content ── */}
         <div className="detail-mobile-content" ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
-          {/* Hero image — grand et beau */}
+          {/* Hero image – grand et beau */}
           <div style={{ position: "relative", height: 260, flexShrink: 0, color: "#fff" }}>
             <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={104} style={{ width: "100%", height: "100%" }} />} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 40%,rgba(0,0,0,0.72) 100%)" }} />
@@ -389,7 +389,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             </div>
           </div>
 
-          {/* Sentinelle invisible juste sous le hero — dès qu'elle sort du viewport la barre compacte apparaît */}
+          {/* Sentinelle invisible juste sous le hero – dès qu'elle sort du viewport la barre compacte apparaît */}
           <div ref={heroSentinelRef} style={{ height: 1, flexShrink: 0 }} />
 
           {/* Barre compacte sticky */}
@@ -412,7 +412,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             </>}
           </div>
 
-          {/* Infos + actions — remontés juste sous le hero, au-dessus des onglets */}
+          {/* Infos + actions – remontés juste sous le hero, au-dessus des onglets */}
           <div style={{ padding: "16px 16px 14px" }}>
             <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 16, padding: "14px 8px", marginBottom: 12, border: "1px solid var(--border)" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
@@ -453,11 +453,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             ))}
           </div>
 
-          {/* Contenu selon onglet actif — swipe horizontal pour changer d'onglet */}
+          {/* Contenu selon onglet actif – swipe horizontal pour changer d'onglet */}
           <div {...swipeHandlers}>
           {activeTab === "Ingrédients" && (
             <div style={{ padding: "16px 16px 32px" }}>
-              {/* Portions — pilote les quantités de la liste */}
+              {/* Portions – pilote les quantités de la liste */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)", borderRadius: 14, padding: "12px 16px", marginBottom: 14, border: "1px solid var(--border)" }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>Portions</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -470,7 +470,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   </button>
                 </div>
               </div>
-              {/* Liste ingrédients — carte unique, lignes séparées par un filet */}
+              {/* Liste ingrédients – carte unique, lignes séparées par un filet */}
               <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
                 {recipe.ingredients.map((ing, idx) => {
                   const rc = resolveComp(ing);
@@ -781,7 +781,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         </div>
       </div>
 
-      {/* ── COOK MODE — fullscreen step-by-step ── */}
+      {/* ── COOK MODE – fullscreen step-by-step ── */}
       {showNutrition && (
         <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
       )}
@@ -910,7 +910,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         <SwipeableSheet onClose={() => setConfirmClone(false)}>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Ajouter à mes recettes ?</h3>
           <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 14, lineHeight: 1.5 }}>
-            Une <strong>copie personnelle</strong> est créée dans ta bibliothèque. C'est elle qui te permet de la planifier, de l'ajouter à tes courses, de la cuisiner en pas-à-pas et de l'<strong>adapter librement</strong> — même hors-ligne. L'auteur d'origine reste crédité.
+            Une <strong>copie personnelle</strong> est créée dans ta bibliothèque. C'est elle qui te permet de la planifier, de l'ajouter à tes courses, de la cuisiner en pas-à-pas et de l'<strong>adapter librement</strong> – même hors-ligne. L'auteur d'origine reste crédité.
           </p>
           {componentDeps.length > 0 && (
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 20 }}>

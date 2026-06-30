@@ -1,4 +1,4 @@
-// ─── GLOSSAIRE EN CONTEXTE — repérage des techniques dans un texte (pur) ──────
+// ─── GLOSSAIRE EN CONTEXTE – repérage des techniques dans un texte (pur) ──────
 // Repère les gestes culinaires (suer, déglacer, monter au beurre…) dans le texte
 // d'une étape, pour les surligner et afficher leur définition au survol/tap.
 // Logique pure, sans React : le composant fournit le texte et le glossaire.

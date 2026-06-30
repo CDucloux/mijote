@@ -8,10 +8,10 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 
-// ─── HOME TAB ─────────────────────────────────────────────────────────────────
+// ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
-export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
+export function RecipeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
   const [search, setSearch] = useState("");
   const [filterCuisine, setFilterCuisine] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
@@ -137,7 +137,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
                 </button>
                 );
               })}
-              {/* Carte « ajouter un carnet » — même gabarit que les carnets */}
+              {/* Carte « ajouter un carnet » – même gabarit que les carnets */}
               <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#e8703a", icon: "📓" })} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
                 <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", border: "2px dashed var(--border)" }}>
                   <div style={{ position: "relative", aspectRatio: "1/1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text3)" }}>

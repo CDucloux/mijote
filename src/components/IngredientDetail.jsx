@@ -37,7 +37,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
     { key: "fat", label: "Lipides", color: MACRO_COLORS.fat, value: (n.fat || 0) * 9, grams: n.fat || 0 },
   ];
   const macroTot = macroSegs.reduce((s, x) => s + x.value, 0) || 1;
-  const fmt = v => v == null ? "—" : `${v >= 10 ? Math.round(v) : Math.round(v * 10) / 10} g`;
+  const fmt = v => v == null ? "–" : `${v >= 10 ? Math.round(v) : Math.round(v * 10) / 10} g`;
   const riPct = (key, v) => NUTRI_RI[key] ? Math.round((v || 0) / NUTRI_RI[key] * 100) : null;
   const rows = [
     { key: "fat", label: "Lipides", value: n.fat, color: MACRO_COLORS.fat },
@@ -206,7 +206,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           </div>
         )}
 
-        {/* Source des données nutritionnelles — attribution Ciqual (obligatoire) */}
+        {/* Source des données nutritionnelles – attribution Ciqual (obligatoire) */}
         <a className="slide-up" href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer"
           style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 32, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textDecoration: "none", animationDelay: "0.32s" }}>
           <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#1a8a3c,#4caf7d)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(26,138,60,0.35)" }}>

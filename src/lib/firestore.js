@@ -6,15 +6,15 @@ import { householdWorkspace } from "./workspace.js";
 
 // ─── FIRESTORE DATA LAYER (split documents) ──────────────────────────────────
 // Structure:
-//   users/{uid}/recipes/{recipeId}   — one doc per recipe (own 1MB budget each)
-//   users/{uid}/meta/collections     — { items: [...] }
-//   users/{uid}/meta/mealPlan        — { data: {...} }
-//   users/{uid}/meta/shoppingLists   — { items: [...] }
-//   users/{uid}/meta/fridge          — { items: [...], settings: {...} }
-//   users/{uid}/meta/userDB          — { ingredients: [...], utensils: [...] }
-//   master/ingredients               — { items: [...] } (shared, read-only for users)
-//   master/utensils                  — { items: [...] }
-//   master/techniques                — { items: [...] } (glossaire des techniques)
+//   users/{uid}/recipes/{recipeId}   – one doc per recipe (own 1MB budget each)
+//   users/{uid}/meta/collections     – { items: [...] }
+//   users/{uid}/meta/mealPlan        – { data: {...} }
+//   users/{uid}/meta/shoppingLists   – { items: [...] }
+//   users/{uid}/meta/fridge          – { items: [...], settings: {...} }
+//   users/{uid}/meta/userDB          – { ingredients: [...], utensils: [...] }
+//   master/ingredients               – { items: [...] } (shared, read-only for users)
+//   master/utensils                  – { items: [...] }
+//   master/techniques                – { items: [...] } (glossaire des techniques)
 
 // Helpers résolus depuis un `workspace` (cf. lib/workspace.js) : `ws.segments` est
 // le préfixe de chemin du namespace actif (users/{uid} en solo, households/{hid}
@@ -94,7 +94,7 @@ export const householdMemberQuery = (uid) => query(householdsCol(), where("membe
 export const householdInviteQuery = (email) => query(householdsCol(), where("invitedEmails", "array-contains", (email || "").toLowerCase()));
 
 // Pointeur du foyer actif. `migrated` indique si la fusion des données a eu lieu
-// (true dès la création — données déjà semées ; false à l'adhésion — fusion à
+// (true dès la création – données déjà semées ; false à l'adhésion – fusion à
 // faire une fois par le coordinateur de sync).
 export function setHouseholdPointer(uid, id, migrated) {
   return setDoc(householdPointerDoc(uid), { id, migrated: !!migrated, updatedAt: Date.now() });

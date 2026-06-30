@@ -42,7 +42,7 @@ export function usePullToRefresh(onRefresh, { enabled = true, threshold = 110, m
       if (!g.current.active) return;
       const dy = e.touches[0].clientY - g.current.startY;
       const dx = e.touches[0].clientX - g.current.startX;
-      // Lock direction on first significant move — ignore if horizontal
+      // Lock direction on first significant move – ignore if horizontal
       if (!g.current.dirLocked) {
         if (Math.abs(dx) > Math.abs(dy) + 4) { g.current.active = false; return; }
         if (Math.abs(dy) > 6) g.current.dirLocked = true;

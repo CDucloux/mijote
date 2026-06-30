@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Icon } from "./Icon.jsx";
 import { useOnline } from "../hooks/useOnline.js";
 
-// Signale une perte de connexion durable via un modal — sans être intempestif :
+// Signale une perte de connexion durable via un modal – sans être intempestif :
 // on n'affiche qu'après OFFLINE_DELAY ms hors ligne continu (les micro-coupures
 // d'une connexion instable sont donc ignorées). Le modal se ferme tout seul au
 // retour en ligne, et ne se ré-affiche pas tant qu'on reste connecté.

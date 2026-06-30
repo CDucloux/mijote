@@ -57,7 +57,7 @@ export function TechniqueText({ text, index: indexProp }) {
       <span key={i} style={{ position: "relative", display: "inline-block" }}>
         <button
           type="button"
-          title={`${t.name} — voir la définition`}
+          title={`${t.name} – voir la définition`}
           onClick={e => { e.stopPropagation(); setOpenId(openId === key ? null : key); }}
           onMouseEnter={() => setHoverId(key)}
           onMouseLeave={() => setHoverId(null)}

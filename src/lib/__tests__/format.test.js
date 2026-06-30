@@ -3,8 +3,8 @@ import { fmtTime, relativeDate } from "../format.js";
 
 describe("fmtTime", () => {
   it("renders an em dash for null/undefined", () => {
-    expect(fmtTime(null)).toBe("—");
-    expect(fmtTime(undefined)).toBe("—");
+    expect(fmtTime(null)).toBe("–");
+    expect(fmtTime(undefined)).toBe("–");
   });
 
   it("keeps 0 as a real value (0m), not a dash", () => {

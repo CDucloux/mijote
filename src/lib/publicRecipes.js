@@ -50,7 +50,7 @@ function collectCategories(recipe, ingredientDB, recipesById) {
 // Régimes avec lesquels la recette est COMPATIBLE (heuristique sur les catégories).
 // Toujours omnivore/flexitarien ; pescatarien si pas de viande ; végétarien si ni
 // viande ni poisson ; végan si en plus pas de produit laitier. Approximation
-// volontaire (ignore œufs/miel/gélatine) — sert au filtre « selon mes préférences ».
+// volontaire (ignore œufs/miel/gélatine) – sert au filtre « selon mes préférences ».
 export function deriveDietTags(recipe, ingredientDB, recipesById) {
   const cats = collectCategories(recipe, ingredientDB, recipesById);
   const noMeat = !cats.has("meat");

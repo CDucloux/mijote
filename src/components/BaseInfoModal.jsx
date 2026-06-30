@@ -4,16 +4,16 @@ import { BaseIcon } from "./BaseIcon.jsx";
 const INTRO = "Une préparation de base est un élément élaboré à l'avance, indépendamment d'un plat précis, qui sert de brique de construction pour plusieurs recettes.";
 
 const FAMILIES = [
-  { label: "Fonds", desc: "Fond brun, fond blanc, fumet de poisson, fond de volaille — la colonne vertébrale des sauces. Ils se préparent à l'avance et se congèlent." },
+  { label: "Fonds", desc: "Fond brun, fond blanc, fumet de poisson, fond de volaille – la colonne vertébrale des sauces. Ils se préparent à l'avance et se congèlent." },
   { label: "Sauces mères", desc: "Béchamel, velouté, espagnole, hollandaise, tomate. Toute la sauce-cuisine classique en découle." },
   { label: "Appareils", desc: "Mélanges prêts à l'emploi : appareil à crème brûlée, à quiche, à financier… On les prépare la veille pour gagner du temps service." },
-  { label: "Liaisons", desc: "Roux, beurre manié, liaison à la crème ou aux jaunes — des texturants qu'on intègre dans d'autres préparations." },
+  { label: "Liaisons", desc: "Roux, beurre manié, liaison à la crème ou aux jaunes – des texturants qu'on intègre dans d'autres préparations." },
 ];
 
 export function BaseInfoModal({ onClose }) {
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "90dvh" }}>
-      {/* Header — bandeau dégradé */}
+      {/* Header – bandeau dégradé */}
       <div style={{
         margin: "-20px -20px 4px", padding: "26px 22px 22px",
         background: "linear-gradient(135deg, rgba(232,112,58,0.16), rgba(232,112,58,0.04))",
@@ -36,10 +36,10 @@ export function BaseInfoModal({ onClose }) {
       </div>
 
       <div style={{ overflowY: "auto", maxHeight: "64vh", padding: "18px 2px 4px" }}>
-        {/* Intro — lead paragraph */}
+        {/* Intro – lead paragraph */}
         <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.65, margin: "0 0 26px" }}>{INTRO}</p>
 
-        {/* Les grandes familles — liste épurée numérotée */}
+        {/* Les grandes familles – liste épurée numérotée */}
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Les grandes familles</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {FAMILIES.map((it, j) => (
@@ -61,7 +61,7 @@ export function BaseInfoModal({ onClose }) {
           ))}
         </div>
 
-        {/* Dans Mijoté — carte accent */}
+        {/* Dans Mijoté – carte accent */}
         <div style={{
           marginTop: 24, padding: "16px 18px", borderRadius: 16,
           background: "linear-gradient(135deg, rgba(232,112,58,0.13), rgba(232,112,58,0.05))",

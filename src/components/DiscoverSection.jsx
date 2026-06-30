@@ -61,7 +61,7 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
   );
 }
 
-// ─── DÉCOUVRIR — recettes publiques de la communauté ──────────────────────────
+// ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
 export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
@@ -142,7 +142,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       {/* Sentinelle pour détecter le sticky */}
       <div ref={sentinelRef} style={{ height: 1, marginBottom: -1, pointerEvents: "none" }} />
 
-      {/* En-tête sticky — fond toujours opaque & pleine largeur pour masquer le
+      {/* En-tête sticky – fond toujours opaque & pleine largeur pour masquer le
           contenu qui défile derrière (l'ombre n'apparaît qu'une fois collé). */}
       <div style={{
         position: "sticky", top: 0, zIndex: 20,
@@ -247,7 +247,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         </>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", color: "var(--text3)", padding: "32px 16px", fontSize: 13 }}>
-          Aucun résultat — essaie d'élargir tes filtres.
+          Aucun résultat – essaie d'élargir tes filtres.
         </div>
       ) : (
         // ── Mode recherche / filtre : grille complète ──

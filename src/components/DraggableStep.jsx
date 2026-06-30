@@ -62,7 +62,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         </div>
       )}
 
-      {/* Astuce du chef — sous la photo */}
+      {/* Astuce du chef – sous la photo */}
       {showTip && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>

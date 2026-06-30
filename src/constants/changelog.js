@@ -1,15 +1,15 @@
 // ─── CHANGELOG ────────────────────────────────────────────────────────────────
 // Source unique de vérité : CHANGELOG.md (racine du dépôt). Ce module le parse
-// au build (import `?raw`) pour alimenter l'UI — plus aucun changelog dupliqué
+// au build (import `?raw`) pour alimenter l'UI – plus aucun changelog dupliqué
 // à maintenir en parallèle. Format attendu par entrée :
 //
-//   ## v1.2.3 — Libellé
+//   ## v1.2.3 – Libellé
 //   - item
 //   - item
 //
 import raw from "../../CHANGELOG.md?raw";
 
-const HEADER = /^##\s+v([\d.]+)\s*[—–-]?\s*(.*)$/;
+const HEADER = /^##\s+v([\d.]+)\s*[—––-]?\s*(.*)$/;
 const BULLET = /^[-*]\s+(.+)$/;
 
 function parseChangelog(md) {

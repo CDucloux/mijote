@@ -16,7 +16,7 @@ const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat"
 // stringify sans repli de ligne : les définitions/tips restent sur une ligne, plus
 // lisibles dans une revue de diff Git. On aère ensuite le rendu : une ligne vide
 // après l'en-tête et entre chaque entrée de 1er niveau (les marqueurs `- ` en
-// colonne 0). Sans incidence au ré-import — YAML ignore les lignes vides.
+// colonne 0). Sans incidence au ré-import – YAML ignore les lignes vides.
 const dumpYaml = (rows, header) => {
   const body = stringifyYaml(rows, { lineWidth: 0 }).replace(/\n(- )/g, "\n\n$1");
   return header.replace(/\s*$/, "") + "\n\n" + body;
@@ -109,7 +109,7 @@ export function formatTechniquesMarkdown(list) {
   return `# Glossaire des techniques Mijoté (${rows.length})\n\n${header}\n${body}\n`;
 }
 
-// Export YAML du glossaire — réimportable (round-trip fidèle avec parseTechniquesYaml).
+// Export YAML du glossaire – réimportable (round-trip fidèle avec parseTechniquesYaml).
 export function formatTechniquesYaml(list) {
   const cats = Object.keys(TECHNIQUE_CATEGORIES);
   const rows = [...(list || [])]
@@ -121,7 +121,7 @@ export function formatTechniquesYaml(list) {
       if (t.source) o.source = t.source;
       return o;
     });
-  return dumpYaml(rows, `# Glossaire des techniques Mijoté (${rows.length}) — généré, réimportable.\n`);
+  return dumpYaml(rows, `# Glossaire des techniques Mijoté (${rows.length}) – généré, réimportable.\n`);
 }
 
 // ─── EXPORTS YAML (réimportables, pour versionner dans data/) ──────────────────
@@ -151,14 +151,14 @@ export function formatIngredientsYaml(list, { categoryOrder = [] } = {}) {
       }
       return o;
     });
-  return dumpYaml(rows, `# Base d'ingrédients Mijoté (${rows.length}) — généré, réimportable. Valeurs pour 100 g.\n`);
+  return dumpYaml(rows, `# Base d'ingrédients Mijoté (${rows.length}) – généré, réimportable. Valeurs pour 100 g.\n`);
 }
 
 export function formatUtensilsYaml(list) {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
     .map(d => { const o = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.image) o.image = d.image; return o; });
-  return dumpYaml(rows, `# Base d'ustensiles Mijoté (${rows.length}) — généré, réimportable.\n`);
+  return dumpYaml(rows, `# Base d'ustensiles Mijoté (${rows.length}) – généré, réimportable.\n`);
 }
 
 // ─── INGRÉDIENTS ──────────────────────────────────────────────────────────────

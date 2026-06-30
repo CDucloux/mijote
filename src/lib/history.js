@@ -4,7 +4,7 @@
 // la recette à cet instant → reproductibilité et rollback. Tout vit dans le doc
 // recette (recipe.history[]), donc aucun impact sur la sync Firestore (1 doc/recette).
 
-// Champs « live » capturés dans un snapshot — ceux qui définissent la préparation.
+// Champs « live » capturés dans un snapshot – ceux qui définissent la préparation.
 const SNAPSHOT_FIELDS = ["ingredients", "utensils", "steps", "prepTime", "cookTime", "servings", "yield", "nutriLetter", "healthScore"];
 
 // Snapshot de l'état courant d'une recette (copie défensive des tableaux).
@@ -69,7 +69,7 @@ export function diffSnapshots(base, target) {
   base = base || {};
   target = target || {};
 
-  // Ingrédients — appariés par nom normalisé.
+  // Ingrédients – appariés par nom normalisé.
   const baseIng = new Map((base.ingredients || []).map(i => [diffKey(i.name), i]));
   const targetIng = new Map((target.ingredients || []).map(i => [diffKey(i.name), i]));
   const qtyOf = i => `${i.amount ?? ""}${i.unit ? " " + i.unit : ""}`.trim();
@@ -84,7 +84,7 @@ export function diffSnapshots(base, target) {
     if (!targetIng.has(k)) ingredients.push({ type: "removed", name: bi.name, qty: qtyOf(bi) });
   }
 
-  // Ustensiles — appariés par nom normalisé (ajout / retrait, pas de quantité).
+  // Ustensiles – appariés par nom normalisé (ajout / retrait, pas de quantité).
   const baseUt = new Map((base.utensils || []).map(u => [diffKey(u.name), u]));
   const targetUt = new Map((target.utensils || []).map(u => [diffKey(u.name), u]));
   const utensils = [];
@@ -96,7 +96,7 @@ export function diffSnapshots(base, target) {
     if (!targetUt.has(k)) utensils.push({ type: "removed", name: bu.name });
   }
 
-  // Étapes — comparées par position.
+  // Étapes – comparées par position.
   const bs = base.steps || [], ts = target.steps || [];
   const steps = [];
   for (let i = 0; i < Math.max(bs.length, ts.length); i++) {
@@ -108,11 +108,11 @@ export function diffSnapshots(base, target) {
     else steps.push({ type: "removed", index: i, description: b.description });
   }
 
-  // Scalaires — temps & portions.
+  // Scalaires – temps & portions.
   const scalars = [];
   for (const [field, label, unit] of [["prepTime", "Préparation", " min"], ["cookTime", "Cuisson", " min"], ["servings", "Portions", ""]]) {
     const bv = base[field] ?? null, tv = target[field] ?? null;
-    if (bv !== tv) scalars.push({ label, from: bv != null ? bv + unit : "—", to: tv != null ? tv + unit : "—" });
+    if (bv !== tv) scalars.push({ label, from: bv != null ? bv + unit : "–", to: tv != null ? tv + unit : "–" });
   }
 
   const hasChanges = scalars.length > 0

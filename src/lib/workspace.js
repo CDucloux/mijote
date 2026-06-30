@@ -8,7 +8,7 @@
 // l'espace de données sans toucher les helpers eux-mêmes.
 //
 // Note : certains slices restent TOUJOURS personnels (préférences, ajouts perso à
-// la base d'ingrédients) — l'appelant leur passe explicitement le workspace solo,
+// la base d'ingrédients) – l'appelant leur passe explicitement le workspace solo,
 // même quand l'utilisateur est dans un foyer.
 
 export function soloWorkspace(uid) {
@@ -23,7 +23,7 @@ export function isHousehold(ws) {
   return ws?.kind === "household";
 }
 
-// Identifiant du namespace (uid ou hid) — utile comme clé de cache locale.
+// Identifiant du namespace (uid ou hid) – utile comme clé de cache locale.
 export function workspaceId(ws) {
   return ws?.id ?? null;
 }
