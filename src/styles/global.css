@@ -81,6 +81,11 @@ input,textarea,select{font-family:var(--ff-body);}
 .search-clear-btn:hover{background:var(--accent);color:#fff;}
 .detail-scroll-fix{min-height:0;}
 
+/* Skeleton de chargement (cartes grises animées) */
+.skeleton{position:relative;overflow:hidden;background:var(--surface2);}
+.skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,var(--surface3) 50%,transparent);animation:shimmer 1.25s ease-in-out infinite;}
+@keyframes shimmer{100%{transform:translateX(100%);}}
+
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
 @keyframes shake{10%,90%{transform:translateX(-1px);}20%,80%{transform:translateX(2px);}30%,50%,70%{transform:translateX(-4px);}40%,60%{transform:translateX(4px);}}

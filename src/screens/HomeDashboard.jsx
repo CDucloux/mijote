@@ -107,52 +107,58 @@ function FoyerSection() {
     ? `${count} ${count > 1 ? "membres" : "membre"} · partage actif`
     : hasInvite ? "Une invitation t'attend" : "Recettes, courses & planning partagés";
 
+  const notch = (side) => (
+    <span aria-hidden="true" style={{
+      position: "absolute", top: "50%", [side]: -11, width: 22, height: 22, borderRadius: "50%",
+      transform: "translateY(-50%)", background: "var(--bg)",
+      boxShadow: `inset ${side === "left" ? "-1px" : "1px"} 0 0 rgba(232,112,58,0.32)`, pointerEvents: "none",
+    }} />
+  );
+
   return (
     <section style={{ marginBottom: 26 }}>
+      {/* Carte « ticket » : encoches latérales + perforation pointillée → un objet
+          d'invitation, volontairement différent des bandes de notification. */}
       <button onClick={() => setOpen(v => !v)} aria-label="Ouvrir le foyer"
         style={{
-          position: "relative", overflow: "hidden", width: "100%", textAlign: "left", cursor: "pointer",
-          display: "flex", alignItems: "center", gap: 16, padding: "18px 18px",
-          borderRadius: 24, border: "1px solid rgba(232,112,58,0.32)",
-          background: "linear-gradient(135deg, rgba(232,112,58,0.20) 0%, rgba(232,112,58,0.05) 55%, rgba(232,112,58,0.02) 100%)",
-          boxShadow: "0 6px 22px rgba(232,112,58,0.12)",
+          position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
+          display: "flex", alignItems: "stretch", gap: 0, padding: 0,
+          borderRadius: 20, border: "1px solid rgba(232,112,58,0.32)",
+          background: "linear-gradient(120deg, rgba(232,112,58,0.16), rgba(232,112,58,0.04))",
+          boxShadow: "0 6px 22px rgba(232,112,58,0.12)", overflow: "hidden",
         }}>
-        {/* Blob décoratif (coin droit) pour casser le format « bande » */}
-        <span aria-hidden="true" style={{
-          position: "absolute", right: -34, top: -34, width: 130, height: 130, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(232,112,58,0.22), transparent 70%)", pointerEvents: "none",
-        }} />
-        {/* Badge dégradé avec pictogramme maison */}
-        <span style={{
-          width: 52, height: 52, borderRadius: 16, flexShrink: 0, position: "relative",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: "linear-gradient(140deg, #f0894a, #e05f2c)",
-          boxShadow: "0 6px 16px rgba(224,95,44,0.4)",
-        }}>
-          <FoyerGlyph size={28} />
-        </span>
-        <span style={{ flex: 1, minWidth: 0, position: "relative" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {household ? household.name : "Mon foyer"}
-            </span>
-            {!household && (
-              <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", color: "var(--accent)", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>
-                {hasInvite ? "Invitation" : "Nouveau"}
-              </span>
-            )}
-          </span>
-          <span style={{ display: "block", fontSize: 12.5, color: "var(--text2)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {summary}
-          </span>
-        </span>
-        {/* À droite : pile d'avatars (foyer actif) ou pastille d'action (sinon) */}
-        <span style={{ position: "relative", display: "inline-flex", alignItems: "center", flexShrink: 0 }}>
+        {notch("left")}
+        {notch("right")}
+        {/* Souche gauche : pictogramme (sans foyer) ou pile d'avatars (foyer actif) */}
+        <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 18px" }}>
           {household
             ? <MemberStack emails={household.memberEmails || []} photoFor={photoFor} nameFor={nameFor} />
-            : <span style={{ width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.32)" }}>
-                <Icon name={hasInvite ? "forward" : "plus"} size={16} color="var(--accent)" />
+            : <span style={{ width: 50, height: 50, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(140deg, #f0894a, #e05f2c)", boxShadow: "0 6px 16px rgba(224,95,44,0.4)" }}>
+                <FoyerGlyph size={27} />
               </span>}
+        </span>
+        {/* Perforation verticale */}
+        <span aria-hidden="true" style={{ flexShrink: 0, width: 0, alignSelf: "stretch", margin: "12px 0", borderLeft: "2px dashed rgba(232,112,58,0.35)" }} />
+        {/* Talon droit : titre + statut + action */}
+        <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, padding: "16px 18px" }}>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {household ? household.name : "Mon foyer"}
+              </span>
+              {!household && (
+                <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", color: "var(--accent)", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>
+                  {hasInvite ? "Invitation" : "Nouveau"}
+                </span>
+              )}
+            </span>
+            <span style={{ display: "block", fontSize: 12.5, color: "var(--text2)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {summary}
+            </span>
+          </span>
+          <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.32)" }}>
+            <Icon name={household ? "forward" : hasInvite ? "forward" : "plus"} size={16} color="var(--accent)" />
+          </span>
         </span>
       </button>
       {open && (
