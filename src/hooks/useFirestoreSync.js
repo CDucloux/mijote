@@ -44,6 +44,7 @@ export function useFirestoreSync({
   const transitionTargetRef = useRef(undefined); // cible d'une bascule en cours (anti-concurrence)
   const [loadedHid, setLoadedHid] = useState(null); // foyer chargé → déclenche les abonnements temps réel
   const [bootstrapped, setBootstrapped] = useState(false); // miroir d'état de cloudLoaded → ré-exécute le coordinateur quand le bootstrap finit
+  const [workspaceReady, setWorkspaceReady] = useState(false); // true quand le namespace chargé == le namespace voulu (évite le flash 404 pendant la bascule solo→foyer)
 
   // Mémorise les signatures des méta partagées chargées (un snapshot identique ne ré-applique rien).
   const seedSigs = useCallback((d) => {
@@ -64,6 +65,10 @@ export function useFirestoreSync({
   // s'exécuter (et non via leur closure, potentiellement périmée), sinon une écriture
   // tardive réécrirait une vieille valeur par-dessus un changement distant reçu entre-temps.
   const desiredHidRef = useRef(null); desiredHidRef.current = desiredHid;
+  // Le workspace est « prêt » quand le bootstrap est fini ET que le foyer chargé
+  // (loadedHid) correspond au foyer voulu (desiredHid). Tant qu'une bascule
+  // solo→foyer est en cours, on reste « pas prêt » → l'écran 404 ne flashe pas.
+  useEffect(() => { setWorkspaceReady(bootstrapped && loadedHid === desiredHid); }, [bootstrapped, loadedHid, desiredHid]);
   const sharedWsNow = (uid) => (desiredHidRef.current ? householdWorkspace(desiredHidRef.current) : soloWorkspace(uid));
   const applyShared = useCallback((d) => {
     setRecipes(d.recipes || []);
@@ -312,5 +317,5 @@ export function useFirestoreSync({
     ]).then(() => setSyncStatus("synced")).catch(() => setSyncStatus("error"));
   }, [masterDB, user, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { cloudLoaded };
+  return { cloudLoaded, workspaceReady };
 }
