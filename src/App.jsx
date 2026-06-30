@@ -531,7 +531,7 @@ function AppInner() {
   // Login screen
   if (!user) return <LoginScreen isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData };
+  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory };
 
   return (
     <AppShellProvider value={shellValue}>

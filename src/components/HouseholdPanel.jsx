@@ -5,15 +5,20 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, isOwner, MAX_HOUSEHOLD } from "../lib/household.js";
 
-// ─── PANNEAU FOYER (Config › Foyer) ───────────────────────────────────────────
-// Phase 1 : gestion de l'appartenance (créer, inviter, rejoindre, quitter).
-// Le partage effectif des données (stock/recettes/listes/planning) arrive en
-// Phase 2 ; un bandeau l'indique pour ne pas créer d'attente trompeuse.
-export function HouseholdPanel() {
-  const { user } = useAppShell();
+// Avatar rond : photo si disponible, sinon initiale colorée.
+function Avatar({ photo, label, size = 34, dim = false }) {
+  const ini = (label || "?").trim()[0]?.toUpperCase() || "?";
+  return photo
+    ? <img src={photo} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, objectFit: "cover", border: "1px solid var(--border)" }} />
+    : <span style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 700, color: "#fff", background: dim ? "var(--text3)" : "var(--accent)" }}>{ini}</span>;
+}
+
+// ─── PANNEAU FOYER ────────────────────────────────────────────────────────────
+// `onClose` (optionnel) : ferme la feuille parente après un quitter/dissoudre.
+export function HouseholdPanel({ onClose }) {
+  const { user, directory = [] } = useAppShell();
   const { household, invites, loading, actions } = useHousehold();
   const [name, setName] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
 
   if (loading) {
@@ -22,25 +27,35 @@ export function HouseholdPanel() {
     </div>;
   }
 
+  const myEmail = (user?.email || "").toLowerCase();
   const owner = household && isOwner(household, user?.uid);
   const full = household && peopleCount(household) >= MAX_HOUSEHOLD;
+  const dirByEmail = new Map(directory.map(d => [(d.email || "").toLowerCase(), d]));
+  const photoFor = (email) => (email === myEmail ? user?.photoURL : dirByEmail.get(email)?.photoURL) || "";
+  const nameFor = (email) => dirByEmail.get(email)?.displayName || "";
+
+  // Candidats à l'invitation : utilisateurs déjà connus, hors moi / membres / invités.
+  const taken = new Set([...(household?.memberEmails || []), ...(household?.invitedEmails || []), myEmail]);
+  const candidates = directory.filter(d => d.email && !taken.has((d.email || "").toLowerCase()));
 
   const card = (children, style) => (
     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, ...style }}>{children}</div>
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 560 }}>
-      {/* Bandeau d'étape : le partage des données n'est pas encore actif */}
-      <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "rgba(91,156,246,0.10)", border: "1px solid rgba(91,156,246,0.3)", borderRadius: 12, padding: "10px 12px" }}>
-        <Icon name="info" size={16} color="var(--blue)" />
-        <span style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5 }}>
-          Jusqu'à {MAX_HOUSEHOLD} personnes partagent <strong>recettes, stock, listes de courses et planning</strong>. En rejoignant un foyer, tes recettes y sont <strong>ajoutées</strong> ; planning, stock et courses du foyer sont adoptés (ta version perso reste sauvegardée).
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Bandeau info */}
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "linear-gradient(135deg, rgba(232,112,58,0.10), rgba(232,112,58,0.04))", border: "1px solid rgba(232,112,58,0.25)", borderRadius: 14, padding: "14px 16px" }}>
+        <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: "rgba(232,112,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon name="info" size={18} color="var(--accent)" />
+        </span>
+        <span style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55 }}>
+          Jusqu'à <strong style={{ color: "var(--text)" }}>{MAX_HOUSEHOLD} personnes</strong> partagent recettes, stock, listes de courses et planning. En rejoignant un foyer, tes recettes y sont <strong style={{ color: "var(--text)" }}>ajoutées</strong> ; planning, stock et courses du foyer sont adoptés (ta version perso reste sauvegardée).
         </span>
       </div>
 
       {/* Invitations reçues */}
-      {invites.length > 0 && invites.map(inv => (
+      {invites.map(inv => (
         <div key={inv.id} style={{ background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.35)", borderRadius: 16, padding: 16 }}>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Invitation à rejoindre « {inv.name} »</div>
           <div style={{ fontSize: 12, color: "var(--text3)", marginBottom: 12 }}>{(inv.memberEmails || []).length} membre(s)</div>
@@ -72,21 +87,25 @@ export function HouseholdPanel() {
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600 }}>{household.name}</div>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>{peopleCount(household)}/{MAX_HOUSEHOLD}</span>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {(household.memberEmails || []).map(e => {
-                  const mine = e === (user?.email || "").toLowerCase();
+                  const mine = e === myEmail;
+                  const nm = nameFor(e);
                   return (
-                  <div key={e} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5 }}>
-                    <span style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{e[0].toUpperCase()}</span>
-                    <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}{mine ? " (toi)" : ""}</span>
-                    {mine && owner && <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
-                  </div>
+                    <div key={e} style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                      <Avatar photo={photoFor(e)} label={nm || e} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nm || e}{mine ? " (toi)" : ""}</div>
+                        {nm && <div style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>}
+                      </div>
+                      {household.ownerUid && ((mine && owner) || (!mine && nm && false)) && <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
+                    </div>
                   );
                 })}
                 {(household.invitedEmails || []).map(e => (
-                  <div key={e} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, opacity: 0.7 }}>
-                    <span style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--surface3)", color: "var(--text3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="clock" size={14} color="var(--text3)" /></span>
-                    <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</span>
+                  <div key={e} style={{ display: "flex", alignItems: "center", gap: 11, opacity: 0.75 }}>
+                    <Avatar photo={photoFor(e)} label={e} dim />
+                    <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>
                     <span style={{ fontSize: 10, color: "var(--text3)" }}>en attente</span>
                     {owner && <button onClick={() => actions.cancelInvite(e)} title="Annuler l'invitation" style={{ color: "var(--text3)", display: "inline-flex" }}><Icon name="close" size={13} color="var(--text3)" /></button>}
                   </div>
@@ -95,15 +114,31 @@ export function HouseholdPanel() {
             </>
           )}
 
-          {/* Inviter */}
-          {!full && (
+          {/* Inviter — uniquement des utilisateurs déjà connus de Mijoté */}
+          {owner && !full && (
             card(
               <>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Inviter par email</div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input className="field-input" type="email" placeholder="email@exemple.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} style={{ flex: 1 }} />
-                  <button className="btn btn-primary btn-sm" onClick={async () => { if (await actions.invite(inviteEmail)) setInviteEmail(""); }}>Inviter</button>
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Inviter une personne</div>
+                <div style={{ fontSize: 11.5, color: "var(--text3)", marginBottom: 12 }}>Parmi les utilisateurs déjà connectés à Mijoté.</div>
+                {candidates.length === 0 ? (
+                  <div style={{ fontSize: 12.5, color: "var(--text3)", textAlign: "center", padding: "10px 0" }}>Aucun autre utilisateur disponible pour l'instant.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 240, overflowY: "auto", margin: "0 -6px" }}>
+                    {candidates.map(d => (
+                      <button key={d.uid || d.email} onClick={() => actions.invite(d.email)}
+                        style={{ display: "flex", alignItems: "center", gap: 11, padding: "8px 6px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left", width: "100%" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "var(--surface2)"}
+                        onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        <Avatar photo={d.photoURL} label={d.displayName || d.email} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.displayName || d.email}</div>
+                          {d.displayName && <div style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.email}</div>}
+                        </div>
+                        <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: "var(--accent)" }}><Icon name="plus" size={13} color="var(--accent)" /> Inviter</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </>
             )
           )}
@@ -125,14 +160,14 @@ export function HouseholdPanel() {
             <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, margin: "0 0 8px" }}>
               {owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
             </h3>
-            <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 22px", maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
+            <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: "0 auto 22px", maxWidth: 360 }}>
               {owner
                 ? <>« {household.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
                 : <>Tu n'auras plus accès aux données partagées de « {household.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmLeave(false)}>Annuler</button>
-              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { (owner ? actions.dissolve() : actions.leave()); setConfirmLeave(false); }}>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={async () => { const ok = await (owner ? actions.dissolve() : actions.leave()); setConfirmLeave(false); if (ok) onClose?.(); }}>
                 <Icon name={owner ? "trash" : "logout"} size={15} color="var(--red)" /> {owner ? "Dissoudre" : "Quitter"}
               </button>
             </div>

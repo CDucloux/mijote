@@ -95,7 +95,7 @@ function FoyerSection() {
       {open && (
         <SwipeableSheet onClose={() => setOpen(false)} style={{ maxHeight: "88dvh" }}>
           <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: "0 0 16px" }}>Foyer</h2>
-          <HouseholdPanel />
+          <HouseholdPanel onClose={() => setOpen(false)} />
         </SwipeableSheet>
       )}
     </section>
