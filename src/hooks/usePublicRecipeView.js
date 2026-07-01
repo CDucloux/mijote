@@ -24,7 +24,9 @@ export function usePublicRecipeView({ user, recipes, location, navigate }) {
   // sinon précharge le doc connu et route vers /discover/:pubId.
   const open = useCallback((pub, components) => {
     if (pub?.authorUid === user?.uid && recipes.some(r => r.id === pub.originalId)) {
-      navigate(`/recipes/${pub.originalId}`);
+      // On vient de Découvrir (Accueil) : on mémorise l'origine pour que le bouton
+      // « retour » de la fiche perso revienne à l'Accueil et non à la liste Recettes.
+      navigate(`/recipes/${pub.originalId}`, { state: { from: "/home" } });
       return;
     }
     setEntry({ id: pub.pubId, value: { pub, components: components || [] } });
