@@ -935,11 +935,23 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             Elle sera visible par la communauté de mijoteurs et chacun pourra l'ajouter à ses recettes.
           </p>
           {componentDeps.length > 0 && (
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 20 }}>
-              <Icon name="info" size={16} color="var(--accent)" />
-              <span style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.45 }}>
-                Cette recette s'appuie sur <strong>{componentDeps.length} préparation{componentDeps.length > 1 ? "s" : ""} de base</strong> ({componentDeps.map(c => c.name).join(", ")}). Elle{componentDeps.length > 1 ? "s" : ""} ser{componentDeps.length > 1 ? "ont" : "a"} publiée{componentDeps.length > 1 ? "s" : ""} avec, pour que le clone reste complet.
-              </span>
+            <div style={{ borderRadius: 14, background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.22)", padding: "13px 14px", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <span style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: "rgba(232,112,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Icon name="import" size={14} color="var(--accent)" />
+                </span>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)" }}>
+                  Publiée{componentDeps.length > 1 ? "s" : ""} avec {componentDeps.length > 1 ? "ses" : "sa"} préparation{componentDeps.length > 1 ? "s" : ""} de base
+                </span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {componentDeps.map(c => (
+                  <span key={c.id} style={{ fontSize: 12, fontWeight: 500, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "3px 9px" }}>{c.name}</span>
+                ))}
+              </div>
+              <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 9, lineHeight: 1.45 }}>
+                Incluses pour que le clone reste complet. Déjà publiques ? Elles seront simplement mises à jour.
+              </div>
             </div>
           )}
           <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 8 }}>
