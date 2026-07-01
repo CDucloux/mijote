@@ -21,13 +21,14 @@ const wordBtn = (active) => ({
   transition: "background 0.15s ease",
 });
 
-const popover = {
-  position: "absolute", top: "100%", left: 0, marginTop: 6, zIndex: 60,
+const popover = (align) => ({
+  position: "absolute", top: "100%", marginTop: 6, zIndex: 60,
+  ...(align === "right" ? { right: 0 } : { left: 0 }),
   width: "max-content", maxWidth: "min(280px, 80vw)",
   background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
   boxShadow: "0 10px 30px rgba(0,0,0,0.25)", padding: "11px 13px",
   textAlign: "left", cursor: "default", whiteSpace: "normal",
-};
+});
 
 export function TechniqueText({ text, index: indexProp }) {
   const { techniques } = useAppShell();
@@ -36,6 +37,13 @@ export function TechniqueText({ text, index: indexProp }) {
   const segments = useMemo(() => annotateText(text, index), [text, index]);
   const [openId, setOpenId] = useState(null);   // épinglé au tap (mobile)
   const [hoverId, setHoverId] = useState(null);  // au survol (desktop)
+  const [align, setAlign] = useState("left");    // "right" si le mot est côté droit → évite le débordement
+
+  // Le mot est-il dans la moitié droite de l'écran ? Alors on ancre la bulle à droite.
+  const alignFor = (el) => {
+    const r = el.getBoundingClientRect();
+    return r.left + r.width / 2 > window.innerWidth / 2 ? "right" : "left";
+  };
 
   // Tap hors d'une bulle épinglée → on referme (le tap d'ouverture est stoppé).
   useEffect(() => {
@@ -58,15 +66,15 @@ export function TechniqueText({ text, index: indexProp }) {
         <button
           type="button"
           title={`${t.name} – voir la définition`}
-          onClick={e => { e.stopPropagation(); setOpenId(openId === key ? null : key); }}
-          onMouseEnter={() => setHoverId(key)}
+          onClick={e => { e.stopPropagation(); setAlign(alignFor(e.currentTarget)); setOpenId(openId === key ? null : key); }}
+          onMouseEnter={e => { setAlign(alignFor(e.currentTarget)); setHoverId(key); }}
           onMouseLeave={() => setHoverId(null)}
           style={wordBtn(active)}
         >
           {seg.text}
         </button>
         {active && (
-          <span role="tooltip" style={popover} onClick={e => e.stopPropagation()}>
+          <span role="tooltip" style={popover(align)} onClick={e => e.stopPropagation()}>
             <span style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
               <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>{t.name}</span>
               <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.06em" }}>

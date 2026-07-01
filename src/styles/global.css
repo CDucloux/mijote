@@ -20,7 +20,10 @@ html.light,html.light body{background:#f5f0eb;color:#2c2420;}
 html.light .ut-pill-desktop{background:#ffffff!important;}
 html.light .field-input{color:#2c2420;background:#ede8e2;}
 html.light select option{background:#ede8e2;color:#1a1614;}
-*,*::before,*::after{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.1s ease;}
+*,*::before,*::after{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.1s ease;-webkit-tap-highlight-color:transparent;}
+/* Pas de contour bleu au tap/focus tactile (PWA) ; le focus clavier reste visible via :focus-visible */
+button,a,[role="button"],input,textarea,select{-webkit-tap-highlight-color:transparent;}
+:focus:not(:focus-visible){outline:none;}
 /* Selection highlight — Mijoté sage green, distinct from the orange accent and the default blue */
 ::selection{background:rgba(76,175,125,0.35);}
 ::-moz-selection{background:rgba(76,175,125,0.35);}

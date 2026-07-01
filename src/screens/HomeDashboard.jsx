@@ -198,6 +198,9 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
 
       {/* Corps défilant */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 24px" }}>
+        {/* ── Mon foyer (en tête d'accueil) ───────────────────────────────── */}
+        <FoyerSection />
+
         {/* ── Aujourd'hui ─────────────────────────────────────────────────── */}
         <section style={{ marginBottom: isCalm ? 18 : 26 }}>
           {!isCalm && (
@@ -277,9 +280,6 @@ export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [],
             </div>
           )}
         </section>
-
-        {/* ── Mon foyer ───────────────────────────────────────────────────── */}
-        <FoyerSection />
 
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
         <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} />
