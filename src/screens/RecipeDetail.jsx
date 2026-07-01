@@ -93,9 +93,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     for (const l of recipe?.ingredients || []) if (l.recipeId) ids.add(l.recipeId);
     return [...ids].map(id => recipesById.get(id)).filter(Boolean);
   }, [recipe, recipesById]);
+  // Publier ouvre toujours une confirmation (avec, le cas échéant, la note sur les
+  // préparations de base publiées avec). Dépublier est immédiat.
   const togglePublish = () => isPublished
     ? onUnpublish?.(recipe)
-    : (componentDeps.length ? setPendingPublish(true) : onPublish?.(recipe));
+    : setPendingPublish(true);
   // Résout une ligne composant → { comp, missing }. comp = recette source (cache name).
   const resolveComp = (ing) => ing.recipeId ? { comp: recipesById.get(ing.recipeId), missing: !recipesById.get(ing.recipeId) } : null;
   // Retourne true si l'ingrédient de recette est trouvé dans le stock
@@ -216,7 +218,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
             items={[
               { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
-              ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "sparkle", onClick: togglePublish }] : []),
+              ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "globe", onClick: togglePublish }] : []),
               ...(isPublished ? [{ label: "Partager le lien public", icon: "share", onClick: shareRecipe }] : []),
               { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
               { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
@@ -352,7 +354,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
                 items={[
                   { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
-                  ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "sparkle", onClick: togglePublish }] : []),
+                  ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "globe", onClick: togglePublish }] : []),
                   ...(isPublished ? [{ label: "Partager le lien public", icon: "share", onClick: shareRecipe }] : []),
                   { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
                   { label: "Supprimer", icon: "trash", danger: true, onClick: () => setShowDeleteConfirm(true) },
@@ -932,13 +934,15 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>
             Elle sera visible par la communauté de mijoteurs et chacun pourra l'ajouter à ses recettes.
           </p>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 20 }}>
-            <Icon name="info" size={16} color="var(--accent)" />
-            <span style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.45 }}>
-              Cette recette s'appuie sur <strong>{componentDeps.length} préparation{componentDeps.length > 1 ? "s" : ""} de base</strong> ({componentDeps.map(c => c.name).join(", ")}). Elle{componentDeps.length > 1 ? "s" : ""} ser{componentDeps.length > 1 ? "ont" : "a"} publiée{componentDeps.length > 1 ? "s" : ""} avec, pour que le clone reste complet.
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
+          {componentDeps.length > 0 && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 20 }}>
+              <Icon name="info" size={16} color="var(--accent)" />
+              <span style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.45 }}>
+                Cette recette s'appuie sur <strong>{componentDeps.length} préparation{componentDeps.length > 1 ? "s" : ""} de base</strong> ({componentDeps.map(c => c.name).join(", ")}). Elle{componentDeps.length > 1 ? "s" : ""} ser{componentDeps.length > 1 ? "ont" : "a"} publiée{componentDeps.length > 1 ? "s" : ""} avec, pour que le clone reste complet.
+              </span>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 8 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingPublish(false)}>Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { onPublish?.(recipe); setPendingPublish(false); }}>Publier</button>
           </div>
