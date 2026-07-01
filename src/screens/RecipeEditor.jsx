@@ -220,15 +220,15 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </div>
               </div>
               <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Carnets</div>
+                <div className="field-label" style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}><Icon name="book" size={13} color="var(--text3)" /> Carnets</div>
                 {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucun carnet – créez-en dans Config.</p>}
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {collections.map(col => {
                     const active = (form.collections || []).includes(col.id);
                     return (
                       <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
-                        style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
-                        {active && <Icon name="check" size={11} color="#fff" />}
+                        style={{ padding: "6px 13px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s" }}>
+                        {active ? <Icon name="check" size={11} color="#fff" /> : <span style={{ fontSize: 13, lineHeight: 1 }}>{col.icon || "📓"}</span>}
                         {col.name}
                       </button>
                     );

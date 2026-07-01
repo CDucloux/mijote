@@ -9,7 +9,6 @@ export const CUISINES = [
   { label: "Espagnole", emoji: "🇪🇸" },
   { label: "Portugaise", emoji: "🇵🇹" },
   { label: "Grecque", emoji: "🇬🇷" },
-  { label: "Méditerranéenne", emoji: "🫒" },
   { label: "Marocaine", emoji: "🇲🇦" },
   { label: "Tunisienne", emoji: "🇹🇳" },
   { label: "Libanaise", emoji: "🇱🇧" },
@@ -22,10 +21,7 @@ export const CUISINES = [
   { label: "Vietnamienne", emoji: "🇻🇳" },
   { label: "Mexicaine", emoji: "🇲🇽" },
   { label: "Américaine", emoji: "🇺🇸" },
-  { label: "Antillaise", emoji: "🏝️" },
-  { label: "Africaine", emoji: "🌍" },
   { label: "Fusion", emoji: "🍴" },
-  { label: "Autre", emoji: "🍽️" },
 ];
 
 // Accès rapide à l'emoji depuis le label (affichage des badges).
