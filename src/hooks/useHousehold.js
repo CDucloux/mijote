@@ -6,7 +6,6 @@ import {
   createHousehold, inviteToHousehold, acceptInvite, declineInvite,
   leaveHousehold, dissolveHousehold, clearHouseholdPointer,
 } from "../lib/firestore.js";
-import { sendInviteEmail } from "../lib/email.js";
 
 // ─── HOOK FOYER ───────────────────────────────────────────────────────────────
 // Abonnements temps réel : mon foyer actif (membre par uid) + mes invitations en
@@ -58,15 +57,7 @@ export function useHousehold() {
 
   const actions = {
     create: (name) => run(() => createHousehold(user, name, getSharedData?.()), "Création du foyer échouée"),
-    invite: (email) => run(async () => {
-      await inviteToHousehold(household.id, email);
-      // E-mail best-effort : on n'échoue pas l'invitation si l'envoi ne part pas.
-      const sent = await sendInviteEmail({
-        toEmail: email, foyerName: household.name,
-        inviterName: user?.displayName || user?.email,
-      });
-      notify(sent ? "Invitation envoyée par e-mail" : "Invitation ajoutée", "success");
-    }, "Invitation échouée"),
+    invite: (email) => run(() => inviteToHousehold(household.id, email), "Invitation échouée"),
     accept: (hid) => run(() => acceptInvite(hid, user), "Adhésion échouée"),
     decline: (hid) => run(() => declineInvite(hid, user.email), "Refus échoué"),
     cancelInvite: (email) => run(() => declineInvite(household.id, email), "Annulation échouée"),
