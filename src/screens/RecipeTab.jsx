@@ -101,7 +101,7 @@ export function RecipeTab({ recipes, collections, ingredientDB, onSelect, onNewR
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
         {!search && !filterCuisine && !filterCol && (
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <h2 style={{ fontSize: 16, fontWeight: 600 }}>Carnets</h2>
               <button onClick={toggleCarnets} title={hideCarnets ? "Afficher les carnets" : "Masquer les carnets"} aria-label={hideCarnets ? "Afficher les carnets" : "Masquer les carnets"} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 8, background: "transparent", border: "none", color: "var(--text3)", cursor: "pointer" }}>
@@ -155,7 +155,7 @@ export function RecipeTab({ recipes, collections, ingredientDB, onSelect, onNewR
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6 }}>
               Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
             </h2>
             {filterCol && (() => { const ac = collections.find(c => c.id === filterCol); return ac ? (
