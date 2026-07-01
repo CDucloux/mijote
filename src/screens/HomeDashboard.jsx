@@ -107,33 +107,23 @@ function FoyerSection() {
     ? `${count} ${count > 1 ? "membres" : "membre"} · partage actif`
     : hasInvite ? "Une invitation t'attend" : "Recettes, courses & planning partagés";
 
-  const notch = (side) => (
-    <span aria-hidden="true" style={{
-      position: "absolute", top: "50%", [side]: -11, width: 22, height: 22, borderRadius: "50%",
-      transform: "translateY(-50%)", background: "var(--bg)",
-      boxShadow: `inset ${side === "left" ? "-1px" : "1px"} 0 0 rgba(232,112,58,0.32)`, pointerEvents: "none",
-    }} />
-  );
-
   return (
     <section style={{ marginBottom: 26 }}>
-      {/* Carte « ticket » : encoches latérales + perforation pointillée → un objet
-          d'invitation, volontairement différent des bandes de notification. */}
+      {/* Carte foyer : surface neutre + liseré accent à gauche (inset box-shadow,
+          épouse les coins) + perforation pointillée comme séparateur distinctif. */}
       <button onClick={() => setOpen(v => !v)} aria-label="Ouvrir le foyer"
         style={{
           position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
           display: "flex", alignItems: "stretch", gap: 0, padding: 0,
-          borderRadius: 20, border: "1px solid rgba(232,112,58,0.32)",
-          background: "linear-gradient(120deg, rgba(232,112,58,0.16), rgba(232,112,58,0.04))",
-          boxShadow: "0 6px 22px rgba(232,112,58,0.12)", overflow: "hidden",
+          borderRadius: 18, border: "1px solid var(--border)",
+          background: "var(--surface)",
+          boxShadow: "inset 4px 0 0 var(--accent), 0 4px 16px rgba(0,0,0,0.06)", overflow: "hidden",
         }}>
-        {notch("left")}
-        {notch("right")}
         {/* Souche gauche : pictogramme (sans foyer) ou pile d'avatars (foyer actif) */}
-        <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 18px" }}>
+        <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 18px 16px 22px" }}>
           {household
             ? <MemberStack emails={household.memberEmails || []} photoFor={photoFor} nameFor={nameFor} />
-            : <span style={{ width: 50, height: 50, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(140deg, #f0894a, #e05f2c)", boxShadow: "0 6px 16px rgba(224,95,44,0.4)" }}>
+            : <span style={{ width: 50, height: 50, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--accent)", boxShadow: "0 4px 12px rgba(224,95,44,0.28)" }}>
                 <FoyerGlyph size={27} />
               </span>}
         </span>
