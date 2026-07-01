@@ -150,8 +150,10 @@ export function HouseholdPanel({ onClose }) {
         </>
       )}
 
-      {/* Feuille de confirmation quitter / dissoudre */}
-      {confirmLeave && (
+      {/* Feuille de confirmation quitter / dissoudre. On garde `household` dans la
+          condition : dès qu'il devient null (dissolution/départ effectif), la feuille
+          se démonte sans jamais lire household.name sur une valeur nulle. */}
+      {confirmLeave && household && (
         <SwipeableSheet onClose={() => setConfirmLeave(false)}>
           <div style={{ textAlign: "center", padding: "4px 4px 0" }}>
             <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
