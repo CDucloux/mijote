@@ -190,7 +190,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     const el = scrollRef.current;
     if (!el || isDesktop) return;
     let raf = 0;
-    const START = 150, END = 224; // px de scroll : début et fin de la transition
+    // On ne commence la transition que lorsque le hero restant est ≤ hauteur de la
+    // barre (260 − 52 ≈ 208) : la barre couvre alors toujours entièrement le hero
+    // encore visible → jamais de bande floue posée sur une image nette en dessous.
+    const START = 208, END = 258; // px de scroll : début et fin de la transition
     const onScroll = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => {
@@ -371,8 +374,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 ]} />
             </div>
             )}
-            {/* Titre + source + tags */}
-            <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
+            {/* Titre + source + tags — se fond quand la barre compacte prend le relais */}
+            <div style={{ position: "absolute", bottom: 16, left: 18, right: 18, opacity: 1 - heroProgress, transform: `translateY(${(heroProgress * -8).toFixed(2)}px)` }}>
               <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff" }}>{recipe.name}</h1>
               {attribution}
               {!publicMode && recipe.source && (
