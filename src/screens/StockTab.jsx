@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
-import { FoyerBadge } from "../components/FoyerBadge.jsx";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 
@@ -68,9 +67,9 @@ export function StockTab({ stock = [], setStock, lowStock = [], setLowStock, ing
       {/* En-tête */}
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-            <FoyerBadge style={{ marginBottom: 5, alignSelf: "flex-start" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mon Stock</h1>
+            
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <UserAvatar />

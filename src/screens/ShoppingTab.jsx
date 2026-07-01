@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
-import { FoyerBadge } from "../components/FoyerBadge.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ShoppingItemRow } from "../components/ShoppingItemRow.jsx";
 import { HeroMenu } from "../components/HeroMenu.jsx";
@@ -133,9 +132,9 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
       {/* Header */}
       <div style={{ padding: "20px 20px 0", flexShrink: 0, position: "relative", zIndex: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-            <FoyerBadge style={{ marginBottom: 5, alignSelf: "flex-start" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Courses</h1>
+            
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => { setConfigList({ isNew: true, name: "", type: "free", hideClear: false, sharedWith: [] }); setShareEmail(""); }}><Icon name="plus" size={16} /> Nouvelle liste</button>
