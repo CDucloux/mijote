@@ -77,16 +77,25 @@ export function RecipeTab({ recipes, collections, ingredientDB, onSelect, onNewR
           <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 2 }}>
-          {["name", "health", "date"].map(s => (
-            <button key={s} onClick={() => setSortBy(s)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: sortBy === s ? "var(--accent)" : "var(--surface2)", color: sortBy === s ? "#fff" : "var(--text2)", border: `1px solid ${sortBy === s ? "transparent" : "var(--border)"}` }}>
-              {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
-            </button>
-          ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 2 }}>
+          {/* Tri — segmented control (« choisis-en un ») pour le distinguer des filtres */}
+          <div style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 2, padding: 2, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20 }}>
+            <span title="Trier" aria-label="Trier" style={{ display: "inline-flex", padding: "0 5px 0 7px" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 7h13M4 12h9M4 17h5" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
+            {["name", "health", "date"].map(s => (
+              <button key={s} onClick={() => setSortBy(s)} style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 16, fontSize: 12, fontWeight: 600, background: sortBy === s ? "var(--accent)" : "transparent", color: sortBy === s ? "#fff" : "var(--text2)", border: "none" }}>
+                {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
+              </button>
+            ))}
+          </div>
+          <div style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
+          {/* Filtres — puces indépendantes (activables/désactivables) */}
           <button onClick={() => setSeasonOnly(s => !s)} title="Recettes de saison ce mois-ci" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: seasonOnly ? "rgba(76,175,125,0.18)" : "var(--surface2)", color: seasonOnly ? "var(--green)" : "var(--text2)", border: `1px solid ${seasonOnly ? "rgba(76,175,125,0.5)" : "var(--border)"}` }}>
-            De saison
+            <Icon name="leaf" size={13} color={seasonOnly ? "var(--green)" : "var(--text3)"} /> De saison
           </button>
-          {usedCuisines.length > 0 && <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />}
           {usedCuisines.length > 0 && (
             <button onClick={() => { setShowCuisines(v => { if (v) setFilterCuisine(null); return !v; }); }} title={showCuisines ? "Masquer les styles" : "Filtrer par style de cuisine"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: showCuisines ? "var(--surface3)" : "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
               <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>{showCuisines ? "−" : "+"}</span> Cuisine

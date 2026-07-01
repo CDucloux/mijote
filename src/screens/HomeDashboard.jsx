@@ -94,7 +94,13 @@ function FoyerSection() {
   const { user, directory = [] } = useAppShell();
   const { household, invites, loading } = useHousehold();
   const [open, setOpen] = useState(false);
-  if (loading) return null;
+  // Pendant le chargement : on réserve l'espace avec un skeleton de même hauteur
+  // pour éviter le « pop » / décalage de layout au (re)chargement de l'Accueil.
+  if (loading) return (
+    <section style={{ marginBottom: 26 }}>
+      <div className="skeleton" style={{ height: 84, borderRadius: 18 }} />
+    </section>
+  );
 
   const myEmail = (user?.email || "").toLowerCase();
   const dirByEmail = new Map(directory.map(d => [(d.email || "").toLowerCase(), d]));
