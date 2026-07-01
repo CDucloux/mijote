@@ -81,8 +81,11 @@ export function RecipeTab({ recipes, collections, ingredientDB, onSelect, onNewR
           {/* Tri — segmented control (« choisis-en un ») pour le distinguer des filtres */}
           <div style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 2, padding: 2, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20 }}>
             <span title="Trier" aria-label="Trier" style={{ display: "inline-flex", padding: "0 5px 0 7px" }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 7h13M4 12h9M4 17h5" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" />
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                {/* Barres décroissantes = ordre + flèche = direction du tri */}
+                <path d="M4 7h11M4 12h7M4 17h4" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" />
+                <path d="M19 5v13" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="m16 15 3 3 3-3" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
             {["name", "health", "date"].map(s => (
