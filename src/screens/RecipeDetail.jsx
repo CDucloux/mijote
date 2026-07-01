@@ -163,7 +163,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
 
   const scrollRef = useRef(null);
   const heroSentinelRef = useRef(null);
-  const [heroCollapsed, setHeroCollapsed] = useState(false);
+  const [heroProgress, setHeroProgress] = useState(0); // 0 = hero déployé, 1 = barre compacte pleine
   const swipeStart = useRef(null);
   const TAB_ORDER = ["Ingrédients", "Ustensiles", "Étapes"];
   const swipeHandlers = {
@@ -183,15 +183,28 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     },
   };
 
+  // Collapse du hero piloté par la position de scroll (0 → 1) plutôt que par un
+  // basculement binaire : la barre compacte apparaît/disparaît de façon continue,
+  // en suivant le doigt, aussi bien en descendant qu'en remontant vers le hero.
   useEffect(() => {
-    const sentinel = heroSentinelRef.current;
-    if (!sentinel || isDesktop) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setHeroCollapsed(!entry.isIntersecting),
-      { threshold: 0 }
-    );
-    obs.observe(sentinel);
-    return () => obs.disconnect();
+    const el = scrollRef.current;
+    if (!el || isDesktop) return;
+    let raf = 0;
+    // On ne commence la transition que lorsque le hero restant est ≤ hauteur de la
+    // barre (260 − 52 ≈ 208) : la barre couvre alors toujours entièrement le hero
+    // encore visible → jamais de bande floue posée sur une image nette en dessous.
+    const START = 208, END = 258; // px de scroll : début et fin de la transition
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const p = Math.min(1, Math.max(0, (el.scrollTop - START) / (END - START)));
+        setHeroProgress(p);
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => { el.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
   }, [isDesktop]);
 
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
@@ -361,8 +374,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 ]} />
             </div>
             )}
-            {/* Titre + source + tags */}
-            <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
+            {/* Titre + source + tags — se fond quand la barre compacte prend le relais */}
+            <div style={{ position: "absolute", bottom: 16, left: 18, right: 18, opacity: 1 - heroProgress, transform: `translateY(${(heroProgress * -8).toFixed(2)}px)` }}>
               <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff" }}>{recipe.name}</h1>
               {attribution}
               {!publicMode && recipe.source && (
@@ -394,25 +407,37 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           {/* Sentinelle invisible juste sous le hero – dès qu'elle sort du viewport la barre compacte apparaît */}
           <div ref={heroSentinelRef} style={{ height: 1, flexShrink: 0 }} />
 
-          {/* Barre compacte sticky */}
+          {/* Barre compacte sticky – pilotée en continu par heroProgress (0→1) :
+              fond, flou et contenu suivent le scroll, dans les deux sens. */}
+          {(() => {
+            // Le contenu n'apparaît que sur la 2e moitié de la course, pour laisser
+            // le hero se replier d'abord, puis se révéler franchement.
+            const contentOp = Math.min(1, Math.max(0, (heroProgress - 0.35) / 0.65));
+            return (
           <div style={{
             position: "sticky", top: 0, zIndex: 30, flexShrink: 0,
-            background: heroCollapsed ? "rgba(var(--bg-rgb),0.85)" : "transparent",
-            backdropFilter: heroCollapsed ? "blur(16px)" : "none",
-            borderBottom: heroCollapsed ? "1px solid var(--border)" : "none",
-            transition: "background 0.25s, border-color 0.25s",
-            pointerEvents: heroCollapsed ? "auto" : "none",
+            background: `rgba(var(--bg-rgb),${(0.85 * heroProgress).toFixed(3)})`,
+            backdropFilter: `blur(${(16 * heroProgress).toFixed(2)}px)`,
+            WebkitBackdropFilter: `blur(${(16 * heroProgress).toFixed(2)}px)`,
+            boxShadow: `0 1px 0 rgba(0,0,0,${(0.08 * heroProgress).toFixed(3)})`,
+            pointerEvents: heroProgress > 0.5 ? "auto" : "none",
             height: 52, marginTop: -52,
             display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px",
           }}>
-            {heroCollapsed && <>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+              opacity: contentOp,
+              transform: `translateY(${((1 - contentOp) * -6).toFixed(2)}px)`,
+            }}>
               <button onClick={handleBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
               <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipe.name}</span>
               <div style={{ display: "flex", gap: 6 }}>
                 {!publicMode && <button onClick={() => { openShoppingModal(); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>}
               </div>
-            </>}
+            </div>
           </div>
+            );
+          })()}
 
           {/* Infos + actions – remontés juste sous le hero, au-dessus des onglets */}
           <div style={{ padding: "16px 16px 14px" }}>
