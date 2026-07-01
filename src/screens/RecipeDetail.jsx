@@ -394,24 +394,31 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           {/* Sentinelle invisible juste sous le hero – dès qu'elle sort du viewport la barre compacte apparaît */}
           <div ref={heroSentinelRef} style={{ height: 1, flexShrink: 0 }} />
 
-          {/* Barre compacte sticky */}
+          {/* Barre compacte sticky – apparition progressive (fond + flou + contenu
+              fondus/translatés) plutôt qu'un basculement binaire. */}
           <div style={{
             position: "sticky", top: 0, zIndex: 30, flexShrink: 0,
-            background: heroCollapsed ? "rgba(var(--bg-rgb),0.85)" : "transparent",
-            backdropFilter: heroCollapsed ? "blur(16px)" : "none",
-            borderBottom: heroCollapsed ? "1px solid var(--border)" : "none",
-            transition: "background 0.25s, border-color 0.25s",
+            background: heroCollapsed ? "rgba(var(--bg-rgb),0.85)" : "rgba(var(--bg-rgb),0)",
+            backdropFilter: heroCollapsed ? "blur(16px)" : "blur(0px)",
+            WebkitBackdropFilter: heroCollapsed ? "blur(16px)" : "blur(0px)",
+            borderBottom: "1px solid " + (heroCollapsed ? "var(--border)" : "transparent"),
+            transition: "background 0.32s ease, border-color 0.32s ease, backdrop-filter 0.32s ease, -webkit-backdrop-filter 0.32s ease",
             pointerEvents: heroCollapsed ? "auto" : "none",
             height: 52, marginTop: -52,
             display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px",
           }}>
-            {heroCollapsed && <>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+              opacity: heroCollapsed ? 1 : 0,
+              transform: heroCollapsed ? "translateY(0)" : "translateY(-6px)",
+              transition: "opacity 0.28s ease, transform 0.28s ease",
+            }}>
               <button onClick={handleBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
               <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipe.name}</span>
               <div style={{ display: "flex", gap: 6 }}>
                 {!publicMode && <button onClick={() => { openShoppingModal(); }} style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>}
               </div>
-            </>}
+            </div>
           </div>
 
           {/* Infos + actions – remontés juste sous le hero, au-dessus des onglets */}
