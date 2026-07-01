@@ -102,9 +102,9 @@ function DiffView({ diff, baseLabel }) {
               <DiffRow key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{ing.name}</span>
                 {ing.type === "changed" ? (
-                  <span> <span style={{ fontSize: 12, color: "var(--text3)", textDecoration: "line-through" }}>{ing.from || "—"}</span>
+                  <span> <span style={{ fontSize: 12, color: "var(--text3)", textDecoration: "line-through" }}>{ing.from || "–"}</span>
                   <span style={{ fontSize: 12, color: "var(--text3)" }}> → </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{ing.to || "—"}</span></span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{ing.to || "–"}</span></span>
                 ) : ing.qty ? <span style={{ fontSize: 12, color: "var(--text3)", marginLeft: 6 }}>{ing.qty}</span> : null}
               </DiffRow>
             );

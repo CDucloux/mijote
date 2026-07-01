@@ -44,7 +44,7 @@ export function AboutModal({ onClose }) {
             color: "#8fba7a", fontSize: 12, fontWeight: 500, fontFamily: "var(--ff-body)",
           }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#8fba7a", flexShrink: 0 }} />
-            {`v${__APP_VERSION__}${codename ? ` — ${codename}` : ""}`}
+            {`v${__APP_VERSION__}${codename ? ` – ${codename}` : ""}`}
           </span>
           <div style={{ fontSize: 13, color: "var(--text2)", textAlign: "center", marginTop: 2 }}>
             Cuisinez mieux, organisez moins.
@@ -85,7 +85,7 @@ export function AboutModal({ onClose }) {
         {/* Licence */}
         <Section icon="fileText" title="Licence">
           <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6 }}>
-            Logiciel propriétaire — <strong style={{ color: "var(--text)" }}>tous droits réservés</strong>. Le code
+            Logiciel propriétaire – <strong style={{ color: "var(--text)" }}>tous droits réservés</strong>. Le code
             source, le design et les contenus associés ne peuvent être copiés, distribués ou modifiés sans
             autorisation écrite.
           </div>

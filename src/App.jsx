@@ -4,7 +4,7 @@ import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 import { setDoc, deleteDoc } from "firebase/firestore";
 
 import { auth, provider } from "./lib/firebase.js";
-import { sharedListDoc, toSharedListDoc, publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "./lib/firestore.js";
+import { sharedListDoc, toSharedListDoc, publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer } from "./lib/firestore.js";
 import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "./lib/publicRecipes.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
@@ -28,10 +28,11 @@ import { PullToRefresh } from "./components/PullToRefresh.jsx";
 import { Icon } from "./components/Icon.jsx";
 import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/OfflineModal.jsx";
+import { HouseholdWelcome } from "./components/HouseholdWelcome.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
 import { HomeDashboard } from "./screens/HomeDashboard.jsx";
-import { HomeTab } from "./screens/HomeTab.jsx";
+import { RecipeTab } from "./screens/RecipeTab.jsx";
 import { MealPlanTab } from "./screens/MealPlanTab.jsx";
 import { StockTab } from "./screens/StockTab.jsx";
 import { ShoppingTab } from "./screens/ShoppingTab.jsx";
@@ -63,7 +64,7 @@ function AppInner() {
   const [collections, setCollections] = useLS("rf_collections2", SAMPLE_COLLECTIONS);
   const [mealPlan, setMealPlan] = useLS("rf_mealplan2", {});
   const [shoppingLists, setShoppingLists] = useLS("rf_shopping3", []);
-  // Listes partagées (autres membres ou que je partage) — alimentées par onSnapshot.
+  // Listes partagées (autres membres ou que je partage) – alimentées par onSnapshot.
   const [sharedLists, setSharedLists] = useState([]);
   // Annuaire des utilisateurs connus (pour proposer les e-mails avec avatar au partage).
   const [directory, setDirectory] = useState([]);
@@ -72,7 +73,7 @@ function AppInner() {
   useEffect(() => { personalListsRef.current = shoppingLists; }, [shoppingLists]);
   useEffect(() => { sharedListsRef.current = sharedLists; }, [sharedLists]);
   // Une liste est « partagée » dès qu'elle a au moins un invité. Le tag _shared (issu du
-  // snapshot) ne sert qu'à l'affichage — pas à la décision de routage, sinon le départage
+  // snapshot) ne sert qu'à l'affichage – pas à la décision de routage, sinon le départage
   // (sharedWith vidé) ne ramènerait jamais la liste en perso.
   const listIsShared = (l) => Array.isArray(l.sharedWith) && l.sharedWith.length > 0;
   // Vue fusionnée affichée : listes partagées d'abord, puis perso, dédoublonnées par id.
@@ -219,6 +220,12 @@ function AppInner() {
   const [stock, setStock] = useLS("rf_stock", []);
   const [lowStock, setLowStock] = useLS("rf_lowStock", []);
   const [preferences, setPreferences] = useLS("rf_preferences", DEFAULT_PREFERENCES);
+  // Pointeur du foyer actif ({ id, migrated } | null) – pilote le namespace partagé.
+  const [householdPointer, setHouseholdPointer] = useState(null);
+  useEffect(() => {
+    if (!user?.uid) { setHouseholdPointer(null); return; }
+    return subscribeHouseholdPointer(user.uid, setHouseholdPointer);
+  }, [user]);
   // Dérivé du pathname (et non de useParams) pour qu'AppInner reste une instance
   // unique montée sur `path="*"` : pas de remontage entre les onglets.
   const recipeIdParam = location.pathname.startsWith("/recipes/")
@@ -231,12 +238,12 @@ function AppInner() {
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [notification, setNotification] = useState(null);
-  // Vue d'une recette publique (route /discover/:pubId) — logique isolée dans son hook.
+  // Vue d'une recette publique (route /discover/:pubId) – logique isolée dans son hook.
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
-  const { cloudLoaded } = useFirestoreSync({
-    user, setUser, isAdmin, setSyncStatus,
+  const { cloudLoaded, workspaceReady } = useFirestoreSync({
+    user, setUser, isAdmin, setSyncStatus, householdPointer,
     recipes, setRecipes,
     collections, setCollections,
     mealPlan, setMealPlan,
@@ -342,7 +349,7 @@ function AppInner() {
       setRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, visibility: "public", publicId: publicId(user.uid, recipe.id) } : r));
       const bases = docs.length - 1;
       notify(bases > 0 ? `Recette publiée (+ ${bases} base${bases > 1 ? "s" : ""})` : "Recette publiée");
-    } catch { notify("Publication refusée — règles Firestore déployées ?", "error"); }
+    } catch { notify("Publication refusée – règles Firestore déployées ?", "error"); }
   };
 
   const unpublishRecipe = async (recipe) => {
@@ -419,7 +426,7 @@ function AppInner() {
         rejected > 0 ? `${rejected} recette(s) non conforme(s) écartée(s)` : "",
       ].filter(Boolean).join(" · ");
       if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${extras ? ` · ${extras}` : ""}`);
-      else notify(`Aucune recette importée${extras ? ` — ${extras}` : ""}`, "error");
+      else notify(`Aucune recette importée${extras ? ` – ${extras}` : ""}`, "error");
       return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
     });
   };
@@ -429,6 +436,12 @@ function AppInner() {
     notify("PDF en cours de génération…");
   };
 
+  // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer
+  // à sa création (copie de mes données vers le namespace du foyer).
+  const getSharedData = useCallback(
+    () => ({ recipes, collections, mealPlan, shoppingLists, stock, lowStock }),
+    [recipes, collections, mealPlan, shoppingLists, stock, lowStock]
+  );
   const currentRecipe = recipes.find(r => r.id === selectedRecipe);
   const isDesktop = useIsDesktop();
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
@@ -468,7 +481,7 @@ function AppInner() {
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
-      {tab === "recipes" && <HomeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
+      {tab === "recipes" && <RecipeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
       {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
       {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "fridge" && <StockTab stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
@@ -506,9 +519,9 @@ function AppInner() {
     )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
+      <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => { if (location.state?.from) navigate(location.state.from); else setSelectedRecipe(null); }} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
-  ) : selectedRecipe && !currentRecipe && cloudLoaded.current ? (
+  ) : selectedRecipe && !currentRecipe && workspaceReady ? (
     <RecipeNotFound onBack={() => navigate("/recipes")} />
   ) : tabContent;
 
@@ -518,7 +531,7 @@ function AppInner() {
   // Login screen
   if (!user) return <LoginScreen isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques };
+  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory };
 
   return (
     <AppShellProvider value={shellValue}>
@@ -565,6 +578,7 @@ function AppInner() {
           </SwipeableSheet>
         )}
         <OfflineModal />
+        <HouseholdWelcome />
       </div>
     </AppShellProvider>
   );

@@ -44,6 +44,41 @@ function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, style }
   );
 }
 
+// Squelette d'une carte recette (visuel + 2 lignes de méta) pendant le chargement.
+function SkeletonCard() {
+  return (
+    <div>
+      <div className="skeleton" style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: 16 }} />
+      <div className="skeleton" style={{ height: 12, width: "85%", borderRadius: 6, marginTop: 10 }} />
+      <div className="skeleton" style={{ height: 10, width: "55%", borderRadius: 6, marginTop: 7 }} />
+    </div>
+  );
+}
+
+// Rangée de squelettes (mime un carrousel) le temps que les recettes arrivent.
+function SkeletonRow({ titleWidth = 130, count = 4 }) {
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <div className="skeleton" style={{ height: 15, width: titleWidth, borderRadius: 6, marginBottom: 12 }} />
+      <div style={{ display: "flex", gap: 12, overflow: "hidden" }}>
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} style={{ flex: `0 0 ${CARD_W}` }}><SkeletonCard /></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DiscoverSkeleton() {
+  return (
+    <div style={{ paddingTop: 4 }}>
+      <SkeletonRow titleWidth={110} />
+      <SkeletonRow titleWidth={160} />
+      <SkeletonRow titleWidth={130} />
+    </div>
+  );
+}
+
 // Rangée éditoriale horizontale (carrousel). Ne s'affiche pas si vide.
 function Carousel({ icon, iconNode, title, items, renderItem }) {
   if (!items.length) return null;
@@ -61,7 +96,7 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
   );
 }
 
-// ─── DÉCOUVRIR — recettes publiques de la communauté ──────────────────────────
+// ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
 export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
@@ -142,7 +177,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       {/* Sentinelle pour détecter le sticky */}
       <div ref={sentinelRef} style={{ height: 1, marginBottom: -1, pointerEvents: "none" }} />
 
-      {/* En-tête sticky — fond toujours opaque & pleine largeur pour masquer le
+      {/* En-tête sticky – fond toujours opaque & pleine largeur pour masquer le
           contenu qui défile derrière (l'ombre n'apparaît qu'une fois collé). */}
       <div style={{
         position: "sticky", top: 0, zIndex: 20,
@@ -197,10 +232,8 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       </div>{/* fin sticky header */}
 
       {/* Résultats */}
-      {loading && !loadedOnce ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
-          <div style={{ width: 22, height: 22, border: "2.5px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
-        </div>
+      {(loading && !loadedOnce) || spinning ? (
+        <DiscoverSkeleton />
       ) : error ? (
         <div style={{ textAlign: "center", color: "var(--text3)", padding: "28px 0", fontSize: 13 }}>
           Impossible de charger les recettes publiques.<br />
@@ -247,7 +280,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         </>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", color: "var(--text3)", padding: "32px 16px", fontSize: 13 }}>
-          Aucun résultat — essaie d'élargir tes filtres.
+          Aucun résultat – essaie d'élargir tes filtres.
         </div>
       ) : (
         // ── Mode recherche / filtre : grille complète ──

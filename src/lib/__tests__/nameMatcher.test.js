@@ -17,16 +17,16 @@ describe("normalizeName", () => {
 });
 
 describe("findIngredientMatch", () => {
-  it("A — exact normalized match", () => {
+  it("A – exact normalized match", () => {
     expect(findIngredientMatch("ail", db).id).toBe("ail");
     expect(findIngredientMatch("Huile d'olive", db).id).toBe("huile-olive");
   });
 
-  it("B — singular/plural match", () => {
+  it("B – singular/plural match", () => {
     expect(findIngredientMatch("Tomates", db).id).toBe("tomate");
   });
 
-  it("C — canonical match strips preparation qualifiers and word order", () => {
+  it("C – canonical match strips preparation qualifiers and word order", () => {
     // "tomate" + qualifier "concassée" → still matches tomate
     expect(findIngredientMatch("tomates concassées", db).id).toBe("tomate");
     // word order indifferent on "ail" with qualifier
@@ -37,7 +37,7 @@ describe("findIngredientMatch", () => {
     expect(findIngredientMatch("échalote grise", db).id).toBe("oignon");
   });
 
-  it("does NOT strip variety words (noir) — keeps distinct ingredients", () => {
+  it("does NOT strip variety words (noir) – keeps distinct ingredients", () => {
     expect(findIngredientMatch("poivre noir", db).id).toBe("poivre-noir");
   });
 

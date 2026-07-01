@@ -145,7 +145,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           setSection(["info", "ingrédients", "ustensiles", "étapes"][idx]);
         }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
 
-        {/* Slide 1 — Info */}
+        {/* Slide 1 – Info */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           {(
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -192,7 +192,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </label>
                 {form.isComponent && (
                   <div style={{ marginTop: 14 }}>
-                    <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>— ce que produit la préparation</span></div>
+                    <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>– ce que produit la préparation</span></div>
                     <div style={{ display: "flex", gap: 10 }}>
                       <input className="field-input" type="number" min="0" step="any" placeholder="ex: 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2 }} />
                       <select className="field-input" value={form.yield?.unit || "g"} onChange={e => upYield("unit", e.target.value)} style={{ flex: 1 }}>
@@ -220,15 +220,15 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </div>
               </div>
               <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Carnets</div>
-                {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucun carnet — créez-en dans Config.</p>}
+                <div className="field-label" style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}><Icon name="book" size={13} color="var(--text3)" /> Carnets</div>
+                {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucun carnet – créez-en dans Config.</p>}
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {collections.map(col => {
                     const active = (form.collections || []).includes(col.id);
                     return (
                       <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
-                        style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s" }}>
-                        {active && <Icon name="check" size={11} color="#fff" />}
+                        style={{ padding: "6px 13px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s" }}>
+                        {active ? <Icon name="check" size={11} color="#fff" /> : <span style={{ fontSize: 13, lineHeight: 1 }}>{col.icon || "📓"}</span>}
                         {col.name}
                       </button>
                     );
@@ -240,7 +240,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           <div style={{ height: 20 }} />
         </div>
 
-        {/* Slide 2 — Ingrédients */}
+        {/* Slide 2 – Ingrédients */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {saveError && (
@@ -295,10 +295,10 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           <div style={{ height: 20 }} />
         </div>
 
-        {/* Slide 3 — Ustensiles */}
+        {/* Slide 3 – Ustensiles */}
         <UtensilPicker utensilDB={utensilDB} selected={form.utensils} onChange={v => up("utensils", v)} />
 
-        {/* Slide 4 — Étapes */}
+        {/* Slide 4 – Étapes */}
         <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto", padding: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {!isDesktop && (

@@ -5,8 +5,9 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { useHousehold } from "../hooks/useHousehold.js";
 
-// ─── MEAL PLAN — module-level constants & pure helpers ────────────────────────
+// ─── MEAL PLAN – module-level constants & pure helpers ────────────────────────
 const MP_DAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const MP_MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 const MP_SLOT_LABEL = { midi: "🌤 Midi", soir: "🌙 Soir" };
@@ -64,7 +65,8 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
 export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB }) {
-  const { notify } = useAppShell();
+  const { notify, user } = useAppShell();
+  const { household } = useHousehold();
   const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
@@ -123,6 +125,19 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
     const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//RecipeApp//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
     let count = 0;
 
+    // En mode foyer, on ajoute les membres comme participants : l'utilisateur courant
+    // est l'organisateur, les autres membres sont invités (ATTENDEE) sur chaque repas.
+    const myEmail = (user?.email || "").toLowerCase();
+    const memberEmails = household ? (household.memberEmails || []) : [];
+    const peopleLines = [];
+    if (memberEmails.length > 1 && myEmail) {
+      peopleLines.push(`ORGANIZER;CN=${escapeICS(user?.displayName || myEmail)}:mailto:${myEmail}`);
+      for (const email of memberEmails) {
+        if (!email || email.toLowerCase() === myEmail) continue;
+        peopleLines.push(`ATTENDEE;CN=${escapeICS(email)};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${email}`);
+      }
+    }
+
     Object.entries(mealPlan).forEach(([date, meals]) => {
       (meals || []).forEach(meal => {
         const recipe = recipes.find(r => r.id === meal.recipeId);
@@ -139,7 +154,7 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
           meal.portions > 1 ? `${recipe.servings} portions sur ${meal.portions} jours` : "",
           `Préparation : ${recipe.prepTime} min`,
           `Cuisson : ${recipe.cookTime} min`,
-          `Score santé : ${recipe.healthScore || "—"}/100`,
+          `Score santé : ${recipe.healthScore || "–"}/100`,
           recipe.ingredients?.map(i => `• ${i.name} ${i.amount} ${i.unit}`).join("\n") || "",
           recipe.source ? `Source : ${recipe.source}` : "",
         ].filter(Boolean).join("\n");
@@ -150,9 +165,10 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
           `DTSTAMP:${dtstamp}`,
           `DTSTART;TZID=Europe/Paris:${toICSDate(date, times.start)}`,
           `DTEND;TZID=Europe/Paris:${toICSDate(date, times.end)}`,
-          `SUMMARY:${escapeICS(slotLabel + " — " + recipe.name)}`,
+          `SUMMARY:${escapeICS(slotLabel + " – " + recipe.name)}`,
           `DESCRIPTION:${escapeICS(descParts)}`,
           `CATEGORIES:${escapeICS(slotLabel)}`,
+          ...peopleLines,
           "END:VEVENT"
         );
         count++;
@@ -167,7 +183,7 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
     const blob = new Blob([lines.join(CRLF)], { type: "text/calendar;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "planning_repas.ics";
+    a.download = "Mijoté - Planning repas.ics";
     a.click();
     URL.revokeObjectURL(a.href);
     notify?.("Planning exporté dans ton calendrier");
@@ -183,12 +199,12 @@ export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, in
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => navigate(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
           <span style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
-            {`${new Date(weekDays[0] + "T12:00").getDate()} — ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
+            {`${new Date(weekDays[0] + "T12:00").getDate()} – ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
           </span>
           <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)", flexShrink: 0 }}>Auj.</button>
-          <button onClick={exportICS} title="Exporter en .ics (Google Calendar, Apple Calendar…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
-            <Icon name="download" size={13} color="var(--blue)" /> .ics
+          <button onClick={exportICS} title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
+            <Icon name="calendar" size={13} color="var(--blue)" /> Agenda
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-// ─── COMPOSANTS — éclatement courses & utilitaires ────────────────────────────
+// ─── COMPOSANTS – éclatement courses & utilitaires ────────────────────────────
 // Un composant est une recette (isComponent) avec un rendement (yield).
 // Une ligne d'ingrédient le référence par recipeId et en consomme une quantité,
 // exprimée dans l'unité du rendement → fraction f = consommé / rendement.

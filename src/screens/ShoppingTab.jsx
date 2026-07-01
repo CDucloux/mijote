@@ -194,7 +194,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
       {/* Active list content */}
       {activeList && (
         <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-          {/* FAB — absolute inside the list container */}
+          {/* FAB – absolute inside the list container */}
           {activeList.type === "free" && (
             <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}
               style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
@@ -202,7 +202,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
             </button>
           )}
 
-          {/* Liste — pleine largeur, défilante */}
+          {/* Liste – pleine largeur, défilante */}
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 80px" }}>
 
             {activeList.items.length === 0 && activeList.type !== "free" && (
@@ -248,7 +248,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
                         {!activeList.hideClear && (
-                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat — les produits de placard rejoignent ton stock">
+                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat – les produits de placard rejoignent ton stock">
                             <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
                           </button>
                         )}
@@ -262,7 +262,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
           </div>
         </div>
       )}
-      {/* Confirm delete modal — only for free lists */}
+      {/* Confirm delete modal – only for free lists */}
       {confirmDeleteId && (
         <SwipeableSheet onClose={() => setConfirmDeleteId(null)}>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la liste ?</h3>
@@ -352,7 +352,7 @@ export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, dir
                   <span style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.3 }}>Une ligne = un article (tirets, puces et numéros acceptés).</span>
                   <span style={{ fontSize: 11, fontWeight: 600, color: over ? "var(--red)" : "var(--text3)", flexShrink: 0 }}>{count}/{MAX_LIST_ITEMS}</span>
                 </div>
-                {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois — retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
+                {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois – retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
                 <button className="btn btn-primary" style={{ width: "100%" }} disabled={count === 0 || over}
                   onClick={() => { addManyFromText(pasteText); setPasteText(""); setShowAddModal(false); setListMode(false); }}>
                   <Icon name="plus" size={15} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}

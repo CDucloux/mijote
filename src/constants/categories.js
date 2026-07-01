@@ -1,5 +1,5 @@
 // ─── NUTRITION CATEGORIES ──────────────────────────────────────────────────────
-// Default nutrition categories — seed for the Master `categories` doc.
+// Default nutrition categories – seed for the Master `categories` doc.
 // `score` has been removed: health scoring is now computed from ingredient
 // nutrition data (Nutri-Score algorithm), not from a hand-tuned per-category value.
 // Keys are in English. Labels are displayed in French in the UI.

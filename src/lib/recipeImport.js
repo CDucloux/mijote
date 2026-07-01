@@ -24,7 +24,7 @@ export function prepareRecipeImport(json, { ingredientDB = [], utensilDB = [] } 
     const e = validateRecipeSchema(r, label);
     if (e.length) schemaErrors.push(...e); else validRecipes.push(r);
   });
-  if (!validRecipes.length) return { error: `Import refusé — schéma invalide : ${schemaErrors[0]}` };
+  if (!validRecipes.length) return { error: `Import refusé – schéma invalide : ${schemaErrors[0]}` };
 
   try {
     const matchIng = buildNameMatcher(ingredientDB);

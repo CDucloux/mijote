@@ -8,10 +8,10 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 
-// ─── HOME TAB ─────────────────────────────────────────────────────────────────
+// ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
-export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
+export function RecipeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
   const [search, setSearch] = useState("");
   const [filterCuisine, setFilterCuisine] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
@@ -77,16 +77,28 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
           <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 2 }}>
-          {["name", "health", "date"].map(s => (
-            <button key={s} onClick={() => setSortBy(s)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: sortBy === s ? "var(--accent)" : "var(--surface2)", color: sortBy === s ? "#fff" : "var(--text2)", border: `1px solid ${sortBy === s ? "transparent" : "var(--border)"}` }}>
-              {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
-            </button>
-          ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 2 }}>
+          {/* Tri — segmented control (« choisis-en un ») pour le distinguer des filtres */}
+          <div style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 2, padding: 2, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20 }}>
+            <span title="Trier" aria-label="Trier" style={{ display: "inline-flex", padding: "0 5px 0 7px" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                {/* Barres décroissantes = ordre + flèche = direction du tri */}
+                <path d="M4 7h11M4 12h7M4 17h4" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" />
+                <path d="M19 5v13" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="m16 15 3 3 3-3" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            {["name", "health", "date"].map(s => (
+              <button key={s} onClick={() => setSortBy(s)} style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 16, fontSize: 12, fontWeight: 600, background: sortBy === s ? "var(--accent)" : "transparent", color: sortBy === s ? "#fff" : "var(--text2)", border: "none" }}>
+                {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
+              </button>
+            ))}
+          </div>
+          <div style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
+          {/* Filtres — puces indépendantes (activables/désactivables) */}
           <button onClick={() => setSeasonOnly(s => !s)} title="Recettes de saison ce mois-ci" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: seasonOnly ? "rgba(76,175,125,0.18)" : "var(--surface2)", color: seasonOnly ? "var(--green)" : "var(--text2)", border: `1px solid ${seasonOnly ? "rgba(76,175,125,0.5)" : "var(--border)"}` }}>
-            De saison
+            <Icon name="leaf" size={13} color={seasonOnly ? "var(--green)" : "var(--text3)"} /> De saison
           </button>
-          {usedCuisines.length > 0 && <div style={{ width: 1, background: "var(--border)", flexShrink: 0 }} />}
           {usedCuisines.length > 0 && (
             <button onClick={() => { setShowCuisines(v => { if (v) setFilterCuisine(null); return !v; }); }} title={showCuisines ? "Masquer les styles" : "Filtrer par style de cuisine"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: showCuisines ? "var(--surface3)" : "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
               <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>{showCuisines ? "−" : "+"}</span> Cuisine
@@ -101,7 +113,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
         {!search && !filterCuisine && !filterCol && (
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <h2 style={{ fontSize: 16, fontWeight: 600 }}>Carnets</h2>
               <button onClick={toggleCarnets} title={hideCarnets ? "Afficher les carnets" : "Masquer les carnets"} aria-label={hideCarnets ? "Afficher les carnets" : "Masquer les carnets"} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 8, background: "transparent", border: "none", color: "var(--text3)", cursor: "pointer" }}>
@@ -137,7 +149,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
                 </button>
                 );
               })}
-              {/* Carte « ajouter un carnet » — même gabarit que les carnets */}
+              {/* Carte « ajouter un carnet » – même gabarit que les carnets */}
               <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#e8703a", icon: "📓" })} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
                 <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", border: "2px dashed var(--border)" }}>
                   <div style={{ position: "relative", aspectRatio: "1/1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text3)" }}>
@@ -155,7 +167,7 @@ export function HomeTab({ recipes, collections, ingredientDB, onSelect, onNewRec
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6 }}>
               Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
             </h2>
             {filterCol && (() => { const ac = collections.find(c => c.id === filterCol); return ac ? (

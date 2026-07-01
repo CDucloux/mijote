@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { useOnline } from "../hooks/useOnline.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { useHousehold } from "../hooks/useHousehold.js";
 import { AboutModal } from "./AboutModal.jsx";
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
@@ -16,6 +17,7 @@ export function UserAvatar() {
   const [dropPos, setDropPos] = useState({ top: 0, right: 0 });
   const btnRef = useRef(null);
   const online = useOnline();
+  const { household } = useHousehold();
 
   const openDropdown = () => {
     if (btnRef.current) {
@@ -37,9 +39,17 @@ export function UserAvatar() {
     <div style={{ position: "relative", flexShrink: 0 }}>
       <button ref={btnRef} onClick={() => { if (open) { setOpen(false); setConfirmSignOut(false); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="Mon compte">
         {user.photoURL
-          ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: "2px solid var(--border)" }} />
-          : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff" }}>{(user.displayName || "?")[0].toUpperCase()}</div>
+          ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: `2px solid ${household ? "var(--accent)" : "var(--border)"}` }} />
+          : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", border: household ? "2px solid var(--accent)" : undefined }}>{(user.displayName || "?")[0].toUpperCase()}</div>
         }
+        {household && (
+          <span title={`Foyer : ${household.name}`} style={{ position: "absolute", top: -2, left: -2, width: 16, height: 16, borderRadius: "50%", background: "var(--accent)", border: "2px solid var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3.5 11 12 4l8.5 7" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M5.5 9.5V19h13V9.5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        )}
         <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none" }} />
       </button>
       {open && createPortal(

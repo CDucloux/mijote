@@ -50,7 +50,7 @@ function YamlImport({ onText, warn }) {
     <>
       {warn && (
         <p style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12, lineHeight: 1.45 }}>
-          <span style={{ fontWeight: 600, color: "var(--text)" }}>Fusion dans la base</span> : chaque entrée est mise à jour (par id, sinon par nom) ou ajoutée — <span style={{ fontWeight: 600 }}>aucune entrée existante n'est supprimée</span>. À la moindre erreur, l'import est annulé en entier.
+          <span style={{ fontWeight: 600, color: "var(--text)" }}>Fusion dans la base</span> : chaque entrée est mise à jour (par id, sinon par nom) ou ajoutée – <span style={{ fontWeight: 600 }}>aucune entrée existante n'est supprimée</span>. À la moindre erreur, l'import est annulé en entier.
         </p>
       )}
       <input ref={ref} type="file" accept=".yaml,.yml,.txt" style={{ display: "none" }}
@@ -214,7 +214,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
 
   // Affiche la liste d'erreurs de validation YAML, tronquée. Annulation totale.
   const reportErrors = (errors) => {
-    setMdError(`Import annulé — ${errors.length} erreur${errors.length > 1 ? "s" : ""} : ` + errors.slice(0, 3).join(" ") + (errors.length > 3 ? " …" : ""));
+    setMdError(`Import annulé – ${errors.length} erreur${errors.length > 1 ? "s" : ""} : ` + errors.slice(0, 3).join(" ") + (errors.length > 3 ? " …" : ""));
   };
 
   // Import YAML des ingrédients (master). Upsert par id puis par nom normalisé.
@@ -508,7 +508,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
               );
             })}
 
-            {/* ── Import / Export Markdown de la base master (admin) — en bas ── */}
+            {/* ── Import / Export Markdown de la base master (admin) – en bas ── */}
             {isAdmin && (
               <>
                 <div style={{ height: 6 }} />
@@ -562,7 +562,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
               ))}
             </div>
 
-            {/* ── Export Markdown de la base ustensiles (admin) — en bas ── */}
+            {/* ── Export Markdown de la base ustensiles (admin) – en bas ── */}
             {isAdmin && (
               <>
                 <div style={{ height: 6 }} />
@@ -722,7 +722,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
                 <Icon name="import" size={28} color={dragOver ? "var(--accent)" : "var(--text3)"} />
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 13, fontWeight: 500, color: dragOver ? "var(--accent)" : "var(--text)" }}>Dépose tes fichiers JSON ici</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>ou clique pour sélectionner — plusieurs fichiers acceptés</div>
+                  <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>ou clique pour sélectionner – plusieurs fichiers acceptés</div>
                 </div>
               </div>
               {jsonError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8 }}>{jsonError}</p>}
@@ -811,7 +811,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
           <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} pathPrefix={isAdmin ? "master/ingredients" : "ingredients"} />
           <div className="field-label">Poids moyen d'une pièce (g)</div>
           <div style={{ position: "relative", marginBottom: 4 }}>
-            <input className="field-input" type="number" min="0" step="1" placeholder="ex. 125 pour une tomate — optionnel"
+            <input className="field-input" type="number" min="0" step="1" placeholder="ex. 125 pour une tomate – optionnel"
               value={editIng.gramsPerPiece ?? ""}
               onChange={e => setEditIng(p => ({ ...p, gramsPerPiece: e.target.value === "" ? undefined : +e.target.value }))}
               style={{ paddingRight: 32 }} />
@@ -852,7 +852,7 @@ export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensil
             );
           })()}
           <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel — pour 100g)</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel – pour 100g)</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[["calories", "Énergie (kcal)", 1], ["protein", "Protéines (g)", 0.1], ["carbs", "Glucides (g)", 0.1], ["sugar", "Sucres (g)", 0.1], ["fat", "Lipides (g)", 0.1], ["saturatedFat", "G. saturées (g)", 0.1], ["omega3", "Oméga-3 (g)", 0.01], ["fiber", "Fibres (g)", 0.1], ["salt", "Sel (g)", 0.01]].map(([k, l, step]) => (
                 <div key={k}>

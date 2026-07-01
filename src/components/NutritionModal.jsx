@@ -33,7 +33,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   const macroTot = macroSegs.reduce((s, x) => s + x.value, 0) || 1;
 
   const fmt = (v, unit = "g") => {
-    if (v == null) return "—";
+    if (v == null) return "–";
     const r = v >= 10 ? Math.round(v) : Math.round(v * 10) / 10;
     return `${r} ${unit}`;
   };
@@ -109,7 +109,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
       {/* Note de fiabilité */}
       {detail.coverage < 0.95 && (
         <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.5, marginTop: 12, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
-          Estimation sur {Math.round(detail.coverage * 100)}% de la masse du plat — certains ingrédients n'ont pas encore de données nutritionnelles.
+          Estimation sur {Math.round(detail.coverage * 100)}% de la masse du plat – certains ingrédients n'ont pas encore de données nutritionnelles.
         </div>
       )}
       <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 12 }}>

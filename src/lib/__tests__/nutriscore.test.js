@@ -7,7 +7,7 @@ const DB = [
 ];
 
 describe("computeNutriInfo return shape", () => {
-  it("always returns { score, letter } — even with no resolvable nutrition", () => {
+  it("always returns { score, letter } – even with no resolvable nutrition", () => {
     // lignes présentes mais aucune avec dbId/nutrition → masse nulle
     const r = computeNutriInfo([{ name: "Inconnu", amount: 100, unit: "g" }], DB, new Map());
     expect(r).toEqual({ score: 50, letter: null });

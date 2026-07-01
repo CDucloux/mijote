@@ -9,7 +9,7 @@ describe("ingredientMonths", () => {
     expect(ingredientMonths({})).toBeNull();
     expect(ingredientMonths({ months: "1-3" })).toBeNull();
   });
-  it("returns null for a 12-month (year-round) ingredient — no seasonal signal", () => {
+  it("returns null for a 12-month (year-round) ingredient – no seasonal signal", () => {
     expect(ingredientMonths({ months: [1,2,3,4,5,6,7,8,9,10,11,12] })).toBeNull();
   });
   it("dedupes, sorts and filters out-of-range values", () => {
