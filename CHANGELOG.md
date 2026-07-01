@@ -1,6 +1,14 @@
 # Changelog – Mijoté
 
-## Non publié – Accueil & communauté de mijoteurs
+## v3.1.0 – Cardamome · Foyer partagé & communauté de mijoteurs
+
+### Foyer partagé
+- **Créer un foyer** (jusqu'à 2 personnes) : recettes, stock, listes de courses et planning deviennent **communs** aux membres, synchronisés en temps réel
+- **Espace actif unique** : on cuisine soit en solo, soit dans un foyer – en rejoignant un foyer, tes recettes y sont **ajoutées** (fusion additive) et planning/stock/courses du foyer sont adoptés ; ta **version personnelle reste sauvegardée** et redevient active en quittant
+- **Préférences personnelles** conservées hors du partage
+- **Inviter** depuis l'annuaire des utilisateurs déjà connectés à Mijoté (avec avatars), **gérer** le foyer (créer, inviter, quitter, dissoudre) et **message de bienvenue** à l'arrivée dans un foyer
+- **Repères visuels** : carte Foyer en tête de l'Accueil et pastille foyer sur l'avatar quand le partage est actif
+- **Export agenda** du planning : en foyer, les membres sont ajoutés comme **participants** aux repas
 
 ### Couche de données & glossaire des techniques
 - **Techniques en contexte dans le pas-à-pas** : en mode cuisson, les gestes du glossaire (suer, déglacer, monter au beurre…) sont **mis en évidence dans le texte de l'étape** ; un survol (ordinateur) ou un appui (mobile) affiche leur définition
@@ -27,6 +35,14 @@
 ### Navigation & préférences
 - La **Configuration** quitte la barre d'onglets et rejoint le menu **avatar** (5 onglets max, mobile comme desktop)
 - Nouvelle section **Préférences alimentaires** (régime, allergènes, catégories à éviter, ingrédients non aimés), synchronisée dans le cloud
+
+### Raffinements
+- **Publier une recette** : confirmation explicite avant publication, icône **globe** plus parlante, encart « préparations de base incluses » redessiné
+- **Découverte** : squelettes de chargement animés (au premier chargement et au rafraîchissement)
+- **Mes Recettes** : tri regroupé en *segmented control* distinct des filtres (De saison, Cuisine), compteur de recettes aligné sur la ligne de base, espacement Carnets resserré
+- **Éditeur de recette** : liste des styles de cuisine allégée, icône de carnet sur chaque pill
+- **Confort mobile** : suppression du halo bleu au tap (PWA), bulle de définition d'une technique repositionnée pour ne plus déborder de l'écran
+- **Navigation** : retour cohérent vers l'Accueil quand on ouvre depuis la Découverte une recette qu'on a publiée
 
 ## v3.0.0 – Tonka · Journal d'itérations & Raffinements
 
