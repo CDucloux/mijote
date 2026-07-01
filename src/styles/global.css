@@ -319,3 +319,21 @@ input,textarea,select{font-family:var(--ff-body);}
 }
 .mp-remove-btn:hover{background:rgba(224,82,82,0.12);color:var(--red);opacity:1;}
 .mp-remove-btn:active{transform:scale(0.88);}
+
+/* ─── Retour tactile « pressé » (appareils tactiles uniquement) ──────────────
+   Feel d'app mobile native : tout élément tappable s'assombrit brièvement sous
+   le doigt ; les cartes et boutons principaux se rétractent en plus (scale).
+   Ciblé via @media (hover:none) pour ne pas affecter la souris sur desktop, et
+   volontairement sans scale global (certains boutons utilisent transform pour
+   se positionner — on ne scale que des classes dont la racine ne l'utilise pas). */
+@media (hover: none) {
+  button:active, a:active, [role="button"]:active, label:active, .pressable:active {
+    opacity: 0.62;
+  }
+  .btn:active, .recipe-card:active, .notebook-card:active, .discover-card:active, .pressable:active {
+    transform: scale(0.97);
+  }
+  .btn, .recipe-card, .notebook-card, .discover-card, .pressable {
+    transition: transform 0.11s ease, opacity 0.11s ease;
+  }
+}

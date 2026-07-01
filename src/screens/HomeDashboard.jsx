@@ -24,7 +24,7 @@ function greeting(date = new Date()) {
 // Carte de notification compacte (courses, stock bas) – icône + libellé + chevron.
 function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }) {
   return (
-    <button onClick={onClick} className="slide-up"
+    <button onClick={onClick} className="slide-up pressable"
       style={{
         animationDelay,
         display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
@@ -117,7 +117,7 @@ function FoyerSection() {
     <section style={{ marginBottom: 26 }}>
       {/* Carte foyer : surface neutre + liseré accent à gauche (inset box-shadow,
           épouse les coins) + perforation pointillée comme séparateur distinctif. */}
-      <button onClick={() => setOpen(v => !v)} aria-label="Ouvrir le foyer"
+      <button onClick={() => setOpen(v => !v)} aria-label="Ouvrir le foyer" className="pressable"
         style={{
           position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
           display: "flex", alignItems: "stretch", gap: 0, padding: 0,
