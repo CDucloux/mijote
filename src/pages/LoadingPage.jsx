@@ -1,5 +1,5 @@
 // ─── LOADING SCREEN ───────────────────────────────────────────────────────────
-export function LoadingScreen({ isDark }) {
+export function LoadingPage({ isDark }) {
   return (
     <div className={`loading-root${isDark ? "" : " light"}`}>
       <div className="loading-blob" style={{ width: 320, height: 320, background: "var(--accent)", top: "-60px", right: "-60px" }} />

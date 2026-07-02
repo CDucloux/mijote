@@ -8,7 +8,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "../lib/techniques.js";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
-import { consumptionFraction } from "../lib/components.js";
+import { consumptionFraction } from "../lib/recipeComponents.js";
 import { capitalize } from "../lib/format.js";
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────

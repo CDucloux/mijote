@@ -167,7 +167,7 @@ function FoyerSection() {
   );
 }
 
-export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic }) {
+export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
   const firstName = (user?.displayName || "").trim().split(" ")[0] || "";
 

@@ -1,5 +1,5 @@
 // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────────
-export function LoginScreen({ isDark, onToggleTheme, onSignIn }) {
+export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
   return (
     <div className={`login-root${isDark ? "" : " light"}`}>
       {/* Theme toggle */}

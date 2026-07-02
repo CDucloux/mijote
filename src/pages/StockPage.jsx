@@ -9,7 +9,7 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../
 // Gestion binaire du stock (placards / étagères) : j'en ai / j'en ai pas.
 // Chaque ingrédient de la base est listable ; le stock = tableau d'IDs.
 
-export function StockTab({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
+export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("all"); // "all" = tout | "stock" = ce que j'ai | "low" = à racheter
 

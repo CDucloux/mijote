@@ -3,7 +3,7 @@
 // le composant fournit l'état courant et applique le résultat.
 
 import { computeNutriInfo, buildRecipeIndex, isComponentLine } from "./nutriscore.js";
-import { flattenForShopping, mergeRawLines } from "./components.js";
+import { flattenForShopping, mergeRawLines } from "./recipeComponents.js";
 
 const norm = s => (s || "").toLowerCase().trim();
 

@@ -72,7 +72,7 @@ function YamlImport({ onText, warn }) {
 }
 
 
-export function ConfigTab({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques }) {
+export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques }) {
   const navigate = useNavigate();
   const location = useLocation();
   const configSectionParam = location.pathname.startsWith("/config/")

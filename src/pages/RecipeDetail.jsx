@@ -18,7 +18,7 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { fmtTime, capitalize } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
-import { flattenForShopping } from "../lib/components.js";
+import { flattenForShopping } from "../lib/recipeComponents.js";
 import { isOfficialAuthor } from "../lib/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 
