@@ -524,7 +524,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     else if (!isComp && ing.dbId) navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`);
                   };
                   return (
-                    <div key={ing.id} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
+                    <div key={ing.id} onClick={onClick} className={clickable ? "press-hold" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
                       {isComp && !rc.comp?.image
                         ? <span style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
                         : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
