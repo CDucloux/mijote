@@ -324,3 +324,215 @@
   definition: >
     Donner du brillant à un mets en le badigeonnant de beurre clarifié ou de
     gelée juste avant de servir.
+
+# ─── Ajouts : découpe avancée, cuissons, pâtisserie ───────────────────────────
+
+- id: tech_tourner
+  name: Tourner les légumes
+  aliases: [tourner les légumes, légumes tournés, tournage]
+  category: decoupe
+  difficulty: 5
+  definition: "Façonner un légume (pomme de terre, carotte, navet) en forme régulière à plusieurs faces au couteau, pour une cuisson homogène et un dressage soigné."
+
+- id: tech_lever_filets
+  name: Lever les filets
+  aliases: [lever les filets, filets levés, lever un filet, lever les suprêmes]
+  category: decoupe
+  difficulty: 4
+  definition: "Détacher proprement les filets d'un poisson le long de l'arête, ou les quartiers d'un agrume à vif, sans laisser de chair."
+
+- id: tech_escaloper
+  name: Escaloper
+  aliases: [escaloper, escalopé, escalopée]
+  category: decoupe
+  difficulty: 2
+  definition: "Couper une pièce en biais, en tranches larges et minces appelées escalopes."
+
+- id: tech_parer
+  name: Parer
+  aliases: [parer, paré, parée, parage]
+  category: decoupe
+  difficulty: 2
+  definition: "Retirer les nerfs, le gras et les parties non comestibles d'une pièce pour la rendre nette avant cuisson."
+
+- id: tech_zester
+  name: Zester
+  aliases: [zester, zesté, zestée, zeste]
+  category: decoupe
+  difficulty: 1
+  definition: "Prélever la fine partie colorée et parfumée de la peau d'un agrume, sans le blanc amer."
+
+- id: tech_raper
+  name: Râper
+  aliases: [râper, raper, râpé, râpée, rapé]
+  category: decoupe
+  difficulty: 1
+  definition: "Réduire un aliment en fins filaments ou en poudre à l'aide d'une râpe."
+
+- id: tech_saisir
+  name: Saisir
+  aliases: [saisir, saisi, saisie, saisir à vif]
+  category: cuisson
+  difficulty: 1
+  definition: "Colorer vivement la surface d'un aliment à feu très chaud pour former une croûte et fixer les sucs."
+
+- id: tech_rotir
+  name: Rôtir
+  aliases: [rôtir, rotir, rôti, rôtie]
+  category: cuisson
+  difficulty: 1
+  definition: "Cuire une pièce au four ou à la broche avec un peu de corps gras, en l'arrosant régulièrement."
+
+- id: tech_griller
+  name: Griller
+  aliases: [griller, grillé, grillée]
+  category: cuisson
+  difficulty: 1
+  definition: "Cuire un aliment par le contact direct d'une source de chaleur intense (gril, braises, plancha)."
+
+- id: tech_mijoter
+  name: Mijoter
+  aliases: [mijoter, mijoté, mijotée, mijote]
+  category: cuisson
+  difficulty: 1
+  definition: "Cuire longuement et doucement, à petits frémissements couverts, pour attendrir et lier les saveurs."
+
+- id: tech_frire
+  name: Frire
+  aliases: [frire, faire frire, frit, frite]
+  category: cuisson
+  difficulty: 2
+  definition: "Cuire un aliment par immersion dans un bain de matière grasse chaude jusqu'à ce qu'il dore et croustille."
+
+- id: tech_confire
+  name: Confire
+  aliases: [confire, confit, confite, confits]
+  category: cuisson
+  difficulty: 2
+  definition: "Cuire lentement un aliment dans un corps gras, un sirop ou du sucre, à basse température, pour l'attendrir et le conserver."
+
+- id: tech_nacrer
+  name: Nacrer
+  aliases: [nacrer, nacré, nacrée]
+  category: cuisson
+  difficulty: 2
+  definition: "Enrober les grains de riz de corps gras chaud jusqu'à ce qu'ils deviennent translucides et brillants, avant de mouiller (risotto, pilaf)."
+
+- id: tech_flamber
+  name: Flamber
+  aliases: [flamber, flambé, flambée, flambe]
+  category: cuisson
+  difficulty: 3
+  definition: "Arroser un mets d'alcool chaud et l'enflammer pour le parfumer et brûler l'alcool."
+
+- id: tech_cuire_a_blanc
+  name: Cuire à blanc
+  aliases: [cuire à blanc, cuit à blanc, cuisson à blanc]
+  category: cuisson
+  difficulty: 2
+  definition: "Précuire un fond de tarte à vide, souvent lesté de légumes secs, avant de le garnir."
+
+- id: tech_temperer
+  name: Tempérer le chocolat
+  aliases: [tempérer le chocolat, chocolat tempéré, tempérage, mettre au point le chocolat]
+  category: liaison
+  difficulty: 5
+  definition: "Faire suivre au chocolat fondu une courbe précise de température pour stabiliser ses cristaux, gage d'un rendu brillant, lisse et cassant."
+
+- id: tech_roux
+  name: Réaliser un roux
+  aliases: [réaliser un roux, faire un roux, un roux, roux blond, roux brun]
+  category: liaison
+  difficulty: 3
+  definition: "Cuire à parts égales du beurre et de la farine — plus ou moins longtemps selon la couleur voulue — pour obtenir la base liante des sauces blanches et brunes."
+
+- id: tech_foisonner
+  name: Foisonner
+  aliases: [foisonner, foisonné, foisonnée, foisonnement]
+  category: liaison
+  difficulty: 3
+  definition: "Incorporer de l'air à une préparation en la fouettant (crème, beurre, appareil) pour en augmenter le volume et l'alléger."
+
+- id: tech_lier
+  name: Lier
+  aliases: [lier, lié, liée, lier la sauce]
+  category: liaison
+  difficulty: 2
+  definition: "Épaissir et rendre homogène une préparation à l'aide d'un roux, d'un jaune d'œuf, de fécule ou de beurre."
+
+- id: tech_serrer
+  name: Serrer les blancs
+  aliases: [serrer les blancs, blancs serrés, serrer la meringue]
+  category: liaison
+  difficulty: 2
+  definition: "Terminer des blancs en neige en y ajoutant un peu de sucre tout en fouettant, pour les raffermir et les rendre lisses et brillants."
+
+- id: tech_tourer
+  name: Tourer
+  aliases: [tourer, touré, tourée, donner un tour, donner les tours, tourage]
+  category: preparation
+  difficulty: 5
+  definition: "Donner ses tours à une pâte feuilletée en pliant et abaissant successivement la détrempe et le beurre, pour créer les couches — geste long et minutieux."
+
+- id: tech_desosser
+  name: Désosser
+  aliases: [désosser, desosser, désossé, désossée]
+  category: preparation
+  difficulty: 3
+  definition: "Retirer les os d'une pièce de viande ou de volaille en préservant au mieux la chair."
+
+- id: tech_degorger
+  name: Dégorger
+  aliases: [dégorger, degorger, dégorgé, dégorge]
+  category: preparation
+  difficulty: 2
+  definition: "Faire rendre son eau à un légume au sel (concombre, aubergine), ou purger une viande ou un abat à l'eau froide."
+
+- id: tech_petrir
+  name: Pétrir
+  aliases: [pétrir, petrir, pétri, pétrie, pétrissage]
+  category: preparation
+  difficulty: 1
+  definition: "Travailler une pâte à la main ou au crochet pour l'homogénéiser et développer le réseau de gluten."
+
+- id: tech_tamiser
+  name: Tamiser
+  aliases: [tamiser, tamisé, tamisée, tamise]
+  category: preparation
+  difficulty: 1
+  definition: "Passer une poudre (farine, sucre glace) au tamis pour l'aérer et éliminer les grumeaux."
+
+- id: tech_barder
+  name: Barder
+  aliases: [barder, bardé, bardée]
+  category: preparation
+  difficulty: 2
+  definition: "Entourer une pièce d'une fine tranche de lard gras avant cuisson pour la nourrir et l'empêcher de se dessécher."
+
+- id: tech_chiqueter
+  name: Chiqueter
+  aliases: [chiqueter, chiqueté, chiquetée, chiquetage]
+  category: dressage
+  difficulty: 3
+  definition: "Inciser en biais et à intervalles réguliers les bords d'un feuilletage, pour favoriser sa levée et le décorer."
+
+- id: tech_masquer
+  name: Masquer
+  aliases: [masquer, masqué, masquée]
+  category: dressage
+  difficulty: 2
+  definition: "Recouvrir entièrement un entremets d'une couche régulière de crème ou de glaçage avant le décor."
+
+- id: tech_dresser
+  name: Dresser
+  aliases: [dresser, dressé, dressée, dressage]
+  category: dressage
+  difficulty: 1
+  definition: "Disposer harmonieusement les éléments d'un mets dans le plat ou l'assiette."
+
+- id: tech_rayer
+  name: Rayer
+  aliases: [rayer, rayé, rayée]
+  category: dressage
+  difficulty: 2
+  definition: "Décorer à la pointe d'un couteau la surface dorée d'un feuilletage (galette, pâté en croûte) avant cuisson."
