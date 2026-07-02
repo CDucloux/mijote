@@ -76,6 +76,8 @@ export function parseTechniquesYaml(text) {
       errors.push(`${where} : catégorie « ${category || "?"} » inconnue (${Object.keys(TECHNIQUE_CATEGORIES).join(", ")}).`);
     if (raw.aliases != null && (!Array.isArray(raw.aliases) || raw.aliases.some(a => typeof a !== "string")))
       errors.push(`${where} : « aliases » doit être une liste de chaînes.`);
+    if (raw.difficulty != null && (!Number.isInteger(raw.difficulty) || raw.difficulty < 1 || raw.difficulty > 5))
+      errors.push(`${where} : « difficulty » doit être un entier de 1 à 5.`);
 
     const id = str(raw.id) || slugifyId("tech_", name);
     if (seenIds.has(id)) errors.push(`${where} : id en double « ${id} ».`);
@@ -87,6 +89,7 @@ export function parseTechniquesYaml(text) {
     // N'inclure que des clés définies : Firestore rejette les valeurs `undefined`.
     const item = { id, name, category, definition };
     if (aliases.length) item.aliases = aliases;
+    if (Number.isInteger(raw.difficulty) && raw.difficulty >= 1 && raw.difficulty <= 5) item.difficulty = raw.difficulty;
     const source = str(raw.source);
     if (source) item.source = source;
     items.push(item);
@@ -102,9 +105,9 @@ export function formatTechniquesMarkdown(list) {
     const ca = cats.indexOf(a.category), cb = cats.indexOf(b.category);
     return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr");
   });
-  const header = "| Technique | Catégorie | Définition | Aliases | Source |\n|---|---|---|---|---|";
+  const header = "| Technique | Catégorie | Difficulté | Définition | Aliases | Source |\n|---|---|---|---|---|---|";
   const body = rows.map(r =>
-    `| ${esc(r.name)} | ${esc(TECHNIQUE_CATEGORIES[r.category] || r.category)} | ${esc(r.definition)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.source)} |`
+    `| ${esc(r.name)} | ${esc(TECHNIQUE_CATEGORIES[r.category] || r.category)} | ${r.difficulty ? `${r.difficulty}/5` : "–"} | ${esc(r.definition)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.source)} |`
   ).join("\n");
   return `# Glossaire des techniques Mijoté (${rows.length})\n\n${header}\n${body}\n`;
 }
@@ -117,6 +120,7 @@ export function formatTechniquesYaml(list) {
     .map(t => {
       const o = { id: t.id, name: t.name, category: t.category };
       if (t.aliases?.length) o.aliases = t.aliases;
+      if (t.difficulty) o.difficulty = t.difficulty;
       o.definition = t.definition;
       if (t.source) o.source = t.source;
       return o;

@@ -11,7 +11,7 @@ import { isRecipeInSeason } from "../lib/seasonality.js";
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
-export function RecipeTab({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
+export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
   const [search, setSearch] = useState("");
   const [filterCuisine, setFilterCuisine] = useState(null);
   const [filterCol, setFilterCol] = useState(null);

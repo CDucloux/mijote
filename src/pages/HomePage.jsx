@@ -16,9 +16,7 @@ const SLOT_LABEL = { midi: "🌤 Ce midi", soir: "🌙 Ce soir" };
 
 function greeting(date = new Date()) {
   const h = date.getHours();
-  if (h < 6) return "Bonne nuit";
-  if (h < 18) return "Bonjour";
-  return "Bonsoir";
+  return h >= 6 && h < 18 ? "Bonjour" : "Bonsoir";
 }
 
 // Carte de notification compacte (courses, stock bas) – icône + libellé + chevron.
@@ -167,7 +165,7 @@ function FoyerSection() {
   );
 }
 
-export function HomeDashboard({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic }) {
+export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
   const firstName = (user?.displayName || "").trim().split(" ")[0] || "";
 

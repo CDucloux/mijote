@@ -337,3 +337,9 @@ input,textarea,select{font-family:var(--ff-body);}
     transition: transform 0.11s ease, opacity 0.11s ease;
   }
 }
+/* Appui maintenu : le fond s'éclaircit progressivement tant que le doigt reste
+   posé (feedback tactile « long press »), et se résorbe au relâchement. */
+.press-hold { transition: background-color 0.35s ease; }
+@media (hover: none) {
+  .press-hold:active { background-color: var(--surface3); transition: background-color 0.45s ease; }
+}

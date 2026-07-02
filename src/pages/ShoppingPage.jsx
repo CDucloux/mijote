@@ -19,7 +19,7 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // l'animation de passage dans « Acheté » (l'article glisse vers le bas en
 // s'estompant avant de rejoindre la section).
 
-export function ShoppingTab({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
+export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
   const { user, notify } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback(el => el?.focus({ preventScroll: true }), []);

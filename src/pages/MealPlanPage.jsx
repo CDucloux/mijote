@@ -64,7 +64,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-export function MealPlanTab({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB }) {
+export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB }) {
   const { notify, user } = useAppShell();
   const { household } = useHousehold();
   const [viewMode] = useState("week");

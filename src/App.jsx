@@ -11,7 +11,7 @@ import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
 import { prepareRecipeImport } from "./lib/recipeImport.js";
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
-import { recipesReferencing } from "./lib/components.js";
+import { recipesReferencing } from "./lib/recipeComponents.js";
 import { buildRecipeIndex } from "./lib/nutriscore.js";
 import {
   DEFAULT_CATEGORIES, SAMPLE_RECIPES, SAMPLE_COLLECTIONS,
@@ -31,16 +31,16 @@ import { OfflineModal } from "./components/OfflineModal.jsx";
 import { HouseholdWelcome } from "./components/HouseholdWelcome.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
-import { HomeDashboard } from "./screens/HomeDashboard.jsx";
-import { RecipeTab } from "./screens/RecipeTab.jsx";
-import { MealPlanTab } from "./screens/MealPlanTab.jsx";
-import { StockTab } from "./screens/StockTab.jsx";
-import { ShoppingTab } from "./screens/ShoppingTab.jsx";
-import { RecipeEditor } from "./screens/RecipeEditor.jsx";
-import { RecipeDetail } from "./screens/RecipeDetail.jsx";
-import { ConfigTab } from "./screens/ConfigTab.jsx";
-import { LoadingScreen } from "./screens/LoadingScreen.jsx";
-import { LoginScreen } from "./screens/LoginScreen.jsx";
+import { HomePage } from "./pages/HomePage.jsx";
+import { RecipesPage } from "./pages/RecipesPage.jsx";
+import { MealPlanPage } from "./pages/MealPlanPage.jsx";
+import { StockPage } from "./pages/StockPage.jsx";
+import { ShoppingPage } from "./pages/ShoppingPage.jsx";
+import { RecipeEditor } from "./pages/RecipeEditor.jsx";
+import { RecipeDetail } from "./pages/RecipeDetail.jsx";
+import { ConfigPage } from "./pages/ConfigPage.jsx";
+import { LoadingPage } from "./pages/LoadingPage.jsx";
+import { LoginPage } from "./pages/LoginPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
 
@@ -186,7 +186,7 @@ function AppInner() {
     }
   }, [user]);
 
-  // Setter unique exposé à ShoppingTab : reçoit la liste FUSIONNÉE, aiguille perso vs partagé.
+  // Setter unique exposé à ShoppingPage : reçoit la liste FUSIONNÉE, aiguille perso vs partagé.
   const setMergedShoppingLists = useCallback((updater) => {
     const myEmail = (user?.email || "").toLowerCase();
     const sharedIds = new Set(sharedListsRef.current.map(l => l.id));
@@ -480,12 +480,12 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "home" && <HomeDashboard recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
-      {tab === "recipes" && <RecipeTab recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
-      {tab === "meal-plan" && <MealPlanTab mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
-      {tab === "shopping" && <ShoppingTab shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
-      {tab === "fridge" && <StockTab stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
-      {tab === "config" && <ConfigTab ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
+      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
+      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} />}
+      {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
+      {tab === "shopping" && <ShoppingPage shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
+      {tab === "fridge" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
+      {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
     </div>
   );
 
@@ -519,17 +519,17 @@ function AppInner() {
     )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => { if (location.state?.from) navigate(location.state.from); else setSelectedRecipe(null); }} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
+      <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
   ) : selectedRecipe && !currentRecipe && workspaceReady ? (
     <RecipeNotFound onBack={() => navigate("/recipes")} />
   ) : tabContent;
 
   // Loading state
-  if (user === undefined) return <LoadingScreen isDark={isDark} />;
+  if (user === undefined) return <LoadingPage isDark={isDark} />;
 
   // Login screen
-  if (!user) return <LoginScreen isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
+  if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
   const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory };
 

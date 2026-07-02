@@ -13,7 +13,10 @@ import { relativeDate } from "../lib/format.js";
 
 const NUTRI_LETTERS = ["A", "B", "C", "D", "E"];
 const TINT = "rgba(232,112,58,0.2)";
-const CARD_W = "clamp(150px, 46vw, 200px)"; // largeur des cartes en carrousel (= grille)
+// Largeur des cartes en carrousel = exactement la moitié de la rangée visible
+// (gap 12 → 50% − 6px), pour afficher pile 2 cartes dans la largeur comme la
+// grille de /recipes ; plafonné à 200px sur les écrans larges (desktop).
+const CARD_W = "clamp(150px, calc(50% - 6px), 200px)";
 
 // Carte d'une recette publique : visuel (hover-lift) + crédit créateur & date dessous.
 function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, style }) {

@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "./Icon.jsx";
 import { CHANGELOG } from "../constants/changelog.js";
-import { renderInline } from "../lib/markdownInline.jsx";
+import { renderInline } from "./markdownInline.jsx";
 
 export function ChangelogSection() {
   const [open, setOpen] = React.useState({});

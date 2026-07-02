@@ -26,7 +26,7 @@ export function usePublicRecipeView({ user, recipes, location, navigate }) {
     if (pub?.authorUid === user?.uid && recipes.some(r => r.id === pub.originalId)) {
       // On vient de Découvrir (Accueil) : on mémorise l'origine pour que le bouton
       // « retour » de la fiche perso revienne à l'Accueil et non à la liste Recettes.
-      navigate(`/recipes/${pub.originalId}`, { state: { from: "/home" } });
+      navigate(`/recipes/${pub.originalId}`, { state: { fromPath: "/home" } });
       return;
     }
     setEntry({ id: pub.pubId, value: { pub, components: components || [] } });
