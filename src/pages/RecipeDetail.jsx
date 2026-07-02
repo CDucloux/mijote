@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { StepTip } from "../components/StepTip.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
@@ -624,12 +625,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                       {step.text && (
                         <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: (step.tip || hasPills || step.image) ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>
                       )}
-                      {step.tip && (
-                        <div style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 10, padding: "9px 11px", marginBottom: (hasPills || step.image) ? 10 : 0 }}>
-                          <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={15} color="var(--blue)" /></span>
-                          <p style={{ fontSize: 12.5, color: "var(--text)", lineHeight: 1.5, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}><span style={{ fontWeight: 700, color: "var(--blue)" }}>Astuce</span><span style={{ color: "var(--text3)", margin: "0 5px" }}>·</span><span style={{ fontStyle: "italic" }}>{step.tip}</span></p>
-                        </div>
-                      )}
+                      {step.tip && <StepTip tip={step.tip} style={{ marginBottom: (hasPills || step.image) ? 10 : 0 }} />}
                       {hasPills && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: step.image ? 10 : 0 }}>
                           {linkedIngs.map(ing => {
@@ -779,12 +775,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   <div key={step.id}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>Étape {i + 1}</div>
                     {step.text && <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 12, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
-                    {step.tip && (
-                      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
-                        <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={16} color="var(--blue)" /></span>
-                        <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.55, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}><span style={{ fontWeight: 700, color: "var(--blue)" }}>Astuce</span><span style={{ color: "var(--text3)", margin: "0 6px" }}>·</span><span style={{ fontStyle: "italic" }}>{step.tip}</span></p>
-                      </div>
-                    )}
+                    {step.tip && <StepTip tip={step.tip} style={{ marginBottom: 12 }} />}
                     {(linkedIngs.length > 0 || linkedUts.length > 0) && (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: step.image ? 12 : 0 }}>
                         {linkedIngs.map(ing => {

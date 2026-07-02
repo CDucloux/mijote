@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/Icon.jsx";
+import { StepTip } from "../components/StepTip.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
 import { TechniqueText } from "../components/TechniqueText.jsx";
@@ -224,15 +225,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                   </div>
                   <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
 
-                  {step.tip && (
-                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "rgba(91,156,246,0.12)", border: "1px solid rgba(91,156,246,0.35)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
-                      <span style={{ flexShrink: 0, marginTop: 1 }}><Icon name="bulb" size={20} color="var(--blue)" /></span>
-                      <div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--blue)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>Astuce</div>
-                        <p style={{ fontSize: 15, color: "var(--text)", lineHeight: 1.6, margin: 0 }}>{step.tip}</p>
-                      </div>
-                    </div>
-                  )}
+                  {step.tip && <StepTip tip={step.tip} size="lg" style={{ marginBottom: 20 }} />}
 
                   {linkedIngs.length > 0 && (
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>

@@ -61,7 +61,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
           <div class="step-title">Étape ${i + 1}</div>
         </div>
         ${s.text ? `<p class="step-text">${s.text}</p>` : ""}
-        ${s.tip ? `<p class="step-tip">💡 ${s.tip}</p>` : ""}
+        ${s.tip ? `<div class="step-tip"><span class="step-tip-ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.5.4.9 1 1 1.7l.1.5h5l.1-.5c.1-.7.5-1.3 1-1.7A6 6 0 0 0 12 3Z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="step-tip-body"><span class="step-tip-label">Astuce</span>${s.tip}</span></div>` : ""}
         ${pills ? `<div class="step-pills">${pills}</div>` : ""}
       </div>`;
   }).join("");
@@ -168,7 +168,10 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .step-title { font-weight: 700; font-size: 14px; color: var(--accent); }
     .step-text { color: var(--text2); line-height: 1.65; padding-left: 40px; }
-    .step-tip { color: var(--text2); font-style: italic; line-height: 1.55; padding: 7px 11px; margin: 8px 0 0 40px; background: rgba(91,156,246,0.13); border: 1px solid rgba(91,156,246,0.4); border-radius: 8px; font-size: 12.5px; }
+    .step-tip { display: flex; gap: 9px; align-items: flex-start; margin: 9px 0 0 40px; padding: 9px 12px; background: rgba(91,156,246,0.10); border: 1px solid rgba(91,156,246,0.30); border-left: 3px solid #5b9cf6; border-radius: 9px; font-size: 12.5px; line-height: 1.55; }
+    .step-tip-ico { flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px; background: #5b9cf6; display: inline-flex; align-items: center; justify-content: center; }
+    .step-tip-body { color: var(--text2); }
+    .step-tip-label { display: block; font-size: 9px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: #5b9cf6; margin-bottom: 2px; }
     .step-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-left: 40px; }
     /* Annexe composants */
     .comp-block { margin-bottom: 28px; padding: 16px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
