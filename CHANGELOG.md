@@ -1,5 +1,33 @@
 # Changelog – Mijoté
 
+## v3.2.0 – Poivre · Difficulté, partage & confort mobile
+
+### Difficulté des recettes
+- **Glossaire des techniques enrichi** : 63 gestes culinaires classés par famille, chacun avec une **difficulté (1–5)** – de « ciseler » à « tempérer le chocolat »
+- **Gestion des techniques dans l'app** (admin) : ajout / édition / suppression d'un geste directement dans l'interface, comme les ingrédients, en plus de l'import/export YAML
+- **Score de difficulté** d'une recette, estimé à partir des gestes repérés dans ses étapes (max des difficultés + modificateurs : nombre de gestes, préparations de base, longueur) – affiché en **badge dans la fiche**, avec le détail des gestes qui le tirent
+
+### Partage
+- **Feuille de partage** repensée : aperçu de la recette + **copier le lien**, **WhatsApp**, **SMS** et partage natif de l'appareil
+
+### Confort mobile
+- **Retour tactile** façon app native : les éléments s'assombrissent/rétractent sous le doigt ; les lignes d'ingrédients s'éclaircissent progressivement à l'appui maintenu
+- **Collapse du hero** de la fiche recette **progressif et lié au scroll** (dans les deux sens), sans à-coup
+- Suppression du contour bleu au tap, bulle de technique qui ne déborde plus
+
+### Accueil & recettes
+- Carte **Foyer** en tête de l'Accueil, épurée (liseré accent) ; salutation **Bonjour / Bonsoir**
+- Carrousels **Découverte** et squelettes de chargement alignés sur **2 cartes** dans la largeur, comme la grille
+- **Tri** des recettes en *segmented control* distinct des filtres
+- **Astuces d'étape** redessinées (icône dédiée, une ligne) dans l'app **et le PDF**
+- Éditeur : styles de cuisine allégés, **icône de carnet** sur les pills
+
+### Planning
+- Export **Agenda** (renommé, plus clair que « .ics ») ; en foyer, les membres sont ajoutés comme **participants** aux repas
+
+### Sous le capot
+- Structure du code clarifiée : `screens/` → `pages/` (suffixes `*Page`), quelques renommages de cohérence
+
 ## v3.1.0 – Cardamome · Foyer partagé & communauté de mijoteurs
 
 ### Foyer partagé
