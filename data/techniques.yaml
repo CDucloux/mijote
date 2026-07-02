@@ -9,6 +9,8 @@
 #   aliases     formes du verbe à reconnaître plus tard au survol en CookMode
 #               (infinitif, participe, conjugaisons courantes). Minuscules.
 #   category    decoupe | cuisson | liaison | preparation | dressage
+#   difficulty  entier 1–5 (1 Très facile … 5 Expert). Alimente le score de
+#               difficulté d'une recette (max des gestes + modificateurs).
 #   definition  1–2 phrases, rédaction originale (le texte d'Escoffier est
 #               adapté, jamais recopié — l'OCR du Guide est bruité).
 #   source      attribution / inspiration (facultatif).
@@ -19,6 +21,7 @@
   name: Suer
   aliases: [suer, faire suer, sué, suée]
   category: cuisson
+  difficulty: 1
   definition: >
     Cuire doucement un aliment — souvent des légumes — dans un peu de corps gras,
     à feu doux et sans coloration, pour lui faire rendre son eau et concentrer
@@ -29,6 +32,7 @@
   name: Déglacer
   aliases: [déglacer, deglacer, déglacé, déglace]
   category: cuisson
+  difficulty: 2
   definition: >
     Dissoudre les sucs caramélisés au fond d'un récipient de cuisson en y versant
     un liquide (vin, fonds, vinaigre) et en grattant, pour en faire la base d'une
@@ -39,6 +43,7 @@
   name: Monder
   aliases: [monder, émonder, emonder, mondé, monde]
   category: preparation
+  difficulty: 1
   definition: >
     Retirer la peau d'un aliment (tomate, amande, pêche) après l'avoir brièvement
     plongé dans l'eau bouillante puis refroidi.
@@ -47,6 +52,7 @@
   name: Blanchir
   aliases: [blanchir, blanchi, blanchie, blanchit]
   category: cuisson
+  difficulty: 1
   definition: >
     Plonger un aliment quelques instants dans l'eau bouillante (puis souvent le
     rafraîchir) pour le raffermir, l'attendrir, fixer sa couleur ou en retirer
@@ -56,6 +62,7 @@
   name: Émulsionner
   aliases: [émulsionner, emulsionner, émulsion, monter une émulsion]
   category: liaison
+  difficulty: 4
   definition: >
     Mélanger énergiquement deux liquides qui ne se lient pas naturellement (gras
     et aqueux), souvent à l'aide d'un jaune d'œuf ou de moutarde, pour obtenir une
@@ -65,6 +72,7 @@
   name: Napper
   aliases: [napper, nappé, nappe, nappant]
   category: dressage
+  difficulty: 2
   definition: >
     Recouvrir un mets d'une couche régulière de sauce ; la sauce « nappe » quand
     elle est assez réduite pour tenir sur le dos d'une cuillère.
@@ -74,6 +82,7 @@
   name: Sauter
   aliases: [sauter, sauté, sautée, faire sauter]
   category: cuisson
+  difficulty: 2
   definition: >
     Cuire vivement un aliment dans un peu de matière grasse très chaude, en le
     faisant sauter ou en le remuant, pour le colorer sans qu'il rende son jus.
@@ -82,6 +91,7 @@
   name: Braiser
   aliases: [braiser, braisé, braisée, braise]
   category: cuisson
+  difficulty: 2
   definition: >
     Cuire lentement à couvert, avec peu de liquide aromatique, un aliment d'abord
     rissolé — méthode douce et longue qui attendrit les pièces fermes.
@@ -90,6 +100,7 @@
   name: Pocher
   aliases: [pocher, poché, pochée, poche]
   category: cuisson
+  difficulty: 2
   definition: >
     Cuire un aliment dans un liquide frémissant (jamais en pleine ébullition) pour
     préserver sa tendreté et sa forme.
@@ -98,6 +109,7 @@
   name: Rissoler
   aliases: [rissoler, rissolé, rissolée, rissole]
   category: cuisson
+  difficulty: 2
   definition: >
     Colorer vivement la surface d'un aliment dans un corps gras chaud pour obtenir
     une croûte dorée et savoureuse.
@@ -107,6 +119,7 @@
   name: Singer
   aliases: [singer, singé, singe]
   category: liaison
+  difficulty: 2
   definition: >
     Saupoudrer de farine un aliment en cours de cuisson, puis la cuire sur place,
     pour lier la sauce qui se formera au mouillement.
@@ -116,6 +129,7 @@
   name: Réduire
   aliases: [réduire, reduire, réduit, réduction, réduite]
   category: cuisson
+  difficulty: 2
   definition: >
     Faire évaporer une partie de l'eau d'un liquide par ébullition pour en
     concentrer les saveurs et l'épaissir.
@@ -124,6 +138,7 @@
   name: Clarifier
   aliases: [clarifier, clarifié, clarification, clarifie]
   category: preparation
+  difficulty: 4
   definition: >
     Rendre un liquide limpide : un consommé à l'aide de blancs d'œuf et de viande
     hachée, un beurre en éliminant le petit-lait et la caséine.
@@ -133,6 +148,7 @@
   name: Ciseler
   aliases: [ciseler, ciselé, ciselée, cisèle]
   category: decoupe
+  difficulty: 1
   definition: >
     Tailler finement en très petits dés (oignon, échalote) ; pour une herbe,
     la couper en fines lanières.
@@ -141,6 +157,7 @@
   name: Émincer
   aliases: [émincer, emincer, émincé, émince]
   category: decoupe
+  difficulty: 1
   definition: >
     Couper un aliment en tranches fines et régulières.
 
@@ -148,6 +165,7 @@
   name: Hacher
   aliases: [hacher, haché, hachée, hache]
   category: decoupe
+  difficulty: 1
   definition: >
     Réduire un aliment en très petits morceaux au couteau ou au hachoir.
 
@@ -155,6 +173,7 @@
   name: Concasser
   aliases: [concasser, concassé, concassée, concasse]
   category: decoupe
+  difficulty: 1
   definition: >
     Hacher grossièrement (tomates, poivre, os) en morceaux irréguliers.
 
@@ -162,6 +181,7 @@
   name: Tailler en julienne
   aliases: [julienne, tailler en julienne, en julienne]
   category: decoupe
+  difficulty: 3
   definition: >
     Détailler un légume en fins bâtonnets allongés, de l'épaisseur d'une
     allumette.
@@ -170,6 +190,7 @@
   name: Tailler en brunoise
   aliases: [brunoise, tailler en brunoise, en brunoise]
   category: decoupe
+  difficulty: 3
   definition: >
     Détailler un légume en très petits dés réguliers, plus fins que la
     mirepoix.
@@ -179,6 +200,7 @@
   name: Chemiser
   aliases: [chemiser, chemisé, chemisée, chemise]
   category: preparation
+  difficulty: 2
   definition: >
     Tapisser l'intérieur d'un moule (de papier, de gelée, de farce, de sucre)
     avant de le garnir.
@@ -187,6 +209,7 @@
   name: Foncer
   aliases: [foncer, foncé, foncée, fonce]
   category: preparation
+  difficulty: 2
   definition: >
     Garnir le fond et les parois d'un moule ou d'un cercle avec une abaisse de
     pâte.
@@ -195,6 +218,7 @@
   name: Abaisser
   aliases: [abaisser, abaissé, abaisse, abaissée]
   category: preparation
+  difficulty: 2
   definition: >
     Étaler une pâte au rouleau pour l'amener à l'épaisseur voulue ; le résultat
     s'appelle une « abaisse ».
@@ -203,6 +227,7 @@
   name: Paner
   aliases: [paner, pané, panée, pane]
   category: preparation
+  difficulty: 1
   definition: >
     Enrober un aliment de chapelure (souvent après l'avoir passé dans la farine
     puis l'œuf battu) avant de le frire ou de le sauter.
@@ -211,6 +236,7 @@
   name: Vanner
   aliases: [vanner, vanné, vannée, vanne]
   category: preparation
+  difficulty: 1
   definition: >
     Remuer une sauce ou une crème pendant son refroidissement pour l'empêcher de
     croûter en surface et la garder lisse.
@@ -220,6 +246,7 @@
   name: Dépouiller
   aliases: [dépouiller, depouiller, dépouillé, dépouille, dépouillement]
   category: cuisson
+  difficulty: 2
   definition: >
     Retirer au fur et à mesure l'écume et les graisses qui montent à la surface
     d'un fonds ou d'une sauce en cuisson lente, pour l'affiner.
@@ -229,6 +256,7 @@
   name: Glacer
   aliases: [glacer, glacé, glacée, glace]
   category: dressage
+  difficulty: 2
   definition: >
     Donner un aspect brillant à un mets : en le caramélisant légèrement, en le
     nappant d'un sirop, ou en le passant sous une chaleur vive.
@@ -237,6 +265,7 @@
   name: Monter au beurre
   aliases: [monter au beurre, monté au beurre, beurre monté]
   category: liaison
+  difficulty: 3
   definition: >
     Incorporer hors du feu de petits morceaux de beurre froid à une sauce en la
     fouettant, pour la lier, l'enrichir et la lustrer.
@@ -245,6 +274,7 @@
   name: Fouetter
   aliases: [fouetter, fouetté, fouettée, fouette]
   category: preparation
+  difficulty: 1
   definition: >
     Battre vivement au fouet pour mélanger, émulsionner ou incorporer de l'air
     (blancs en neige, crème, sauce).
@@ -253,6 +283,7 @@
   name: Caraméliser
   aliases: [caraméliser, carameliser, caramélisé, caramélise]
   category: cuisson
+  difficulty: 3
   definition: >
     Transformer un sucre en caramel par la chaleur ; par extension, colorer la
     surface d'un aliment riche en sucres.
@@ -261,6 +292,7 @@
   name: Faire revenir
   aliases: [revenir, faire revenir, revenu, revenue]
   category: cuisson
+  difficulty: 1
   definition: >
     Colorer légèrement un aliment dans un corps gras chaud en début de cuisson,
     pour développer ses arômes.
@@ -270,6 +302,7 @@
   name: Mariner
   aliases: [mariner, mariné, marinée, marine, marinade]
   category: preparation
+  difficulty: 1
   definition: >
     Laisser tremper un aliment dans un liquide aromatique (vin, huile, aromates)
     pour le parfumer et l'attendrir avant cuisson.
@@ -278,6 +311,7 @@
   name: Détendre
   aliases: [détendre, detendre, détendu, détend]
   category: liaison
+  difficulty: 1
   definition: >
     Assouplir une préparation trop épaisse en y ajoutant un peu de liquide
     (eau, lait, fonds).
@@ -286,6 +320,7 @@
   name: Lustrer
   aliases: [lustrer, lustré, lustrée, lustre]
   category: dressage
+  difficulty: 2
   definition: >
     Donner du brillant à un mets en le badigeonnant de beurre clarifié ou de
     gelée juste avant de servir.
