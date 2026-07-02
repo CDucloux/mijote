@@ -15,7 +15,7 @@ import { ING_MD_COLUMNS, formatTips } from "../lib/ingredientsMarkdown.js";
 import {
   parseIngredientsYaml, parseUtensilsYaml, parseTechniquesYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
-  TECHNIQUE_CATEGORIES,
+  TECHNIQUE_CATEGORIES, slugifyId,
 } from "../lib/dataYaml.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
@@ -72,6 +72,18 @@ function YamlImport({ onText, warn }) {
 }
 
 
+// Niveau de difficulté d'un geste : 5 pastilles, colorées vert→ambre→rouge.
+const DIFFICULTY_COLOR = (lvl) => lvl <= 2 ? "var(--green)" : lvl === 3 ? "#e8920a" : "var(--red)";
+const DIFFICULTY_LABEL = { 1: "Très facile", 2: "Facile", 3: "Intermédiaire", 4: "Difficile", 5: "Expert" };
+function DifficultyPips({ level }) {
+  if (!level) return null;
+  return (
+    <span style={{ display: "inline-flex", gap: 3, alignItems: "center" }} title={`Difficulté ${level}/5 · ${DIFFICULTY_LABEL[level]}`}>
+      {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= level ? DIFFICULTY_COLOR(level) : "var(--surface3)" }} />)}
+    </span>
+  );
+}
+
 export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,6 +100,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   }, [configSectionParam]);
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
+  const [editTech, setEditTech] = useState(null);
   const [editCol, setEditCol] = useState(null);
   const [editCat, setEditCat] = useState(null); // { key, label, color, icon, isNew }
   const [confirmDelCat, setConfirmDelCat] = useState(null); // { key, label }
@@ -130,6 +143,21 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     if (item?.image) deleteImageByUrl(item.image);
     setUtensilDB(prev => prev.filter(d => d.id !== id));
   };
+  // Upsert d'un geste technique (master). N'inclut que des clés définies (Firestore).
+  const saveTech = raw => {
+    const name = (raw.name || "").trim();
+    const definition = (raw.definition || "").trim();
+    if (!name || !definition) { setMdError("Nom et définition sont requis."); return; }
+    const id = raw.id || slugifyId("tech_", name);
+    const item = { id, name, category: raw.category || "preparation", definition };
+    const aliases = [...new Set((raw.aliases || []).map(a => (a || "").trim().toLowerCase()).filter(Boolean))];
+    if (aliases.length) item.aliases = aliases;
+    if (raw.difficulty) item.difficulty = raw.difficulty;
+    if ((raw.source || "").trim()) item.source = raw.source.trim();
+    setTechniques?.(prev => prev.find(t => t.id === id) ? prev.map(t => t.id === id ? item : t) : [...prev, item]);
+    setEditTech(null);
+  };
+  const delTech = id => setTechniques?.(prev => prev.filter(t => t.id !== id));
 
   // ── Categories (admin only) ─────────────────────────────────────────────────────
   const slugifyCat = (label) => "cat_" + label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 32);
@@ -336,9 +364,9 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           ))}
         </div>
         {/* Compteur + bannière admin : figés avec l'en-tête (restent visibles au scroll), pour Ingrédients et Ustensiles */}
-        {(section === "ingredients" || section === "ustensiles") && (() => {
-          const n = section === "ingredients" ? ingredientDB.length : utensilDB.length;
-          const noun = section === "ingredients" ? "ingrédient" : "ustensile";
+        {(section === "ingredients" || section === "ustensiles" || section === "techniques") && (() => {
+          const n = section === "ingredients" ? ingredientDB.length : section === "ustensiles" ? utensilDB.length : techniques.length;
+          const noun = section === "ingredients" ? "ingrédient" : section === "ustensiles" ? "ustensile" : "technique";
           return (
             <div style={{ paddingTop: 14 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--text2)", padding: "0 2px", marginBottom: 10 }}>
@@ -596,27 +624,41 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
         {section === "techniques" && (() => {
           const cats = Object.keys(TECHNIQUE_CATEGORIES);
-          const byCat = cats.map(c => [c, [...techniques].filter(t => t.category === c).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))]).filter(([, list]) => list.length);
+          // Admin : toutes les catégories (pour pouvoir ajouter partout). Sinon : non vides.
+          const byCat = cats
+            .map(c => [c, [...techniques].filter(t => t.category === c).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))])
+            .filter(([, list]) => isAdmin || list.length);
           return (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="slide-up">
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className="slide-up">
               <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: 0 }}>
-                Glossaire des gestes culinaires (suer, déglacer, monder…). Il servira bientôt à expliquer les verbes d'une étape directement dans le mode pas-à-pas.
+                Glossaire des gestes culinaires (suer, déglacer, monder…). Chaque geste porte une <strong>difficulté</strong> (1–5), socle du futur score de difficulté d'une recette.
               </p>
 
-              {techniques.length === 0 && (
+              {!isAdmin && techniques.length === 0 && (
                 <div style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "24px 16px", background: "var(--surface)", border: "1px dashed var(--border)", borderRadius: 14 }}>
-                  Aucune technique pour l'instant.{isAdmin ? " Importe un fichier YAML ci-dessous." : ""}
+                  Aucune technique pour l'instant.
                 </div>
               )}
 
               {byCat.map(([catKey, list]) => (
-                <div key={catKey}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{TECHNIQUE_CATEGORIES[catKey]}</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {list.map(t => (
-                      <div key={t.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: "12px 14px" }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                <div key={catKey} style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderBottom: list.length ? "1px solid var(--border)" : "none" }}>
+                    <div style={{ flex: 1, fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      {TECHNIQUE_CATEGORIES[catKey]} <span style={{ color: "var(--text3)", opacity: 0.7 }}>· {list.length}</span>
+                    </div>
+                    {isAdmin && (
+                      <button className="btn btn-primary btn-sm" style={{ flexShrink: 0, padding: "4px 10px", fontSize: 11 }}
+                        onClick={() => setEditTech({ id: "", name: "", category: catKey, definition: "", aliases: [], difficulty: undefined, source: "" })}>
+                        <Icon name="plus" size={12} /> Ajouter
+                      </button>
+                    )}
+                  </div>
+                  {list.map((t, i) => (
+                    <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderTop: i === 0 ? "none" : "1px solid var(--border)" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 14, fontWeight: 600 }}>{t.name}</span>
+                          <DifficultyPips level={t.difficulty} />
                           {t.source && <span style={{ fontSize: 10.5, color: "var(--text3)" }}>· {t.source}</span>}
                         </div>
                         <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "5px 0 0" }}>{t.definition}</p>
@@ -626,8 +668,17 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
+                      {isAdmin && (
+                        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                          <button onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier" style={{ color: "var(--text3)", padding: 4 }}><Icon name="edit" size={14} /></button>
+                          <button onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer" style={{ color: "var(--text3)", padding: 4 }}><Icon name="trash" size={14} /></button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {isAdmin && list.length === 0 && (
+                    <div style={{ padding: "12px 14px", fontSize: 12.5, color: "var(--text3)", fontStyle: "italic" }}>Aucun geste dans cette catégorie.</div>
+                  )}
                 </div>
               ))}
 
@@ -899,17 +950,55 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         </SwipeableSheet>
       )}
 
+      {/* Éditeur de geste technique (admin) */}
+      {editTech && (
+        <SwipeableSheet onClose={() => setEditTech(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editTech.id ? "Modifier" : "Nouveau"} geste</h3>
+          <div className="field-label">Nom</div>
+          <input className="field-input" placeholder="ex: Émulsionner" value={editTech.name} onChange={e => setEditTech(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div className="field-label">Catégorie</div>
+          <select className="field-input" value={editTech.category || "preparation"} onChange={e => setEditTech(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+            {Object.entries(TECHNIQUE_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+          <div className="field-label">Difficulté</div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 4 }}>
+            {[1, 2, 3, 4, 5].map(n => {
+              const on = editTech.difficulty === n;
+              return (
+                <button key={n} onClick={() => setEditTech(p => ({ ...p, difficulty: p.difficulty === n ? undefined : n }))}
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    background: on ? DIFFICULTY_COLOR(n) : "var(--surface2)", color: on ? "#fff" : "var(--text2)",
+                    border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{n}</button>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 12 }}>{editTech.difficulty ? DIFFICULTY_LABEL[editTech.difficulty] : "Non définie (clique un chiffre ; re-clique pour effacer)."}</div>
+          <div className="field-label">Définition</div>
+          <textarea className="field-input" rows={3} placeholder="Que veut dire ce geste ?" value={editTech.definition} onChange={e => setEditTech(p => ({ ...p, definition: e.target.value }))} style={{ marginBottom: 12, resize: "vertical", minHeight: 64 }} />
+          <div className="field-label">Alias / synonymes</div>
+          <div style={{ marginBottom: 12 }}>
+            <TagInput tags={editTech.aliases || []} onChange={v => setEditTech(p => ({ ...p, aliases: v }))} allTags={[]} label="" placeholder="fouetter, battre…" inputId="tech-alias-input" commitOnBlur dedupeInsensitive />
+          </div>
+          <div className="field-label">Source (optionnel)</div>
+          <input className="field-input" placeholder="ex: Escoffier, Le Guide Culinaire" value={editTech.source || ""} onChange={e => setEditTech(p => ({ ...p, source: e.target.value }))} style={{ marginBottom: 16 }} />
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditTech(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveTech(editTech)}>Sauvegarder</button>
+          </div>
+        </SwipeableSheet>
+      )}
+
 
       {/* Category delete confirmation */}
       {confirmDel && (
         <SwipeableSheet onClose={() => setConfirmDel(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer {confirmDel.type === "ing" ? "l'ingrédient" : "l'ustensile"} ?</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer {confirmDel.type === "ing" ? "l'ingrédient" : confirmDel.type === "tech" ? "le geste" : "l'ustensile"} ?</h3>
           <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
             « {confirmDel.item.name} » sera retiré de la base Master partagée. Cette action est visible par tous les utilisateurs et irréversible.
           </p>
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDel(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { confirmDel.type === "ing" ? delIng(confirmDel.item.id) : delUt(confirmDel.item.id); setConfirmDel(null); if (ingDetailId) navigate(-1); }}>Supprimer</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { if (confirmDel.type === "ing") delIng(confirmDel.item.id); else if (confirmDel.type === "tech") delTech(confirmDel.item.id); else delUt(confirmDel.item.id); setConfirmDel(null); if (ingDetailId) navigate(-1); }}>Supprimer</button>
           </div>
         </SwipeableSheet>
       )}
