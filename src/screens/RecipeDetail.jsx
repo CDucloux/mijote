@@ -26,9 +26,14 @@ import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const handleBack = location.state?.from
-    ? () => navigate(`/recipes/${location.state.from}`)
-    : onBack;
+  // `state.fromPath` = page d'origine (ex. "/home") → on y retourne tel quel.
+  // `state.from` = id d'une recette parente (préparation de base ouverte depuis
+  // une recette) → retour vers cette recette. Sinon, comportement par défaut.
+  const handleBack = location.state?.fromPath
+    ? () => navigate(location.state.fromPath)
+    : location.state?.from
+      ? () => navigate(`/recipes/${location.state.from}`)
+      : onBack;
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
   const [activeTab, setActiveTab] = useState("Ingrédients");
   const isDesktop = useIsDesktop();
