@@ -204,7 +204,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           )}
 
           {isCalm ? (
-            <button className="slide-up" onClick={() => setTab?.("meal-plan")}
+            <button className="slide-up pressable" onClick={() => setTab?.("meal-plan")}
               style={{ animationDelay: "0.04s", display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
               <span style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "rgba(76,175,125,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Icon name="check" size={15} color="var(--green)" />
@@ -219,7 +219,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {/* Repas du jour */}
               {meals.map((m, i) => (
-                <button key={i} onClick={() => onSelectRecipe?.(m.recipe.id)} className="slide-up"
+                <button key={i} onClick={() => onSelectRecipe?.(m.recipe.id)} className="slide-up pressable"
                   style={{
                     animationDelay: `${i * 0.06}s`,
                     display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
