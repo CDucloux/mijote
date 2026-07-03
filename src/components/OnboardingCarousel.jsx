@@ -76,28 +76,33 @@ export function OnboardingCarousel() {
   if (!show) return null;
   const last = active === SLIDES.length - 1;
 
+  const CARD_W = "min(78vw, 300px)"; // largeur d'une carte (mobile vw, plafond desktop)
+
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: "20px 0", animation: "fadeIn 0.2s ease" }}>
-      {/* Piste de cards défilable */}
-      <div ref={scrollerRef} onScroll={onScroll}
-        style={{ width: "100%", display: "flex", gap: 14, overflowX: "auto", scrollSnapType: "x mandatory", padding: "0 12vw", WebkitOverflowScrolling: "touch" }}>
-        {SLIDES.map((s, n) => (
-          <div key={n} style={{
-            flex: "0 0 76vw", maxWidth: 380, scrollSnapAlign: "center",
-            background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 24,
-            padding: "30px 24px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)",
-            display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-            minHeight: 340, justifyContent: "center",
-            opacity: n === active ? 1 : 0.4, transform: `scale(${n === active ? 1 : 0.9})`,
-            transition: "opacity 0.3s ease, transform 0.3s ease",
-          }}>
-            <span style={{ width: 78, height: 78, borderRadius: 22, display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(140deg, ${s.color}, ${s.color}bb)`, boxShadow: `0 10px 24px -6px ${s.color}88`, marginBottom: 22 }}>
-              <Icon name={s.icon} size={36} color="#fff" />
-            </span>
-            <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 12px", color: "var(--text)" }}>{s.title}</h2>
-            <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>{s.text}</p>
-          </div>
-        ))}
+      {/* Conteneur borné : centrage + dépassement des voisines calculés par rapport
+          à cette largeur (et non à l'écran entier) → correct mobile ET desktop. */}
+      <div style={{ width: "100%", maxWidth: 440 }}>
+        <div ref={scrollerRef} onScroll={onScroll}
+          style={{ display: "flex", gap: 14, overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", paddingInline: `calc(50% - ${CARD_W} / 2)` }}>
+          {SLIDES.map((s, n) => (
+            <div key={n} style={{
+              flex: `0 0 ${CARD_W}`, scrollSnapAlign: "center",
+              background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 24,
+              padding: "30px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)",
+              display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+              minHeight: 340, justifyContent: "center",
+              opacity: n === active ? 1 : 0.45, transform: `scale(${n === active ? 1 : 0.9})`,
+              transition: "opacity 0.3s ease, transform 0.3s ease",
+            }}>
+              <span style={{ width: 78, height: 78, borderRadius: 22, display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(140deg, ${s.color}, ${s.color}bb)`, boxShadow: `0 10px 24px -6px ${s.color}88`, marginBottom: 22 }}>
+                <Icon name={s.icon} size={36} color="#fff" />
+              </span>
+              <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 12px", color: "var(--text)" }}>{s.title}</h2>
+              <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>{s.text}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Contrôles (sur le fond, partagés) */}
