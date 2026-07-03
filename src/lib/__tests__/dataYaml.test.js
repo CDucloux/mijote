@@ -179,8 +179,9 @@ describe("YAML export round-trips (parse ∘ format = identity)", () => {
 `).items;
     const out = formatUtensilsYaml(src);
     // un saut de ligne vide avant chaque entrée suivante, pas avant la première
-    expect(out).toMatch(/\n\n- name: Bbb/);
-    expect(out).not.toMatch(/- name: Aaa\n- name: Bbb/);
+    // (les entrées commencent désormais par `- id:` : l'id est généré si absent)
+    expect(out).toMatch(/\n\n- id: db_u_bbb/);
+    expect(out).not.toMatch(/name: Aaa\n- id:/);
     // toujours réimportable malgré les lignes vides
     expect(parseUtensilsYaml(out).errors).toEqual([]);
   });
@@ -215,7 +216,21 @@ describe("parseUtensilsYaml", () => {
 `);
     expect(errors).toEqual([]);
     expect(items).toHaveLength(2);
-    expect(items[1].id).toBe("db_u_cass");
+    expect(items[1].id).toBe("db_u_cass"); // id explicite conservé
+  });
+
+  it("génère un id à partir du nom quand il est absent", () => {
+    const { items, errors } = parseUtensilsYaml(`- name: Économe`);
+    expect(errors).toEqual([]);
+    expect(items[0].id).toBe("db_u_econome");
+  });
+
+  it("rejette deux entrées avec le même id (généré ou explicite)", () => {
+    // deux noms identiques → même id généré → conflit signalé
+    expect(parseUtensilsYaml(`
+- name: Fouet
+- name: Fouet
+`).errors.join(" ")).toMatch(/double/);
   });
 
   it("requires a name", () => {

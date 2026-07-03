@@ -327,11 +327,14 @@ input,textarea,select{font-family:var(--ff-body);}
    volontairement sans scale global (certains boutons utilisent transform pour
    se positionner — on ne scale que des classes dont la racine ne l'utilise pas). */
 @media (hover: none) {
+  /* `!important` : indispensable pour les éléments animés à l'entrée (.slide-up,
+     fill-mode both) — sinon la valeur finale de l'animation (transform/opacity)
+     l'emporte sur ces règles :active et le retour tactile ne se voit pas. */
   button:active, a:active, [role="button"]:active, label:active, .pressable:active {
-    opacity: 0.62;
+    opacity: 0.62 !important;
   }
   .btn:active, .recipe-card:active, .notebook-card:active, .discover-card:active, .pressable:active {
-    transform: scale(0.97);
+    transform: scale(0.97) !important;
   }
   .btn, .recipe-card, .notebook-card, .discover-card, .pressable {
     transition: transform 0.11s ease, opacity 0.11s ease;

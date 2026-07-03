@@ -11,7 +11,7 @@ import { isRecipeInSeason } from "../lib/seasonality.js";
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
-export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
+export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, setTab }) {
   const [search, setSearch] = useState("");
   const [filterCuisine, setFilterCuisine] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
@@ -112,7 +112,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
-        {!search && !filterCuisine && !filterCol && (
+        {recipes.length > 0 && !search && !filterCuisine && !filterCol && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <h2 style={{ fontSize: 16, fontWeight: 600 }}>Carnets</h2>
@@ -165,6 +165,30 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             )}
           </div>
         )}
+        {recipes.length === 0 ? (
+          // ── Première connexion : 0 recette, c'est normal → on invite, sans afficher « Carnets » ni « Recettes (0) » ──
+          <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 420, margin: "0 auto" }}>
+            <div style={{ position: "relative", width: 88, height: 88, borderRadius: 24, background: "linear-gradient(150deg, rgba(232,112,58,0.18), rgba(240,192,96,0.14))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, boxShadow: "0 10px 30px -14px rgba(232,112,58,0.5)" }}>
+              <span style={{ fontSize: 40, lineHeight: 1 }}>🍳</span>
+              <span style={{ position: "absolute", top: -6, right: -6 }}><Icon name="sparkle" size={20} color="var(--accent)" /></span>
+            </div>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta bibliothèque</h3>
+            <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
+              Elle est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+              <button className="btn btn-primary" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={onNewRecipe}>
+                <Icon name="plus" size={16} /> Créer ma première recette
+              </button>
+              {setTab && (
+                <button className="btn btn-ghost" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={() => setTab("home")}>
+                  <Icon name="sparkle" size={16} color="var(--accent)" /> Explorer les recettes publiques
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+        <>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexWrap: "wrap" }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -190,7 +214,24 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <div style={{ width: 22, height: 22, border: "2.5px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
           </div>
         )}
-        {filtered.length === 0 && <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}><Icon name="search" size={32} /><br /><span style={{ fontSize: 14, marginTop: 8, display: "block" }}>Aucune recette trouvée</span></div>}
+        {filtered.length === 0 && (
+          <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 400, margin: "0 auto" }}>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <Icon name="search" size={30} color="var(--text3)" />
+            </div>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Aucune recette trouvée</h3>
+            <p style={{ fontSize: 13.5, color: "var(--text3)", lineHeight: 1.5, marginBottom: 18 }}>
+              {search ? <>Rien ne correspond à « <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{search}</strong> » dans ta bibliothèque.<br />Essaie un autre mot-clé ou ajuste tes filtres.</> : "Aucune recette ne correspond à ces filtres."}
+            </p>
+            {(search || filterCuisine || seasonOnly) && (
+              <button className="btn btn-ghost" style={{ padding: "9px 18px", borderRadius: 12, fontSize: 13.5 }} onClick={() => { setSearch(""); setFilterCuisine(null); setSeasonOnly(false); setShowCuisines(false); }}>
+                <Icon name="close" size={14} /> Réinitialiser la recherche
+              </button>
+            )}
+          </div>
+        )}
+        </>
+        )}
       </div>
 
       {/* Création rapide d'un carnet (mêmes pickers que Config) */}
