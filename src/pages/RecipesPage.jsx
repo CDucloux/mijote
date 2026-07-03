@@ -221,7 +221,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             </div>
             <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Aucune recette trouvée</h3>
             <p style={{ fontSize: 13.5, color: "var(--text3)", lineHeight: 1.5, marginBottom: 18 }}>
-              {search ? <>Rien ne correspond à « <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{search}</strong> ».<br />Essaie un autre mot-clé ou ajuste tes filtres.</> : "Aucune recette ne correspond à ces filtres."}
+              {search ? <>Rien ne correspond à « <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{search}</strong> » dans ta bibliothèque.<br />Essaie un autre mot-clé ou ajuste tes filtres.</> : "Aucune recette ne correspond à ces filtres."}
             </p>
             {(search || filterCuisine || seasonOnly) && (
               <button className="btn btn-ghost" style={{ padding: "9px 18px", borderRadius: 12, fontSize: 13.5 }} onClick={() => { setSearch(""); setFilterCuisine(null); setSeasonOnly(false); setShowCuisines(false); }}>
