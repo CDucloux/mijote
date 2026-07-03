@@ -163,8 +163,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const seasonResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);
   const { techniques } = useAppShell();
-  const difficulty = useMemo(() => computeDifficulty(recipe, techniques), [recipe, techniques]);
-  const difficultyExplain = useMemo(() => explainDifficulty(recipe, techniques), [recipe, techniques]);
+  const difficulty = useMemo(() => computeDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
+  const difficultyExplain = useMemo(() => explainDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
   const difficultyTitle = difficulty.overridden
     ? `Difficulté ${difficulty.score}/5 (définie manuellement)`
     : difficulty.drivers.length ? `Difficulté ${difficulty.score}/5 · ${difficulty.drivers.join(", ")}` : undefined;

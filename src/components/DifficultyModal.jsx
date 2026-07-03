@@ -43,7 +43,7 @@ export function DifficultyModal({ data, onClose }) {
         ) : (
           <>
             <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 22px" }}>
-              Mijoté repère les <strong style={{ color: "var(--text)" }}>gestes techniques</strong> dans les étapes et retient le plus exigeant, puis ajoute des points selon la charge de travail.
+              Mijoté repère les <strong style={{ color: "var(--text)" }}>gestes techniques</strong> dans les étapes{data.inheritedFromBases ? " de la recette et de ses préparations de base" : ""} et retient le plus exigeant, puis ajoute des points selon la charge de travail.
             </p>
 
             {/* Geste dominant */}
@@ -81,11 +81,12 @@ export function DifficultyModal({ data, onClose }) {
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Gestes détectés ({data.techniques.length})</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                   {data.techniques.map(t => (
-                    <span key={t.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 11px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
+                    <span key={t.id} title={t.inherited ? "Hérité d'une préparation de base" : undefined} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 11px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
                       <span style={{ display: "inline-flex", gap: 2 }}>
                         {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: i <= t.difficulty ? difficultyColor(t.difficulty) : "var(--surface3)" }} />)}
                       </span>
                       {t.name}
+                      {t.inherited && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>· base</span>}
                     </span>
                   ))}
                 </div>

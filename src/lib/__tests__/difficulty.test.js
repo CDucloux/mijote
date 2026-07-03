@@ -39,6 +39,21 @@ describe("computeDifficulty", () => {
     expect(computeDifficulty(r, TECHS).score).toBe(4);
   });
 
+  it("hérite des gestes des préparations de base (héritage simple)", () => {
+    // La recette parente n'a aucun geste propre ; toute la technique est dans la base.
+    const base = { id: "sub1", name: "Sauce émulsionnée", steps: [step("émulsionner à feu doux")] };
+    const parent = { steps: [step("Assembler et servir.")], ingredients: [{ recipeId: "sub1" }] };
+    const d = computeDifficulty(parent, TECHS, { recipes: [base] });
+    // base émulsionner (4) + modif « préparation de base » (+1) = 5
+    expect(d.score).toBe(5);
+    expect(d.drivers).toEqual(["émulsionner"]);
+  });
+
+  it("sans la liste des recettes, ne peut pas hériter (comportement historique)", () => {
+    const parent = { steps: [step("Assembler et servir.")], ingredients: [{ recipeId: "sub1" }] };
+    expect(computeDifficulty(parent, TECHS).score).toBe(null);
+  });
+
   it("respecte difficultyOverride", () => {
     const r = { difficultyOverride: 2, steps: [step("flamber")] };
     const d = computeDifficulty(r, TECHS);
