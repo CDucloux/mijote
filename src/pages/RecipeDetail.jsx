@@ -9,6 +9,7 @@ import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { DifficultyBadge } from "../components/DifficultyBadge.jsx";
 import { NutritionModal } from "../components/NutritionModal.jsx";
 import { BaseInfoModal } from "../components/BaseInfoModal.jsx";
+import { DifficultyModal } from "../components/DifficultyModal.jsx";
 import { RecipeJournal } from "../components/RecipeJournal.jsx";
 import { RecipePlaceholder } from "../components/RecipePlaceholder.jsx";
 import { HeroMenu } from "../components/HeroMenu.jsx";
@@ -20,7 +21,7 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { fmtTime, capitalize } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
-import { computeDifficulty } from "../lib/difficulty.js";
+import { computeDifficulty, explainDifficulty } from "../lib/difficulty.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "../lib/recipeComponents.js";
 import { isOfficialAuthor } from "../lib/publicRecipes.js";
@@ -136,6 +137,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const [actionsOpen, setActionsOpen] = useState(false);
   const [dockClosing, setDockClosing] = useState(false);
   const [showBaseInfo, setShowBaseInfo] = useState(false);
+  const [showDifficulty, setShowDifficulty] = useState(false);
   const actionsRef = useRef(null);
   // Repli animé du dock : on joue l'animation inverse avant de démonter (évite le flicker).
   const closeDock = () => {
@@ -162,6 +164,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);
   const { techniques } = useAppShell();
   const difficulty = useMemo(() => computeDifficulty(recipe, techniques), [recipe, techniques]);
+  const difficultyExplain = useMemo(() => explainDifficulty(recipe, techniques), [recipe, techniques]);
   const difficultyTitle = difficulty.overridden
     ? `Difficulté ${difficulty.score}/5 (définie manuellement)`
     : difficulty.drivers.length ? `Difficulté ${difficulty.score}/5 · ${difficulty.drivers.join(", ")}` : undefined;
@@ -276,7 +279,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
               </span>
             )}
-            <DifficultyBadge score={difficulty.score} onImage title={difficultyTitle} />
+            <DifficultyBadge score={difficulty.score} onImage title={difficultyExplain ? "Voir comment la difficulté est calculée" : difficultyTitle} onClick={difficultyExplain ? () => setShowDifficulty(true) : undefined} />
             {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
             {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
             {!publicMode && <button onClick={() => setShowCollModal(true)} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>}
@@ -413,7 +416,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
                   </span>
                 )}
-                <DifficultyBadge score={difficulty.score} onImage title={difficultyTitle} />
+                <DifficultyBadge score={difficulty.score} onImage title={difficultyExplain ? "Voir comment la difficulté est calculée" : difficultyTitle} onClick={difficultyExplain ? () => setShowDifficulty(true) : undefined} />
                 {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
                 {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color, border: `1px solid ${col.color}66` }}>{col.name}</span> : null; })}
                 {!publicMode && <button onClick={() => setShowCollModal(true)} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer" }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>}
@@ -1046,6 +1049,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         </SwipeableSheet>
       )}
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
+      {showDifficulty && <DifficultyModal data={difficultyExplain} onClose={() => setShowDifficulty(false)} />}
       {showCollModal && (
         <SwipeableSheet onClose={() => setShowCollModal(false)}>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Carnets</h3>

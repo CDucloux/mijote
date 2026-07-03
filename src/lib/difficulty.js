@@ -52,3 +52,35 @@ export function computeDifficulty(recipe, techniques, opts = {}) {
   const drivers = used.filter(t => t.difficulty === base).map(t => t.name);
   return { score, drivers, overridden: false };
 }
+
+// Décompose le calcul pour l'expliquer à l'utilisateur : geste dominant, gestes
+// détectés et modificateurs appliqués (avec le plafond de +2). Renvoie `null`
+// quand il n'y a rien à expliquer (score non calculé faute de geste noté).
+export function explainDifficulty(recipe, techniques, opts = {}) {
+  const ov = recipe?.difficultyOverride;
+  if (Number.isInteger(ov) && ov >= 1 && ov <= 5) {
+    return { score: ov, overridden: true, base: null, techniques: [], drivers: [], mods: [], modsApplied: 0, modsCapped: false };
+  }
+
+  const index = opts.index || buildTechniqueIndex(techniques);
+  const used = techniquesInRecipe(recipe, index);
+  if (!used.length) return null;
+
+  const base = Math.max(...used.map(t => t.difficulty));
+  const distinct = used.length;
+  const nbComponents = componentCount(recipe);
+  const nbSteps = (recipe?.steps || []).length;
+
+  const mods = [
+    { label: "4 gestes techniques ou plus", detail: `${distinct} geste${distinct > 1 ? "s" : ""} détecté${distinct > 1 ? "s" : ""}`, applied: distinct >= 4 },
+    { label: "Au moins une préparation de base", detail: nbComponents ? `${nbComponents} sous-recette${nbComponents > 1 ? "s" : ""}` : "aucune sous-recette", applied: nbComponents >= 1 },
+    { label: "12 étapes ou plus", detail: `${nbSteps} étape${nbSteps > 1 ? "s" : ""}`, applied: nbSteps >= 12 },
+  ];
+  const rawMods = mods.filter(m => m.applied).length;
+  const modsApplied = Math.min(rawMods, 2);
+  const score = Math.min(5, Math.max(1, base + modsApplied));
+  const drivers = used.filter(t => t.difficulty === base).map(t => t.name);
+  const techList = [...used].sort((a, b) => b.difficulty - a.difficulty);
+
+  return { score, overridden: false, base, techniques: techList, drivers, mods, modsApplied, modsCapped: rawMods > 2 };
+}
