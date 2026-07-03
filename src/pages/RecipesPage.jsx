@@ -11,7 +11,7 @@ import { isRecipeInSeason } from "../lib/seasonality.js";
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
-export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections }) {
+export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, setTab }) {
   const [search, setSearch] = useState("");
   const [filterCuisine, setFilterCuisine] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
@@ -190,7 +190,33 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <div style={{ width: 22, height: 22, border: "2.5px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
           </div>
         )}
-        {filtered.length === 0 && <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}><Icon name="search" size={32} /><br /><span style={{ fontSize: 14, marginTop: 8, display: "block" }}>Aucune recette trouvée</span></div>}
+        {filtered.length === 0 && (
+          recipes.length === 0 ? (
+            // ── Première connexion : 0 recette, c'est normal → on invite plutôt qu'on constate un vide ──
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "36px 24px 48px", maxWidth: 420, margin: "0 auto" }}>
+              <div style={{ position: "relative", width: 88, height: 88, borderRadius: 24, background: "linear-gradient(150deg, rgba(232,112,58,0.18), rgba(240,192,96,0.14))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, boxShadow: "0 10px 30px -14px rgba(232,112,58,0.5)" }}>
+                <span style={{ fontSize: 40, lineHeight: 1 }}>🍳</span>
+                <span style={{ position: "absolute", top: -6, right: -6 }}><Icon name="sparkle" size={20} color="var(--accent)" /></span>
+              </div>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta cuisine</h3>
+              <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
+                Ton carnet est encore vierge. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                <button className="btn btn-primary" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={onNewRecipe}>
+                  <Icon name="plus" size={16} /> Créer ma première recette
+                </button>
+                {setTab && (
+                  <button className="btn btn-ghost" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={() => setTab("home")}>
+                    <Icon name="sparkle" size={16} color="var(--accent)" /> Explorer les recettes publiques
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}><Icon name="search" size={32} /><br /><span style={{ fontSize: 14, marginTop: 8, display: "block" }}>Aucune recette trouvée</span></div>
+          )
+        )}
       </div>
 
       {/* Création rapide d'un carnet (mêmes pickers que Config) */}
