@@ -243,13 +243,20 @@ export function parseUtensilsYaml(text) {
 
   const errors = [];
   const items = [];
+  const seenIds = new Set();
   list.forEach((raw, i) => {
     const where = `Entrée #${i + 1}${raw && raw.name ? ` « ${raw.name} »` : ""}`;
     if (!isObj(raw)) { errors.push(`${where} : ce n'est pas un objet.`); return; }
     const name = str(raw.name);
     if (!name || name.length > 120) { errors.push(`${where} : « name » manquant ou trop long.`); return; }
-    const row = { name };
-    if (raw.id != null) row.id = str(raw.id);
+    // Id stable généré depuis le nom quand il est absent (comme les techniques) :
+    // un ustensile ajouté sans `id` reste ainsi sûr côté seed (le seed pousse tel
+    // quel). Les ustensiles existants conservent leur id → les liens dans les
+    // recettes (référencées par id) ne bougent pas.
+    const id = str(raw.id) || slugifyId("db_u_", name);
+    if (seenIds.has(id)) { errors.push(`${where} : id en double « ${id} ».`); return; }
+    seenIds.add(id);
+    const row = { id, name };
     if (raw.image != null) row.image = str(raw.image);
     items.push(row);
   });
