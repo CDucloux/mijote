@@ -200,7 +200,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               </div>
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta cuisine</h3>
               <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
-                Ton carnet est encore vierge. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
+                Ton livre de recettes est encore vierge. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
                 <button className="btn btn-primary" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={onNewRecipe}>
