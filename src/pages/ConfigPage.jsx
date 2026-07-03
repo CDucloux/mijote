@@ -116,6 +116,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const [mdError, setMdError] = useState("");
   const [mdInfo, setMdInfo] = useState("");
   const toggleCat = k => setOpenCats(p => ({ ...p, [k]: !p[k] }));
+  const [openTechCats, setOpenTechCats] = useState({}); // catégories de techniques repliées par défaut
+  const toggleTechCat = k => setOpenTechCats(p => ({ ...p, [k]: !p[k] }));
 
   const saveIng = raw => {
     // Conseils : on retire les lignes vides, on supprime le champ si plus rien.
@@ -630,22 +632,29 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             .filter(([, list]) => isAdmin || list.length);
           return (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className="slide-up">
-              <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: 0 }}>
-                Glossaire des gestes culinaires (suer, déglacer, monder…). Chaque geste porte une <strong>difficulté</strong> (1–5), socle du futur score de difficulté d'une recette.
-              </p>
-
               {!isAdmin && techniques.length === 0 && (
                 <div style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "24px 16px", background: "var(--surface)", border: "1px dashed var(--border)", borderRadius: 14 }}>
                   Aucune technique pour l'instant.
                 </div>
               )}
 
-              {byCat.map(([catKey, list]) => (
+              {byCat.map(([catKey, list]) => {
+                const isOpen = openTechCats[catKey];
+                return (
                 <div key={catKey} style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderBottom: list.length ? "1px solid var(--border)" : "none" }}>
-                    <div style={{ flex: 1, fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                      {TECHNIQUE_CATEGORIES[catKey]} <span style={{ color: "var(--text3)", opacity: 0.7 }}>· {list.length}</span>
-                    </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px" }}>
+                    <button onClick={() => toggleTechCat(catKey)} style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
+                      <div style={{ flex: 1, fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        {TECHNIQUE_CATEGORIES[catKey]} <span style={{ color: "var(--text3)", opacity: 0.7 }}>· {list.length}</span>
+                      </div>
+                      <span style={{
+                        display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
+                        background: "var(--surface2)", border: "1px solid var(--border)",
+                        transition: "transform 0.25s ease", transform: isOpen ? "rotate(-90deg)" : "rotate(90deg)",
+                      }}>
+                        <Icon name="forward" size={12} color="var(--text3)" />
+                      </span>
+                    </button>
                     {isAdmin && (
                       <button className="btn btn-primary btn-sm" style={{ flexShrink: 0, padding: "4px 10px", fontSize: 11 }}
                         onClick={() => setEditTech({ id: "", name: "", category: catKey, definition: "", aliases: [], difficulty: undefined, source: "" })}>
@@ -653,34 +662,39 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                       </button>
                     )}
                   </div>
-                  {list.map((t, i) => (
-                    <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderTop: i === 0 ? "none" : "1px solid var(--border)" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 14, fontWeight: 600 }}>{t.name}</span>
-                          <DifficultyPips level={t.difficulty} />
-                          {t.source && <span style={{ fontSize: 10.5, color: "var(--text3)" }}>· {t.source}</span>}
-                        </div>
-                        <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "5px 0 0" }}>{t.definition}</p>
-                        {t.aliases?.length > 0 && (
-                          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8 }}>
-                            {t.aliases.map(a => <span key={a} style={{ fontSize: 10.5, color: "var(--text3)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "1px 7px" }}>{a}</span>)}
+                  {isOpen && (
+                    <div style={{ borderTop: "1px solid var(--border)", animation: "expandDown 0.2s ease" }}>
+                      {list.map((t, i) => (
+                        <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderTop: i === 0 ? "none" : "1px solid var(--border)" }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <span style={{ fontSize: 14, fontWeight: 600 }}>{t.name}</span>
+                              <DifficultyPips level={t.difficulty} />
+                              {t.source && <span style={{ fontSize: 10.5, color: "var(--text3)" }}>· {t.source}</span>}
+                            </div>
+                            <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "5px 0 0" }}>{t.definition}</p>
+                            {t.aliases?.length > 0 && (
+                              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 8 }}>
+                                {t.aliases.map(a => <span key={a} style={{ fontSize: 10.5, color: "var(--text3)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "1px 7px" }}>{a}</span>)}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      {isAdmin && (
-                        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                          <button onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier" style={{ color: "var(--text3)", padding: 4 }}><Icon name="edit" size={14} /></button>
-                          <button onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer" style={{ color: "var(--text3)", padding: 4 }}><Icon name="trash" size={14} /></button>
+                          {isAdmin && (
+                            <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                              <button onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier" style={{ color: "var(--text3)", padding: 4 }}><Icon name="edit" size={14} /></button>
+                              <button onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer" style={{ color: "var(--text3)", padding: 4 }}><Icon name="trash" size={14} /></button>
+                            </div>
+                          )}
                         </div>
+                      ))}
+                      {list.length === 0 && (
+                        <div style={{ padding: "12px 14px", fontSize: 12.5, color: "var(--text3)", fontStyle: "italic" }}>Aucun geste dans cette catégorie.</div>
                       )}
                     </div>
-                  ))}
-                  {isAdmin && list.length === 0 && (
-                    <div style={{ padding: "12px 14px", fontSize: 12.5, color: "var(--text3)", fontStyle: "italic" }}>Aucun geste dans cette catégorie.</div>
                   )}
                 </div>
-              ))}
+                );
+              })}
 
               {/* Import / Export (admin) */}
               {isAdmin && (
