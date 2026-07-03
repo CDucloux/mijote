@@ -215,7 +215,20 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </div>
         )}
         {filtered.length === 0 && (
-          <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}><Icon name="search" size={32} /><br /><span style={{ fontSize: 14, marginTop: 8, display: "block" }}>Aucune recette trouvée</span></div>
+          <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 400, margin: "0 auto" }}>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <Icon name="search" size={30} color="var(--text3)" />
+            </div>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Aucune recette trouvée</h3>
+            <p style={{ fontSize: 13.5, color: "var(--text3)", lineHeight: 1.5, marginBottom: 18 }}>
+              {search ? <>Rien ne correspond à « <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{search}</strong> ».<br />Essaie un autre mot-clé ou ajuste tes filtres.</> : "Aucune recette ne correspond à ces filtres."}
+            </p>
+            {(search || filterCuisine || seasonOnly) && (
+              <button className="btn btn-ghost" style={{ padding: "9px 18px", borderRadius: 12, fontSize: 13.5 }} onClick={() => { setSearch(""); setFilterCuisine(null); setSeasonOnly(false); setShowCuisines(false); }}>
+                <Icon name="close" size={14} /> Réinitialiser la recherche
+              </button>
+            )}
+          </div>
         )}
         </>
         )}
