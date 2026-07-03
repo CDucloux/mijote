@@ -336,8 +336,12 @@ input,textarea,select{font-family:var(--ff-body);}
   .btn:active, .recipe-card:active, .notebook-card:active, .discover-card:active, .pressable:active {
     transform: scale(0.97) !important;
   }
+  /* `!important` aussi sur la transition : certains éléments ont une transition
+     inline (border-color/box-shadow) qui, sinon, écrase celle-ci et fait snapper
+     le retour au relâchement. On garde donc le même retour progressif que la
+     carte « Mon foyer » (qui, elle, n'a pas de transition inline concurrente). */
   .btn, .recipe-card, .notebook-card, .discover-card, .pressable {
-    transition: transform 0.11s ease, opacity 0.11s ease;
+    transition: transform 0.14s ease, opacity 0.14s ease !important;
   }
 }
 /* Appui maintenu : le fond s'éclaircit progressivement tant que le doigt reste
