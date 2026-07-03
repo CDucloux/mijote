@@ -29,6 +29,7 @@ import { Icon } from "./components/Icon.jsx";
 import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/OfflineModal.jsx";
 import { HouseholdWelcome } from "./components/HouseholdWelcome.jsx";
+import { OnboardingCarousel } from "./components/OnboardingCarousel.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
@@ -579,6 +580,7 @@ function AppInner() {
         )}
         <OfflineModal />
         <HouseholdWelcome />
+        <OnboardingCarousel />
       </div>
     </AppShellProvider>
   );
