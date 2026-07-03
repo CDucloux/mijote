@@ -172,9 +172,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               <span style={{ fontSize: 40, lineHeight: 1 }}>🍳</span>
               <span style={{ position: "absolute", top: -6, right: -6 }}><Icon name="sparkle" size={20} color="var(--accent)" /></span>
             </div>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta cuisine</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta bibliothèque</h3>
             <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
-              Ta bibliothèque est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
+              Elle est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
               <button className="btn btn-primary" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={onNewRecipe}>
