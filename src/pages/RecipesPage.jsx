@@ -112,7 +112,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
-        {!search && !filterCuisine && !filterCol && (
+        {recipes.length > 0 && !search && !filterCuisine && !filterCol && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <h2 style={{ fontSize: 16, fontWeight: 600 }}>Carnets</h2>
@@ -165,6 +165,30 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             )}
           </div>
         )}
+        {recipes.length === 0 ? (
+          // ── Première connexion : 0 recette, c'est normal → on invite, sans afficher « Carnets » ni « Recettes (0) » ──
+          <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 420, margin: "0 auto" }}>
+            <div style={{ position: "relative", width: 88, height: 88, borderRadius: 24, background: "linear-gradient(150deg, rgba(232,112,58,0.18), rgba(240,192,96,0.14))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, boxShadow: "0 10px 30px -14px rgba(232,112,58,0.5)" }}>
+              <span style={{ fontSize: 40, lineHeight: 1 }}>🍳</span>
+              <span style={{ position: "absolute", top: -6, right: -6 }}><Icon name="sparkle" size={20} color="var(--accent)" /></span>
+            </div>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta cuisine</h3>
+            <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
+              Ta bibliothèque est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+              <button className="btn btn-primary" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={onNewRecipe}>
+                <Icon name="plus" size={16} /> Créer ma première recette
+              </button>
+              {setTab && (
+                <button className="btn btn-ghost" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={() => setTab("home")}>
+                  <Icon name="sparkle" size={16} color="var(--accent)" /> Explorer les recettes publiques
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+        <>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexWrap: "wrap" }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -191,31 +215,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </div>
         )}
         {filtered.length === 0 && (
-          recipes.length === 0 ? (
-            // ── Première connexion : 0 recette, c'est normal → on invite plutôt qu'on constate un vide ──
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "36px 24px 48px", maxWidth: 420, margin: "0 auto" }}>
-              <div style={{ position: "relative", width: 88, height: 88, borderRadius: 24, background: "linear-gradient(150deg, rgba(232,112,58,0.18), rgba(240,192,96,0.14))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, boxShadow: "0 10px 30px -14px rgba(232,112,58,0.5)" }}>
-                <span style={{ fontSize: 40, lineHeight: 1 }}>🍳</span>
-                <span style={{ position: "absolute", top: -6, right: -6 }}><Icon name="sparkle" size={20} color="var(--accent)" /></span>
-              </div>
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta cuisine</h3>
-              <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
-                Ta bibliothèque est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
-                <button className="btn btn-primary" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={onNewRecipe}>
-                  <Icon name="plus" size={16} /> Créer ma première recette
-                </button>
-                {setTab && (
-                  <button className="btn btn-ghost" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={() => setTab("home")}>
-                    <Icon name="sparkle" size={16} color="var(--accent)" /> Explorer les recettes publiques
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}><Icon name="search" size={32} /><br /><span style={{ fontSize: 14, marginTop: 8, display: "block" }}>Aucune recette trouvée</span></div>
-          )
+          <div style={{ textAlign: "center", color: "var(--text3)", padding: "40px 0" }}><Icon name="search" size={32} /><br /><span style={{ fontSize: 14, marginTop: 8, display: "block" }}>Aucune recette trouvée</span></div>
+        )}
+        </>
         )}
       </div>
 
