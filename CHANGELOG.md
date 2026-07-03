@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.2.1 – Poivre · Correctifs & améliorations
+
+- **Difficulté** : le badge de la fiche devient **cliquable** et détaille le calcul (geste dominant, gestes détectés, modificateurs) ; le score **hérite désormais des gestes des préparations de base** d'une recette
+- **Techniques** (Config) : catégories **repliables**, repliées par défaut, comme les Ingrédients
+- **Ustensiles** : un ustensile ajouté sans `id` en reçoit un **automatiquement** (comme les techniques) – sûr côté seed, sans impact sur les recettes liées
+- **Mes Recettes** : état vide **accueillant** à la première connexion, et recherche sans résultat plus soignée
+- **Confort mobile** : retour tactile enfin visible sur les **cartes animées** (cartes recette, alertes courses/stock, repas du jour) ; le swipe-to-close d'une feuille respecte le scroll interne
+
 ## v3.2.0 – Poivre · Difficulté, partage & confort mobile
 
 ### Difficulté des recettes
