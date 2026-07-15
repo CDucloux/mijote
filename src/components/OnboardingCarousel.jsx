@@ -13,14 +13,14 @@ const seenKey = (uid) => `mijote_onboarded_${uid}`;
 // Géométrie responsive : les cartes sont nettement plus grandes sur desktop.
 const geo = (desktop) =>
   desktop
-    ? { CARD: "min(88vw, 440px)", GAP: 18, PEEK: 34, minHeight: 430, pad: "44px 40px", icon: 46, iconBox: 96, title: 27, text: 16 }
+    ? { CARD: "min(88vw, 440px)", GAP: 18, PEEK: 34, minHeight: 404, pad: "40px 40px", icon: 46, iconBox: 94, title: 27, text: 16 }
     : { CARD: "min(82vw, 320px)", GAP: 14, PEEK: 24, minHeight: 372, pad: "34px 26px", icon: 38, iconBox: 80, title: 22, text: 14.5 };
 
 const SLIDES = [
   {
     icon: "sparkle", color: "#e8703a",
     title: "Bienvenue dans Mijoté",
-    text: "Pas une app de recettes de plus. Une vraie base d'ingrédients, d'ustensiles et de techniques pour comprendre ce que tu cuisines — et progresser à chaque plat.",
+    text: "Pas une app de recettes de plus. Une vraie base d'ingrédients, d'ustensiles et de techniques pour comprendre ce que tu cuisines, et progresser à chaque plat.",
   },
   {
     icon: "book", color: "#e8703a",
@@ -35,7 +35,7 @@ const SLIDES = [
   {
     icon: "calendar", color: "#5b9cf6",
     title: "Planifie ta semaine",
-    text: "Glisse tes recettes sur le planning, midi et soir. Un tap suffit pour tout exporter vers ton agenda — le reste se remplit tout seul.",
+    text: "Glisse tes recettes sur le planning, midi et soir. Un tap suffit pour tout exporter vers ton agenda, le reste se remplit tout seul.",
   },
   {
     icon: "shopping", color: "#e8703a",
@@ -59,7 +59,9 @@ export function OnboardingCarousel() {
   const [show, setShow] = useState(false);
   const [active, setActive] = useState(0);
   const [desktop, setDesktop] = useState(false);
+  const [closing, setClosing] = useState(false);
   const touchX = useRef(null);
+  const closeTimer = useRef(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -77,14 +79,19 @@ export function OnboardingCarousel() {
   }, [user]);
 
   useEffect(() => {
-    const replay = () => { setActive(0); setShow(true); };
+    const replay = () => { setClosing(false); setActive(0); setShow(true); };
     window.addEventListener("mijote:show-onboarding", replay);
     return () => window.removeEventListener("mijote:show-onboarding", replay);
   }, []);
 
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
+
   const finish = () => {
+    if (closing) return;
     try { if (user?.uid) localStorage.setItem(seenKey(user.uid), "1"); } catch { /* ignore */ }
-    setShow(false);
+    // Fermeture douce : on laisse jouer l'animation de sortie avant de démonter.
+    setClosing(true);
+    closeTimer.current = setTimeout(() => { setShow(false); setClosing(false); }, 300);
   };
   const goTo = (n) => setActive(Math.max(0, Math.min(SLIDES.length - 1, n)));
   const next = () => (active < SLIDES.length - 1 ? setActive(active + 1) : finish());
@@ -108,9 +115,9 @@ export function OnboardingCarousel() {
   const shift = `translateX(calc(${LEAD}px - ${active} * (${g.CARD} + ${g.GAP}px)))`;
 
   return createPortal(
-    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: desktop ? 30 : 22, padding: "20px 0", animation: "fadeIn 0.2s ease" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: desktop ? 30 : 22, padding: "28px 0", overflowY: "auto", animation: closing ? "onbFadeOut 0.28s ease forwards" : "fadeIn 0.2s ease" }}>
       {/* Fenêtre (clippe les voisines pour ne montrer que le peek) */}
-      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ width: VIEWPORT, maxWidth: "96vw", overflow: "hidden", padding: "18px 0" }}>
+      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ flexShrink: 0, width: VIEWPORT, maxWidth: "96vw", overflow: "hidden", padding: "20px 0" }}>
         <div style={{ display: "flex", gap: g.GAP, transform: shift, transition: "transform 0.42s cubic-bezier(0.22,1,0.36,1)" }}>
           {SLIDES.map((s, n) => {
             const on = n === active;
@@ -128,6 +135,7 @@ export function OnboardingCarousel() {
                 transform: on ? "scale(1)" : "scale(0.92)",
                 transformOrigin: "center",
                 transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease",
+                animation: closing && on ? "onbCardOut 0.28s ease forwards" : undefined,
               }}>
                 <span style={{ width: g.iconBox, height: g.iconBox, borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(140deg, ${s.color}, ${s.color}bb)`, boxShadow: `0 12px 28px -8px ${s.color}88`, marginBottom: desktop ? 28 : 22 }}>
                   <Icon name={s.icon} size={g.icon} color="#fff" />
@@ -169,8 +177,8 @@ export function OnboardingCarousel() {
             {first ? "Passer" : "Précédent"}
           </button>
           <button className="btn btn-primary" onClick={next} style={{ flex: 1, borderRadius: 14, padding: "14px 0", fontSize: 15, fontWeight: 600 }}>
-            {last ? "C'est parti 🍳" : "Suivant"}
-            {!last && <Icon name="forward" size={15} color="#fff" />}
+            {last ? "C'est parti" : "Suivant"}
+            <Icon name={last ? "fire" : "forward"} size={16} color="#fff" />
           </button>
         </div>
       </div>
