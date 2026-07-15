@@ -70,7 +70,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], onOpenIngredient
           <path d="M12 13C12 9.7 9.5 8 6 8c0 3.5 2.5 5 6 5Z" />
           <path d="M12 11c0-3 2.5-4.6 6-4.6 0 3.4-2.5 4.6-6 4.6Z" />
         </svg>
-        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 600, margin: 0 }}>L'ingrédient du moment</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>L'ingrédient du moment</h3>
         <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>chaque semaine</span>
       </div>
 
