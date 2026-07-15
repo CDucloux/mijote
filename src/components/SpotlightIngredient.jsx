@@ -18,7 +18,7 @@ function SeasonFrieze({ months }) {
   return (
     <div style={{ marginTop: 12 }}>
       <div style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600, margin: "0 2px 6px" }}>Sa saison</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: 4 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: 6 }}>
         {MONTHS_INI.map((m, i) => {
           const month = i + 1, active = on.has(month), isNow = month === now;
           return (
@@ -64,12 +64,17 @@ export function SpotlightIngredient({ ingredient, recipes = [], onOpenIngredient
   return (
     <section style={{ marginBottom: 22 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 2px 12px" }}>
-        <Icon name="sparkle" size={16} color="var(--accent)" />
+        {/* Pousse / jeune plant : distinct de l'étoile de « Découvrir », évoque le produit frais */}
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 20v-7" />
+          <path d="M12 13C12 9.7 9.5 8 6 8c0 3.5 2.5 5 6 5Z" />
+          <path d="M12 11c0-3 2.5-4.6 6-4.6 0 3.4-2.5 4.6-6 4.6Z" />
+        </svg>
         <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 600, margin: 0 }}>L'ingrédient du moment</h3>
         <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>chaque semaine</span>
       </div>
 
-      <article style={{ position: "relative", overflow: "hidden", borderRadius: 20, border: "1px solid rgba(232,112,58,0.22)", background: "linear-gradient(158deg, rgba(232,112,58,0.09), rgba(232,112,58,0.02))", padding: "16px 16px 14px", boxShadow: "0 10px 26px -14px rgba(120,70,30,0.35)" }}>
+      <article style={{ position: "relative", overflow: "hidden", borderRadius: 20, border: "1px solid rgba(232,112,58,0.16)", background: "linear-gradient(158deg, color-mix(in srgb, var(--accent) 7%, var(--surface)), var(--surface) 62%)", padding: "16px 16px 14px", boxShadow: "0 10px 26px -14px rgba(120,70,30,0.28)" }}>
         <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: "linear-gradient(90deg, var(--accent), #f4a05f)" }} />
 
         {/* En-tête cliquable → fiche ingrédient */}
