@@ -8,6 +8,7 @@ import { OfficialAvatar } from "./OfficialAvatar.jsx";
 import { filterPublicRecipes, publicId, isOfficialAuthor } from "../lib/publicRecipes.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
+import { isRecipeVegan } from "../lib/dietary.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { relativeDate } from "../lib/format.js";
 
@@ -19,10 +20,10 @@ const TINT = "rgba(232,112,58,0.2)";
 const CARD_W = "clamp(150px, calc(50% - 6px), 200px)";
 
 // Carte d'une recette publique : visuel (hover-lift) + crédit créateur & date dessous.
-function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, style }) {
+function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, vegan, style }) {
   return (
     <div>
-      <div className="discover-card"><RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} style={style} /></div>
+      <div className="discover-card"><RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} vegan={vegan} style={style} /></div>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "0 2px" }}>
         <button onClick={onAuthor} title="Filtrer par ce créateur"
           style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
@@ -136,6 +137,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   }, [recipes]);
   const isOwned = (p) => ownedIds.has(p.pubId) || p.authorUid === user?.uid;
   const isInSeason = (payload) => isRecipeInSeason(payload, resolver);
+  const isVegan = (payload) => isRecipeVegan(payload, resolver);
 
   // Payloads des bases référencées, retrouvées parmi les docs déjà chargés.
   const componentsFor = (p) => (p.componentRefs || [])
@@ -162,7 +164,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
   const card = (p, idx) => (
     <PublicRecipeCard
-      p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)}
+      p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)} vegan={isVegan(p.recipe)}
       onOpen={() => onOpenPublic?.(p, componentsFor(p))}
       onAdd={onClonePublic ? () => onClonePublic(p) : undefined}
       onAuthor={() => setAuthorUid(authorUid === p.authorUid ? null : p.authorUid)}

@@ -7,7 +7,7 @@ import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { fmtTime } from "../lib/format.js";
 
-export function RecipeCard({ recipe, onClick, style, inSeason = false }) {
+export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = false }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const [showBaseInfo, setShowBaseInfo] = useState(false);
   return (
@@ -15,12 +15,18 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false }) {
     <button className="slide-up recipe-card pressable" onClick={onClick} style={{ width: "100%", display: "block", background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", ...style }}>
       <div className="recipe-card-thumb" style={{ aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} style={{ width: "100%", height: "100%" }} />} />
-        {/* Badges empilés en haut à droite (cohérents avec « De saison ») */}
-        {(inSeason || recipe.isComponent) && (
+        {/* Badges empilés en haut à droite */}
+        {(vegan || inSeason || recipe.isComponent) && (
           <div style={{ position: "absolute", top: 8, right: 8, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-            {inSeason && (
-              <span title="De saison ce mois-ci" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 9px 4px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.3)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
+            {vegan && (
+              <span title="Vegan" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 9px 4px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.3)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
                 <Icon name="leaf" size={11} color="#fff" />
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>Vegan</span>
+              </span>
+            )}
+            {inSeason && (
+              <span title="De saison ce mois-ci" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 9px 4px 7px", borderRadius: 20, background: "rgba(232,146,10,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.3)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
+                <Icon name="sun" size={11} color="#fff" />
                 <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
               </span>
             )}

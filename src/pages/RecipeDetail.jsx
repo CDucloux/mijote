@@ -19,6 +19,7 @@ import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
+import { isRecipeVegan } from "../lib/dietary.js";
 import { fmtTime, capitalize } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { computeDifficulty, explainDifficulty } from "../lib/difficulty.js";
@@ -162,6 +163,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   const mult = servings / (recipe.servings || 2);
   const seasonResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);
+  const recipeVegan = useMemo(() => isRecipeVegan(recipe, seasonResolver, { recipes }), [recipe, seasonResolver, recipes]);
   const { techniques } = useAppShell();
   const difficulty = useMemo(() => computeDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
   const difficultyExplain = useMemo(() => explainDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
@@ -273,9 +275,15 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 <BaseIcon size={12} color="#fff" /> Base
               </button>
             )}
-            {recipeInSeason && (
+            {recipeVegan && (
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
                 <Icon name="leaf" size={11} color="#fff" />
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>Vegan</span>
+              </span>
+            )}
+            {recipeInSeason && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(232,146,10,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
+                <Icon name="sun" size={11} color="#fff" />
                 <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
               </span>
             )}
@@ -410,9 +418,15 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     <BaseIcon size={12} color="#fff" /> Base
                   </button>
                 )}
-                {recipeInSeason && (
+                {recipeVegan && (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
                     <Icon name="leaf" size={11} color="#fff" />
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>Vegan</span>
+                  </span>
+                )}
+                {recipeInSeason && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(232,146,10,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
+                    <Icon name="sun" size={11} color="#fff" />
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
                   </span>
                 )}
