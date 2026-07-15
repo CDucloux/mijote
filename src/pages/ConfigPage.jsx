@@ -124,6 +124,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     const tips = (raw.tips || []).map(t => ({ type: t.type, text: (t.text || "").trim() })).filter(t => t.text);
     const item = { ...raw };
     if (tips.length) item.tips = tips; else delete item.tips;
+    if ((item.description || "").trim()) item.description = item.description.trim(); else delete item.description;
     if (Array.isArray(item.months) && item.months.length) item.months = [...new Set(item.months)].sort((a, b) => a - b);
     else delete item.months;
     if (ingredientDB.find(d => d.id === item.id)) setIngredientDB(prev => prev.map(d => d.id === item.id ? item : d));
@@ -853,6 +854,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div className="field-label">Description (accroche « ingrédient du moment »)</div>
+          <textarea className="field-input" rows={2} maxLength={280} placeholder="ex: Fragile. À déguster sous 2 jours, ou pochée au miel pour la garder plus longtemps."
+            value={editIng.description || ""} onChange={e => setEditIng(p => ({ ...p, description: e.target.value }))}
+            style={{ marginBottom: 12, resize: "vertical", minHeight: 48 }} />
           <div className="field-label">Alias / synonymes</div>
           <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 6, lineHeight: 1.4 }}>
             Autres noms qui doivent pointer vers cet ingrédient (ex : ciboule, cébette, oignon nouveau).

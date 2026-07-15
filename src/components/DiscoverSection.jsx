@@ -1,6 +1,9 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
+import { SpotlightIngredient } from "./SpotlightIngredient.jsx";
+import { pickSpotlightIngredient, publicRecipesWithIngredient } from "../lib/spotlight.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useDiscoverRecipes } from "../hooks/useDiscoverRecipes.js";
 import { RecipeCard } from "./RecipeCard.jsx";
@@ -103,6 +106,7 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
 // ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
 export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
+  const navigate = useNavigate();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
 
@@ -161,6 +165,11 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   // Préparations de base (composants publics) : exclues de la recherche/feed normal
   // par filterPublicRecipes ; on les met en avant dans leur propre rangée.
   const bases = useMemo(() => pubs.filter(p => p.isComponent).slice(0, 12), [pubs]);
+
+  // Ingrédient du moment (fruit/légume de saison, rotation hebdo) + recettes
+  // publiques qui l'utilisent.
+  const spotlight = useMemo(() => pickSpotlightIngredient(ingredientDB), [ingredientDB]);
+  const spotlightRecipes = useMemo(() => publicRecipesWithIngredient(spotlight, pubs, resolver, 10), [spotlight, pubs, resolver]);
 
   const card = (p, idx) => (
     <PublicRecipeCard
@@ -268,6 +277,15 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       ) : !activeFilters ? (
         // ── Mode navigation : feed éditorial ──
         <>
+          {spotlight && (
+            <SpotlightIngredient
+              ingredient={spotlight}
+              recipes={spotlightRecipes}
+              onOpenIngredient={(ing) => navigate(`/config/ingredients/${encodeURIComponent(ing.id)}`)}
+              onOpenPublic={(p) => onOpenPublic?.(p, componentsFor(p))}
+              onPublish={() => navigate("/recipes")}
+            />
+          )}
           <Carousel icon="fire" title="À la une" items={featured} renderItem={card} />
           <Carousel iconNode={<BaseIcon size={15} />} title="Préparations de base" items={bases} renderItem={card} />
           <Carousel icon="leaf" title="De saison" items={seasonal} renderItem={card} />
