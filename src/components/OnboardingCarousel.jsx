@@ -4,10 +4,19 @@ import { Icon } from "./Icon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── ONBOARDING – CARROUSEL DE BIENVENUE ──────────────────────────────────────
-// S'affiche une seule fois à la première connexion (flag localStorage par uid).
-// Cards défilables horizontalement (scroll-snap) : la carte active est centrée,
-// les voisines dépassent de chaque côté. Portalisé dans <body>.
+// Affiché une seule fois à la première connexion (flag localStorage par uid).
+// Piste de cards pilotée par `active` (transform translateX déterministe) : la
+// carte active est centrée, les voisines dépassent d'un montant fixe (peek).
+// Portalisé dans <body>. Rien ne dépend de la position de scroll.
 const seenKey = (uid) => `mijote_onboarded_${uid}`;
+
+// Géométrie (px) : largeur carte, gap, dépassement des voisines.
+const CARD = "min(74vw, 300px)";
+const GAP = 14;
+const PEEK = 26;
+// Fenêtre = carte + 2 gaps + 2 peeks → chaque voisine dépasse exactement de PEEK.
+const VIEWPORT = `calc(${CARD} + ${2 * (GAP + PEEK)}px)`;
+const LEAD = GAP + PEEK; // décalage pour centrer la 1re carte dans la fenêtre
 
 const SLIDES = [
   { icon: "sparkle", color: "#e8703a", title: "Bienvenue sur Mijoté", text: "Tes recettes, ton planning, tes courses et ton stock, enfin réunis au même endroit et synchronisés partout." },
@@ -22,8 +31,7 @@ export function OnboardingCarousel() {
   const { user } = useAppShell();
   const [show, setShow] = useState(false);
   const [active, setActive] = useState(0);
-  const scrollerRef = useRef(null);
-  const rafRef = useRef(0);
+  const touchX = useRef(null);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -32,68 +40,46 @@ export function OnboardingCarousel() {
     if (!seen) setShow(true);
   }, [user]);
 
-  // Rejouable à la demande (menu avatar « Revoir l'introduction »).
   useEffect(() => {
     const replay = () => { setActive(0); setShow(true); };
     window.addEventListener("mijote:show-onboarding", replay);
     return () => window.removeEventListener("mijote:show-onboarding", replay);
   }, []);
 
-  // À l'ouverture : on repart de la première carte.
-  useEffect(() => {
-    if (show && scrollerRef.current) { scrollerRef.current.scrollLeft = 0; setActive(0); }
-  }, [show]);
-
   const finish = () => {
     try { if (user?.uid) localStorage.setItem(seenKey(user.uid), "1"); } catch { /* ignore */ }
     setShow(false);
   };
+  const goTo = (n) => setActive(Math.max(0, Math.min(SLIDES.length - 1, n)));
+  const next = () => (active < SLIDES.length - 1 ? setActive(active + 1) : finish());
 
-  // Carte la plus proche du centre du scroller → index actif.
-  const onScroll = () => {
-    if (rafRef.current) return;
-    rafRef.current = requestAnimationFrame(() => {
-      rafRef.current = 0;
-      const el = scrollerRef.current;
-      if (!el) return;
-      const mid = el.scrollLeft + el.clientWidth / 2;
-      let best = 0, bestD = Infinity;
-      [...el.children].forEach((c, n) => {
-        const center = c.offsetLeft + c.offsetWidth / 2;
-        const d = Math.abs(center - mid);
-        if (d < bestD) { bestD = d; best = n; }
-      });
-      setActive(best);
-    });
+  const onTouchStart = (e) => { touchX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e) => {
+    if (touchX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    if (dx < -45) goTo(active + 1);
+    else if (dx > 45) goTo(active - 1);
+    touchX.current = null;
   };
-
-  const goTo = (n) => {
-    const el = scrollerRef.current;
-    if (el?.children[n]) el.children[n].scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  };
-  const next = () => (active < SLIDES.length - 1 ? goTo(active + 1) : finish());
 
   if (!show) return null;
   const last = active === SLIDES.length - 1;
-
-  const CARD_W = "min(78vw, 300px)"; // largeur d'une carte (mobile vw, plafond desktop)
+  // translateX : place la carte active au centre de la fenêtre.
+  const shift = `translateX(calc(${LEAD}px - ${active} * (${CARD} + ${GAP}px)))`;
 
   return createPortal(
-    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: "20px 0", animation: "fadeIn 0.2s ease" }}>
-      {/* Conteneur borné : centrage + dépassement des voisines calculés par rapport
-          à cette largeur (et non à l'écran entier) → correct mobile ET desktop. */}
-      <div style={{ width: "100%", maxWidth: 440 }}>
-        <div ref={scrollerRef} onScroll={onScroll}
-          style={{ display: "flex", gap: 14, overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", paddingInline: `calc(50% - ${CARD_W} / 2)` }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22, padding: "20px 0", animation: "fadeIn 0.2s ease" }}>
+      {/* Fenêtre (clippe les voisines pour ne montrer que le peek) */}
+      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ width: VIEWPORT, maxWidth: "94vw", overflow: "hidden" }}>
+        <div style={{ display: "flex", gap: GAP, transform: shift, transition: "transform 0.42s cubic-bezier(0.22,1,0.36,1)" }}>
           {SLIDES.map((s, n) => (
             <div key={n} style={{
-              flex: `0 0 ${CARD_W}`, scrollSnapAlign: "center",
+              flex: `0 0 ${CARD}`, boxSizing: "border-box",
               background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 24,
               padding: "30px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)",
               display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-              minHeight: 340, justifyContent: "center",
-              opacity: n === active ? 1 : 0.45, transform: `scale(${n === active ? 1 : 0.9})`,
-              transition: "opacity 0.3s ease, transform 0.3s ease",
+              minHeight: 344, justifyContent: "center",
+              opacity: n === active ? 1 : 0.4, transition: "opacity 0.35s ease",
             }}>
               <span style={{ width: 78, height: 78, borderRadius: 22, display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(140deg, ${s.color}, ${s.color}bb)`, boxShadow: `0 10px 24px -6px ${s.color}88`, marginBottom: 22 }}>
                 <Icon name={s.icon} size={36} color="#fff" />
@@ -105,8 +91,8 @@ export function OnboardingCarousel() {
         </div>
       </div>
 
-      {/* Contrôles (sur le fond, partagés) */}
-      <div style={{ width: "100%", maxWidth: 380, padding: "0 20px", display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* Contrôles */}
+      <div style={{ width: "100%", maxWidth: 340, padding: "0 20px", display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ display: "flex", justifyContent: "center", gap: 7 }}>
           {SLIDES.map((_, n) => (
             <button key={n} onClick={() => goTo(n)} aria-label={`Aller à l'étape ${n + 1}`}
