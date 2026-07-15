@@ -188,6 +188,18 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
   return (
     <section className="slide-up" style={{ animationDelay: "0.22s" }}>
+      {/* Ingrédient du moment : accroche éditoriale, au-dessus de la barre de
+          recherche (uniquement en mode navigation). */}
+      {spotlight && !activeFilters && (
+        <SpotlightIngredient
+          ingredient={spotlight}
+          recipes={spotlightRecipes}
+          onOpenIngredient={(ing) => navigate(`/config/ingredients/${encodeURIComponent(ing.id)}`)}
+          onOpenPublic={(p) => onOpenPublic?.(p, componentsFor(p))}
+          onPublish={() => navigate("/recipes")}
+        />
+      )}
+
       {/* Sentinelle pour détecter le sticky */}
       <div ref={sentinelRef} style={{ height: 1, marginBottom: -1, pointerEvents: "none" }} />
 
@@ -277,15 +289,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       ) : !activeFilters ? (
         // ── Mode navigation : feed éditorial ──
         <>
-          {spotlight && (
-            <SpotlightIngredient
-              ingredient={spotlight}
-              recipes={spotlightRecipes}
-              onOpenIngredient={(ing) => navigate(`/config/ingredients/${encodeURIComponent(ing.id)}`)}
-              onOpenPublic={(p) => onOpenPublic?.(p, componentsFor(p))}
-              onPublish={() => navigate("/recipes")}
-            />
-          )}
           <Carousel icon="fire" title="À la une" items={featured} renderItem={card} />
           <Carousel iconNode={<BaseIcon size={15} />} title="Préparations de base" items={bases} renderItem={card} />
           <Carousel icon="leaf" title="De saison" items={seasonal} renderItem={card} />
