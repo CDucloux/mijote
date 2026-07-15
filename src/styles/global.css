@@ -91,8 +91,99 @@ input,textarea,select{font-family:var(--ff-body);}
 
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 @keyframes onbFadeOut{from{opacity:1;}to{opacity:0;}}
+/* ─── ONBOARDING – CARROUSEL DE BIENVENUE ─────────────────────────────────────
+   Géométrie pilotée par variables CSS (surchargées en desktop via media query).
+   Seuls l'index actif (--onb-active) et la couleur du slide (--c) sont passés
+   au composant ; tout le reste vit ici. */
+.onb-overlay{
+  position:fixed;inset:0;z-index:2000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:22px;padding:28px 0;overflow-y:auto;
+  background:rgba(0,0,0,0.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  animation:fadeIn 0.2s ease;
+}
+.onb-overlay.is-closing{animation:onbFadeOut 0.28s ease forwards;}
+
+.onb-viewport{
+  --onb-card:min(82vw,320px);--onb-gap:14px;--onb-peek:24px;
+  --onb-lead:calc(var(--onb-gap) + var(--onb-peek));
+  flex-shrink:0;width:calc(var(--onb-card) + 2 * var(--onb-lead));max-width:96vw;
+  overflow:hidden;padding:20px 0;
+}
+.onb-track{
+  display:flex;gap:var(--onb-gap);
+  transform:translateX(calc(var(--onb-lead) - var(--onb-active,0) * (var(--onb-card) + var(--onb-gap))));
+  transition:transform 0.42s cubic-bezier(0.22,1,0.36,1);
+}
+
+.onb-card{
+  flex:0 0 var(--onb-card);box-sizing:border-box;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  min-height:372px;padding:34px 26px;
+  background:var(--surface);border:1px solid var(--border);border-radius:26px;
+  box-shadow:0 8px 24px -18px rgba(0,0,0,0.3);
+  opacity:0.42;transform:scale(0.92);transform-origin:center;
+  transition:opacity 0.4s ease,transform 0.4s cubic-bezier(0.22,1,0.36,1),box-shadow 0.4s ease;
+}
+.onb-card.is-active{
+  opacity:1;transform:scale(1);
+  box-shadow:0 26px 60px -28px color-mix(in srgb,var(--c) 40%,transparent),
+             0 14px 40px -20px rgba(0,0,0,0.35);
+}
+.onb-overlay.is-closing .onb-card.is-active{animation:onbCardOut 0.28s ease forwards;}
+
+.onb-iconbox{
+  width:80px;height:80px;border-radius:24px;margin-bottom:22px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(140deg,var(--c),color-mix(in srgb,var(--c) 73%,transparent));
+  box-shadow:0 12px 28px -8px color-mix(in srgb,var(--c) 53%,transparent);
+}
+.onb-iconbox svg{width:38px;height:38px;}
+
+.onb-title{
+  font-family:var(--ff-display);font-size:22px;font-weight:600;letter-spacing:-0.015em;
+  line-height:1.15;margin:0 0 12px;color:var(--text);
+}
+.onb-text{font-size:14.5px;color:var(--text2);line-height:1.62;margin:0;}
 .onb-text strong{color:var(--text);font-weight:600;}
 .onb-text em{font-style:italic;color:var(--accent);font-weight:500;}
+
+.onb-controls{width:100%;max-width:360px;padding:0 20px;display:flex;flex-direction:column;gap:18px;}
+.onb-dots{display:flex;justify-content:center;align-items:center;gap:6px;}
+.onb-dot{
+  width:8px;height:8px;border-radius:999px;border:none;padding:0;cursor:pointer;
+  background:rgba(255,255,255,0.22);
+  transition:width 0.3s cubic-bezier(0.22,1,0.36,1),background 0.3s ease;
+}
+.onb-dot.is-done{background:rgba(255,255,255,0.55);}
+.onb-dot.is-active{
+  width:28px;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  box-shadow:0 2px 10px -2px var(--accent);
+}
+
+.onb-buttons{display:flex;align-items:center;gap:10px;}
+.onb-btn-sec{
+  flex-shrink:0;min-width:68px;padding:13px 16px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  background:none;border:none;color:rgba(255,255,255,0.82);
+  font-family:var(--ff-body);font-size:14px;font-weight:500;cursor:pointer;
+  transition:background 0.2s ease;
+}
+.onb-btn-sec.is-prev{
+  min-width:118px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);
+}
+.onb-btn-primary{flex:1;border-radius:14px;padding:14px 0;font-size:15px;font-weight:600;}
+
+@media(min-width:768px){
+  .onb-overlay{gap:30px;}
+  .onb-viewport{--onb-card:min(88vw,440px);--onb-gap:18px;--onb-peek:34px;}
+  .onb-card{min-height:404px;padding:40px;}
+  .onb-iconbox{width:94px;height:94px;margin-bottom:28px;}
+  .onb-iconbox svg{width:46px;height:46px;}
+  .onb-title{font-size:27px;margin-bottom:16px;}
+  .onb-text{font-size:16px;max-width:360px;}
+  .onb-controls{max-width:460px;gap:24px;}
+}
 @keyframes onbCardOut{from{opacity:1;transform:scale(1);}to{opacity:0;transform:scale(0.94);}}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
 @keyframes shake{10%,90%{transform:translateX(-1px);}20%,80%{transform:translateX(2px);}30%,50%,70%{transform:translateX(-4px);}40%,60%{transform:translateX(4px);}}

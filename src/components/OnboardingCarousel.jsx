@@ -5,16 +5,10 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── ONBOARDING – CARROUSEL DE BIENVENUE ──────────────────────────────────────
 // Affiché une seule fois à la première connexion (flag localStorage par uid).
-// Piste de cards pilotée par `active` (transform translateX déterministe) : la
-// carte active est centrée, les voisines dépassent d'un montant fixe (peek) et
-// sont mises en retrait (opacité + léger scale). Portalisé dans <body>.
+// Piste de cards pilotée par `active` : la variable CSS --onb-active positionne
+// la carte active au centre de la fenêtre (transform déterministe). Toute la
+// géométrie et le responsive vivent dans global.css (.onb-*). Portalisé <body>.
 const seenKey = (uid) => `mijote_onboarded_${uid}`;
-
-// Géométrie responsive : les cartes sont nettement plus grandes sur desktop.
-const geo = (desktop) =>
-  desktop
-    ? { CARD: "min(88vw, 440px)", GAP: 18, PEEK: 34, minHeight: 404, pad: "40px 40px", icon: 46, iconBox: 94, title: 27, text: 16 }
-    : { CARD: "min(82vw, 320px)", GAP: 14, PEEK: 24, minHeight: 372, pad: "34px 26px", icon: 38, iconBox: 80, title: 22, text: 14.5 };
 
 const SLIDES = [
   {
@@ -58,18 +52,9 @@ export function OnboardingCarousel() {
   const { user } = useAppShell();
   const [show, setShow] = useState(false);
   const [active, setActive] = useState(0);
-  const [desktop, setDesktop] = useState(false);
   const [closing, setClosing] = useState(false);
   const touchX = useRef(null);
   const closeTimer = useRef(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const sync = () => setDesktop(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -107,76 +92,37 @@ export function OnboardingCarousel() {
   };
 
   if (!show) return null;
-  const g = geo(desktop);
-  const VIEWPORT = `calc(${g.CARD} + ${2 * (g.GAP + g.PEEK)}px)`;
-  const LEAD = g.GAP + g.PEEK;
   const first = active === 0;
   const last = active === SLIDES.length - 1;
-  const shift = `translateX(calc(${LEAD}px - ${active} * (${g.CARD} + ${g.GAP}px)))`;
 
   return createPortal(
-    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: desktop ? 30 : 22, padding: "28px 0", overflowY: "auto", animation: closing ? "onbFadeOut 0.28s ease forwards" : "fadeIn 0.2s ease" }}>
-      {/* Fenêtre (clippe les voisines pour ne montrer que le peek) */}
-      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ flexShrink: 0, width: VIEWPORT, maxWidth: "96vw", overflow: "hidden", padding: "20px 0" }}>
-        <div style={{ display: "flex", gap: g.GAP, transform: shift, transition: "transform 0.42s cubic-bezier(0.22,1,0.36,1)" }}>
-          {SLIDES.map((s, n) => {
-            const on = n === active;
-            return (
-              <div key={n} style={{
-                flex: `0 0 ${g.CARD}`, boxSizing: "border-box",
-                background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 26,
-                padding: g.pad,
-                boxShadow: on
-                  ? `0 26px 60px -28px ${s.color}66, 0 14px 40px -20px rgba(0,0,0,0.35)`
-                  : "0 8px 24px -18px rgba(0,0,0,0.3)",
-                display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-                minHeight: g.minHeight, justifyContent: "center",
-                opacity: on ? 1 : 0.42,
-                transform: on ? "scale(1)" : "scale(0.92)",
-                transformOrigin: "center",
-                transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease",
-                animation: closing && on ? "onbCardOut 0.28s ease forwards" : undefined,
-              }}>
-                <span style={{ width: g.iconBox, height: g.iconBox, borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(140deg, ${s.color}, ${s.color}bb)`, boxShadow: `0 12px 28px -8px ${s.color}88`, marginBottom: desktop ? 28 : 22 }}>
-                  <Icon name={s.icon} size={g.icon} color="#fff" />
-                </span>
-                <h2 style={{ fontFamily: "var(--ff-display)", fontSize: g.title, fontWeight: 600, letterSpacing: "-0.015em", lineHeight: 1.15, margin: `0 0 ${desktop ? 16 : 12}px`, color: "var(--text)" }}>{s.title}</h2>
-                <p className="onb-text" style={{ fontSize: g.text, color: "var(--text2)", lineHeight: 1.62, margin: 0, maxWidth: desktop ? 360 : "none" }}>{s.text}</p>
-              </div>
-            );
-          })}
+    <div className={`onb-overlay${closing ? " is-closing" : ""}`}>
+      {/* Fenêtre : clippe les voisines pour ne montrer que le peek */}
+      <div className="onb-viewport" style={{ "--onb-active": active }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <div className="onb-track">
+          {SLIDES.map((s, n) => (
+            <div key={n} className={`onb-card${n === active ? " is-active" : ""}`} style={{ "--c": s.color }}>
+              <span className="onb-iconbox"><Icon name={s.icon} size={38} color="#fff" /></span>
+              <h2 className="onb-title">{s.title}</h2>
+              <p className="onb-text">{s.text}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Contrôles */}
-      <div style={{ width: "100%", maxWidth: desktop ? 460 : 360, padding: "0 20px", display: "flex", flexDirection: "column", gap: desktop ? 24 : 18 }}>
-        {/* Indicateur de progression segmenté */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
-          {SLIDES.map((_, n) => {
-            const on = n === active;
-            const done = n < active;
-            return (
-              <button key={n} onClick={() => goTo(n)} aria-label={`Aller à l'étape ${n + 1}`}
-                style={{
-                  width: on ? 28 : 8, height: 8, borderRadius: 999, border: "none", padding: 0, cursor: "pointer",
-                  background: on
-                    ? "linear-gradient(90deg, var(--accent), var(--accent2))"
-                    : done ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.22)",
-                  boxShadow: on ? "0 2px 10px -2px var(--accent)" : "none",
-                  transition: "width 0.3s cubic-bezier(0.22,1,0.36,1), background 0.3s ease",
-                }} />
-            );
-          })}
+      <div className="onb-controls">
+        <div className="onb-dots">
+          {SLIDES.map((_, n) => (
+            <button key={n} onClick={() => goTo(n)} aria-label={`Aller à l'étape ${n + 1}`}
+              className={`onb-dot${n === active ? " is-active" : n < active ? " is-done" : ""}`} />
+          ))}
         </div>
-        {/* Boutons : à gauche Passer (1re carte) ou Précédent, à droite Suivant */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button
-            onClick={first ? finish : prev}
-            style={{ flexShrink: 0, minWidth: first ? 68 : 118, padding: "13px 16px", borderRadius: 14, background: first ? "none" : "rgba(255,255,255,0.1)", border: first ? "none" : "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.82)", fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "background 0.2s ease" }}>
+        <div className="onb-buttons">
+          <button className={`onb-btn-sec${first ? "" : " is-prev"}`} onClick={first ? finish : prev}>
             {!first && <Icon name="back" size={15} color="rgba(255,255,255,0.82)" />}
             {first ? "Passer" : "Précédent"}
           </button>
-          <button className="btn btn-primary" onClick={next} style={{ flex: 1, borderRadius: 14, padding: "14px 0", fontSize: 15, fontWeight: 600 }}>
+          <button className="btn btn-primary onb-btn-primary" onClick={next}>
             {last ? "C'est parti" : "Suivant"}
             <Icon name={last ? "fire" : "forward"} size={16} color="#fff" />
           </button>
