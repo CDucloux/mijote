@@ -4,21 +4,26 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
+import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
+import { DEFAULT_FILTERS, activeFilterCount } from "../lib/recipeFilters.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
+import { computeDifficulty } from "../lib/difficulty.js";
+import { buildTechniqueIndex } from "../lib/techniques.js";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
 export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, setTab }) {
+  const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
-  const [filterCuisine, setFilterCuisine] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
   const [sortBy, setSortBy] = useState("name");
-  const [seasonOnly, setSeasonOnly] = useState(false);
-  const [showCuisines, setShowCuisines] = useState(false);
+  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+  const [filterOpen, setFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [hideCarnets, setHideCarnets] = useState(() => {
@@ -33,7 +38,11 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
 
   // Styles de cuisine réellement utilisés, dans l'ordre canonique de la liste.
   const usedCuisines = CUISINES.filter(c => recipes.some(r => r.cuisine === c.label));
-  const filtered = recipes
+  const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
+  const nActiveFilters = activeFilterCount(filters);
+  const NUTRI_ORDER = { A: 1, B: 2, C: 3, D: 4, E: 5 };
+
+  const filtered = useMemo(() => recipes
     .filter(r => {
       // Plats et bases cohabitent dans la même grille ; le badge en coin les distingue.
       if (search) {
@@ -43,14 +52,27 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         const inIngredients = r.ingredients?.some(i => normalizeStr(i.name).includes(q));
         if (!inName && !inCuisine && !inIngredients) return false;
       }
-      if (filterCuisine && r.cuisine !== filterCuisine) return false;
       if (filterCol && !r.collections?.includes(filterCol)) return false;
-      if (seasonOnly && !isRecipeInSeason(r, resolver)) return false;
+      if (filters.type === "base" && !r.isComponent) return false;
+      if (filters.type === "dish" && r.isComponent) return false;
+      if (filters.cuisines.length && !filters.cuisines.includes(r.cuisine)) return false;
+      if (filters.season && !isRecipeInSeason(r, resolver)) return false;
+      if (filters.vegan && !isRecipeVegan(r, resolver, { recipes })) return false;
+      if (filters.nutriMax && !(r.nutriLetter && NUTRI_ORDER[r.nutriLetter] <= NUTRI_ORDER[filters.nutriMax])) return false;
+      if (filters.diffMax) {
+        const s = computeDifficulty(r, techniques, { index: techIndex, recipes }).score;
+        if (!(s != null && s <= filters.diffMax)) return false;
+      }
+      if (filters.ingredient.trim()) {
+        const q = normalizeStr(filters.ingredient);
+        if (!r.ingredients?.some(i => normalizeStr(i.name).includes(q))) return false;
+      }
       return true;
     })
-    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt));
+    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt)),
+  [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCuisine, filterCol, sortBy, seasonOnly]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, filters]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -96,24 +118,21 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             ))}
           </div>
           <div style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
-          {/* Filtres — puces indépendantes (activables/désactivables) */}
-          <button onClick={() => setSeasonOnly(s => !s)} title="Recettes de saison ce mois-ci" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: seasonOnly ? "rgba(76,175,125,0.18)" : "var(--surface2)", color: seasonOnly ? "var(--green)" : "var(--text2)", border: `1px solid ${seasonOnly ? "rgba(76,175,125,0.5)" : "var(--border)"}` }}>
-            <Icon name="leaf" size={13} color={seasonOnly ? "var(--green)" : "var(--text3)"} /> De saison
+          {/* Filtres avancés — s'ouvre dans une feuille dédiée ; pastille = nb actifs */}
+          <button onClick={() => setFilterOpen(true)} title="Filtres avancés" style={{ position: "relative", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+            Filtres
+            {nActiveFilters > 0 && <span style={{ minWidth: 17, height: 17, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{nActiveFilters}</span>}
           </button>
-          {usedCuisines.length > 0 && (
-            <button onClick={() => { setShowCuisines(v => { if (v) setFilterCuisine(null); return !v; }); }} title={showCuisines ? "Masquer les styles" : "Filtrer par style de cuisine"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: showCuisines ? "var(--surface3)" : "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-              <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>{showCuisines ? "−" : "+"}</span> Cuisine
-            </button>
-          )}
-          <div style={{ display: "flex", gap: 6, flexShrink: 0, maxWidth: showCuisines ? 2000 : 0, opacity: showCuisines ? 1 : 0, overflow: "hidden", transition: "max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease" }}>
-            {usedCuisines.map(c => (
-              <button key={c.label} onClick={() => setFilterCuisine(filterCuisine === c.label ? null : c.label)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: filterCuisine === c.label ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: filterCuisine === c.label ? "var(--accent)" : "var(--text2)", border: `1px solid ${filterCuisine === c.label ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}><span style={{ fontSize: 13, lineHeight: 1 }}>{c.emoji}</span>{c.label}</button>
-            ))}
-          </div>
         </div>
       </div>
+      {filterOpen && (
+        <SwipeableSheet onClose={() => setFilterOpen(false)} style={{ maxHeight: "90dvh" }}>
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
+        </SwipeableSheet>
+      )}
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
-        {recipes.length > 0 && !search && !filterCuisine && !filterCol && (
+        {recipes.length > 0 && !search && !filterCol && nActiveFilters === 0 && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <h2 style={{ fontSize: 16, fontWeight: 600 }}>Carnets</h2>
@@ -224,9 +243,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <p style={{ fontSize: 13.5, color: "var(--text3)", lineHeight: 1.5, marginBottom: 18 }}>
               {search ? <>Rien ne correspond à « <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{search}</strong> » dans ta bibliothèque.<br />Essaie un autre mot-clé ou ajuste tes filtres.</> : "Aucune recette ne correspond à ces filtres."}
             </p>
-            {(search || filterCuisine || seasonOnly) && (
-              <button className="btn btn-ghost" style={{ padding: "9px 18px", borderRadius: 12, fontSize: 13.5 }} onClick={() => { setSearch(""); setFilterCuisine(null); setSeasonOnly(false); setShowCuisines(false); }}>
-                <Icon name="close" size={14} /> Réinitialiser la recherche
+            {(search || nActiveFilters > 0 || filterCol) && (
+              <button className="btn btn-ghost" style={{ padding: "9px 18px", borderRadius: 12, fontSize: 13.5 }} onClick={() => { setSearch(""); setFilters({ ...DEFAULT_FILTERS }); setFilterCol(null); }}>
+                <Icon name="close" size={14} /> Réinitialiser
               </button>
             )}
           </div>
