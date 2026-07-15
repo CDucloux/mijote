@@ -19,38 +19,38 @@ const geo = (desktop) =>
 const SLIDES = [
   {
     icon: "sparkle", color: "#e8703a",
-    title: "Bienvenue dans Mijoté",
-    text: "Pas une app de recettes de plus. Une vraie base d'ingrédients, d'ustensiles et de techniques pour comprendre ce que tu cuisines, et progresser à chaque plat.",
+    title: "Bienvenue sur Mijoté",
+    text: <>Bien plus qu'un carnet de recettes : une vraie base d'<em>ingrédients</em>, d'<em>ustensiles</em> et de <em>techniques</em> pour <strong>comprendre ce que tu cuisines</strong>, et progresser à chaque plat.</>,
   },
   {
-    icon: "book", color: "#e8703a",
-    title: "Chaque recette, décortiquée",
-    text: "Derrière un plat, il y a ses ingrédients, ses ustensiles et des gestes techniques expliqués un à un. Ici, tu ne suis pas une recette : tu apprends à la faire.",
+    icon: "list2", color: "#e8703a",
+    title: "Cuisine guidée, pas à pas",
+    text: <>Lance le <strong>mode pas à pas</strong> et avance sereinement. Chaque <em>geste technique</em> s'explique au bon moment, pour réussir même ce que tu n'as jamais tenté.</>,
   },
   {
     icon: "leaf", color: "#4caf7d",
     title: "Difficulté, saison, Nutri-Score",
-    text: "Mijoté lit tes recettes et fait le calcul : indice de difficulté déduit des techniques, saisonnalité des ingrédients et Nutri-Score, sans que tu aies rien à saisir.",
+    text: <>Mijoté lit tes recettes et fait le calcul : <strong>difficulté</strong> déduite des techniques, <em>saisonnalité</em> des ingrédients et <em>Nutri-Score</em>, sans rien à saisir.</>,
   },
   {
     icon: "calendar", color: "#5b9cf6",
     title: "Planifie ta semaine",
-    text: "Glisse tes recettes sur le planning, midi et soir. Un tap suffit pour tout exporter vers ton agenda, le reste se remplit tout seul.",
+    text: <>Glisse tes recettes sur le planning, <strong>midi et soir</strong>. Un tap suffit pour tout exporter vers ton agenda, le reste se remplit tout seul.</>,
   },
   {
     icon: "shopping", color: "#e8703a",
     title: "Courses et stock, synchronisés",
-    text: "Ta liste de courses se génère depuis ton planning et se coche à mesure. En face, ton stock se met à jour ingrédient par ingrédient.",
+    text: <>Ta <strong>liste de courses</strong> se génère depuis ton planning et se coche à mesure. En face, ton <strong>stock</strong> se met à jour ingrédient par ingrédient.</>,
   },
   {
     icon: "globe", color: "#c080e0",
     title: "Explore et partage",
-    text: "Parcours les recettes de la communauté, filtre par saison, type de cuisine ou Nutri-Score, et publie les tiennes quand tu es prêt·e.",
+    text: <>Parcours les recettes de la communauté, filtre par <em>saison</em>, <em>type de cuisine</em> ou <em>Nutri-Score</em>, et publie les tiennes quand tu es prêt·e.</>,
   },
   {
     icon: "home", color: "#e8703a",
     title: "Cuisinez à plusieurs",
-    text: "Crée un foyer et partagez recettes, planning, courses et stock en temps réel. À vous de jouer !",
+    text: <>Crée un <strong>foyer</strong> et partagez recettes, planning, courses et stock <em>en temps réel</em>. À vous de jouer !</>,
   },
 ];
 
@@ -141,7 +141,7 @@ export function OnboardingCarousel() {
                   <Icon name={s.icon} size={g.icon} color="#fff" />
                 </span>
                 <h2 style={{ fontFamily: "var(--ff-display)", fontSize: g.title, fontWeight: 600, letterSpacing: "-0.015em", lineHeight: 1.15, margin: `0 0 ${desktop ? 16 : 12}px`, color: "var(--text)" }}>{s.title}</h2>
-                <p style={{ fontSize: g.text, color: "var(--text2)", lineHeight: 1.62, margin: 0, maxWidth: desktop ? 360 : "none" }}>{s.text}</p>
+                <p className="onb-text" style={{ fontSize: g.text, color: "var(--text2)", lineHeight: 1.62, margin: 0, maxWidth: desktop ? 360 : "none" }}>{s.text}</p>
               </div>
             );
           })}
