@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Icon } from "./Icon.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
+import { IngImage } from "./Img.jsx";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { DIFFICULTY_LABEL, difficultyColor } from "../lib/difficulty.js";
 import { DEFAULT_FILTERS, activeFilterCount } from "../lib/recipeFilters.js";
+import { normalizeStr } from "../lib/parseIngredient.js";
 
 // ─── FILTRES AVANCÉS (feuille, sections repliables façon « Mob ») ──────────────
 const NUTRI = { A: "#178a3a", B: "#7db52a", C: "#f2c230", D: "#ef8b26", E: "#e5462f" };
@@ -41,7 +43,55 @@ function Chip({ on, onClick, color, children }) {
 }
 const Row = ({ children }) => <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{children}</div>;
 
-export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, usedCuisines = [], resultCount = 0, onClose }) {
+// Sélection d'ingrédients (multi) avec vignettes.
+function IngredientPicker({ ingredientDB, selected, setFilters }) {
+  const [q, setQ] = useState("");
+  const byId = useMemo(() => new Map(ingredientDB.map(i => [i.id, i])), [ingredientDB]);
+  const toggle = (id) => setFilters(f => ({
+    ...f, ingredients: f.ingredients.includes(id) ? f.ingredients.filter(x => x !== id) : [...f.ingredients, id],
+  }));
+  const matches = useMemo(() => {
+    const nq = normalizeStr(q.trim());
+    if (!nq) return [];
+    return ingredientDB
+      .filter(i => !selected.includes(i.id) && normalizeStr(i.name).includes(nq))
+      .slice(0, 8);
+  }, [q, ingredientDB, selected]);
+
+  return (
+    <div>
+      {selected.length > 0 && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 11 }}>
+          {selected.map(id => {
+            const ing = byId.get(id);
+            if (!ing) return null;
+            return (
+              <button key={id} onClick={() => toggle(id)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(232,112,58,0.16)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.5)" }}>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "var(--surface)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={22} /></span>
+                {ing.name}
+                <Icon name="close" size={12} color="var(--accent)" />
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <input className="field-input" placeholder="Rechercher un ingrédient…" value={q} onChange={e => setQ(e.target.value)} />
+      {matches.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 8 }}>
+          {matches.map(ing => (
+            <button key={ing.id} onClick={() => { toggle(ing.id); setQ(""); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "7px 8px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+              <span style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={30} /></span>
+              <span style={{ fontSize: 13.5, color: "var(--text)" }}>{ing.name}</span>
+              <span style={{ marginLeft: "auto", display: "inline-flex" }}><Icon name="plus" size={15} color="var(--text3)" /></span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose }) {
   const set = (patch) => setFilters(f => ({ ...f, ...patch }));
   const toggleCuisine = (label) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
@@ -51,7 +101,7 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
   const typeSummary = filters.type === "dish" ? "Plats" : filters.type === "base" ? "Préparations de base" : null;
 
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column" }}>
       {/* En-tête */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: 0 }}>Tous les filtres</h2>
@@ -121,24 +171,40 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
         </div>
       </Group>
 
-      {/* Difficulté */}
+      {/* Difficulté — pills libellées */}
       <Group title="Difficulté" defaultOpen={false} summary={filters.diffMax ? `jusqu'à ${DIFFICULTY_LABEL[filters.diffMax]}` : null}>
-        <div style={{ display: "flex", gap: 8 }}>
+        <Row>
           {[1, 2, 3, 4, 5].map(n => {
             const on = filters.diffMax === n;
-            return <button key={n} onClick={() => set({ diffMax: on ? null : n })} style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", background: on ? difficultyColor(n) : "var(--surface2)", color: on ? "#fff" : "var(--text3)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{n}</button>;
+            const col = difficultyColor(n);
+            return (
+              <button key={n} onClick={() => set({ diffMax: on ? null : n })} style={{
+                display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
+                padding: "8px 13px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer",
+                background: on ? `color-mix(in srgb, ${col} 16%, transparent)` : "var(--surface2)",
+                color: on ? col : "var(--text2)",
+                border: `1px solid ${on ? `color-mix(in srgb, ${col} 55%, transparent)` : "var(--border)"}`,
+              }}>
+                <span style={{ display: "inline-flex", gap: 2 }}>
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: i <= n ? (on ? col : "var(--text3)") : (on ? `color-mix(in srgb, ${col} 30%, transparent)` : "var(--border)") }} />
+                  ))}
+                </span>
+                {DIFFICULTY_LABEL[n]}
+              </button>
+            );
           })}
-        </div>
-        {filters.diffMax && <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 8 }}>Jusqu'à « {DIFFICULTY_LABEL[filters.diffMax]} ».</div>}
+        </Row>
+        {filters.diffMax && <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 9 }}>Recettes jusqu'à « {DIFFICULTY_LABEL[filters.diffMax]} ».</div>}
       </Group>
 
-      {/* Ingrédient */}
-      <Group title="Contient l'ingrédient" defaultOpen={false} summary={filters.ingredient.trim() || null}>
-        <input className="field-input" placeholder="ex: courgette, feta…" value={filters.ingredient} onChange={e => set({ ingredient: e.target.value })} />
+      {/* Ingrédients (multi + vignettes) */}
+      <Group title="Contient les ingrédients" defaultOpen={false} summary={filters.ingredients.length ? `${filters.ingredients.length} sélectionné${filters.ingredients.length > 1 ? "s" : ""}` : null}>
+        <IngredientPicker ingredientDB={ingredientDB} selected={filters.ingredients} setFilters={setFilters} />
       </Group>
 
-      {/* CTA sticky */}
-      <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", paddingTop: 12, marginTop: 6, borderTop: "1px solid var(--border)" }}>
+      {/* CTA — pied plein, sans liseré, jusqu'au bas de la feuille */}
+      <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "12px 20px calc(20px + env(safe-area-inset-bottom))" }}>
         <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5 }} onClick={onClose}>
           Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
         </button>

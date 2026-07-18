@@ -64,9 +64,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         const s = computeDifficulty(r, techniques, { index: techIndex, recipes }).score;
         if (!(s != null && s <= filters.diffMax)) return false;
       }
-      if (filters.ingredient.trim()) {
-        const q = normalizeStr(filters.ingredient);
-        if (!r.ingredients?.some(i => normalizeStr(i.name).includes(q))) return false;
+      if (filters.ingredients.length) {
+        const recIds = new Set();
+        for (const ri of r.ingredients || []) { const m = resolver(ri.name); if (m) recIds.add(m.id); }
+        if (!filters.ingredients.every(id => recIds.has(id))) return false;
       }
       return true;
     })
@@ -114,8 +115,8 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         </div>
       </div>
       {filterOpen && (
-        <SwipeableSheet onClose={() => setFilterOpen(false)} style={{ maxHeight: "90dvh" }}>
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
+        <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingBottom: 0 }}>
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
         </SwipeableSheet>
       )}
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
