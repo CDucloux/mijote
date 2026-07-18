@@ -10,6 +10,7 @@ import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
+import { matchesCooking } from "../lib/cooking.js";
 import { computeDifficulty } from "../lib/difficulty.js";
 import { buildTechniqueIndex } from "../lib/techniques.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
@@ -57,6 +58,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       if (filters.type === "dish" && r.isComponent) return false;
       if (filters.cuisines.length && !filters.cuisines.includes(r.cuisine)) return false;
       if (filters.timeMax && ((r.prepTime || 0) + (r.cookTime || 0)) > filters.timeMax) return false;
+      if (filters.cooking.length && !matchesCooking(r, filters.cooking)) return false;
       if (filters.season && !isRecipeInSeason(r, resolver)) return false;
       if (filters.vegan && !isRecipeVegan(r, resolver, { recipes })) return false;
       if (filters.nutriMax && !(r.nutriLetter && NUTRI_ORDER[r.nutriLetter] <= NUTRI_ORDER[filters.nutriMax])) return false;

@@ -5,7 +5,10 @@ import { IngImage } from "./Img.jsx";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { DIFFICULTY_LABEL, difficultyColor } from "../lib/difficulty.js";
 import { DEFAULT_FILTERS, activeFilterCount } from "../lib/recipeFilters.js";
+import { COOKING_METHODS } from "../lib/cooking.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
+
+const COOKING_EMOJI = { four: "🔥", airfryer: "🌀", plaques: "🍳", vapeur: "♨️", grill: "🍢", "micro-ondes": "📡" };
 
 // ─── FILTRES AVANCÉS (feuille, sections repliables façon « Mob ») ──────────────
 const NUTRI = { A: "#178a3a", B: "#7db52a", C: "#f2c230", D: "#ef8b26", E: "#e5462f" };
@@ -96,6 +99,9 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
   const toggleCuisine = (label) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
   }));
+  const toggleCooking = (id) => setFilters(f => ({
+    ...f, cooking: f.cooking.includes(id) ? f.cooking.filter(c => c !== id) : [...f.cooking, id],
+  }));
   const reset = () => setFilters({ ...DEFAULT_FILTERS });
   const nActive = activeFilterCount(filters);
   const typeSummary = filters.type === "dish" ? "Plats" : filters.type === "base" ? "Préparations de base" : null;
@@ -160,6 +166,21 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
           </Row>
         </Group>
       )}
+
+      {/* Mode de cuisson (déduit des ustensiles) */}
+      <Group title="Mode de cuisson" defaultOpen={false} summary={filters.cooking.length ? `${filters.cooking.length} sélectionné${filters.cooking.length > 1 ? "s" : ""}` : null}>
+        <Row>
+          {COOKING_METHODS.map(m => (
+            <Chip key={m.id} on={filters.cooking.includes(m.id)} onClick={() => toggleCooking(m.id)}>
+              <span style={{ fontSize: 13, lineHeight: 1 }}>{COOKING_EMOJI[m.id]}</span> {m.label}
+            </Chip>
+          ))}
+          <Chip on={filters.cooking.includes("mixte")} onClick={() => toggleCooking("mixte")}>
+            <span style={{ fontSize: 13, lineHeight: 1 }}>🔀</span> Mixte
+          </Chip>
+        </Row>
+        <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 9 }}>D'après les ustensiles de la recette. « Mixte » = plusieurs modes.</div>
+      </Group>
 
       {/* Nutri-Score */}
       <Group title="Nutri-Score" defaultOpen={false} summary={filters.nutriMax ? `${filters.nutriMax} ou mieux` : null}>
