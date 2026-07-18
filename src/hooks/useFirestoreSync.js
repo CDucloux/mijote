@@ -1,9 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, onSnapshot, getDocs, query, where } from "firebase/firestore";
+import { doc, setDoc, onSnapshot, query, where } from "firebase/firestore";
 import { auth, db } from "../lib/firebase.js";
 import {
-  metaDoc, recipesCol, sharedListsCol, userDirCol, userDirDoc,
+  metaDoc, recipesCol, sharedListsCol, upsertOwnDirectoryEntry,
   loadMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
   loadSharedData, writeSharedData, setHouseholdPointer,
 } from "../lib/firestore.js";
@@ -35,7 +35,6 @@ export function useFirestoreSync({
   mealPlan, setMealPlan,
   shoppingLists, setShoppingLists,
   setSharedLists,
-  setDirectory,
   stock, setStock,
   lowStock, setLowStock,
   preferences, setPreferences,
@@ -201,12 +200,21 @@ export function useFirestoreSync({
           writeCachedHid(user.uid, desiredHid); // mémorise pour un chargement direct au prochain reload
           setLoadedHid(desiredHid);
         } else {
-          const solo = await loadSharedData(soloWorkspace(user.uid)); // retour en solo (départ)
+          // Retour en solo (départ / dissolution). On NE veut PAS perdre les recettes
+          // créées dans le foyer : on les fusionne de façon ADDITIVE dans l'espace
+          // perso (dédup par nom via mergeShared), puis on écrit le solo enrichi.
+          // Effet de bord bienvenu : la transition est additive (l'écran ne se vide
+          // pas d'abord pour se repeupler ensuite) → plus de flicker foyer → solo.
+          const soloWs = soloWorkspace(user.uid);
+          const solo = await loadSharedData(soloWs);
           if (cancelled) return;
-          applyShared(solo);
-          recipeSyncMap.current = mapOf(solo.recipes);
-          recipesSigRef.current = JSON.stringify(solo.recipes || []);
-          metaSigRef.current = {};
+          const merged = mergeShared(sharedRef.current, solo); // foyer (local) → solo (remote)
+          const newMap = await writeSharedData(soloWs, merged, mapOf(solo.recipes));
+          if (cancelled) return;
+          applyShared(merged);
+          recipeSyncMap.current = newMap;
+          recipesSigRef.current = JSON.stringify(merged.recipes || []);
+          seedSigs(merged); // signatures méta à jour → l'autosave ne ré-émet pas d'écho
           activeHidRef.current = null;
           writeCachedHid(user.uid, null); // sorti du foyer → on retire le cache
           setLoadedHid(null);
@@ -317,14 +325,13 @@ export function useFirestoreSync({
     return () => { if (unsub) unsub(); };
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Ma fiche d'annuaire : un seul write par session (pour être invitable / affichable).
+  // La LECTURE de l'annuaire est désormais à la demande (voir loadDirectory dans App) :
+  // plus de getDocs global systématique, qui faisait exploser les lectures Firestore.
   useEffect(() => {
-    if (!user) { setDirectory([]); return; }
-    setDoc(userDirDoc(user.uid), {
-      uid: user.uid, email: (user.email || "").toLowerCase(),
-      displayName: user.displayName || "", photoURL: user.photoURL || "", updatedAt: Date.now(),
-    }, { merge: true }).catch(() => { });
-    getDocs(userDirCol()).then(s => setDirectory(s.docs.map(d => d.data()))).catch(() => { });
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!user) return;
+    upsertOwnDirectoryEntry(user).catch(() => { });
+  }, [user]);
 
   useEffect(() => {
     if (!user || !cloudLoaded.current || !isAdmin) return;

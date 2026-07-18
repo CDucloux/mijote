@@ -30,6 +30,34 @@ export const sharedListDoc = (id) => doc(db, "sharedLists", id);
 export const userDirCol = () => collection(db, "userDirectory");
 export const userDirDoc = (uid) => doc(db, "userDirectory", uid);
 
+// Inscrit/actualise ma fiche d'annuaire (pour que les autres puissent m'inviter
+// et afficher mon avatar). Un seul write par session.
+export function upsertOwnDirectoryEntry(user) {
+  return setDoc(userDirDoc(user.uid), {
+    uid: user.uid, email: (user.email || "").toLowerCase(),
+    displayName: user.displayName || "", photoURL: user.photoURL || "", updatedAt: Date.now(),
+  }, { merge: true });
+}
+
+// Charge l'annuaire des utilisateurs. À la DEMANDE uniquement (invitations,
+// partage de liste, avatars de foyer) : ne JAMAIS l'appeler au chargement pour
+// tout le monde — l'immense majorité (utilisateurs solo) n'en a aucun besoin, et
+// un getDocs global à chaque session fait exploser les lectures Firestore.
+// `emails` optionnel : ciblage par email (chunks de 10 pour l'opérateur `in`).
+export async function fetchUserDirectory(emails) {
+  if (!emails) {
+    const s = await getDocs(userDirCol());
+    return s.docs.map(d => d.data());
+  }
+  const list = [...new Set(emails.map(e => (e || "").toLowerCase()).filter(Boolean))];
+  const out = [];
+  for (let i = 0; i < list.length; i += 10) {
+    const s = await getDocs(query(userDirCol(), where("email", "in", list.slice(i, i + 10))));
+    out.push(...s.docs.map(d => d.data()));
+  }
+  return out;
+}
+
 // Recettes publiques (communauté) : collection top-level lisible par tous les
 // connectés, écrite uniquement par l'auteur (cf. firestore.rules).
 export const publicRecipesCol = () => collection(db, "publicRecipes");

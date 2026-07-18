@@ -4,7 +4,7 @@ import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 import { setDoc, deleteDoc } from "firebase/firestore";
 
 import { auth, provider } from "./lib/firebase.js";
-import { sharedListDoc, toSharedListDoc, publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer } from "./lib/firestore.js";
+import { sharedListDoc, toSharedListDoc, publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer, fetchUserDirectory } from "./lib/firestore.js";
 import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "./lib/publicRecipes.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
@@ -68,7 +68,15 @@ function AppInner() {
   // Listes partagées (autres membres ou que je partage) – alimentées par onSnapshot.
   const [sharedLists, setSharedLists] = useState([]);
   // Annuaire des utilisateurs connus (pour proposer les e-mails avec avatar au partage).
+  // Chargé À LA DEMANDE (loadDirectory) : les utilisateurs solo ne le lisent jamais.
   const [directory, setDirectory] = useState([]);
+  const directoryLoadedRef = useRef(null); // uid dont l'annuaire est (en cours de) chargement
+  const loadDirectory = useCallback(async () => {
+    if (!user || directoryLoadedRef.current === user.uid) return;
+    directoryLoadedRef.current = user.uid; // garde par uid → refetch après changement de compte
+    try { setDirectory(await fetchUserDirectory()); }
+    catch { directoryLoadedRef.current = null; }
+  }, [user]);
   const personalListsRef = useRef(shoppingLists);
   const sharedListsRef = useRef(sharedLists);
   useEffect(() => { personalListsRef.current = shoppingLists; }, [shoppingLists]);
@@ -250,7 +258,6 @@ function AppInner() {
     mealPlan, setMealPlan,
     shoppingLists, setShoppingLists,
     setSharedLists,
-    setDirectory,
     stock, setStock,
     lowStock, setLowStock,
     preferences, setPreferences,
@@ -532,7 +539,7 @@ function AppInner() {
   // Login screen
   if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory };
+  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory };
 
   return (
     <AppShellProvider value={shellValue}>

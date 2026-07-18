@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
@@ -16,10 +16,12 @@ function Avatar({ photo, label, size = 34, dim = false }) {
 // ─── PANNEAU FOYER ────────────────────────────────────────────────────────────
 // `onClose` (optionnel) : ferme la feuille parente après un quitter/dissoudre.
 export function HouseholdPanel({ onClose }) {
-  const { user, directory = [] } = useAppShell();
+  const { user, directory = [], loadDirectory } = useAppShell();
   const { household, invites, loading, actions } = useHousehold();
   const [name, setName] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
+  // Le panneau foyer a besoin de l'annuaire (candidats à l'invitation + avatars).
+  useEffect(() => { loadDirectory?.(); }, [loadDirectory]);
 
   if (loading) {
     return <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>

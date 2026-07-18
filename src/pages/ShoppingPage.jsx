@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -20,7 +20,7 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // s'estompant avant de rejoindre la section).
 
 export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
-  const { user, notify } = useAppShell();
+  const { user, notify, loadDirectory } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback(el => el?.focus({ preventScroll: true }), []);
   const [activeListId, setActiveListId] = useState(null);
@@ -35,6 +35,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, di
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
   const [shareEmail, setShareEmail] = useState("");    // saisie e-mail dans la section partage
   const [showAllSuggestions, setShowAllSuggestions] = useState(false); // déplier toutes les suggestions de partage
+  // Annuaire chargé à la demande : uniquement quand on ouvre la config de partage d'une liste.
+  useEffect(() => { if (configList) loadDirectory?.(); }, [configList, loadDirectory]);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const activeList = shoppingLists.find(l => l.id === activeListId) || shoppingLists[0] || null;
