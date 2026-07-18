@@ -56,6 +56,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       if (filters.type === "base" && !r.isComponent) return false;
       if (filters.type === "dish" && r.isComponent) return false;
       if (filters.cuisines.length && !filters.cuisines.includes(r.cuisine)) return false;
+      if (filters.timeMax && ((r.prepTime || 0) + (r.cookTime || 0)) > filters.timeMax) return false;
       if (filters.season && !isRecipeInSeason(r, resolver)) return false;
       if (filters.vegan && !isRecipeVegan(r, resolver, { recipes })) return false;
       if (filters.nutriMax && !(r.nutriLetter && NUTRI_ORDER[r.nutriLetter] <= NUTRI_ORDER[filters.nutriMax])) return false;
@@ -100,35 +101,21 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 2 }}>
-          {/* Tri — segmented control (« choisis-en un ») pour le distinguer des filtres */}
-          <div style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 2, padding: 2, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20 }}>
-            <span title="Trier" aria-label="Trier" style={{ display: "inline-flex", padding: "0 5px 0 7px" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                {/* Barres décroissantes = ordre + flèche = direction du tri */}
-                <path d="M4 7h11M4 12h7M4 17h4" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" />
-                <path d="M19 5v13" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="m16 15 3 3 3-3" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            {["name", "health", "date"].map(s => (
-              <button key={s} onClick={() => setSortBy(s)} style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 16, fontSize: 12, fontWeight: 600, background: sortBy === s ? "var(--accent)" : "transparent", color: sortBy === s ? "#fff" : "var(--text2)", border: "none" }}>
-                {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
-              </button>
-            ))}
-          </div>
-          <div style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
-          {/* Filtres avancés — s'ouvre dans une feuille dédiée ; pastille = nb actifs */}
-          <button onClick={() => setFilterOpen(true)} title="Filtres avancés" style={{ position: "relative", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+          {/* Un seul point d'entrée : la feuille « Tous les filtres » (tri + filtres) */}
+          <button onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
-            {nActiveFilters > 0 && <span style={{ minWidth: 17, height: 17, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{nActiveFilters}</span>}
+            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
+          <span style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            Trié par <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{sortBy === "name" ? "A → Z" : sortBy === "health" ? "Santé" : "Récent"}</strong>
+          </span>
         </div>
       </div>
       {filterOpen && (
         <SwipeableSheet onClose={() => setFilterOpen(false)} style={{ maxHeight: "90dvh" }}>
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
         </SwipeableSheet>
       )}
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
