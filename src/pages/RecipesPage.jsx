@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
-import { UrlImportButton } from "../components/UrlImportButton.jsx";
+import { NewRecipeButton } from "../components/NewRecipeButton.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
@@ -76,8 +76,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mes Recettes</h1></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <UrlImportButton />
-            <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={onNewRecipe}><Icon name="plus" size={16} /> Nouvelle</button>
+            <NewRecipeButton onManual={onNewRecipe} />
             <UserAvatar />
           </div>
         </div>
