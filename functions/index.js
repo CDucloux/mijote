@@ -1,9 +1,11 @@
 // ─── CLOUD FUNCTIONS MIJOTÉ ──────────────────────────────────────────────────
-// `importRecipeFromUrl` : importe une recette depuis une URL. Réservé à l'admin
-// (le créateur) — la vérification se fait CÔTÉ SERVEUR sur l'e-mail du token Auth,
-// pas seulement en masquant un bouton. Extraction par Claude Haiku 4.5 (prompt
-// éditable dans prompts/recipeExtract.md), assemblée par assignIdsAndLink()
-// (ids stables, _raw, liaisons ingrédients/ustensiles ↔ étapes, images d'étape).
+// `importRecipeFromUrl`   : importe une recette depuis une URL.
+// `importRecipeFromImages`: importe une recette depuis 1 ou 2 photos (livre).
+// Les deux sont réservées à l'admin (le créateur) — la vérification se fait CÔTÉ
+// SERVEUR sur l'e-mail du token Auth, pas seulement en masquant un bouton.
+// Extraction par Claude Haiku 4.5 (prompt éditable dans prompts/recipeExtract.md),
+// assemblée par assignIdsAndLink() (ids stables, _raw, liaisons ingrédients/
+// ustensiles ↔ étapes, images d'étape pour l'URL).
 const fs = require("fs");
 const path = require("path");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
@@ -98,6 +100,45 @@ function llmToIntermediate(d, sourceUrl) {
   };
 }
 
+// Extraction depuis une ou deux PHOTOS (recette d'un livre, éventuellement sur 2
+// pages). Même schéma de sortie que l'extraction web, mais sans images d'étape
+// (une photo de page n'expose pas d'URL d'illustration exploitable).
+const IMG_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MAX_IMG_B64 = 6_000_000; // ~4,5 Mo par image décodée
+
+async function extractFromImages(images, knownUtensils) {
+  const key = ANTHROPIC_API_KEY.value();
+  if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
+  const system = PROMPT_TEMPLATE
+    .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)")
+    .replace("depuis le texte brut d'une page web", "depuis une ou plusieurs photos (pages d'un livre de cuisine)");
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic({ apiKey: key });
+  const content = images.map(im => ({
+    type: "image",
+    source: { type: "base64", media_type: im.mediaType, data: im.data },
+  }));
+  content.push({ type: "text", text: images.length > 1
+    ? "Ces photos montrent une même recette (pages successives d'un livre). Extrait-la en un seul objet JSON."
+    : "Cette photo montre une recette de livre de cuisine. Extrait-la en JSON. Laisse `image` vide pour chaque étape." });
+  let response;
+  try {
+    response = await client.messages.create({
+      model: MODEL, max_tokens: 4096, system,
+      messages: [{ role: "user", content }],
+    });
+  } catch (e) {
+    console.error("Anthropic API error (images):", e?.status, e?.name, e?.message);
+    throw new HttpsError("internal", `Extraction IA échouée : ${e?.message || "erreur API"}`);
+  }
+  const block = (response.content || []).find(b => b.type === "text");
+  if (!block) throw new HttpsError("internal", "Réponse IA vide.");
+  let parsed;
+  try { parsed = parseJsonLoose(block.text); }
+  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
+  return llmToIntermediate(parsed, "");
+}
+
 async function extractWithLlm(text, sourceUrl, knownUtensils) {
   const key = ANTHROPIC_API_KEY.value();
   // Clé absente ou factice (déploiement sans vraie clé) → message clair, pas d'appel.
@@ -163,6 +204,45 @@ exports.importRecipeFromUrl = onCall(
     } catch (e) {
       if (e instanceof HttpsError) throw e; // messages déjà lisibles
       console.error("importRecipeFromUrl — erreur inattendue:", e);
+      throw new HttpsError("internal", `Erreur inattendue : ${e?.message || e}`);
+    }
+  }
+);
+
+// Import depuis une ou deux photos (livre de cuisine). Réservé à l'admin (garde
+// serveur identique). Vision Haiku 4.5 ; pas d'images d'étape.
+exports.importRecipeFromImages = onCall(
+  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
+  async (request) => {
+    const email = (request.auth?.token?.email || "").toLowerCase();
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const admin = (ADMIN_EMAIL.value() || "").toLowerCase();
+    if (!admin || email !== admin) throw new HttpsError("permission-denied", "Fonctionnalité réservée au créateur.");
+
+    const raw = Array.isArray(request.data?.images) ? request.data.images : [];
+    const images = raw.slice(0, 2).map(im => ({
+      mediaType: String(im?.mediaType || ""),
+      data: String(im?.data || ""),
+    })).filter(im => im.data);
+    if (!images.length) throw new HttpsError("invalid-argument", "Aucune image fournie.");
+    for (const im of images) {
+      if (!IMG_MEDIA_TYPES.has(im.mediaType)) throw new HttpsError("invalid-argument", "Format d'image non pris en charge (JPEG, PNG, WebP).");
+      if (im.data.length > MAX_IMG_B64) throw new HttpsError("invalid-argument", "Image trop volumineuse (max ~4,5 Mo).");
+    }
+    const knownUtensils = Array.isArray(request.data?.knownUtensils)
+      ? request.data.knownUtensils.map(s => String(s)).filter(Boolean).slice(0, 200) : [];
+
+    try {
+      const inter = await extractFromImages(images, knownUtensils);
+      inter.image = "";
+      inter.utensils = filterUtensilsToKnown(inter.utensils, knownUtensils);
+      for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
+      const recipe = assignIdsAndLink(inter);
+      if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");
+      return { recipe, method: "image" };
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error("importRecipeFromImages — erreur inattendue:", e);
       throw new HttpsError("internal", `Erreur inattendue : ${e?.message || e}`);
     }
   }

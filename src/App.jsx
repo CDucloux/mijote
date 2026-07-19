@@ -9,7 +9,7 @@ import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
 import { prepareRecipeImport } from "./lib/recipeImport.js";
-import { importRecipeFromUrl } from "./lib/recipeUrlImport.js";
+import { importRecipeFromUrl, importRecipeFromImages } from "./lib/recipeUrlImport.js";
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
 import { recipesReferencing } from "./lib/recipeComponents.js";
 import { buildRecipeIndex } from "./lib/nutriscore.js";
@@ -454,8 +454,8 @@ function AppInner() {
     utensils: (recipe.utensils || []).map((u, k) => ({ id: `u${Date.now()}_${k}`, dbId: "", name: "", ...u })),
     steps: (recipe.steps || []).map((s, k) => ({ id: `s${Date.now()}_${k}`, title: "", text: "", ingredients: [], utensils: [], ...s })),
   });
-  const importFromUrl = async (url) => {
-    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
+  // Recette brute extraite (URL ou image) → brouillon prêt pour l'éditeur.
+  const openImportedDraft = (recipe) => {
     // Complète dbId + Nutri-Score via le pipeline d'import existant (schéma toléré).
     const res = prepareRecipeImport(JSON.stringify(recipe), { ingredientDB, utensilDB });
     let draft = res.prepared?.[0] || recipe;
@@ -469,10 +469,19 @@ function AppInner() {
       steps: (draft.steps || []).map(s => ({ ...s, utensils: (s.utensils || []).filter(id => keptIds.has(id)) })),
     };
     setEditingRecipe(withItemIds(draft));
+  };
+  const importFromUrl = async (url) => {
+    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
+    openImportedDraft(recipe);
+    return { method };
+  };
+  const importFromImages = async (images) => {
+    const { recipe, method } = await importRecipeFromImages(images, utensilDB.map(u => u.name));
+    openImportedDraft(recipe);
     return { method };
   };
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory, isAdmin, importFromUrl };
+  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory, isAdmin, importFromUrl, importFromImages };
 
   return (
     <AppShellProvider value={shellValue}>

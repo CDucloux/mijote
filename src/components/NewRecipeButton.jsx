@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { fileToImagePart } from "../lib/recipeUrlImport.js";
 
 // ─── BOUTON « NOUVELLE » (choix : import par lien IA — admin — ou saisie manuelle) ─
 // L'import par lien consomme un crédit IA : l'écran d'attente est VOLONTAIREMENT
@@ -64,13 +65,16 @@ function Choice({ icon, title, subtitle, onClick, accent }) {
 }
 
 export function NewRecipeButton({ onManual }) {
-  const { isAdmin, importFromUrl, notify } = useAppShell();
-  const [step, setStep] = useState("idle"); // idle | choose | url | loading
+  const { isAdmin, importFromUrl, importFromImages, notify } = useAppShell();
+  const [step, setStep] = useState("idle"); // idle | choose | url | photo | loading
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
+  const [photos, setPhotos] = useState([]); // [{ file, preview, part }], max 2
+  const fileRef = useRef(null);
 
+  const resetPhotos = () => { photos.forEach(p => URL.revokeObjectURL(p.preview)); setPhotos([]); };
   const openNew = () => {
-    setError(""); setUrl("");
+    setError(""); setUrl(""); resetPhotos();
     if (isAdmin) setStep("choose");
     else onManual();               // sans droits d'import : saisie manuelle directe
   };
@@ -91,6 +95,34 @@ export function NewRecipeButton({ onManual }) {
     }
   };
 
+  const addFiles = async (fileList) => {
+    setError("");
+    const files = Array.from(fileList || []).filter(f => f.type.startsWith("image/"));
+    const room = 2 - photos.length;
+    if (room <= 0) { setError("2 photos maximum (recette sur 2 pages)."); return; }
+    const next = [];
+    for (const file of files.slice(0, room)) {
+      try { next.push({ file, preview: URL.createObjectURL(file), part: await fileToImagePart(file) }); }
+      catch { setError("Une image n'a pas pu être lue."); }
+    }
+    setPhotos(p => [...p, ...next]);
+  };
+  const removePhoto = (i) => setPhotos(p => { const c = p[i]; if (c) URL.revokeObjectURL(c.preview); return p.filter((_, k) => k !== i); });
+
+  const goPhotos = async () => {
+    if (!photos.length) { setError("Ajoute au moins une photo."); return; }
+    const parts = photos.map(p => p.part);
+    setError(""); setStep("loading");
+    try {
+      await importFromImages(parts);
+      resetPhotos(); setStep("idle");
+      notify?.("Recette extraite — à relire");
+    } catch (e) {
+      setStep("photo");
+      setError(e?.message || "Import impossible.");
+    }
+  };
+
   return (
     <>
       <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={openNew}>
@@ -104,7 +136,10 @@ export function NewRecipeButton({ onManual }) {
           <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Comment veux-tu la créer ?</p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Choice icon="link" accent title="Importer depuis un lien" subtitle="L'IA extrait la recette et la met en forme." onClick={() => { setError(""); setStep("url"); }} />
-            <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
+            <Choice icon="photo" accent title="Importer une photo" subtitle="Prends en photo une recette de livre (2 pages max)." onClick={() => { setError(""); resetPhotos(); setStep("photo"); }} />
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
+            </div>
           </div>
         </SwipeableSheet>
       )}
@@ -128,6 +163,44 @@ export function NewRecipeButton({ onManual }) {
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStep(isAdmin ? "choose" : "idle")}>Retour</button>
             <button className="btn btn-primary" style={{ flex: 1 }} disabled={!url.trim()} onClick={go}>
               <Icon name="plus" size={15} /> Importer
+            </button>
+          </div>
+        </SwipeableSheet>
+      )}
+
+      {/* Import par photo */}
+      {step === "photo" && (
+        <SwipeableSheet onClose={() => { resetPhotos(); setStep("idle"); }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 6 }}>
+            <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(232,112,58,0.15)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="photo" size={16} color="var(--accent)" /></span>
+            <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Importer une photo</h3>
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>
+            Photographie la recette d'un livre. Ajoute une <strong style={{ color: "var(--text2)" }}>2ᵉ photo</strong> si elle tient sur deux pages. Tu pourras tout relire avant d'enregistrer.
+          </p>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple hidden
+            onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: error ? 8 : 16 }}>
+            {photos.map((p, i) => (
+              <div key={i} style={{ position: "relative", aspectRatio: "3/4", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
+                <img src={p.preview} alt={`page ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <button onClick={() => removePhoto(i)} style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.6)", color: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
+                  <Icon name="close" size={13} />
+                </button>
+              </div>
+            ))}
+            {photos.length < 2 && (
+              <button onClick={() => fileRef.current?.click()} className="pressable" style={{ aspectRatio: "3/4", borderRadius: 12, border: "1.5px dashed var(--border)", background: "var(--surface2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text3)", cursor: "pointer" }}>
+                <Icon name="plus" size={20} color="var(--accent)" />
+                <span style={{ fontSize: 12, fontWeight: 600 }}>{photos.length ? "Ajouter la page 2" : "Ajouter une photo"}</span>
+              </button>
+            )}
+          </div>
+          {error && <div style={{ fontSize: 12.5, color: "var(--red)", margin: "0 0 14px", lineHeight: 1.4 }}>{error}</div>}
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => { resetPhotos(); setStep("choose"); }}>Retour</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} disabled={!photos.length} onClick={goPhotos}>
+              <Icon name="sparkle" size={15} /> Extraire
             </button>
           </div>
         </SwipeableSheet>
