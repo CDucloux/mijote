@@ -8,11 +8,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      // Don't generate a full PWA manifest — just use the SW for caching
+      // Manifest fourni en statique (public/manifest.webmanifest) : le plugin ne
+      // gère que le service worker de cache.
       manifest: false,
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable-512.png', 'manifest.webmanifest'],
       workbox: {
-        // Cache JS/CSS/HTML app shell
-        globPatterns: ['**/*.{js,css,html,svg,ico}'],
+        // Cache JS/CSS/HTML app shell (+ icônes PWA & manifest)
+        globPatterns: ['**/*.{js,css,html,svg,ico,png,webmanifest}'],
         runtimeCaching: [
           {
             // Images from Firebase Storage and any other origin
