@@ -45,21 +45,20 @@ function LoadingOverlay() {
   );
 }
 
-// Grande option cliquable du sélecteur.
+// Carte-option verticale du sélecteur (deux côte à côte).
 function Choice({ icon, title, subtitle, onClick, accent }) {
   return (
     <button onClick={onClick} className="pressable" style={{
-      display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
-      padding: "16px 16px", borderRadius: 16, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 12,
+      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 11, height: "100%",
+      textAlign: "left", cursor: "pointer", padding: "18px 15px 16px", borderRadius: 18,
+      background: accent ? "linear-gradient(158deg, rgba(232,112,58,0.14), var(--surface2) 70%)" : "var(--surface2)",
+      border: `1px solid ${accent ? "rgba(232,112,58,0.4)" : "var(--border)"}`,
     }}>
-      <span style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 13, display: "grid", placeItems: "center", background: accent ? "rgba(232,112,58,0.15)" : "var(--surface3)" }}>
-        <Icon name={icon} size={20} color={accent ? "var(--accent)" : "var(--text2)"} />
+      <span style={{ width: 46, height: 46, borderRadius: 14, display: "grid", placeItems: "center", background: accent ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
+        <Icon name={icon} size={22} color={accent ? "var(--accent)" : "var(--text2)"} />
       </span>
-      <span style={{ minWidth: 0, flex: 1 }}>
-        <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{title}</span>
-        <span style={{ display: "block", fontSize: 12, color: "var(--text3)", marginTop: 2, lineHeight: 1.35 }}>{subtitle}</span>
-      </span>
-      <Icon name="forward" size={16} color="var(--text3)" />
+      <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{title}</span>
+      <span style={{ fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4 }}>{subtitle}</span>
     </button>
   );
 }
@@ -103,8 +102,10 @@ export function NewRecipeButton({ onManual }) {
         <SwipeableSheet onClose={() => setStep("idle")}>
           <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 4px" }}>Nouvelle recette</h3>
           <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Comment veux-tu la créer ?</p>
-          <Choice icon="link" accent title="Importer depuis un lien" subtitle="Colle l'URL d'une recette, l'IA l'extrait et la met en forme." onClick={() => { setError(""); setStep("url"); }} />
-          <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Choice icon="link" accent title="Importer depuis un lien" subtitle="L'IA extrait la recette et la met en forme." onClick={() => { setError(""); setStep("url"); }} />
+            <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
+          </div>
         </SwipeableSheet>
       )}
 
