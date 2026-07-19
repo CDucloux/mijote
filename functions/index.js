@@ -98,7 +98,8 @@ function normalizeLlmDraft(d, sourceUrl) {
 
 async function extractWithLlm(text, sourceUrl) {
   const key = ANTHROPIC_API_KEY.value();
-  if (!key) throw new HttpsError("failed-precondition", "Cette page n'a pas de données structurées et l'extraction IA n'est pas configurée (clé API manquante).");
+  // Clé absente ou factice (déploiement sans vraie clé) → message clair, pas d'appel.
+  if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "Cette page n'a pas de données structurées et l'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
   const body = text.slice(0, 24_000); // borne le coût
