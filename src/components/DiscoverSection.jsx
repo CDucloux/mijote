@@ -179,6 +179,10 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const cuisines = useMemo(() => [...new Set(pubs.filter(p => !p.isComponent && p.cuisine).map(p => p.cuisine))].sort(), [pubs]);
   const usedCuisines = useMemo(() => CUISINES.filter(c => pubs.some(p => p.cuisine === c.label)), [pubs]);
   const activeFilters = !!(usePrefs || authorUid || text) || nActiveFilters > 0;
+  // L'« ingrédient du moment » est éditorial : il reste affiché pendant une
+  // recherche texte ; on ne le masque que sur un vrai filtre (préférences,
+  // auteur, feuille de filtres).
+  const hideSpotlight = usePrefs || authorUid || nActiveFilters > 0;
 
   // Rangées éditoriales (mode navigation, sans recherche ni filtre actif).
   const featured = useMemo(() => pubs.filter(p => !p.isComponent).slice(0, 12), [pubs]);
@@ -213,7 +217,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     <section className="slide-up" style={{ animationDelay: "0.22s" }}>
       {/* Ingrédient du moment : accroche éditoriale, au-dessus de la barre de
           recherche (uniquement en mode navigation). */}
-      {spotlight && !activeFilters && (
+      {spotlight && !hideSpotlight && (
         <SpotlightIngredient
           ingredient={spotlight}
           recipes={spotlightRecipes}
