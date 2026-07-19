@@ -56,14 +56,18 @@ function Choice({ icon, title, subtitle, onClick, accent, ai }) {
       background: accent ? "linear-gradient(100deg, rgba(232,112,58,0.13), var(--surface2) 75%)" : "var(--surface2)",
       border: `1px solid ${accent ? "rgba(232,112,58,0.38)" : "var(--border)"}`,
     }}>
-      <span style={{ width: 44, height: 44, borderRadius: 13, flexShrink: 0, display: "grid", placeItems: "center", background: accent ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
-        <Icon name={icon} size={21} color={accent ? "var(--accent)" : "var(--text2)"} />
+      <span style={{ position: "relative", flexShrink: 0 }}>
+        <span style={{ width: 44, height: 44, borderRadius: 13, display: "grid", placeItems: "center", background: accent ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
+          <Icon name={icon} size={21} color={accent ? "var(--accent)" : "var(--text2)"} />
+        </span>
+        {ai && (
+          <span title="Extraction par IA" style={{ position: "absolute", top: -5, right: -5, display: "grid", placeItems: "center", width: 19, height: 19, borderRadius: 999, background: "var(--accent)", border: "2px solid var(--surface)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}>
+            <Icon name="thinking" size={11} color="#fff" />
+          </span>
+        )}
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{title}</span>
-          {ai && <span title="Extraction par IA" style={{ display: "inline-grid", placeItems: "center", width: 20, height: 20, borderRadius: 999, background: "rgba(232,112,58,0.16)", flexShrink: 0 }}><Icon name="thinking" size={13} color="var(--accent)" /></span>}
-        </span>
+        <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{title}</span>
         <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 3 }}>{subtitle}</span>
       </span>
       <Icon name="forward" size={16} color="var(--text3)" />
