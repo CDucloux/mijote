@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 
@@ -9,6 +9,7 @@ import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
 import { prepareRecipeImport } from "./lib/recipeImport.js";
+import { importRecipeFromUrl, importRecipeFromImages } from "./lib/recipeUrlImport.js";
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
 import { recipesReferencing } from "./lib/recipeComponents.js";
 import { buildRecipeIndex } from "./lib/nutriscore.js";
@@ -391,8 +392,38 @@ function AppInner() {
   };
   const handleSignOut = () => { signOut(auth); setUser(null); };
 
+  // Retour d'une recette publique → on revient sur la carte cliquée dans
+  // « Découvrir » via son ancre (#discover-card-<pubId>). `scrollIntoView` est
+  // agnostique du conteneur qui défile ; on réessaie tant que la carte n'existe
+  // pas encore (le feed public se charge de façon asynchrone au remontage).
+  const lastPublicPubId = useRef(null);
+  const wasAtTabView = useRef(true);
+  const [scrollHold, setScrollHold] = useState(false); // masque l'onglet le temps de se caler
+  useEffect(() => { if (publicPubId) lastPublicPubId.current = publicPubId; }, [publicPubId]);
+  const atTabView = editingRecipe === null && !publicPubId
+    && !(selectedRecipe && currentRecipe)
+    && !(selectedRecipe && !currentRecipe && workspaceReady);
+  useLayoutEffect(() => {
+    const returning = atTabView && !wasAtTabView.current;
+    wasAtTabView.current = atTabView;
+    const anchor = lastPublicPubId.current;
+    if (!returning || !anchor) return;
+    lastPublicPubId.current = null;
+    setScrollHold(true); // rendu masqué avant peinture → pas de flash en haut
+    const deadline = Date.now() + 3000;
+    let raf;
+    const tryScroll = () => {
+      const el = document.getElementById(`discover-card-${anchor}`);
+      if (el) { el.scrollIntoView({ block: "center", behavior: "auto" }); setScrollHold(false); return; }
+      if (Date.now() < deadline) raf = requestAnimationFrame(tryScroll);
+      else setScrollHold(false);
+    };
+    tryScroll();
+    return () => cancelAnimationFrame(raf);
+  }, [atTabView]);
+
   const tabContent = (
-    <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
+    <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
@@ -444,7 +475,43 @@ function AppInner() {
   // Login screen
   if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory };
+  // Import depuis une URL (admin) : appelle la Cloud Function puis ouvre l'ÉDITEUR
+  // avec le brouillon (jamais d'enregistrement direct — le créateur relit/corrige).
+  const withItemIds = (recipe) => ({
+    description: "", collections: [], image: "", cuisine: "", source: "",
+    prepTime: 0, cookTime: 0, servings: 2, ...recipe,
+    ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),
+    utensils: (recipe.utensils || []).map((u, k) => ({ id: `u${Date.now()}_${k}`, dbId: "", name: "", ...u })),
+    steps: (recipe.steps || []).map((s, k) => ({ id: `s${Date.now()}_${k}`, title: "", text: "", ingredients: [], utensils: [], ...s })),
+  });
+  // Recette brute extraite (URL ou image) → brouillon prêt pour l'éditeur.
+  const openImportedDraft = (recipe) => {
+    // Complète dbId + Nutri-Score via le pipeline d'import existant (schéma toléré).
+    const res = prepareRecipeImport(JSON.stringify(recipe), { ingredientDB, utensilDB });
+    let draft = res.prepared?.[0] || recipe;
+    // Ustensiles : ne garder QUE ceux réellement en base master (dbId résolu), et
+    // purger les liens d'étapes qui pointaient vers un ustensile écarté.
+    const keptUt = (draft.utensils || []).filter(u => u.dbId);
+    const keptIds = new Set(keptUt.map(u => u.id));
+    draft = {
+      ...draft,
+      utensils: keptUt,
+      steps: (draft.steps || []).map(s => ({ ...s, utensils: (s.utensils || []).filter(id => keptIds.has(id)) })),
+    };
+    setEditingRecipe(withItemIds(draft));
+  };
+  const importFromUrl = async (url) => {
+    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
+    openImportedDraft(recipe);
+    return { method };
+  };
+  const importFromImages = async (images) => {
+    const { recipe, method } = await importRecipeFromImages(images, utensilDB.map(u => u.name));
+    openImportedDraft(recipe);
+    return { method };
+  };
+
+  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory, isAdmin, importFromUrl, importFromImages };
 
   return (
     <AppShellProvider value={shellValue}>

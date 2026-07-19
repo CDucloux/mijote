@@ -5,7 +5,7 @@ export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 })
   const active = pull > 0 || refreshing;
   const ready = pull >= threshold;
   return (
-    <div ref={containerRef} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+    <div ref={containerRef} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", overscrollBehavior: "contain" }}>
       {enabled && active && (
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: refreshing ? threshold : pull, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 5 }}>
           <div style={{ width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", border: "1px solid var(--border)", boxShadow: "0 2px 12px rgba(0,0,0,0.3)", opacity: Math.min(1, pull / threshold) }}>

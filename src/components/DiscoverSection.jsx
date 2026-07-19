@@ -100,7 +100,7 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
       </h3>
       <div className="discover-row" style={{ display: "flex", gap: 12, overflowX: "auto", paddingTop: 6, paddingBottom: 6, scrollSnapType: "x proximity" }}>
         {items.map((it, i) => (
-          <div key={it.pubId} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
+          <div key={it.pubId} id={`discover-card-${it.pubId}`} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
         ))}
       </div>
     </div>
@@ -179,6 +179,10 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const cuisines = useMemo(() => [...new Set(pubs.filter(p => !p.isComponent && p.cuisine).map(p => p.cuisine))].sort(), [pubs]);
   const usedCuisines = useMemo(() => CUISINES.filter(c => pubs.some(p => p.cuisine === c.label)), [pubs]);
   const activeFilters = !!(usePrefs || authorUid || text) || nActiveFilters > 0;
+  // L'« ingrédient du moment » est éditorial : il reste affiché pendant une
+  // recherche texte ; on ne le masque que sur un vrai filtre (préférences,
+  // auteur, feuille de filtres).
+  const hideSpotlight = usePrefs || authorUid || nActiveFilters > 0;
 
   // Rangées éditoriales (mode navigation, sans recherche ni filtre actif).
   const featured = useMemo(() => pubs.filter(p => !p.isComponent).slice(0, 12), [pubs]);
@@ -213,7 +217,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     <section className="slide-up" style={{ animationDelay: "0.22s" }}>
       {/* Ingrédient du moment : accroche éditoriale, au-dessus de la barre de
           recherche (uniquement en mode navigation). */}
-      {spotlight && !activeFilters && (
+      {spotlight && !hideSpotlight && (
         <SpotlightIngredient
           ingredient={spotlight}
           recipes={spotlightRecipes}
@@ -233,7 +237,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         background: "var(--bg)",
         boxShadow: stuck ? "0 4px 12px rgba(0,0,0,0.10)" : "none",
         margin: "0 -20px",
-        padding: "8px 20px 6px",
+        padding: "8px 20px 8px",
         transition: "box-shadow 0.2s",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -261,7 +265,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         </div>
 
         {/* Barre de filtres — mêmes options que /recipes (feuille dédiée) */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 4 }}>
           <button className="filter-btn" onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
@@ -335,7 +339,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       ) : (
         // ── Mode recherche / filtre : grille complète ──
         <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.map((p, idx) => <div key={p.pubId}>{card(p, idx)}</div>)}
+          {filtered.map((p, idx) => <div key={p.pubId} id={`discover-card-${p.pubId}`}>{card(p, idx)}</div>)}
         </div>
       )}
     </section>

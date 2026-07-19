@@ -1,5 +1,22 @@
 # Changelog – Mijoté
 
+## v3.4.0 – Safran · Import IA & calculatrices
+
+### Nouvelle recette
+- **Import depuis un lien** : colle l'URL d'une recette, l'IA (Claude Haiku) l'extrait et la met en forme (ingrédients, étapes à l'infinitif, liaisons ingrédients/ustensiles) — à relire avant d'enregistrer. Réservé au créateur, garde vérifiée **côté serveur**
+- **Import depuis une photo** : photographie une recette de livre (jusqu'à **2 pages**), l'IA la reconstruit
+- Sélecteur **« Nouvelle recette »** repensé : import par lien / photo (marqués IA) ou saisie manuelle
+- Écran d'attente **volontairement non-annulable** pendant l'extraction (pour ne pas gâcher un crédit)
+
+### Calculatrices dans la recette
+- **Moule / plat** : adapte toutes les quantités au rapport de surfaces (ou de volumes) entre deux moules
+- **Conversions d'unités** : masse ↔ volume via la densité de l'ingrédient de la recette
+
+### Confort
+- Retour d'une recette publique : on **revient sur la carte** consultée dans Découvrir (fini le retour tout en haut), sans clignotement
+- **« L'ingrédient du moment »** reste visible pendant une recherche texte ; frise de saison plus aérée sur desktop et repère du mois courant soigné
+- Bouton **Filtres** : survol desktop plus discret ; espacement des barres de filtre uniformisé entre Découvrir et Mes Recettes
+
 ## v3.3.0 – Safran · Découverte, filtres unifiés & PWA soignée
 
 ### Onboarding
