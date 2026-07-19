@@ -392,8 +392,34 @@ function AppInner() {
   };
   const handleSignOut = () => { signOut(auth); setUser(null); };
 
+  // Conserve la position de défilement de chaque onglet : quand on ouvre une
+  // recette (publique ou non) l'onglet est démonté, puis remonté au retour. On
+  // mémorise le scrollTop en continu et on le restaure au retour (avec quelques
+  // réessais rAF le temps que le contenu asynchrone — Découvrir — se remplisse).
+  const tabScrollRef = useRef(null);
+  const tabScrollPos = useRef({});
+  const wasAtTabView = useRef(true);
+  const atTabView = editingRecipe === null && !publicPubId
+    && !(selectedRecipe && currentRecipe)
+    && !(selectedRecipe && !currentRecipe && workspaceReady);
+  useEffect(() => {
+    const returning = atTabView && !wasAtTabView.current;
+    wasAtTabView.current = atTabView;
+    if (!returning) return;
+    const el = tabScrollRef.current;
+    const y = tabScrollPos.current[tab] || 0;
+    if (!el || !y) return;
+    let raf, tries = 0;
+    const apply = () => {
+      el.scrollTop = y;
+      if (Math.abs(el.scrollTop - y) > 2 && tries++ < 40) raf = requestAnimationFrame(apply);
+    };
+    apply();
+    return () => cancelAnimationFrame(raf);
+  }, [atTabView, tab]);
+
   const tabContent = (
-    <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
+    <div ref={tabScrollRef} onScroll={e => { tabScrollPos.current[tab] = e.currentTarget.scrollTop; }} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
