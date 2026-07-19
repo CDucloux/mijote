@@ -46,8 +46,9 @@ function LoadingOverlay() {
   );
 }
 
-// Ligne-option du sélecteur (empilées verticalement). `accent` = import IA.
-function Choice({ icon, title, subtitle, onClick, accent, badge }) {
+// Ligne-option du sélecteur (empilées verticalement). `accent` = import IA
+// (marqué par une petite tête qui réfléchit plutôt qu'un libellé « IA »).
+function Choice({ icon, title, subtitle, onClick, accent, ai }) {
   return (
     <button onClick={onClick} className="pressable" style={{
       display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
@@ -61,7 +62,7 @@ function Choice({ icon, title, subtitle, onClick, accent, badge }) {
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{title}</span>
-          {badge && <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--accent)", background: "rgba(232,112,58,0.16)", padding: "2px 6px", borderRadius: 999 }}>{badge}</span>}
+          {ai && <span title="Extraction par IA" style={{ display: "inline-grid", placeItems: "center", width: 20, height: 20, borderRadius: 999, background: "rgba(232,112,58,0.16)", flexShrink: 0 }}><Icon name="thinking" size={13} color="var(--accent)" /></span>}
         </span>
         <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 3 }}>{subtitle}</span>
       </span>
@@ -141,8 +142,8 @@ export function NewRecipeButton({ onManual }) {
           <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Nouvelle recette</h3>
           <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 18px" }}>Comment veux-tu la créer ?</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <Choice icon="link" accent badge="IA" title="Importer depuis un lien" subtitle="Colle une URL : l'IA extrait et met en forme la recette." onClick={() => { setError(""); setStep("url"); }} />
-            <Choice icon="photo" accent badge="IA" title="Importer une photo" subtitle="Photographie une recette de livre — jusqu'à 2 pages." onClick={() => { setError(""); resetPhotos(); setStep("photo"); }} />
+            <Choice icon="link" accent ai title="Importer depuis un lien" subtitle="Colle une URL : l'IA extrait et met en forme la recette." onClick={() => { setError(""); setStep("url"); }} />
+            <Choice icon="photo" accent ai title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => { setError(""); resetPhotos(); setStep("photo"); }} />
             <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
               <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
               <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>
