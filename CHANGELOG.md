@@ -1,5 +1,33 @@
 # Changelog – Mijoté
 
+## v3.3.0 – Safran · Découverte, filtres unifiés & PWA soignée
+
+### Onboarding
+- **Carrousel de bienvenue** à la première connexion : cartes défilables (peek gauche/droite) qui présentent les fonctionnalités clés
+
+### Découvrir
+- **« L'ingrédient du moment »** en tête de Découvrir : un fruit/légume de saison (rotation hebdomadaire), sa frise de saison, une accroche et les recettes publiques qui l'utilisent — ou une invitation à publier
+- **Filtres unifiés avec Mes Recettes** : mêmes options exactement, via la même feuille de filtres
+
+### Filtres avancés (Mes Recettes & Découvrir)
+- **Feuille de filtres** repensée façon « Mob » : sections repliables, tri intégré
+- Filtrer par **type**, **temps total**, **régime & saison**, **cuisine**, **Nutri-Score**, **difficulté**, **mode de cuisson** (four, air fryer, plaques… déduit des ustensiles, « mixte » si plusieurs) et **ingrédients** (multi-sélection avec vignettes)
+- Bouton **Filtres** avec surbrillance élégante au survol sur desktop
+
+### Badges
+- Nouveau badge **Vegan** (ni viande, ni poisson, ni produits laitiers) ; le badge **De saison** est relooké (icône soleil / ambre)
+
+### Foyer
+- **Départ / dissolution** d'un foyer : les recettes créées dans le foyer ne disparaissent plus (fusion additive dans l'espace perso) et l'état vécu est conservé — plus de vieille liste de courses qui « ressuscite »
+- **Retrait du partage de listes de courses** individuel : le mode foyer couvre déjà ce besoin, de façon plus cohérente
+
+### PWA
+- **Icônes d'application nettes** (fini le SVG pixellisé à l'ajout à l'écran d'accueil) : icônes PNG dédiées (dont une version *maskable*) + manifeste d'application
+- Zoom et sélection de texte désactivés en mode **standalone** uniquement (feel natif sans gêner le navigateur)
+
+### Sous le capot
+- **Coûts Firestore** : l'annuaire des utilisateurs (avatars) n'est plus chargé pour tout le monde à chaque session — chargement **à la demande** (foyer, invitations), les utilisateurs solo ne le lisent jamais
+
 ## v3.2.1 – Poivre · Correctifs & améliorations
 
 - **Difficulté** : le badge de la fiche devient **cliquable** et détaille le calcul (geste dominant, gestes détectés, modificateurs) ; le score **hérite désormais des gestes des préparations de base** d'une recette
