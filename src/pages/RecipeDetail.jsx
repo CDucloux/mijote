@@ -13,6 +13,7 @@ import { DifficultyModal } from "../components/DifficultyModal.jsx";
 import { RecipeJournal } from "../components/RecipeJournal.jsx";
 import { RecipePlaceholder } from "../components/RecipePlaceholder.jsx";
 import { HeroMenu } from "../components/HeroMenu.jsx";
+import { RecipeCalculators } from "../components/RecipeCalculators.jsx";
 import { OfficialAvatar } from "../components/OfficialAvatar.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
@@ -41,6 +42,8 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       ? () => navigate(`/recipes/${location.state.from}`)
       : onBack;
   const [servings, setServings] = useState(Math.min(24, recipe.servings || 2));
+  const [panFactor, setPanFactor] = useState(1); // facteur d'adaptation de moule (calculatrice)
+  const [showCalc, setShowCalc] = useState(false);
   const [activeTab, setActiveTab] = useState("Ingrédients");
   const isDesktop = useIsDesktop();
   const [showMealModal, setShowMealModal] = useState(false);
@@ -160,7 +163,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     setShareOpen(false);
   };
   const isProgrammaticScroll = useRef(false);
-  const mult = servings / (recipe.servings || 2);
+  const mult = (servings / (recipe.servings || 2)) * panFactor;
   const seasonResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);
   const recipeVegan = useMemo(() => isRecipeVegan(recipe, seasonResolver, { recipes }), [recipe, seasonResolver, recipes]);
@@ -520,7 +523,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             <div style={{ padding: "16px 16px 32px" }}>
               {/* Portions – pilote les quantités de la liste */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)", borderRadius: 14, padding: "12px 16px", marginBottom: 14, border: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>Portions</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>Portions</span>
+                  <button onClick={() => setShowCalc(true)} title="Calculatrices (moule, conversions)" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, padding: "4px 9px", borderRadius: 999, border: "1px solid var(--border)", background: panFactor !== 1 ? "rgba(232,112,58,0.14)" : "var(--surface2)", color: panFactor !== 1 ? "var(--accent)" : "var(--text2)", cursor: "pointer" }}>
+                    <Icon name="sparkle" size={13} /> {panFactor !== 1 ? `Moule ×${(Math.round(panFactor * 100) / 100)}` : "Adapter"}
+                  </button>
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", border: "none", cursor: "pointer" }}>
                     <svg width="11" height="2" viewBox="0 0 11 2"><rect x="0" y="0" width="11" height="2" rx="1" fill="currentColor"/></svg>
@@ -1061,6 +1069,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           </div>
           <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
         </SwipeableSheet>
+      )}
+      {showCalc && (
+        <RecipeCalculators recipe={recipe} panApplied={panFactor !== 1}
+          onApply={f => setPanFactor(f)} onReset={() => setPanFactor(1)} onClose={() => setShowCalc(false)} />
       )}
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
       {showDifficulty && <DifficultyModal data={difficultyExplain} onClose={() => setShowDifficulty(false)} />}
