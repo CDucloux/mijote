@@ -2,10 +2,17 @@
 // `importRecipeFromUrl` : importe une recette depuis une URL. Réservé à l'admin
 // (le créateur) — la vérification se fait CÔTÉ SERVEUR sur l'e-mail du token Auth,
 // pas seulement en masquant un bouton. Deux chemins : JSON-LD schema.org (gratuit)
-// puis, à défaut, extraction via Claude Haiku 4.5 (structured outputs).
+// puis, à défaut, extraction via Claude Haiku 4.5 (prompt éditable dans prompts/).
+// Les deux chemins produisent un brouillon identiquement structuré (ids, _raw,
+// liaisons ingrédients/ustensiles ↔ étapes) via assignIdsAndLink().
+const fs = require("fs");
+const path = require("path");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret, defineString } = require("firebase-functions/params");
-const { extractJsonLdRecipe, mapJsonLdToMijote, htmlToText } = require("./recipeExtract.js");
+const {
+  extractJsonLdRecipe, mapJsonLdToMijote, htmlToText,
+  extractOgImage, assignIdsAndLink, CUISINE_LABELS,
+} = require("./recipeExtract.js");
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 const ADMIN_EMAIL = defineString("ADMIN_EMAIL"); // e-mail autorisé (le créateur)
@@ -14,16 +21,11 @@ const MAX_HTML_BYTES = 3_000_000; // garde-fou : on ne télécharge pas des page
 const FETCH_TIMEOUT_MS = 15_000;
 const MODEL = "claude-haiku-4-5";
 
-// Schéma de sortie imposé au LLM (structured outputs) : brouillon Mijoté.
-// Format JSON attendu du LLM, décrit dans le prompt (plus robuste et compatible
-// que output_config selon la version du SDK) ; on parse le texte renvoyé.
-const LLM_SYSTEM = `Tu extrais une recette de cuisine depuis le texte brut d'une page web, en français.
-Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour ni balises Markdown, au format exact :
-{"name": string, "prepTime": number, "cookTime": number, "servings": number, "cuisine": string,
- "ingredients": [{"name": string, "amount": string, "unit": string}],
- "utensils": [{"name": string}],
- "steps": [{"text": string, "tip": string}]}
-Règles : prepTime/cookTime en minutes (0 si inconnu) ; pour chaque ingrédient, "amount" = le chiffre seul (ou "" si absent), "unit" = l'unité (ou ""), "name" = l'ingrédient ; "steps" dans l'ordre de préparation ; "tip" = astuce optionnelle ("" sinon). N'invente rien qui ne soit pas dans la page. Si la page n'est pas une recette, renvoie "name": "".`;
+// Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md), avec
+// la liste des cuisines injectée. Lu une fois au démarrage de l'instance.
+const LLM_SYSTEM = fs
+  .readFileSync(path.join(__dirname, "prompts", "recipeExtract.md"), "utf-8")
+  .replace("{{CUISINE_LIST}}", CUISINE_LABELS.join(", "));
 
 function parseJsonLoose(s) {
   let t = (s || "").trim();
@@ -70,29 +72,28 @@ async function fetchHtml(url) {
   }
 }
 
-// Nettoie le brouillon LLM (amount "" → absent / nombre) au schéma Mijoté.
-function normalizeLlmDraft(d, sourceUrl) {
-  const num = (s) => { const n = Number(String(s).replace(",", ".")); return Number.isFinite(n) && n > 0 ? n : undefined; };
+// Brouillon LLM brut → forme INTERMÉDIAIRE (avant ids/liaisons). Conserve `_raw`
+// (ligne d'origine, éditable) et les listes de noms ingrédients/ustensiles par étape.
+function llmToIntermediate(d, sourceUrl) {
+  const num = (s) => { const n = Number(String(s ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? n : undefined; };
   return {
     name: (d.name || "").slice(0, 200),
-    prepTime: Math.max(0, Math.round(d.prepTime || 0)),
-    cookTime: Math.max(0, Math.round(d.cookTime || 0)),
-    servings: Math.max(1, Math.round(d.servings || 2)),
-    cuisine: (d.cuisine || "").slice(0, 60),
+    prepTime: d.prepTime, cookTime: d.cookTime, servings: d.servings,
+    cuisine: d.cuisine || "",
     source: sourceUrl,
-    image: "",
     ingredients: (d.ingredients || []).map(i => {
-      const ing = { name: (i.name || "").slice(0, 120) };
+      const ing = { name: (i.name || "").slice(0, 120), _raw: (i.raw || "").slice(0, 160) };
       const a = num(i.amount); if (a != null) ing.amount = a;
       if (i.unit) ing.unit = String(i.unit).slice(0, 30);
       return ing;
     }).filter(i => i.name),
     utensils: (d.utensils || []).map(u => ({ name: (u.name || "").slice(0, 60) })).filter(u => u.name),
-    steps: (d.steps || []).map(s => {
-      const step = { text: (s.text || "").slice(0, 2000) };
-      if (s.tip && s.tip.trim()) step.tip = s.tip.slice(0, 500);
-      return step;
-    }).filter(s => s.text),
+    steps: (d.steps || []).map(s => ({
+      text: (s.text || "").slice(0, 2000),
+      tip: (s.tip && s.tip.trim()) ? s.tip.slice(0, 500) : "",
+      ingredients: Array.isArray(s.ingredients) ? s.ingredients.map(x => String(x)) : [],
+      utensils: Array.isArray(s.utensils) ? s.utensils.map(x => String(x)) : [],
+    })).filter(s => s.text),
   };
 }
 
@@ -120,7 +121,7 @@ async function extractWithLlm(text, sourceUrl) {
   let parsed;
   try { parsed = parseJsonLoose(block.text); }
   catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
-  return normalizeLlmDraft(parsed, sourceUrl);
+  return llmToIntermediate(parsed, sourceUrl);
 }
 
 exports.importRecipeFromUrl = onCall(
@@ -137,17 +138,22 @@ exports.importRecipeFromUrl = onCall(
 
     try {
       const html = await fetchHtml(url);
+      const ogImage = extractOgImage(html); // image principale (fallback si absente du JSON-LD)
 
       // 1. Chemin gratuit : JSON-LD schema.org/Recipe.
       const jsonld = extractJsonLdRecipe(html);
       if (jsonld && jsonld.name && (jsonld.recipeIngredient || jsonld.recipeInstructions)) {
-        return { recipe: mapJsonLdToMijote(jsonld, url), method: "jsonld" };
+        const inter = mapJsonLdToMijote(jsonld, url);
+        inter.image = inter.image || ogImage;
+        return { recipe: assignIdsAndLink(inter), method: "jsonld" };
       }
 
       // 2. Fallback : LLM sur le texte de la page.
       const text = htmlToText(html);
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
-      const recipe = await extractWithLlm(text, url);
+      const inter = await extractWithLlm(text, url);
+      inter.image = ogImage; // le texte n'a pas d'image → on prend l'og:image de la page
+      const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
       return { recipe, method: "llm" };
     } catch (e) {

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isoDurationToMinutes, parseIngredientLine, extractJsonLdRecipe,
   mapJsonLdToMijote, flattenInstructions, htmlToText,
+  matchCuisine, extractOgImage, assignIdsAndLink,
 } from "./recipeExtract.js";
 
 describe("isoDurationToMinutes", () => {
@@ -17,17 +18,66 @@ describe("isoDurationToMinutes", () => {
 });
 
 describe("parseIngredientLine", () => {
-  it("sépare quantité, unité et nom", () => {
-    expect(parseIngredientLine("200 g de farine")).toEqual({ name: "farine", amount: 200, unit: "g" });
+  it("sépare quantité, unité et nom + conserve _raw", () => {
+    expect(parseIngredientLine("200 g de farine")).toEqual({ name: "farine", _raw: "200 g de farine", amount: 200, unit: "g" });
   });
   it("gère les fractions", () => {
-    expect(parseIngredientLine("1/2 cuillère à café de cannelle")).toEqual({ name: "cannelle", amount: 0.5, unit: "cuillère à café" });
+    expect(parseIngredientLine("1/2 cuillère à café de cannelle")).toEqual({ name: "cannelle", _raw: "1/2 cuillère à café de cannelle", amount: 0.5, unit: "cuillère à café" });
   });
   it("sans quantité → nom seul", () => {
-    expect(parseIngredientLine("sel")).toEqual({ name: "sel" });
+    expect(parseIngredientLine("sel")).toEqual({ name: "sel", _raw: "sel" });
   });
   it("nombre sans unité", () => {
-    expect(parseIngredientLine("3 pommes")).toEqual({ name: "pommes", amount: 3 });
+    expect(parseIngredientLine("3 pommes")).toEqual({ name: "pommes", _raw: "3 pommes", amount: 3 });
+  });
+});
+
+describe("matchCuisine", () => {
+  it("rapproche du label canonique", () => {
+    expect(matchCuisine("française")).toBe("Française");
+    expect(matchCuisine("Cuisine grecque")).toBe("Grecque");
+  });
+  it("renvoie \"\" si aucune correspondance", () => {
+    expect(matchCuisine("martienne")).toBe("");
+    expect(matchCuisine("")).toBe("");
+  });
+});
+
+describe("extractOgImage", () => {
+  it("récupère l'og:image du head", () => {
+    expect(extractOgImage('<meta property="og:image" content="https://x/p.jpg">')).toBe("https://x/p.jpg");
+  });
+  it("\"\" si absente", () => {
+    expect(extractOgImage("<head></head>")).toBe("");
+  });
+});
+
+describe("assignIdsAndLink", () => {
+  it("assigne des ids et lie ingrédients/ustensiles aux étapes", () => {
+    const inter = {
+      name: "Test", prepTime: 10, cookTime: 20, servings: 4, cuisine: "Grecque",
+      ingredients: [{ name: "pastèque", amount: 1, _raw: "1 pastèque" }, { name: "feta", amount: 200, unit: "g", _raw: "200 g de feta" }],
+      utensils: [{ name: "saladier" }],
+      steps: [
+        { text: "Couper la pastèque en cubes.", tip: "", ingredients: [], utensils: [] },
+        { text: "Mélanger le tout dans un saladier avec la feta.", tip: "", ingredients: ["feta"], utensils: [] },
+      ],
+    };
+    const r = assignIdsAndLink(inter);
+    expect(r.ingredients[0].id).toBe("i0");
+    expect(r.ingredients[0]._raw).toBe("1 pastèque");
+    expect(r.utensils[0].id).toBe("u0");
+    // étape 1 : pastèque détectée dans le texte
+    expect(r.steps[0].ingredients).toContain("i0");
+    // étape 2 : feta (explicite) + saladier (texte)
+    expect(r.steps[1].ingredients).toContain("i1");
+    expect(r.steps[1].utensils).toContain("u0");
+    expect(r.cuisine).toBe("Grecque");
+  });
+  it("ne lie pas par faux positif de sous-chaîne", () => {
+    const inter = { ingredients: [{ name: "sel" }], utensils: [], steps: [{ text: "Ciseler le persil." }] };
+    const r = assignIdsAndLink(inter);
+    expect(r.steps[0].ingredients).toEqual([]); // "sel" ⊄ "persil"
   });
 });
 

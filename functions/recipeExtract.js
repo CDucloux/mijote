@@ -60,7 +60,7 @@ function parseIngredientLine(raw) {
   }
   rest = rest.replace(/^(de |d'|d’|des |du )/i, "").trim();
   const name = (rest || line).slice(0, 120);
-  const ing = { name };
+  const ing = { name, _raw: line.slice(0, 160) };
   if (amount != null) ing.amount = amount;
   if (unit) ing.unit = unit;
   return ing;
@@ -123,21 +123,86 @@ function extractJsonLdRecipe(html) {
   return null;
 }
 
-// schema.org/Recipe → brouillon au schéma Mijoté (validé/complété côté client).
+// Styles de cuisine reconnus (miroir de src/constants/cuisines.js — garder aligné).
+const CUISINE_LABELS = ["Française", "Italienne", "Espagnole", "Portugaise", "Grecque",
+  "Marocaine", "Tunisienne", "Libanaise", "Turque", "Indienne", "Chinoise", "Japonaise",
+  "Coréenne", "Thaïlandaise", "Vietnamienne", "Mexicaine", "Américaine", "Fusion"];
+
+const norm = (s) => (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+
+// Rapproche une valeur libre du label canonique le plus proche (ou "").
+function matchCuisine(v) {
+  const n = norm(Array.isArray(v) ? v[0] : v);
+  if (!n) return "";
+  const hit = CUISINE_LABELS.find(l => norm(l) === n) || CUISINE_LABELS.find(l => n.includes(norm(l)) || norm(l).includes(n));
+  return hit || "";
+}
+
+// og:image (ou twitter:image) depuis le <head> — image principale de la recette.
+function extractOgImage(html) {
+  const m = html.match(/<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)(?::url)?["'][^>]*>/i);
+  if (!m) return "";
+  const c = m[0].match(/content=["']([^"']+)["']/i);
+  return c ? c[1] : "";
+}
+
+// schema.org/Recipe → brouillon INTERMÉDIAIRE (sans ids ; liaisons faites ensuite).
 function mapJsonLdToMijote(r, sourceUrl) {
-  const draft = {
+  return {
     name: (Array.isArray(r.name) ? r.name[0] : r.name || "").toString().slice(0, 200),
     prepTime: isoDurationToMinutes(r.prepTime) || 0,
     cookTime: isoDurationToMinutes(r.cookTime) || 0,
     servings: parseYield(r.recipeYield) || 2,
     image: firstImageUrl(r.image),
     source: sourceUrl,
-    cuisine: (Array.isArray(r.recipeCuisine) ? r.recipeCuisine[0] : r.recipeCuisine || "").toString().slice(0, 60),
+    cuisine: matchCuisine(r.recipeCuisine),
     ingredients: (r.recipeIngredient || r.ingredients || []).map(parseIngredientLine).filter(Boolean),
     utensils: [],
     steps: flattenInstructions(r.recipeInstructions),
   };
-  return draft;
+}
+
+// Détecte le nom `name` (normalisé) comme mot/segment dans un texte (évite les
+// faux positifs type « sel » dans « persil »).
+function mentions(text, name) {
+  const n = norm(name);
+  if (n.length < 3) return false;
+  const esc = n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(text);
+}
+
+// Assemble le brouillon FINAL au schéma Mijoté : ids stables sur ingrédients/
+// ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
+// fourni par le LLM, complété par détection dans le texte de l'étape).
+function assignIdsAndLink(d) {
+  const ingredients = (d.ingredients || []).map((i, k) => {
+    const raw = i._raw || [i.amount, i.unit, i.name].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
+    const ing = { id: `i${k}`, dbId: "", name: i.name || "", _raw: raw };
+    if (i.amount != null && i.amount !== "") ing.amount = i.amount;
+    if (i.unit) ing.unit = i.unit;
+    return ing;
+  });
+  const utensils = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: (u.name || u).toString() }));
+
+  const steps = (d.steps || []).map((s, k) => {
+    const text = norm(s.text);
+    const explicitIng = new Set((s.ingredients || []).map(norm));
+    const explicitUt = new Set((s.utensils || []).map(norm));
+    const ingIds = ingredients.filter(i => i.name && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map(i => i.id);
+    const utIds = utensils.filter(u => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map(u => u.id);
+    return { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
+  });
+
+  return {
+    name: (d.name || "").slice(0, 200),
+    prepTime: Math.max(0, Math.round(d.prepTime || 0)),
+    cookTime: Math.max(0, Math.round(d.cookTime || 0)),
+    servings: Math.max(1, Math.round(d.servings || 2)),
+    cuisine: matchCuisine(d.cuisine),
+    source: d.source || "",
+    image: d.image || "",
+    ingredients, utensils, steps,
+  };
 }
 
 // HTML → texte lisible (pour le fallback LLM) : retire scripts/styles et balises.
@@ -156,4 +221,5 @@ function htmlToText(html) {
 module.exports = {
   isoDurationToMinutes, parseYield, parseIngredientLine, flattenInstructions,
   firstImageUrl, findRecipeNode, extractJsonLdRecipe, mapJsonLdToMijote, htmlToText,
+  CUISINE_LABELS, matchCuisine, extractOgImage, assignIdsAndLink, mentions,
 };
