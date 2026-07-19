@@ -9,6 +9,7 @@ import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
 import { prepareRecipeImport } from "./lib/recipeImport.js";
+import { importRecipeFromUrl } from "./lib/recipeUrlImport.js";
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
 import { recipesReferencing } from "./lib/recipeComponents.js";
 import { buildRecipeIndex } from "./lib/nutriscore.js";
@@ -444,7 +445,24 @@ function AppInner() {
   // Login screen
   if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory };
+  // Import depuis une URL (admin) : appelle la Cloud Function puis ouvre l'ÉDITEUR
+  // avec le brouillon (jamais d'enregistrement direct — le créateur relit/corrige).
+  const withItemIds = (recipe) => ({
+    description: "", collections: [], image: "", cuisine: "", source: "",
+    prepTime: 0, cookTime: 0, servings: 2, ...recipe,
+    ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),
+    utensils: (recipe.utensils || []).map((u, k) => ({ id: `u${Date.now()}_${k}`, dbId: "", name: "", ...u })),
+    steps: (recipe.steps || []).map((s, k) => ({ id: `s${Date.now()}_${k}`, title: "", text: "", ingredients: [], utensils: [], ...s })),
+  });
+  const importFromUrl = async (url) => {
+    const { recipe, method } = await importRecipeFromUrl(url);
+    // Complète dbId + Nutri-Score via le pipeline d'import existant (schéma toléré).
+    const res = prepareRecipeImport(JSON.stringify(recipe), { ingredientDB, utensilDB });
+    setEditingRecipe(withItemIds(res.prepared?.[0] || recipe));
+    return { method };
+  };
+
+  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory, isAdmin, importFromUrl };
 
   return (
     <AppShellProvider value={shellValue}>
