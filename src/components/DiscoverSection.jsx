@@ -233,7 +233,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         background: "var(--bg)",
         boxShadow: stuck ? "0 4px 12px rgba(0,0,0,0.10)" : "none",
         margin: "0 -20px",
-        padding: "8px 20px 6px",
+        padding: "8px 20px 8px",
         transition: "box-shadow 0.2s",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -261,7 +261,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         </div>
 
         {/* Barre de filtres — mêmes options que /recipes (feuille dédiée) */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 4 }}>
           <button className="filter-btn" onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
