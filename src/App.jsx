@@ -396,40 +396,35 @@ function AppInner() {
   // recette (publique ou non) l'onglet est démonté, puis remonté au retour. On
   // mémorise le scrollTop en continu et on le restaure au retour (avec quelques
   // réessais rAF le temps que le contenu asynchrone — Découvrir — se remplisse).
-  const tabScrollRef = useRef(null);
-  const tabScrollPos = useRef({});
+  // Retour d'une recette publique → on revient sur la carte cliquée dans
+  // « Découvrir » via son ancre (#discover-card-<pubId>). `scrollIntoView` est
+  // agnostique du conteneur qui défile ; on réessaie tant que la carte n'existe
+  // pas encore (le feed public se charge de façon asynchrone au remontage).
+  const lastPublicPubId = useRef(null);
   const wasAtTabView = useRef(true);
-  const restoringRef = useRef(false);
+  useEffect(() => { if (publicPubId) lastPublicPubId.current = publicPubId; }, [publicPubId]);
   const atTabView = editingRecipe === null && !publicPubId
     && !(selectedRecipe && currentRecipe)
     && !(selectedRecipe && !currentRecipe && workspaceReady);
   useEffect(() => {
     const returning = atTabView && !wasAtTabView.current;
     wasAtTabView.current = atTabView;
-    if (!returning) return;
-    const el = tabScrollRef.current;
-    const y = tabScrollPos.current[tab] || 0;
-    if (!el || !y) return;
-    // Le contenu (Découvrir) se remplit de façon asynchrone : la page est courte
-    // au remontage, puis grandit. On réapplique la position tant que la hauteur
-    // change (ResizeObserver), en ignorant les scrolls programmatiques.
-    restoringRef.current = true;
-    let done = false;
-    const finish = () => { done = true; restoringRef.current = false; ro.disconnect(); clearTimeout(timer); };
-    const apply = () => {
-      if (done) return;
-      el.scrollTop = y;
-      if (Math.abs(el.scrollTop - y) <= 2) finish();
+    const anchor = lastPublicPubId.current;
+    if (!returning || !anchor) return;
+    lastPublicPubId.current = null;
+    const deadline = Date.now() + 4000;
+    let raf;
+    const tryScroll = () => {
+      const el = document.getElementById(`discover-card-${anchor}`);
+      if (el) { el.scrollIntoView({ block: "center", behavior: "auto" }); return; }
+      if (Date.now() < deadline) raf = requestAnimationFrame(tryScroll);
     };
-    const ro = new ResizeObserver(apply);
-    ro.observe(el.firstElementChild || el);
-    const timer = setTimeout(finish, 4000); // filet de sécurité
-    apply();
-    return finish;
-  }, [atTabView, tab]);
+    tryScroll();
+    return () => cancelAnimationFrame(raf);
+  }, [atTabView]);
 
   const tabContent = (
-    <div ref={tabScrollRef} onScroll={e => { if (!restoringRef.current) tabScrollPos.current[tab] = e.currentTarget.scrollTop; }} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
+    <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}

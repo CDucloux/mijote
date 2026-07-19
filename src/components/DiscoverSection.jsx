@@ -100,7 +100,7 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
       </h3>
       <div className="discover-row" style={{ display: "flex", gap: 12, overflowX: "auto", paddingTop: 6, paddingBottom: 6, scrollSnapType: "x proximity" }}>
         {items.map((it, i) => (
-          <div key={it.pubId} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
+          <div key={it.pubId} id={`discover-card-${it.pubId}`} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
         ))}
       </div>
     </div>
@@ -339,7 +339,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       ) : (
         // ── Mode recherche / filtre : grille complète ──
         <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.map((p, idx) => <div key={p.pubId}>{card(p, idx)}</div>)}
+          {filtered.map((p, idx) => <div key={p.pubId} id={`discover-card-${p.pubId}`}>{card(p, idx)}</div>)}
         </div>
       )}
     </section>
