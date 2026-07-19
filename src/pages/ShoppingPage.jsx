@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -19,8 +19,8 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // l'animation de passage dans « Acheté » (l'article glisse vers le bas en
 // s'estompant avant de rejoindre la section).
 
-export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, directory = [], categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
-  const { user, notify, loadDirectory } = useAppShell();
+export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
+  const { notify } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback(el => el?.focus({ preventScroll: true }), []);
   const [activeListId, setActiveListId] = useState(null);
@@ -33,10 +33,6 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, di
   const [listMode, setListMode] = useState(false);     // false = article par article ; true = coller une liste
   const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
-  const [shareEmail, setShareEmail] = useState("");    // saisie e-mail dans la section partage
-  const [showAllSuggestions, setShowAllSuggestions] = useState(false); // déplier toutes les suggestions de partage
-  // Annuaire chargé à la demande : uniquement quand on ouvre la config de partage d'une liste.
-  useEffect(() => { if (configList) loadDirectory?.(); }, [configList, loadDirectory]);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const activeList = shoppingLists.find(l => l.id === activeListId) || shoppingLists[0] || null;
@@ -139,7 +135,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, di
             
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => { setConfigList({ isNew: true, name: "", type: "free", hideClear: false, sharedWith: [] }); setShareEmail(""); }}><Icon name="plus" size={16} /> Nouvelle liste</button>
+            <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => setConfigList({ isNew: true, name: "", type: "free", hideClear: false })}><Icon name="plus" size={16} /> Nouvelle liste</button>
             <UserAvatar />
           </div>
         </div>
@@ -159,7 +155,6 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, di
                     border: `1px solid ${isActive ? "transparent" : "var(--border)"}`
                   }}>
                   <Icon name={l.type === "recipe" ? "book" : "shopping"} size={12} color={isActive ? "#fff" : "var(--text3)"} />
-                  {l._shared && <Icon name="share" size={11} color={isActive ? "#fff" : "var(--text3)"} />}
                   {l.name}
                   {l.items.length > 0 && (
                     <span style={{ fontSize: 10, background: isActive ? "rgba(255,255,255,0.25)" : "var(--surface3)", borderRadius: 10, padding: "1px 6px" }}>
@@ -175,7 +170,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, di
                   icon="ellipsis" iconColor="var(--text2)" iconSize={18} className="icon-btn-soft"
                   btnStyle={{ width: 34, height: 34, borderRadius: 9, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                   items={[
-                    { label: "Paramètres de la liste", icon: "settings", onClick: () => { setConfigList({ ...activeList, sharedWith: activeList.sharedWith || [] }); setShareEmail(""); } },
+                    { label: "Paramètres de la liste", icon: "settings", onClick: () => setConfigList({ ...activeList }) },
                     { label: "Supprimer la liste", icon: "trash", danger: true, onClick: () => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id) },
                   ]} />
               </div>
@@ -395,148 +390,42 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, di
       )}
 
       {/* Configuration de la liste */}
-      {configList && (() => {
-        const myEmail = (user?.email || "").toLowerCase();
-        const isOwner = !configList._shared || (configList.ownerEmail || "").toLowerCase() === myEmail;
-        const email = shareEmail.trim().toLowerCase();
-        const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        const alreadyShared = configList.sharedWith.includes(email);
-        const maxReached = configList.sharedWith.length >= 3;
-        const addEmail = (e) => {
-          const v = (e || email).trim().toLowerCase();
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || configList.sharedWith.includes(v) || v === myEmail || configList.sharedWith.length >= 3) return;
-          setConfigList(p => ({ ...p, sharedWith: [...p.sharedWith, v] }));
-          setShareEmail("");
-        };
-        // Avatars proposés : utilisateurs connus, hors moi et hors déjà-partagés.
-        // On en montre 3 par défaut, le reste derrière un chip « … ».
-        const allSuggestions = directory
-          .map(d => ({ ...d, email: (d.email || "").toLowerCase() }))
-          .filter(d => d.email && d.email !== myEmail && !configList.sharedWith.includes(d.email));
-        const suggestions = showAllSuggestions ? allSuggestions : allSuggestions.slice(0, 3);
-        const extraSuggestions = allSuggestions.length - suggestions.length;
-        const dirByEmail = Object.fromEntries(directory.map(d => [(d.email || "").toLowerCase(), d]));
-        const Avatar = ({ d, size = 28 }) => d?.photoURL
-          ? <img src={d.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} />
-          : <span style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 700 }}>{((d?.displayName || d?.email || "?")[0] || "?").toUpperCase()}</span>;
-        return (
-          <SwipeableSheet onClose={() => setConfigList(null)}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{configList.isNew ? "Nouvelle liste" : "Configurer la liste"}</h3>
+      {configList && (
+        <SwipeableSheet onClose={() => setConfigList(null)}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{configList.isNew ? "Nouvelle liste" : "Configurer la liste"}</h3>
 
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom de la liste</div>
-            <input className="field-input" value={configList.name} maxLength={60} ref={focusNoScroll}
-              onChange={e => setConfigList(p => ({ ...p, name: e.target.value }))}
-              onKeyDown={e => e.key === "Enter" && e.target.blur()} style={{ marginBottom: 18 }} />
+          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom de la liste</div>
+          <input className="field-input" value={configList.name} maxLength={60} ref={focusNoScroll}
+            onChange={e => setConfigList(p => ({ ...p, name: e.target.value }))}
+            onKeyDown={e => e.key === "Enter" && e.target.blur()} style={{ marginBottom: 18 }} />
 
-            <button onClick={() => setConfigList(p => ({ ...p, hideClear: !p.hideClear }))}
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: "12px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 18, cursor: "pointer", textAlign: "left" }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Cacher le bouton « Valider l'achat »</div>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Évite de valider les articles achetés par mégarde.</div>
-              </div>
-              <span style={{ position: "relative", flexShrink: 0, width: 38, height: 22, borderRadius: 12, background: configList.hideClear ? "var(--accent)" : "var(--surface3)", transition: "background 0.15s" }}>
-                <span style={{ position: "absolute", top: 2, left: configList.hideClear ? 18 : 2, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
-              </span>
-            </button>
-
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-              <Icon name="share" size={12} color="var(--text3)" /> Partage (lecture &amp; écriture)
+          <button onClick={() => setConfigList(p => ({ ...p, hideClear: !p.hideClear }))}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: "12px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 18, cursor: "pointer", textAlign: "left" }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Cacher le bouton « Valider l'achat »</div>
+              <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Évite de valider les articles achetés par mégarde.</div>
             </div>
+            <span style={{ position: "relative", flexShrink: 0, width: 38, height: 22, borderRadius: 12, background: configList.hideClear ? "var(--accent)" : "var(--surface3)", transition: "background 0.15s" }}>
+              <span style={{ position: "absolute", top: 2, left: configList.hideClear ? 18 : 2, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+            </span>
+          </button>
 
-            {!isOwner ? (
-              <>
-                <p style={{ fontSize: 12, color: "var(--text2)", lineHeight: 1.4, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <Avatar d={dirByEmail[(configList.ownerEmail || "").toLowerCase()]} /> Liste partagée par <strong>{configList.ownerEmail}</strong>. Tu peux la voir et la modifier.
-                </p>
-                <button className="btn btn-danger" style={{ width: "100%", marginBottom: 18 }}
-                  onClick={() => { setShoppingLists(prev => prev.filter(l => l.id !== configList.id)); setConfigList(null); }}>
-                  Quitter le partage
-                </button>
-              </>
-            ) : (
-              <>
-                <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.4, marginBottom: 10 }}>
-                  Ajoute les personnes qui pourront voir et modifier cette liste.{" "}
-                  <span style={{ color: maxReached ? "var(--accent)" : "inherit" }}>({configList.sharedWith.length}/3 invité{configList.sharedWith.length > 1 ? "s" : ""})</span>
-                </p>
-                {!maxReached && (
-                  <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                    <input className="field-input" type="email" inputMode="email" placeholder="email@exemple.com"
-                      value={shareEmail} onChange={e => setShareEmail(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && addEmail()} style={{ flex: 1 }} />
-                    <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={() => addEmail()} disabled={!emailValid || alreadyShared}>
-                      <Icon name="plus" size={15} /> Ajouter
-                    </button>
-                  </div>
-                )}
-
-                {!maxReached && suggestions.length > 0 && (
-                  <div style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 6 }}>Suggestions</div>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {suggestions.map(d => (
-                        <button key={d.email} onClick={() => addEmail(d.email)}
-                          style={{ display: "flex", alignItems: "center", gap: 7, padding: "4px 10px 4px 4px", borderRadius: 20, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", maxWidth: "100%" }}>
-                          <Avatar d={d} />
-                          <span style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.displayName || d.email}</span>
-                        </button>
-                      ))}
-                      {extraSuggestions > 0 && (
-                        <button onClick={() => setShowAllSuggestions(true)} title={`Voir ${extraSuggestions} suggestion${extraSuggestions > 1 ? "s" : ""} de plus`}
-                          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 20, background: "var(--surface2)", border: "1px dashed var(--border)", cursor: "pointer", color: "var(--text2)", fontSize: 12, fontWeight: 600 }}>
-                          +{extraSuggestions}
-                        </button>
-                      )}
-                      {showAllSuggestions && allSuggestions.length > 3 && (
-                        <button onClick={() => setShowAllSuggestions(false)} title="Réduire"
-                          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 20, background: "var(--surface2)", border: "1px dashed var(--border)", cursor: "pointer", color: "var(--text3)", fontSize: 12, fontWeight: 600 }}>
-                          −
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {configList.sharedWith.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
-                    {configList.sharedWith.map(e => (
-                      <div key={e} style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10, padding: "6px 10px" }}>
-                        <Avatar d={dirByEmail[e]} />
-                        <span style={{ flex: 1, fontSize: 13, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{dirByEmail[e]?.displayName ? `${dirByEmail[e].displayName} · ${e}` : e}</span>
-                        <button onClick={() => setConfigList(p => ({ ...p, sharedWith: p.sharedWith.filter(x => x !== e) }))}
-                          style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: "transparent", border: "none", color: "var(--text3)", cursor: "pointer", transition: "background 0.15s, color 0.15s" }}
-                          onMouseEnter={ev => { ev.currentTarget.style.background = "rgba(224,82,82,0.12)"; ev.currentTarget.style.color = "var(--red)"; }}
-                          onMouseLeave={ev => { ev.currentTarget.style.background = "transparent"; ev.currentTarget.style.color = "var(--text3)"; }}
-                          title="Retirer"><Icon name="close" size={15} color="currentColor" /></button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div style={{ display: "flex", gap: 8, fontSize: 11, color: "var(--text3)", lineHeight: 1.4, background: "rgba(91,156,246,0.10)", border: "1px solid rgba(91,156,246,0.28)", borderRadius: 10, padding: "9px 12px", marginBottom: 18 }}>
-                  <span style={{ flexShrink: 0 }}>☁️</span>
-                  <span>Les personnes ajoutées verront la liste dès leur prochaine connexion et pourront l'éditer en temps réel.</span>
-                </div>
-              </>
-            )}
-
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfigList(null)}>Annuler</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} disabled={!configList.name.trim()} onClick={() => {
-                const name = configList.name.trim();
-                if (configList.isNew) {
-                  const l = { id: "sl" + Date.now(), name, type: "free", items: [], hideClear: !!configList.hideClear, sharedWith: configList.sharedWith };
-                  setShoppingLists(prev => [...prev, l]);
-                  setActiveListId(l.id);
-                } else {
-                  updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear, sharedWith: configList.sharedWith }));
-                }
-                setConfigList(null);
-              }}>{configList.isNew ? "Créer" : "Enregistrer"}</button>
-            </div>
-          </SwipeableSheet>
-        );
-      })()}
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfigList(null)}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} disabled={!configList.name.trim()} onClick={() => {
+              const name = configList.name.trim();
+              if (configList.isNew) {
+                const l = { id: "sl" + Date.now(), name, type: "free", items: [], hideClear: !!configList.hideClear };
+                setShoppingLists(prev => [...prev, l]);
+                setActiveListId(l.id);
+              } else {
+                updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear }));
+              }
+              setConfigList(null);
+            }}>{configList.isNew ? "Créer" : "Enregistrer"}</button>
+          </div>
+        </SwipeableSheet>
+      )}
     </div>
   );
 }

@@ -415,6 +415,18 @@ input,textarea,select{font-family:var(--ff-body);}
   .mp-add-btn:hover{background:var(--surface3);border-color:var(--text3);color:var(--text);}
   .mp-add-btn:hover .mp-add-label{max-width:240px;opacity:1;margin-right:6px;}
 }
+/* Bouton « Filtres » (/recipes & Découvrir) — surbrillance élégante au survol
+   sur desktop. Les styles de base sont inline ; on force donc via !important pour
+   passer par-dessus le fond/bordure inline, uniquement sur périphérique à survol. */
+.filter-btn{transition:background 0.16s,border-color 0.16s,box-shadow 0.16s,transform 0.12s;}
+@media (hover:hover){
+  .filter-btn:hover{
+    border-color:var(--accent)!important;
+    background:color-mix(in srgb, var(--accent) 12%, var(--surface2))!important;
+    box-shadow:0 3px 14px -4px rgba(232,112,58,0.45);
+  }
+}
+.filter-btn:active{transform:scale(0.97);}
 /* Bouton « retirer du planning » — pastille discrète qui rougit au survol */
 .mp-remove-btn{
   display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;

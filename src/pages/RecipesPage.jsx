@@ -5,13 +5,11 @@ import { RecipeCard } from "../components/RecipeCard.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
-import { DEFAULT_FILTERS, activeFilterCount } from "../lib/recipeFilters.js";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters } from "../lib/recipeFilters.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
-import { matchesCooking } from "../lib/cooking.js";
-import { computeDifficulty } from "../lib/difficulty.js";
 import { buildTechniqueIndex } from "../lib/techniques.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
@@ -41,7 +39,6 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const usedCuisines = CUISINES.filter(c => recipes.some(r => r.cuisine === c.label));
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const nActiveFilters = activeFilterCount(filters);
-  const NUTRI_ORDER = { A: 1, B: 2, C: 3, D: 4, E: 5 };
 
   const filtered = useMemo(() => recipes
     .filter(r => {
@@ -54,27 +51,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         if (!inName && !inCuisine && !inIngredients) return false;
       }
       if (filterCol && !r.collections?.includes(filterCol)) return false;
-      if (filters.type === "base" && !r.isComponent) return false;
-      if (filters.type === "dish" && r.isComponent) return false;
-      if (filters.cuisines.length && !filters.cuisines.includes(r.cuisine)) return false;
-      if (filters.timeMax && ((r.prepTime || 0) + (r.cookTime || 0)) > filters.timeMax) return false;
-      if (filters.cooking.length && !matchesCooking(r, filters.cooking)) return false;
-      if (filters.season && !isRecipeInSeason(r, resolver)) return false;
-      if (filters.vegan && !isRecipeVegan(r, resolver, { recipes })) return false;
-      if (filters.nutriMax && !(r.nutriLetter && NUTRI_ORDER[r.nutriLetter] <= NUTRI_ORDER[filters.nutriMax])) return false;
-      if (filters.diffMax) {
-        const s = computeDifficulty(r, techniques, { index: techIndex, recipes }).score;
-        if (!(s != null && s <= filters.diffMax)) return false;
-      }
-      if (filters.ingredients.length) {
-        const recIds = new Set();
-        for (const ri of r.ingredients || []) { const m = resolver(ri.name); if (m) recIds.add(m.id); }
-        if (!filters.ingredients.every(id => recIds.has(id))) return false;
-      }
-      return true;
+      return matchesFilters(r, filters, { resolver, techniques, techIndex, recipes });
     })
     .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt)),
-  [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+  [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]);
 
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, filters]);
 
@@ -104,9 +84,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           {/* Un seul point d'entrée : la feuille « Tous les filtres » (tri + filtres) */}
-          <button onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+          <button className="filter-btn" onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
             {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}

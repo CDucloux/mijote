@@ -1,9 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, onSnapshot, query, where } from "firebase/firestore";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../lib/firebase.js";
 import {
-  metaDoc, recipesCol, sharedListsCol, upsertOwnDirectoryEntry,
+  metaDoc, recipesCol, upsertOwnDirectoryEntry,
   loadMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
   loadSharedData, writeSharedData, setHouseholdPointer,
 } from "../lib/firestore.js";
@@ -34,7 +34,6 @@ export function useFirestoreSync({
   collections, setCollections,
   mealPlan, setMealPlan,
   shoppingLists, setShoppingLists,
-  setSharedLists,
   stock, setStock,
   lowStock, setLowStock,
   preferences, setPreferences,
@@ -310,20 +309,6 @@ export function useFirestoreSync({
     unsubs.push(metaSub("stock", d => ({ items: d.items || [], low: d.low || [] }), v => { setStock(v.items); setLowStock(v.low); }));
     return () => unsubs.forEach(u => u());
   }, [user, loadedHid]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!user?.email) { setSharedLists([]); return; }
-    const email = user.email.toLowerCase();
-    let unsub;
-    try {
-      unsub = onSnapshot(
-        query(sharedListsCol(), where("memberEmails", "array-contains", email)),
-        snap => setSharedLists(snap.docs.map(d => ({ ...d.data(), _shared: true }))),
-        () => { }
-      );
-    } catch { /* noop */ }
-    return () => { if (unsub) unsub(); };
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ma fiche d'annuaire : un seul write par session (pour être invitable / affichable).
   // La LECTURE de l'annuaire est désormais à la demande (voir loadDirectory dans App) :

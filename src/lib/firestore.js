@@ -23,10 +23,7 @@ const segmentsOf = (ws) => (typeof ws === "string" ? ["users", ws] : ws.segments
 export const metaDoc = (ws, name) => doc(db, ...segmentsOf(ws), "meta", name);
 export const recipesCol = (ws) => collection(db, ...segmentsOf(ws), "recipes");
 // Listes de courses partagées (lecture/écriture entre membres) : collection top-level
-// autorisée par e-mail côté règles Firestore. Annuaire des utilisateurs connus pour
-// proposer les e-mails disponibles avec avatar.
-export const sharedListsCol = () => collection(db, "sharedLists");
-export const sharedListDoc = (id) => doc(db, "sharedLists", id);
+// Annuaire des utilisateurs connus (avatars des membres du foyer, invitations).
 export const userDirCol = () => collection(db, "userDirectory");
 export const userDirDoc = (uid) => doc(db, "userDirectory", uid);
 
@@ -92,23 +89,6 @@ export async function fetchPublicDocsByIds(pubIds) {
   return snaps.filter(s => s.exists()).map(s => s.data());
 }
 
-// Nettoie une liste avant écriture dans sharedLists (retire les champs internes _*).
-export function toSharedListDoc(list, { ownerEmail, ownerUid }) {
-  const sharedWith = Array.from(new Set((list.sharedWith || []).map(e => (e || "").trim().toLowerCase()).filter(Boolean)));
-  const memberEmails = Array.from(new Set([ownerEmail, ...sharedWith].filter(Boolean)));
-  return {
-    id: list.id,
-    name: list.name || "",
-    type: list.type || "free",
-    items: list.items || [],
-    hideClear: !!list.hideClear,
-    sharedWith,
-    ownerEmail,
-    ownerUid: ownerUid || null,
-    memberEmails,
-    updatedAt: Date.now(),
-  };
-}
 
 // ─── FOYERS (households) ──────────────────────────────────────────────────────
 // households/{hid} : doc d'appartenance (cf. lib/household.js). Le pointeur du

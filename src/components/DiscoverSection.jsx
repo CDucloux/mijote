@@ -8,14 +8,18 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useDiscoverRecipes } from "../hooks/useDiscoverRecipes.js";
 import { RecipeCard } from "./RecipeCard.jsx";
 import { OfficialAvatar } from "./OfficialAvatar.jsx";
+import { SwipeableSheet } from "./SwipeableSheet.jsx";
+import { RecipeFilterSheet } from "./RecipeFilterSheet.jsx";
 import { filterPublicRecipes, publicId, isOfficialAuthor } from "../lib/publicRecipes.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
-import { cuisineEmoji } from "../constants/cuisines.js";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters } from "../lib/recipeFilters.js";
+import { buildTechniqueIndex } from "../lib/techniques.js";
+import { normalizeStr } from "../lib/parseIngredient.js";
+import { CUISINES, cuisineEmoji } from "../constants/cuisines.js";
 import { relativeDate } from "../lib/format.js";
 
-const NUTRI_LETTERS = ["A", "B", "C", "D", "E"];
 const TINT = "rgba(232,112,58,0.2)";
 // Largeur des cartes en carrousel = exactement la moitié de la rangée visible
 // (gap 12 → 50% − 6px), pour afficher pile 2 cartes dans la largeur comme la
@@ -105,19 +109,18 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
 
 // ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
 export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic }) {
-  const { user } = useAppShell();
+  const { user, techniques = [] } = useAppShell();
   const navigate = useNavigate();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
 
   const [text, setText] = useState("");
-  const [cuisine, setCuisine] = useState(null);
-  const [seasonOnly, setSeasonOnly] = useState(false);
-  const [nutriMax, setNutriMax] = useState(null);
+  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("date");
   const [usePrefs, setUsePrefs] = useState(false);
   const [authorUid, setAuthorUid] = useState(null);
-  const [showNutri, setShowNutri] = useState(false);
-  const [showCuisine, setShowCuisine] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [stuck, setStuck] = useState(false);
   const sentinelRef = useRef(null);
@@ -149,13 +152,33 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     .filter(Boolean)
     .map(x => x.recipe);
 
-  const filtered = useMemo(() => filterPublicRecipes(pubs, {
-    text, cuisine, seasonOnly, nutriMax, authorUid,
-    diet: usePrefs ? preferences?.diet : null,
-  }, { isInSeason }), [pubs, text, cuisine, seasonOnly, nutriMax, authorUid, usePrefs, preferences, resolver]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Filtres unifiés avec /recipes (mêmes options via RecipeFilterSheet), + la
+  // recherche texte, le filtre auteur (clic sur un créateur) et « selon mes
+  // préférences » propres à Découvrir.
+  const nActiveFilters = activeFilterCount(filters);
+  const filtered = useMemo(() => {
+    const q = normalizeStr(text);
+    const diet = usePrefs ? preferences?.diet : null;
+    return pubs
+      .filter(p => {
+        if (q) {
+          const hay = (p.keywords || []).join(" ");
+          if (!normalizeStr(hay).includes(q) && !normalizeStr(p.name).includes(q)) return false;
+        }
+        if (authorUid && p.authorUid !== authorUid) return false;
+        if (diet && diet !== "omnivore" && !(p.dietTags || []).includes(diet)) return false;
+        return matchesFilters(p.recipe, filters, { resolver, techniques, techIndex });
+      })
+      .sort((a, b) => sortBy === "name"
+        ? (a.recipe.name || "").localeCompare(b.recipe.name || "")
+        : sortBy === "health"
+          ? (b.recipe.healthScore || 0) - (a.recipe.healthScore || 0)
+          : new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  }, [pubs, text, authorUid, usePrefs, preferences, filters, sortBy, resolver, techniques, techIndex]);
 
   const cuisines = useMemo(() => [...new Set(pubs.filter(p => !p.isComponent && p.cuisine).map(p => p.cuisine))].sort(), [pubs]);
-  const activeFilters = !!(cuisine || seasonOnly || nutriMax || usePrefs || authorUid || text);
+  const usedCuisines = useMemo(() => CUISINES.filter(c => pubs.some(p => p.cuisine === c.label)), [pubs]);
+  const activeFilters = !!(usePrefs || authorUid || text) || nActiveFilters > 0;
 
   // Rangées éditoriales (mode navigation, sans recherche ni filtre actif).
   const featured = useMemo(() => pubs.filter(p => !p.isComponent).slice(0, 12), [pubs]);
@@ -237,25 +260,26 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
 
-        {/* Filtres progressifs */}
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
-        {chip(seasonOnly, () => setSeasonOnly(v => !v), <><Icon name="leaf" size={13} color="currentColor" /> De saison</>)}
-        {preferences?.diet && chip(usePrefs, () => setUsePrefs(v => !v), <><Icon name="heart" size={13} color="currentColor" /> Selon mes préférences</>)}
-        {chip(!!nutriMax || showNutri, () => setShowNutri(v => !v), <>{nutriMax ? `Nutri ≤ ${nutriMax}` : "Nutri-Score"} <span style={{ fontSize: 9 }}>{showNutri ? "▲" : "▼"}</span></>)}
-        {cuisines.length > 0 && chip(!!cuisine || showCuisine, () => setShowCuisine(v => !v), <>{cuisine || "Cuisine"} <span style={{ fontSize: 9 }}>{showCuisine ? "▲" : "▼"}</span></>)}
-        {authorUid && chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Créateur</>)}
-      </div>
-      {showNutri && (
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
-          {NUTRI_LETTERS.map(L => chip(nutriMax === L, () => setNutriMax(nutriMax === L ? null : L), <>≤ {L}</>))}
+        {/* Barre de filtres — mêmes options que /recipes (feuille dédiée) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 12 }}>
+          <button className="filter-btn" onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+            Filtres
+            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
+          </button>
+          {preferences?.diet && preferences.diet !== "omnivore" && chip(usePrefs, () => setUsePrefs(v => !v), <><Icon name="heart" size={13} color="currentColor" /> Mes préférences</>)}
+          {authorUid && chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Créateur</>)}
+          <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--text3)", whiteSpace: "nowrap" }}>
+            Trié par <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{sortBy === "name" ? "A → Z" : sortBy === "health" ? "Santé" : "Récent"}</strong>
+          </span>
         </div>
-      )}
-      {showCuisine && cuisines.length > 0 && (
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 4 }}>
-          {cuisines.map(c => chip(cuisine === c, () => setCuisine(cuisine === c ? null : c), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>))}
-        </div>
-      )}
       </div>{/* fin sticky header */}
+
+      {filterOpen && (
+        <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingBottom: 0 }}>
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
+        </SwipeableSheet>
+      )}
 
       {/* Résultats */}
       {(loading && !loadedOnce) || spinning ? (
@@ -299,7 +323,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
                 <Icon name="globe" size={15} color="var(--accent)" /> Par cuisine
               </h3>
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, flexWrap: "wrap" }}>
-                {cuisines.map(c => chip(false, () => setCuisine(c), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>))}
+                {cuisines.map(c => chip(false, () => setFilters(f => ({ ...f, cuisines: [c] })), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>))}
               </div>
             </div>
           )}
