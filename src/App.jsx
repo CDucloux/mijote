@@ -399,6 +399,7 @@ function AppInner() {
   const tabScrollRef = useRef(null);
   const tabScrollPos = useRef({});
   const wasAtTabView = useRef(true);
+  const restoringRef = useRef(false);
   const atTabView = editingRecipe === null && !publicPubId
     && !(selectedRecipe && currentRecipe)
     && !(selectedRecipe && !currentRecipe && workspaceReady);
@@ -409,17 +410,26 @@ function AppInner() {
     const el = tabScrollRef.current;
     const y = tabScrollPos.current[tab] || 0;
     if (!el || !y) return;
-    let raf, tries = 0;
+    // Le contenu (Découvrir) se remplit de façon asynchrone : la page est courte
+    // au remontage, puis grandit. On réapplique la position tant que la hauteur
+    // change (ResizeObserver), en ignorant les scrolls programmatiques.
+    restoringRef.current = true;
+    let done = false;
+    const finish = () => { done = true; restoringRef.current = false; ro.disconnect(); clearTimeout(timer); };
     const apply = () => {
+      if (done) return;
       el.scrollTop = y;
-      if (Math.abs(el.scrollTop - y) > 2 && tries++ < 40) raf = requestAnimationFrame(apply);
+      if (Math.abs(el.scrollTop - y) <= 2) finish();
     };
+    const ro = new ResizeObserver(apply);
+    ro.observe(el.firstElementChild || el);
+    const timer = setTimeout(finish, 4000); // filet de sécurité
     apply();
-    return () => cancelAnimationFrame(raf);
+    return finish;
   }, [atTabView, tab]);
 
   const tabContent = (
-    <div ref={tabScrollRef} onScroll={e => { tabScrollPos.current[tab] = e.currentTarget.scrollTop; }} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
+    <div ref={tabScrollRef} onScroll={e => { if (!restoringRef.current) tabScrollPos.current[tab] = e.currentTarget.scrollTop; }} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
