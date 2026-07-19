@@ -10,7 +10,7 @@ const path = require("path");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret, defineString } = require("firebase-functions/params");
 const {
-  extractJsonLdRecipe, mapJsonLdToMijote, htmlToText,
+  extractJsonLdRecipe, mapJsonLdToMijote, htmlToText, imageUrlsInText,
   extractOgImage, assignIdsAndLink, filterUtensilsToKnown, CUISINE_LABELS,
 } = require("./recipeExtract.js");
 
@@ -92,6 +92,7 @@ function llmToIntermediate(d, sourceUrl) {
     steps: (d.steps || []).map(s => ({
       text: (s.text || "").slice(0, 2000),
       tip: (s.tip && s.tip.trim()) ? s.tip.slice(0, 500) : "",
+      image: (s.image || "").toString().slice(0, 500),
       ingredients: Array.isArray(s.ingredients) ? s.ingredients.map(x => String(x)) : [],
       utensils: Array.isArray(s.utensils) ? s.utensils.map(x => String(x)) : [],
     })).filter(s => s.text),
@@ -160,6 +161,10 @@ exports.importRecipeFromUrl = onCall(
       const inter = await extractWithLlm(text, url, knownUtensils);
       inter.image = ogImage; // le texte n'a pas d'image → on prend l'og:image de la page
       inter.utensils = filterUtensilsToKnown(inter.utensils, knownUtensils);
+      // Images d'étape : on ne garde que des URLs réellement présentes dans la page
+      // (anti-hallucination) et jamais l'image principale du plat.
+      const pageImages = imageUrlsInText(text);
+      for (const s of inter.steps) s.image = (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
       return { recipe, method: "llm" };

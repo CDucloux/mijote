@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isoDurationToMinutes, parseIngredientLine, extractJsonLdRecipe,
   mapJsonLdToMijote, flattenInstructions, htmlToText,
-  matchCuisine, extractOgImage, assignIdsAndLink, filterUtensilsToKnown,
+  matchCuisine, extractOgImage, assignIdsAndLink, filterUtensilsToKnown, imageUrlsInText,
 } from "./recipeExtract.js";
 
 describe("isoDurationToMinutes", () => {
@@ -98,13 +98,13 @@ describe("filterUtensilsToKnown", () => {
 });
 
 describe("flattenInstructions", () => {
-  it("aplati les HowToStep", () => {
-    const steps = flattenInstructions([{ "@type": "HowToStep", text: "A" }, { "@type": "HowToStep", text: "B" }]);
-    expect(steps).toEqual([{ text: "A" }, { text: "B" }]);
+  it("aplati les HowToStep (+ image d'étape éventuelle)", () => {
+    const steps = flattenInstructions([{ "@type": "HowToStep", text: "A", image: "https://x/a.jpg" }, { "@type": "HowToStep", text: "B" }]);
+    expect(steps).toEqual([{ text: "A", image: "https://x/a.jpg" }, { text: "B", image: "" }]);
   });
   it("aplati les HowToSection", () => {
     const steps = flattenInstructions([{ "@type": "HowToSection", itemListElement: [{ "@type": "HowToStep", text: "X" }] }]);
-    expect(steps).toEqual([{ text: "X" }]);
+    expect(steps).toEqual([{ text: "X", image: "" }]);
   });
   it("gère une chaîne multi-lignes", () => {
     expect(flattenInstructions("Étape 1\nÉtape 2")).toEqual([{ text: "Étape 1" }, { text: "Étape 2" }]);
@@ -133,7 +133,7 @@ describe("extractJsonLdRecipe + mapJsonLdToMijote", () => {
     expect(draft.servings).toBe(4);
     expect(draft.source).toBe("https://x");
     expect(draft.ingredients).toHaveLength(2);
-    expect(draft.steps).toEqual([{ text: "Mélanger." }]);
+    expect(draft.steps).toEqual([{ text: "Mélanger.", image: "" }]);
   });
   it("renvoie null sans bloc Recipe", () => {
     expect(extractJsonLdRecipe("<html>rien</html>")).toBe(null);
@@ -146,5 +146,12 @@ describe("htmlToText", () => {
     expect(t).toContain("Bonjour");
     expect(t).toContain("Monde");
     expect(t).not.toContain("x()");
+  });
+  it("garde les images de contenu en marqueurs, ignore le décoratif", () => {
+    const t = htmlToText('<p>Étape</p><img src="https://x/step1.jpg"><img src="https://x/logo.svg"><img data-src="https://x/step2.jpg" src="https://x/placeholder.png">');
+    expect(t).toContain("⟦IMG:https://x/step1.jpg⟧");
+    expect(t).toContain("⟦IMG:https://x/step2.jpg⟧"); // préfère data-src au placeholder
+    expect(t).not.toContain("logo.svg");
+    expect(imageUrlsInText(t).has("https://x/step1.jpg")).toBe(true);
   });
 });

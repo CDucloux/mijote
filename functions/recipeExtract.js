@@ -77,8 +77,8 @@ function flattenInstructions(instr) {
       node.forEach(walk);
     } else if (typeof node === "object") {
       if (node["@type"] === "HowToSection" && node.itemListElement) walk(node.itemListElement);
-      else if (node.text) out.push({ text: String(node.text).trim() });
-      else if (node.name) out.push({ text: String(node.name).trim() });
+      else if (node.text) out.push({ text: String(node.text).trim(), image: firstImageUrl(node.image) });
+      else if (node.name) out.push({ text: String(node.name).trim(), image: firstImageUrl(node.image) });
     }
   };
   walk(instr);
@@ -205,7 +205,7 @@ function assignIdsAndLink(d) {
     const explicitUt = new Set((s.utensils || []).map(norm));
     const ingIds = ingredients.filter(i => i.name && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map(i => i.id);
     const utIds = utensils.filter(u => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map(u => u.id);
-    return { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
+    return { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
   });
 
   return {
@@ -220,12 +220,33 @@ function assignIdsAndLink(d) {
   };
 }
 
-// HTML → texte lisible (pour le fallback LLM) : retire scripts/styles et balises.
-function htmlToText(html) {
+// Images décoratives / techniques à ignorer (logo, avatar, icône, pixel, svg…).
+const JUNK_IMG = /(^data:|\.svg(\?|$)|sprite|logo|avatar|icon|emoji|pixel|1x1|placeholder|badge|banner|widget|gravatar|share|social|ads?[-_/])/i;
+
+// URL d'image « de contenu » depuis une balise <img> (préfère les attributs lazy).
+function imgUrlFromTag(tag) {
+  const m = tag.match(/(?:data-src|data-lazy-src|data-original|src)\s*=\s*["']([^"']+)["']/i);
+  const url = m ? m[1].trim() : "";
+  if (!url || JUNK_IMG.test(url)) return "";
+  return url;
+}
+
+// HTML → texte lisible (pour le fallback LLM). Retire scripts/styles, et convertit
+// les <img> de contenu en marqueurs ⟦IMG:url⟧ (plafonnés) pour que le LLM puisse
+// rattacher une photo pertinente à une étape.
+function htmlToText(html, { maxImages = 15 } = {}) {
+  let count = 0;
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<img\b[^>]*>/gi, (tag) => {
+      if (count >= maxImages) return " ";
+      const url = imgUrlFromTag(tag);
+      if (!url) return " ";
+      count++;
+      return `\n⟦IMG:${url}⟧\n`;
+    })
     .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&#39;|&apos;/gi, "'")
@@ -233,9 +254,16 @@ function htmlToText(html) {
     .replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
 
+// Ensemble des URLs d'images présentes dans le texte (marqueurs ⟦IMG:…⟧).
+function imageUrlsInText(text) {
+  const set = new Set();
+  for (const m of (text || "").matchAll(/⟦IMG:([^⟧]+)⟧/g)) set.add(m[1]);
+  return set;
+}
+
 module.exports = {
   isoDurationToMinutes, parseYield, parseIngredientLine, flattenInstructions,
   firstImageUrl, findRecipeNode, extractJsonLdRecipe, mapJsonLdToMijote, htmlToText,
   CUISINE_LABELS, matchCuisine, extractOgImage, assignIdsAndLink, mentions,
-  filterUtensilsToKnown,
+  filterUtensilsToKnown, imageUrlsInText,
 };
