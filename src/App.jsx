@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 
@@ -392,39 +392,38 @@ function AppInner() {
   };
   const handleSignOut = () => { signOut(auth); setUser(null); };
 
-  // Conserve la position de défilement de chaque onglet : quand on ouvre une
-  // recette (publique ou non) l'onglet est démonté, puis remonté au retour. On
-  // mémorise le scrollTop en continu et on le restaure au retour (avec quelques
-  // réessais rAF le temps que le contenu asynchrone — Découvrir — se remplisse).
   // Retour d'une recette publique → on revient sur la carte cliquée dans
   // « Découvrir » via son ancre (#discover-card-<pubId>). `scrollIntoView` est
   // agnostique du conteneur qui défile ; on réessaie tant que la carte n'existe
   // pas encore (le feed public se charge de façon asynchrone au remontage).
   const lastPublicPubId = useRef(null);
   const wasAtTabView = useRef(true);
+  const [scrollHold, setScrollHold] = useState(false); // masque l'onglet le temps de se caler
   useEffect(() => { if (publicPubId) lastPublicPubId.current = publicPubId; }, [publicPubId]);
   const atTabView = editingRecipe === null && !publicPubId
     && !(selectedRecipe && currentRecipe)
     && !(selectedRecipe && !currentRecipe && workspaceReady);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const returning = atTabView && !wasAtTabView.current;
     wasAtTabView.current = atTabView;
     const anchor = lastPublicPubId.current;
     if (!returning || !anchor) return;
     lastPublicPubId.current = null;
-    const deadline = Date.now() + 4000;
+    setScrollHold(true); // rendu masqué avant peinture → pas de flash en haut
+    const deadline = Date.now() + 3000;
     let raf;
     const tryScroll = () => {
       const el = document.getElementById(`discover-card-${anchor}`);
-      if (el) { el.scrollIntoView({ block: "center", behavior: "auto" }); return; }
+      if (el) { el.scrollIntoView({ block: "center", behavior: "auto" }); setScrollHold(false); return; }
       if (Date.now() < deadline) raf = requestAnimationFrame(tryScroll);
+      else setScrollHold(false);
     };
     tryScroll();
     return () => cancelAnimationFrame(raf);
   }, [atTabView]);
 
   const tabContent = (
-    <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
+    <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
