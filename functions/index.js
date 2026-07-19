@@ -1,17 +1,16 @@
 // ─── CLOUD FUNCTIONS MIJOTÉ ──────────────────────────────────────────────────
 // `importRecipeFromUrl` : importe une recette depuis une URL. Réservé à l'admin
 // (le créateur) — la vérification se fait CÔTÉ SERVEUR sur l'e-mail du token Auth,
-// pas seulement en masquant un bouton. Deux chemins : JSON-LD schema.org (gratuit)
-// puis, à défaut, extraction via Claude Haiku 4.5 (prompt éditable dans prompts/).
-// Les deux chemins produisent un brouillon identiquement structuré (ids, _raw,
-// liaisons ingrédients/ustensiles ↔ étapes) via assignIdsAndLink().
+// pas seulement en masquant un bouton. Extraction par Claude Haiku 4.5 (prompt
+// éditable dans prompts/recipeExtract.md), assemblée par assignIdsAndLink()
+// (ids stables, _raw, liaisons ingrédients/ustensiles ↔ étapes, images d'étape).
 const fs = require("fs");
 const path = require("path");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret, defineString } = require("firebase-functions/params");
 const {
-  extractJsonLdRecipe, mapJsonLdToMijote, htmlToText, imageUrlsInText,
-  extractOgImage, assignIdsAndLink, filterUtensilsToKnown, CUISINE_LABELS,
+  htmlToText, imageUrlsInText, extractOgImage,
+  assignIdsAndLink, filterUtensilsToKnown, CUISINE_LABELS,
 } = require("./recipeExtract.js");
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
@@ -144,18 +143,11 @@ exports.importRecipeFromUrl = onCall(
 
     try {
       const html = await fetchHtml(url);
-      const ogImage = extractOgImage(html); // image principale (fallback si absente du JSON-LD)
+      const ogImage = extractOgImage(html); // image principale du plat
 
-      // 1. Chemin gratuit : JSON-LD schema.org/Recipe.
-      const jsonld = extractJsonLdRecipe(html);
-      if (jsonld && jsonld.name && (jsonld.recipeIngredient || jsonld.recipeInstructions)) {
-        const inter = mapJsonLdToMijote(jsonld, url);
-        inter.image = inter.image || ogImage;
-        inter.utensils = filterUtensilsToKnown(inter.utensils, knownUtensils);
-        return { recipe: assignIdsAndLink(inter), method: "jsonld" };
-      }
-
-      // 2. Fallback : LLM sur le texte de la page.
+      // Extraction par IA (Haiku) sur le texte de la page. Le chemin JSON-LD a été
+      // abandonné : à qualité de rendu, l'extraction Haiku est bien meilleure
+      // (étapes reformulées, quantités estimées, liaisons ingrédients/ustensiles).
       const text = htmlToText(html);
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
       const inter = await extractWithLlm(text, url, knownUtensils);

@@ -29,7 +29,7 @@ USTENSILES
 
 ÉTAPES
 - **Regroupe** les actions d'une même phase en UNE étape (ex. « laver puis couper tous les légumes »). Vise un déroulé **synthétique** — en général **3 à 8 étapes** pour une recette simple. Ne crée jamais d'étape pour une action triviale, ne coupe pas une phrase en deux, et n'éclate pas une recette de salade en 15 étapes.
-- `text` : l'instruction (peut contenir plusieurs gestes liés).
+- `text` : l'instruction, rédigée à l'**INFINITIF** (« Préparer », « Mélanger », « Enfourner »), **jamais** à l'impératif en « -ez » (« Préparez », « Mélangez »). Peut regrouper plusieurs gestes liés. **Ne répète PAS les quantités chiffrées** dans le texte : elles sont déjà affichées sous l'étape via les ingrédients liés (et sont ajustables). Écris « ajouter la farine et le beurre » plutôt que « ajouter 250 g de farine et 100 g de beurre ». Une indication *relative* reste permise si utile (« la moitié du beurre », « le reste du sucre »).
 - `ingredients` / `utensils` : les noms (repris EXACTEMENT de tes listes ci-dessus) utilisés dans l'étape ; `[]` sinon.
 - `tip` : seulement une **vraie** astuce technique non évidente (température, repère de cuisson, erreur classique). La PLUPART des étapes → `""`. Jamais à chaque étape, jamais inventée.
 - `image` : si une photo `⟦IMG:url⟧` figurant à proximité illustre le **geste ou le résultat** de CETTE étape et apporte une vraie valeur, mets son url exacte ; sinon `""`. Jamais une image décorative, un logo, une photo d'ambiance, ni l'image principale du plat. La plupart des étapes n'ont pas d'image.

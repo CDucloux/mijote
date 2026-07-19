@@ -7,19 +7,20 @@ depuis une URL. Réservée au créateur (garde côté serveur sur l'e-mail du to
 
 1. Vérifie que l'appelant est authentifié **et** que son e-mail == `ADMIN_EMAIL`.
 2. Télécharge la page côté serveur (pas de CORS, UA navigateur, taille/temps bornés).
-3. **JSON-LD schema.org/Recipe** présent → mapping direct (gratuit, déterministe).
-4. Sinon → texte de la page envoyé à **Claude Haiku 4.5** → JSON.
-5. Renvoie `{ recipe, method: "jsonld" | "llm" }`. Le client relit/corrige dans l'éditeur.
+3. Envoie le texte de la page à **Claude Haiku 4.5** → JSON (le chemin JSON-LD a été
+   abandonné : à qualité de rendu, Haiku est nettement meilleur — étapes reformulées à
+   l'infinitif, quantités estimées, liaisons ingrédients/ustensiles).
+4. Renvoie `{ recipe, method: "llm" }`. Le client relit/corrige dans l'éditeur.
 
-Les deux chemins produisent le même schéma (ids stables, `_raw` éditable par ingrédient,
-liaisons ingrédients/ustensiles ↔ étapes, image principale via `og:image`, style de
-cuisine rapproché de la liste Mijoté).
+Le brouillon renvoyé porte : ids stables, `_raw` éditable par ingrédient, liaisons
+ingrédients/ustensiles ↔ étapes, images d'étape pertinentes, image principale via
+`og:image`, style de cuisine rapproché de la liste Mijoté.
 
 ### Modifier le prompt d'extraction
 
-Le prompt système du fallback IA est dans **`functions/prompts/recipeExtract.md`**
-(la liste des cuisines y est injectée via `{{CUISINE_LIST}}`). Après édition :
-`firebase deploy --only functions` (le prompt vit dans la fonction, pas dans le client).
+Le prompt système est dans **`functions/prompts/recipeExtract.md`** (les listes de
+cuisines et d'ustensiles y sont injectées via `{{CUISINE_LIST}}` / `{{UTENSILS}}`).
+Après édition : `firebase deploy --only functions` (le prompt vit dans la fonction).
 
 ## Prérequis
 
