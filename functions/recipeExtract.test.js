@@ -1,36 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  isoDurationToMinutes, parseIngredientLine, extractJsonLdRecipe,
-  mapJsonLdToMijote, flattenInstructions, htmlToText,
-  matchCuisine, extractOgImage, assignIdsAndLink, filterUtensilsToKnown, imageUrlsInText,
+  matchCuisine, extractOgImage, assignIdsAndLink, filterUtensilsToKnown, htmlToText, imageUrlsInText,
 } from "./recipeExtract.js";
-
-describe("isoDurationToMinutes", () => {
-  it("convertit PT#H#M", () => {
-    expect(isoDurationToMinutes("PT30M")).toBe(30);
-    expect(isoDurationToMinutes("PT1H30M")).toBe(90);
-    expect(isoDurationToMinutes("PT2H")).toBe(120);
-  });
-  it("renvoie null si vide/invalide", () => {
-    expect(isoDurationToMinutes("")).toBe(null);
-    expect(isoDurationToMinutes(42)).toBe(null);
-  });
-});
-
-describe("parseIngredientLine", () => {
-  it("sépare quantité, unité et nom + conserve _raw", () => {
-    expect(parseIngredientLine("200 g de farine")).toEqual({ name: "farine", _raw: "200 g de farine", amount: 200, unit: "g" });
-  });
-  it("gère les fractions", () => {
-    expect(parseIngredientLine("1/2 cuillère à café de cannelle")).toEqual({ name: "cannelle", _raw: "1/2 cuillère à café de cannelle", amount: 0.5, unit: "cuillère à café" });
-  });
-  it("sans quantité → nom seul", () => {
-    expect(parseIngredientLine("sel")).toEqual({ name: "sel", _raw: "sel" });
-  });
-  it("nombre sans unité", () => {
-    expect(parseIngredientLine("3 pommes")).toEqual({ name: "pommes", _raw: "3 pommes", amount: 3 });
-  });
-});
 
 describe("matchCuisine", () => {
   it("rapproche du label canonique", () => {
@@ -56,7 +27,7 @@ describe("assignIdsAndLink", () => {
   it("assigne des ids et lie ingrédients/ustensiles aux étapes", () => {
     const inter = {
       name: "Test", prepTime: 10, cookTime: 20, servings: 4, cuisine: "Grecque",
-      ingredients: [{ name: "pastèque", amount: 1, _raw: "1 pastèque" }, { name: "feta", amount: 200, unit: "g", _raw: "200 g de feta" }],
+      ingredients: [{ name: "pastèque", amount: 1 }, { name: "feta", amount: 200, unit: "g" }],
       utensils: [{ name: "saladier" }],
       steps: [
         { text: "Couper la pastèque en cubes.", tip: "", ingredients: [], utensils: [] },
@@ -67,17 +38,16 @@ describe("assignIdsAndLink", () => {
     expect(r.ingredients[0].id).toBe("i0");
     expect(r.ingredients[0]._raw).toBe("1 pastèque");
     expect(r.utensils[0].id).toBe("u0");
-    // étape 1 : pastèque détectée dans le texte
-    expect(r.steps[0].ingredients).toContain("i0");
-    // étape 2 : feta (explicite) + saladier (texte)
-    expect(r.steps[1].ingredients).toContain("i1");
-    expect(r.steps[1].utensils).toContain("u0");
+    expect(r.steps[0].ingredients).toContain("i0"); // pastèque détectée dans le texte
+    expect(r.steps[1].ingredients).toContain("i1"); // feta (explicite)
+    expect(r.steps[1].utensils).toContain("u0");    // saladier (texte)
     expect(r.cuisine).toBe("Grecque");
   });
-  it("ne lie pas par faux positif de sous-chaîne", () => {
-    const inter = { ingredients: [{ name: "sel" }], utensils: [], steps: [{ text: "Ciseler le persil." }] };
+  it("porte l'image d'étape et ne lie pas par faux positif de sous-chaîne", () => {
+    const inter = { ingredients: [{ name: "sel" }], utensils: [], steps: [{ text: "Ciseler le persil.", image: "https://x/s.jpg" }] };
     const r = assignIdsAndLink(inter);
     expect(r.steps[0].ingredients).toEqual([]); // "sel" ⊄ "persil"
+    expect(r.steps[0].image).toBe("https://x/s.jpg");
   });
   it("reconstruit _raw proprement à partir des champs", () => {
     const r = assignIdsAndLink({ ingredients: [{ name: "piment en poudre", amount: 1, unit: "pincée" }], utensils: [], steps: [] });
@@ -94,49 +64,6 @@ describe("filterUtensilsToKnown", () => {
   it("ne filtre pas si aucune liste connue fournie", () => {
     const arr = [{ name: "truc" }];
     expect(filterUtensilsToKnown(arr, [])).toBe(arr);
-  });
-});
-
-describe("flattenInstructions", () => {
-  it("aplati les HowToStep (+ image d'étape éventuelle)", () => {
-    const steps = flattenInstructions([{ "@type": "HowToStep", text: "A", image: "https://x/a.jpg" }, { "@type": "HowToStep", text: "B" }]);
-    expect(steps).toEqual([{ text: "A", image: "https://x/a.jpg" }, { text: "B", image: "" }]);
-  });
-  it("aplati les HowToSection", () => {
-    const steps = flattenInstructions([{ "@type": "HowToSection", itemListElement: [{ "@type": "HowToStep", text: "X" }] }]);
-    expect(steps).toEqual([{ text: "X", image: "" }]);
-  });
-  it("gère une chaîne multi-lignes", () => {
-    expect(flattenInstructions("Étape 1\nÉtape 2")).toEqual([{ text: "Étape 1" }, { text: "Étape 2" }]);
-  });
-});
-
-describe("extractJsonLdRecipe + mapJsonLdToMijote", () => {
-  const html = `<script type="application/ld+json">${JSON.stringify({
-    "@context": "https://schema.org",
-    "@graph": [
-      { "@type": "WebPage", name: "page" },
-      { "@type": "Recipe", name: "Crêpes", prepTime: "PT10M", cookTime: "PT20M", recipeYield: "4 personnes",
-        recipeIngredient: ["250 g de farine", "3 œufs"], recipeInstructions: [{ "@type": "HowToStep", text: "Mélanger." }] },
-    ],
-  })}</script>`;
-
-  it("trouve la recette dans un @graph", () => {
-    const r = extractJsonLdRecipe(html);
-    expect(r?.name).toBe("Crêpes");
-  });
-  it("mappe vers le schéma Mijoté", () => {
-    const draft = mapJsonLdToMijote(extractJsonLdRecipe(html), "https://x");
-    expect(draft.name).toBe("Crêpes");
-    expect(draft.prepTime).toBe(10);
-    expect(draft.cookTime).toBe(20);
-    expect(draft.servings).toBe(4);
-    expect(draft.source).toBe("https://x");
-    expect(draft.ingredients).toHaveLength(2);
-    expect(draft.steps).toEqual([{ text: "Mélanger.", image: "" }]);
-  });
-  it("renvoie null sans bloc Recipe", () => {
-    expect(extractJsonLdRecipe("<html>rien</html>")).toBe(null);
   });
 });
 
