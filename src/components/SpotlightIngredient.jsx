@@ -4,6 +4,7 @@ import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { ingredientMonths, currentMonth } from "../lib/seasonality.js";
 import { fmtTime } from "../lib/format.js";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
 // ─── L'INGRÉDIENT DU MOMENT ───────────────────────────────────────────────────
 // Carte éditoriale en tête de « Découvrir » : un fruit/légume de saison, sa frise
@@ -15,21 +16,29 @@ const CAT_LABEL = { fruit: "Fruit", vegetable: "Légume" };
 function SeasonFrieze({ months }) {
   const on = new Set(months || []);
   const now = currentMonth();
+  const isDesktop = useIsDesktop();
   return (
     <div style={{ marginTop: 12 }}>
       <div style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600, margin: "0 2px 6px" }}>Sa saison</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: 6 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: isDesktop ? 12 : 6 }}>
         {MONTHS_INI.map((m, i) => {
           const month = i + 1, active = on.has(month), isNow = month === now;
           return (
-            <div key={i} title={isNow ? "Ce mois-ci" : undefined} style={{
-              height: 24, borderRadius: 7, display: "grid", placeItems: "center",
-              fontSize: 10, fontWeight: 700,
-              background: active ? "var(--accent)" : "var(--surface2)",
-              color: active ? "#fff" : "var(--text3)",
-              boxShadow: active ? "0 3px 8px -3px rgba(232,112,58,0.7)" : "none",
-              outline: isNow ? "2px solid var(--accent-deep, #cf5320)" : "none", outlineOffset: 1,
-            }}>{m}</div>
+            <div key={i} title={isNow ? "Ce mois-ci" : undefined} style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              <div style={{
+                width: "100%", height: isDesktop ? 28 : 24, borderRadius: 8, display: "grid", placeItems: "center",
+                fontSize: 10.5, fontWeight: 700,
+                background: active ? "var(--accent)" : "var(--surface2)",
+                color: active ? "#fff" : "var(--text3)",
+                // Mois courant : anneau interne foncé, affleurant (pas d'espace blanc),
+                // + lift plus marqué. Les autres mois de saison gardent une ombre douce.
+                boxShadow: isNow
+                  ? "inset 0 0 0 2px var(--accent-deep, #b8461c), 0 6px 14px -5px rgba(232,112,58,0.75)"
+                  : active ? "0 3px 8px -3px rgba(232,112,58,0.7)" : "none",
+              }}>{m}</div>
+              {/* Petit repère « ce mois-ci » sous la case, sans cerner la case */}
+              <span aria-hidden="true" style={{ width: 4, height: 4, borderRadius: "50%", background: isNow ? "var(--accent-deep, #b8461c)" : "transparent" }} />
+            </div>
           );
         })}
       </div>
