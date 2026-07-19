@@ -46,20 +46,26 @@ function LoadingOverlay() {
   );
 }
 
-// Carte-option verticale du sélecteur (deux côte à côte).
-function Choice({ icon, title, subtitle, onClick, accent }) {
+// Ligne-option du sélecteur (empilées verticalement). `accent` = import IA.
+function Choice({ icon, title, subtitle, onClick, accent, badge }) {
   return (
     <button onClick={onClick} className="pressable" style={{
-      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 11, height: "100%",
-      textAlign: "left", cursor: "pointer", padding: "18px 15px 16px", borderRadius: 18,
-      background: accent ? "linear-gradient(158deg, rgba(232,112,58,0.14), var(--surface2) 70%)" : "var(--surface2)",
-      border: `1px solid ${accent ? "rgba(232,112,58,0.4)" : "var(--border)"}`,
+      display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
+      padding: "14px 15px", borderRadius: 16,
+      background: accent ? "linear-gradient(100deg, rgba(232,112,58,0.13), var(--surface2) 75%)" : "var(--surface2)",
+      border: `1px solid ${accent ? "rgba(232,112,58,0.38)" : "var(--border)"}`,
     }}>
-      <span style={{ width: 46, height: 46, borderRadius: 14, display: "grid", placeItems: "center", background: accent ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
-        <Icon name={icon} size={22} color={accent ? "var(--accent)" : "var(--text2)"} />
+      <span style={{ width: 44, height: 44, borderRadius: 13, flexShrink: 0, display: "grid", placeItems: "center", background: accent ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
+        <Icon name={icon} size={21} color={accent ? "var(--accent)" : "var(--text2)"} />
       </span>
-      <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{title}</span>
-      <span style={{ fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4 }}>{subtitle}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{title}</span>
+          {badge && <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--accent)", background: "rgba(232,112,58,0.16)", padding: "2px 6px", borderRadius: 999 }}>{badge}</span>}
+        </span>
+        <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 3 }}>{subtitle}</span>
+      </span>
+      <Icon name="forward" size={16} color="var(--text3)" />
     </button>
   );
 }
@@ -132,14 +138,17 @@ export function NewRecipeButton({ onManual }) {
       {/* Sélecteur : importer par lien (admin) ou écrire */}
       {step === "choose" && (
         <SwipeableSheet onClose={() => setStep("idle")}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 4px" }}>Nouvelle recette</h3>
-          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Comment veux-tu la créer ?</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Choice icon="link" accent title="Importer depuis un lien" subtitle="L'IA extrait la recette et la met en forme." onClick={() => { setError(""); setStep("url"); }} />
-            <Choice icon="photo" accent title="Importer une photo" subtitle="Prends en photo une recette de livre (2 pages max)." onClick={() => { setError(""); resetPhotos(); setStep("photo"); }} />
-            <div style={{ gridColumn: "1 / -1" }}>
-              <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Nouvelle recette</h3>
+          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 18px" }}>Comment veux-tu la créer ?</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <Choice icon="link" accent badge="IA" title="Importer depuis un lien" subtitle="Colle une URL : l'IA extrait et met en forme la recette." onClick={() => { setError(""); setStep("url"); }} />
+            <Choice icon="photo" accent badge="IA" title="Importer une photo" subtitle="Photographie une recette de livre — jusqu'à 2 pages." onClick={() => { setError(""); resetPhotos(); setStep("photo"); }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
+              <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
+              <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>
+              <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
             </div>
+            <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
           </div>
         </SwipeableSheet>
       )}
