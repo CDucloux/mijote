@@ -199,21 +199,29 @@ export function useFirestoreSync({
           writeCachedHid(user.uid, desiredHid); // mémorise pour un chargement direct au prochain reload
           setLoadedHid(desiredHid);
         } else {
-          // Retour en solo (départ / dissolution). On NE veut PAS perdre les recettes
-          // créées dans le foyer : on les fusionne de façon ADDITIVE dans l'espace
-          // perso (dédup par nom via mergeShared), puis on écrit le solo enrichi.
-          // Effet de bord bienvenu : la transition est additive (l'écran ne se vide
-          // pas d'abord pour se repeupler ensuite) → plus de flicker foyer → solo.
+          // Retour en solo (départ / dissolution). On CONSERVE tel quel l'état vécu
+          // dans le foyer (recettes, carnets, planning, listes, stock) et on l'écrit
+          // dans l'espace perso, qui REMPLACE l'ancienne sauvegarde solo (potentiellement
+          // périmée : vieilles listes de courses, etc.). Aucune donnée ne « ressuscite »,
+          // et rien ne disparaît — le foyer contenait déjà tout (nos données solo y ont
+          // été fusionnées à l'adhésion). Transition additive → pas de flicker.
           const soloWs = soloWorkspace(user.uid);
-          const solo = await loadSharedData(soloWs);
+          const soloPrev = await loadSharedData(soloWs); // uniquement pour differ les recettes
           if (cancelled) return;
-          const merged = mergeShared(sharedRef.current, solo); // foyer (local) → solo (remote)
-          const newMap = await writeSharedData(soloWs, merged, mapOf(solo.recipes));
+          const keep = {
+            recipes: sharedRef.current.recipes || [],
+            collections: sharedRef.current.collections || [],
+            mealPlan: sharedRef.current.mealPlan || {},
+            shoppingLists: sharedRef.current.shoppingLists || [],
+            stock: sharedRef.current.stock || [],
+            lowStock: sharedRef.current.lowStock || [],
+          };
+          const newMap = await writeSharedData(soloWs, keep, mapOf(soloPrev.recipes));
           if (cancelled) return;
-          applyShared(merged);
+          applyShared(keep);
           recipeSyncMap.current = newMap;
-          recipesSigRef.current = JSON.stringify(merged.recipes || []);
-          seedSigs(merged); // signatures méta à jour → l'autosave ne ré-émet pas d'écho
+          recipesSigRef.current = JSON.stringify(keep.recipes || []);
+          seedSigs(keep); // signatures méta à jour → l'autosave ne ré-émet pas d'écho
           activeHidRef.current = null;
           writeCachedHid(user.uid, null); // sorti du foyer → on retire le cache
           setLoadedHid(null);
