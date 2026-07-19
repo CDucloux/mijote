@@ -455,10 +455,20 @@ function AppInner() {
     steps: (recipe.steps || []).map((s, k) => ({ id: `s${Date.now()}_${k}`, title: "", text: "", ingredients: [], utensils: [], ...s })),
   });
   const importFromUrl = async (url) => {
-    const { recipe, method } = await importRecipeFromUrl(url);
+    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
     // Complète dbId + Nutri-Score via le pipeline d'import existant (schéma toléré).
     const res = prepareRecipeImport(JSON.stringify(recipe), { ingredientDB, utensilDB });
-    setEditingRecipe(withItemIds(res.prepared?.[0] || recipe));
+    let draft = res.prepared?.[0] || recipe;
+    // Ustensiles : ne garder QUE ceux réellement en base master (dbId résolu), et
+    // purger les liens d'étapes qui pointaient vers un ustensile écarté.
+    const keptUt = (draft.utensils || []).filter(u => u.dbId);
+    const keptIds = new Set(keptUt.map(u => u.id));
+    draft = {
+      ...draft,
+      utensils: keptUt,
+      steps: (draft.steps || []).map(s => ({ ...s, utensils: (s.utensils || []).filter(id => keptIds.has(id)) })),
+    };
+    setEditingRecipe(withItemIds(draft));
     return { method };
   };
 

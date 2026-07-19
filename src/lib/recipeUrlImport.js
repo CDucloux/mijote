@@ -5,10 +5,10 @@ import { functions } from "./firebase.js";
 // Appelle la Cloud Function `importRecipeFromUrl` (fetch serveur + JSON-LD ou LLM).
 // La garde admin est faite CÔTÉ SERVEUR ; ici on ne fait qu'appeler et remonter
 // un message d'erreur lisible. Renvoie { recipe, method: "jsonld" | "llm" }.
-export async function importRecipeFromUrl(url) {
+export async function importRecipeFromUrl(url, knownUtensils = []) {
   const call = httpsCallable(functions, "importRecipeFromUrl", { timeout: 70000 });
   try {
-    const res = await call({ url });
+    const res = await call({ url, knownUtensils });
     return res.data;
   } catch (e) {
     // Les HttpsError renvoyées par la fonction exposent un `message` propre.

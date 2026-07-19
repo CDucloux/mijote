@@ -174,9 +174,24 @@ function mentions(text, name) {
 // Assemble le brouillon FINAL au schéma Mijoté : ids stables sur ingrédients/
 // ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
 // fourni par le LLM, complété par détection dans le texte de l'étape).
+// Ne garde que les ustensiles présents dans la base master (liste de noms connus).
+// Rapprochement tolérant (accents/casse, singulier grossier). Si la liste connue
+// est vide (client ne l'a pas fournie), on ne filtre pas.
+function filterUtensilsToKnown(utensils, knownNames) {
+  if (!knownNames || !knownNames.length) return utensils || [];
+  const known = knownNames.map(norm);
+  const sing = (s) => s.replace(/s\b/g, "");
+  return (utensils || []).filter(u => {
+    const n = norm(u.name || u);
+    return n && known.some(k => k === n || sing(k) === sing(n) || k.includes(n) || n.includes(k));
+  });
+}
+
 function assignIdsAndLink(d) {
   const ingredients = (d.ingredients || []).map((i, k) => {
-    const raw = i._raw || [i.amount, i.unit, i.name].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
+    // _raw reconstruit à partir des champs normalisés (texte propre et éditable),
+    // plutôt que la ligne d'origine parfois bruitée (« un peu de… pour servir »).
+    const raw = [i.amount, i.unit, i.name].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
     const ing = { id: `i${k}`, dbId: "", name: i.name || "", _raw: raw };
     if (i.amount != null && i.amount !== "") ing.amount = i.amount;
     if (i.unit) ing.unit = i.unit;
@@ -222,4 +237,5 @@ module.exports = {
   isoDurationToMinutes, parseYield, parseIngredientLine, flattenInstructions,
   firstImageUrl, findRecipeNode, extractJsonLdRecipe, mapJsonLdToMijote, htmlToText,
   CUISINE_LABELS, matchCuisine, extractOgImage, assignIdsAndLink, mentions,
+  filterUtensilsToKnown,
 };

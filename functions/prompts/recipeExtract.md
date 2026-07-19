@@ -28,8 +28,16 @@ Règles :
 - **Portions** : `servings` = nombre de personnes (entier ; 2 par défaut si absent).
 - **cuisine** : déduis le style de cuisine et choisis **exactement une valeur** dans cette liste (respecte l'orthographe), ou `""` si aucune ne correspond :
   {{CUISINE_LIST}}
-- **Ingrédients** : un objet par ingrédient. `raw` = la ligne d'origine telle qu'écrite (ex. « 200 g de farine T55 »). `name` = l'ingrédient seul, sans quantité ni préparation (ex. « farine T55 », pas « 200 g de farine émincée »). `amount` = le **chiffre seul** (ex. « 200 », « 0.5 »), ou `""` si non précisé. `unit` = l'unité (`g`, `cl`, `ml`, `cuillère à soupe`, `pincée`, `gousse`…), ou `""`.
-- **Ustensiles** : liste les ustensiles/matériel réellement mentionnés (saladier, four, poêle, fouet…). Si aucun n'est cité, renvoie `[]`. N'invente pas.
+- **Ingrédients** : un objet par ingrédient.
+  - `name` = l'ingrédient **seul**, sans quantité, sans préparation, sans usage. Retire les mentions de service/garniture (« pour servir », « pour la déco », « pour le dressage »), les précisions de mouture/goût (« du moulin », « au goût », « à volonté ») et les qualificatifs de préparation (« émincé », « haché »). Ex. : « poivre noir du moulin, pour servir » → `name` = « poivre noir ».
+  - `amount` = **toujours un chiffre**, jamais `""`. Convertis les quantités vagues et estime celles qui manquent, avec du bon sens culinaire :
+    - « une dizaine » → 10 ; « une douzaine » → 12 ; « quelques » → 3 ; « une pincée / un peu / une pointe » → 1 (unit `pincée`) ; « un filet / un trait » → 1 (unit `cuillère à soupe`).
+    - Assaisonnement sans quantité (sel, poivre, épices « au goût ») → `amount` = 1, `unit` = `pincée`.
+    - Si vraiment rien n'est indiqué, estime une quantité raisonnable pour le nombre de portions plutôt que de laisser vide.
+  - `unit` = l'unité (`g`, `kg`, `cl`, `ml`, `l`, `cuillère à soupe`, `cuillère à café`, `pincée`, `gousse`, `sachet`, `tranche`…), ou `""` si l'ingrédient se compte à l'unité (ex. « 3 œufs » → amount 3, unit "").
+  - `raw` : ignore ce champ, laisse `""`.
+- **Ustensiles** : n'utilise **QUE** des ustensiles de cette liste (reprends l'orthographe exacte), et **uniquement** ceux réellement nécessaires à la recette. Si un ustensile pertinent n'y figure pas, ne le mentionne pas. N'invente jamais. Si aucun ne s'applique, renvoie `[]`.
+  Liste autorisée : {{UTENSILS}}
 - **Étapes** (`steps`) : dans l'ordre de préparation, une action cohérente par étape (ni une phrase coupée en deux, ni cinq actions en une). Pour chaque étape :
   - `text` : l'instruction.
   - `ingredients` : la liste des **noms d'ingrédients** (repris EXACTEMENT du champ `name` ci-dessus) utilisés dans cette étape. `[]` si aucun.

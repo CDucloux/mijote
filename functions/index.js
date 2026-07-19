@@ -11,7 +11,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret, defineString } = require("firebase-functions/params");
 const {
   extractJsonLdRecipe, mapJsonLdToMijote, htmlToText,
-  extractOgImage, assignIdsAndLink, CUISINE_LABELS,
+  extractOgImage, assignIdsAndLink, filterUtensilsToKnown, CUISINE_LABELS,
 } = require("./recipeExtract.js");
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
@@ -21,9 +21,10 @@ const MAX_HTML_BYTES = 3_000_000; // garde-fou : on ne télécharge pas des page
 const FETCH_TIMEOUT_MS = 15_000;
 const MODEL = "claude-haiku-4-5";
 
-// Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md), avec
-// la liste des cuisines injectée. Lu une fois au démarrage de l'instance.
-const LLM_SYSTEM = fs
+// Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md). La
+// liste des cuisines est fixe (injectée au démarrage) ; la liste des ustensiles
+// autorisés est dynamique (fournie par le client à chaque appel).
+const PROMPT_TEMPLATE = fs
   .readFileSync(path.join(__dirname, "prompts", "recipeExtract.md"), "utf-8")
   .replace("{{CUISINE_LIST}}", CUISINE_LABELS.join(", "));
 
@@ -97,10 +98,11 @@ function llmToIntermediate(d, sourceUrl) {
   };
 }
 
-async function extractWithLlm(text, sourceUrl) {
+async function extractWithLlm(text, sourceUrl, knownUtensils) {
   const key = ANTHROPIC_API_KEY.value();
   // Clé absente ou factice (déploiement sans vraie clé) → message clair, pas d'appel.
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "Cette page n'a pas de données structurées et l'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
+  const system = PROMPT_TEMPLATE.replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)");
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
   const body = text.slice(0, 24_000); // borne le coût
@@ -109,7 +111,7 @@ async function extractWithLlm(text, sourceUrl) {
     response = await client.messages.create({
       model: MODEL,
       max_tokens: 4096,
-      system: LLM_SYSTEM,
+      system,
       messages: [{ role: "user", content: `Texte de la page (source : ${sourceUrl}) :\n\n${body}` }],
     });
   } catch (e) {
@@ -135,6 +137,9 @@ exports.importRecipeFromUrl = onCall(
 
     const url = String(request.data?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
+    // Ustensiles connus (base master), fournis par le client → borne les propositions du LLM.
+    const knownUtensils = Array.isArray(request.data?.knownUtensils)
+      ? request.data.knownUtensils.map(s => String(s)).filter(Boolean).slice(0, 200) : [];
 
     try {
       const html = await fetchHtml(url);
@@ -145,14 +150,16 @@ exports.importRecipeFromUrl = onCall(
       if (jsonld && jsonld.name && (jsonld.recipeIngredient || jsonld.recipeInstructions)) {
         const inter = mapJsonLdToMijote(jsonld, url);
         inter.image = inter.image || ogImage;
+        inter.utensils = filterUtensilsToKnown(inter.utensils, knownUtensils);
         return { recipe: assignIdsAndLink(inter), method: "jsonld" };
       }
 
       // 2. Fallback : LLM sur le texte de la page.
       const text = htmlToText(html);
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
-      const inter = await extractWithLlm(text, url);
+      const inter = await extractWithLlm(text, url, knownUtensils);
       inter.image = ogImage; // le texte n'a pas d'image → on prend l'og:image de la page
+      inter.utensils = filterUtensilsToKnown(inter.utensils, knownUtensils);
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
       return { recipe, method: "llm" };

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isoDurationToMinutes, parseIngredientLine, extractJsonLdRecipe,
   mapJsonLdToMijote, flattenInstructions, htmlToText,
-  matchCuisine, extractOgImage, assignIdsAndLink,
+  matchCuisine, extractOgImage, assignIdsAndLink, filterUtensilsToKnown,
 } from "./recipeExtract.js";
 
 describe("isoDurationToMinutes", () => {
@@ -78,6 +78,22 @@ describe("assignIdsAndLink", () => {
     const inter = { ingredients: [{ name: "sel" }], utensils: [], steps: [{ text: "Ciseler le persil." }] };
     const r = assignIdsAndLink(inter);
     expect(r.steps[0].ingredients).toEqual([]); // "sel" ⊄ "persil"
+  });
+  it("reconstruit _raw proprement à partir des champs", () => {
+    const r = assignIdsAndLink({ ingredients: [{ name: "piment en poudre", amount: 1, unit: "pincée" }], utensils: [], steps: [] });
+    expect(r.ingredients[0]._raw).toBe("1 pincée piment en poudre");
+  });
+});
+
+describe("filterUtensilsToKnown", () => {
+  const known = ["Saladier", "Four", "Couteau", "Poêle"];
+  it("ne garde que les ustensiles connus (accents/casse/singulier tolérés)", () => {
+    const out = filterUtensilsToKnown([{ name: "saladier" }, { name: "récipient inconnu" }, { name: "Couteaux" }], known);
+    expect(out.map(u => u.name)).toEqual(["saladier", "Couteaux"]);
+  });
+  it("ne filtre pas si aucune liste connue fournie", () => {
+    const arr = [{ name: "truc" }];
+    expect(filterUtensilsToKnown(arr, [])).toBe(arr);
   });
 });
 
