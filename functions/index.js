@@ -15,49 +15,24 @@ const FETCH_TIMEOUT_MS = 15_000;
 const MODEL = "claude-haiku-4-5";
 
 // Schéma de sortie imposé au LLM (structured outputs) : brouillon Mijoté.
-const RECIPE_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    name: { type: "string" },
-    prepTime: { type: "integer" },       // minutes
-    cookTime: { type: "integer" },       // minutes
-    servings: { type: "integer" },
-    cuisine: { type: "string" },
-    ingredients: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          name: { type: "string" },
-          amount: { type: "string" },     // "" si non précisé (converti en nombre ensuite)
-          unit: { type: "string" },
-        },
-        required: ["name", "amount", "unit"],
-      },
-    },
-    utensils: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: { name: { type: "string" } },
-        required: ["name"],
-      },
-    },
-    steps: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: { text: { type: "string" }, tip: { type: "string" } },
-        required: ["text", "tip"],
-      },
-    },
-  },
-  required: ["name", "prepTime", "cookTime", "servings", "cuisine", "ingredients", "utensils", "steps"],
-};
+// Format JSON attendu du LLM, décrit dans le prompt (plus robuste et compatible
+// que output_config selon la version du SDK) ; on parse le texte renvoyé.
+const LLM_SYSTEM = `Tu extrais une recette de cuisine depuis le texte brut d'une page web, en français.
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour ni balises Markdown, au format exact :
+{"name": string, "prepTime": number, "cookTime": number, "servings": number, "cuisine": string,
+ "ingredients": [{"name": string, "amount": string, "unit": string}],
+ "utensils": [{"name": string}],
+ "steps": [{"text": string, "tip": string}]}
+Règles : prepTime/cookTime en minutes (0 si inconnu) ; pour chaque ingrédient, "amount" = le chiffre seul (ou "" si absent), "unit" = l'unité (ou ""), "name" = l'ingrédient ; "steps" dans l'ordre de préparation ; "tip" = astuce optionnelle ("" sinon). N'invente rien qui ne soit pas dans la page. Si la page n'est pas une recette, renvoie "name": "".`;
+
+function parseJsonLoose(s) {
+  let t = (s || "").trim();
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) t = fence[1].trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a >= 0 && b > a) t = t.slice(a, b + 1);
+  return JSON.parse(t);
+}
 
 async function fetchHtml(url) {
   const controller = new AbortController();
@@ -127,21 +102,23 @@ async function extractWithLlm(text, sourceUrl) {
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
   const body = text.slice(0, 24_000); // borne le coût
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 4096,
-    system: "Tu extrais une recette de cuisine depuis le texte brut d'une page web, en français. "
-      + "Sépare quantité (amount, chiffre uniquement, \"\" si absent), unité (unit) et nom pour chaque ingrédient. "
-      + "prepTime et cookTime sont en minutes (0 si inconnu). Les étapes (steps) sont l'ordre de préparation ; "
-      + "tip est une astuce optionnelle (\"\" sinon). N'invente aucune information absente de la page.",
-    messages: [{ role: "user", content: `Voici le texte de la page (source : ${sourceUrl}) :\n\n${body}` }],
-    output_config: { format: { type: "json_schema", schema: RECIPE_SCHEMA } },
-  });
-  const block = response.content.find(b => b.type === "text");
-  if (!block) throw new HttpsError("internal", "Extraction LLM vide.");
+  let response;
+  try {
+    response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 4096,
+      system: LLM_SYSTEM,
+      messages: [{ role: "user", content: `Texte de la page (source : ${sourceUrl}) :\n\n${body}` }],
+    });
+  } catch (e) {
+    console.error("Anthropic API error:", e?.status, e?.name, e?.message);
+    throw new HttpsError("internal", `Extraction IA échouée : ${e?.message || "erreur API"}`);
+  }
+  const block = (response.content || []).find(b => b.type === "text");
+  if (!block) throw new HttpsError("internal", "Réponse IA vide.");
   let parsed;
-  try { parsed = JSON.parse(block.text); }
-  catch { throw new HttpsError("internal", "Réponse LLM illisible."); }
+  try { parsed = parseJsonLoose(block.text); }
+  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
   return normalizeLlmDraft(parsed, sourceUrl);
 }
 
@@ -157,19 +134,25 @@ exports.importRecipeFromUrl = onCall(
     const url = String(request.data?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
 
-    const html = await fetchHtml(url);
+    try {
+      const html = await fetchHtml(url);
 
-    // 1. Chemin gratuit : JSON-LD schema.org/Recipe.
-    const jsonld = extractJsonLdRecipe(html);
-    if (jsonld && jsonld.name && (jsonld.recipeIngredient || jsonld.recipeInstructions)) {
-      return { recipe: mapJsonLdToMijote(jsonld, url), method: "jsonld" };
+      // 1. Chemin gratuit : JSON-LD schema.org/Recipe.
+      const jsonld = extractJsonLdRecipe(html);
+      if (jsonld && jsonld.name && (jsonld.recipeIngredient || jsonld.recipeInstructions)) {
+        return { recipe: mapJsonLdToMijote(jsonld, url), method: "jsonld" };
+      }
+
+      // 2. Fallback : LLM sur le texte de la page.
+      const text = htmlToText(html);
+      if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
+      const recipe = await extractWithLlm(text, url);
+      if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
+      return { recipe, method: "llm" };
+    } catch (e) {
+      if (e instanceof HttpsError) throw e; // messages déjà lisibles
+      console.error("importRecipeFromUrl — erreur inattendue:", e);
+      throw new HttpsError("internal", `Erreur inattendue : ${e?.message || e}`);
     }
-
-    // 2. Fallback : LLM sur le texte de la page.
-    const text = htmlToText(html);
-    if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable.");
-    const recipe = await extractWithLlm(text, url);
-    if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
-    return { recipe, method: "llm" };
   }
 );
