@@ -36,5 +36,5 @@ export const db = initializeFirestore(firebaseApp, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
 });
 export const storage = getStorage(firebaseApp);
-// Cloud Functions (région par défaut us-central1) : import de recette depuis une URL.
-export const functions = getFunctions(firebaseApp);
+// Cloud Functions (région europe-west1, alignée sur index.js) : import URL.
+export const functions = getFunctions(firebaseApp, "europe-west1");

@@ -35,8 +35,8 @@ firebase deploy --only functions
 ```
 
 > `ADMIN_EMAIL` doit correspondre à `VITE_ADMIN_EMAIL` côté client (même e-mail).
-> Région : `us-central1` (par défaut). Si tu changes de région, ajuste aussi
-> `getFunctions(firebaseApp, "<région>")` dans `src/lib/firebase.js`.
+> Région : **`europe-west1`** (alignée entre `functions/index.js` et
+> `getFunctions(firebaseApp, "europe-west1")` dans `src/lib/firebase.js`).
 
 ## Émulateur (test local)
 

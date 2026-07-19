@@ -122,8 +122,10 @@ function normalizeLlmDraft(d, sourceUrl) {
 }
 
 async function extractWithLlm(text, sourceUrl) {
+  const key = ANTHROPIC_API_KEY.value();
+  if (!key) throw new HttpsError("failed-precondition", "Cette page n'a pas de données structurées et l'extraction IA n'est pas configurée (clé API manquante).");
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
-  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY.value() });
+  const client = new Anthropic({ apiKey: key });
   const body = text.slice(0, 24_000); // borne le coût
   const response = await client.messages.create({
     model: MODEL,
@@ -144,7 +146,7 @@ async function extractWithLlm(text, sourceUrl) {
 }
 
 exports.importRecipeFromUrl = onCall(
-  { secrets: [ANTHROPIC_API_KEY], region: "us-central1", timeoutSeconds: 60, memory: "512MiB" },
+  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
     // ── Garde admin (côté serveur) ──
     const email = (request.auth?.token?.email || "").toLowerCase();
