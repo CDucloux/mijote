@@ -4,8 +4,7 @@ rules_version = '2';
 // Modèle de données :
 //   users/{uid}/**         données privées de chaque utilisateur (recettes, méta…)
 //   master/{doc}           base partagée en lecture, écriture réservée à l'admin
-//   userDirectory/{uid}    fiche publique (email/avatar) proposée au partage
-//   sharedLists/{listId}   listes de courses partagées (autorisation par email)
+//   userDirectory/{uid}    fiche publique (email/avatar) pour foyer/invitations
 //   publicRecipes/{pubId}  recettes (et bases) publiées, lisibles par tous les
 //                          connectés ; écriture réservée à leur auteur
 //
@@ -46,38 +45,6 @@ service cloud.firestore {
     match /userDirectory/{uid} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == uid;
-    }
-
-    // ── Listes de courses partagées (autorisation par email) ─────────────────
-    // L'email du token Google évite d'avoir à connaître l'UID des invités à
-    // l'avance. Plafond métier « propriétaire + 3 invités » appliqué côté règles.
-    match /sharedLists/{listId} {
-      function isMember(rsc) {
-        return hasVerifiedEmail() && email() in rsc.data.memberEmails;
-      }
-
-      // Membres (propriétaire + invités) : lecture & requêtes.
-      allow read: if isMember(resource);
-
-      // Création : seul le créateur, qui s'inclut comme propriétaire ET membre,
-      // dans la limite de 4 membres (lui + 3).
-      allow create: if hasVerifiedEmail()
-                    && request.resource.data.ownerEmail == email()
-                    && email() in request.resource.data.memberEmails
-                    && request.resource.data.memberEmails.size() <= 4;
-
-      // Mise à jour : tout membre courant édite (articles, nom, invités…), MAIS
-      //   • le propriétaire est immuable (pas de transfert furtif),
-      //   • il reste toujours membre,
-      //   • le plafond de 4 membres tient.
-      allow update: if isMember(resource)
-                    && request.resource.data.ownerEmail == resource.data.ownerEmail
-                    && resource.data.ownerEmail in request.resource.data.memberEmails
-                    && request.resource.data.memberEmails.size() <= 4;
-
-      // Suppression : réservée au propriétaire.
-      allow delete: if hasVerifiedEmail()
-                    && email() == resource.data.ownerEmail;
     }
 
     // ── Foyers (households) ───────────────────────────────────────────────────

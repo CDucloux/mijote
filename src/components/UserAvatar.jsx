@@ -73,6 +73,12 @@ export function UserAvatar() {
                 {isDark ? "Mode clair" : "Mode sombre"}
               </button>
             )}
+            <button onClick={() => { setOpen(false); window.dispatchEvent(new Event("mijote:show-onboarding")); }}
+              style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
+              <Icon name="sparkle" size={13} color="currentColor" /> Revoir l'introduction
+            </button>
             <button onClick={() => { setOpen(false); setAbout(true); }}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}

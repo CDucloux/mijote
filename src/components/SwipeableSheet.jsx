@@ -5,7 +5,7 @@ import { useSwipeDown } from "../hooks/useSwipeDown.js";
 // Porté dans <body> : le backdrop `position:fixed` doit échapper aux ancêtres
 // `overflow:hidden` / transformés (ex. en-tête de l'Accueil, #root mis à
 // l'échelle), sans quoi la feuille se retrouve rognée en haut de l'écran.
-export function SwipeableSheet({ onClose, children, style }) {
+export function SwipeableSheet({ onClose, children, style, hideHandle = false }) {
   const { sheetRef, onTouchStart, onTouchMove, onTouchEnd } = useSwipeDown(onClose);
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
@@ -15,7 +15,7 @@ export function SwipeableSheet({ onClose, children, style }) {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}>
-        <div className="modal-handle" />
+        {!hideHandle && <div className="modal-handle" />}
         {children}
       </div>
     </div>,

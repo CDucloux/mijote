@@ -1,9 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, onSnapshot, getDocs, query, where } from "firebase/firestore";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../lib/firebase.js";
 import {
-  metaDoc, recipesCol, sharedListsCol, userDirCol, userDirDoc,
+  metaDoc, recipesCol, upsertOwnDirectoryEntry,
   loadMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
   loadSharedData, writeSharedData, setHouseholdPointer,
 } from "../lib/firestore.js";
@@ -34,8 +34,6 @@ export function useFirestoreSync({
   collections, setCollections,
   mealPlan, setMealPlan,
   shoppingLists, setShoppingLists,
-  setSharedLists,
-  setDirectory,
   stock, setStock,
   lowStock, setLowStock,
   preferences, setPreferences,
@@ -201,12 +199,29 @@ export function useFirestoreSync({
           writeCachedHid(user.uid, desiredHid); // mémorise pour un chargement direct au prochain reload
           setLoadedHid(desiredHid);
         } else {
-          const solo = await loadSharedData(soloWorkspace(user.uid)); // retour en solo (départ)
+          // Retour en solo (départ / dissolution). On CONSERVE tel quel l'état vécu
+          // dans le foyer (recettes, carnets, planning, listes, stock) et on l'écrit
+          // dans l'espace perso, qui REMPLACE l'ancienne sauvegarde solo (potentiellement
+          // périmée : vieilles listes de courses, etc.). Aucune donnée ne « ressuscite »,
+          // et rien ne disparaît — le foyer contenait déjà tout (nos données solo y ont
+          // été fusionnées à l'adhésion). Transition additive → pas de flicker.
+          const soloWs = soloWorkspace(user.uid);
+          const soloPrev = await loadSharedData(soloWs); // uniquement pour differ les recettes
           if (cancelled) return;
-          applyShared(solo);
-          recipeSyncMap.current = mapOf(solo.recipes);
-          recipesSigRef.current = JSON.stringify(solo.recipes || []);
-          metaSigRef.current = {};
+          const keep = {
+            recipes: sharedRef.current.recipes || [],
+            collections: sharedRef.current.collections || [],
+            mealPlan: sharedRef.current.mealPlan || {},
+            shoppingLists: sharedRef.current.shoppingLists || [],
+            stock: sharedRef.current.stock || [],
+            lowStock: sharedRef.current.lowStock || [],
+          };
+          const newMap = await writeSharedData(soloWs, keep, mapOf(soloPrev.recipes));
+          if (cancelled) return;
+          applyShared(keep);
+          recipeSyncMap.current = newMap;
+          recipesSigRef.current = JSON.stringify(keep.recipes || []);
+          seedSigs(keep); // signatures méta à jour → l'autosave ne ré-émet pas d'écho
           activeHidRef.current = null;
           writeCachedHid(user.uid, null); // sorti du foyer → on retire le cache
           setLoadedHid(null);
@@ -303,28 +318,13 @@ export function useFirestoreSync({
     return () => unsubs.forEach(u => u());
   }, [user, loadedHid]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Ma fiche d'annuaire : un seul write par session (pour être invitable / affichable).
+  // La LECTURE de l'annuaire est désormais à la demande (voir loadDirectory dans App) :
+  // plus de getDocs global systématique, qui faisait exploser les lectures Firestore.
   useEffect(() => {
-    if (!user?.email) { setSharedLists([]); return; }
-    const email = user.email.toLowerCase();
-    let unsub;
-    try {
-      unsub = onSnapshot(
-        query(sharedListsCol(), where("memberEmails", "array-contains", email)),
-        snap => setSharedLists(snap.docs.map(d => ({ ...d.data(), _shared: true }))),
-        () => { }
-      );
-    } catch { /* noop */ }
-    return () => { if (unsub) unsub(); };
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!user) { setDirectory([]); return; }
-    setDoc(userDirDoc(user.uid), {
-      uid: user.uid, email: (user.email || "").toLowerCase(),
-      displayName: user.displayName || "", photoURL: user.photoURL || "", updatedAt: Date.now(),
-    }, { merge: true }).catch(() => { });
-    getDocs(userDirCol()).then(s => setDirectory(s.docs.map(d => d.data()))).catch(() => { });
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!user) return;
+    upsertOwnDirectoryEntry(user).catch(() => { });
+  }, [user]);
 
   useEffect(() => {
     if (!user || !cloudLoaded.current || !isAdmin) return;

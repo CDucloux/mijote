@@ -144,6 +144,7 @@ export function formatIngredientsYaml(list, { categoryOrder = [] } = {}) {
       o.name = d.name;
       if (d.aliases?.length) o.aliases = d.aliases;
       if (d.category) o.category = d.category;
+      if (d.description) o.description = d.description;
       if (d.months?.length) o.months = d.months;
       if (d.gramsPerPiece != null) o.gramsPerPiece = d.gramsPerPiece;
       if (d.image) o.image = d.image;
@@ -186,6 +187,11 @@ export function parseIngredientsYaml(text, { validCategories } = {}) {
     if (raw.id != null) row.id = str(raw.id);
     if (raw.category != null) row.category = str(raw.category);
     if (raw.image != null) row.image = str(raw.image);
+    if (raw.description != null) {
+      const d = str(raw.description);
+      if (d.length > 280) errors.push(`${where} : « description » trop longue (max 280).`);
+      else if (d) row.description = d;
+    }
     if (Array.isArray(raw.aliases)) {
       const a = raw.aliases.map(x => str(x)).filter(Boolean);
       if (a.length) row.aliases = a;

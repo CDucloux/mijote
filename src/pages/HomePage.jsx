@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -89,9 +89,11 @@ function MemberStack({ emails, photoFor, nameFor }) {
 // différente des bandes de notification au-dessus. Elle s'ouvre sur le panneau
 // de gestion complet. Évite d'aller fouiller dans la Configuration.
 function FoyerSection() {
-  const { user, directory = [] } = useAppShell();
+  const { user, directory = [], loadDirectory } = useAppShell();
   const { household, invites, loading } = useHousehold();
   const [open, setOpen] = useState(false);
+  // Annuaire chargé à la demande, seulement s'il y a un foyer (avatars des membres).
+  useEffect(() => { if (household || invites.length) loadDirectory?.(); }, [household, invites.length, loadDirectory]);
   // Pendant le chargement : on réserve l'espace avec un skeleton de même hauteur
   // pour éviter le « pop » / décalage de layout au (re)chargement de l'Accueil.
   if (loading) return (

@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
-import { setDoc, deleteDoc } from "firebase/firestore";
 
 import { auth, provider } from "./lib/firebase.js";
-import { sharedListDoc, toSharedListDoc, publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer } from "./lib/firestore.js";
+import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer, fetchUserDirectory } from "./lib/firestore.js";
 import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "./lib/publicRecipes.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
@@ -29,6 +28,7 @@ import { Icon } from "./components/Icon.jsx";
 import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/OfflineModal.jsx";
 import { HouseholdWelcome } from "./components/HouseholdWelcome.jsx";
+import { OnboardingCarousel } from "./components/OnboardingCarousel.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
@@ -64,23 +64,16 @@ function AppInner() {
   const [collections, setCollections] = useLS("rf_collections2", SAMPLE_COLLECTIONS);
   const [mealPlan, setMealPlan] = useLS("rf_mealplan2", {});
   const [shoppingLists, setShoppingLists] = useLS("rf_shopping3", []);
-  // Listes partagées (autres membres ou que je partage) – alimentées par onSnapshot.
-  const [sharedLists, setSharedLists] = useState([]);
-  // Annuaire des utilisateurs connus (pour proposer les e-mails avec avatar au partage).
+  // Annuaire des utilisateurs connus (avatars des membres du foyer, invitations).
+  // Chargé À LA DEMANDE (loadDirectory) : les utilisateurs solo ne le lisent jamais.
   const [directory, setDirectory] = useState([]);
-  const personalListsRef = useRef(shoppingLists);
-  const sharedListsRef = useRef(sharedLists);
-  useEffect(() => { personalListsRef.current = shoppingLists; }, [shoppingLists]);
-  useEffect(() => { sharedListsRef.current = sharedLists; }, [sharedLists]);
-  // Une liste est « partagée » dès qu'elle a au moins un invité. Le tag _shared (issu du
-  // snapshot) ne sert qu'à l'affichage – pas à la décision de routage, sinon le départage
-  // (sharedWith vidé) ne ramènerait jamais la liste en perso.
-  const listIsShared = (l) => Array.isArray(l.sharedWith) && l.sharedWith.length > 0;
-  // Vue fusionnée affichée : listes partagées d'abord, puis perso, dédoublonnées par id.
-  const mergedShoppingLists = useMemo(() => {
-    const sharedIds = new Set(sharedLists.map(l => l.id));
-    return [...sharedLists, ...shoppingLists.filter(l => !sharedIds.has(l.id))];
-  }, [shoppingLists, sharedLists]);
+  const directoryLoadedRef = useRef(null); // uid dont l'annuaire est (en cours de) chargement
+  const loadDirectory = useCallback(async () => {
+    if (!user || directoryLoadedRef.current === user.uid) return;
+    directoryLoadedRef.current = user.uid; // garde par uid → refetch après changement de compte
+    try { setDirectory(await fetchUserDirectory()); }
+    catch { directoryLoadedRef.current = null; }
+  }, [user]);
   // Reference DBs: shared Master + user's own additions, merged for display.
   const [masterDB, setMasterDB] = useState(() => {
     try {
@@ -139,84 +132,6 @@ function AppInner() {
     });
   }, [isAdmin]);
 
-  // Écrit les changements des listes partagées vers Firestore (création/màj/suppression/quitter).
-  // Compare l'ancien et le nouvel état fusionné pour n'écrire que ce qui change.
-  const persistSharedDiffs = useCallback(async (prevMerged, next) => {
-    if (!user?.email) return;
-    const myEmail = user.email.toLowerCase();
-    const prevById = new Map(prevMerged.map(l => [l.id, l]));
-    const nextById = new Map(next.map(l => [l.id, l]));
-    const ops = [];
-    for (const l of next) {
-      const prev = prevById.get(l.id);
-      if (!listIsShared(l)) {
-        // Départage : était partagée, redevient perso → le propriétaire supprime le doc partagé.
-        if (prev && prev._shared && (prev.ownerEmail || "").toLowerCase() === myEmail) {
-          ops.push(deleteDoc(sharedListDoc(l.id)));
-        }
-        continue;
-      }
-      const ownerEmail = (l.ownerEmail || myEmail).toLowerCase();
-      const ownerUid = l.ownerUid || (ownerEmail === myEmail ? user.uid : null);
-      const payload = toSharedListDoc(l, { ownerEmail, ownerUid });
-      const sig = p => JSON.stringify({ name: p.name, items: p.items, hideClear: !!p.hideClear, sharedWith: (p.sharedWith || []).map(e => (e || "").toLowerCase()) });
-      if (!prev || !prev._shared || sig(prev) !== sig(payload)) {
-        ops.push(setDoc(sharedListDoc(l.id), payload));
-      }
-    }
-    for (const l of prevMerged) {
-      if (l._shared && !nextById.has(l.id)) {
-        if ((l.ownerEmail || "").toLowerCase() === myEmail) {
-          ops.push(deleteDoc(sharedListDoc(l.id)));                          // propriétaire : suppression
-        } else {
-          const sharedWith = (l.sharedWith || []).filter(e => (e || "").toLowerCase() !== myEmail);
-          const memberEmails = (l.memberEmails || []).filter(e => (e || "").toLowerCase() !== myEmail);
-          ops.push(setDoc(sharedListDoc(l.id), { ...toSharedListDoc(l, { ownerEmail: (l.ownerEmail || "").toLowerCase(), ownerUid: l.ownerUid || null }), sharedWith, memberEmails })); // membre : quitter
-        }
-      }
-    }
-    if (!ops.length) return;
-    setSyncStatus("syncing");
-    const results = await Promise.allSettled(ops);
-    if (results.some(r => r.status === "rejected")) {
-      setSyncStatus("error");
-      notify("Partage indisponible : écriture refusée. Les règles Firestore sont-elles déployées ?", "error");
-    } else {
-      setSyncStatus("synced");
-    }
-  }, [user]);
-
-  // Setter unique exposé à ShoppingPage : reçoit la liste FUSIONNÉE, aiguille perso vs partagé.
-  const setMergedShoppingLists = useCallback((updater) => {
-    const myEmail = (user?.email || "").toLowerCase();
-    const sharedIds = new Set(sharedListsRef.current.map(l => l.id));
-    // Vue fusionnée identique au memo : la version partagée prime sur la copie perso de même id.
-    const prevMerged = [...sharedListsRef.current, ...personalListsRef.current.filter(l => !sharedIds.has(l.id))];
-    const next = typeof updater === "function" ? updater(prevMerged) : updater;
-
-    const ownerOf = l => (l.ownerEmail || myEmail).toLowerCase();
-    const isMine = l => !listIsShared(l) || ownerOf(l) === myEmail;
-
-    // Anti-perte : le PROPRIÉTAIRE garde toujours une copie perso durable, même partagée.
-    // Les listes partagées PAR d'autres ne vivent que dans la collection partagée.
-    const nextPersonal = next.filter(isMine);
-    const nextShared = next.filter(listIsShared);
-
-    const strippedPersonal = nextPersonal.map(l => {
-      const { _shared, memberEmails, ownerUid, ...rest } = l;
-      if (listIsShared(l)) return { ...rest, ownerEmail: ownerOf(l) };  // conserve sharedWith + ownerEmail
-      const { ownerEmail, sharedWith, ...clean } = rest;                // perso non partagée : aucune méta de partage
-      return clean;
-    });
-    if (JSON.stringify(personalListsRef.current) !== JSON.stringify(strippedPersonal)) setShoppingLists(strippedPersonal);
-
-    setSharedLists(nextShared.map(l => {                              // reflet optimiste immédiat
-      const ownerEmail = ownerOf(l);
-      const sw = (l.sharedWith || []).map(e => (e || "").toLowerCase());
-      return { ...l, _shared: true, ownerEmail, ownerUid: l.ownerUid || (ownerEmail === myEmail ? user?.uid : null), memberEmails: Array.from(new Set([ownerEmail, ...sw])) };
-    }));
-    persistSharedDiffs(prevMerged, next);
-  }, [persistSharedDiffs, setShoppingLists, user]);
   const [stock, setStock] = useLS("rf_stock", []);
   const [lowStock, setLowStock] = useLS("rf_lowStock", []);
   const [preferences, setPreferences] = useLS("rf_preferences", DEFAULT_PREFERENCES);
@@ -248,8 +163,6 @@ function AppInner() {
     collections, setCollections,
     mealPlan, setMealPlan,
     shoppingLists, setShoppingLists,
-    setSharedLists,
-    setDirectory,
     stock, setStock,
     lowStock, setLowStock,
     preferences, setPreferences,
@@ -480,10 +393,10 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }} className={isDesktop ? "desktop-content" : ""}>
-      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={mergedShoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
+      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
-      {tab === "shopping" && <ShoppingPage shoppingLists={mergedShoppingLists} setShoppingLists={setMergedShoppingLists} ingredientDB={ingredientDB} directory={directory} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
+      {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "fridge" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
     </div>
@@ -531,7 +444,7 @@ function AppInner() {
   // Login screen
   if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory };
+  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory };
 
   return (
     <AppShellProvider value={shellValue}>
@@ -579,6 +492,7 @@ function AppInner() {
         )}
         <OfflineModal />
         <HouseholdWelcome />
+        <OnboardingCarousel />
       </div>
     </AppShellProvider>
   );

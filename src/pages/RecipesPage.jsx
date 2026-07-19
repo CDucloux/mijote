@@ -4,20 +4,25 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
+import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters } from "../lib/recipeFilters.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
+import { isRecipeVegan } from "../lib/dietary.js";
+import { buildTechniqueIndex } from "../lib/techniques.js";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
 export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, setTab }) {
+  const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
-  const [filterCuisine, setFilterCuisine] = useState(null);
   const [filterCol, setFilterCol] = useState(null);
   const [sortBy, setSortBy] = useState("name");
-  const [seasonOnly, setSeasonOnly] = useState(false);
-  const [showCuisines, setShowCuisines] = useState(false);
+  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+  const [filterOpen, setFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [hideCarnets, setHideCarnets] = useState(() => {
@@ -32,7 +37,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
 
   // Styles de cuisine réellement utilisés, dans l'ordre canonique de la liste.
   const usedCuisines = CUISINES.filter(c => recipes.some(r => r.cuisine === c.label));
-  const filtered = recipes
+  const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
+  const nActiveFilters = activeFilterCount(filters);
+
+  const filtered = useMemo(() => recipes
     .filter(r => {
       // Plats et bases cohabitent dans la même grille ; le badge en coin les distingue.
       if (search) {
@@ -42,14 +50,13 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         const inIngredients = r.ingredients?.some(i => normalizeStr(i.name).includes(q));
         if (!inName && !inCuisine && !inIngredients) return false;
       }
-      if (filterCuisine && r.cuisine !== filterCuisine) return false;
       if (filterCol && !r.collections?.includes(filterCol)) return false;
-      if (seasonOnly && !isRecipeInSeason(r, resolver)) return false;
-      return true;
+      return matchesFilters(r, filters, { resolver, techniques, techIndex, recipes });
     })
-    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt));
+    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt)),
+  [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]);
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCuisine, filterCol, sortBy, seasonOnly]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, filters]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -77,42 +84,25 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
           {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 2 }}>
-          {/* Tri — segmented control (« choisis-en un ») pour le distinguer des filtres */}
-          <div style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 2, padding: 2, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20 }}>
-            <span title="Trier" aria-label="Trier" style={{ display: "inline-flex", padding: "0 5px 0 7px" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                {/* Barres décroissantes = ordre + flèche = direction du tri */}
-                <path d="M4 7h11M4 12h7M4 17h4" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" />
-                <path d="M19 5v13" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="m16 15 3 3 3-3" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            {["name", "health", "date"].map(s => (
-              <button key={s} onClick={() => setSortBy(s)} style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 16, fontSize: 12, fontWeight: 600, background: sortBy === s ? "var(--accent)" : "transparent", color: sortBy === s ? "#fff" : "var(--text2)", border: "none" }}>
-                {s === "name" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 3, lineHeight: 1 }}>A<span style={{ fontSize: 9, position: "relative", top: "-1px", margin: "0 1px" }}>→</span>Z</span> : s === "health" ? "Santé" : "Récent"}
-              </button>
-            ))}
-          </div>
-          <div style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
-          {/* Filtres — puces indépendantes (activables/désactivables) */}
-          <button onClick={() => setSeasonOnly(s => !s)} title="Recettes de saison ce mois-ci" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: seasonOnly ? "rgba(76,175,125,0.18)" : "var(--surface2)", color: seasonOnly ? "var(--green)" : "var(--text2)", border: `1px solid ${seasonOnly ? "rgba(76,175,125,0.5)" : "var(--border)"}` }}>
-            <Icon name="leaf" size={13} color={seasonOnly ? "var(--green)" : "var(--text3)"} /> De saison
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          {/* Un seul point d'entrée : la feuille « Tous les filtres » (tri + filtres) */}
+          <button className="filter-btn" onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+            Filtres
+            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
-          {usedCuisines.length > 0 && (
-            <button onClick={() => { setShowCuisines(v => { if (v) setFilterCuisine(null); return !v; }); }} title={showCuisines ? "Masquer les styles" : "Filtrer par style de cuisine"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: showCuisines ? "var(--surface3)" : "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-              <span style={{ fontSize: 14, lineHeight: 1, fontWeight: 400 }}>{showCuisines ? "−" : "+"}</span> Cuisine
-            </button>
-          )}
-          <div style={{ display: "flex", gap: 6, flexShrink: 0, maxWidth: showCuisines ? 2000 : 0, opacity: showCuisines ? 1 : 0, overflow: "hidden", transition: "max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease" }}>
-            {usedCuisines.map(c => (
-              <button key={c.label} onClick={() => setFilterCuisine(filterCuisine === c.label ? null : c.label)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: filterCuisine === c.label ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: filterCuisine === c.label ? "var(--accent)" : "var(--text2)", border: `1px solid ${filterCuisine === c.label ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}><span style={{ fontSize: 13, lineHeight: 1 }}>{c.emoji}</span>{c.label}</button>
-            ))}
-          </div>
+          <span style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            Trié par <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{sortBy === "name" ? "A → Z" : sortBy === "health" ? "Santé" : "Récent"}</strong>
+          </span>
         </div>
       </div>
+      {filterOpen && (
+        <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingBottom: 0 }}>
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
+        </SwipeableSheet>
+      )}
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
-        {recipes.length > 0 && !search && !filterCuisine && !filterCol && (
+        {recipes.length > 0 && !search && !filterCol && nActiveFilters === 0 && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <h2 style={{ fontSize: 16, fontWeight: 600 }}>Carnets</h2>
@@ -207,7 +197,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           )}
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} inSeason={isRecipeInSeason(r, resolver)} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
+          {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} inSeason={isRecipeInSeason(r, resolver)} vegan={isRecipeVegan(r, resolver, { recipes })} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
         </div>
         {visibleCount < filtered.length && (
           <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
@@ -223,9 +213,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <p style={{ fontSize: 13.5, color: "var(--text3)", lineHeight: 1.5, marginBottom: 18 }}>
               {search ? <>Rien ne correspond à « <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{search}</strong> » dans ta bibliothèque.<br />Essaie un autre mot-clé ou ajuste tes filtres.</> : "Aucune recette ne correspond à ces filtres."}
             </p>
-            {(search || filterCuisine || seasonOnly) && (
-              <button className="btn btn-ghost" style={{ padding: "9px 18px", borderRadius: 12, fontSize: 13.5 }} onClick={() => { setSearch(""); setFilterCuisine(null); setSeasonOnly(false); setShowCuisines(false); }}>
-                <Icon name="close" size={14} /> Réinitialiser la recherche
+            {(search || nActiveFilters > 0 || filterCol) && (
+              <button className="btn btn-ghost" style={{ padding: "9px 18px", borderRadius: 12, fontSize: 13.5 }} onClick={() => { setSearch(""); setFilters({ ...DEFAULT_FILTERS }); setFilterCol(null); }}>
+                <Icon name="close" size={14} /> Réinitialiser
               </button>
             )}
           </div>
