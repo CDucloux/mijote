@@ -27,7 +27,7 @@ button,a,[role="button"],input,textarea,select{-webkit-tap-highlight-color:trans
 /* Selection highlight — Mijoté sage green, distinct from the orange accent and the default blue */
 ::selection{background:rgba(76,175,125,0.35);}
 ::-moz-selection{background:rgba(76,175,125,0.35);}
-html,body{background:var(--bg);color:var(--text);font-family:var(--ff-body);font-size:15px;height:100%;overflow:hidden;}
+html,body{background:var(--bg);color:var(--text);font-family:var(--ff-body);font-size:15px;height:100%;overflow:hidden;overscroll-behavior:none;}
 /* Feel « app native » : uniquement en PWA installée (standalone). Pas de sélection
    de texte ni de menu callout iOS au long-press… sauf dans les champs de saisie,
    où l'édition et la sélection restent nécessaires. Dans le navigateur classique,
