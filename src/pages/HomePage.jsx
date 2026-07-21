@@ -198,26 +198,11 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
         <FoyerSection />
 
         {/* ── Aujourd'hui ─────────────────────────────────────────────────── */}
-        <section style={{ marginBottom: isCalm ? 18 : 26 }}>
-          {!isCalm && (
-            <h2 className="slide-up" style={{ animationDelay: "0.04s", fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
-              Aujourd'hui
-            </h2>
-          )}
-
-          {isCalm ? (
-            <button className="slide-up pressable" onClick={() => setTab?.("meal-plan")}
-              style={{ animationDelay: "0.04s", display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
-              <span style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "rgba(76,175,125,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name="check" size={15} color="var(--green)" />
-              </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                <strong style={{ fontWeight: 600 }}>Tout est à jour</strong>
-                <span style={{ color: "var(--text3)" }}> · rien de planifié, courses et stock OK</span>
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 12, fontWeight: 600, color: "var(--accent)", flexShrink: 0 }}>Planifier <Icon name="forward" size={13} color="var(--accent)" /></span>
-            </button>
-          ) : (
+        {!isCalm && (
+        <section style={{ marginBottom: 26 }}>
+          <h2 className="slide-up" style={{ animationDelay: "0.04s", fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
+            Aujourd'hui
+          </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {/* Repas du jour */}
               {meals.map((m, i) => (
@@ -274,8 +259,8 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                   subtitle={lowStockNames.slice(0, 4).join(" · ")} />
               )}
             </div>
-          )}
         </section>
+        )}
 
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
         <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} />
