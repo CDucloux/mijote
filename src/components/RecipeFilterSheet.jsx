@@ -114,7 +114,7 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
     <div style={{ display: "flex", flexDirection: "column" }}>
       {/* En-tête — collant en haut de la feuille, fond opaque couvrant la bande de
           padding du haut pour qu'aucun contenu ne transparaisse pendant le défilement */}
-      <div style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", margin: "-20px -20px 10px", padding: "20px 20px 11px", borderBottom: "1px solid var(--border)" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", margin: "0 -20px 10px", padding: "18px 20px 12px", borderBottom: "1px solid var(--border)" }}>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: 0, lineHeight: 1 }}>Tous les filtres</h2>
         {nActive > 0 && <button onClick={reset} style={{ alignSelf: "center", background: "none", border: "none", color: "var(--accent)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, lineHeight: 1 }}>Réinitialiser</button>}
         <button onClick={onClose} aria-label="Fermer" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "var(--surface2)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>

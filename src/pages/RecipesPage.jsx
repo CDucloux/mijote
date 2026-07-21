@@ -135,7 +135,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         </div>
       </div>
       {filterOpen && (
-        <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingBottom: 0 }}>
+        <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
           <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => { setFilterOpen(false); setEditingSmartId(null); }}
             alreadySaved={!editingSmartId && collections.some(c => isSmart(c) && smartActive(c))}
             updatingCarnetName={editingSmartId ? collections.find(c => c.id === editingSmartId)?.name : null}

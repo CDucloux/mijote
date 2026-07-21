@@ -280,7 +280,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       </div>{/* fin sticky header */}
 
       {filterOpen && (
-        <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingBottom: 0 }}>
+        <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
           <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
         </SwipeableSheet>
       )}
