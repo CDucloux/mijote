@@ -180,7 +180,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* En-tête */}
-      <div style={{ padding: "20px 20px 8px", flexShrink: 0, background: "linear-gradient(180deg, rgba(232,112,58,0.07), transparent)" }}>
+      <div style={{ padding: "20px 20px 8px", flexShrink: 0, position: "relative", zIndex: 1, background: "linear-gradient(180deg, rgba(232,112,58,0.07), transparent), var(--bg)" }}>
         <div className="slide-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
@@ -213,7 +213,6 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 <strong style={{ fontWeight: 600 }}>Tout est à jour</strong>
-                <span style={{ color: "var(--text3)" }}> · rien de planifié, courses et stock OK</span>
               </span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 12, fontWeight: 600, color: "var(--accent)", flexShrink: 0 }}>Planifier <Icon name="forward" size={13} color="var(--accent)" /></span>
             </button>

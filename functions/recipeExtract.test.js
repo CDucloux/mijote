@@ -1,7 +1,16 @@
 import { describe, it, expect } from "vitest";
 import {
-  matchCuisine, extractOgImage, assignIdsAndLink, filterUtensilsToKnown, htmlToText, imageUrlsInText,
+  matchCuisine, matchCategory, extractOgImage, assignIdsAndLink, filterUtensilsToKnown, htmlToText, imageUrlsInText,
 } from "./recipeExtract.js";
+
+describe("matchCategory", () => {
+  it("ne garde qu'un id de catégorie valide", () => {
+    expect(matchCategory("dessert")).toBe("dessert");
+    expect(matchCategory("Dessert")).toBe("dessert");
+    expect(matchCategory("plat principal")).toBe("");
+    expect(matchCategory("")).toBe("");
+  });
+});
 
 describe("matchCuisine", () => {
   it("rapproche du label canonique", () => {

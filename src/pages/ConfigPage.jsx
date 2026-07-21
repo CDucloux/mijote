@@ -101,7 +101,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editTech, setEditTech] = useState(null);
-  const [editCol, setEditCol] = useState(null);
   const [editCat, setEditCat] = useState(null); // { key, label, color, icon, isNew }
   const [confirmDelCat, setConfirmDelCat] = useState(null); // { key, label }
   const [confirmDel, setConfirmDel] = useState(null); // { type: "ing" | "ut", item }
@@ -360,7 +359,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <UserAvatar />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
-          {["préférences", "ingredients", "ustensiles", "techniques", "collections", "données", "nouveautés"].map(s => (
+          {["préférences", "ingredients", "ustensiles", "techniques", "données", "nouveautés"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
               {s === "préférences" ? "Préférences" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "techniques" ? "Techniques" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
             </button>
@@ -729,28 +728,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           );
         })()}
 
-        {section === "collections" && (
-          <div>
-            <button className="btn btn-primary btn-sm" style={{ marginBottom: 14 }} onClick={() => setEditCol({ id: "", name: "", color: "#e8703a", icon: "📓" })}><Icon name="plus" size={14} /> Nouveau carnet</button>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {collections.map(col => (
-                <div key={col.id} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", borderRadius: 12, padding: "10px 14px", border: "1px solid var(--border)" }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: col.color + "33", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
-                    <span style={{ fontSize: 18, lineHeight: 1 }}>{col.icon || "📓"}</span>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{col.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--text3)" }}>{col.count} recette(s)</div>
-                  </div>
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: col.color, flexShrink: 0 }} />
-                  <button onClick={() => setEditCol({ ...col })} style={{ color: "var(--text3)", marginRight: 4 }}><Icon name="edit" size={14} /></button>
-                  <button onClick={() => setCollections(prev => prev.filter(c => c.id !== col.id))} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
-                </div>
-              ))}
-              {collections.length === 0 && <p style={{ fontSize: 13, color: "var(--text3)" }}>Aucun carnet. Créez-en un !</p>}
-            </div>
-          </div>
-        )}
 
         {section === "données" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1037,47 +1014,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         </SwipeableSheet>
       )}
 
-      {/* Collection editor modal */}
-      {editCol && (
-        <SwipeableSheet onClose={() => setEditCol(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editCol.id ? "Modifier le" : "Nouveau"} carnet</h3>
-          <div style={{ marginBottom: 12 }}>
-            <div className="field-label">Nom</div>
-            <input className="field-input" placeholder="ex: Plats végétariens" value={editCol.name} onChange={e => setEditCol(p => ({ ...p, name: e.target.value }))} />
-          </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => (
-              <button key={c} onClick={() => setEditCol(p => ({ ...p, color: c }))} style={{ width: 32, height: 32, borderRadius: "50%", background: c, border: `3px solid ${editCol.color === c ? "#fff" : "transparent"}`, boxShadow: editCol.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
-            ))}
-          </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-            {["🍽️", "🥗", "🍝", "🍰", "🥩", "🥦", "🥐", "🍜", "🍛", "🫕", "🥘", "🧁", "🍣", "🫙", "🥚", "🧀", "🫒", "🌮", "🍲"].map(ico => (
-              <button key={ico} onClick={() => setEditCol(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: editCol.icon === ico ? editCol.color + "33" : "var(--surface2)", border: `2px solid ${editCol.icon === ico ? editCol.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
-            ))}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, marginBottom: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: editCol.color + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{editCol.icon || "📓"}</div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{editCol.name || "Nom du carnet"}</div>
-              <div style={{ fontSize: 11, color: "var(--text3)" }}>Aperçu</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditCol(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
-              if (!editCol.name.trim()) return;
-              if (editCol.id && collections.find(c => c.id === editCol.id)) {
-                setCollections(prev => prev.map(c => c.id === editCol.id ? { ...editCol } : c));
-              } else {
-                setCollections(prev => [...prev, { ...editCol, id: "c" + Date.now(), count: 0 }]);
-              }
-              setEditCol(null);
-            }}>Sauvegarder</button>
-          </div>
-        </SwipeableSheet>
-      )}
     </div>
   );
 }

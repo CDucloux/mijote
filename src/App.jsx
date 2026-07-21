@@ -180,9 +180,12 @@ function AppInner() {
     return next;
   });
 
-  // Sync theme class to <html> so html/body background updates too
+  // Sync theme class to <html> so html/body background updates too, and align the
+  // PWA `theme-color` (barre de statut) sur le fond du thème plutôt qu'un orange fixe.
   useEffect(() => {
     document.documentElement.classList.toggle("light", !isDark);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", isDark ? "#0e0e0f" : "#f5f0eb");
   }, [isDark]);
 
   // Update document title on tab change
@@ -478,7 +481,7 @@ function AppInner() {
   // Import depuis une URL (admin) : appelle la Cloud Function puis ouvre l'ÉDITEUR
   // avec le brouillon (jamais d'enregistrement direct — le créateur relit/corrige).
   const withItemIds = (recipe) => ({
-    description: "", collections: [], image: "", cuisine: "", source: "",
+    description: "", collections: [], image: "", cuisine: "", category: "", source: "",
     prepTime: 0, cookTime: 0, servings: 2, ...recipe,
     ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),
     utensils: (recipe.utensils || []).map((u, k) => ({ id: `u${Date.now()}_${k}`, dbId: "", name: "", ...u })),
@@ -517,8 +520,11 @@ function AppInner() {
     <AppShellProvider value={shellValue}>
     <div id="root" className={isDark ? "" : "light"}>
         {notification && (
-          <div style={{ position: "fixed", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: notification.type === "error" ? "var(--red)" : notification.type === "warning" ? "#e8920a" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: "toastIn 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both" }}>
+          <div style={{ position: "fixed", left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none",
+            ...(isDesktop
+              ? { top: 16 }
+              : { bottom: "calc(var(--tab-h) + env(safe-area-inset-bottom) + 12px)" }) }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, maxWidth: "calc(100vw - 32px)", background: notification.type === "error" ? "var(--red)" : notification.type === "warning" ? "#e8920a" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: `${isDesktop ? "toastIn" : "toastUp"} 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both` }}>
               <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name={notification.type === "error" ? "close" : notification.type === "warning" ? "warning" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
               </div>

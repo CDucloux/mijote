@@ -82,6 +82,7 @@ function llmToIntermediate(d, sourceUrl) {
     name: (d.name || "").slice(0, 200),
     prepTime: d.prepTime, cookTime: d.cookTime, servings: d.servings,
     cuisine: d.cuisine || "",
+    category: d.category || "",
     source: sourceUrl,
     ingredients: (d.ingredients || []).map(i => {
       const ing = { name: (i.name || "").slice(0, 120), _raw: (i.raw || "").slice(0, 160) };

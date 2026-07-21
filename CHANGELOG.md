@@ -1,5 +1,22 @@
 # Changelog – Mijoté
 
+## v3.5.0 – Safran · Types de recette & carnets intelligents
+
+### Types de recette
+- Nouveau champ **Type de recette** (Apéritif, Entrée, Soupe, Salade, Plat, Gratin, Pasta, Pizza, Accompagnement, Dessert, Tarte, Petit-déjeuner, Boisson, Sauce, Boulangerie) : badge sur la fiche, filtre dédié, rempli aussi par l'import IA
+
+### Carnets intelligents
+- Les carnets peuvent désormais être des **vues de filtres enregistrées** : on filtre, on enregistre la vue, le carnet se remplit tout seul (les carnets manuels restent possibles)
+- Consultation et **modification des filtres** d'un carnet intelligent
+- La **gestion des carnets** (créer, modifier, supprimer) passe des réglages à la page **Mes Recettes** (appui long sur un carnet)
+
+### Confort & finitions
+- **Fiche recette (mobile)** : onglets Ingrédients/Ustensiles/Étapes en switch segmenté avec indicateur glissant
+- **Notifications** : affichées en bas au-dessus de la barre d'onglets sur mobile (snackbar)
+- **PWA** : la barre de statut suit la couleur du thème (clair/sombre) au lieu d'un orange fixe
+- **Feuille de filtres** : en-tête « Tous les filtres » collant et opaque ; barres de tri alignées entre Mes Recettes et Découvrir
+- **Ingrédient du moment** : rotation hebdomadaire corrigée (ne restait plus figé) et conservé pendant une recherche
+
 ## v3.4.0 – Safran · Import IA & calculatrices
 
 ### Nouvelle recette

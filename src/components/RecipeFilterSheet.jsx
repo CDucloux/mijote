@@ -3,6 +3,7 @@ import { Icon } from "./Icon.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { IngImage } from "./Img.jsx";
 import { cuisineEmoji } from "../constants/cuisines.js";
+import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
 import { DIFFICULTY_LABEL, difficultyColor } from "../lib/difficulty.js";
 import { DEFAULT_FILTERS, activeFilterCount } from "../lib/recipeFilters.js";
 import { COOKING_METHODS } from "../lib/cooking.js";
@@ -16,10 +17,10 @@ const SORT_LABEL = { name: "A → Z", health: "Santé", date: "Récent" };
 const TIME_LABEL = { 20: "≤ 20 min", 30: "≤ 30 min", 60: "≤ 1 h" };
 
 // Section repliable : titre + résumé (quand fermée) + chevron.
-function Group({ title, summary, defaultOpen = true, children }) {
+function Group({ title, summary, defaultOpen = true, first = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderTop: "1px solid var(--border)", padding: "15px 0" }}>
+    <div style={{ borderTop: first ? "none" : "1px solid var(--border)", padding: first ? "3px 0 15px" : "15px 0" }}>
       <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}>
         <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>{title}</span>
         {!open && summary && <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{summary}</span>}
@@ -94,7 +95,7 @@ function IngredientPicker({ ingredientDB, selected, setFilters }) {
   );
 }
 
-export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose }) {
+export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false, updatingCarnetName = null }) {
   const set = (patch) => setFilters(f => ({ ...f, ...patch }));
   const toggleCuisine = (label) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
@@ -102,21 +103,25 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
   const toggleCooking = (id) => setFilters(f => ({
     ...f, cooking: f.cooking.includes(id) ? f.cooking.filter(c => c !== id) : [...f.cooking, id],
   }));
+  const toggleCategory = (id) => setFilters(f => ({
+    ...f, categories: (f.categories || []).includes(id) ? f.categories.filter(c => c !== id) : [...(f.categories || []), id],
+  }));
   const reset = () => setFilters({ ...DEFAULT_FILTERS });
   const nActive = activeFilterCount(filters);
   const typeSummary = filters.type === "dish" ? "Plats" : filters.type === "base" ? "Préparations de base" : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* En-tête */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: 0 }}>Tous les filtres</h2>
-        {nActive > 0 && <button onClick={reset} style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: "4px 2px" }}>Réinitialiser</button>}
+      {/* En-tête — collant en haut de la feuille, fond opaque couvrant la bande de
+          padding du haut pour qu'aucun contenu ne transparaisse pendant le défilement */}
+      <div style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", margin: "0 -20px 10px", padding: "18px 20px 12px", borderBottom: "1px solid var(--border)" }}>
+        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: 0, lineHeight: 1 }}>Tous les filtres</h2>
+        {nActive > 0 && <button onClick={reset} style={{ alignSelf: "center", background: "none", border: "none", color: "var(--accent)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, lineHeight: 1 }}>Réinitialiser</button>}
         <button onClick={onClose} aria-label="Fermer" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "var(--surface2)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>
       </div>
 
       {/* Trier */}
-      <Group title="Trier par" summary={SORT_LABEL[sortBy]}>
+      <Group title="Trier par" summary={SORT_LABEL[sortBy]} first>
         <Row>
           {["name", "health", "date"].map(s => (
             <Chip key={s} on={sortBy === s} onClick={() => setSortBy(s)}>{SORT_LABEL[s]}</Chip>
@@ -124,8 +129,19 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
         </Row>
       </Group>
 
-      {/* Type */}
-      <Group title="Type de recette" summary={typeSummary}>
+      {/* Type de recette (rôle dans le repas) */}
+      <Group title="Type de recette" defaultOpen={false} summary={filters.categories?.length ? `${filters.categories.length} sélectionné${filters.categories.length > 1 ? "s" : ""}` : null}>
+        <Row>
+          {RECIPE_CATEGORIES.map(c => (
+            <Chip key={c.id} on={(filters.categories || []).includes(c.id)} onClick={() => toggleCategory(c.id)}>
+              <span style={{ fontSize: 13, lineHeight: 1 }}>{c.emoji}</span> {c.label}
+            </Chip>
+          ))}
+        </Row>
+      </Group>
+
+      {/* Nature (plat vs préparation de base) */}
+      <Group title="Nature" summary={typeSummary}>
         <Row>
           {[["all", "Toutes", false], ["dish", "Plats", false], ["base", "Préparations de base", true]].map(([val, label, isBase]) => (
             <Chip key={val} on={filters.type === val} onClick={() => set({ type: val })}>
@@ -225,10 +241,29 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
       </Group>
 
       {/* CTA — pied plein, sans liseré, jusqu'au bas de la feuille */}
-      <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "12px 20px calc(20px + env(safe-area-inset-bottom))" }}>
+      <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "10px 20px calc(16px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 10 }}>
         <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5 }} onClick={onClose}>
           Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
         </button>
+        {/* Enregistrer / mettre à jour la vue comme carnet (bibliothèque perso) */}
+        {onSaveAsCarnet && nActive > 0 && (
+          alreadySaved && !updatingCarnetName ? (
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "var(--green)", padding: "4px 0" }}>
+              <Icon name="check" size={15} color="var(--green)" /> Vue enregistrée comme carnet
+            </div>
+          ) : (
+            <button onClick={onSaveAsCarnet} className="pressable" style={{ width: "100%", display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 15, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", textAlign: "left" }}>
+              <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.14)" }}>
+                <Icon name={updatingCarnetName ? "check" : "book"} size={17} color="var(--accent)" />
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
+                <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>{updatingCarnetName ? "Remplacer les filtres du carnet" : "Retrouve cette sélection en un tap"}</span>
+              </span>
+              <Icon name="forward" size={15} color="var(--text3)" />
+            </button>
+          )
+        )}
       </div>
     </div>
   );

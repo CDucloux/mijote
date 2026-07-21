@@ -28,6 +28,8 @@ export function validateRecipeSchema(r, label) {
     errs.push(`${label} : "tags" doit être un tableau de chaînes.`);
   if (r.cuisine != null && typeof r.cuisine !== "string")
     errs.push(`${label} : "cuisine" doit être une chaîne.`);
+  if (r.category != null && typeof r.category !== "string")
+    errs.push(`${label} : "category" doit être une chaîne.`);
   if (r.collections != null && (!Array.isArray(r.collections) || r.collections.some(c => typeof c !== "string")))
     errs.push(`${label} : "collections" doit être un tableau de chaînes.`);
   if (r.ingredients != null) {

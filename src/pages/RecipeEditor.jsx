@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { CUISINES } from "../constants/cuisines.js";
+import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
 import { UtensilPicker } from "../components/UtensilPicker.jsx";
 import { DraggableStep } from "../components/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
@@ -13,7 +14,7 @@ import { useIsDesktop } from "../hooks/useIsDesktop.js";
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
 export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, collections, recipes }) {
-  const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
+  const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", category: recipe.category || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
   const [section, setSection] = useState("info");
   const up = (f, v) => setForm(p => ({ ...p, [f]: v }));
   const upYield = (f, v) => setForm(p => ({ ...p, yield: { ...(p.yield || { amount: "", unit: "g" }), [f]: v } }));
@@ -206,12 +207,12 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 )}
               </div>
               <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Style de cuisine</div>
+                <div className="field-label" style={{ marginBottom: 8 }}>Type de recette</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {CUISINES.map(c => {
-                    const active = form.cuisine === c.label;
+                  {RECIPE_CATEGORIES.map(c => {
+                    const active = form.category === c.id;
                     return (
-                      <button key={c.label} type="button" onClick={() => up("cuisine", active ? "" : c.label)}
+                      <button key={c.id} type="button" onClick={() => up("category", active ? "" : c.id)}
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: active ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
                         <span style={{ fontSize: 14, lineHeight: 1 }}>{c.emoji}</span>{c.label}
                       </button>
@@ -220,16 +221,14 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </div>
               </div>
               <div>
-                <div className="field-label" style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}><Icon name="book" size={13} color="var(--text3)" /> Carnets</div>
-                {collections.length === 0 && <p style={{ fontSize: 12, color: "var(--text3)" }}>Aucun carnet – créez-en dans Config.</p>}
+                <div className="field-label" style={{ marginBottom: 8 }}>Style de cuisine</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {collections.map(col => {
-                    const active = (form.collections || []).includes(col.id);
+                  {CUISINES.map(c => {
+                    const active = form.cuisine === c.label;
                     return (
-                      <button key={col.id} onClick={() => up("collections", active ? (form.collections || []).filter(id => id !== col.id) : [...(form.collections || []), col.id])}
-                        style={{ padding: "6px 13px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? col.color : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? col.color : "var(--border)"}`, display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s" }}>
-                        {active ? <Icon name="check" size={11} color="#fff" /> : <span style={{ fontSize: 13, lineHeight: 1 }}>{col.icon || "📓"}</span>}
-                        {col.name}
+                      <button key={c.label} type="button" onClick={() => up("cuisine", active ? "" : c.label)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: active ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>{c.emoji}</span>{c.label}
                       </button>
                     );
                   })}
