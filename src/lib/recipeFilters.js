@@ -3,12 +3,35 @@
 // prédicat unique appliqué des deux côtés (uniformisation des filtres).
 import { isRecipeInSeason } from "./seasonality.js";
 import { isRecipeVegan } from "./dietary.js";
-import { matchesCooking } from "./cooking.js";
-import { computeDifficulty } from "./difficulty.js";
+import { matchesCooking, COOKING_METHODS } from "./cooking.js";
+import { computeDifficulty, DIFFICULTY_LABEL } from "./difficulty.js";
+import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
 
 export const DEFAULT_FILTERS = { season: false, vegan: false, type: "all", categories: [], timeMax: null, cuisines: [], cooking: [], nutriMax: null, diffMax: null, ingredients: [] };
 
 const NUTRI_ORDER = { A: 1, B: 2, C: 3, D: 4, E: 5 };
+const CAT_LABEL = new Map(RECIPE_CATEGORIES.map(c => [c.id, c.label]));
+const COOK_LABEL = new Map(COOKING_METHODS.map(m => [m.id, m.label]));
+
+// Résumé lisible d'une vue de filtres (pour l'affichage d'un carnet intelligent).
+// Renvoie une liste de courtes étiquettes.
+export function summarizeFilters(f = {}, search = "") {
+  const out = [];
+  const s = (search || "").trim();
+  if (s) out.push(`« ${s} »`);
+  (f.categories || []).forEach(id => out.push(CAT_LABEL.get(id) || id));
+  if (f.type === "dish") out.push("Plats");
+  else if (f.type === "base") out.push("Préparations de base");
+  (f.cuisines || []).forEach(c => out.push(c));
+  (f.cooking || []).forEach(id => out.push(id === "mixte" ? "Cuisson mixte" : (COOK_LABEL.get(id) || id)));
+  if (f.timeMax) out.push(`≤ ${f.timeMax} min`);
+  if (f.vegan) out.push("Vegan");
+  if (f.season) out.push("De saison");
+  if (f.nutriMax) out.push(`Nutri ${f.nutriMax} ou mieux`);
+  if (f.diffMax) out.push(`Jusqu'à ${DIFFICULTY_LABEL[f.diffMax]}`);
+  if (f.ingredients?.length) out.push(`${f.ingredients.length} ingrédient${f.ingredients.length > 1 ? "s" : ""}`);
+  return out;
+}
 
 export function activeFilterCount(f) {
   return (f.season ? 1 : 0) + (f.vegan ? 1 : 0) + (f.type !== "all" ? 1 : 0)

@@ -134,12 +134,12 @@ function ConvertTab({ ingredients }) {
       <label>
         <span style={{ display: "block", fontSize: 11, color: "var(--text3)", marginBottom: 4, fontWeight: 600 }}>Ingrédient (pour la densité)</span>
         <select className="field-input" value={ingName} onChange={e => setIngName(e.target.value)} style={{ appearance: "auto" }}>
-          <option value="">— aucun —</option>
+          <option value="">Aucun</option>
           {knownIngs.map(i => <option key={i.id || i.name} value={i.name}>{i.name}</option>)}
         </select>
         {ingName && (density != null
           ? <span style={{ fontSize: 11, color: "var(--green)", marginTop: 4, display: "block" }}>Densité ≈ {density} g/ml</span>
-          : <span style={{ fontSize: 11, color: "var(--accent)", marginTop: 4, display: "block" }}>Densité inconnue — conversion masse/volume indisponible.</span>)}
+          : <span style={{ fontSize: 11, color: "var(--accent)", marginTop: 4, display: "block" }}>Densité inconnue : conversion masse/volume indisponible.</span>)}
       </label>
 
       <div style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", padding: "16px", textAlign: "center" }}>

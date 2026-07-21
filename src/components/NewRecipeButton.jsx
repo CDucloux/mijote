@@ -38,7 +38,7 @@ function LoadingOverlay() {
           {[0, 1, 2].map(d => <span key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", animation: `importDots 1.2s ${d * 0.16}s ease-in-out infinite` }} />)}
         </div>
         <div style={{ fontSize: 11.5, color: "var(--text3)", lineHeight: 1.5 }}>
-          Garde cette fenêtre ouverte — l'extraction est en cours et ne peut pas être interrompue.
+          Garde cette fenêtre ouverte : l'extraction est en cours et ne peut pas être interrompue.
         </div>
       </div>
     </div>,
@@ -98,7 +98,7 @@ export function NewRecipeButton({ onManual }) {
     try {
       const { method } = await importFromUrl(u);
       setStep("idle"); setUrl("");
-      notify?.(method === "jsonld" ? "Recette importée — à relire" : "Recette extraite — à relire");
+      notify?.(method === "jsonld" ? "Recette importée, à relire" : "Recette extraite, à relire");
     } catch (e) {
       // L'éditeur ne s'ouvre pas : on revient à la saisie d'URL avec le message.
       setStep("url");
@@ -127,7 +127,7 @@ export function NewRecipeButton({ onManual }) {
     try {
       await importFromImages(parts);
       resetPhotos(); setStep("idle");
-      notify?.("Recette extraite — à relire");
+      notify?.("Recette extraite, à relire");
     } catch (e) {
       setStep("photo");
       setError(e?.message || "Import impossible.");

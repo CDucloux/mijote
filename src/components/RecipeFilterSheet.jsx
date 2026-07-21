@@ -95,7 +95,7 @@ function IngredientPicker({ ingredientDB, selected, setFilters }) {
   );
 }
 
-export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false }) {
+export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false, updatingCarnetName = null }) {
   const set = (patch) => setFilters(f => ({ ...f, ...patch }));
   const toggleCuisine = (label) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
@@ -244,9 +244,13 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
         <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5 }} onClick={onClose}>
           Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
         </button>
-        {/* Enregistrer la vue courante comme carnet (bibliothèque perso) — action secondaire */}
+        {/* Enregistrer / mettre à jour la vue comme carnet (bibliothèque perso) — action secondaire */}
         {onSaveAsCarnet && nActive > 0 && (
-          alreadySaved ? (
+          updatingCarnetName ? (
+            <button onClick={onSaveAsCarnet} className="pressable" style={{ width: "100%", padding: "10px 0", fontSize: 13.5, fontWeight: 600, cursor: "pointer", background: "none", border: "none", color: "var(--accent)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+              <Icon name="check" size={15} color="var(--accent)" /> Mettre à jour « {updatingCarnetName} »
+            </button>
+          ) : alreadySaved ? (
             <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 500, color: "var(--text3)", padding: "9px 0" }}>
               <Icon name="check" size={14} color="var(--green)" /> Vue déjà enregistrée comme carnet
             </div>

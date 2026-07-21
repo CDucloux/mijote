@@ -6,7 +6,7 @@ import { RecipeCard } from "../components/RecipeCard.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
-import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual } from "../lib/recipeFilters.js";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "../lib/recipeFilters.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
@@ -27,6 +27,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
+  const [editingSmartId, setEditingSmartId] = useState(null); // carnet smart dont on ré-édite la vue de filtres
   const lpTimer = useRef(null);
   const lpFired = useRef(false);
   const startLongPress = (col) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; setCarnetMenu(col); }, 480); };
@@ -134,10 +135,19 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         </div>
       </div>
       {filterOpen && (
-        <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingBottom: 0 }}>
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => setFilterOpen(false)}
-            alreadySaved={collections.some(c => isSmart(c) && smartActive(c))}
-            onSaveAsCarnet={() => { setFilterOpen(false); setNewCarnet({ name: "", color: "#e8703a", icon: "📓", smart: true, filters: { ...filters }, search }); }} />
+        <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingBottom: 0 }}>
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => { setFilterOpen(false); setEditingSmartId(null); }}
+            alreadySaved={!editingSmartId && collections.some(c => isSmart(c) && smartActive(c))}
+            updatingCarnetName={editingSmartId ? collections.find(c => c.id === editingSmartId)?.name : null}
+            onSaveAsCarnet={() => {
+              if (editingSmartId) {
+                setCollections(prev => prev.map(c => c.id === editingSmartId ? { ...c, filters: { ...DEFAULT_FILTERS, ...filters }, search: search.trim() } : c));
+                setEditingSmartId(null); setFilterOpen(false);
+              } else {
+                setFilterOpen(false);
+                setNewCarnet({ name: "", color: "#e8703a", icon: "📓", smart: true, filters: { ...filters }, search });
+              }
+            }} />
         </SwipeableSheet>
       )}
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
@@ -288,7 +298,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               <div style={{ fontSize: 12, color: "var(--text2)", lineHeight: 1.45 }}>
                 <strong style={{ color: "var(--text)" }}>Carnet intelligent</strong> : il applique tes filtres actuels
                 {" "}({activeFilterCount(newCarnet.filters)} critère{activeFilterCount(newCarnet.filters) > 1 ? "s" : ""}{newCarnet.search?.trim() ? " + recherche" : ""})
-                {" "}et se remplit tout seul — {recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0)} recette(s) pour l'instant.
+                {" "}et se remplit tout seul : {recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0)} recette(s) pour l'instant.
               </div>
             </div>
           )}
@@ -308,6 +318,26 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               <button key={ico} onClick={() => setNewCarnet(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: newCarnet.icon === ico ? newCarnet.color + "33" : "var(--surface2)", border: `2px solid ${newCarnet.icon === ico ? newCarnet.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
             ))}
           </div>
+          {/* Vue de filtres d'un carnet intelligent : consultable et modifiable */}
+          {newCarnet.editing && newCarnet.kind === "smart" && (() => {
+            const chips = summarizeFilters(newCarnet.filters, newCarnet.search);
+            return (
+              <div style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                <div className="field-label" style={{ marginBottom: 8 }}>Filtres de la vue</div>
+                {chips.length ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 500, padding: "4px 10px", borderRadius: 20, background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}>{c}</span>)}
+                  </div>
+                ) : <p style={{ fontSize: 12, color: "var(--text3)", margin: "0 0 12px" }}>Aucun filtre (toutes les recettes).</p>}
+                <button className="btn btn-ghost btn-sm" style={{ width: "100%" }} onClick={() => {
+                  setFilters({ ...DEFAULT_FILTERS, ...newCarnet.filters }); setSearch(newCarnet.search || "");
+                  setEditingSmartId(newCarnet.id); setNewCarnet(null); setFilterOpen(true);
+                }}>
+                  <Icon name="settings" size={14} /> Modifier les filtres
+                </button>
+              </div>
+            );
+          })()}
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setNewCarnet(null)}>Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
