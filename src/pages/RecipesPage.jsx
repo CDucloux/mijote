@@ -213,17 +213,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </div>
         ) : (
         <>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6 }}>
-              Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
-            </h2>
-            {filterCol && (() => { const ac = collections.find(c => c.id === filterCol); return ac ? (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: ac.color + "22", color: ac.color, border: `1px solid ${ac.color}55`, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                <span style={{ fontSize: 13, lineHeight: 1 }}>{ac.icon || "📓"}</span>{ac.name}
-              </span>
-            ) : null; })()}
-          </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
+            Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
+          </h2>
           {filterCol && (
             <button onClick={() => setFilterCol(null)} title="Revenir à toutes les recettes" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}>
               <Icon name="back" size={14} color="var(--text2)" /> Retour
