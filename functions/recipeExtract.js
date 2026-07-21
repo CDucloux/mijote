@@ -11,8 +11,8 @@ const CUISINE_LABELS = ["Française", "Italienne", "Espagnole", "Portugaise", "G
   "Coréenne", "Thaïlandaise", "Vietnamienne", "Mexicaine", "Américaine", "Fusion"];
 
 // Catégories (rôle dans le repas) reconnues (miroir de src/constants/recipeCategories.js).
-const CATEGORY_IDS = ["aperitif", "entree", "soupe", "salade", "plat", "accompagnement",
-  "dessert", "petit-dej", "gouter", "boisson", "sauce", "boulangerie"];
+const CATEGORY_IDS = ["aperitif", "entree", "soupe", "salade", "plat", "pasta", "pizza",
+  "accompagnement", "dessert", "tarte", "petit-dej", "boisson", "sauce", "boulangerie"];
 
 const norm = (s) => (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
