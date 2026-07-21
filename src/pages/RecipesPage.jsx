@@ -26,6 +26,11 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const [filterOpen, setFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
+  const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
+  const lpTimer = useRef(null);
+  const lpFired = useRef(false);
+  const startLongPress = (col) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; setCarnetMenu(col); }, 480); };
+  const cancelLongPress = () => clearTimeout(lpTimer.current);
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
   });
@@ -143,6 +148,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               <button onClick={toggleCarnets} title={hideCarnets ? "Afficher les carnets" : "Masquer les carnets"} aria-label={hideCarnets ? "Afficher les carnets" : "Masquer les carnets"} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 8, background: "transparent", border: "none", color: "var(--text3)", cursor: "pointer" }}>
                 <Icon name={hideCarnets ? "eyeOff" : "eye"} size={16} color="var(--text3)" />
               </button>
+              {!hideCarnets && collections.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text3)" }}>Appui long pour gérer</span>}
             </div>
             {!hideCarnets && (
             <div className="collections-row" style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 6 }}>
@@ -150,7 +156,12 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                 const active = carnetActive(col);
                 const count = countFor(col);
                 return (
-                <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined} onClick={() => openCarnet(col)} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
+                <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined}
+                  onClick={() => { if (lpFired.current) { lpFired.current = false; return; } openCarnet(col); }}
+                  onPointerDown={() => startLongPress(col)} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+                  onContextMenu={(e) => { e.preventDefault(); setCarnetMenu(col); }}
+                  title="Appui long pour modifier ou supprimer"
+                  style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
                   <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 8px 22px -10px ${col.color}, 0 0 0 2px ${col.color}` : "0 6px 16px -10px rgba(0,0,0,0.35)" }}>
                     {/* Page lignée + reliure colorée */}
                     <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${col.color}1f 0%, ${col.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${col.color}00 0 27px, ${col.color}22 27px 28px)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -246,10 +257,31 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         )}
       </div>
 
-      {/* Création rapide d'un carnet (mêmes pickers que Config) */}
+      {/* Menu d'un carnet (appui long) : modifier / supprimer */}
+      {carnetMenu && (
+        <SwipeableSheet onClose={() => setCarnetMenu(null)}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: carnetMenu.color + "33", display: "grid", placeItems: "center", fontSize: 22 }}>{carnetMenu.icon || "📓"}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{carnetMenu.name}</div>
+              <div style={{ fontSize: 12, color: "var(--text3)" }}>{isSmart(carnetMenu) ? "Carnet intelligent" : "Carnet"}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { setNewCarnet({ ...carnetMenu, editing: true }); setCarnetMenu(null); }}>
+              <Icon name="edit" size={16} /> Modifier
+            </button>
+            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setCollections(prev => prev.filter(c => c.id !== carnetMenu.id)); if (filterCol === carnetMenu.id) setFilterCol(null); setCarnetMenu(null); }}>
+              <Icon name="trash" size={16} /> Supprimer
+            </button>
+          </div>
+        </SwipeableSheet>
+      )}
+
+      {/* Création / modification d'un carnet */}
       {newCarnet && (
         <SwipeableSheet onClose={() => setNewCarnet(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{newCarnet.editing ? "Modifier le carnet" : newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
           {newCarnet.smart && (
             <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 16, padding: "10px 12px", borderRadius: 12, background: "rgba(232,112,58,0.08)", border: "1px solid rgba(232,112,58,0.25)" }}>
               <Icon name="thinking" size={16} color="var(--accent)" />
@@ -280,13 +312,19 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setNewCarnet(null)}>Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
               if (!newCarnet.name.trim()) return;
+              if (newCarnet.editing) {
+                // On ne touche qu'au nom/couleur/icône ; kind, filtres et vue sont préservés.
+                setCollections(prev => prev.map(c => c.id === newCarnet.id ? { ...c, name: newCarnet.name.trim(), color: newCarnet.color, icon: newCarnet.icon } : c));
+                setNewCarnet(null);
+                return;
+              }
               const base = { name: newCarnet.name.trim(), color: newCarnet.color, icon: newCarnet.icon, id: "c" + Date.now() };
               const col = newCarnet.smart
                 ? { ...base, kind: "smart", filters: { ...DEFAULT_FILTERS, ...newCarnet.filters }, search: (newCarnet.search || "").trim() }
                 : { ...base, kind: "manual", count: 0 };
               setCollections(prev => [...prev, col]);
               setNewCarnet(null);
-            }}>{newCarnet.smart ? "Enregistrer" : "Créer"}</button>
+            }}>{newCarnet.editing ? "Enregistrer" : newCarnet.smart ? "Enregistrer" : "Créer"}</button>
           </div>
         </SwipeableSheet>
       )}
