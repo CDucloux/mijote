@@ -16,7 +16,7 @@ export const RECIPE_CATEGORIES = [
   { id: "tarte",        label: "Tarte",           emoji: "🥧" },
   { id: "petit-dej",    label: "Petit-déjeuner",  emoji: "🥐" },
   { id: "boisson",      label: "Boisson",         emoji: "🥤" },
-  { id: "sauce",        label: "Sauce & condiment", emoji: "🫙" },
+  { id: "sauce",        label: "Sauce",           emoji: "🫙" },
   { id: "boulangerie",  label: "Boulangerie",     emoji: "🍞" },
 ];
 
