@@ -17,10 +17,10 @@ const SORT_LABEL = { name: "A → Z", health: "Santé", date: "Récent" };
 const TIME_LABEL = { 20: "≤ 20 min", 30: "≤ 30 min", 60: "≤ 1 h" };
 
 // Section repliable : titre + résumé (quand fermée) + chevron.
-function Group({ title, summary, defaultOpen = true, children }) {
+function Group({ title, summary, defaultOpen = true, first = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderTop: "1px solid var(--border)", padding: "15px 0" }}>
+    <div style={{ borderTop: first ? "none" : "1px solid var(--border)", padding: first ? "3px 0 15px" : "15px 0" }}>
       <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}>
         <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>{title}</span>
         {!open && summary && <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{summary}</span>}
@@ -121,7 +121,7 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
       </div>
 
       {/* Trier */}
-      <Group title="Trier par" summary={SORT_LABEL[sortBy]}>
+      <Group title="Trier par" summary={SORT_LABEL[sortBy]} first>
         <Row>
           {["name", "health", "date"].map(s => (
             <Chip key={s} on={sortBy === s} onClick={() => setSortBy(s)}>{SORT_LABEL[s]}</Chip>
