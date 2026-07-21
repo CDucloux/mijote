@@ -528,7 +528,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 const on = activeTab === t;
                 return (
                   <button key={t} onClick={() => setActiveTab(t)} style={{
-                    position: "relative", zIndex: 1, flex: 1, padding: "8px 0", fontSize: 12.5, fontWeight: 600,
+                    position: "relative", zIndex: 1, flex: 1, padding: "11px 0", fontSize: 13, fontWeight: 600,
                     border: "none", background: "none", cursor: "pointer",
                     color: on ? "var(--accent)" : "var(--text3)", transition: "color 0.2s ease",
                   }}>{t}</button>
