@@ -513,11 +513,22 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             )}
           </div>
 
-          {/* Onglets sticky sous la barre */}
-          <div style={{ position: "sticky", top: 52, zIndex: 29, background: "var(--surface)", borderBottom: "1px solid var(--border)", display: "flex", flexShrink: 0 }}>
-            {TAB_ORDER.map(t => (
-              <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "11px 0", fontSize: 12, fontWeight: 500, color: activeTab === t ? "var(--accent)" : "var(--text3)", background: "none", border: "none", borderBottom: `2px solid ${activeTab === t ? "var(--accent)" : "transparent"}`, transition: "color 0.15s, border-color 0.15s", cursor: "pointer" }}>{t}</button>
-            ))}
+          {/* Onglets sticky sous la barre — switch segmenté */}
+          <div style={{ position: "sticky", top: 52, zIndex: 29, background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "8px 16px 10px", flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: 4, background: "var(--surface2)", borderRadius: 12, padding: 4 }}>
+              {TAB_ORDER.map(t => {
+                const on = activeTab === t;
+                return (
+                  <button key={t} onClick={() => setActiveTab(t)} style={{
+                    flex: 1, padding: "8px 0", fontSize: 12.5, fontWeight: 600, borderRadius: 9, border: "none", cursor: "pointer",
+                    background: on ? "var(--surface)" : "transparent",
+                    color: on ? "var(--accent)" : "var(--text3)",
+                    boxShadow: on ? "0 1px 3px rgba(0,0,0,0.14)" : "none",
+                    transition: "background 0.15s, color 0.15s, box-shadow 0.15s",
+                  }}>{t}</button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Contenu selon onglet actif – swipe horizontal pour changer d'onglet */}
