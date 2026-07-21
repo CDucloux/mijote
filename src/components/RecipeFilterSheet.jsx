@@ -112,8 +112,8 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* En-tête */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+      {/* En-tête — collant en haut de la feuille pendant le défilement */}
+      <div style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", margin: "0 -20px", padding: "2px 20px 10px", borderBottom: "1px solid var(--border)" }}>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: 0 }}>Tous les filtres</h2>
         {nActive > 0 && <button onClick={reset} style={{ background: "none", border: "none", color: "var(--accent)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: "4px 2px" }}>Réinitialiser</button>}
         <button onClick={onClose} aria-label="Fermer" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "var(--surface2)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>
@@ -240,23 +240,26 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
       </Group>
 
       {/* CTA — pied plein, sans liseré, jusqu'au bas de la feuille */}
-      <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "12px 20px calc(18px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "10px 20px calc(16px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 10 }}>
         <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5 }} onClick={onClose}>
           Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
         </button>
-        {/* Enregistrer / mettre à jour la vue comme carnet (bibliothèque perso) — action secondaire */}
+        {/* Enregistrer / mettre à jour la vue comme carnet (bibliothèque perso) */}
         {onSaveAsCarnet && nActive > 0 && (
-          updatingCarnetName ? (
-            <button onClick={onSaveAsCarnet} className="pressable" style={{ width: "100%", padding: "10px 0", fontSize: 13.5, fontWeight: 600, cursor: "pointer", background: "none", border: "none", color: "var(--accent)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-              <Icon name="check" size={15} color="var(--accent)" /> Mettre à jour « {updatingCarnetName} »
-            </button>
-          ) : alreadySaved ? (
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 500, color: "var(--text3)", padding: "9px 0" }}>
-              <Icon name="check" size={14} color="var(--green)" /> Vue déjà enregistrée comme carnet
+          alreadySaved && !updatingCarnetName ? (
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "var(--green)", padding: "4px 0" }}>
+              <Icon name="check" size={15} color="var(--green)" /> Vue enregistrée comme carnet
             </div>
           ) : (
-            <button onClick={onSaveAsCarnet} className="pressable" style={{ width: "100%", padding: "10px 0", fontSize: 13.5, fontWeight: 600, cursor: "pointer", background: "none", border: "none", color: "var(--text2)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-              <Icon name="book" size={15} color="var(--accent)" /> Enregistrer comme carnet
+            <button onClick={onSaveAsCarnet} className="pressable" style={{ width: "100%", display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 15, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", textAlign: "left" }}>
+              <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.14)" }}>
+                <Icon name={updatingCarnetName ? "check" : "book"} size={17} color="var(--accent)" />
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
+                <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>{updatingCarnetName ? "Remplacer les filtres du carnet" : "Retrouve cette sélection en un tap"}</span>
+              </span>
+              <Icon name="forward" size={15} color="var(--text3)" />
             </button>
           )
         )}
