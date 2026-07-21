@@ -180,9 +180,12 @@ function AppInner() {
     return next;
   });
 
-  // Sync theme class to <html> so html/body background updates too
+  // Sync theme class to <html> so html/body background updates too, and align the
+  // PWA `theme-color` (barre de statut) sur le fond du thème plutôt qu'un orange fixe.
   useEffect(() => {
     document.documentElement.classList.toggle("light", !isDark);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", isDark ? "#0e0e0f" : "#f5f0eb");
   }, [isDark]);
 
   // Update document title on tab change
