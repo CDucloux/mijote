@@ -149,7 +149,6 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               {collections.map((col) => {
                 const active = carnetActive(col);
                 const count = countFor(col);
-                const smart = isSmart(col);
                 return (
                 <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined} onClick={() => openCarnet(col)} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
                   <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 8px 22px -10px ${col.color}, 0 0 0 2px ${col.color}` : "0 6px 16px -10px rgba(0,0,0,0.35)" }}>
@@ -160,8 +159,6 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                       <div style={{ position: "absolute", left: 3, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: 3 }}>
                         {[0, 1, 2].map(d => <span key={d} style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.85)" }} />)}
                       </div>
-                      {/* Marqueur « carnet intelligent » (vue de filtres, auto-rempli) */}
-                      {smart && <span title="Carnet intelligent (vue de filtres)" style={{ position: "absolute", top: 8, left: 17, display: "grid", placeItems: "center", width: 18, height: 18, borderRadius: 999, background: col.color, boxShadow: `0 2px 5px -1px ${col.color}aa` }}><Icon name="thinking" size={11} color="#fff" /></span>}
                       {/* Pastille compteur */}
                       <div style={{ position: "absolute", top: 8, right: 8, minWidth: 22, height: 22, borderRadius: 11, background: count ? col.color : "var(--surface3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: count ? "#fff" : "var(--text3)", padding: "0 6px", boxShadow: count ? `0 2px 6px -1px ${col.color}99` : "none" }}>{count}</div>
                       {/* Icône */}
@@ -170,7 +167,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                     {/* Tranche basse blanche */}
                     <div style={{ padding: "9px 11px 11px", background: "var(--surface)", borderTop: `1px solid ${col.color}22` }}>
                       <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{col.name}</div>
-                      <div style={{ fontSize: 11, color: count ? "var(--text2)" : "var(--text3)", textAlign: "left", marginTop: 1 }}>{smart ? "Vue" : count === 0 ? "Vide" : `${count} recette${count > 1 ? "s" : ""}`}{smart && count ? ` · ${count}` : ""}</div>
+                      <div style={{ fontSize: 11, color: count ? "var(--text2)" : "var(--text3)", textAlign: "left", marginTop: 1 }}>{count === 0 ? "Vide" : `${count} recette${count > 1 ? "s" : ""}`}</div>
                     </div>
                   </div>
                 </button>
