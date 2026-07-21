@@ -95,7 +95,7 @@ function IngredientPicker({ ingredientDB, selected, setFilters }) {
   );
 }
 
-export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose }) {
+export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false }) {
   const set = (patch) => setFilters(f => ({ ...f, ...patch }));
   const toggleCuisine = (label) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
@@ -240,7 +240,19 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
       </Group>
 
       {/* CTA — pied plein, sans liseré, jusqu'au bas de la feuille */}
-      <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "12px 20px calc(20px + env(safe-area-inset-bottom))" }}>
+      <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "12px 20px calc(20px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 9 }}>
+        {/* Enregistrer la vue courante comme carnet intelligent (bibliothèque perso) */}
+        {onSaveAsCarnet && nActive > 0 && (
+          alreadySaved ? (
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "var(--text3)" }}>
+              <Icon name="check" size={14} color="var(--green)" /> Cette vue est déjà un carnet
+            </div>
+          ) : (
+            <button onClick={onSaveAsCarnet} style={{ width: "100%", borderRadius: 30, padding: "11px 0", fontSize: 13.5, fontWeight: 600, cursor: "pointer", background: "var(--surface2)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.4)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+              <Icon name="thinking" size={15} color="var(--accent)" /> Enregistrer comme carnet
+            </button>
+          )
+        )}
         <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5 }} onClick={onClose}>
           Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
         </button>

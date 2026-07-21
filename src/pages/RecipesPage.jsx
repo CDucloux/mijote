@@ -126,18 +126,13 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           <span style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             Trié par <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{sortBy === "name" ? "A → Z" : sortBy === "health" ? "Santé" : "Récent"}</strong>
           </span>
-          {/* La vue courante n'est pas déjà un carnet → proposer de l'enregistrer */}
-          {nActiveFilters > 0 && !collections.some(c => isSmart(c) && smartActive(c)) && (
-            <button onClick={() => setNewCarnet({ name: "", color: "#e8703a", icon: "📓", smart: true, filters: { ...filters }, search })}
-              title="Enregistrer ces filtres comme carnet" style={{ marginLeft: "auto", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.4)", cursor: "pointer" }}>
-              <Icon name="thinking" size={13} color="var(--accent)" /> Enregistrer
-            </button>
-          )}
         </div>
       </div>
       {filterOpen && (
         <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingBottom: 0 }}>
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => setFilterOpen(false)}
+            alreadySaved={collections.some(c => isSmart(c) && smartActive(c))}
+            onSaveAsCarnet={() => { setFilterOpen(false); setNewCarnet({ name: "", color: "#e8703a", icon: "📓", smart: true, filters: { ...filters }, search }); }} />
         </SwipeableSheet>
       )}
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
