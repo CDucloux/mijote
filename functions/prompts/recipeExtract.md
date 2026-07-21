@@ -6,6 +6,7 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
 {
   "name": string,
   "cuisine": string,
+  "category": string,
   "prepTime": number, "cookTime": number, "servings": number,
   "ingredients": [{ "name": string, "amount": string, "unit": string }],
   "utensils": [{ "name": string }],
@@ -17,6 +18,7 @@ TITRE & MÉTA
 - `name` : le vrai titre, sans nom de site ni mention parasite.
 - `prepTime` / `cookTime` : minutes entières (0 si inconnu). `servings` : entier (2 si absent).
 - `cuisine` : une valeur EXACTE de cette liste, sinon `""` : {{CUISINE_LIST}}
+- `category` : le rôle de la recette dans le repas — un SEUL id EXACT de cette liste, sinon `""` : `aperitif`, `entree`, `soupe`, `salade`, `plat`, `accompagnement`, `dessert`, `petit-dej`, `gouter`, `boisson`, `sauce`, `boulangerie`. Une tarte salée → `plat` ; une tarte sucrée → `dessert`.
 
 INGRÉDIENTS
 - `name` : l'ingrédient seul. Retire la quantité, la préparation (« émincé »), l'usage (« pour servir »), la mouture/goût (« du moulin », « au goût »).

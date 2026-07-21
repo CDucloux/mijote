@@ -3,6 +3,7 @@ import { Icon } from "./Icon.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { IngImage } from "./Img.jsx";
 import { cuisineEmoji } from "../constants/cuisines.js";
+import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
 import { DIFFICULTY_LABEL, difficultyColor } from "../lib/difficulty.js";
 import { DEFAULT_FILTERS, activeFilterCount } from "../lib/recipeFilters.js";
 import { COOKING_METHODS } from "../lib/cooking.js";
@@ -102,6 +103,9 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
   const toggleCooking = (id) => setFilters(f => ({
     ...f, cooking: f.cooking.includes(id) ? f.cooking.filter(c => c !== id) : [...f.cooking, id],
   }));
+  const toggleCategory = (id) => setFilters(f => ({
+    ...f, categories: (f.categories || []).includes(id) ? f.categories.filter(c => c !== id) : [...(f.categories || []), id],
+  }));
   const reset = () => setFilters({ ...DEFAULT_FILTERS });
   const nActive = activeFilterCount(filters);
   const typeSummary = filters.type === "dish" ? "Plats" : filters.type === "base" ? "Préparations de base" : null;
@@ -124,8 +128,19 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
         </Row>
       </Group>
 
-      {/* Type */}
-      <Group title="Type de recette" summary={typeSummary}>
+      {/* Type de recette (rôle dans le repas) */}
+      <Group title="Type de recette" defaultOpen={false} summary={filters.categories?.length ? `${filters.categories.length} sélectionné${filters.categories.length > 1 ? "s" : ""}` : null}>
+        <Row>
+          {RECIPE_CATEGORIES.map(c => (
+            <Chip key={c.id} on={(filters.categories || []).includes(c.id)} onClick={() => toggleCategory(c.id)}>
+              <span style={{ fontSize: 13, lineHeight: 1 }}>{c.emoji}</span> {c.label}
+            </Chip>
+          ))}
+        </Row>
+      </Group>
+
+      {/* Nature (plat vs préparation de base) */}
+      <Group title="Nature" summary={typeSummary}>
         <Row>
           {[["all", "Toutes", false], ["dish", "Plats", false], ["base", "Préparations de base", true]].map(([val, label, isBase]) => (
             <Chip key={val} on={filters.type === val} onClick={() => set({ type: val })}>

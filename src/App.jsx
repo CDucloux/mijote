@@ -478,7 +478,7 @@ function AppInner() {
   // Import depuis une URL (admin) : appelle la Cloud Function puis ouvre l'ÉDITEUR
   // avec le brouillon (jamais d'enregistrement direct — le créateur relit/corrige).
   const withItemIds = (recipe) => ({
-    description: "", collections: [], image: "", cuisine: "", source: "",
+    description: "", collections: [], image: "", cuisine: "", category: "", source: "",
     prepTime: 0, cookTime: 0, servings: 2, ...recipe,
     ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),
     utensils: (recipe.utensils || []).map((u, k) => ({ id: `u${Date.now()}_${k}`, dbId: "", name: "", ...u })),

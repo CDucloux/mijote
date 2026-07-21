@@ -10,7 +10,17 @@ const CUISINE_LABELS = ["Française", "Italienne", "Espagnole", "Portugaise", "G
   "Marocaine", "Tunisienne", "Libanaise", "Turque", "Indienne", "Chinoise", "Japonaise",
   "Coréenne", "Thaïlandaise", "Vietnamienne", "Mexicaine", "Américaine", "Fusion"];
 
+// Catégories (rôle dans le repas) reconnues (miroir de src/constants/recipeCategories.js).
+const CATEGORY_IDS = ["aperitif", "entree", "soupe", "salade", "plat", "accompagnement",
+  "dessert", "petit-dej", "gouter", "boisson", "sauce", "boulangerie"];
+
 const norm = (s) => (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+
+// Valide un id de catégorie renvoyé par le LLM (ou "").
+function matchCategory(v) {
+  const n = norm(Array.isArray(v) ? v[0] : v);
+  return CATEGORY_IDS.includes(n) ? n : "";
+}
 
 // Rapproche une valeur libre du label canonique le plus proche (ou "").
 function matchCuisine(v) {
@@ -79,6 +89,7 @@ function assignIdsAndLink(d) {
     cookTime: Math.max(0, Math.round(d.cookTime || 0)),
     servings: Math.max(1, Math.round(d.servings || 2)),
     cuisine: matchCuisine(d.cuisine),
+    category: matchCategory(d.category),
     source: d.source || "",
     image: d.image || "",
     ingredients, utensils, steps,
@@ -127,6 +138,6 @@ function imageUrlsInText(text) {
 }
 
 module.exports = {
-  CUISINE_LABELS, matchCuisine, extractOgImage, mentions,
+  CUISINE_LABELS, matchCuisine, matchCategory, extractOgImage, mentions,
   filterUtensilsToKnown, assignIdsAndLink, htmlToText, imageUrlsInText,
 };

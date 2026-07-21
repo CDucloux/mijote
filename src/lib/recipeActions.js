@@ -63,7 +63,9 @@ export function upsertRecipe(recipes, recipe) {
 
 // Recalcule le compteur de recettes de chaque collection.
 export function recomputeCollectionCounts(collections, recipes) {
-  return collections.map(col => ({
+  // Les carnets intelligents (vues de filtres) n'ont pas d'appartenance explicite :
+  // leur contenu est calculé à l'affichage. On ne touche qu'aux carnets manuels.
+  return collections.map(col => col.kind === "smart" ? col : ({
     ...col,
     count: recipes.filter(rec => (rec.collections || []).includes(col.id)).length,
   }));
