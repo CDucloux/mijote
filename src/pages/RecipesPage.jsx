@@ -321,20 +321,27 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           {/* Vue de filtres d'un carnet intelligent : consultable et modifiable */}
           {newCarnet.editing && newCarnet.kind === "smart" && (() => {
             const chips = summarizeFilters(newCarnet.filters, newCarnet.search);
+            const editFilters = () => {
+              setFilters({ ...DEFAULT_FILTERS, ...newCarnet.filters }); setSearch(newCarnet.search || "");
+              setEditingSmartId(newCarnet.id); setNewCarnet(null); setFilterOpen(true);
+            };
             return (
-              <div style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                <div className="field-label" style={{ marginBottom: 8 }}>Filtres de la vue</div>
+              <div style={{ marginBottom: 18, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <span className="field-label" style={{ margin: 0 }}>Filtres de la vue</span>
+                  <button onClick={editFilters} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                    <Icon name="edit" size={13} color="var(--accent)" /> Modifier
+                  </button>
+                </div>
                 {chips.length ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 500, padding: "4px 10px", borderRadius: 20, background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}>{c}</span>)}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 20, background: "rgba(232,112,58,0.12)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.28)" }}>{c}</span>)}
                   </div>
-                ) : <p style={{ fontSize: 12, color: "var(--text3)", margin: "0 0 12px" }}>Aucun filtre (toutes les recettes).</p>}
-                <button className="btn btn-ghost btn-sm" style={{ width: "100%" }} onClick={() => {
-                  setFilters({ ...DEFAULT_FILTERS, ...newCarnet.filters }); setSearch(newCarnet.search || "");
-                  setEditingSmartId(newCarnet.id); setNewCarnet(null); setFilterOpen(true);
-                }}>
-                  <Icon name="settings" size={14} /> Modifier les filtres
-                </button>
+                ) : (
+                  <button onClick={editFilters} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 12px", borderRadius: 12, background: "var(--surface2)", border: "1px dashed var(--border)", color: "var(--text3)", fontSize: 12.5, cursor: "pointer", textAlign: "left" }}>
+                    <Icon name="plus" size={14} color="var(--accent)" /> Aucun filtre : ce carnet montre toutes les recettes. Ajoute des critères.
+                  </button>
+                )}
               </div>
             );
           })()}
