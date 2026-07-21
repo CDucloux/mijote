@@ -514,7 +514,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           </div>
 
           {/* Onglets sticky sous la barre — switch segmenté avec indicateur glissant */}
-          <div style={{ position: "sticky", top: 52, zIndex: 29, background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "8px 16px 10px", flexShrink: 0 }}>
+          <div style={{ position: "sticky", top: 52, zIndex: 29, background: "var(--bg)", padding: "8px 16px 10px", flexShrink: 0 }}>
             <div style={{ position: "relative", display: "flex", background: "var(--surface2)", borderRadius: 12, padding: 4 }}>
               {/* Pastille active qui glisse d'un segment à l'autre */}
               <div aria-hidden="true" style={{
