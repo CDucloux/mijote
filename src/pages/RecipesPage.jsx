@@ -217,11 +217,6 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
             Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
           </h2>
-          {filterCol && (
-            <button onClick={() => setFilterCol(null)} title="Revenir à toutes les recettes" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}>
-              <Icon name="back" size={14} color="var(--text2)" /> Retour
-            </button>
-          )}
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
           {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} inSeason={isRecipeInSeason(r, resolver)} vegan={isRecipeVegan(r, resolver, { recipes })} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
