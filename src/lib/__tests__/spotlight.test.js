@@ -27,6 +27,13 @@ describe("pickSpotlightIngredient", () => {
   it("null si aucun candidat de saison", () => {
     expect(pickSpotlightIngredient([{ id: "x", name: "X", category: "fruit", months: [1] }], AUG)).toBe(null);
   });
+
+  it("tourne d'une semaine à l'autre même si un seul candidat a une description", () => {
+    // Régression : la préférence « avec description » figeait la vedette.
+    const picks = new Set();
+    for (let d = 1; d <= 28; d++) picks.add(pickSpotlightIngredient(DB, new Date(2025, 7, d)).id);
+    expect(picks.size).toBeGreaterThan(1); // figue ET courgette apparaissent sur le mois
+  });
 });
 
 describe("publicRecipesWithIngredient", () => {

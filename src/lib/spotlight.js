@@ -14,8 +14,9 @@ export function weekIndex(date = new Date()) {
 }
 
 // Fruit/légume de saison ce mois, choisi de façon déterministe et tournant chaque
-// semaine. Priorité au pool des ingrédients qui ont une description (accroche
-// éditoriale). Renvoie `null` si aucun candidat de saison.
+// semaine sur TOUS les candidats de saison (la description ne fait qu'enrichir la
+// carte : la préférer figeait la rotation quand un seul ingrédient en avait une).
+// Renvoie `null` si aucun candidat de saison.
 export function pickSpotlightIngredient(ingredientDB, date = new Date()) {
   const month = date.getMonth() + 1;
   const candidates = (ingredientDB || []).filter(i => {
@@ -24,9 +25,7 @@ export function pickSpotlightIngredient(ingredientDB, date = new Date()) {
     return m && m.includes(month);
   });
   if (!candidates.length) return null;
-  const withDesc = candidates.filter(i => (i.description || "").trim());
-  const pool = withDesc.length ? withDesc : candidates;
-  const sorted = [...pool].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
+  const sorted = [...candidates].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
   return sorted[weekIndex(date) % sorted.length];
 }
 
