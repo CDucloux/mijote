@@ -18,7 +18,7 @@ TITRE & MÉTA
 - `name` : le vrai titre, sans nom de site ni mention parasite.
 - `prepTime` / `cookTime` : minutes entières (0 si inconnu). `servings` : entier (2 si absent).
 - `cuisine` : une valeur EXACTE de cette liste, sinon `""` : {{CUISINE_LIST}}
-- `category` : le rôle de la recette dans le repas — un SEUL id EXACT de cette liste, sinon `""` : `aperitif`, `entree`, `soupe`, `salade`, `plat`, `pasta`, `pizza`, `accompagnement`, `dessert`, `tarte`, `petit-dej`, `boisson`, `sauce`, `boulangerie`. Choisis le plus spécifique : un plat de pâtes → `pasta` ; une pizza → `pizza` ; une tarte (salée ou sucrée) → `tarte`.
+- `category` : le rôle de la recette dans le repas — un SEUL id EXACT de cette liste, sinon `""` : `aperitif`, `entree`, `soupe`, `salade`, `plat`, `gratin`, `pasta`, `pizza`, `accompagnement`, `dessert`, `tarte`, `petit-dej`, `boisson`, `sauce`, `boulangerie`. Choisis le plus spécifique : un plat de pâtes → `pasta` ; une pizza → `pizza` ; un gratin → `gratin` ; une tarte (salée ou sucrée) → `tarte`.
 
 INGRÉDIENTS
 - `name` : l'ingrédient seul. Retire la quantité, la préparation (« émincé »), l'usage (« pour servir »), la mouture/goût (« du moulin », « au goût »).
