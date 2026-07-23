@@ -14,6 +14,7 @@ export const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t.path]));
 
 // Config sub-sections URL mapping
 export const CONFIG_SECTION_BY_PATH = {
+  "profil": "profil",
   "preferences": "préférences",
   "ingredients": "ingredients",
   "ustensils": "ustensiles",

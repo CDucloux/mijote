@@ -170,7 +170,7 @@ function FoyerSection() {
 
 export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
-  const firstName = (user?.displayName || "").trim().split(" ")[0] || "";
+  const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
 
   const summary = useMemo(
     () => buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowStock, ingredientDB }),
