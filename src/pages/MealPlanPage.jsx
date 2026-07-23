@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -7,6 +7,7 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
+import { useMealPlanner } from "../hooks/useMealPlanner.js";
 
 // ─── MEAL PLAN – module-level constants & pure helpers ────────────────────────
 const MP_DAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -65,9 +66,10 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB }) {
+export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [] }) {
   const { notify, user } = useAppShell();
   const { household } = useHousehold();
+  const { generate, undo } = useMealPlanner({ recipes, ingredientDB, preferences, stock, mealPlan, setMealPlan });
   const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
@@ -79,6 +81,18 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
   const monthDays = useMemo(() => mpGetMonthDays(currentDate), [currentDate]);
+
+  // Génération automatique de la semaine visible (créneaux midi/soir vides).
+  const [genDone, setGenDone] = useState(false);
+  const handleGenerate = useCallback(() => {
+    const { count } = generate(weekDays, ["midi", "soir"]);
+    if (count > 0) { setGenDone(true); notify(`${count} repas proposés, à relire et ajuster`, "success"); }
+    else notify("Cette semaine est déjà remplie (midi et soir)", "info");
+  }, [generate, weekDays, notify]);
+  const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
+  // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
+  // que pour la dernière génération sur la semaine où elle a eu lieu).
+  useEffect(() => { setGenDone(false); }, [weekDays]);
 
   const getMeals = useCallback((date, slot) => (mealPlan[date] || []).filter(m => m.slot === slot), [mealPlan]);
 
@@ -195,7 +209,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning Repas</h1></div>
-          <UserAvatar />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {genDone
+              ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
+              : <button onClick={handleGenerate} className="btn btn-primary" style={{ padding: "8px 13px", borderRadius: 12 }}><Icon name="sparkle" size={15} /> Générer</button>}
+            <UserAvatar />
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => navigate(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
