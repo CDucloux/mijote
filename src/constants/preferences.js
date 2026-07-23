@@ -3,6 +3,7 @@
 // stockées dans users/{uid}/meta/preferences. En PR1 elles sont informatives ;
 // elles alimenteront le filtre « selon mes préférences » de la découverte (PR2).
 export const DEFAULT_PREFERENCES = {
+  displayName: "",
   diet: "omnivore",
   allergens: [],
   excludedCategories: [],
@@ -26,6 +27,7 @@ export const COMMON_ALLERGENS = [
 export function normalizePreferences(p) {
   const src = p && typeof p === "object" ? p : {};
   return {
+    displayName: typeof src.displayName === "string" ? src.displayName.slice(0, 40) : "",
     diet: typeof src.diet === "string" ? src.diet : DEFAULT_PREFERENCES.diet,
     allergens: Array.isArray(src.allergens) ? src.allergens.filter(x => typeof x === "string") : [],
     excludedCategories: Array.isArray(src.excludedCategories) ? src.excludedCategories.filter(x => typeof x === "string") : [],

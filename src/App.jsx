@@ -40,6 +40,7 @@ import { ShoppingPage } from "./pages/ShoppingPage.jsx";
 import { RecipeEditor } from "./pages/RecipeEditor.jsx";
 import { RecipeDetail } from "./pages/RecipeDetail.jsx";
 import { ConfigPage } from "./pages/ConfigPage.jsx";
+import { ProfilePage } from "./pages/ProfilePage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
@@ -49,7 +50,7 @@ function AppInner() {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : "home");
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : location.pathname.startsWith("/profile") ? "profile" : "home");
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/home"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
@@ -425,14 +426,25 @@ function AppInner() {
     return () => cancelAnimationFrame(raf);
   }, [atTabView]);
 
+  // Purge de données (depuis le profil). Vide l'état local ; la synchro propage
+  // l'effacement au cloud. « all » remet l'espace à zéro.
+  const purgeData = (scope) => {
+    if (scope === "planning" || scope === "all") setMealPlan({});
+    if (scope === "shopping" || scope === "all") setShoppingLists([]);
+    if (scope === "stock" || scope === "all") { setStock([]); setLowStock([]); }
+    if (scope === "all") { setRecipes([]); setCollections([]); }
+    notify(scope === "all" ? "Données effacées" : "Effacé", "info");
+  };
+
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
-      {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} />}
+      {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "fridge" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
+      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} onPurge={purgeData} />}
     </div>
   );
 

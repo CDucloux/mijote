@@ -29,6 +29,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "../lib/recipeComponents.js";
 import { isOfficialAuthor } from "../lib/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
+import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
 export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
@@ -943,21 +944,21 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           <input type="date" className="field-input" value={mealDate} onChange={e => setMealDate(e.target.value)} style={{ marginBottom: 12 }} />
           <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection)</div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            {[["midi", "🌤 Midi", "var(--yellow)"], ["soir", "🌙 Soir", "var(--blue)"]].map(([slot, label, col]) => {
-              const active = mealSlots.includes(slot);
+            {MEAL_SLOTS.map(s => {
+              const active = mealSlots.includes(s.id);
               const toggle = () => setMealSlots(prev => {
-                const next = active ? prev.filter(s => s !== slot) : [...prev, slot];
+                const next = active ? prev.filter(x => x !== s.id) : [...prev, s.id];
                 return next.length ? next : prev;
               });
               return (
-                <button key={slot} onClick={toggle} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 14, fontWeight: 600, background: active ? col : "var(--surface2)", color: active ? "#000" : "var(--text2)", border: `2px solid ${active ? col : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
-                  {active && <Icon name="check" size={14} color="#000" />}
-                  {label}
+                <button key={s.id} onClick={toggle} style={{ flex: 1, padding: "10px 6px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: active ? s.color : "var(--surface2)", color: active ? s.text : "var(--text3)", border: `1px solid ${active ? "transparent" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all 0.15s" }}>
+                  {active && <Icon name="check" size={13} color={s.text} />}
+                  <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
                 </button>
               );
             })}
           </div>
-          {mealSlots.length === 2 && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10, textAlign: "center" }}>Ajouté au midi ET au soir</div>}
+          {mealSlots.length > 1 && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10, textAlign: "center" }}>Ajouté à {mealSlots.map(id => SLOT_BY_ID[id]?.label).join(", ")}</div>}
           <div className="field-label">Étaler sur X jours consécutifs</div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
             <button onClick={() => setMealPortions(p => Math.max(1, p - 1))} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>−</button>

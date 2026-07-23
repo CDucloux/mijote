@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -6,14 +6,31 @@ import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
+import { peopleCount } from "../lib/household.js";
+import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
+import { useMealPlanner } from "../hooks/useMealPlanner.js";
+import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory } from "../lib/composedMeal.js";
+import { suggestSides } from "../lib/mealPlanner.js";
+import { buildBatchSession, weekEntries } from "../lib/batchSession.js";
+import { isEligible } from "../lib/dietFilter.js";
+import { createIngredientResolver } from "../lib/nameMatcher.js";
+import { currentMonth } from "../lib/seasonality.js";
+import { normalizeStr } from "../lib/parseIngredient.js";
+
+// Rôles proposés pour compléter un repas (le plat existe déjà).
+const COMPLETE_ROLES = [
+  { id: "entree", label: "Entrée" },
+  { id: "accompagnement", label: "Accompagnement" },
+  { id: "dessert", label: "Dessert" },
+];
 
 // ─── MEAL PLAN – module-level constants & pure helpers ────────────────────────
 const MP_DAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const MP_MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-const MP_SLOT_LABEL = { midi: "🌤 Midi", soir: "🌙 Soir" };
-const MP_SLOT_COLOR = { midi: "rgba(240,192,96,0.18)", soir: "rgba(91,156,246,0.18)" };
-const MP_SLOT_TEXT = { midi: "var(--yellow)", soir: "var(--blue)" };
-const MP_SLOT_TIMES = { midi: { start: "120000", end: "133000" }, soir: { start: "193000", end: "210000" } };
+const MP_SLOT_LABEL = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, `${s.emoji} ${s.label}`]));
+const MP_SLOT_COLOR = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.color]));
+const MP_SLOT_TEXT = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.text]));
+const MP_SLOT_TIMES = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.ics]));
 
 function mpGetWeekDays(ref) {
   const d = new Date(ref), day = d.getDay(), diff = day === 0 ? -6 : 1 - day;
@@ -31,7 +48,7 @@ function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T
 function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").join("\\,").split(";").join("\\;"); }
 
 // SlotZone lifted out + memoised → never re-created on parent re-render
-const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipes, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo }) {
+const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete }) {
   const dropKey = date + ":" + slot;
   const isOver = dropTarget === dropKey;
   return (
@@ -39,23 +56,38 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDragOver={e => { e.preventDefault(); onSetDropTarget(dropKey); }}
       onDragLeave={() => onSetDropTarget(null)}
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
-      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", height: 60, overflowY: "auto", display: "flex", flexDirection: "column", justifyContent: meals.length > 1 ? "flex-start" : "center" }}>
-      {meals.map((meal, mi) => {
-        const globalIdx = (mealPlan[date] || []).indexOf(meal);
-        const r = recipes.find(x => x.id === meal.recipeId);
-        if (!r) return null;
+      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
+      {groupSlotMeals(meals, recipesById).map((g, gi) => {
+        const composed = !!g.groupId && g.items.length > 1;
         return (
-          <div key={mi} draggable
-            onDragStart={() => onSetDragInfo({ date, idx: globalIdx, slot })}
-            onDragEnd={() => onSetDragInfo(null)}
-            style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: mi < meals.length - 1 ? 6 : 0, cursor: "grab" }}>
-            <div style={{ width: 46, height: 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-            <button onClick={() => onSelectRecipe(r.id)} style={{ flex: 1, textAlign: "left" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2 }}>{r.name}</div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{MP_SLOT_LABEL[slot]}</div>
-              {meal.portions > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{meal.portions}</div>}
-            </button>
-            <button className="mp-remove-btn" onClick={() => onRemoveMeal(date, globalIdx)} title="Retirer du planning"><Icon name="close" size={13} /></button>
+          <div key={g.groupId || `g${gi}`} style={composed ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7, display: "flex", flexDirection: "column", gap: 5 } : undefined}>
+            {g.items.map(({ item }) => {
+              const r = recipesById.get(item.recipeId);
+              if (!r) return null;
+              const globalIdx = (mealPlan[date] || []).indexOf(item);
+              const role = itemRole(item, r);
+              const label = composed ? roleLabel(role) : MP_SLOT_LABEL[slot];
+              return (
+                <div key={globalIdx} draggable
+                  onDragStart={() => onSetDragInfo({ date, idx: globalIdx, slot })}
+                  onDragEnd={() => onSetDragInfo(null)}
+                  style={{ display: "flex", alignItems: "center", gap: 8, cursor: "grab" }}>
+                  <div style={{ width: composed ? 38 : 46, height: composed ? 38 : 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <button onClick={() => onSelectRecipe(r.id)} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    <div style={{ fontSize: 9.5, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{label}</div>
+                    {item.portions > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{item.portions}</div>}
+                  </button>
+                  <button className="mp-remove-btn" onClick={() => onRemoveMeal(date, globalIdx)} title="Retirer du planning"><Icon name="close" size={13} /></button>
+                </div>
+              );
+            })}
+            {slot !== "matin" && onComplete && (
+              <button onClick={() => onComplete(date, slot, g)} title="Compléter le repas (entrée, accompagnement, dessert)"
+                style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2, padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: "transparent", color: MP_SLOT_TEXT[slot], border: `1px dashed ${MP_SLOT_TEXT[slot]}`, cursor: "pointer" }}>
+                <Icon name="plus" size={10} color={MP_SLOT_TEXT[slot]} /> Compléter
+              </button>
+            )}
           </div>
         );
       })}
@@ -64,9 +96,10 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB }) {
+export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [] }) {
   const { notify, user } = useAppShell();
   const { household } = useHousehold();
+  const { generate, undo } = useMealPlanner({ recipes, ingredientDB, preferences, stock, mealPlan, setMealPlan });
   const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
@@ -78,6 +111,51 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
   const monthDays = useMemo(() => mpGetMonthDays(currentDate), [currentDate]);
+  const recipesById = useMemo(() => new Map(recipes.map(r => [r.id, r])), [recipes]);
+
+  // Composition manuelle : contexte pour suggérer des recettes par rôle.
+  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  const suggestCtx = useMemo(() => ({ resolver, byId: recipesById, month: currentMonth(), stockSet: new Set(stock || []), preferences }), [resolver, recipesById, stock, preferences]);
+  const eligiblePool = useMemo(() => recipes.filter(r => !r.isComponent && isEligible(r, preferences, { resolver, byId: recipesById })), [recipes, preferences, resolver, recipesById]);
+  const [composeFor, setComposeFor] = useState(null); // { date, slot, groupId, baseIdx, baseRecipeId }
+  const [completeRole, setCompleteRole] = useState("accompagnement");
+  const [completeSearch, setCompleteSearch] = useState("");
+
+  const openComplete = useCallback((date, slot, group) => {
+    const platEntry = group.items.find(x => itemRole(x.item, recipesById.get(x.item.recipeId)) === "plat") || group.items[0];
+    setComposeFor({ date, slot, groupId: group.groupId || null, baseIdx: (mealPlan[date] || []).indexOf(platEntry.item), baseRecipeId: platEntry.item.recipeId });
+    setCompleteRole("accompagnement"); setCompleteSearch("");
+  }, [mealPlan, recipesById]);
+
+  const attachToMeal = useCallback((recipeId, role) => {
+    if (!composeFor) return;
+    setMealPlan(prev => {
+      const entries = [...(prev[composeFor.date] || [])];
+      let gid = composeFor.groupId;
+      if (!gid) { gid = newGroupId(); const b = entries[composeFor.baseIdx]; if (b) entries[composeFor.baseIdx] = { ...b, groupId: gid, role: b.role || "plat" }; }
+      entries.push({ recipeId, slot: composeFor.slot, portions: 1, role, groupId: gid });
+      return { ...prev, [composeFor.date]: entries };
+    });
+    notify("Ajouté au repas");
+    setComposeFor(null);
+  }, [composeFor, setMealPlan, notify]);
+
+  // Génération automatique de la semaine visible (créneaux midi/soir vides).
+  const [genDone, setGenDone] = useState(false);
+  const handleGenerate = useCallback(() => {
+    const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
+    const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm });
+    if (count > 0) { setGenDone(true); notify(`${count} repas proposés, à relire et ajuster`, "success"); }
+    else notify("Cette semaine est déjà remplie (midi et soir)", "info");
+  }, [generate, weekDays, notify, household]);
+  const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
+
+  // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
+  const [showBatch, setShowBatch] = useState(false);
+  const batch = useMemo(() => buildBatchSession(weekEntries(mealPlan, weekDays), recipes), [mealPlan, weekDays, recipes]);
+  // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
+  // que pour la dernière génération sur la semaine où elle a eu lieu).
+  useEffect(() => { setGenDone(false); }, [weekDays]);
 
   const getMeals = useCallback((date, slot) => (mealPlan[date] || []).filter(m => m.slot === slot), [mealPlan]);
 
@@ -143,8 +221,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         const recipe = recipes.find(r => r.id === meal.recipeId);
         if (!recipe) return;
         const slot = meal.slot || "midi";
-        const times = SLOT_TIMES[slot];
-        const slotLabel = slot === "midi" ? "Déjeuner" : "Dîner";
+        const times = SLOT_TIMES[slot] || SLOT_TIMES.midi;
+        const slotLabel = SLOT_BY_ID[slot]?.meal || "Repas";
         const uid = `${date}-${slot}-${recipe.id}@recipeapp`;
         const now = new Date();
         const dtstamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}T${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}Z`;
@@ -194,7 +272,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning Repas</h1></div>
-          <UserAvatar />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {genDone
+              ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
+              : <button onClick={handleGenerate} className="btn btn-primary" style={{ padding: "8px 13px", borderRadius: 12 }}><Icon name="sparkle" size={15} /> Générer</button>}
+            <UserAvatar />
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => navigate(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
@@ -203,6 +286,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </span>
           <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)", flexShrink: 0 }}>Auj.</button>
+          <button onClick={() => setShowBatch(true)} title="Session batch : plats à cuisiner et préparations de base à faire d'avance" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(76,175,125,0.16)", border: "1px solid rgba(76,175,125,0.4)", color: "var(--green)", flexShrink: 0 }}>
+            <Icon name="fire" size={13} color="var(--green)" /> Batch
+          </button>
           <button onClick={exportICS} title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
             <Icon name="calendar" size={13} color="var(--blue)" /> Agenda
           </button>
@@ -224,14 +310,15 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                       </span>
                       {isToday && <span style={{ fontSize: 10, background: "rgba(232,112,58,0.2)", color: "var(--accent)", padding: "2px 7px", borderRadius: 10 }}>Aujourd'hui</span>}
                     </div>
-                    <button onClick={() => openAdd(date, ["midi", "soir"])} className="mp-add-btn" title="Ajouter une recette au planning">
+                    <button onClick={() => openAdd(date, ["midi"])} className="mp-add-btn" title="Ajouter une recette au planning">
                       <span className="mp-add-label">Ajouter une recette au planning</span>
                       <Icon name="plus" size={13} color="currentColor" />
                     </button>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <SlotZone date={date} slot="midi" meals={getMeals(date, "midi")} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipes={recipes} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} />
-                    <SlotZone date={date} slot="soir" meals={getMeals(date, "soir")} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipes={recipes} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} />
+                    {MEAL_SLOTS.map(s => (
+                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} />
+                    ))}
                   </div>
                 </div>
               );
@@ -252,27 +339,25 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             <div className="field-label" style={{ marginBottom: 8 }}>Repas</div>
             {(() => {
               const slots = addModal.slots;
-              const both = slots.length === 2;
-              const sel = both ? "both" : slots[0];
-              const OPTS = [
-                { key: "midi", label: "Midi", emoji: "🌤", slots: ["midi"], fill: "linear-gradient(135deg,#f5cf6a,#f0c060)" },
-                { key: "both", label: "Les deux", emoji: "🍽", slots: ["midi", "soir"], fill: "linear-gradient(135deg,#f0c060,#5b9cf6)" },
-                { key: "soir", label: "Soir", emoji: "🌙", slots: ["soir"], fill: "linear-gradient(135deg,#6fa8f7,#5b9cf6)" },
-              ];
+              // Multi-sélection : on peut ajouter la recette à un ou plusieurs créneaux.
+              const toggle = (id) => setAddModal(p => {
+                const has = p.slots.includes(id);
+                const next = has ? p.slots.filter(s => s !== id) : [...p.slots, id];
+                return { ...p, slots: next.length ? next : p.slots }; // garde toujours ≥ 1
+              });
               return (
                 <div style={{ display: "flex", gap: 5, padding: 5, background: "var(--surface2)", borderRadius: 14, border: "1px solid var(--border)" }}>
-                  {OPTS.map(o => {
-                    const active = sel === o.key;
+                  {MEAL_SLOTS.map(s => {
+                    const active = slots.includes(s.id);
                     return (
-                      <button key={o.key} onClick={() => setAddModal(p => ({ ...p, slots: o.slots }))}
-                        style={{ flex: 1, padding: "9px 6px", borderRadius: 10, fontSize: 13.5, fontWeight: 700,
-                          background: active ? o.fill : "transparent",
-                          color: active ? "#1a1410" : "var(--text2)",
-                          border: "none", cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                          boxShadow: active ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+                      <button key={s.id} onClick={() => toggle(s.id)}
+                        style={{ flex: 1, padding: "9px 6px", borderRadius: 10, fontSize: 13, fontWeight: 700,
+                          background: active ? s.color : "transparent",
+                          color: active ? s.text : "var(--text3)",
+                          border: `1px solid ${active ? "transparent" : "var(--border)"}`, cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                           transition: "all 0.18s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
-                        <span style={{ fontSize: 15 }}>{o.emoji}</span>{o.label}
+                        <span style={{ fontSize: 15 }}>{s.emoji}</span>{s.label}
                       </button>
                     );
                   })}
@@ -300,6 +385,92 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </div>
         </SwipeableSheet>
       )}
+
+      {/* Session batch : plats à cuisiner + préparations de base partagées */}
+      {showBatch && (
+        <SwipeableSheet onClose={() => setShowBatch(false)} style={{ maxHeight: "84dvh" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={16} color="var(--green)" /></span>
+            <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0 }}>Session batch</h3>
+          </div>
+          <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 16px" }}>Cuisine en une fois pour la semaine visible : les portions en trop couvrent les jours suivants, et les préparations de base partagées se font d'avance.</p>
+
+          {batch.bases.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              <div className="field-label" style={{ marginBottom: 10 }}>À préparer d'avance</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {batch.bases.map(b => (
+                  <div key={b.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(b.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: b.shared ? "rgba(76,175,125,0.08)" : "var(--surface2)", borderRadius: 12, border: `1px solid ${b.shared ? "rgba(76,175,125,0.3)" : "var(--border)"}`, cursor: "pointer" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600 }}>{b.recipe.name}</div>
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Pour {b.usedBy.join(", ")}</div>
+                    </div>
+                    {b.shared && <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.16)", padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Partagé</span>}
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>{b.amount} {b.unit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="field-label" style={{ marginBottom: 10 }}>À cuisiner</div>
+          {batch.dishes.length === 0
+            ? <p style={{ fontSize: 13, color: "var(--text3)", padding: "8px 0" }}>Planifie des repas cette semaine pour voir la session batch.</p>
+            : <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {batch.dishes.map(d => (
+                  <button key={d.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(d.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={d.recipe.image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.recipe.name}</div>
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>{d.meals} repas · {d.cookings} cuisson{d.cookings > 1 ? "s" : ""} · {d.servings} portions</div>
+                    </div>
+                    <Icon name="forward" size={15} color="var(--text3)" />
+                  </button>
+                ))}
+              </div>}
+        </SwipeableSheet>
+      )}
+
+      {/* Compléter un repas : entrée / accompagnement / dessert, suggérés de saison */}
+      {composeFor && (() => {
+        const base = recipesById.get(composeFor.baseRecipeId);
+        const q = normalizeStr(completeSearch.trim());
+        const list = q
+          ? eligiblePool.filter(r => roleForCategory(r.category || "") === completeRole && normalizeStr(r.name).includes(q)).slice(0, 20)
+          : suggestSides(base, eligiblePool, suggestCtx, { role: completeRole, max: 12 });
+        return (
+          <SwipeableSheet onClose={() => setComposeFor(null)} style={{ maxHeight: "82dvh" }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 2 }}>Compléter le repas</h3>
+            {base && <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 14 }}>Autour de <strong style={{ color: "var(--text2)" }}>{base.name}</strong></div>}
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              {COMPLETE_ROLES.map(r => (
+                <button key={r.id} onClick={() => setCompleteRole(r.id)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                  background: completeRole === r.id ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: completeRole === r.id ? "var(--accent)" : "var(--text2)",
+                  border: `1px solid ${completeRole === r.id ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{r.label}</button>
+              ))}
+            </div>
+            <div style={{ position: "relative", marginBottom: 12 }}>
+              <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
+              <input className="field-input" placeholder={`Rechercher ${roleLabel(completeRole).toLowerCase()}…`} value={completeSearch} onChange={e => setCompleteSearch(e.target.value)} style={{ paddingLeft: 34 }} />
+            </div>
+            {!q && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}><Icon name="sun" size={12} color="var(--accent)" /> Suggestions de saison</div>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "48vh" }}>
+              {list.map(r => (
+                <button key={r.id} onClick={() => attachToMeal(r.id, completeRole)}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    {r.cuisine && <div style={{ fontSize: 11, color: "var(--text3)" }}>{r.cuisine}</div>}
+                  </div>
+                  <Icon name="plus" size={16} color="var(--accent)" />
+                </button>
+              ))}
+              {list.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette « {roleLabel(completeRole).toLowerCase()} » {q ? "trouvée" : "disponible"}</p>}
+            </div>
+          </SwipeableSheet>
+        );
+      })()}
     </div>
   );
 }

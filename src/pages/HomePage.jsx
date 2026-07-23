@@ -9,10 +9,11 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, MAX_HOUSEHOLD } from "../lib/household.js";
 import { buildDashboardSummary } from "../lib/dashboard.js";
+import { SLOT_BY_ID } from "../constants/mealSlots.js";
+import { itemRole, roleOrder } from "../lib/composedMeal.js";
 import { fmtTime } from "../lib/format.js";
 
 // ─── HOME / ACCUEIL ───────────────────────────────────────────────────────────
-const SLOT_LABEL = { midi: "🌤 Ce midi", soir: "🌙 Ce soir" };
 
 function greeting(date = new Date()) {
   const h = date.getHours();
@@ -169,7 +170,7 @@ function FoyerSection() {
 
 export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic }) {
   const { user } = useAppShell();
-  const firstName = (user?.displayName || "").trim().split(" ")[0] || "";
+  const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
 
   const summary = useMemo(
     () => buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowStock, ingredientDB }),
@@ -177,10 +178,28 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
   );
   const { meals, shoppingTodo, lowStockNames, isCalm } = summary;
 
+  // Regroupe les items d'un repas composé (même créneau + groupId) en UNE carte :
+  // le plat en tête, les autres services résumés. Un item solo reste une carte.
+  const mealCards = useMemo(() => {
+    const map = new Map(), order = [];
+    meals.forEach((m, i) => {
+      const key = m.slot + "|" + (m.groupId || `solo-${i}`);
+      let c = map.get(key);
+      if (!c) { c = { slot: m.slot, items: [] }; map.set(key, c); order.push(c); }
+      c.items.push(m);
+    });
+    order.forEach(c => {
+      c.items.sort((a, b) => roleOrder(itemRole(a, a.recipe)) - roleOrder(itemRole(b, b.recipe)));
+      c.primary = c.items.find(m => itemRole(m, m.recipe) === "plat") || c.items[0];
+      c.others = c.items.filter(m => m !== c.primary);
+    });
+    return order;
+  }, [meals]);
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* En-tête */}
-      <div style={{ padding: "20px 20px 8px", flexShrink: 0, position: "relative", zIndex: 1, background: "linear-gradient(180deg, rgba(232,112,58,0.07), transparent), var(--bg)" }}>
+      <div style={{ padding: "20px 20px 8px", flexShrink: 0, position: "relative", zIndex: 1, background: "var(--bg)" }}>
         <div className="slide-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
@@ -218,8 +237,8 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             </button>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {/* Repas du jour */}
-              {meals.map((m, i) => (
+              {/* Repas du jour (un repas composé = une carte, plat en tête) */}
+              {mealCards.map((card, i) => { const m = card.primary; return (
                 <button key={i} onClick={() => onSelectRecipe?.(m.recipe.id)} className="slide-up pressable"
                   style={{
                     animationDelay: `${i * 0.06}s`,
@@ -229,7 +248,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                     boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
                     transition: "border-color 0.15s, box-shadow 0.15s",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = m.slot === "midi" ? "#e0a800" : "#4a80d4"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.12)"; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = (SLOT_BY_ID[m.slot]?.accent || "var(--accent)"); e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.12)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}>
                   <div style={{ width: 70, height: 70, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 3px 10px rgba(0,0,0,0.14)" }}>
                     <Img src={m.recipe.image} alt={m.recipe.name} style={{ width: "100%", height: "100%" }} />
@@ -238,20 +257,25 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                     <span style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
                       fontSize: 10.5, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                      background: m.slot === "midi" ? "rgba(240,192,96,0.22)" : "rgba(91,156,246,0.18)",
-                      color: m.slot === "midi" ? "#9a6700" : "#3060b8",
+                      background: (SLOT_BY_ID[m.slot]?.color || "var(--surface2)"),
+                      color: (SLOT_BY_ID[m.slot]?.text || "var(--text2)"),
                       marginBottom: 6,
                     }}>
-                      {SLOT_LABEL[m.slot] || "Au menu"}
+                      {SLOT_BY_ID[m.slot]?.today || "Au menu"}
                     </span>
                     <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.recipe.name}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 3 }}>
-                      {fmtTime((m.recipe.prepTime || 0) + (m.recipe.cookTime || 0))}{m.recipe.ingredients?.length ? ` · ${m.recipe.ingredients.length} ingr.` : ""}
+                      {fmtTime((m.recipe.prepTime || 0) + (m.recipe.cookTime || 0))}{m.recipe.ingredients?.length ? ` | ${m.recipe.ingredients.length} ingr.` : ""}
                     </div>
+                    {card.others.length > 0 && (
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {card.others.map(o => <span key={o.recipe.id}><span style={{ color: "var(--accent)", fontWeight: 700, position: "relative", top: "-1px" }}>+</span> {o.recipe.name} </span>)}
+                      </div>
+                    )}
                   </div>
                   <Icon name="forward" size={16} color="var(--text3)" />
                 </button>
-              ))}
+              ); })}
 
               {/* Courses à faire */}
               {shoppingTodo > 0 && (
