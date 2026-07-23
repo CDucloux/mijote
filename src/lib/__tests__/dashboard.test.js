@@ -42,8 +42,9 @@ describe("getTodayMeals", () => {
 });
 
 describe("upcomingSlot", () => {
-  it("is midi before 15h and soir after", () => {
-    expect(upcomingSlot(new Date("2026-06-28T09:00:00"))).toBe("midi");
+  it("matin avant 11h, midi avant 15h, soir ensuite", () => {
+    expect(upcomingSlot(new Date("2026-06-28T08:00:00"))).toBe("matin");
+    expect(upcomingSlot(new Date("2026-06-28T12:30:00"))).toBe("midi");
     expect(upcomingSlot(new Date("2026-06-28T19:00:00"))).toBe("soir");
   });
 });

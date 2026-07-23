@@ -45,6 +45,8 @@ export function useFirestoreSync({
   const activeHidRef = useRef(null);   // hid du workspace partagé chargé (null = solo)
   const migratingRef = useRef(false);  // true pendant la bascule/migration → suspend l'autosave
   const metaSigRef = useRef({});       // signatures JSON des méta partagées (anti-écho push/snapshot)
+  const metaTimers = useRef({});       // timers de debounce par méta (écritures groupées, ex. planning)
+  const metaPending = useRef({});      // { name: { payload, ws } } en attente de flush
   const recipesSigRef = useRef(null);  // signature des recettes appliquées (load/snapshot) → l'autosave n'écrit QUE sur une vraie modif utilisateur
   const transitionTargetRef = useRef(undefined); // cible d'une bascule en cours (anti-concurrence)
   const [loadedHid, setLoadedHid] = useState(null); // foyer chargé → déclenche les abonnements temps réel
@@ -271,17 +273,46 @@ export function useFirestoreSync({
   // Écrit une méta partagée si elle a changé (signature) : on note la signature avant
   // d'écrire, si bien que le snapshot de notre propre écriture (même JSON) est ignoré.
   // `localVal` est toujours lu depuis sharedRef (valeur la plus récente).
-  const pushSharedMeta = (name, localVal, payload) => {
+  const pushSharedMeta = (name, localVal, payload, { debounce = 0 } = {}) => {
     if (!user || !canAutosaveShared()) return;
     const sig = JSON.stringify(localVal);
     if (metaSigRef.current[name] === sig) return; // écho ou no-op
     metaSigRef.current[name] = sig;
-    saveMeta(name, payload, sharedWsNow(user.uid));
+    const ws = sharedWsNow(user.uid);
+    if (debounce > 0) {
+      // Écritures groupées : glisser/déposer et éditions rapides du planning ne
+      // déclenchent qu'un seul setDoc après la pause. Flush garanti (unmount/pagehide).
+      metaPending.current[name] = { payload, ws };
+      clearTimeout(metaTimers.current[name]);
+      setSyncStatus("syncing");
+      metaTimers.current[name] = setTimeout(() => {
+        const p = metaPending.current[name];
+        delete metaPending.current[name]; delete metaTimers.current[name];
+        if (p) saveMeta(name, p.payload, p.ws);
+      }, debounce);
+      return;
+    }
+    saveMeta(name, payload, ws);
   };
+
+  // Flush des méta debouncées encore en attente (fermeture d'onglet, démontage).
+  useEffect(() => {
+    const flush = () => {
+      for (const name of Object.keys(metaPending.current)) {
+        clearTimeout(metaTimers.current[name]);
+        const p = metaPending.current[name];
+        delete metaPending.current[name]; delete metaTimers.current[name];
+        if (p) saveMeta(name, p.payload, p.ws);
+      }
+    };
+    window.addEventListener("pagehide", flush);
+    window.addEventListener("beforeunload", flush);
+    return () => { window.removeEventListener("pagehide", flush); window.removeEventListener("beforeunload", flush); flush(); };
+  }, [saveMeta]);
 
   // Méta partagées → workspace actif (anti-écho, valeur la plus récente via sharedRef).
   useEffect(() => { const v = sharedRef.current.collections || []; pushSharedMeta("collections", v, { items: v }); }, [collections]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { const v = sharedRef.current.mealPlan || {}; pushSharedMeta("mealPlan", v, { data: v }); }, [mealPlan]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const v = sharedRef.current.mealPlan || {}; pushSharedMeta("mealPlan", v, { data: v }, { debounce: 700 }); }, [mealPlan]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const v = sharedRef.current.shoppingLists || []; pushSharedMeta("shoppingLists", v, { items: v }); }, [shoppingLists]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const v = { items: sharedRef.current.stock || [], low: sharedRef.current.lowStock || [] }; pushSharedMeta("stock", v, v); }, [stock, lowStock]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (user) saveMeta("preferences", preferences, soloWorkspace(user.uid)); }, [preferences]); // eslint-disable-line react-hooks/exhaustive-deps

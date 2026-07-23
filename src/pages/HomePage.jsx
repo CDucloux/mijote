@@ -9,10 +9,10 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, MAX_HOUSEHOLD } from "../lib/household.js";
 import { buildDashboardSummary } from "../lib/dashboard.js";
+import { SLOT_BY_ID } from "../constants/mealSlots.js";
 import { fmtTime } from "../lib/format.js";
 
 // ─── HOME / ACCUEIL ───────────────────────────────────────────────────────────
-const SLOT_LABEL = { midi: "🌤 Ce midi", soir: "🌙 Ce soir" };
 
 function greeting(date = new Date()) {
   const h = date.getHours();
@@ -229,7 +229,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                     boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
                     transition: "border-color 0.15s, box-shadow 0.15s",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = m.slot === "midi" ? "#e0a800" : "#4a80d4"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.12)"; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = (SLOT_BY_ID[m.slot]?.accent || "var(--accent)"); e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.12)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}>
                   <div style={{ width: 70, height: 70, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 3px 10px rgba(0,0,0,0.14)" }}>
                     <Img src={m.recipe.image} alt={m.recipe.name} style={{ width: "100%", height: "100%" }} />
@@ -238,11 +238,11 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                     <span style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
                       fontSize: 10.5, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                      background: m.slot === "midi" ? "rgba(240,192,96,0.22)" : "rgba(91,156,246,0.18)",
-                      color: m.slot === "midi" ? "#9a6700" : "#3060b8",
+                      background: (SLOT_BY_ID[m.slot]?.color || "var(--surface2)"),
+                      color: (SLOT_BY_ID[m.slot]?.text || "var(--text2)"),
                       marginBottom: 6,
                     }}>
-                      {SLOT_LABEL[m.slot] || "Au menu"}
+                      {SLOT_BY_ID[m.slot]?.today || "Au menu"}
                     </span>
                     <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.recipe.name}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 3 }}>

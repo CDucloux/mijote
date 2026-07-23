@@ -15,6 +15,7 @@ import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters } from "../lib/recipeFilters.js";
+import { isEligible } from "../lib/dietFilter.js";
 import { buildTechniqueIndex } from "../lib/techniques.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { CUISINES, cuisineEmoji } from "../constants/cuisines.js";
@@ -158,7 +159,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const nActiveFilters = activeFilterCount(filters);
   const filtered = useMemo(() => {
     const q = normalizeStr(text);
-    const diet = usePrefs ? preferences?.diet : null;
     return pubs
       .filter(p => {
         if (q) {
@@ -166,7 +166,9 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           if (!normalizeStr(hay).includes(q) && !normalizeStr(p.name).includes(q)) return false;
         }
         if (authorUid && p.authorUid !== authorUid) return false;
-        if (diet && diet !== "omnivore" && !(p.dietTags || []).includes(diet)) return false;
+        // « Selon mes préférences » : contraintes dures (régime + allergènes +
+        // catégories exclues), même prédicat que le générateur de planning.
+        if (usePrefs && !isEligible(p.recipe, preferences, { resolver })) return false;
         return matchesFilters(p.recipe, filters, { resolver, techniques, techIndex });
       })
       .sort((a, b) => sortBy === "name"
@@ -274,7 +276,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           <span style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             Trié par <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{sortBy === "name" ? "A → Z" : sortBy === "health" ? "Santé" : "Récent"}</strong>
           </span>
-          {preferences?.diet && preferences.diet !== "omnivore" && chip(usePrefs, () => setUsePrefs(v => !v), <><Icon name="heart" size={13} color="currentColor" /> Mes préférences</>)}
+          {((preferences?.diet && preferences.diet !== "omnivore") || preferences?.allergens?.length || preferences?.excludedCategories?.length) && chip(usePrefs, () => setUsePrefs(v => !v), <><Icon name="heart" size={13} color="currentColor" /> Mes préférences</>)}
           {authorUid && chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Créateur</>)}
         </div>
       </div>{/* fin sticky header */}
