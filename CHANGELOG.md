@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.6.1 – Safran · Correctifs
+
+- **PWA hors ligne** : la session est désormais restaurée au démarrage à froid d'une appli installée (persistance d'authentification IndexedDB explicite) ; toute navigation hors ligne sert le shell. Fini le blocage « hors connexion »
+- **Onboarding** repensé en **plein écran** (fond coloré par étape, illustration, pastilles, « C'est parti ! »)
+- **Carnets (mobile)** : le liseré de surbrillance du carnet sélectionné n'est plus rogné en haut
+
 ## v3.6.0 – Safran · Refonte du planning & profil
 
 ### Planning intelligent
