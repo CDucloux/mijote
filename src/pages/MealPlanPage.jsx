@@ -11,6 +11,7 @@ import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
 import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory } from "../lib/composedMeal.js";
 import { suggestSides } from "../lib/mealPlanner.js";
+import { buildBatchSession, weekEntries } from "../lib/batchSession.js";
 import { isEligible } from "../lib/dietFilter.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { currentMonth } from "../lib/seasonality.js";
@@ -148,6 +149,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     else notify("Cette semaine est déjà remplie (midi et soir)", "info");
   }, [generate, weekDays, notify, household]);
   const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
+
+  // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
+  const [showBatch, setShowBatch] = useState(false);
+  const batch = useMemo(() => buildBatchSession(weekEntries(mealPlan, weekDays), recipes), [mealPlan, weekDays, recipes]);
   // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
   // que pour la dernière génération sur la semaine où elle a eu lieu).
   useEffect(() => { setGenDone(false); }, [weekDays]);
@@ -281,6 +286,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </span>
           <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)", flexShrink: 0 }}>Auj.</button>
+          <button onClick={() => setShowBatch(true)} title="Session batch : plats à cuisiner et préparations de base à faire d'avance" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(76,175,125,0.16)", border: "1px solid rgba(76,175,125,0.4)", color: "var(--green)", flexShrink: 0 }}>
+            <Icon name="fire" size={13} color="var(--green)" /> Batch
+          </button>
           <button onClick={exportICS} title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
             <Icon name="calendar" size={13} color="var(--blue)" /> Agenda
           </button>
@@ -375,6 +383,51 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             ))}
             {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
           </div>
+        </SwipeableSheet>
+      )}
+
+      {/* Session batch : plats à cuisiner + préparations de base partagées */}
+      {showBatch && (
+        <SwipeableSheet onClose={() => setShowBatch(false)} style={{ maxHeight: "84dvh" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={16} color="var(--green)" /></span>
+            <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0 }}>Session batch</h3>
+          </div>
+          <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 16px" }}>Cuisine en une fois pour la semaine visible : les portions en trop couvrent les jours suivants, et les préparations de base partagées se font d'avance.</p>
+
+          {batch.bases.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              <div className="field-label" style={{ marginBottom: 10 }}>À préparer d'avance</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {batch.bases.map(b => (
+                  <div key={b.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(b.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: b.shared ? "rgba(76,175,125,0.08)" : "var(--surface2)", borderRadius: 12, border: `1px solid ${b.shared ? "rgba(76,175,125,0.3)" : "var(--border)"}`, cursor: "pointer" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600 }}>{b.recipe.name}</div>
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Pour {b.usedBy.join(", ")}</div>
+                    </div>
+                    {b.shared && <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.16)", padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Partagé</span>}
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>{b.amount} {b.unit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="field-label" style={{ marginBottom: 10 }}>À cuisiner</div>
+          {batch.dishes.length === 0
+            ? <p style={{ fontSize: 13, color: "var(--text3)", padding: "8px 0" }}>Planifie des repas cette semaine pour voir la session batch.</p>
+            : <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {batch.dishes.map(d => (
+                  <button key={d.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(d.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={d.recipe.image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.recipe.name}</div>
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>{d.meals} repas · {d.cookings} cuisson{d.cookings > 1 ? "s" : ""} · {d.servings} portions</div>
+                    </div>
+                    <Icon name="forward" size={15} color="var(--text3)" />
+                  </button>
+                ))}
+              </div>}
         </SwipeableSheet>
       )}
 
