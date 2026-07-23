@@ -1,5 +1,23 @@
 # Changelog – Mijoté
 
+## v3.6.0 – Safran · Refonte du planning & profil
+
+### Planning intelligent
+- **Générateur de semaine** (bouton « Générer ») : filtre le vivier par tes contraintes dures (régime, allergènes, catégories exclues) puis classe les recettes par saison, équilibre, variété, effort étalé, stock et affinité batch. Annulation en un tap
+- **Repas composé** : entrée + plat + accompagnement + dessert. Bouton « Compléter » pour ajouter un service, avec **suggestions de saison** par rôle
+- **Réutilisation des portions** : une recette cuisinée pour plusieurs couvre plusieurs repas de la semaine (fini les portions perdues)
+- **Créneau Petit-déjeuner** ajouté ; « Selon mes préférences » de Découvrir utilise le même filtre que le planning
+- **Session batch** : plats à cuisiner et **préparations de base partagées** à préparer d'avance, avec quantités agrégées
+
+### Profil
+- Nouvelle page **Profil** (menu avatar) : **nom d'affichage** modifiable, **activité cuisine** en heatmap façon GitHub + statistiques, et **purge des données** (planning, courses, stock ou tout)
+
+### Finitions
+- Onglets de la fiche recette en **switch segmenté** glissant (mobile)
+- **Notifications** en bas de l'écran sur mobile (snackbar)
+- Barre de statut **PWA** alignée sur la couleur du thème
+- Accueil : un repas composé s'affiche en **une seule carte**
+
 ## v3.5.0 – Safran · Types de recette & carnets intelligents
 
 ### Types de recette
