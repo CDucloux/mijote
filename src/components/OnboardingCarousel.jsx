@@ -80,7 +80,6 @@ export function OnboardingCarousel() {
   };
   const goTo = (n) => setActive(Math.max(0, Math.min(SLIDES.length - 1, n)));
   const next = () => (active < SLIDES.length - 1 ? setActive(active + 1) : finish());
-  const prev = () => goTo(active - 1);
 
   const onTouchStart = (e) => { touchX.current = e.touches[0].clientX; };
   const onTouchEnd = (e) => {
@@ -92,40 +91,44 @@ export function OnboardingCarousel() {
   };
 
   if (!show) return null;
-  const first = active === 0;
   const last = active === SLIDES.length - 1;
+  const N = SLIDES.length;
 
   return createPortal(
-    <div className={`onb-overlay${closing ? " is-closing" : ""}`}>
-      {/* Fenêtre : clippe les voisines pour ne montrer que le peek */}
-      <div className="onb-viewport" style={{ "--onb-active": active }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-        <div className="onb-track">
-          {SLIDES.map((s, n) => (
-            <div key={n} className={`onb-card${n === active ? " is-active" : ""}`} style={{ "--c": s.color }}>
-              <span className="onb-iconbox"><Icon name={s.icon} size={38} color="#fff" /></span>
-              <h2 className="onb-title">{s.title}</h2>
-              <p className="onb-text">{s.text}</p>
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden",
+      background: SLIDES[active].color, transition: "background 0.4s ease, opacity 0.3s",
+      opacity: closing ? 0 : 1 }}
+      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+
+      {/* Passer (sauf dernière slide) */}
+      {!last && (
+        <button onClick={finish} style={{ position: "absolute", top: "calc(14px + env(safe-area-inset-top))", right: 18, zIndex: 3, background: "none", border: "none", color: "rgba(255,255,255,0.85)", fontSize: 13.5, fontWeight: 600, cursor: "pointer", padding: 6 }}>Passer</button>
+      )}
+
+      {/* Piste plein écran : une slide occupe toute la fenêtre */}
+      <div style={{ display: "flex", height: "100%", width: `${N * 100}%`, transform: `translateX(-${active * (100 / N)}%)`, transition: "transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
+        {SLIDES.map((s, n) => (
+          <div key={n} style={{ width: `${100 / N}%`, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
+            <div style={{ width: 168, height: 168, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", marginBottom: 40, boxShadow: "0 18px 50px -20px rgba(0,0,0,0.45)" }}>
+              <Icon name={s.icon} size={74} color={s.color} />
             </div>
-          ))}
-        </div>
+            <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 600, letterSpacing: "-0.01em", color: "#fff", margin: "0 0 16px" }}>{s.title}</h2>
+            <p style={{ fontSize: 15.5, lineHeight: 1.55, color: "rgba(255,255,255,0.92)", margin: 0, maxWidth: 440 }}>{s.text}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="onb-controls">
-        <div className="onb-dots">
+      {/* Bas : indice/CTA + pastilles */}
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: "calc(30px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", alignItems: "center", gap: 22, padding: "0 32px" }}>
+        {last
+          ? <button onClick={finish} style={{ background: "#fff", color: SLIDES[active].color, border: "none", borderRadius: 16, padding: "15px 44px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.4)" }}>C'est parti !</button>
+          : <button onClick={next} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,0.9)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Glisse pour continuer <Icon name="forward" size={15} color="rgba(255,255,255,0.9)" /></button>}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {SLIDES.map((_, n) => (
-            <button key={n} onClick={() => goTo(n)} aria-label={`Aller à l'étape ${n + 1}`}
-              className={`onb-dot${n === active ? " is-active" : n < active ? " is-done" : ""}`} />
+            <button key={n} onClick={() => goTo(n)} aria-label={`Étape ${n + 1}`}
+              style={{ width: n === active ? 22 : 8, height: 8, borderRadius: 999, border: "none", cursor: "pointer", padding: 0,
+                background: n === active ? "#fff" : "rgba(255,255,255,0.45)", transition: "width 0.3s ease, background 0.3s ease" }} />
           ))}
-        </div>
-        <div className="onb-buttons">
-          <button className={`onb-btn-sec${first ? "" : " is-prev"}`} onClick={first ? finish : prev}>
-            {!first && <Icon name="back" size={15} color="rgba(255,255,255,0.82)" />}
-            {first ? "Passer" : "Précédent"}
-          </button>
-          <button className="btn btn-primary onb-btn-primary" onClick={next}>
-            {last ? "C'est parti" : "Suivant"}
-            <Icon name={last ? "fire" : "forward"} size={16} color="#fff" />
-          </button>
         </div>
       </div>
     </div>,

@@ -161,7 +161,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               {!hideCarnets && collections.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text3)" }}>Appui long pour gérer</span>}
             </div>
             {!hideCarnets && (
-            <div className="collections-row" style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 6 }}>
+            <div className="collections-row" style={{ display: "flex", gap: 14, overflowX: "auto", padding: "7px 3px 8px" }}>
               {collections.map((col) => {
                 const active = carnetActive(col);
                 const count = countFor(col);
