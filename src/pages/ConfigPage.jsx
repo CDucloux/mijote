@@ -19,8 +19,6 @@ import {
 } from "../lib/dataYaml.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
-import { CookingHeatmap } from "../components/CookingHeatmap.jsx";
-import { buildHeatmap } from "../lib/cookingActivity.js";
 import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "../lib/seasonality.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
@@ -86,7 +84,7 @@ function DifficultyPips({ level }) {
   );
 }
 
-export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques, user, mealPlan = {}, onPurge }) {
+export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques }) {
   const navigate = useNavigate();
   const location = useLocation();
   const configSectionParam = location.pathname.startsWith("/config/")
@@ -105,8 +103,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const [editTech, setEditTech] = useState(null);
   const [editCat, setEditCat] = useState(null); // { key, label, color, icon, isNew }
   const [confirmDelCat, setConfirmDelCat] = useState(null); // { key, label }
-  const [nameInput, setNameInput] = useState(null);      // édition du nom d'affichage
-  const [purgeScope, setPurgeScope] = useState(null);    // { scope, label } en confirmation
   const [confirmDel, setConfirmDel] = useState(null); // { type: "ing" | "ut", item }
   const [dragCat, setDragCat] = useState(null); // key being dragged
   const [overCat, setOverCat] = useState(null); // key currently hovered as drop target
@@ -363,9 +359,9 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <UserAvatar />
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
-          {["profil", "préférences", "ingredients", "ustensiles", "techniques", "données", "nouveautés"].map(s => (
+          {["préférences", "ingredients", "ustensiles", "techniques", "données", "nouveautés"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "profil" ? "Profil" : s === "préférences" ? "Préférences" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "techniques" ? "Techniques" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
+              {s === "préférences" ? "Préférences" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "techniques" ? "Techniques" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
             </button>
           ))}
         </div>
@@ -386,86 +382,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
-        {section === "profil" && (() => {
-          const prefs = preferences || DEFAULT_PREFERENCES;
-          const currentName = prefs.displayName || user?.displayName || "";
-          const editing = nameInput !== null;
-          const stats = buildHeatmap(mealPlan, { weeks: 26 });
-          const STAT = [
-            { label: "Repas cuisinés", value: stats.total },
-            { label: "Jours actifs", value: stats.activeDays },
-            { label: "Série en cours", value: `${stats.streak} j` },
-            { label: "7 derniers jours", value: stats.thisWeek },
-          ];
-          return (
-            <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 640 }}>
-              {/* En-tête profil : avatar + identité */}
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                {user?.photoURL
-                  ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--border)" }} />
-                  : <div style={{ width: 60, height: 60, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "grid", placeItems: "center", fontSize: 24, fontWeight: 700 }}>{(currentName || "?")[0].toUpperCase()}</div>}
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentName || "Sans nom"}</div>
-                  {user?.email && <div style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>}
-                </div>
-              </div>
-
-              {/* Nom d'affichage */}
-              <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Nom d'affichage</div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input className="field-input" style={{ flex: 1 }} placeholder={user?.displayName || "Ton prénom"}
-                    value={editing ? nameInput : currentName}
-                    onChange={e => setNameInput(e.target.value)}
-                    onFocus={() => { if (!editing) setNameInput(currentName); }} />
-                  {editing && (
-                    <button className="btn btn-primary btn-sm" onClick={() => { setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), displayName: nameInput.trim() })); setNameInput(null); }}>Enregistrer</button>
-                  )}
-                </div>
-                <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 6 }}>C'est le nom utilisé dans l'interface (accueil, foyer).</div>
-              </div>
-
-              {/* Activité cuisine */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <Icon name="fire" size={16} color="var(--accent)" />
-                  <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Ton activité cuisine</h3>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
-                  {STAT.map(s => (
-                    <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 10px", textAlign: "center" }}>
-                      <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, color: "var(--accent)" }}>{s.value}</div>
-                      <div style={{ fontSize: 10.5, color: "var(--text3)", marginTop: 2 }}>{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "16px 14px" }}>
-                  <CookingHeatmap mealPlan={mealPlan} weeks={26} />
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>D'après tes repas planifiés sur les 6 derniers mois.</div>
-              </div>
-
-              {/* Zone danger : purge */}
-              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 18 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--red)", marginBottom: 4 }}>Zone de danger</div>
-                <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 12px" }}>Efface définitivement des données de ton espace. Irréversible.</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {[
-                    { scope: "planning", label: "Vider le planning" },
-                    { scope: "shopping", label: "Vider les courses" },
-                    { scope: "stock", label: "Vider le stock" },
-                    { scope: "all", label: "Tout effacer" },
-                  ].map(o => (
-                    <button key={o.scope} onClick={() => setPurgeScope(o)}
-                      style={{ padding: "8px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: o.scope === "all" ? "rgba(224,82,82,0.14)" : "var(--surface2)", color: o.scope === "all" ? "var(--red)" : "var(--text2)", border: `1px solid ${o.scope === "all" ? "rgba(224,82,82,0.5)" : "var(--border)"}` }}>
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
         {section === "préférences" && (() => {
           const prefs = preferences || DEFAULT_PREFERENCES;
           const setPref = (patch) => setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), ...patch }));
@@ -1068,22 +984,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         </SwipeableSheet>
       )}
 
-
-      {/* Purge de données (confirmation) */}
-      {purgeScope && (
-        <SwipeableSheet onClose={() => setPurgeScope(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{purgeScope.label} ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-            {purgeScope.scope === "all"
-              ? "Toutes tes recettes, carnets, planning, courses et stock seront définitivement effacés. Cette action est irréversible."
-              : "Ces données seront définitivement effacées. Cette action est irréversible."}
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPurgeScope(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onPurge?.(purgeScope.scope); setPurgeScope(null); }}>Effacer</button>
-          </div>
-        </SwipeableSheet>
-      )}
 
       {/* Category delete confirmation */}
       {confirmDel && (
