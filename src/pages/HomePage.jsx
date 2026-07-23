@@ -269,7 +269,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                     </div>
                     {card.others.length > 0 && (
                       <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {card.others.map(o => <span key={o.recipe.id}><span style={{ color: "var(--accent)", fontWeight: 600 }}>+ </span>{o.recipe.name} </span>)}
+                        {card.others.map(o => <span key={o.recipe.id}><span style={{ color: "var(--accent)", fontWeight: 700, position: "relative", top: "-1px" }}>+</span> {o.recipe.name} </span>)}
                       </div>
                     )}
                   </div>
