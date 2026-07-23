@@ -265,11 +265,11 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                     </span>
                     <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.recipe.name}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 3 }}>
-                      {fmtTime((m.recipe.prepTime || 0) + (m.recipe.cookTime || 0))}{m.recipe.ingredients?.length ? ` · ${m.recipe.ingredients.length} ingr.` : ""}
+                      {fmtTime((m.recipe.prepTime || 0) + (m.recipe.cookTime || 0))}{m.recipe.ingredients?.length ? ` | ${m.recipe.ingredients.length} ingr.` : ""}
                     </div>
                     {card.others.length > 0 && (
                       <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        <span style={{ color: "var(--accent)", fontWeight: 600 }}>+ </span>{card.others.map(o => o.recipe.name).join(" · ")}
+                        {card.others.map(o => <span key={o.recipe.id}><span style={{ color: "var(--accent)", fontWeight: 600 }}>+ </span>{o.recipe.name} </span>)}
                       </div>
                     )}
                   </div>
