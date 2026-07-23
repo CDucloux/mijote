@@ -10,6 +10,7 @@ import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, MAX_HOUSEHOLD } from "../lib/household.js";
 import { buildDashboardSummary } from "../lib/dashboard.js";
 import { SLOT_BY_ID } from "../constants/mealSlots.js";
+import { itemRole, roleOrder } from "../lib/composedMeal.js";
 import { fmtTime } from "../lib/format.js";
 
 // ─── HOME / ACCUEIL ───────────────────────────────────────────────────────────
@@ -177,6 +178,24 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
   );
   const { meals, shoppingTodo, lowStockNames, isCalm } = summary;
 
+  // Regroupe les items d'un repas composé (même créneau + groupId) en UNE carte :
+  // le plat en tête, les autres services résumés. Un item solo reste une carte.
+  const mealCards = useMemo(() => {
+    const map = new Map(), order = [];
+    meals.forEach((m, i) => {
+      const key = m.slot + "|" + (m.groupId || `solo-${i}`);
+      let c = map.get(key);
+      if (!c) { c = { slot: m.slot, items: [] }; map.set(key, c); order.push(c); }
+      c.items.push(m);
+    });
+    order.forEach(c => {
+      c.items.sort((a, b) => roleOrder(itemRole(a, a.recipe)) - roleOrder(itemRole(b, b.recipe)));
+      c.primary = c.items.find(m => itemRole(m, m.recipe) === "plat") || c.items[0];
+      c.others = c.items.filter(m => m !== c.primary);
+    });
+    return order;
+  }, [meals]);
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* En-tête */}
@@ -218,8 +237,8 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             </button>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {/* Repas du jour */}
-              {meals.map((m, i) => (
+              {/* Repas du jour (un repas composé = une carte, plat en tête) */}
+              {mealCards.map((card, i) => { const m = card.primary; return (
                 <button key={i} onClick={() => onSelectRecipe?.(m.recipe.id)} className="slide-up pressable"
                   style={{
                     animationDelay: `${i * 0.06}s`,
@@ -248,10 +267,15 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                     <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 3 }}>
                       {fmtTime((m.recipe.prepTime || 0) + (m.recipe.cookTime || 0))}{m.recipe.ingredients?.length ? ` · ${m.recipe.ingredients.length} ingr.` : ""}
                     </div>
+                    {card.others.length > 0 && (
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <span style={{ color: "var(--accent)", fontWeight: 600 }}>+ </span>{card.others.map(o => o.recipe.name).join(" · ")}
+                      </div>
+                    )}
                   </div>
                   <Icon name="forward" size={16} color="var(--text3)" />
                 </button>
-              ))}
+              ); })}
 
               {/* Courses à faire */}
               {shoppingTodo > 0 && (
