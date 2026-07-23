@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
@@ -26,7 +26,14 @@ if (_missing.length) {
 }
 
 export const firebaseApp = initializeApp(firebaseConfig);
-export const auth = getAuth(firebaseApp);
+// Persistance d'auth EXPLICITE (IndexedDB en priorité, repli localStorage) : la
+// session survit au démarrage à froid hors ligne d'une PWA installée. `getAuth`
+// choisit une heuristique parfois plus faible → on force via `initializeAuth`.
+// `popupRedirectResolver` conserve le fonctionnement de signInWithPopup/redirect.
+export const auth = initializeAuth(firebaseApp, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+  popupRedirectResolver: browserPopupRedirectResolver,
+});
 export const provider = new GoogleAuthProvider();
 // Cache persistant (IndexedDB) : lectures hors-ligne + file d'écritures durable qui
 // survit aux rechargements et se resynchronise automatiquement à la reconnexion.

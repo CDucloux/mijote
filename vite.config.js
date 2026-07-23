@@ -15,6 +15,9 @@ export default defineConfig({
       workbox: {
         // Cache JS/CSS/HTML app shell (+ icônes PWA & manifest)
         globPatterns: ['**/*.{js,css,html,svg,ico,png,webmanifest}'],
+        // Toute navigation hors ligne (y compris /profile, /config…) sert le shell.
+        navigateFallback: 'index.html',
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             // Images from Firebase Storage and any other origin
