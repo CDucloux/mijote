@@ -9,7 +9,19 @@ import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "../lib/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
-import { groupSlotMeals, itemRole, roleLabel } from "../lib/composedMeal.js";
+import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory } from "../lib/composedMeal.js";
+import { suggestSides } from "../lib/mealPlanner.js";
+import { isEligible } from "../lib/dietFilter.js";
+import { createIngredientResolver } from "../lib/nameMatcher.js";
+import { currentMonth } from "../lib/seasonality.js";
+import { normalizeStr } from "../lib/parseIngredient.js";
+
+// Rôles proposés pour compléter un repas (le plat existe déjà).
+const COMPLETE_ROLES = [
+  { id: "entree", label: "Entrée" },
+  { id: "accompagnement", label: "Accompagnement" },
+  { id: "dessert", label: "Dessert" },
+];
 
 // ─── MEAL PLAN – module-level constants & pure helpers ────────────────────────
 const MP_DAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -35,7 +47,7 @@ function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T
 function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").join("\\,").split(";").join("\\;"); }
 
 // SlotZone lifted out + memoised → never re-created on parent re-render
-const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo }) {
+const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete }) {
   const dropKey = date + ":" + slot;
   const isOver = dropTarget === dropKey;
   return (
@@ -69,6 +81,12 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
                 </div>
               );
             })}
+            {slot !== "matin" && onComplete && (
+              <button onClick={() => onComplete(date, slot, g)} title="Compléter le repas (entrée, accompagnement, dessert)"
+                style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2, padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: "transparent", color: MP_SLOT_TEXT[slot], border: `1px dashed ${MP_SLOT_TEXT[slot]}`, cursor: "pointer" }}>
+                <Icon name="plus" size={10} color={MP_SLOT_TEXT[slot]} /> Compléter
+              </button>
+            )}
           </div>
         );
       })}
@@ -93,6 +111,33 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
   const monthDays = useMemo(() => mpGetMonthDays(currentDate), [currentDate]);
   const recipesById = useMemo(() => new Map(recipes.map(r => [r.id, r])), [recipes]);
+
+  // Composition manuelle : contexte pour suggérer des recettes par rôle.
+  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  const suggestCtx = useMemo(() => ({ resolver, byId: recipesById, month: currentMonth(), stockSet: new Set(stock || []), preferences }), [resolver, recipesById, stock, preferences]);
+  const eligiblePool = useMemo(() => recipes.filter(r => !r.isComponent && isEligible(r, preferences, { resolver, byId: recipesById })), [recipes, preferences, resolver, recipesById]);
+  const [composeFor, setComposeFor] = useState(null); // { date, slot, groupId, baseIdx, baseRecipeId }
+  const [completeRole, setCompleteRole] = useState("accompagnement");
+  const [completeSearch, setCompleteSearch] = useState("");
+
+  const openComplete = useCallback((date, slot, group) => {
+    const platEntry = group.items.find(x => itemRole(x.item, recipesById.get(x.item.recipeId)) === "plat") || group.items[0];
+    setComposeFor({ date, slot, groupId: group.groupId || null, baseIdx: (mealPlan[date] || []).indexOf(platEntry.item), baseRecipeId: platEntry.item.recipeId });
+    setCompleteRole("accompagnement"); setCompleteSearch("");
+  }, [mealPlan, recipesById]);
+
+  const attachToMeal = useCallback((recipeId, role) => {
+    if (!composeFor) return;
+    setMealPlan(prev => {
+      const entries = [...(prev[composeFor.date] || [])];
+      let gid = composeFor.groupId;
+      if (!gid) { gid = newGroupId(); const b = entries[composeFor.baseIdx]; if (b) entries[composeFor.baseIdx] = { ...b, groupId: gid, role: b.role || "plat" }; }
+      entries.push({ recipeId, slot: composeFor.slot, portions: 1, role, groupId: gid });
+      return { ...prev, [composeFor.date]: entries };
+    });
+    notify("Ajouté au repas");
+    setComposeFor(null);
+  }, [composeFor, setMealPlan, notify]);
 
   // Génération automatique de la semaine visible (créneaux midi/soir vides).
   const [genDone, setGenDone] = useState(false);
@@ -264,7 +309,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {MEAL_SLOTS.map(s => (
-                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} />
+                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} />
                     ))}
                   </div>
                 </div>
@@ -332,6 +377,47 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </div>
         </SwipeableSheet>
       )}
+
+      {/* Compléter un repas : entrée / accompagnement / dessert, suggérés de saison */}
+      {composeFor && (() => {
+        const base = recipesById.get(composeFor.baseRecipeId);
+        const q = normalizeStr(completeSearch.trim());
+        const list = q
+          ? eligiblePool.filter(r => roleForCategory(r.category || "") === completeRole && normalizeStr(r.name).includes(q)).slice(0, 20)
+          : suggestSides(base, eligiblePool, suggestCtx, { role: completeRole, max: 12 });
+        return (
+          <SwipeableSheet onClose={() => setComposeFor(null)} style={{ maxHeight: "82dvh" }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 2 }}>Compléter le repas</h3>
+            {base && <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 14 }}>Autour de <strong style={{ color: "var(--text2)" }}>{base.name}</strong></div>}
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              {COMPLETE_ROLES.map(r => (
+                <button key={r.id} onClick={() => setCompleteRole(r.id)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                  background: completeRole === r.id ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: completeRole === r.id ? "var(--accent)" : "var(--text2)",
+                  border: `1px solid ${completeRole === r.id ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{r.label}</button>
+              ))}
+            </div>
+            <div style={{ position: "relative", marginBottom: 12 }}>
+              <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
+              <input className="field-input" placeholder={`Rechercher ${roleLabel(completeRole).toLowerCase()}…`} value={completeSearch} onChange={e => setCompleteSearch(e.target.value)} style={{ paddingLeft: 34 }} />
+            </div>
+            {!q && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}><Icon name="sun" size={12} color="var(--accent)" /> Suggestions de saison</div>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "48vh" }}>
+              {list.map(r => (
+                <button key={r.id} onClick={() => attachToMeal(r.id, completeRole)}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    {r.cuisine && <div style={{ fontSize: 11, color: "var(--text3)" }}>{r.cuisine}</div>}
+                  </div>
+                  <Icon name="plus" size={16} color="var(--accent)" />
+                </button>
+              ))}
+              {list.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette « {roleLabel(completeRole).toLowerCase()} » {q ? "trouvée" : "disponible"}</p>}
+            </div>
+          </SwipeableSheet>
+        );
+      })()}
     </div>
   );
 }
