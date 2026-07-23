@@ -6,6 +6,7 @@ import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
+import { peopleCount } from "../lib/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
 import { groupSlotMeals, itemRole, roleLabel } from "../lib/composedMeal.js";
@@ -96,10 +97,11 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   // Génération automatique de la semaine visible (créneaux midi/soir vides).
   const [genDone, setGenDone] = useState(false);
   const handleGenerate = useCallback(() => {
-    const { count } = generate(weekDays, ["midi", "soir"], { compose: true });
+    const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
+    const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm });
     if (count > 0) { setGenDone(true); notify(`${count} repas proposés, à relire et ajuster`, "success"); }
     else notify("Cette semaine est déjà remplie (midi et soir)", "info");
-  }, [generate, weekDays, notify]);
+  }, [generate, weekDays, notify, household]);
   const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
   // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
   // que pour la dernière génération sur la semaine où elle a eu lieu).

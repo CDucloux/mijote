@@ -106,4 +106,30 @@ describe("generateWeek", () => {
     const out = generateWeek({ dates: ["2026-07-01"], slots: ["midi"], recipes: withSides, ctx });
     expect(out.some(a => a.role === "accompagnement")).toBe(false);
   });
+
+  it("compose un repas complet entrée + plat + accompagnement + dessert", () => {
+    const lib = [
+      R("plat1", { ingredients: [{ name: "Courgette" }] }),
+      R("ent1", { category: "entree", ingredients: [{ name: "Courgette" }] }),
+      R("acc1", { category: "accompagnement", ingredients: [{ name: "Riz" }] }),
+      R("des1", { category: "dessert", ingredients: [{ name: "Courgette" }] }),
+    ];
+    const out = generateWeek({ dates: ["2026-07-01"], slots: ["midi"], recipes: lib, ctx, compose: true });
+    const roles = out.map(a => a.role).sort();
+    expect(roles).toEqual(["accompagnement", "dessert", "entree", "plat"]);
+    expect(new Set(out.map(a => a.groupId)).size).toBe(1); // un seul repas
+  });
+
+  it("réutilise les portions cuisinées (recette pour 6 replacée sur plusieurs jours)", () => {
+    const lib = [
+      R("gros", { servings: 6, ingredients: [{ name: "Courgette" }] }),      // de saison → cuisiné en premier
+      R("b", { servings: 2, ingredients: [{ name: "Potiron" }] }),           // hors saison
+      R("c", { servings: 2, ingredients: [{ name: "Potiron" }] }),
+    ];
+    const dates = ["2026-07-01", "2026-07-02"];
+    const out = generateWeek({ dates, slots: ["midi", "soir"], recipes: lib, ctx });
+    const gros = out.filter(a => a.recipeId === "gros");
+    expect(gros.length).toBe(3);                 // 1 cuisson pour 6 = 3 repas
+    expect(gros.every(a => a.portions === 3)).toBe(true);
+  });
 });

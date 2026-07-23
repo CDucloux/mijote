@@ -13,10 +13,10 @@ export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = 
   const undoRef = useRef(null);
   const [canUndo, setCanUndo] = useState(false);
 
-  const generate = useCallback((dates = [], slots = ["midi", "soir"], { replace = false, compose = false } = {}) => {
+  const generate = useCallback((dates = [], slots = ["midi", "soir"], { replace = false, compose = false, portionsPerMeal = 2 } = {}) => {
     const byId = new Map(recipes.map(r => [r.id, r]));
     const ctx = { resolver, byId, month: currentMonth(), stockSet: new Set(stock || []), preferences: preferences || {} };
-    const assignments = generateWeek({ dates, slots, recipes, ctx, existing: mealPlan, replace, compose });
+    const assignments = generateWeek({ dates, slots, recipes, ctx, existing: mealPlan, replace, compose, portionsPerMeal });
     if (!assignments.length) return { count: 0 };
 
     undoRef.current = mealPlan; // snapshot avant modification

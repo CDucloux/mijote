@@ -89,66 +89,89 @@ function componentsOf(recipe) {
 
 // Pénalités de niveau semaine (variété + étalement de l'effort + bonus batch).
 const WEEK = { repeat: 0.6, category: 0.09, cuisine: 0.05, dayEffort: 0.12, batchBonus: 0.12 };
+// Rôles d'un repas composé complet, dans l'ordre de service.
+const COMPOSE_ROLES = ["entree", "plat", "accompagnement", "dessert"];
 
-// Remplit les créneaux vides de la semaine. `dates` (YYYY-MM-DD), `slots`
-// (["midi","soir"]…), `recipes` (bibliothèque), `existing` (mealPlan actuel).
-// Renvoie [{ date, slot, recipeId }] pour les cellules effectivement remplies.
-export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, existing = {}, replace = false, compose = false }) {
+// Combien de repas une cuisson couvre-t-elle ? servings / portions par repas.
+// Une recette pour 4 avec 2 portions/repas = 2 repas → 1 « reste » à replacer.
+export function batchMeals(recipe, portionsPerMeal = 2) {
+  const s = Number(recipe.servings) || 2;
+  return Math.max(1, Math.min(7, Math.round(s / Math.max(1, portionsPerMeal))));
+}
+
+// Remplit les créneaux vides de la semaine. `dates` (YYYY-MM-DD), `slots`,
+// `recipes`, `existing` (mealPlan actuel). Avec `compose`, chaque repas midi/soir
+// devient entrée + plat + accompagnement + dessert (selon le vivier disponible).
+// Avec `portionsPerMeal`, les portions cuisinées en trop sont RÉUTILISÉES plus tard
+// dans la semaine (files de « restes » par rôle) au lieu de cuisiner du neuf.
+// Renvoie [{ date, slot, recipeId, role?, groupId?, portions }] par cellule remplie.
+export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, existing = {}, replace = false, compose = false, portionsPerMeal = 2 }) {
   const byId = ctx.byId || new Map(recipes.map(r => [r.id, r]));
   const c = { ...ctx, byId };
   const pool = recipes.filter(r => !r.isComponent && isEligible(r, ctx.preferences || {}, c));
-  const sidePool = compose ? suggestSides(null, pool, c) : []; // accompagnements classés
   const baseScore = new Map(pool.map(r => [r.id, scoreRecipe(r, c)]));
   const comps = new Map(pool.map(r => [r.id, componentsOf(r)]));
+  const byRole = { entree: [], plat: [], accompagnement: [], dessert: [] };
+  for (const r of pool) { const role = roleForCategory(r.category || ""); if (byRole[role]) byRole[role].push(r); }
 
   const used = new Map();       // recipeId → nb d'emplois cette semaine
   const catCount = new Map();   // catégorie → nb
   const cuiCount = new Map();   // cuisine → nb
-  const dayEffort = new Map();  // date → effort cumulé (heures ~)
+  const dayEffort = new Map();  // date → effort cuisiné cumulé (les restes ne comptent pas)
   const usedComps = new Set();  // préparations de base déjà mobilisées
+  const leftovers = { entree: [], plat: [], accompagnement: [], dessert: [] }; // { id, portions }
   const out = [];
 
   const filled = (date, slot) => (existing[date] || []).some(m => m.slot === slot);
+  const mark = (r, date, cooked) => {
+    used.set(r.id, (used.get(r.id) || 0) + 1);
+    catCount.set(r.category || "?", (catCount.get(r.category || "?") || 0) + 1);
+    cuiCount.set(r.cuisine || "?", (cuiCount.get(r.cuisine || "?") || 0) + 1);
+    for (const id of comps.get(r.id) || []) usedComps.add(id);
+    if (cooked) dayEffort.set(date, (dayEffort.get(date) || 0) + (1 - effortScore(r)));
+  };
+
+  // Choisit une recette d'un rôle : d'abord un RESTE (portion déjà cuisinée), sinon
+  // la meilleure fraîche (score + pénalités variété), qu'on cuisine — ses portions
+  // en trop rejoignent la file de restes du rôle.
+  const takeForRole = (role, cands, date) => {
+    if (leftovers[role].length) { const lo = leftovers[role].shift(); const r = byId.get(lo.id); if (r) { mark(r, date, false); return { recipe: r, portions: lo.portions, leftover: true }; } }
+    let best = null, bestVal = -Infinity;
+    for (const r of cands) {
+      let v = baseScore.get(r.id) ?? 0;
+      v -= WEEK.repeat * (used.get(r.id) || 0);
+      v -= WEEK.category * (catCount.get(r.category || "?") || 0);
+      v -= WEEK.cuisine * (cuiCount.get(r.cuisine || "?") || 0);
+      if (role === "plat") v -= WEEK.dayEffort * (dayEffort.get(date) || 0);
+      const rc = comps.get(r.id);
+      if (rc && [...rc].some(id => usedComps.has(id))) v += WEEK.batchBonus;
+      if (v > bestVal) { bestVal = v; best = r; }
+    }
+    if (!best) return null;
+    const b = batchMeals(best, portionsPerMeal);
+    for (let k = 1; k < b; k++) leftovers[role].push({ id: best.id, portions: b });
+    mark(best, date, true);
+    return { recipe: best, portions: b, leftover: false };
+  };
 
   for (const date of dates) {
     for (const slot of slots) {
       if (!replace && filled(date, slot)) continue;
-      const cands = pool.filter(r => eligibleForSlot(r, slot));
-      if (!cands.length) continue;
+      const mainCands = pool.filter(r => eligibleForSlot(r, slot));
+      if (!mainCands.length) continue;
+      const plat = takeForRole("plat", mainCands, date);
+      if (!plat) continue;
 
-      let best = null, bestVal = -Infinity;
-      for (const r of cands) {
-        let v = baseScore.get(r.id) ?? 0;
-        v -= WEEK.repeat * (used.get(r.id) || 0);
-        v -= WEEK.category * (catCount.get(r.category || "?") || 0);
-        v -= WEEK.cuisine * (cuiCount.get(r.cuisine || "?") || 0);
-        v -= WEEK.dayEffort * (dayEffort.get(date) || 0);
-        const rc = comps.get(r.id);
-        if (rc && [...rc].some(id => usedComps.has(id))) v += WEEK.batchBonus;
-        if (v > bestVal) { bestVal = v; best = r; }
-      }
-      if (!best) continue;
-
-      // Composition : on rattache un accompagnement de saison peu utilisé, sous un
-      // même groupId (le repas). Le plat prend le rôle « plat », le côté « accompagnement ».
-      let groupId;
+      // Repas composé (midi/soir) : entrée + plat + accompagnement + dessert.
       if (compose && slot !== "matin") {
-        const side = sidePool.find(s => (used.get(s.id) || 0) < 2 && s.id !== best.id);
-        if (side) {
-          groupId = newGroupId();
-          out.push({ date, slot, recipeId: side.id, role: "accompagnement", groupId });
-          used.set(side.id, (used.get(side.id) || 0) + 1);
-          catCount.set(side.category || "?", (catCount.get(side.category || "?") || 0) + 1);
-          for (const id of comps.get(side.id) || []) usedComps.add(id);
+        const groupId = newGroupId();
+        for (const role of COMPOSE_ROLES) {
+          const pick = role === "plat" ? plat : takeForRole(role, byRole[role], date);
+          if (pick) out.push({ date, slot, recipeId: pick.recipe.id, role, groupId, portions: pick.portions });
         }
+      } else {
+        out.push({ date, slot, recipeId: plat.recipe.id, role: "plat", portions: plat.portions });
       }
-
-      out.push({ date, slot, recipeId: best.id, role: "plat", groupId });
-      used.set(best.id, (used.get(best.id) || 0) + 1);
-      catCount.set(best.category || "?", (catCount.get(best.category || "?") || 0) + 1);
-      cuiCount.set(best.cuisine || "?", (cuiCount.get(best.cuisine || "?") || 0) + 1);
-      dayEffort.set(date, (dayEffort.get(date) || 0) + (1 - effortScore(best))); // long = charge
-      for (const id of comps.get(best.id) || []) usedComps.add(id);
     }
   }
   return out;
