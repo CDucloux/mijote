@@ -8,6 +8,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
+import { groupSlotMeals, itemRole, roleLabel } from "../lib/composedMeal.js";
 
 // ─── MEAL PLAN – module-level constants & pure helpers ────────────────────────
 const MP_DAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -33,7 +34,7 @@ function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T
 function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").join("\\,").split(";").join("\\;"); }
 
 // SlotZone lifted out + memoised → never re-created on parent re-render
-const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipes, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo }) {
+const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo }) {
   const dropKey = date + ":" + slot;
   const isOver = dropTarget === dropKey;
   return (
@@ -41,23 +42,32 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDragOver={e => { e.preventDefault(); onSetDropTarget(dropKey); }}
       onDragLeave={() => onSetDropTarget(null)}
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
-      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", height: 60, overflowY: "auto", display: "flex", flexDirection: "column", justifyContent: meals.length > 1 ? "flex-start" : "center" }}>
-      {meals.map((meal, mi) => {
-        const globalIdx = (mealPlan[date] || []).indexOf(meal);
-        const r = recipes.find(x => x.id === meal.recipeId);
-        if (!r) return null;
+      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
+      {groupSlotMeals(meals, recipesById).map((g, gi) => {
+        const composed = !!g.groupId && g.items.length > 1;
         return (
-          <div key={mi} draggable
-            onDragStart={() => onSetDragInfo({ date, idx: globalIdx, slot })}
-            onDragEnd={() => onSetDragInfo(null)}
-            style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: mi < meals.length - 1 ? 6 : 0, cursor: "grab" }}>
-            <div style={{ width: 46, height: 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-            <button onClick={() => onSelectRecipe(r.id)} style={{ flex: 1, textAlign: "left" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2 }}>{r.name}</div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{MP_SLOT_LABEL[slot]}</div>
-              {meal.portions > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{meal.portions}</div>}
-            </button>
-            <button className="mp-remove-btn" onClick={() => onRemoveMeal(date, globalIdx)} title="Retirer du planning"><Icon name="close" size={13} /></button>
+          <div key={g.groupId || `g${gi}`} style={composed ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7, display: "flex", flexDirection: "column", gap: 5 } : undefined}>
+            {g.items.map(({ item }) => {
+              const r = recipesById.get(item.recipeId);
+              if (!r) return null;
+              const globalIdx = (mealPlan[date] || []).indexOf(item);
+              const role = itemRole(item, r);
+              const label = composed ? roleLabel(role) : MP_SLOT_LABEL[slot];
+              return (
+                <div key={globalIdx} draggable
+                  onDragStart={() => onSetDragInfo({ date, idx: globalIdx, slot })}
+                  onDragEnd={() => onSetDragInfo(null)}
+                  style={{ display: "flex", alignItems: "center", gap: 8, cursor: "grab" }}>
+                  <div style={{ width: composed ? 38 : 46, height: composed ? 38 : 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <button onClick={() => onSelectRecipe(r.id)} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    <div style={{ fontSize: 9.5, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{label}</div>
+                    {item.portions > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{item.portions}</div>}
+                  </button>
+                  <button className="mp-remove-btn" onClick={() => onRemoveMeal(date, globalIdx)} title="Retirer du planning"><Icon name="close" size={13} /></button>
+                </div>
+              );
+            })}
           </div>
         );
       })}
@@ -81,11 +91,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
   const monthDays = useMemo(() => mpGetMonthDays(currentDate), [currentDate]);
+  const recipesById = useMemo(() => new Map(recipes.map(r => [r.id, r])), [recipes]);
 
   // Génération automatique de la semaine visible (créneaux midi/soir vides).
   const [genDone, setGenDone] = useState(false);
   const handleGenerate = useCallback(() => {
-    const { count } = generate(weekDays, ["midi", "soir"]);
+    const { count } = generate(weekDays, ["midi", "soir"], { compose: true });
     if (count > 0) { setGenDone(true); notify(`${count} repas proposés, à relire et ajuster`, "success"); }
     else notify("Cette semaine est déjà remplie (midi et soir)", "info");
   }, [generate, weekDays, notify]);
@@ -251,7 +262,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {MEAL_SLOTS.map(s => (
-                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipes={recipes} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} />
+                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} />
                     ))}
                   </div>
                 </div>

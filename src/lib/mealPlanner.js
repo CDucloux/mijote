@@ -11,6 +11,7 @@
 import { recipeSeasonScore, currentMonth } from "./seasonality.js";
 import { collectIngredientSignals, isEligible } from "./dietFilter.js";
 import { normalizeStr } from "./parseIngredient.js";
+import { roleForCategory, newGroupId } from "./composedMeal.js";
 
 // Types de recette recevables selon le créneau. Le matin ne prend que du
 // petit-déjeuner ; midi/soir prennent les « plats » (et les recettes non typées,
@@ -70,6 +71,17 @@ export function scoreRecipe(recipe, ctx = {}) {
   return w.season * season + w.health * health + w.stock * stock + w.effort * effort - w.dislike * dislike;
 }
 
+// Accompagnements candidats pour un plat : recettes de rôle « accompagnement »
+// éligibles, classées par note (saison…), en excluant le plat lui-même.
+export function suggestSides(main, pool, ctx, { role = "accompagnement", max = 8 } = {}) {
+  return pool
+    .filter(r => r.id !== main?.id && roleForCategory(r.category || "") === role)
+    .map(r => ({ r, s: scoreRecipe(r, ctx) }))
+    .sort((a, b) => b.s - a.s)
+    .slice(0, max)
+    .map(x => x.r);
+}
+
 // Ensemble des préparations de base (recipeId) utilisées par une recette.
 function componentsOf(recipe) {
   return new Set((recipe.ingredients || []).filter(i => i.recipeId).map(i => i.recipeId));
@@ -81,10 +93,11 @@ const WEEK = { repeat: 0.6, category: 0.09, cuisine: 0.05, dayEffort: 0.12, batc
 // Remplit les créneaux vides de la semaine. `dates` (YYYY-MM-DD), `slots`
 // (["midi","soir"]…), `recipes` (bibliothèque), `existing` (mealPlan actuel).
 // Renvoie [{ date, slot, recipeId }] pour les cellules effectivement remplies.
-export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, existing = {}, replace = false }) {
+export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, existing = {}, replace = false, compose = false }) {
   const byId = ctx.byId || new Map(recipes.map(r => [r.id, r]));
   const c = { ...ctx, byId };
   const pool = recipes.filter(r => !r.isComponent && isEligible(r, ctx.preferences || {}, c));
+  const sidePool = compose ? suggestSides(null, pool, c) : []; // accompagnements classés
   const baseScore = new Map(pool.map(r => [r.id, scoreRecipe(r, c)]));
   const comps = new Map(pool.map(r => [r.id, componentsOf(r)]));
 
@@ -116,7 +129,21 @@ export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, e
       }
       if (!best) continue;
 
-      out.push({ date, slot, recipeId: best.id });
+      // Composition : on rattache un accompagnement de saison peu utilisé, sous un
+      // même groupId (le repas). Le plat prend le rôle « plat », le côté « accompagnement ».
+      let groupId;
+      if (compose && slot !== "matin") {
+        const side = sidePool.find(s => (used.get(s.id) || 0) < 2 && s.id !== best.id);
+        if (side) {
+          groupId = newGroupId();
+          out.push({ date, slot, recipeId: side.id, role: "accompagnement", groupId });
+          used.set(side.id, (used.get(side.id) || 0) + 1);
+          catCount.set(side.category || "?", (catCount.get(side.category || "?") || 0) + 1);
+          for (const id of comps.get(side.id) || []) usedComps.add(id);
+        }
+      }
+
+      out.push({ date, slot, recipeId: best.id, role: "plat", groupId });
       used.set(best.id, (used.get(best.id) || 0) + 1);
       catCount.set(best.category || "?", (catCount.get(best.category || "?") || 0) + 1);
       cuiCount.set(best.cuisine || "?", (cuiCount.get(best.cuisine || "?") || 0) + 1);

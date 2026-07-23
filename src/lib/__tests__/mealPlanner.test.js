@@ -86,4 +86,24 @@ describe("generateWeek", () => {
     const out = generateWeek({ dates: ["2026-07-01"], slots: ["midi"], recipes: meaty, ctx: { ...ctx, preferences: { diet: "vegetarien" } } });
     expect(out.every(a => a.recipeId !== "carne")).toBe(true);
   });
+
+  it("compose : rattache un accompagnement au plat sous un même groupId", () => {
+    const withSides = [
+      R("plat1", { ingredients: [{ name: "Courgette" }] }),
+      R("riz", { category: "accompagnement", ingredients: [{ name: "Riz" }] }),
+      R("puree", { category: "accompagnement", ingredients: [{ name: "Courgette" }] }),
+    ];
+    const out = generateWeek({ dates: ["2026-07-01"], slots: ["midi"], recipes: withSides, ctx, compose: true });
+    const plat = out.find(a => a.role === "plat");
+    const side = out.find(a => a.role === "accompagnement");
+    expect(plat).toBeTruthy();
+    expect(side).toBeTruthy();
+    expect(side.groupId).toBe(plat.groupId); // même repas
+  });
+
+  it("sans compose : aucun accompagnement, pas de rôle accompagnement", () => {
+    const withSides = [R("plat1", { ingredients: [{ name: "Courgette" }] }), R("riz", { category: "accompagnement" })];
+    const out = generateWeek({ dates: ["2026-07-01"], slots: ["midi"], recipes: withSides, ctx });
+    expect(out.some(a => a.role === "accompagnement")).toBe(false);
+  });
 });

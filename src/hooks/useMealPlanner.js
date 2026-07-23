@@ -13,10 +13,10 @@ export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = 
   const undoRef = useRef(null);
   const [canUndo, setCanUndo] = useState(false);
 
-  const generate = useCallback((dates = [], slots = ["midi", "soir"], { replace = false } = {}) => {
+  const generate = useCallback((dates = [], slots = ["midi", "soir"], { replace = false, compose = false } = {}) => {
     const byId = new Map(recipes.map(r => [r.id, r]));
     const ctx = { resolver, byId, month: currentMonth(), stockSet: new Set(stock || []), preferences: preferences || {} };
-    const assignments = generateWeek({ dates, slots, recipes, ctx, existing: mealPlan, replace });
+    const assignments = generateWeek({ dates, slots, recipes, ctx, existing: mealPlan, replace, compose });
     if (!assignments.length) return { count: 0 };
 
     undoRef.current = mealPlan; // snapshot avant modification
@@ -27,11 +27,15 @@ export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = 
         for (const date of dates) next[date] = (next[date] || []).filter(m => !slots.includes(m.slot));
       }
       for (const a of assignments) {
-        next[a.date] = [...(next[a.date] || []), { recipeId: a.recipeId, slot: a.slot, portions: 1 }];
+        const meal = { recipeId: a.recipeId, slot: a.slot, portions: 1 };
+        if (a.role) meal.role = a.role;
+        if (a.groupId) meal.groupId = a.groupId;
+        next[a.date] = [...(next[a.date] || []), meal];
       }
       return next;
     });
-    return { count: assignments.length };
+    // Nombre de REPAS (plats), pas d'items : les accompagnements ne comptent pas double.
+    return { count: assignments.filter(a => a.role !== "accompagnement").length };
   }, [recipes, resolver, stock, preferences, mealPlan, setMealPlan]);
 
   const undo = useCallback(() => {
