@@ -16,14 +16,23 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   const ingImg = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
   const utImg = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
 
-  // Tags de tête : type de recette, cuisine (nationalité), et « Vegan » si détecté.
+  // Badges : « Vegan » (même look que dans l'app : pill vert + feuille), type de
+  // recette et cuisine. Superposés en haut à droite DANS l'image du plat ; en
+  // l'absence d'image, repli en pills claires sous le titre.
   const recipesList = recipesById ? [...recipesById.values()] : [];
   const resolver = createIngredientResolver(ingredientDB || []);
   const vegan = isRecipeVegan(recipe, resolver, { recipes: recipesList });
+  const leafSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
+  const heroBadges = [
+    vegan ? `<span class="hbadge hbadge-vegan">${leafSvg}<span class="hb-txt">Vegan</span></span>` : "",
+    recipe.category ? `<span class="hbadge hbadge-dark"><span class="hb-emoji">${categoryEmoji(recipe.category)}</span><span class="hb-txt">${categoryLabel(recipe.category)}</span></span>` : "",
+    recipe.cuisine ? `<span class="hbadge hbadge-dark"><span class="hb-emoji">🌍</span><span class="hb-txt">${recipe.cuisine}</span></span>` : "",
+  ].filter(Boolean).join("");
+  // Repli (sans image) : pills claires lisibles sur fond blanc.
   const tagChips = [
+    vegan ? `<span class="tag tag-vegan"><span class="tag-emoji">🌱</span>Vegan</span>` : "",
     recipe.category ? `<span class="tag"><span class="tag-emoji">${categoryEmoji(recipe.category)}</span>${categoryLabel(recipe.category)}</span>` : "",
     recipe.cuisine ? `<span class="tag"><span class="tag-emoji">🌍</span>${recipe.cuisine}</span>` : "",
-    vegan ? `<span class="tag tag-vegan"><span class="tag-emoji">🌱</span>Vegan</span>` : "",
   ].filter(Boolean).join("");
 
   // Icône « base » (casserole) – SVG inline, cohérente avec l'app.
@@ -156,7 +165,15 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --accent: #e8703a; --text: #1a1714; --text2: #5a5250; --text3: #9a9490; --border: #e8e0d8; --surface: #f9f6f2; }
     body { font-family: 'Hanken Grotesk', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; margin-bottom: 24px; display: block; }
+    .hero-wrap { position: relative; margin-bottom: 24px; }
+    .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; display: block; }
+    .hero-badges { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+    .hbadge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px 5px 8px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.35); box-shadow: 0 2px 8px rgba(0,0,0,0.28); }
+    .hbadge svg { width: 12px; height: 12px; }
+    .hbadge .hb-emoji { font-size: 12px; line-height: 1; }
+    .hbadge .hb-txt { font-size: 10px; font-weight: 700; color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
+    .hbadge-vegan { background: rgba(76,175,125,0.92); }
+    .hbadge-dark { background: rgba(20,18,16,0.58); }
     .header { padding-bottom: 4px; margin-bottom: 12px; }
     h1 { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
     .title-rule { width: 48px; height: 4px; border-radius: 4px; background: var(--accent); margin-bottom: 18px; }
@@ -217,11 +234,13 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   </style>
 </head>
 <body>
-  ${recipe.image ? `<img class="hero" src="${recipe.image}" alt="${recipe.name}" />` : ""}
+  ${recipe.image
+      ? `<div class="hero-wrap"><img class="hero" src="${recipe.image}" alt="${recipe.name}" />${heroBadges ? `<div class="hero-badges">${heroBadges}</div>` : ""}</div>`
+      : ""}
   <div class="header">
     <h1>${recipe.name}</h1>
     <div class="title-rule"></div>
-    ${tagChips ? `<div class="tags">${tagChips}</div>` : ""}
+    ${!recipe.image && tagChips ? `<div class="tags">${tagChips}</div>` : ""}
     <div class="meta">
       <div class="meta-item"><span class="meta-label">Préparation</span><div class="meta-val"><span class="meta-value">${recipe.prepTime} min</span></div></div>
       <div class="meta-item"><span class="meta-label">Cuisson</span><div class="meta-val"><span class="meta-value">${recipe.cookTime} min</span></div></div>
