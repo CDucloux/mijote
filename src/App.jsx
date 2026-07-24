@@ -8,7 +8,7 @@ import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscri
 import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "./lib/publicRecipes.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
-import { exportRecipePdf } from "./lib/recipePdf.js";
+import { printRecipe } from "./lib/recipePdf.js";
 import { prepareRecipeImport } from "./lib/recipeImport.js";
 import { importRecipeFromUrl, importRecipeFromImages } from "./lib/recipeUrlImport.js";
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
@@ -368,13 +368,9 @@ function AppInner() {
     });
   };
 
-  const exportPDF = async recipe => {
-    notify("PDF en cours de génération…");
-    try {
-      await exportRecipePdf(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes) });
-    } catch {
-      notify("Échec de la génération du PDF", "error");
-    }
+  const exportPDF = recipe => {
+    printRecipe(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes) });
+    notify("Ouverture de l'aperçu d'impression…");
   };
 
   // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer

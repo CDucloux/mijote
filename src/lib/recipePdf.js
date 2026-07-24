@@ -2,8 +2,8 @@
 // `buildRecipePdfHtml` est pure (recette + bases → chaîne HTML).
 // `recipesById` (Map<id, recipe>) permet de résoudre les lignes composant
 // et de générer une annexe « Préparations de base » en fin de document.
-// `exportRecipePdf` produit et télécharge un VRAI fichier PDF (html2pdf, chargé
-// à la demande) au lieu d'ouvrir la page HTML dans le dialogue d'impression.
+// `printRecipe` ouvre le document et lance l'impression du navigateur (« Enregistrer
+// en PDF ») : texte sélectionnable et rendu fidèle.
 
 import { createIngredientResolver } from "./nameMatcher.js";
 import { isRecipeVegan } from "./dietary.js";
@@ -255,74 +255,19 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
 </html>`;
 }
 
-// Nom de fichier propre à partir du titre de la recette.
-export function pdfFileName(recipe) {
-  const base = (recipe?.name || "recette")
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")   // enlève les accents
-    .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase();
-  return `${base || "recette"}.pdf`;
-}
-
-// Attend le chargement (ou l'échec) de toutes les images d'un document.
-function waitForImages(doc) {
-  const imgs = [...doc.images];
-  return Promise.all(imgs.map(img => (img.complete
-    ? Promise.resolve()
-    : new Promise(res => { img.onload = img.onerror = () => res(); }))));
-}
-
-// ─── EXPORT PDF RÉEL ──────────────────────────────────────────────────────────
-// Rend le document dans un iframe ISOLÉ (les styles ne fuient pas dans l'app),
-// le capture en canvas (html2canvas) puis le pagine dans un vrai PDF A4 (jsPDF)
-// téléchargé directement. html2canvas et jsPDF sont chargés à la demande pour ne
-// pas alourdir le bundle principal.
-export async function exportRecipePdf(recipe, dbs = {}) {
+// Ouvre le document dans un nouvel onglet et lance l'impression du navigateur
+// (l'utilisateur choisit « Enregistrer en PDF »). Texte sélectionnable, rendu
+// fidèle. On attend le chargement de l'image de tête pour éviter un aperçu vide.
+export function printRecipe(recipe, dbs = {}) {
   const html = buildRecipePdfHtml(recipe, dbs);
-  const WIDTH = 760; // largeur de rendu (px) → mise à l'échelle vers la largeur A4
-
-  const iframe = document.createElement("iframe");
-  iframe.setAttribute("aria-hidden", "true");
-  iframe.style.cssText = `position:fixed;left:-10000px;top:0;width:${WIDTH}px;height:10px;border:0;opacity:0;pointer-events:none;`;
-  document.body.appendChild(iframe);
-
-  try {
-    const idoc = iframe.contentDocument;
-    idoc.open(); idoc.write(html); idoc.close();
-    await new Promise(res => setTimeout(res, 0)); // laisse le layout se poser
-    try { await idoc.fonts?.ready; } catch { /* fonts API absente */ }
-    await waitForImages(idoc);
-
-    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-      import("html2canvas"),
-      import("jspdf"),
-    ]);
-
-    const target = idoc.body;
-    const canvas = await html2canvas(target, {
-      scale: 2, useCORS: true, backgroundColor: "#ffffff",
-      windowWidth: WIDTH, width: WIDTH, height: target.scrollHeight,
-    });
-
-    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const margin = 8;
-    const imgW = pageW - margin * 2;
-    const imgH = (canvas.height * imgW) / canvas.width;
-    const imgData = canvas.toDataURL("image/jpeg", 0.95);
-
-    let heightLeft = imgH;
-    let position = margin;
-    pdf.addImage(imgData, "JPEG", margin, position, imgW, imgH);
-    heightLeft -= pageH - margin * 2;
-    while (heightLeft > 0) {
-      position = margin - (imgH - heightLeft);
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", margin, position, imgW, imgH);
-      heightLeft -= pageH - margin * 2;
-    }
-    pdf.save(pdfFileName(recipe));
-  } finally {
-    iframe.remove();
+  const w = window.open("", "_blank");
+  if (!w) return; // popup bloquée
+  w.document.write(html);
+  w.document.close();
+  const heroImg = w.document.querySelector(".hero");
+  if (heroImg && !heroImg.complete) {
+    heroImg.onload = heroImg.onerror = () => setTimeout(() => w.print(), 300);
+  } else {
+    setTimeout(() => w.print(), 1200);
   }
 }

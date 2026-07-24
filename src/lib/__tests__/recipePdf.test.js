@@ -1,19 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { buildRecipePdfHtml, pdfFileName } from "../recipePdf.js";
+import { buildRecipePdfHtml } from "../recipePdf.js";
 
 const DB = [
   { id: "courgette", name: "Courgette", category: "vegetable" },
   { id: "boeuf", name: "Bœuf", category: "meat" },
 ];
-
-describe("pdfFileName", () => {
-  it("génère un nom de fichier .pdf sans accents ni espaces", () => {
-    expect(pdfFileName({ name: "Soupe à la tomate d'Ottolenghi" })).toBe("soupe-a-la-tomate-d-ottolenghi.pdf");
-  });
-  it("retombe sur un nom par défaut si le titre est vide", () => {
-    expect(pdfFileName({})).toBe("recette.pdf");
-  });
-});
 
 describe("buildRecipePdfHtml – tags de tête", () => {
   it("affiche le type de recette et la cuisine", () => {
