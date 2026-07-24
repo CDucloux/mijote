@@ -1008,10 +1008,20 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       )}
       {pendingPublish && (
         <SwipeableSheet onClose={() => setPendingPublish(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Rendre cette recette publique ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>
-            Elle sera visible par la communauté de mijoteurs et chacun pourra l'ajouter à ses recettes.
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Publier cette recette ?</h3>
+          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: recipe.source ? 14 : 12, lineHeight: 1.5 }}>
+            Elle rejoindra la communauté Mijoté : chacun pourra la découvrir et l'ajouter à ses recettes. Vous en restez l'auteur·e et pouvez la retirer à tout moment.
           </p>
+          {recipe.source && (
+            <div style={{ borderRadius: 14, background: "rgba(224,146,10,0.09)", border: "1px solid rgba(224,146,10,0.3)", padding: "13px 14px", marginBottom: 18, display: "flex", gap: 10 }}>
+              <span style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: "rgba(224,146,10,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="warning" size={14} color="#e8920a" />
+              </span>
+              <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5 }}>
+                <strong style={{ color: "var(--text)" }}>Attention au droit d'auteur.</strong> Cette recette provient d'une source externe. Ne republiez que ce dont vous avez le droit : reformulez les étapes avec vos propres mots et n'utilisez pas de textes ou de photos protégés dont vous n'êtes pas l'auteur·e.
+              </div>
+            </div>
+          )}
           {componentDeps.length > 0 && (
             <div style={{ borderRadius: 14, background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.22)", padding: "13px 14px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
