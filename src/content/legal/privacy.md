@@ -9,7 +9,7 @@ Cette politique explique quelles données personnelles Mijoté traite, pourquoi,
 
 ## Responsable du traitement
 
-Le responsable du traitement est l'éditeur de l'Application (voir les [Mentions légales](/legal/legal-notice)). Contact : [adresse de contact à compléter].
+Le responsable du traitement est l'éditeur de l'Application (voir les [Mentions légales](/legal/legal-notice)). Contact : **contact-mijote@gmail.com**.
 
 ## Données que nous traitons
 
@@ -32,6 +32,8 @@ Le responsable du traitement est l'éditeur de l'Application (voir les [Mentions
 
 Vos données sont traitées pour notre compte par **Google** (Firebase Authentication, Cloud Firestore, Cloud Storage, Cloud Functions), en qualité de sous-traitant, dans la région europe-west1 (Union européenne).
 
+L'Application est hébergée par **Vercel Inc.** (États-Unis), qui peut traiter des données techniques de connexion (adresse IP, journaux serveur) nécessaires à la diffusion de l'Application. Ces transferts hors Union européenne sont encadrés par les clauses contractuelles types de la Commission européenne.
+
 Si vous utilisez la fonction d'import de recette par lien ou par image, le contenu concerné est transmis au fournisseur du modèle d'analyse pour réaliser l'extraction demandée, uniquement le temps de ce traitement.
 
 ## Durée de conservation
@@ -44,7 +46,7 @@ Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation
 
 - **Rectification et effacement partiel** : directement depuis l'Application (profil, édition de vos contenus).
 - **Effacement global** : bouton « Tout effacer » dans votre profil.
-- **Autres droits** : écrivez à [adresse de contact à compléter].
+- **Autres droits** : écrivez à **contact-mijote@gmail.com**.
 
 ## Réclamation
 
