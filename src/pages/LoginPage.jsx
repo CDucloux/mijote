@@ -48,7 +48,10 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
           {" "}et la{" "}
           <button type="button" onClick={() => navigate("/legal/privacy")} className="login-consent-link">Politique de confidentialité</button>.
         </p>
-        <p className="login-copyright">© 2026 Mijoté · Tous droits réservés</p>
+        <div className="login-footer-right">
+          <p className="login-copyright">© 2026 Mijoté · Tous droits réservés</p>
+          <span className="login-version">v{__APP_VERSION__}</span>
+        </div>
       </div>
     </div>
   );
