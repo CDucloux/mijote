@@ -91,6 +91,12 @@ export function UserAvatar() {
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
               <Icon name="info" size={13} color="currentColor" /> À propos
             </button>
+            <button onClick={() => { setOpen(false); navigate("/legal"); }}
+              style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
+              <Icon name="fileText" size={13} color="currentColor" /> Informations légales
+            </button>
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
             <button onClick={() => { setOpen(false); setConfirmSignOut(true); }}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}

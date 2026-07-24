@@ -111,6 +111,9 @@ input,textarea,select{font-family:var(--ff-body);}
 @keyframes onbRise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 @keyframes onbFadeOut{from{opacity:1;}to{opacity:0;}}
 .onb-cta{transition:transform .18s ease,box-shadow .18s ease;}
+@media (hover:hover){.sidebar-legal-link:hover{color:var(--accent)!important;text-decoration:underline;}}
+@media (hover:hover){.legal-row:hover{border-color:var(--accent)!important;}}
+.login-consent-link{background:none;border:none;padding:0;cursor:pointer;font-size:inherit;font-family:var(--ff-body);color:var(--accent);font-weight:600;text-decoration:underline;}
 @media (hover:hover){.onb-cta:hover{transform:translateY(-2px);box-shadow:0 16px 36px -12px rgba(0,0,0,0.5);}}
 .onb-cta:active{transform:translateY(0);}
 /* ─── ONBOARDING – CARROUSEL DE BIENVENUE ─────────────────────────────────────
