@@ -54,22 +54,21 @@ function PlanningIllustration() {
 function ToqueIllustration() {
   return (
     <svg {...IL}>
-      {/* ===== COIFFE HAUTE à sommet froncé ===== */}
-      <path d="M32 31 Q39 15 46 27 Q53 13 60 27 Q67 13 74 27 Q81 15 88 31 L89 84 L31 84 Z" fill="#3d4d63" />
-      <path d="M35.5 31 Q41.5 21 47 29 Q53 19 60 29 Q67 19 73 29 Q78.5 21 84.5 31 L85 82 L35 82 Z" fill="#ffffff" />
-      {/* plis verticaux (insérés, ne touchent pas les bords) */}
+      {/* ===== SILHOUETTE UNIQUE : coiffe froncée qui s'évase dans le bandeau ===== */}
+      <path d="M32 31 Q39 15 46 27 Q53 13 60 27 Q67 13 74 27 Q81 15 88 31 L88.5 72 Q90 78 94 80.5 L94 90.5 Q94 96.5 87.5 96.5 L32.5 96.5 Q26 96.5 26 90.5 L26 80.5 Q30 78 31.5 72 Z" fill="#3d4d63" />
+      <path d="M35.5 31 Q41.5 21 47 29 Q53 19 60 29 Q67 19 73 29 Q78.5 21 84.5 31 L85 73 Q86 78 90 80 L90 90 Q90 94 86 94 L34 94 Q30 94 30 90 L30 80 Q34 78 35 73 Z" fill="#ffffff" />
+      {/* couture coiffe / bandeau */}
+      <path d="M33 80 Q60 77 87 80" stroke="#cbd4de" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      {/* plis verticaux courts, bien à l'intérieur */}
       <g stroke="#cbd4de" strokeWidth="2.6" strokeLinecap="round">
-        <path d="M46 30 V80" />
-        <path d="M60 28 V80" />
-        <path d="M74 30 V80" />
+        <path d="M45 38 V75" />
+        <path d="M60 36 V75" />
+        <path d="M75 38 V75" />
       </g>
       <g stroke="#d9e0e7" strokeWidth="1.6" strokeLinecap="round">
-        <path d="M53 34 V78" />
-        <path d="M67 34 V78" />
+        <path d="M52.5 40 V73" />
+        <path d="M67.5 40 V73" />
       </g>
-      {/* ===== BANDEAU (devant, sans barres) ===== */}
-      <rect x="34" y="80" width="52" height="16" rx="7" fill="#3d4d63" />
-      <rect x="37.5" y="83" width="45" height="10" rx="4" fill="#ffffff" />
     </svg>
   );
 }
