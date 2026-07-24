@@ -106,7 +106,6 @@ input,textarea,select{font-family:var(--ff-body);}
 /* Onboarding : entrée de l'illustration (fondu + zoom léger, sans rebond) et du texte */
 @keyframes onbPop{from{opacity:0;transform:scale(0.86);}to{opacity:1;transform:scale(1);}}
 @keyframes onbRise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
-@keyframes onbFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 @keyframes onbFadeOut{from{opacity:1;}to{opacity:0;}}
 /* ─── ONBOARDING – CARROUSEL DE BIENVENUE ─────────────────────────────────────
    Géométrie pilotée par variables CSS (surchargées en desktop via media query).

@@ -100,10 +100,6 @@ export function OnboardingCarousel() {
       transition: "background 0.4s ease, opacity 0.3s", opacity: closing ? 0 : 1 }}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
 
-      {/* Formes décoratives (profondeur, sans distraire) */}
-      <div aria-hidden="true" style={{ position: "absolute", top: "-14%", left: "-12%", width: 320, height: 320, borderRadius: "50%", background: "rgba(255,255,255,0.07)", filter: "blur(6px)" }} />
-      <div aria-hidden="true" style={{ position: "absolute", bottom: "-16%", right: "-14%", width: 380, height: 380, borderRadius: "50%", background: "rgba(0,0,0,0.06)", filter: "blur(8px)" }} />
-
       {/* Passer (sauf dernière slide) */}
       {!last && (
         <button onClick={finish} style={{ position: "absolute", top: "calc(14px + env(safe-area-inset-top))", right: 18, zIndex: 3, background: "none", border: "none", color: "rgba(255,255,255,0.85)", fontSize: 13.5, fontWeight: 600, cursor: "pointer", padding: 6 }}>Passer</button>
@@ -115,8 +111,8 @@ export function OnboardingCarousel() {
           <div key={n} style={{ width: `${100 / N}%`, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
             {/* Clé liée à `active` : l'animation d'entrée rejoue à chaque slide affichée */}
             <div key={n === active ? `on-${active}` : `off-${n}`} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div style={{ width: 168, height: 168, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", marginBottom: 40, boxShadow: "0 18px 50px -20px rgba(0,0,0,0.45)", animation: n === active ? "onbPop 0.5s ease-out both, onbFloat 4.5s 0.6s ease-in-out infinite" : "none" }}>
-                <span style={{ fontSize: 80, lineHeight: 1, display: "block", transform: "translateY(3px)" }}>{s.emoji}</span>
+              <div style={{ width: 164, height: 164, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", marginBottom: 44, boxShadow: "0 0 0 12px rgba(255,255,255,0.16), 0 16px 44px -18px rgba(0,0,0,0.4)", animation: n === active ? "onbPop 0.5s ease-out both" : "none" }}>
+                <span style={{ fontSize: 78, lineHeight: 1, display: "block", transform: "translateY(3px)" }}>{s.emoji}</span>
               </div>
               <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 600, letterSpacing: "-0.01em", color: "#fff", margin: "0 0 16px", animation: n === active ? "onbRise 0.5s 0.12s both" : "none" }}>{s.title}</h2>
               <p style={{ fontSize: 15.5, lineHeight: 1.55, color: "rgba(255,255,255,0.92)", margin: 0, maxWidth: 440, animation: n === active ? "onbRise 0.5s 0.2s both" : "none" }}>{s.text}</p>
