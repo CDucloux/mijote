@@ -97,24 +97,42 @@ function BasketIllustration() {
         <rect x="35" y="20" width="10" height="36" rx="5" fill="none" stroke="#c98a45" strokeWidth="1.5" />
         <path d="M40 27 l3.5 -2.2 M40 34 l3.5 -2.2 M40 41 l3.5 -2.2 M40 48 l3.5 -2.2" stroke="#b9773c" strokeWidth="1.6" strokeLinecap="round" />
       </g>
-      {/* botte de verdure au centre-gauche */}
-      <path d="M52 54 C48 40 50 30 54 29 C56 33 58 33 59 29 C63 32 63 44 60 54 Z" fill="#4caf7d" />
-      <path d="M54 54 C54 44 55 36 57 31" stroke="#3f9e6d" strokeWidth="2" strokeLinecap="round" />
+      {/* brocoli au centre-gauche */}
+      <rect x="51" y="44" width="6" height="12" rx="3" fill="#a7c98a" />
+      <g fill="#4caf7d">
+        <circle cx="54" cy="34" r="7" />
+        <circle cx="48" cy="38" r="6" />
+        <circle cx="60" cy="38" r="6" />
+        <circle cx="51" cy="31" r="5.5" />
+        <circle cx="58" cy="30" r="5.5" />
+      </g>
+      <g fill="#3f9e6d" opacity="0.5">
+        <circle cx="49" cy="40" r="2" />
+        <circle cx="55" cy="36" r="2" />
+        <circle cx="59" cy="39" r="2" />
+      </g>
       {/* pomme rouge */}
-      <path d="M67 40 C67 37 71 37 71 40" stroke="#7a5230" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <ellipse cx="65" cy="47" rx="8" ry="8.5" fill="#e5533b" />
-      <path d="M62 42 C60 44 60 47 61 49" stroke="#ff8a6b" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.7" />
-      {/* carotte à droite, pointe vers le panier */}
-      <g transform="rotate(18 76 46)">
-        <path d="M76 56 L71 34 L81 34 Z" fill="#f0902a" />
-        <path d="M72 34 l-3 -6 M76 33 l0 -7 M80 34 l3 -6" stroke="#4caf7d" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M74 40 l3 0 M73 46 l4 0" stroke="#d17520" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M67 42 C67 39 71 39 71 42" stroke="#7a5230" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <ellipse cx="65" cy="48" rx="7.5" ry="8" fill="#e5533b" />
+      <path d="M62 44 C60 46 60 49 61 51" stroke="#ff8a6b" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.7" />
+      {/* carotte à droite (plus courte) */}
+      <g transform="rotate(12 74 50)">
+        <path d="M74 56 L70 42 L78 42 Z" fill="#f0902a" />
+        <path d="M71 42 l-2.5 -5 M74 41 l0 -6 M77 42 l2.5 -5" stroke="#4caf7d" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M72.5 47 l3 0 M72 51 l4 0" stroke="#d17520" strokeWidth="1.4" strokeLinecap="round" />
       </g>
       {/* --- panier --- */}
       <path d="M30 52 H90 L84 88 C83.6 92 80 94 76 94 H44 C40 94 36.4 92 36 88 Z" fill="#e8703a" />
       <rect x="27" y="50" width="66" height="9" rx="4.5" fill="#f0a875" />
-      <path d="M45 62 V90 M57 62 V92 M69 62 V92 M81 62 V90" stroke="rgba(255,255,255,0.22)" strokeWidth="3" />
-      <path d="M39 70 H82 M41 82 H80" stroke="rgba(255,255,255,0.22)" strokeWidth="3" strokeLinecap="round" />
+      {/* lattes verticales suivant l'évasement du panier, centrées sur x=60 */}
+      <g stroke="rgba(255,255,255,0.22)" strokeWidth="3" strokeLinecap="round">
+        <path d="M42.6 61 L51 91" />
+        <path d="M60 61 V91" />
+        <path d="M77.4 61 L69 91" />
+        {/* lattes horizontales, largeur ajustée à la hauteur */}
+        <path d="M37 70 H83" />
+        <path d="M40 81 H80" />
+      </g>
     </svg>
   );
 }
