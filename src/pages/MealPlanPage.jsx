@@ -175,19 +175,19 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const removeMeal = useCallback((date, idx) => setMealPlan(prev => { const arr = [...(prev[date] || [])]; arr.splice(idx, 1); return { ...prev, [date]: arr }; }), [setMealPlan]);
   const moveMeal = useCallback((fromDate, fromIdx, toDate, toSlot) => setMealPlan(prev => {
-    if (fromDate === toDate) {
-      // Same day: splice + re-insert in one atomic array operation
-      const arr = [...(prev[fromDate] || [])];
-      const [item] = arr.splice(fromIdx, 1);
-      item.slot = toSlot;
-      arr.push(item);
-      return { ...prev, [fromDate]: arr };
-    }
-    // Different days
     const from = [...(prev[fromDate] || [])];
-    const [item] = from.splice(fromIdx, 1);
-    item.slot = toSlot;
-    return { ...prev, [fromDate]: from, [toDate]: [...(prev[toDate] || []), item] };
+    const [orig] = from.splice(fromIdx, 1);
+    if (!orig) return prev;
+    const toArr = fromDate === toDate ? from : [...(prev[toDate] || [])];
+    // Rattache l'item au repas déjà présent sur le créneau cible (même groupId) :
+    // sinon il apparaissait comme un nouveau repas orphelin sous l'existant.
+    // Aucun repas cible → il forme son propre repas (midi/soir), matin = sans groupe.
+    const targetGroup = toArr.find(m => m.slot === toSlot && m.groupId)?.groupId
+      || (toSlot === "matin" ? undefined : newGroupId());
+    const moved = { ...orig, slot: toSlot };
+    if (targetGroup) moved.groupId = targetGroup; else delete moved.groupId;
+    toArr.push(moved);
+    return fromDate === toDate ? { ...prev, [fromDate]: toArr } : { ...prev, [fromDate]: from, [toDate]: toArr };
   }), [setMealPlan]);
   const addMeal = useCallback((date, slots, recipeId) => {
     setMealPlan(prev => { const e = [...(prev[date] || [])]; slots.forEach(slot => e.push({ recipeId, slot, portions: 1 })); return { ...prev, [date]: e }; });
