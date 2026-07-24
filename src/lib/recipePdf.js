@@ -8,6 +8,11 @@
 import { createIngredientResolver } from "./nameMatcher.js";
 import { isRecipeVegan } from "./dietary.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
+import { cuisineEmoji, normalizeCuisine } from "../constants/cuisines.js";
+import { DIFFICULTY_LABEL } from "./difficulty.js";
+
+// Couleur de difficulté en hex (le PDF n'a pas les variables CSS --green/--red).
+const diffColorPdf = (lvl) => (lvl <= 2 ? "#4caf7d" : lvl === 3 ? "#e8920a" : "#e05252");
 
 const NUTRI_COLORS_PDF = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
 const num = v => parseFloat(String(v).replace(",", ".")) || 0;
@@ -23,17 +28,26 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   const resolver = createIngredientResolver(ingredientDB || []);
   const vegan = isRecipeVegan(recipe, resolver, { recipes: recipesList });
   const leafSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
+  const cuisineFlag = recipe.cuisine ? cuisineEmoji(normalizeCuisine(recipe.cuisine)) : "";
   const heroBadges = [
     vegan ? `<span class="hbadge hbadge-vegan">${leafSvg}<span class="hb-txt">Vegan</span></span>` : "",
     recipe.category ? `<span class="hbadge hbadge-dark"><span class="hb-emoji">${categoryEmoji(recipe.category)}</span><span class="hb-txt">${categoryLabel(recipe.category)}</span></span>` : "",
-    recipe.cuisine ? `<span class="hbadge hbadge-dark"><span class="hb-emoji">🌍</span><span class="hb-txt">${recipe.cuisine}</span></span>` : "",
+    recipe.cuisine ? `<span class="hbadge hbadge-dark"><span class="hb-emoji">${cuisineFlag}</span><span class="hb-txt">${recipe.cuisine}</span></span>` : "",
   ].filter(Boolean).join("");
   // Repli (sans image) : pills claires lisibles sur fond blanc.
   const tagChips = [
     vegan ? `<span class="tag tag-vegan"><span class="tag-emoji">🌱</span>Vegan</span>` : "",
     recipe.category ? `<span class="tag"><span class="tag-emoji">${categoryEmoji(recipe.category)}</span>${categoryLabel(recipe.category)}</span>` : "",
-    recipe.cuisine ? `<span class="tag"><span class="tag-emoji">🌍</span>${recipe.cuisine}</span>` : "",
+    recipe.cuisine ? `<span class="tag"><span class="tag-emoji">${cuisineFlag}</span>${recipe.cuisine}</span>` : "",
   ].filter(Boolean).join("");
+
+  // Difficulté (à droite du Nutri-Score) : 5 pastilles colorées + libellé.
+  const difficultyMeta = recipe.difficulty
+    ? `<div class="meta-item"><span class="meta-label">Difficulté</span><div class="meta-val" style="gap:9px">
+        <span class="diff-dots">${[1, 2, 3, 4, 5].map(i => `<span class="dd" style="background:${i <= recipe.difficulty ? diffColorPdf(recipe.difficulty) : "#e0d8d0"}"></span>`).join("")}</span>
+        <span class="meta-value" style="font-size:14px">${DIFFICULTY_LABEL[recipe.difficulty] || ""}</span>
+      </div></div>`
+    : "";
 
   // Icône « base » (casserole) – SVG inline, cohérente avec l'app.
   const baseIconSvg = (size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#e8703a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.5 9H7.5L6 8Z"/><line x1="5" y1="8" x2="19" y2="8"/><path d="M6 10H3.5a1.5 1.5 0 0 0 0 3H6"/><path d="M18 10h2.5a1.5 1.5 0 0 1 0 3H18"/><path d="M10 5c0-1 1-1 1-2"/><path d="M14 5c0-1 1-1 1-2"/></svg>`;
@@ -187,6 +201,8 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     .meta-val { height: 27px; display: flex; align-items: center; }
     .meta-value { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1; }
     .nutri-badge { display: inline-flex; align-items: center; gap: 2px; background: #f9f6f2; border: 1px solid #e8e0d8; border-radius: 6px; padding: 3px 4px; }
+    .diff-dots { display: inline-flex; align-items: center; gap: 4px; }
+    .dd { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .nl { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; line-height: 1; }
     .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
     /* Pills */
@@ -246,6 +262,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
       <div class="meta-item"><span class="meta-label">Cuisson</span><div class="meta-val"><span class="meta-value">${recipe.cookTime} min</span></div></div>
       <div class="meta-item"><span class="meta-label">Portions</span><div class="meta-val"><span class="meta-value">${recipe.servings}</span></div></div>
       ${recipe.nutriLetter ? `<div class="meta-item"><span class="meta-label">Nutri-Score</span><div class="meta-val">${nutriBadge(recipe.nutriLetter)}</div></div>` : ""}
+      ${difficultyMeta}
     </div>
   </div>
 
