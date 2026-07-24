@@ -54,34 +54,22 @@ function PlanningIllustration() {
 function ToqueIllustration() {
   return (
     <svg {...IL}>
-      {/* ===== CONTOUR ardoise ===== */}
-      {/* bandeau (derrière) */}
-      <rect x="34" y="82" width="52" height="15" rx="4" fill="#3d4d63" />
-      {/* coiffe haute à sommet froncé */}
-      <path d="M33 33 Q40 21 47 31 Q53.5 20 60 31 Q66.5 20 73 31 Q80 21 87 33 L88 86 L32 86 Z" fill="#3d4d63" />
-      {/* ===== REMPLISSAGE BLANC ===== */}
-      <rect x="37" y="85" width="46" height="10" rx="3" fill="#ffffff" />
-      <path d="M36.5 34 Q42 26 47.5 32.5 Q53.5 23 60 32.5 Q66.5 23 72.5 32.5 Q78 26 83.5 34 L84 84 L36 84 Z" fill="#ffffff" />
-      {/* plis verticaux de la coiffe */}
+      {/* ===== COIFFE HAUTE à sommet froncé ===== */}
+      <path d="M32 31 Q39 15 46 27 Q53 13 60 27 Q67 13 74 27 Q81 15 88 31 L89 84 L31 84 Z" fill="#3d4d63" />
+      <path d="M35.5 31 Q41.5 21 47 29 Q53 19 60 29 Q67 19 73 29 Q78.5 21 84.5 31 L85 82 L35 82 Z" fill="#ffffff" />
+      {/* plis verticaux (insérés, ne touchent pas les bords) */}
       <g stroke="#cbd4de" strokeWidth="2.6" strokeLinecap="round">
-        <path d="M47 33 V83" />
-        <path d="M60 32 V83" />
-        <path d="M73 33 V83" />
+        <path d="M46 30 V80" />
+        <path d="M60 28 V80" />
+        <path d="M74 30 V80" />
       </g>
-      <g stroke="#d6dde5" strokeWidth="1.6" strokeLinecap="round">
-        <path d="M41 40 V80" />
-        <path d="M53.5 38 V80" />
-        <path d="M66.5 38 V80" />
-        <path d="M79 40 V80" />
+      <g stroke="#d9e0e7" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M53 34 V78" />
+        <path d="M67 34 V78" />
       </g>
-      {/* fronces du bandeau */}
-      <g stroke="#c9d3e0" strokeWidth="1.8" strokeLinecap="round">
-        <path d="M45 87 V93" />
-        <path d="M53 87 V93" />
-        <path d="M60 87 V93" />
-        <path d="M67 87 V93" />
-        <path d="M75 87 V93" />
-      </g>
+      {/* ===== BANDEAU (devant, sans barres) ===== */}
+      <rect x="34" y="80" width="52" height="16" rx="7" fill="#3d4d63" />
+      <rect x="37.5" y="83" width="45" height="10" rx="4" fill="#ffffff" />
     </svg>
   );
 }
