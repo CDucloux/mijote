@@ -30,11 +30,13 @@ Le responsable du traitement est l'éditeur de l'Application (voir les [Mentions
 
 ## Destinataires et sous-traitants
 
-Vos données sont traitées pour notre compte par **Google** (Firebase Authentication, Cloud Firestore, Cloud Storage, Cloud Functions), en qualité de sous-traitant, dans la région europe-west1 (Union européenne).
+Vos données ne sont jamais vendues. Elles sont traitées pour notre compte par les sous-traitants suivants :
 
-L'Application est hébergée par **Vercel Inc.** (États-Unis), qui peut traiter des données techniques de connexion (adresse IP, journaux serveur) nécessaires à la diffusion de l'Application. Ces transferts hors Union européenne sont encadrés par les clauses contractuelles types de la Commission européenne.
+- **Google** (Firebase Authentication, Cloud Firestore, Cloud Storage, Cloud Functions) — stockage et synchronisation de vos données, dans la région europe-west1 (Union européenne).
+- **Vercel Inc.** (États-Unis) — hébergement de l'Application ; traite des données techniques de connexion (adresse IP, journaux serveur) nécessaires à sa diffusion.
+- **Anthropic PBC** (États-Unis) — **uniquement** si vous utilisez l'import de recette par lien ou par image : le contenu concerné (URL ou image fournie, texte extrait) est transmis au modèle Claude pour réaliser l'extraction demandée, le temps de ce seul traitement. Ce contenu n'est pas utilisé pour entraîner les modèles.
 
-Si vous utilisez la fonction d'import de recette par lien ou par image, le contenu concerné est transmis au fournisseur du modèle d'analyse pour réaliser l'extraction demandée, uniquement le temps de ce traitement.
+Les transferts hors Union européenne (Vercel, Anthropic) sont encadrés par les **clauses contractuelles types** de la Commission européenne.
 
 ## Durée de conservation
 

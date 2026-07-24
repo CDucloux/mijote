@@ -21,11 +21,10 @@ Le directeur de la publication est l'éditeur de l'Application, **[nom de l'édi
 
 L'Application est hébergée par :
 
-**Vercel Inc.**
-340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis
-[vercel.com](https://vercel.com)
+- **Vercel Inc.** — 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis — [vercel.com](https://vercel.com) *(hébergement de l'application)*
+- **Google Ireland Limited** (Firebase / Google Cloud Platform) — Gordon House, Barrow Street, Dublin 4, Irlande — région **europe-west1**, Union européenne *(stockage des données de compte et de contenu)*
 
-Les données de compte et de contenu (recettes, planning, courses, stock…) sont quant à elles stockées par **Google** (Firebase / Google Cloud Platform), Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlande, dans la région **europe-west1** (Union européenne). Voir la [Politique de confidentialité](/legal/privacy) pour le détail des traitements.
+Les autres prestataires intervenant dans le traitement de vos données, dont le fournisseur d'analyse par intelligence artificielle utilisé pour l'import de recettes, sont détaillés dans la [Politique de confidentialité](/legal/privacy).
 
 ## Propriété intellectuelle
 
