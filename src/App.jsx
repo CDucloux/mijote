@@ -433,7 +433,9 @@ function AppInner() {
     if (!returning || !anchor) return;
     lastPublicPubId.current = null;
     setScrollHold(true); // rendu masqué avant peinture → pas de flash en haut
-    const deadline = Date.now() + 3000;
+    // Filet de sécurité : le feed est réhydraté depuis le cache, l'ancre apparaît
+    // donc quasi immédiatement. On borne court pour ne jamais rester blanc longtemps.
+    const deadline = Date.now() + 1200;
     let raf;
     const tryScroll = () => {
       const el = document.getElementById(`discover-card-${anchor}`);
