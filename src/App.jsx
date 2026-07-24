@@ -571,7 +571,8 @@ function AppInner() {
         )}
         {isDesktop ? (
           <>
-            <DesktopSidebar tab={tab} setTab={requestTab} />
+            {/* Les pages légales s'affichent en plein écran : la sidebar y est superflue. */}
+            {tab !== "legal" && <DesktopSidebar tab={tab} setTab={requestTab} />}
             {mainScreen}
           </>
         ) : (
