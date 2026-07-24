@@ -571,7 +571,7 @@ function AppInner() {
         )}
         {isDesktop ? (
           <>
-            <DesktopSidebar tab={tab} setTab={requestTab} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />
+            <DesktopSidebar tab={tab} setTab={requestTab} />
             {mainScreen}
           </>
         ) : (
