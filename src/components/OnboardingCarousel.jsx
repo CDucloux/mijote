@@ -12,37 +12,37 @@ const seenKey = (uid) => `mijote_onboarded_${uid}`;
 
 const SLIDES = [
   {
-    icon: "sparkle", color: "#e8703a",
+    emoji: "🫕", color: "#e8703a",
     title: "Bienvenue sur Mijoté",
     text: <>Bien plus qu'un carnet de recettes : une vraie base d'<em>ingrédients</em>, d'<em>ustensiles</em> et de <em>techniques</em> pour <strong>comprendre ce que tu cuisines</strong>, et progresser à chaque plat.</>,
   },
   {
-    icon: "list2", color: "#e8703a",
+    emoji: "👨‍🍳", color: "#e8703a",
     title: "Cuisine guidée, pas à pas",
     text: <>Lance le <strong>mode pas à pas</strong> et avance sereinement. Chaque <em>geste technique</em> s'explique au bon moment, pour réussir même ce que tu n'as jamais tenté.</>,
   },
   {
-    icon: "leaf", color: "#4caf7d",
+    emoji: "🥗", color: "#4caf7d",
     title: "Difficulté, saison, Nutri-Score",
     text: <>Mijoté lit tes recettes et fait le calcul : <strong>difficulté</strong> déduite des techniques, <em>saisonnalité</em> des ingrédients et <em>Nutri-Score</em>, sans rien à saisir.</>,
   },
   {
-    icon: "calendar", color: "#5b9cf6",
-    title: "Planifie ta semaine",
-    text: <>Glisse tes recettes sur le planning, <strong>midi et soir</strong>. Un tap suffit pour tout exporter vers ton agenda, le reste se remplit tout seul.</>,
+    emoji: "🗓️", color: "#5b9cf6",
+    title: "Ta semaine se planifie toute seule",
+    text: <>Génère une semaine complète en un tap : Mijoté compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Une <em>session batch</em> te dit quoi préparer d'avance, et tout s'exporte vers ton agenda.</>,
   },
   {
-    icon: "shopping", color: "#e8703a",
+    emoji: "🛒", color: "#e8703a",
     title: "Courses et stock, synchronisés",
     text: <>Ta <strong>liste de courses</strong> se génère depuis ton planning et se coche à mesure. En face, ton <strong>stock</strong> se met à jour ingrédient par ingrédient.</>,
   },
   {
-    icon: "globe", color: "#c080e0",
+    emoji: "🌍", color: "#c080e0",
     title: "Explore et partage",
     text: <>Parcours les recettes de la communauté, filtre par <em>saison</em>, <em>type de cuisine</em> ou <em>Nutri-Score</em>, et publie les tiennes quand tu es prêt·e.</>,
   },
   {
-    icon: "home", color: "#e8703a",
+    emoji: "🏡", color: "#e8703a",
     title: "Cuisinez à plusieurs",
     text: <>Crée un <strong>foyer</strong> et partagez recettes, planning, courses et stock <em>en temps réel</em>. À vous de jouer !</>,
   },
@@ -109,26 +109,29 @@ export function OnboardingCarousel() {
       <div style={{ display: "flex", height: "100%", width: `${N * 100}%`, transform: `translateX(-${active * (100 / N)}%)`, transition: "transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         {SLIDES.map((s, n) => (
           <div key={n} style={{ width: `${100 / N}%`, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
-            <div style={{ width: 168, height: 168, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", marginBottom: 40, boxShadow: "0 18px 50px -20px rgba(0,0,0,0.45)" }}>
-              <Icon name={s.icon} size={74} color={s.color} />
+            {/* Clé liée à `active` : l'animation d'entrée rejoue à chaque slide affichée */}
+            <div key={n === active ? `on-${active}` : `off-${n}`} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ width: 168, height: 168, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", marginBottom: 40, boxShadow: "0 18px 50px -20px rgba(0,0,0,0.45)", animation: n === active ? "onbPop 0.55s cubic-bezier(0.22,1,0.36,1) both" : "none" }}>
+                <span style={{ fontSize: 82, lineHeight: 1 }}>{s.emoji}</span>
+              </div>
+              <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 600, letterSpacing: "-0.01em", color: "#fff", margin: "0 0 16px", animation: n === active ? "onbRise 0.5s 0.12s both" : "none" }}>{s.title}</h2>
+              <p style={{ fontSize: 15.5, lineHeight: 1.55, color: "rgba(255,255,255,0.92)", margin: 0, maxWidth: 440, animation: n === active ? "onbRise 0.5s 0.2s both" : "none" }}>{s.text}</p>
             </div>
-            <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 600, letterSpacing: "-0.01em", color: "#fff", margin: "0 0 16px" }}>{s.title}</h2>
-            <p style={{ fontSize: 15.5, lineHeight: 1.55, color: "rgba(255,255,255,0.92)", margin: 0, maxWidth: 440 }}>{s.text}</p>
           </div>
         ))}
       </div>
 
-      {/* Bas : indice/CTA + pastilles */}
-      <div style={{ position: "absolute", left: 0, right: 0, bottom: "calc(30px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", alignItems: "center", gap: 22, padding: "0 32px" }}>
+      {/* Bas : barre de progression + indice/CTA */}
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: "calc(30px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", alignItems: "center", gap: 20, padding: "0 32px" }}>
         {last
           ? <button onClick={finish} style={{ background: "#fff", color: SLIDES[active].color, border: "none", borderRadius: 16, padding: "15px 44px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.4)" }}>C'est parti !</button>
           : <button onClick={next} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,0.9)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Glisse pour continuer <Icon name="forward" size={15} color="rgba(255,255,255,0.9)" /></button>}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {SLIDES.map((_, n) => (
-            <button key={n} onClick={() => goTo(n)} aria-label={`Étape ${n + 1}`}
-              style={{ width: n === active ? 22 : 8, height: 8, borderRadius: 999, border: "none", cursor: "pointer", padding: 0,
-                background: n === active ? "#fff" : "rgba(255,255,255,0.45)", transition: "width 0.3s ease, background 0.3s ease" }} />
-          ))}
+        {/* Progression continue */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.85)", fontVariantNumeric: "tabular-nums", minWidth: 30 }}>{active + 1}/{N}</span>
+          <div style={{ width: 170, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.28)", overflow: "hidden" }}>
+            <div style={{ height: "100%", background: "#fff", borderRadius: 999, width: `${((active + 1) / N) * 100}%`, transition: "width 0.45s cubic-bezier(0.4,0,0.2,1)" }} />
+          </div>
         </div>
       </div>
     </div>,
