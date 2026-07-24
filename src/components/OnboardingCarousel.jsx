@@ -55,26 +55,32 @@ function ToqueIllustration() {
   return (
     <svg {...IL}>
       {/* contour net (sticker) pour détacher la toque blanche du cercle blanc */}
-      <g fill="#3f5168">
-        <circle cx="43" cy="51" r="18.5" />
-        <circle cx="60" cy="43" r="20.5" />
-        <circle cx="77" cy="51" r="18.5" />
-        <rect x="30" y="50" width="60" height="26" rx="5" />
-        <rect x="33" y="73.5" width="54" height="20" rx="7.5" />
+      <g fill="#3d4d63">
+        <circle cx="41" cy="44" r="20" />
+        <circle cx="60" cy="35" r="22" />
+        <circle cx="79" cy="44" r="20" />
+        <rect x="22" y="44" width="76" height="34" rx="6" />
+        <rect x="31" y="72" width="58" height="22" rx="7" />
       </g>
-      {/* coiffe blanche */}
+      {/* coiffe blanche (haute) */}
       <g fill="#ffffff">
-        <circle cx="43" cy="51" r="15" />
-        <circle cx="60" cy="43" r="17" />
-        <circle cx="77" cy="51" r="15" />
-        <rect x="33.5" y="51" width="53" height="25" rx="3.5" />
+        <circle cx="41" cy="44" r="16.5" />
+        <circle cx="60" cy="35" r="18.5" />
+        <circle cx="79" cy="44" r="16.5" />
+        <rect x="25" y="44" width="70" height="30" />
       </g>
-      {/* bandeau blanc */}
-      <rect x="36" y="76" width="48" height="15" rx="5.5" fill="#ffffff" />
-      {/* ombres internes pour le volume (bleu-gris doux) */}
-      <path d="M35 66 Q43 61 51 66 Q60 61 68 66 Q76 61 85 66" stroke="#d5deea" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9" />
-      <path d="M34 76 H86" stroke="#c3cedd" strokeWidth="2" strokeLinecap="round" />
-      <path d="M45 79 V88 M55 79 V88 M65 79 V88 M75 79 V88" stroke="#d5deea" strokeWidth="2" strokeLinecap="round" />
+      {/* bandeau blanc net */}
+      <rect x="34.5" y="74" width="51" height="16" rx="5.5" fill="#ffffff" />
+      {/* plis verticaux du bandeau */}
+      <g stroke="#c9d3e0" strokeWidth="2" strokeLinecap="round">
+        <path d="M43 77 V87" />
+        <path d="M51 77 V87" />
+        <path d="M60 77 V87" />
+        <path d="M69 77 V87" />
+        <path d="M77 77 V87" />
+      </g>
+      {/* légère ombre en bas de la coiffe pour poser le volume */}
+      <path d="M28 70 Q44 64 60 70 Q76 64 92 70" stroke="#e8edf3" strokeWidth="4" fill="none" strokeLinecap="round" />
     </svg>
   );
 }
