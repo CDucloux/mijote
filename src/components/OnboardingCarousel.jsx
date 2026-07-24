@@ -10,9 +10,50 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // géométrie et le responsive vivent dans global.css (.onb-*). Portalisé <body>.
 const seenKey = (uid) => `mijote_onboarded_${uid}`;
 
+// ── Illustrations SVG maison (test de style, 2 slides sur 7) ──────────────────
+const IL = { w: 116, h: 116, viewBox: "0 0 120 120", fill: "none" };
+function PotIllustration() {
+  return (
+    <svg {...IL}>
+      {/* vapeur */}
+      <path d="M50 30 C44 24 44 18 50 12" stroke="#f0a875" strokeWidth="4" strokeLinecap="round" />
+      <path d="M62 31 C56 23 56 16 62 8" stroke="#f0a875" strokeWidth="4" strokeLinecap="round" />
+      <path d="M74 30 C68 24 68 18 74 12" stroke="#f0a875" strokeWidth="4" strokeLinecap="round" />
+      {/* anses */}
+      <ellipse cx="25" cy="67" rx="8" ry="10" stroke="#c85a2a" strokeWidth="6" />
+      <ellipse cx="95" cy="67" rx="8" ry="10" stroke="#c85a2a" strokeWidth="6" />
+      {/* corps */}
+      <path d="M28 55 H92 L87 92 C86.5 96 83 98 79 98 H41 C37 98 33.5 96 33 92 Z" fill="#e8703a" />
+      <path d="M42 63 C41 74 41 82 45 90" stroke="rgba(255,255,255,0.4)" strokeWidth="5" strokeLinecap="round" />
+      {/* couvercle */}
+      <rect x="24" y="47" width="72" height="12" rx="6" fill="#f0a875" />
+      <rect x="53" y="39" width="14" height="10" rx="4" fill="#c85a2a" />
+    </svg>
+  );
+}
+function PlanningIllustration() {
+  return (
+    <svg {...IL}>
+      {/* reliure */}
+      <rect x="40" y="24" width="7" height="20" rx="3.5" fill="#3f6fb0" />
+      <rect x="73" y="24" width="7" height="20" rx="3.5" fill="#3f6fb0" />
+      {/* corps */}
+      <rect x="24" y="34" width="72" height="62" rx="11" fill="#eaf1fb" stroke="#cdddf2" strokeWidth="2" />
+      {/* bandeau */}
+      <path d="M24 46 C24 39.4 29.4 34 36 34 H84 C90.6 34 96 39.4 96 46 V52 H24 Z" fill="#5b9cf6" />
+      {/* jours */}
+      <circle cx="40" cy="66" r="4" fill="#c9d8ee" />
+      <circle cx="60" cy="66" r="4" fill="#c9d8ee" />
+      <circle cx="80" cy="66" r="4" fill="#c9d8ee" />
+      {/* coche */}
+      <path d="M41 81 L53 91 L81 65" stroke="#4caf7d" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 const SLIDES = [
   {
-    emoji: "🫕", color: "#e8703a",
+    illustration: PotIllustration, color: "#e8703a",
     title: "Bienvenue sur Mijoté",
     text: <>Bien plus qu'un carnet de recettes : une vraie base d'<em>ingrédients</em>, d'<em>ustensiles</em> et de <em>techniques</em> pour <strong>comprendre ce que tu cuisines</strong>, et progresser à chaque plat.</>,
   },
@@ -27,7 +68,7 @@ const SLIDES = [
     text: <>Mijoté lit tes recettes et fait le calcul : <strong>difficulté</strong> déduite des techniques, <em>saisonnalité</em> des ingrédients et <em>Nutri-Score</em>, sans rien à saisir.</>,
   },
   {
-    emoji: "🗓️", color: "#5b9cf6",
+    illustration: PlanningIllustration, color: "#5b9cf6",
     title: "Ta semaine se planifie toute seule",
     text: <>Génère une semaine complète en un tap : Mijoté compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Une <em>session batch</em> te dit quoi préparer d'avance, et tout s'exporte vers ton agenda.</>,
   },
@@ -112,7 +153,9 @@ export function OnboardingCarousel() {
             {/* Clé liée à `active` : l'animation d'entrée rejoue à chaque slide affichée */}
             <div key={n === active ? `on-${active}` : `off-${n}`} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ width: 164, height: 164, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", marginBottom: 44, boxShadow: "0 0 0 12px rgba(255,255,255,0.16), 0 16px 44px -18px rgba(0,0,0,0.4)", animation: n === active ? "onbPop 0.5s ease-out both" : "none" }}>
-                <span style={{ fontSize: 78, lineHeight: 1, display: "block", transform: "translateY(3px)" }}>{s.emoji}</span>
+                {s.illustration
+                  ? <s.illustration />
+                  : <span style={{ fontSize: 78, lineHeight: 1, display: "block", transform: "translateY(3px)" }}>{s.emoji}</span>}
               </div>
               <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 600, letterSpacing: "-0.01em", color: "#fff", margin: "0 0 16px", animation: n === active ? "onbRise 0.5s 0.12s both" : "none" }}>{s.title}</h2>
               <p style={{ fontSize: 15.5, lineHeight: 1.55, color: "rgba(255,255,255,0.92)", margin: 0, maxWidth: 440, animation: n === active ? "onbRise 0.5s 0.2s both" : "none" }}>{s.text}</p>
