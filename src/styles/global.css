@@ -107,6 +107,9 @@ input,textarea,select{font-family:var(--ff-body);}
 @keyframes onbPop{from{opacity:0;transform:scale(0.86);}to{opacity:1;transform:scale(1);}}
 @keyframes onbRise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 @keyframes onbFadeOut{from{opacity:1;}to{opacity:0;}}
+.onb-cta{transition:transform .18s ease,box-shadow .18s ease;}
+@media (hover:hover){.onb-cta:hover{transform:translateY(-2px);box-shadow:0 16px 36px -12px rgba(0,0,0,0.5);}}
+.onb-cta:active{transform:translateY(0);}
 /* ─── ONBOARDING – CARROUSEL DE BIENVENUE ─────────────────────────────────────
    Géométrie pilotée par variables CSS (surchargées en desktop via media query).
    Seuls l'index actif (--onb-active) et la couleur du slide (--c) sont passés
