@@ -54,20 +54,20 @@ function PlanningIllustration() {
 function ToqueIllustration() {
   return (
     <svg {...IL}>
-      {/* ===== SILHOUETTE UNIQUE : coiffe froncée qui s'évase dans le bandeau ===== */}
-      <path d="M32 31 Q39 15 46 27 Q53 13 60 27 Q67 13 74 27 Q81 15 88 31 L88.5 72 Q90 78 94 80.5 L94 90.5 Q94 96.5 87.5 96.5 L32.5 96.5 Q26 96.5 26 90.5 L26 80.5 Q30 78 31.5 72 Z" fill="#3d4d63" />
-      <path d="M35.5 31 Q41.5 21 47 29 Q53 19 60 29 Q67 19 73 29 Q78.5 21 84.5 31 L85 73 Q86 78 90 80 L90 90 Q90 94 86 94 L34 94 Q30 94 30 90 L30 80 Q34 78 35 73 Z" fill="#ffffff" />
+      {/* ===== SILHOUETTE UNIQUE : coiffe large qui se resserre vers un bandeau plus étroit ===== */}
+      <path d="M31 33 Q38 16 46 28 Q53 14 60 28 Q67 14 74 28 Q82 16 89 33 L88 74 Q87 80 82 82 L82 90.5 Q82 96.5 76 96.5 L44 96.5 Q38 96.5 38 90.5 L38 82 Q33 80 32 74 Z" fill="#3d4d63" />
+      <path d="M35 33 Q41 23 47 30 Q53.5 21 60 30 Q66.5 21 73 30 Q79 23 85 33 L84.5 74 Q83.5 78 79 80 L79 90 Q79 94 75 94 L45 94 Q41 94 41 90 L41 80 Q36.5 78 35.5 74 Z" fill="#ffffff" />
       {/* couture coiffe / bandeau */}
-      <path d="M33 80 Q60 77 87 80" stroke="#cbd4de" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      <path d="M40 80 Q60 77 80 80" stroke="#cbd4de" strokeWidth="2.2" fill="none" strokeLinecap="round" />
       {/* plis verticaux courts, bien à l'intérieur */}
       <g stroke="#cbd4de" strokeWidth="2.6" strokeLinecap="round">
-        <path d="M45 38 V75" />
+        <path d="M46 38 V75" />
         <path d="M60 36 V75" />
-        <path d="M75 38 V75" />
+        <path d="M74 38 V75" />
       </g>
       <g stroke="#d9e0e7" strokeWidth="1.6" strokeLinecap="round">
-        <path d="M52.5 40 V73" />
-        <path d="M67.5 40 V73" />
+        <path d="M53 40 V73" />
+        <path d="M67 40 V73" />
       </g>
     </svg>
   );
