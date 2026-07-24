@@ -54,12 +54,25 @@ function PlanningIllustration() {
 function ToqueIllustration() {
   return (
     <svg {...IL}>
-      <circle cx="44" cy="52" r="15" fill="#f4a663" />
-      <circle cx="60" cy="46" r="17" fill="#f4a663" />
-      <circle cx="76" cy="52" r="15" fill="#f4a663" />
-      <rect x="33" y="52" width="54" height="24" fill="#f4a663" />
-      <rect x="33" y="74" width="54" height="16" rx="6" fill="#e8703a" />
-      <path d="M40 82 H80" stroke="rgba(255,255,255,0.45)" strokeWidth="3" strokeLinecap="round" />
+      {/* contour gris clair (effet sticker, pour voir le blanc sur fond blanc) */}
+      <g fill="#d7dde3">
+        <circle cx="44" cy="52" r="18" />
+        <circle cx="60" cy="45" r="20" />
+        <circle cx="76" cy="52" r="18" />
+        <rect x="30" y="52" width="60" height="23" rx="4" />
+        <rect x="33" y="73" width="54" height="20" rx="7" />
+      </g>
+      {/* toque blanche */}
+      <g fill="#ffffff">
+        <circle cx="44" cy="52" r="15.5" />
+        <circle cx="60" cy="45" r="17.5" />
+        <circle cx="76" cy="52" r="15.5" />
+        <rect x="33" y="52" width="54" height="23" rx="3" />
+        <rect x="35.5" y="75.5" width="49" height="15.5" rx="5.5" />
+      </g>
+      {/* plis du bandeau + ombre douce sous la coiffe */}
+      <path d="M37 78 H83" stroke="#eef1f4" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M48 79 V89 M60 79 V89 M72 79 V89" stroke="#e7ebef" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -75,13 +88,24 @@ function LeafIllustration() {
 function BasketIllustration() {
   return (
     <svg {...IL}>
-      {/* légumes qui dépassent */}
-      <circle cx="52" cy="42" r="9" fill="#e05252" />
-      <path d="M66 50 L70 26 L74 50 Z" fill="#4caf7d" />
-      {/* sac */}
-      <path d="M34 50 H86 L81 90 C80.6 94 77 96 73 96 H47 C43 96 39.4 94 39 90 Z" fill="#e8703a" />
-      <rect x="34" y="50" width="52" height="8" fill="#c85a2a" />
-      <path d="M46 66 H74 M45 78 H75" stroke="rgba(255,255,255,0.3)" strokeWidth="3" strokeLinecap="round" />
+      {/* anse */}
+      <path d="M42 54 Q60 30 78 54" stroke="#c85a2a" strokeWidth="5" fill="none" strokeLinecap="round" />
+      {/* baguette */}
+      <g transform="rotate(-16 52 40)">
+        <rect x="47" y="24" width="9" height="32" rx="4.5" fill="#dda15e" />
+        <path d="M50 30 l3 -2 M50 37 l3 -2 M50 44 l3 -2" stroke="#b9773c" strokeWidth="1.6" strokeLinecap="round" />
+      </g>
+      {/* botte de verdure */}
+      <path d="M64 54 C60 36 66 26 70 26 C72 32 75 32 77 27 C81 32 81 46 76 54 Z" fill="#4caf7d" />
+      <path d="M70 54 C70 42 72 34 74 30" stroke="#3f9e6d" strokeWidth="2" strokeLinecap="round" />
+      {/* carotte */}
+      <path d="M60 56 L53 32 L67 50 Z" fill="#f0902a" />
+      <path d="M53 32 l-4 -6 M55 31 l0 -7 M57 32 l4 -6" stroke="#4caf7d" strokeWidth="2.4" strokeLinecap="round" />
+      {/* panier */}
+      <path d="M30 52 H90 L84 88 C83.6 92 80 94 76 94 H44 C40 94 36.4 92 36 88 Z" fill="#e8703a" />
+      <rect x="27" y="50" width="66" height="9" rx="4.5" fill="#f0a875" />
+      <path d="M45 62 V90 M57 62 V92 M69 62 V92 M81 62 V90" stroke="rgba(255,255,255,0.22)" strokeWidth="3" />
+      <path d="M39 70 H82 M41 82 H80" stroke="rgba(255,255,255,0.22)" strokeWidth="3" strokeLinecap="round" />
     </svg>
   );
 }
