@@ -26,7 +26,17 @@ export function eligibleForSlot(recipe, slot) {
   return !NON_MAIN_TYPES.has(cat); // midi/soir : plats typés + non typés
 }
 
-export const DEFAULT_WEIGHTS = { season: 0.9, health: 0.5, stock: 0.6, effort: 0.4, dislike: 2 };
+export const DEFAULT_WEIGHTS = { season: 0.9, health: 0.5, stock: 0.6, effort: 0.4, dislike: 2, difficulty: 0, simple: 0 };
+
+// Styles de génération choisis par l'utilisateur (sous-menu « Générer »).
+//  - facile     : privilégie le rapide et le peu d'ingrédients, évite le difficile.
+//  - equilibre  : comportement par défaut (aucun biais).
+//  - aventureux : privilégie les recettes plus longues et plus difficiles.
+export const GEN_STYLES = {
+  facile: { ...DEFAULT_WEIGHTS, effort: 1.4, simple: 0.7, difficulty: -0.6 },
+  equilibre: { ...DEFAULT_WEIGHTS },
+  aventureux: { ...DEFAULT_WEIGHTS, effort: -0.5, difficulty: 1.1 },
+};
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
@@ -34,6 +44,17 @@ const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 export function effortScore(recipe) {
   const min = (Number(recipe.prepTime) || 0) + (Number(recipe.cookTime) || 0);
   return clamp01(1 - Math.max(0, min - 15) / 75);
+}
+
+// Simplicité ∈ [0,1] : 1 = peu d'ingrédients (≤ ~6), décroît ensuite.
+export function simplicityScore(recipe) {
+  const n = (recipe.ingredients || []).length;
+  return clamp01(1 - Math.max(0, n - 6) / 10);
+}
+
+// Difficulté ∈ [0,1] : recipe.difficulty (1..5) normalisée ; inconnue → neutre.
+function difficultyScore(recipe) {
+  return Number.isFinite(recipe.difficulty) ? clamp01((recipe.difficulty - 1) / 4) : 0.4;
 }
 
 // Fraction des ingrédients résolus déjà en stock (composants inclus).
@@ -67,8 +88,12 @@ export function scoreRecipe(recipe, ctx = {}) {
   const health = Number.isFinite(recipe.healthScore) ? recipe.healthScore / 100 : 0.5;
   const stock = stockAffinity(recipe, ctx);
   const effort = effortScore(recipe);
+  const simple = simplicityScore(recipe);
+  const difficulty = difficultyScore(recipe);
   const dislike = hasDislike(recipe, ctx) ? 1 : 0;
-  return w.season * season + w.health * health + w.stock * stock + w.effort * effort - w.dislike * dislike;
+  return w.season * season + w.health * health + w.stock * stock
+    + w.effort * effort + (w.simple || 0) * simple + (w.difficulty || 0) * difficulty
+    - w.dislike * dislike;
 }
 
 // Accompagnements candidats pour un plat : recettes de rôle « accompagnement »

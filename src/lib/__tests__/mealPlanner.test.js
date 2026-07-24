@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreRecipe, effortScore, eligibleForSlot, generateWeek } from "../mealPlanner.js";
+import { scoreRecipe, effortScore, simplicityScore, eligibleForSlot, generateWeek, GEN_STYLES } from "../mealPlanner.js";
 
 const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const DB = [
@@ -47,6 +47,27 @@ describe("scoreRecipe", () => {
     const r = R("s", { ingredients: [{ name: "Riz" }] });
     const inStock = scoreRecipe(r, { ...ctx, stockSet: new Set(["riz"]) });
     expect(inStock).toBeGreaterThan(scoreRecipe(r, ctx));
+  });
+});
+
+describe("simplicityScore", () => {
+  it("vaut 1 pour peu d'ingrédients et décroît ensuite", () => {
+    expect(simplicityScore({ ingredients: Array.from({ length: 4 }) })).toBe(1);
+    expect(simplicityScore({ ingredients: Array.from({ length: 16 }) })).toBeLessThan(1);
+  });
+});
+
+describe("styles de génération (GEN_STYLES)", () => {
+  const rapideSimple = R("facile", { prepTime: 5, cookTime: 5, difficulty: 1, ingredients: [{ name: "Riz" }, { name: "Courgette" }] });
+  const longDifficile = R("complexe", { prepTime: 60, cookTime: 60, difficulty: 5, ingredients: Array.from({ length: 14 }, (_, i) => ({ name: `ing${i}` })) });
+
+  it("le style facile préfère la recette rapide et simple", () => {
+    const c = { ...ctx, weights: GEN_STYLES.facile };
+    expect(scoreRecipe(rapideSimple, c)).toBeGreaterThan(scoreRecipe(longDifficile, c));
+  });
+  it("le style aventureux préfère la recette longue et difficile", () => {
+    const c = { ...ctx, weights: GEN_STYLES.aventureux };
+    expect(scoreRecipe(longDifficile, c)).toBeGreaterThan(scoreRecipe(rapideSimple, c));
   });
 });
 

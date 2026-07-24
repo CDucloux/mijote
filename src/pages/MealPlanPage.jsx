@@ -140,11 +140,15 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     setComposeFor(null);
   }, [composeFor, setMealPlan, notify]);
 
-  // Génération automatique de la semaine visible (créneaux midi/soir vides).
+  // Génération de la semaine visible (créneaux midi/soir vides), avec un
+  // sous-menu de configuration (style : facile / équilibré / aventureux).
   const [genDone, setGenDone] = useState(false);
-  const handleGenerate = useCallback(() => {
+  const [genOpen, setGenOpen] = useState(false);
+  const [genStyle, setGenStyle] = useState("equilibre");
+  const runGenerate = useCallback((style) => {
     const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
-    const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm });
+    const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm, style });
+    setGenOpen(false);
     if (count > 0) { setGenDone(true); notify(`${count} repas proposés, à relire et ajuster`, "success"); }
     else notify("Cette semaine est déjà remplie (midi et soir)", "info");
   }, [generate, weekDays, notify, household]);
@@ -275,7 +279,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {genDone
               ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
-              : <button onClick={handleGenerate} className="btn btn-primary" style={{ padding: "8px 13px", borderRadius: 12 }}><Icon name="sparkle" size={15} /> Générer</button>}
+              : <button onClick={() => setGenOpen(true)} className="btn btn-primary" style={{ padding: "8px 13px", borderRadius: 12 }}><Icon name="calendar" size={15} /> Générer</button>}
             <UserAvatar />
           </div>
         </div>
@@ -383,6 +387,45 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             ))}
             {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
           </div>
+        </SwipeableSheet>
+      )}
+
+      {/* Sous-menu de génération : choix du style de repas */}
+      {genOpen && (
+        <SwipeableSheet onClose={() => setGenOpen(false)} style={{ maxHeight: "82dvh" }}>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>
+          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Quel style de repas veux-tu pour les créneaux vides (midi et soir) ?</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+            {[
+              { id: "facile", icon: "clock", title: "Facile et rapide", desc: "Peu d'ingrédients, préparation et cuisson courtes. Idéal quand on manque de temps." },
+              { id: "equilibre", icon: "leaf", title: "Équilibré", desc: "Un bon compromis entre saison, santé, variété et effort." },
+              { id: "aventureux", icon: "fire", title: "Aventureux", desc: "Des recettes plus élaborées et plus difficiles, pour se lancer des défis." },
+            ].map(o => {
+              const active = genStyle === o.id;
+              return (
+                <button key={o.id} onClick={() => setGenStyle(o.id)} className="pressable" style={{
+                  display: "flex", alignItems: "center", gap: 13, width: "100%", textAlign: "left", cursor: "pointer",
+                  padding: "13px 14px", borderRadius: 15,
+                  background: active ? "rgba(232,112,58,0.12)" : "var(--surface2)",
+                  border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
+                }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: active ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
+                    <Icon name={o.icon} size={19} color={active ? "var(--accent)" : "var(--text2)"} />
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 14.5, fontWeight: 600, color: "var(--text)" }}>{o.title}</span>
+                    <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>{o.desc}</span>
+                  </span>
+                  <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: "50%", display: "grid", placeItems: "center", border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accent)" : "transparent" }}>
+                    {active && <Icon name="check" size={12} color="#fff" />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} onClick={() => runGenerate(genStyle)}>
+            <Icon name="calendar" size={16} /> Générer la semaine
+          </button>
         </SwipeableSheet>
       )}
 
