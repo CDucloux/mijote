@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 
 const LOGIN_FEATS = [
@@ -10,7 +9,6 @@ const LOGIN_FEATS = [
 
 // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────────
 export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
-  const navigate = useNavigate();
   return (
     <div className={`login-root${isDark ? "" : " light"}`}>
       {/* Theme toggle */}
@@ -37,9 +35,9 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
         </button>
         <p className="login-consent">
           En continuant, vous acceptez les{" "}
-          <button type="button" onClick={() => navigate("/legal/terms")} className="login-consent-link">CGU</button>
+          <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="login-consent-link">CGU</a>
           {" "}et la{" "}
-          <button type="button" onClick={() => navigate("/legal/privacy")} className="login-consent-link">Politique de confidentialité</button>.
+          <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="login-consent-link">Politique de confidentialité</a>.
         </p>
         <div className="login-feats">
           {LOGIN_FEATS.map(f => (
@@ -48,10 +46,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
         </div>
       </div>
       <div className="login-footer">
-        <div className="login-footer-right">
-          <p className="login-copyright">© 2026 Mijoté · Tous droits réservés</p>
-          <span className="login-version">v{__APP_VERSION__}</span>
-        </div>
+        <p className="login-copyright">© 2026 Mijoté · Tous droits réservés · v{__APP_VERSION__}</p>
       </div>
     </div>
   );

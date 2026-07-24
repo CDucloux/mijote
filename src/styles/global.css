@@ -697,8 +697,8 @@ select {
   cursor: pointer;
   font-size: inherit;
   font-family: var(--ff-body);
-  color: var(--text2);
-  font-weight: 500;
+  color: var(--accent);
+  font-weight: 600;
   text-decoration: underline;
 }
 
@@ -1811,7 +1811,7 @@ select {
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 8px;
+  margin-top: 20px;
 }
 
 .login-feat {
@@ -1900,7 +1900,7 @@ select {
   line-height: 1.5;
   text-align: center;
   max-width: 320px;
-  margin: 10px auto 0;
+  margin: 4px auto 0;
   opacity: 0.9;
 }
 
