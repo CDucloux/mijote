@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreRecipe, effortScore, simplicityScore, eligibleForSlot, generateWeek, GEN_STYLES } from "../mealPlanner.js";
+import { scoreRecipe, effortScore, simplicityScore, dishSeasonScore, eligibleForSlot, generateWeek, GEN_STYLES } from "../mealPlanner.js";
 
 const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const DB = [
@@ -54,6 +54,31 @@ describe("simplicityScore", () => {
   it("vaut 1 pour peu d'ingrédients et décroît ensuite", () => {
     expect(simplicityScore({ ingredients: Array.from({ length: 4 }) })).toBe(1);
     expect(simplicityScore({ ingredients: Array.from({ length: 16 }) })).toBeLessThan(1);
+  });
+});
+
+describe("dishSeasonScore (affinité saisonnière du type de plat)", () => {
+  it("favorise les plats consistants en hiver, les pénalise en été", () => {
+    expect(dishSeasonScore({ category: "gratin" }, 1)).toBe(1);   // janvier
+    expect(dishSeasonScore({ category: "gratin" }, 7)).toBe(-1);  // juillet
+    expect(dishSeasonScore({ category: "soupe" }, 12)).toBe(1);
+  });
+  it("favorise le froid/léger en été, le pénalise en hiver", () => {
+    expect(dishSeasonScore({ category: "soupe-froide" }, 7)).toBe(1);
+    expect(dishSeasonScore({ category: "soupe-froide" }, 1)).toBe(-1);
+    expect(dishSeasonScore({ category: "salade" }, 8)).toBe(1);
+  });
+  it("neutre en mi-saison ou pour un type non concerné", () => {
+    expect(dishSeasonScore({ category: "gratin" }, 4)).toBe(0);   // avril
+    expect(dishSeasonScore({ category: "plat" }, 1)).toBe(0);
+  });
+  it("distingue soupe chaude et soupe froide selon la saison", () => {
+    const chaude = { category: "soupe", ingredients: [] };
+    const froide = { category: "soupe-froide", ingredients: [] };
+    const ete = { ...ctx, month: 7 };
+    const hiver = { ...ctx, month: 1 };
+    expect(scoreRecipe(froide, ete)).toBeGreaterThan(scoreRecipe(chaude, ete));
+    expect(scoreRecipe(chaude, hiver)).toBeGreaterThan(scoreRecipe(froide, hiver));
   });
 });
 

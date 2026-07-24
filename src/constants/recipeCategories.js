@@ -6,6 +6,7 @@ export const RECIPE_CATEGORIES = [
   { id: "aperitif",     label: "Apéritif",        emoji: "🫒" },
   { id: "entree",       label: "Entrée",          emoji: "🥗" },
   { id: "soupe",        label: "Soupe",           emoji: "🍲" },
+  { id: "soupe-froide", label: "Soupe froide",    emoji: "🥶" },
   { id: "salade",       label: "Salade",          emoji: "🥬" },
   { id: "plat",         label: "Plat",            emoji: "🍽️" },
   { id: "gratin",       label: "Gratin",          emoji: "🧀" },
