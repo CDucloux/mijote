@@ -9,7 +9,7 @@ import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "../lib/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
-import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory } from "../lib/composedMeal.js";
+import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "../lib/composedMeal.js";
 import { suggestSides } from "../lib/mealPlanner.js";
 import { buildBatchSession, weekEntries } from "../lib/batchSession.js";
 import { isEligible } from "../lib/dietFilter.js";
@@ -63,7 +63,12 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
         // même s'il n'a qu'un plat pour l'instant (plus de « plat orphelin »).
         const composed = !!g.groupId;
         const roles = new Set(g.items.map(({ item }) => itemRole(item, recipesById.get(item.recipeId))));
-        const full = MEAL_ROLE_IDS.every(r => roles.has(r));
+        // Un plat qui se suffit (soupe, pasta…) n'attend pas d'accompagnement :
+        // le repas est « complet » sans lui.
+        const platItem = g.items.find(({ item }) => itemRole(item, recipesById.get(item.recipeId)) === "plat");
+        const needsSide = !platItem || platNeedsSide(recipesById.get(platItem.item.recipeId));
+        const required = needsSide ? MEAL_ROLE_IDS : MEAL_ROLE_IDS.filter(r => r !== "accompagnement");
+        const full = required.every(r => roles.has(r));
         return (
           <div key={g.groupId || `g${gi}`} style={composed ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7, display: "flex", flexDirection: "column", gap: 5 } : undefined}>
             {g.items.map(({ item }) => {

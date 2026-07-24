@@ -26,6 +26,14 @@ export function roleForCategory(cat) {
   return "plat";
 }
 
+// Plats « complets » qui se suffisent à eux-mêmes : pas besoin d'accompagnement.
+// Une soupe, une salade-repas, une pasta, une pizza, un gratin ou une tarte
+// forment déjà un plat entier. Un « plat » générique (protéine…) appelle un côté.
+const SELF_SUFFICIENT_CATEGORIES = new Set(["soupe", "salade", "pasta", "pizza", "gratin", "tarte"]);
+export function platNeedsSide(recipe) {
+  return !SELF_SUFFICIENT_CATEGORIES.has(recipe?.category || "");
+}
+
 // Identifiant de repas (groupe d'items partageant le créneau).
 export function newGroupId() {
   return "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);

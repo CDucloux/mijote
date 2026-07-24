@@ -11,7 +11,7 @@
 import { recipeSeasonScore, currentMonth } from "./seasonality.js";
 import { collectIngredientSignals, isEligible } from "./dietFilter.js";
 import { normalizeStr } from "./parseIngredient.js";
-import { roleForCategory, newGroupId } from "./composedMeal.js";
+import { roleForCategory, newGroupId, platNeedsSide } from "./composedMeal.js";
 
 // Types de recette recevables selon le créneau. Le matin ne prend que du
 // petit-déjeuner ; midi/soir prennent les « plats » (et les recettes non typées,
@@ -190,7 +190,10 @@ export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, e
       // Repas composé (midi/soir) : entrée + plat + accompagnement + dessert.
       if (compose && slot !== "matin") {
         const groupId = newGroupId();
+        // Certains plats (soupe, pasta, gratin…) se suffisent : on saute le côté.
+        const needsSide = platNeedsSide(plat.recipe);
         for (const role of COMPOSE_ROLES) {
+          if (role === "accompagnement" && !needsSide) continue;
           const pick = role === "plat" ? plat : takeForRole(role, byRole[role], date);
           if (pick) out.push({ date, slot, recipeId: pick.recipe.id, role, groupId, portions: pick.portions });
         }

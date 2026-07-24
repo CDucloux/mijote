@@ -141,6 +141,19 @@ describe("generateWeek", () => {
     expect(new Set(out.map(a => a.groupId)).size).toBe(1); // un seul repas
   });
 
+  it("ne met pas d'accompagnement quand le plat se suffit (soupe, pasta…)", () => {
+    const lib = [
+      R("soupe1", { category: "soupe", ingredients: [{ name: "Courgette" }] }),
+      R("ent1", { category: "entree", ingredients: [{ name: "Courgette" }] }),
+      R("acc1", { category: "accompagnement", ingredients: [{ name: "Riz" }] }),
+      R("des1", { category: "dessert", ingredients: [{ name: "Courgette" }] }),
+    ];
+    const out = generateWeek({ dates: ["2026-07-01"], slots: ["midi"], recipes: lib, ctx, compose: true });
+    expect(out.find(a => a.role === "plat").recipeId).toBe("soupe1");
+    expect(out.some(a => a.role === "accompagnement")).toBe(false); // côté sauté
+    expect(out.map(a => a.role).sort()).toEqual(["dessert", "entree", "plat"]);
+  });
+
   it("réutilise les portions cuisinées (recette pour 6 replacée sur plusieurs jours)", () => {
     const lib = [
       R("gros", { servings: 6, ingredients: [{ name: "Courgette" }] }),      // de saison → cuisiné en premier
