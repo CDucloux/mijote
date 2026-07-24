@@ -11,7 +11,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 const seenKey = (uid) => `mijote_onboarded_${uid}`;
 
 // ── Illustrations SVG maison (test de style, 2 slides sur 7) ──────────────────
-const IL = { w: 116, h: 116, viewBox: "0 0 120 120", fill: "none" };
+const IL = { width: 116, height: 116, viewBox: "0 0 120 120", fill: "none" };
 function PotIllustration() {
   return (
     <svg {...IL}>
@@ -51,6 +51,63 @@ function PlanningIllustration() {
   );
 }
 
+function ToqueIllustration() {
+  return (
+    <svg {...IL}>
+      <circle cx="44" cy="52" r="15" fill="#f4a663" />
+      <circle cx="60" cy="46" r="17" fill="#f4a663" />
+      <circle cx="76" cy="52" r="15" fill="#f4a663" />
+      <rect x="33" y="52" width="54" height="24" fill="#f4a663" />
+      <rect x="33" y="74" width="54" height="16" rx="6" fill="#e8703a" />
+      <path d="M40 82 H80" stroke="rgba(255,255,255,0.45)" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+function LeafIllustration() {
+  return (
+    <svg {...IL}>
+      <path d="M58 26 C33 39 29 74 44 95 C71 93 94 61 84 32 C71 41 62 39 58 26 Z" fill="#4caf7d" />
+      <path d="M58 26 C33 39 29 74 44 95 C50 80 52 58 84 32 C71 41 62 39 58 26 Z" fill="#6fce9b" />
+      <path d="M49 90 C55 66 66 50 82 41" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.75" />
+    </svg>
+  );
+}
+function BasketIllustration() {
+  return (
+    <svg {...IL}>
+      {/* légumes qui dépassent */}
+      <circle cx="52" cy="42" r="9" fill="#e05252" />
+      <path d="M66 50 L70 26 L74 50 Z" fill="#4caf7d" />
+      {/* sac */}
+      <path d="M34 50 H86 L81 90 C80.6 94 77 96 73 96 H47 C43 96 39.4 94 39 90 Z" fill="#e8703a" />
+      <rect x="34" y="50" width="52" height="8" fill="#c85a2a" />
+      <path d="M46 66 H74 M45 78 H75" stroke="rgba(255,255,255,0.3)" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+function GlobeIllustration() {
+  return (
+    <svg {...IL}>
+      <circle cx="60" cy="60" r="34" fill="#c080e0" />
+      <path d="M44 44 C52 50 52 70 44 78 M76 44 C68 50 68 70 76 78" stroke="#9b4fc0" strokeWidth="4" fill="none" />
+      <path d="M46 40 C40 62 44 82 46 82 M74 40 C80 62 76 82 74 82" fill="#a860c8" opacity="0.5" />
+      <line x1="26" y1="60" x2="94" y2="60" stroke="rgba(255,255,255,0.55)" strokeWidth="3" />
+      <path d="M30 46 H90 M30 74 H90" stroke="rgba(255,255,255,0.4)" strokeWidth="3" />
+      <ellipse cx="60" cy="60" rx="15" ry="34" stroke="rgba(255,255,255,0.55)" strokeWidth="3" fill="none" />
+    </svg>
+  );
+}
+function HouseIllustration() {
+  return (
+    <svg {...IL}>
+      <rect x="74" y="40" width="8" height="16" fill="#c85a2a" />
+      <path d="M28 62 L60 32 L92 62 Z" fill="#e8703a" />
+      <rect x="38" y="58" width="44" height="38" rx="4" fill="#f4a663" />
+      <path d="M60 84 C53 78 47 74 47 67.5 C47 63.5 50 61 53.5 61 C56.5 61 59 63.5 60 65 C61 63.5 63.5 61 66.5 61 C70 61 73 63.5 73 67.5 C73 74 67 78 60 84 Z" fill="#e8703a" />
+    </svg>
+  );
+}
+
 const SLIDES = [
   {
     illustration: PotIllustration, color: "#e8703a",
@@ -58,12 +115,12 @@ const SLIDES = [
     text: <>Bien plus qu'un carnet de recettes : une vraie base d'<em>ingrédients</em>, d'<em>ustensiles</em> et de <em>techniques</em> pour <strong>comprendre ce que tu cuisines</strong>, et progresser à chaque plat.</>,
   },
   {
-    emoji: "👨‍🍳", color: "#e8703a",
+    illustration: ToqueIllustration, color: "#e8703a",
     title: "Cuisine guidée, pas à pas",
     text: <>Lance le <strong>mode pas à pas</strong> et avance sereinement. Chaque <em>geste technique</em> s'explique au bon moment, pour réussir même ce que tu n'as jamais tenté.</>,
   },
   {
-    emoji: "🥗", color: "#4caf7d",
+    illustration: LeafIllustration, color: "#4caf7d",
     title: "Difficulté, saison, Nutri-Score",
     text: <>Mijoté lit tes recettes et fait le calcul : <strong>difficulté</strong> déduite des techniques, <em>saisonnalité</em> des ingrédients et <em>Nutri-Score</em>, sans rien à saisir.</>,
   },
@@ -73,17 +130,17 @@ const SLIDES = [
     text: <>Génère une semaine complète en un tap : Mijoté compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Une <em>session batch</em> te dit quoi préparer d'avance, et tout s'exporte vers ton agenda.</>,
   },
   {
-    emoji: "🛒", color: "#e8703a",
+    illustration: BasketIllustration, color: "#e8703a",
     title: "Courses et stock, synchronisés",
     text: <>Ta <strong>liste de courses</strong> se génère depuis ton planning et se coche à mesure. En face, ton <strong>stock</strong> se met à jour ingrédient par ingrédient.</>,
   },
   {
-    emoji: "🌍", color: "#c080e0",
+    illustration: GlobeIllustration, color: "#c080e0",
     title: "Explore et partage",
     text: <>Parcours les recettes de la communauté, filtre par <em>saison</em>, <em>type de cuisine</em> ou <em>Nutri-Score</em>, et publie les tiennes quand tu es prêt·e.</>,
   },
   {
-    emoji: "🏡", color: "#e8703a",
+    illustration: HouseIllustration, color: "#e8703a",
     title: "Cuisinez à plusieurs",
     text: <>Crée un <strong>foyer</strong> et partagez recettes, planning, courses et stock <em>en temps réel</em>. À vous de jouer !</>,
   },
@@ -111,6 +168,17 @@ export function OnboardingCarousel() {
   }, []);
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
+
+  // Navigation clavier (desktop) : flèches gauche/droite.
+  useEffect(() => {
+    if (!show) return;
+    const onKey = (e) => {
+      if (e.key === "ArrowRight") setActive(a => Math.min(SLIDES.length - 1, a + 1));
+      else if (e.key === "ArrowLeft") setActive(a => Math.max(0, a - 1));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [show]);
 
   const finish = () => {
     if (closing) return;
