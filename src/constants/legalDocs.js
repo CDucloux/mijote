@@ -19,7 +19,7 @@ export const LEGAL_UPDATED = "24 juillet 2026";
 // Chaque document : { id, short, icon, title, intro?, blocks: [{ h, p?, list? }] }
 export const LEGAL_DOCS = [
   {
-    id: "mentions-legales",
+    id: "legal-notice",
     short: "Mentions légales",
     icon: "info",
     title: "Mentions légales",
@@ -57,7 +57,7 @@ export const LEGAL_DOCS = [
     ],
   },
   {
-    id: "confidentialite",
+    id: "privacy",
     short: "Confidentialité",
     icon: "eyeOff",
     title: "Politique de confidentialité",
@@ -117,7 +117,7 @@ export const LEGAL_DOCS = [
     ],
   },
   {
-    id: "cgu",
+    id: "terms",
     short: "CGU",
     icon: "fileText",
     title: "Conditions générales d'utilisation",

@@ -29,9 +29,9 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
         </button>
         <p className="login-consent" style={{ fontSize: 11.5, color: "var(--text3)", lineHeight: 1.5, textAlign: "center", margin: "14px 0 0", maxWidth: 320 }}>
           En continuant, vous acceptez les{" "}
-          <button type="button" onClick={() => navigate("/legal/cgu")} className="login-consent-link">CGU</button>
+          <button type="button" onClick={() => navigate("/legal/terms")} className="login-consent-link">CGU</button>
           {" "}et la{" "}
-          <button type="button" onClick={() => navigate("/legal/confidentialite")} className="login-consent-link">Politique de confidentialité</button>.
+          <button type="button" onClick={() => navigate("/legal/privacy")} className="login-consent-link">Politique de confidentialité</button>.
         </p>
         <div className="login-feats">
           {["📖 Recettes illimitées", "📅 Planning semaine", "🛒 Listes de courses", "☁️ Sync cloud"].map(f => (
