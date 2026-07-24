@@ -32,9 +32,9 @@ Le responsable du traitement est l'éditeur de l'Application (voir les [Mentions
 
 Vos données ne sont jamais vendues. Elles sont traitées pour notre compte par les sous-traitants suivants :
 
-- **Google** (Firebase Authentication, Cloud Firestore, Cloud Storage, Cloud Functions) — stockage et synchronisation de vos données, dans la région europe-west1 (Union européenne).
-- **Vercel Inc.** (États-Unis) — hébergement de l'Application ; traite des données techniques de connexion (adresse IP, journaux serveur) nécessaires à sa diffusion.
-- **Anthropic PBC** (États-Unis) — **uniquement** si vous utilisez l'import de recette par lien ou par image : le contenu concerné (URL ou image fournie, texte extrait) est transmis au modèle Claude pour réaliser l'extraction demandée, le temps de ce seul traitement. Ce contenu n'est pas utilisé pour entraîner les modèles.
+- **Google** (Firebase Authentication, Cloud Firestore, Cloud Storage, Cloud Functions) : stockage et synchronisation de vos données, dans la région europe-west1 (Union européenne).
+- **Vercel Inc.** (États-Unis) : hébergement de l'Application ; traite des données techniques de connexion (adresse IP, journaux serveur) nécessaires à sa diffusion.
+- **Anthropic PBC** (États-Unis) : **uniquement** si vous utilisez l'import de recette par lien ou par image. Le contenu concerné (URL ou image fournie, texte extrait) est transmis au modèle Claude pour réaliser l'extraction demandée, le temps de ce seul traitement. Ce contenu n'est pas utilisé pour entraîner les modèles.
 
 Les transferts hors Union européenne (Vercel, Anthropic) sont encadrés par les **clauses contractuelles types** de la Commission européenne.
 
@@ -52,4 +52,4 @@ Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation
 
 ## Réclamation
 
-Vous pouvez introduire une réclamation auprès de la **CNIL** (Commission Nationale de l'Informatique et des Libertés), 3 place de Fontenoy, 75007 Paris — [www.cnil.fr](https://www.cnil.fr).
+Vous pouvez introduire une réclamation auprès de la **CNIL** (Commission Nationale de l'Informatique et des Libertés), 3 place de Fontenoy, 75007 Paris ([www.cnil.fr](https://www.cnil.fr)).
