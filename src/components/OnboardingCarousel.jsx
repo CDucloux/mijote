@@ -54,25 +54,27 @@ function PlanningIllustration() {
 function ToqueIllustration() {
   return (
     <svg {...IL}>
-      {/* contour gris clair (effet sticker, pour voir le blanc sur fond blanc) */}
-      <g fill="#d7dde3">
-        <circle cx="44" cy="52" r="18" />
-        <circle cx="60" cy="45" r="20" />
-        <circle cx="76" cy="52" r="18" />
-        <rect x="30" y="52" width="60" height="23" rx="4" />
-        <rect x="33" y="73" width="54" height="20" rx="7" />
+      {/* contour net (sticker) pour détacher la toque blanche du cercle blanc */}
+      <g fill="#3f5168">
+        <circle cx="43" cy="51" r="18.5" />
+        <circle cx="60" cy="43" r="20.5" />
+        <circle cx="77" cy="51" r="18.5" />
+        <rect x="30" y="50" width="60" height="26" rx="5" />
+        <rect x="33" y="73.5" width="54" height="20" rx="7.5" />
       </g>
-      {/* toque blanche */}
+      {/* coiffe blanche */}
       <g fill="#ffffff">
-        <circle cx="44" cy="52" r="15.5" />
-        <circle cx="60" cy="45" r="17.5" />
-        <circle cx="76" cy="52" r="15.5" />
-        <rect x="33" y="52" width="54" height="23" rx="3" />
-        <rect x="35.5" y="75.5" width="49" height="15.5" rx="5.5" />
+        <circle cx="43" cy="51" r="15" />
+        <circle cx="60" cy="43" r="17" />
+        <circle cx="77" cy="51" r="15" />
+        <rect x="33.5" y="51" width="53" height="25" rx="3.5" />
       </g>
-      {/* plis du bandeau + ombre douce sous la coiffe */}
-      <path d="M37 78 H83" stroke="#eef1f4" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M48 79 V89 M60 79 V89 M72 79 V89" stroke="#e7ebef" strokeWidth="2" strokeLinecap="round" />
+      {/* bandeau blanc */}
+      <rect x="36" y="76" width="48" height="15" rx="5.5" fill="#ffffff" />
+      {/* ombres internes pour le volume (bleu-gris doux) */}
+      <path d="M35 66 Q43 61 51 66 Q60 61 68 66 Q76 61 85 66" stroke="#d5deea" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9" />
+      <path d="M34 76 H86" stroke="#c3cedd" strokeWidth="2" strokeLinecap="round" />
+      <path d="M45 79 V88 M55 79 V88 M65 79 V88 M75 79 V88" stroke="#d5deea" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -124,10 +126,21 @@ function GlobeIllustration() {
 function HouseIllustration() {
   return (
     <svg {...IL}>
-      <rect x="74" y="40" width="8" height="16" fill="#c85a2a" />
-      <path d="M28 62 L60 32 L92 62 Z" fill="#e8703a" />
-      <rect x="38" y="58" width="44" height="38" rx="4" fill="#f4a663" />
-      <path d="M60 84 C53 78 47 74 47 67.5 C47 63.5 50 61 53.5 61 C56.5 61 59 63.5 60 65 C61 63.5 63.5 61 66.5 61 C70 61 73 63.5 73 67.5 C73 74 67 78 60 84 Z" fill="#e8703a" />
+      {/* cheminée + fumée en cœur */}
+      <rect x="72" y="30" width="9" height="18" rx="2" fill="#c85a2a" />
+      <path d="M80 28 C84 25 88 27 87 31 C86 34 82 34 80 32 C78 34 74 34 73 31 C72 27 76 25 80 28 Z" fill="#f0a875" opacity="0.7" />
+      {/* toit */}
+      <path d="M24 60 L60 28 L96 60 Z" fill="#e8703a" />
+      <path d="M60 28 L96 60 L88 60 L60 35 Z" fill="#c85a2a" opacity="0.55" />
+      {/* corps de la maison */}
+      <rect x="34" y="58" width="52" height="40" rx="5" fill="#f4a663" />
+      <rect x="34" y="58" width="52" height="40" rx="5" fill="none" stroke="#e08a4a" strokeWidth="2" />
+      {/* fenêtre gauche, chaleureuse */}
+      <rect x="41" y="66" width="16" height="16" rx="3" fill="#ffd98a" stroke="#e08a4a" strokeWidth="2" />
+      <path d="M49 66 V82 M41 74 H57" stroke="#e08a4a" strokeWidth="2" />
+      {/* porte avec cœur */}
+      <rect x="64" y="72" width="16" height="26" rx="3" fill="#c85a2a" />
+      <path d="M72 84 C69 81.5 66.5 80 66.5 77.3 C66.5 75.6 67.8 74.5 69.2 74.5 C70.4 74.5 71.5 75.6 72 76.4 C72.5 75.6 73.6 74.5 74.8 74.5 C76.2 74.5 77.5 75.6 77.5 77.3 C77.5 80 75 81.5 72 84 Z" fill="#ffd98a" />
     </svg>
   );
 }
