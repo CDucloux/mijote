@@ -1,4 +1,12 @@
 import { useNavigate } from "react-router-dom";
+import { Icon } from "../components/Icon.jsx";
+
+const LOGIN_FEATS = [
+  { icon: "list2", label: "Cuisine pas à pas" },
+  { icon: "calendar", label: "Planning intelligent" },
+  { icon: "leaf", label: "Saison & Nutri-Score" },
+  { icon: "wifiOff", label: "Mode hors ligne" },
+];
 
 // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────────
 export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
@@ -28,8 +36,8 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
           Continuer avec Google
         </button>
         <div className="login-feats">
-          {["🥘 Cuisine pas à pas", "📅 Planning intelligent", "🌱 Saison & Nutri-Score", "📴 Mode hors ligne"].map(f => (
-            <span key={f} className="login-feat">{f}</span>
+          {LOGIN_FEATS.map(f => (
+            <span key={f.label} className="login-feat"><Icon name={f.icon} size={13} color="var(--text2)" /> {f.label}</span>
           ))}
         </div>
       </div>
