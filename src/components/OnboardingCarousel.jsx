@@ -54,33 +54,32 @@ function PlanningIllustration() {
 function ToqueIllustration() {
   return (
     <svg {...IL}>
-      {/* contour net (sticker) pour détacher la toque blanche du cercle blanc */}
+      {/* ===== CONTOUR (silhouette ardoise, légèrement plus large) ===== */}
+      {/* bandeau étroit (derrière) */}
+      <rect x="41" y="74" width="38" height="19" rx="7" fill="#3d4d63" />
+      {/* coiffe bombée qui déborde du bandeau + jupe festonnée */}
       <g fill="#3d4d63">
-        <circle cx="41" cy="44" r="20" />
-        <circle cx="60" cy="35" r="22" />
-        <circle cx="79" cy="44" r="20" />
-        <rect x="22" y="44" width="76" height="34" rx="6" />
-        <rect x="31" y="72" width="58" height="22" rx="7" />
+        <circle cx="39" cy="48" r="18" />
+        <circle cx="60" cy="39" r="21" />
+        <circle cx="81" cy="48" r="18" />
+        <path d="M23 50 H97 V70 Q91 79 85 70 Q79 79 73 70 Q67 79 61 70 Q55 79 49 70 Q43 79 37 70 Q31 79 25 70 Z" />
       </g>
-      {/* coiffe blanche (haute) */}
+      {/* ===== REMPLISSAGE BLANC (inséré ~3px) ===== */}
+      <rect x="44.5" y="77" width="31" height="13" rx="4.5" fill="#ffffff" />
       <g fill="#ffffff">
-        <circle cx="41" cy="44" r="16.5" />
-        <circle cx="60" cy="35" r="18.5" />
-        <circle cx="79" cy="44" r="16.5" />
-        <rect x="25" y="44" width="70" height="30" />
+        <circle cx="39" cy="48" r="14.8" />
+        <circle cx="60" cy="39" r="17.8" />
+        <circle cx="81" cy="48" r="14.8" />
+        <path d="M26.5 50 H93.5 V68 Q87.5 76 82 68 Q76.5 76 71 68 Q65.5 76 60 68 Q54.5 76 49 68 Q43.5 76 38 68 Q32.5 76 27 68 Z" />
       </g>
-      {/* bandeau blanc net */}
-      <rect x="34.5" y="74" width="51" height="16" rx="5.5" fill="#ffffff" />
-      {/* plis verticaux du bandeau */}
+      {/* ombre douce sous la coiffe + plis du bandeau */}
+      <path d="M28 64 Q38 59 48 64 Q58 59 68 64 Q78 59 88 64" stroke="#e6ecf3" strokeWidth="3.2" fill="none" strokeLinecap="round" opacity="0.9" />
       <g stroke="#c9d3e0" strokeWidth="2" strokeLinecap="round">
-        <path d="M43 77 V87" />
-        <path d="M51 77 V87" />
-        <path d="M60 77 V87" />
-        <path d="M69 77 V87" />
-        <path d="M77 77 V87" />
+        <path d="M50 80 V89" />
+        <path d="M56 80 V89" />
+        <path d="M62 80 V89" />
+        <path d="M68 80 V89" />
       </g>
-      {/* légère ombre en bas de la coiffe pour poser le volume */}
-      <path d="M28 70 Q44 64 60 70 Q76 64 92 70" stroke="#e8edf3" strokeWidth="4" fill="none" strokeLinecap="round" />
     </svg>
   );
 }
