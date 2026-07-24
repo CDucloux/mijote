@@ -210,7 +210,7 @@ function AppInner() {
 
   // Update document title on tab change
   useEffect(() => {
-    const titles = { "home": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration" };
+    const titles = { "home": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration", "profile": "Profil", "legal": "Informations légales" };
     document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
   }, [tab]);
 
