@@ -369,7 +369,7 @@ function AppInner() {
   };
 
   const exportPDF = recipe => {
-    printRecipe(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes) });
+    printRecipe(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes), techniques });
     notify("Ouverture de l'aperçu d'impression…");
   };
 

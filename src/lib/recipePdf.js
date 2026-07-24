@@ -9,7 +9,7 @@ import { createIngredientResolver } from "./nameMatcher.js";
 import { isRecipeVegan } from "./dietary.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { cuisineEmoji, normalizeCuisine } from "../constants/cuisines.js";
-import { DIFFICULTY_LABEL } from "./difficulty.js";
+import { DIFFICULTY_LABEL, computeDifficulty } from "./difficulty.js";
 
 // Couleur de difficulté en hex (le PDF n'a pas les variables CSS --green/--red).
 const diffColorPdf = (lvl) => (lvl <= 2 ? "#4caf7d" : lvl === 3 ? "#e8920a" : "#e05252");
@@ -17,7 +17,7 @@ const diffColorPdf = (lvl) => (lvl <= 2 ? "#4caf7d" : lvl === 3 ? "#e8920a" : "#
 const NUTRI_COLORS_PDF = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
 const num = v => parseFloat(String(v).replace(",", ".")) || 0;
 
-export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], recipesById } = {}) {
+export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], recipesById, techniques = [] } = {}) {
   const ingImg = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
   const utImg = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
 
@@ -41,11 +41,13 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     recipe.cuisine ? `<span class="tag"><span class="tag-emoji">${cuisineFlag}</span>${recipe.cuisine}</span>` : "",
   ].filter(Boolean).join("");
 
-  // Difficulté (à droite du Nutri-Score) : 5 pastilles colorées + libellé.
-  const difficultyMeta = recipe.difficulty
+  // Difficulté (à droite du Nutri-Score) : calculée comme dans l'app (gestes
+  // techniques), pas seulement lue sur recipe.difficulty. 5 pastilles + libellé.
+  const diffScore = computeDifficulty(recipe, techniques || [], { recipes: recipesList }).score;
+  const difficultyMeta = diffScore
     ? `<div class="meta-item"><span class="meta-label">Difficulté</span><div class="meta-val" style="gap:9px">
-        <span class="diff-dots">${[1, 2, 3, 4, 5].map(i => `<span class="dd" style="background:${i <= recipe.difficulty ? diffColorPdf(recipe.difficulty) : "#e0d8d0"}"></span>`).join("")}</span>
-        <span class="meta-value" style="font-size:14px">${DIFFICULTY_LABEL[recipe.difficulty] || ""}</span>
+        <span class="diff-dots">${[1, 2, 3, 4, 5].map(i => `<span class="dd" style="background:${i <= diffScore ? diffColorPdf(diffScore) : "#e0d8d0"}"></span>`).join("")}</span>
+        <span class="meta-value" style="font-size:14px">${DIFFICULTY_LABEL[diffScore] || ""}</span>
       </div></div>`
     : "";
 

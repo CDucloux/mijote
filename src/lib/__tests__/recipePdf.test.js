@@ -32,6 +32,23 @@ describe("buildRecipePdfHtml – tags de tête", () => {
     expect(html).not.toContain("Vegan");
   });
 
+  it("affiche la difficulté calculée (ici forcée) à côté du Nutri-Score", () => {
+    const html = buildRecipePdfHtml(
+      { name: "Plat", difficultyOverride: 4, ingredients: [{ name: "Courgette" }] },
+      { ingredientDB: DB }
+    );
+    expect(html).toContain("Difficulté");
+    expect(html).toContain("Difficile"); // libellé du niveau 4
+  });
+
+  it("n'affiche pas la difficulté si elle n'est pas calculable (aucun geste noté)", () => {
+    const html = buildRecipePdfHtml(
+      { name: "Plat", ingredients: [{ name: "Courgette" }] },
+      { ingredientDB: DB } // pas de techniques → score null
+    );
+    expect(html).not.toContain("Difficulté");
+  });
+
   it("superpose les badges sur l'image quand il y en a une", () => {
     const html = buildRecipePdfHtml(
       { name: "Pizza", category: "pizza", cuisine: "Italienne", image: "http://x/img.jpg", ingredients: [{ name: "Courgette" }] },
