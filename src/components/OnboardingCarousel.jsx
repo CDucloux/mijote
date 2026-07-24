@@ -97,14 +97,15 @@ function BasketIllustration() {
         <rect x="35" y="20" width="10" height="36" rx="5" fill="none" stroke="#c98a45" strokeWidth="1.5" />
         <path d="M40 27 l3.5 -2.2 M40 34 l3.5 -2.2 M40 41 l3.5 -2.2 M40 48 l3.5 -2.2" stroke="#b9773c" strokeWidth="1.6" strokeLinecap="round" />
       </g>
-      {/* brocoli au centre-gauche */}
-      <rect x="51" y="44" width="6" height="12" rx="3" fill="#a7c98a" />
+      {/* brocoli au centre-gauche (tige remontée dans le bouquet pour rester solidaire) */}
+      <rect x="51" y="40" width="6" height="16" rx="3" fill="#a7c98a" />
       <g fill="#4caf7d">
         <circle cx="54" cy="34" r="7" />
         <circle cx="48" cy="38" r="6" />
         <circle cx="60" cy="38" r="6" />
         <circle cx="51" cy="31" r="5.5" />
         <circle cx="58" cy="30" r="5.5" />
+        <circle cx="54" cy="41" r="6" />
       </g>
       <g fill="#3f9e6d" opacity="0.5">
         <circle cx="49" cy="40" r="2" />
