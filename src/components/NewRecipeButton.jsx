@@ -46,12 +46,14 @@ function LoadingOverlay() {
   );
 }
 
-// Pastille « IA » : une étoile scintillante unique, centrée dans la pastille.
+// Pastille « IA » : pastille orange, anneau blanc fin (net dans les deux
+// thèmes, contrairement à un liseré couleur surface qui vire au noir en sombre)
+// et une étoile 4 branches concave, centrée.
 function AiBadge() {
   return (
-    <span title="Extraction par IA" style={{ position: "absolute", top: -5, right: -5, display: "grid", placeItems: "center", width: 20, height: 20, borderRadius: 999, background: "var(--accent)", border: "2px solid var(--surface)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-        <path d="M12 2.5l2.2 6.3 6.3 2.2-6.3 2.2L12 21.5l-2.2-6.3L3.5 11l6.3-2.2L12 2.5z" />
+    <span title="Extraction par IA" style={{ position: "absolute", top: -6, right: -6, display: "grid", placeItems: "center", width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", border: "1.5px solid rgba(255,255,255,0.92)", boxShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+        <path d="M12 3c.6 4.5 1.5 6.4 9 9-7.5 2.6-8.4 4.5-9 9-.6-4.5-1.5-6.4-9-9 7.5-2.6 8.4-4.5 9-9z" />
       </svg>
     </span>
   );
