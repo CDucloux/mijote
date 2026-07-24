@@ -18,9 +18,10 @@ export function DesktopSidebar({ tab, setTab }) {
           );
         })}
       </nav>
-      <div style={{ borderTop: "1px solid var(--border)", margin: "0 10px 10px" }} />
+      <div style={{ borderTop: "1px solid var(--border)", margin: "0 10px 12px" }} />
       {/* Liens légaux : documents publics, ouverts dans un nouvel onglet. */}
-      <div style={{ padding: "0 8px 14px", display: "flex", flexDirection: "column", gap: 1 }}>
+      <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 1 }}>
+        <div style={{ padding: "0 8px 6px", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text3)" }}>Informations légales</div>
         {LEGAL_DOCS.map(d => (
           <a key={d.id} href={`/legal/${d.id}`} target="_blank" rel="noopener noreferrer" className="sidebar-legal-link"
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "7px 8px", borderRadius: 8, fontSize: 12, color: "var(--text3)", textDecoration: "none" }}>
