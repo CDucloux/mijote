@@ -49,6 +49,26 @@ describe("buildRecipePdfHtml – tags de tête", () => {
     expect(html).not.toContain("Difficulté");
   });
 
+  it("place la source en badge sur l'image (domaine) et pas dans le footer", () => {
+    const html = buildRecipePdfHtml(
+      { name: "X", image: "http://x/i.jpg", source: "www.exemple.com/recettes/truc.html", ingredients: [] },
+      { ingredientDB: DB }
+    );
+    expect(html).toContain('<a class="hero-source"');
+    expect(html).toContain(">www.exemple.com<"); // domaine seul affiché
+    expect(html).toContain("truc.html"); // URL complète dans le href
+    expect(html).not.toContain("Source :"); // plus dans le footer
+  });
+
+  it("sans image : la source reste dans le footer", () => {
+    const html = buildRecipePdfHtml(
+      { name: "X", source: "www.exemple.com/x", ingredients: [] },
+      { ingredientDB: DB }
+    );
+    expect(html).toContain("Source :");
+    expect(html).not.toContain('<a class="hero-source"');
+  });
+
   it("superpose les badges sur l'image quand il y en a une", () => {
     const html = buildRecipePdfHtml(
       { name: "Pizza", category: "pizza", cuisine: "Italienne", image: "http://x/img.jpg", ingredients: [{ name: "Courgette" }] },

@@ -29,6 +29,14 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   const vegan = isRecipeVegan(recipe, resolver, { recipes: recipesList });
   const leafSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
   const cuisineFlag = recipe.cuisine ? cuisineEmoji(normalizeCuisine(recipe.cuisine)) : "";
+
+  // Lien source : badge en bas à gauche DANS l'image (domaine affiché, URL
+  // complète cliquable). Repli dans le pied de page en l'absence d'image.
+  const sourceUrl = recipe.source ? (recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source) : "";
+  const sourceText = recipe.source ? recipe.source.replace(/^https?:\/\//, "").replace(/\/+$/, "") : "";
+  const sourceDomain = sourceText.split("/")[0];
+  const linkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>`;
+  const heroSource = recipe.source ? `<a class="hero-source" href="${sourceUrl}">${linkSvg}<span class="hs-txt">${sourceDomain}</span></a>` : "";
   const heroBadges = [
     vegan ? `<span class="hbadge hbadge-vegan">${leafSvg}<span class="hb-txt">Vegan</span></span>` : "",
     recipe.category ? `<span class="hbadge hbadge-dark"><span class="hb-emoji">${categoryEmoji(recipe.category)}</span><span class="hb-txt">${categoryLabel(recipe.category)}</span></span>` : "",
@@ -190,6 +198,9 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     .hbadge .hb-txt { font-size: 10px; font-weight: 700; color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
     .hbadge-vegan { background: rgba(76,175,125,0.92); }
     .hbadge-dark { background: rgba(20,18,16,0.58); }
+    .hero-source { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 6px; max-width: 62%; padding: 5px 12px 5px 9px; border-radius: 20px; background: rgba(20,18,16,0.58); border: 1px solid rgba(255,255,255,0.35); box-shadow: 0 2px 8px rgba(0,0,0,0.28); text-decoration: none; }
+    .hero-source svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .hero-source .hs-txt { font-size: 10.5px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .header { padding-bottom: 4px; margin-bottom: 12px; }
     h1 { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
     .title-rule { width: 48px; height: 4px; border-radius: 4px; background: var(--accent); margin-bottom: 18px; }
@@ -253,7 +264,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
 </head>
 <body>
   ${recipe.image
-      ? `<div class="hero-wrap"><img class="hero" src="${recipe.image}" alt="${recipe.name}" />${heroBadges ? `<div class="hero-badges">${heroBadges}</div>` : ""}</div>`
+      ? `<div class="hero-wrap"><img class="hero" src="${recipe.image}" alt="${recipe.name}" />${heroBadges ? `<div class="hero-badges">${heroBadges}</div>` : ""}${heroSource}</div>`
       : ""}
   <div class="header">
     <h1>${recipe.name}</h1>
@@ -286,7 +297,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     <span class="footer-brand">Mijoté<span class="dot">·</span></span>
     <span class="footer-meta">
       <span class="footer-gen">Généré le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}${recipe.history?.length ? `<span class="version-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="14"/></svg>${recipe.history[recipe.history.length - 1].label}</span>` : ""}</span>
-      ${recipe.source ? `<span>Source : <a href="${recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}" style="color:var(--accent)">${recipe.source.replace(/^https?:\/\//, "")}</a></span>` : ""}
+      ${recipe.source && !recipe.image ? `<span>Source : <a href="${sourceUrl}" style="color:var(--accent)">${sourceText}</a></span>` : ""}
     </span>
   </div>
 </body>
