@@ -1,5 +1,20 @@
 # Changelog – Mijoté
 
+## v3.7.0 – Safran · Informations légales & finitions
+
+### Informations légales (RGPD)
+- Nouvelle section **Informations légales** dédiée : **Mentions légales**, **Politique de confidentialité**, **CGU** et **Politique de cookies**, rédigées en Markdown (liens, titres, gras)
+- Accès depuis la **sidebar** (desktop), le **menu avatar** (mobile) et une ligne de consentement sur l'écran de connexion ; documents consultables même déconnecté
+- Aucun **bandeau cookies** : seul le strictement nécessaire est déposé (session, cache hors ligne)
+
+### Onboarding
+- **Illustrations SVG** retravaillées (marmite, toque de chef, panier de courses, foyer)
+- Barre de progression épurée ; navigation au **clavier** (flèches) sur desktop ; effet au survol du bouton « C'est parti ! »
+
+### Finitions
+- **Bascule clair / sombre** enfin fluide et uniforme sur toutes les pages
+- Sidebar desktop allégée
+
 ## v3.6.1 – Safran · Correctifs
 
 - **PWA hors ligne** : la session est désormais restaurée au démarrage à froid d'une appli installée (persistance d'authentification IndexedDB explicite) ; toute navigation hors ligne sert le shell. Fini le blocage « hors connexion »
