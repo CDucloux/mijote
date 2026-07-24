@@ -1,9 +1,9 @@
 import { Icon } from "./Icon.jsx";
 import { TABS } from "../constants/tabs.js";
-import { codenameFor } from "../constants/changelog.js";
+import { LEGAL_DOCS } from "../constants/legalDocs.js";
 
 // ─── DESKTOP SIDEBAR ──────────────────────────────────────────────────────────
-export function DesktopSidebar({ tab, setTab, onNewRecipe }) {
+export function DesktopSidebar({ tab, setTab }) {
   return (
     <div className="desktop-sidebar">
       <div className="desktop-sidebar-logo">Mijoté<span>·</span></div>
@@ -18,24 +18,17 @@ export function DesktopSidebar({ tab, setTab, onNewRecipe }) {
           );
         })}
       </nav>
-      <div style={{ padding: "0 10px 14px", display: "flex", justifyContent: "center" }}>
-        <span style={{
-          display: "inline-flex", alignItems: "center", gap: 5,
-          padding: "3px 9px", borderRadius: 20,
-          background: "rgba(122, 155, 107, 0.18)",
-          border: "1px solid rgba(122, 155, 107, 0.35)",
-          color: "#8fba7a",
-          fontSize: 11, fontWeight: 500, fontFamily: "var(--ff-body)", letterSpacing: "0.01em"
-        }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#8fba7a", flexShrink: 0 }} />
-          {`v${__APP_VERSION__}${codenameFor(__APP_VERSION__) ? ` – ${codenameFor(__APP_VERSION__)}` : ""}`}
-        </span>
-      </div>
-      <div style={{ borderTop: "1px solid var(--border)", margin: "0 10px 14px" }} />
-      <div style={{ padding: "0 10px" }}>
-        <button className="btn btn-primary" style={{ width: "100%", borderRadius: 12 }} onClick={onNewRecipe}>
-          <Icon name="plus" size={16} /> Nouvelle recette
-        </button>
+      <div style={{ borderTop: "1px solid var(--border)", margin: "0 10px 12px" }} />
+      {/* Liens légaux : documents publics, ouverts dans un nouvel onglet. */}
+      <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 1 }}>
+        <div style={{ padding: "0 8px 6px", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text3)" }}>Informations légales</div>
+        {LEGAL_DOCS.map(d => (
+          <a key={d.id} href={`/legal/${d.id}`} target="_blank" rel="noopener noreferrer" className="sidebar-legal-link"
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "7px 8px", borderRadius: 8, fontSize: 12, color: "var(--text3)", textDecoration: "none" }}>
+            <span>{d.short}</span>
+            <Icon name="externalLink" size={12} color="currentColor" />
+          </a>
+        ))}
       </div>
     </div>
   );

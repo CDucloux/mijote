@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 
@@ -41,6 +42,7 @@ import { RecipeEditor } from "./pages/RecipeEditor.jsx";
 import { RecipeDetail } from "./pages/RecipeDetail.jsx";
 import { ConfigPage } from "./pages/ConfigPage.jsx";
 import { ProfilePage } from "./pages/ProfilePage.jsx";
+import { LegalPage } from "./pages/LegalPage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
@@ -50,7 +52,7 @@ function AppInner() {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : location.pathname.startsWith("/profile") ? "profile" : "home");
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : "home");
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/home"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
@@ -175,23 +177,40 @@ function AppInner() {
   const [isDark, setIsDark] = useState(() => {
     try { return localStorage.getItem("rf_theme") !== "light"; } catch { return true; }
   });
-  const toggleTheme = () => setIsDark(prev => {
-    const next = !prev;
-    try { localStorage.setItem("rf_theme", next ? "dark" : "light"); } catch { }
-    return next;
-  });
-
-  // Sync theme class to <html> so html/body background updates too, and align the
-  // PWA `theme-color` (barre de statut) sur le fond du thème plutôt qu'un orange fixe.
-  useEffect(() => {
-    document.documentElement.classList.toggle("light", !isDark);
+  // Applique le thème au DOM (classe <html> + theme-color de la barre de statut PWA).
+  const applyThemeToDOM = (dark) => {
+    document.documentElement.classList.toggle("light", !dark);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", isDark ? "#0e0e0f" : "#f5f0eb");
-  }, [isDark]);
+    if (meta) meta.setAttribute("content", dark ? "#0e0e0f" : "#f5f0eb");
+  };
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    // Le fondu de thème par élément (règle globale `*`) est écrasé sur toute
+    // page dont les éléments portent une `transition` inline → bascule sèche.
+    // L'API View Transitions capture un instantané du viewport entier et le
+    // fait cross-fader uniformément, indépendamment des transitions par élément.
+    const run = () => {
+      // flushSync : le commit React doit être appliqué DANS le callback pour que
+      // l'instantané « après » du view-transition reflète déjà le nouveau thème.
+      flushSync(() => setIsDark(next));
+      applyThemeToDOM(next);
+      try { localStorage.setItem("rf_theme", next ? "dark" : "light"); } catch { }
+    };
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (document.startViewTransition && !reduce) document.startViewTransition(run);
+    else run();
+  };
+
+  // Synchronisation initiale (au montage) : aligne le DOM sur l'état persistant.
+  useEffect(() => {
+    applyThemeToDOM(isDark);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Update document title on tab change
   useEffect(() => {
-    const titles = { "home": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration" };
+    const titles = { "home": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration", "profile": "Profil", "legal": "Informations légales" };
     document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
   }, [tab]);
 
@@ -445,6 +464,7 @@ function AppInner() {
       {tab === "fridge" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
       {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} onPurge={purgeData} />}
+      {tab === "legal" && <LegalPage />}
     </div>
   );
 
@@ -488,6 +508,11 @@ function AppInner() {
   if (user === undefined) return <LoadingPage isDark={isDark} />;
 
   // Login screen
+  // Les documents légaux sont publics : accessibles même sans être connecté
+  // (l'écran de connexion y renvoie). On les rend en autonomie, avant la garde d'auth.
+  if (!user && location.pathname.startsWith("/legal")) {
+    return <div style={{ height: "100dvh", background: "var(--bg)", color: "var(--text)" }}><LegalPage /></div>;
+  }
   if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
   // Import depuis une URL (admin) : appelle la Cloud Function puis ouvre l'ÉDITEUR
@@ -546,7 +571,8 @@ function AppInner() {
         )}
         {isDesktop ? (
           <>
-            <DesktopSidebar tab={tab} setTab={requestTab} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />
+            {/* Les pages légales s'affichent en plein écran : la sidebar y est superflue. */}
+            {tab !== "legal" && <DesktopSidebar tab={tab} setTab={requestTab} />}
             {mainScreen}
           </>
         ) : (
