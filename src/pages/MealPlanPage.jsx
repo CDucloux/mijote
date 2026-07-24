@@ -31,6 +31,7 @@ const MP_SLOT_LABEL = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, `${s.emoji} 
 const MP_SLOT_COLOR = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.color]));
 const MP_SLOT_TEXT = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.text]));
 const MP_SLOT_TIMES = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.ics]));
+const MEAL_ROLE_IDS = ["entree", "plat", "accompagnement", "dessert"];
 
 function mpGetWeekDays(ref) {
   const d = new Date(ref), day = d.getDay(), diff = day === 0 ? -6 : 1 - day;
@@ -58,7 +59,11 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
       style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
       {groupSlotMeals(meals, recipesById).map((g, gi) => {
-        const composed = !!g.groupId && g.items.length > 1;
+        // Un item généré porte toujours un groupId → c'est un repas (composé),
+        // même s'il n'a qu'un plat pour l'instant (plus de « plat orphelin »).
+        const composed = !!g.groupId;
+        const roles = new Set(g.items.map(({ item }) => itemRole(item, recipesById.get(item.recipeId))));
+        const full = MEAL_ROLE_IDS.every(r => roles.has(r));
         return (
           <div key={g.groupId || `g${gi}`} style={composed ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7, display: "flex", flexDirection: "column", gap: 5 } : undefined}>
             {g.items.map(({ item }) => {
@@ -82,7 +87,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
                 </div>
               );
             })}
-            {slot !== "matin" && onComplete && (
+            {slot !== "matin" && onComplete && !full && (
               <button onClick={() => onComplete(date, slot, g)} title="Compléter le repas (entrée, accompagnement, dessert)"
                 style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2, padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: "transparent", color: MP_SLOT_TEXT[slot], border: `1px dashed ${MP_SLOT_TEXT[slot]}`, cursor: "pointer" }}>
                 <Icon name="plus" size={10} color={MP_SLOT_TEXT[slot]} /> Compléter
@@ -145,12 +150,17 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const [genDone, setGenDone] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const [genStyle, setGenStyle] = useState("equilibre");
-  const runGenerate = useCallback((style) => {
+  const [genBatch, setGenBatch] = useState(false); // batch cooking : tout préparer d'avance
+  const runGenerate = useCallback((style, batch) => {
     const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
     const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm, style });
     setGenOpen(false);
-    if (count > 0) { setGenDone(true); notify(`${count} repas proposés, à relire et ajuster`, "success"); }
-    else notify("Cette semaine est déjà remplie (midi et soir)", "info");
+    if (count > 0) {
+      setGenDone(true);
+      notify(`${count} repas proposés, à relire et ajuster`, "success");
+      // Batch cooking demandé → on ouvre directement la session (tout à préparer).
+      if (batch) setShowBatch(true);
+    } else notify("Cette semaine est déjà remplie (midi et soir)", "info");
   }, [generate, weekDays, notify, household]);
   const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
 
@@ -290,9 +300,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </span>
           <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)", flexShrink: 0 }}>Auj.</button>
-          <button onClick={() => setShowBatch(true)} title="Session batch : plats à cuisiner et préparations de base à faire d'avance" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(76,175,125,0.16)", border: "1px solid rgba(76,175,125,0.4)", color: "var(--green)", flexShrink: 0 }}>
-            <Icon name="fire" size={13} color="var(--green)" /> Batch
-          </button>
           <button onClick={exportICS} title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
             <Icon name="calendar" size={13} color="var(--blue)" /> Agenda
           </button>
@@ -423,7 +430,25 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               );
             })}
           </div>
-          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} onClick={() => runGenerate(genStyle)}>
+          {/* Batch cooking : tout préparer d'avance (ex. le dimanche) */}
+          <button onClick={() => setGenBatch(v => !v)} className="pressable" style={{
+            display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
+            padding: "12px 14px", borderRadius: 14, marginBottom: 16,
+            background: genBatch ? "rgba(76,175,125,0.12)" : "var(--surface2)",
+            border: `1.5px solid ${genBatch ? "var(--green)" : "var(--border)"}`,
+          }}>
+            <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: genBatch ? "rgba(76,175,125,0.2)" : "var(--surface3)" }}>
+              <Icon name="fire" size={18} color={genBatch ? "var(--green)" : "var(--text2)"} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Batch cooking</span>
+              <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>Regroupe tout ce qu'il y a à cuisiner pour la semaine en une seule session à préparer d'avance.</span>
+            </span>
+            <span style={{ flexShrink: 0, width: 42, height: 24, borderRadius: 999, padding: 2, background: genBatch ? "var(--green)" : "var(--surface3)", display: "flex", justifyContent: genBatch ? "flex-end" : "flex-start", transition: "background 0.15s" }}>
+              <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff" }} />
+            </span>
+          </button>
+          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} onClick={() => runGenerate(genStyle, genBatch)}>
             <Icon name="calendar" size={16} /> Générer la semaine
           </button>
         </SwipeableSheet>
