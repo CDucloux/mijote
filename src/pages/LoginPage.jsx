@@ -28,7 +28,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
           Continuer avec Google
         </button>
         <div className="login-feats">
-          {["🥘 Cuisine pas à pas", "📅 Planning intelligent", "🌱 Saison & Nutri-Score", "🏠 Foyer partagé"].map(f => (
+          {["🥘 Cuisine pas à pas", "📅 Planning intelligent", "🌱 Saison & Nutri-Score", "📴 Mode hors ligne"].map(f => (
             <span key={f} className="login-feat">{f}</span>
           ))}
         </div>
