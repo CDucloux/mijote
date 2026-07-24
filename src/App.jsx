@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 
@@ -175,19 +176,36 @@ function AppInner() {
   const [isDark, setIsDark] = useState(() => {
     try { return localStorage.getItem("rf_theme") !== "light"; } catch { return true; }
   });
-  const toggleTheme = () => setIsDark(prev => {
-    const next = !prev;
-    try { localStorage.setItem("rf_theme", next ? "dark" : "light"); } catch { }
-    return next;
-  });
-
-  // Sync theme class to <html> so html/body background updates too, and align the
-  // PWA `theme-color` (barre de statut) sur le fond du thème plutôt qu'un orange fixe.
-  useEffect(() => {
-    document.documentElement.classList.toggle("light", !isDark);
+  // Applique le thème au DOM (classe <html> + theme-color de la barre de statut PWA).
+  const applyThemeToDOM = (dark) => {
+    document.documentElement.classList.toggle("light", !dark);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", isDark ? "#0e0e0f" : "#f5f0eb");
-  }, [isDark]);
+    if (meta) meta.setAttribute("content", dark ? "#0e0e0f" : "#f5f0eb");
+  };
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    // Le fondu de thème par élément (règle globale `*`) est écrasé sur toute
+    // page dont les éléments portent une `transition` inline → bascule sèche.
+    // L'API View Transitions capture un instantané du viewport entier et le
+    // fait cross-fader uniformément, indépendamment des transitions par élément.
+    const run = () => {
+      // flushSync : le commit React doit être appliqué DANS le callback pour que
+      // l'instantané « après » du view-transition reflète déjà le nouveau thème.
+      flushSync(() => setIsDark(next));
+      applyThemeToDOM(next);
+      try { localStorage.setItem("rf_theme", next ? "dark" : "light"); } catch { }
+    };
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (document.startViewTransition && !reduce) document.startViewTransition(run);
+    else run();
+  };
+
+  // Synchronisation initiale (au montage) : aligne le DOM sur l'état persistant.
+  useEffect(() => {
+    applyThemeToDOM(isDark);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Update document title on tab change
   useEffect(() => {
