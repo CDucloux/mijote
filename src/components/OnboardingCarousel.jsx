@@ -54,31 +54,33 @@ function PlanningIllustration() {
 function ToqueIllustration() {
   return (
     <svg {...IL}>
-      {/* ===== CONTOUR (silhouette ardoise, légèrement plus large) ===== */}
-      {/* bandeau étroit (derrière) */}
-      <rect x="41" y="74" width="38" height="19" rx="7" fill="#3d4d63" />
-      {/* coiffe bombée qui déborde du bandeau + jupe festonnée */}
-      <g fill="#3d4d63">
-        <circle cx="39" cy="48" r="18" />
-        <circle cx="60" cy="39" r="21" />
-        <circle cx="81" cy="48" r="18" />
-        <path d="M23 50 H97 V70 Q91 79 85 70 Q79 79 73 70 Q67 79 61 70 Q55 79 49 70 Q43 79 37 70 Q31 79 25 70 Z" />
+      {/* ===== CONTOUR ardoise ===== */}
+      {/* bandeau (derrière) */}
+      <rect x="34" y="82" width="52" height="15" rx="4" fill="#3d4d63" />
+      {/* coiffe haute à sommet froncé */}
+      <path d="M33 33 Q40 21 47 31 Q53.5 20 60 31 Q66.5 20 73 31 Q80 21 87 33 L88 86 L32 86 Z" fill="#3d4d63" />
+      {/* ===== REMPLISSAGE BLANC ===== */}
+      <rect x="37" y="85" width="46" height="10" rx="3" fill="#ffffff" />
+      <path d="M36.5 34 Q42 26 47.5 32.5 Q53.5 23 60 32.5 Q66.5 23 72.5 32.5 Q78 26 83.5 34 L84 84 L36 84 Z" fill="#ffffff" />
+      {/* plis verticaux de la coiffe */}
+      <g stroke="#cbd4de" strokeWidth="2.6" strokeLinecap="round">
+        <path d="M47 33 V83" />
+        <path d="M60 32 V83" />
+        <path d="M73 33 V83" />
       </g>
-      {/* ===== REMPLISSAGE BLANC (inséré ~3px) ===== */}
-      <rect x="44.5" y="77" width="31" height="13" rx="4.5" fill="#ffffff" />
-      <g fill="#ffffff">
-        <circle cx="39" cy="48" r="14.8" />
-        <circle cx="60" cy="39" r="17.8" />
-        <circle cx="81" cy="48" r="14.8" />
-        <path d="M26.5 50 H93.5 V68 Q87.5 76 82 68 Q76.5 76 71 68 Q65.5 76 60 68 Q54.5 76 49 68 Q43.5 76 38 68 Q32.5 76 27 68 Z" />
+      <g stroke="#d6dde5" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M41 40 V80" />
+        <path d="M53.5 38 V80" />
+        <path d="M66.5 38 V80" />
+        <path d="M79 40 V80" />
       </g>
-      {/* ombre douce sous la coiffe + plis du bandeau */}
-      <path d="M28 64 Q38 59 48 64 Q58 59 68 64 Q78 59 88 64" stroke="#e6ecf3" strokeWidth="3.2" fill="none" strokeLinecap="round" opacity="0.9" />
-      <g stroke="#c9d3e0" strokeWidth="2" strokeLinecap="round">
-        <path d="M50 80 V89" />
-        <path d="M56 80 V89" />
-        <path d="M62 80 V89" />
-        <path d="M68 80 V89" />
+      {/* fronces du bandeau */}
+      <g stroke="#c9d3e0" strokeWidth="1.8" strokeLinecap="round">
+        <path d="M45 87 V93" />
+        <path d="M53 87 V93" />
+        <path d="M60 87 V93" />
+        <path d="M67 87 V93" />
+        <path d="M75 87 V93" />
       </g>
     </svg>
   );
