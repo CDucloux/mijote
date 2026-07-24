@@ -60,13 +60,12 @@ describe("buildRecipePdfHtml – tags de tête", () => {
     expect(html).not.toContain("Source :"); // plus dans le footer
   });
 
-  it("sans image : la source reste dans le footer", () => {
-    const html = buildRecipePdfHtml(
-      { name: "X", source: "www.exemple.com/x", ingredients: [] },
-      { ingredientDB: DB }
-    );
-    expect(html).toContain("Source :");
-    expect(html).not.toContain('<a class="hero-source"');
+  it("la source n'apparaît jamais dans le footer", () => {
+    const withImg = buildRecipePdfHtml({ name: "X", image: "http://x/i.jpg", source: "www.exemple.com/x", ingredients: [] }, { ingredientDB: DB });
+    const noImg = buildRecipePdfHtml({ name: "X", source: "www.exemple.com/x", ingredients: [] }, { ingredientDB: DB });
+    expect(withImg).not.toContain("Source :");
+    expect(noImg).not.toContain("Source :");
+    expect(noImg).not.toContain('<a class="hero-source"'); // pas d'image → pas de badge non plus
   });
 
   it("superpose les badges sur l'image quand il y en a une", () => {
