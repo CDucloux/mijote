@@ -17,7 +17,7 @@ export function LegalPage() {
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* En-tête */}
       <div style={{ padding: "20px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={() => (doc ? navigate("/legal") : navigate(-1))} aria-label="Retour"
+        <button onClick={() => (doc ? navigate("/legal") : navigate("/home"))} aria-label="Retour"
           style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
         </button>
