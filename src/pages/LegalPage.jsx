@@ -65,30 +65,9 @@ function Index({ navigate }) {
 
 function Document({ doc }) {
   return (
-    <article style={{ fontSize: 14, lineHeight: 1.62, color: "var(--text)" }}>
-      {doc.intro && (
-        <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 22px", paddingBottom: 18, borderBottom: "1px solid var(--border)" }}>
-          {doc.intro}
-        </p>
-      )}
-      {doc.blocks.map((b, i) => (
-        <section key={i} style={{ marginBottom: 22 }}>
-          <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 600, color: "var(--accent)", margin: "0 0 8px" }}>{b.h}</h2>
-          {(b.p || []).map((para, j) => (
-            <p key={j} style={{ margin: "0 0 8px", color: "var(--text2)" }}>{para}</p>
-          ))}
-          {b.list && (
-            <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "var(--text2)" }}>
-              {b.list.map((li, j) => (
-                <li key={j} style={{ margin: "0 0 6px" }}>{li}</li>
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
-      <p style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 26, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-        Dernière mise à jour : {LEGAL_UPDATED}
-      </p>
+    <article className="legal-md">
+      <div dangerouslySetInnerHTML={{ __html: doc.html }} />
+      <p className="legal-md-updated">Dernière mise à jour : {LEGAL_UPDATED}</p>
     </article>
   );
 }
