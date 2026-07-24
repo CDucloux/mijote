@@ -47,13 +47,20 @@ function LoadingOverlay() {
 }
 
 // Pastille « IA » : pastille orange, anneau blanc fin (net dans les deux
-// thèmes, contrairement à un liseré couleur surface qui vire au noir en sombre)
-// et une étoile 4 branches concave, centrée.
+// thèmes) et un petit robot blanc (yeux évidés couleur pastille), centré.
 function AiBadge() {
   return (
-    <span title="Extraction par IA" style={{ position: "absolute", top: -6, right: -6, display: "grid", placeItems: "center", width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", border: "1.5px solid rgba(255,255,255,0.92)", boxShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-        <path d="M12 3c.6 4.5 1.5 6.4 9 9-7.5 2.6-8.4 4.5-9 9-.6-4.5-1.5-6.4-9-9 7.5-2.6 8.4-4.5 9-9z" />
+    <span title="Extraction par IA" style={{ position: "absolute", top: -6, right: -6, display: "grid", placeItems: "center", width: 21, height: 21, borderRadius: "50%", background: "var(--accent)", border: "1.5px solid rgba(255,255,255,0.92)", boxShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
+        {/* antenne */}
+        <rect x="11" y="2" width="2" height="3.4" rx="1" fill="#fff" />
+        <circle cx="12" cy="2.4" r="2" fill="#fff" />
+        {/* tête */}
+        <rect x="4" y="7" width="16" height="12" rx="4" fill="#fff" />
+        {/* yeux + bouche évidés */}
+        <circle cx="9" cy="12.6" r="1.9" fill="var(--accent)" />
+        <circle cx="15" cy="12.6" r="1.9" fill="var(--accent)" />
+        <rect x="9" y="16" width="6" height="1.6" rx="0.8" fill="var(--accent)" />
       </svg>
     </span>
   );
@@ -81,7 +88,7 @@ function Choice({ icon, title, subtitle, onClick, accent, ai, disabled, note }) 
         <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 3 }}>{subtitle}</span>
         {note && <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "var(--accent)", marginTop: 6 }}><Icon name="info" size={12} color="var(--accent)" /> {note}</span>}
       </span>
-      <Icon name={disabled ? "info" : "forward"} size={16} color="var(--text3)" />
+      <Icon name="forward" size={16} color="var(--text3)" />
     </button>
   );
 }
