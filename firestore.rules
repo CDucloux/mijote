@@ -35,9 +35,13 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
-    // ── Base Master partagée (lecture : connectés ; écriture : admin) ─────────
+    // ── Base Master partagée (écriture : admin) ──────────────────────────────
+    // Lecture par DOC uniquement (`get`), jamais par requête (`list`) : la base
+    // d'ingrédients enrichie (Ciqual) n'est pas énumérable/aspirable en masse. Le
+    // client la charge de toute façon doc par doc (getDoc ingredients/utensils/…).
+    // Email vérifié requis (relève la barre vs un simple compte scriptable).
     match /master/{doc} {
-      allow read: if isSignedIn();
+      allow get: if hasVerifiedEmail();
       allow write: if isAdmin();
     }
 
@@ -93,7 +97,12 @@ service cloud.firestore {
                && request.auth.uid == request.resource.data.authorUid
                && pubId.split('__')[0] == request.auth.uid;
       }
-      allow read: if isSignedIn();
+      // Lecture : email vérifié requis. `get` (voir une recette publique / cloner
+      // un composant par pubId) libre ; `list` (feed Découverte) borné à 120 pour
+      // interdire l'aspiration de toute la collection en une requête — aligné sur
+      // fetchPublicRecipes(max = 120). Une requête sans limite est refusée.
+      allow get: if hasVerifiedEmail();
+      allow list: if hasVerifiedEmail() && request.query.limit <= 120;
       allow create, update: if ownsDoc();
       allow delete: if hasVerifiedEmail()
                     && request.auth.uid == resource.data.authorUid;

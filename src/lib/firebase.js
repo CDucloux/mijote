@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -26,6 +27,26 @@ if (_missing.length) {
 }
 
 export const firebaseApp = initializeApp(firebaseConfig);
+
+// App Check (anti-abus / anti-scraping) : atteste que les requêtes viennent bien
+// de la vraie app avant que Firestore / Functions / Storage ne répondent. On
+// l'initialise dès qu'une clé reCAPTCHA v3 est fournie ; sans clé (dev local non
+// configuré), on saute l'init pour ne pas casser le démarrage. En dev, un jeton de
+// debug (généré depuis la console App Check) permet de travailler en mode enforce.
+// À activer côté serveur : Console Firebase → App Check → Enforce sur Firestore,
+// Cloud Functions et Storage (voir aussi enforceAppCheck dans functions/index.js).
+const _recaptchaKey = import.meta.env.VITE_FIREBASE_RECAPTCHA_SITE_KEY;
+if (_recaptchaKey) {
+  const _debugToken = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN;
+  if (import.meta.env.DEV && _debugToken && typeof self !== "undefined") {
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = _debugToken;
+  }
+  initializeAppCheck(firebaseApp, {
+    provider: new ReCaptchaV3Provider(_recaptchaKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
+
 // Persistance d'auth EXPLICITE (IndexedDB en priorité, repli localStorage) : la
 // session survit au démarrage à froid hors ligne d'une PWA installée. `getAuth`
 // choisit une heuristique parfois plus faible → on force via `initializeAuth`.
