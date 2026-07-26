@@ -211,7 +211,7 @@ export function NewRecipeButton({ onManual }) {
           <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>
             Photographie la recette d'un livre. Ajoute une <strong style={{ color: "var(--text2)" }}>2ᵉ photo</strong> si elle tient sur deux pages. Tu pourras tout relire avant d'enregistrer.
           </p>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple hidden
+          <input ref={fileRef} type="file" accept="image/*" multiple hidden
             onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: error ? 8 : 16 }}>
             {photos.map((p, i) => (

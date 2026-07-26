@@ -40,7 +40,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
 
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
-  const focusNoScroll = useCallback(el => el?.focus({ preventScroll: true }), []);
+  const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
 
   // Styles de cuisine réellement utilisés, dans l'ordre canonique de la liste.
   const usedCuisines = CUISINES.filter(c => recipes.some(r => r.cuisine === c.label));
