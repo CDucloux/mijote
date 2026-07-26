@@ -61,8 +61,7 @@ describe("assignIdsAndLink", () => {
         { text: "Mélanger le tout dans un saladier avec la feta.", tip: "", ingredients: ["feta"], utensils: [] },
       ],
     };
-    const { recipe: r, components } = assignIdsAndLink(inter);
-    expect(components).toEqual([]);
+    const r = assignIdsAndLink(inter);
     expect(r.ingredients[0].id).toBe("i0");
     expect(r.ingredients[0]._raw).toBe("1 pastèque");
     expect(r.utensils[0].id).toBe("u0");
@@ -73,104 +72,13 @@ describe("assignIdsAndLink", () => {
   });
   it("porte l'image d'étape et ne lie pas par faux positif de sous-chaîne", () => {
     const inter = { ingredients: [{ name: "sel" }], utensils: [], steps: [{ text: "Ciseler le persil.", image: "https://x/s.jpg" }] };
-    const { recipe: r } = assignIdsAndLink(inter);
+    const r = assignIdsAndLink(inter);
     expect(r.steps[0].ingredients).toEqual([]); // "sel" ⊄ "persil"
     expect(r.steps[0].image).toBe("https://x/s.jpg");
   });
   it("reconstruit _raw proprement à partir des champs", () => {
-    const { recipe: r } = assignIdsAndLink({ ingredients: [{ name: "piment en poudre", amount: 1, unit: "pincée" }], utensils: [], steps: [] });
+    const r = assignIdsAndLink({ ingredients: [{ name: "piment en poudre", amount: 1, unit: "pincée" }], utensils: [], steps: [] });
     expect(r.ingredients[0]._raw).toBe("1 pincée piment en poudre");
-  });
-});
-
-describe("assignIdsAndLink — préparations de base (composants)", () => {
-  const moussaka = {
-    name: "Moussaka",
-    components: [
-      { name: "Kima", yield: { amount: 500, unit: "g" }, ingredients: [{ name: "bœuf haché", amount: 400, unit: "g" }, { name: "oignon", amount: 1 }], steps: [{ text: "Faire revenir le bœuf et l'oignon." }] },
-      { name: "Béchamel", yield: { amount: 400, unit: "g" }, ingredients: [{ name: "beurre", amount: 40, unit: "g" }, { name: "farine", amount: 40, unit: "g" }, { name: "lait", amount: 400, unit: "ml" }], steps: [{ text: "Réaliser un roux puis délayer avec le lait." }] },
-    ],
-    ingredients: [
-      { name: "aubergines", amount: 3 },
-      { component: "Kima", amount: 500, unit: "g" },
-      { component: "Béchamel", amount: 400, unit: "g" },
-    ],
-    utensils: [],
-    steps: [{ text: "Monter la moussaka avec les aubergines, la kima et la béchamel, puis enfourner." }],
-  };
-
-  it("extrait les composants avec isComponent + yield + clé temporaire", () => {
-    const { components } = assignIdsAndLink(moussaka);
-    expect(components.map(c => c.name)).toEqual(["Kima", "Béchamel"]);
-    expect(components.every(c => c.isComponent === true)).toBe(true);
-    expect(components[0].yield).toEqual({ amount: 500, unit: "g" });
-    expect(components.map(c => c._key)).toEqual(["cmp0", "cmp1"]);
-    // Un composant ne contient que des ingrédients bruts (aucune ligne composant).
-    expect(components[0].ingredients.every(i => !i.recipeId)).toBe(true);
-  });
-
-  it("résout les lignes composant de la principale (recipeId = clé temp, unité du rendement)", () => {
-    const { recipe, components } = assignIdsAndLink(moussaka);
-    const kima = recipe.ingredients.find(i => i.name === "Kima");
-    const bech = recipe.ingredients.find(i => i.name === "Béchamel");
-    expect(kima.recipeId).toBe(components[0]._key);
-    expect(kima.dbId).toBeUndefined();      // ligne composant → pas de dbId
-    expect(kima.unit).toBe("g");            // unité du rendement
-    expect(bech.recipeId).toBe(components[1]._key);
-    // L'ingrédient brut reste une ligne normale.
-    expect(recipe.ingredients.find(i => i.name === "aubergines").dbId).toBe("");
-  });
-
-  it("défaut de rendement prudent si le LLM l'omet (> 0, sauvegardable)", () => {
-    const { components } = assignIdsAndLink({
-      name: "X", components: [{ name: "Sauce", ingredients: [{ name: "tomate", amount: 2 }], steps: [] }],
-      ingredients: [{ component: "Sauce", amount: 1 }], steps: [],
-    });
-    expect(components[0].yield.amount).toBeGreaterThan(0);
-  });
-
-  it("retire des étapes principales les renvois « méta » à un composant", () => {
-    const { recipe } = assignIdsAndLink({
-      name: "Tarte au caramel",
-      components: [{ name: "Caramel beurre salé", yield: { amount: 400, unit: "g" }, ingredients: [{ name: "sucre", amount: 200, unit: "g" }], steps: [{ text: "Faire un caramel à sec puis ajouter le beurre." }] }],
-      ingredients: [{ component: "Caramel beurre salé", amount: 400, unit: "g" }],
-      steps: [
-        { text: "Préparer le caramel beurre salé selon la méthode décrite dans le composant." },
-        { text: "Couler le caramel sur le fond de tarte et réserver au frais." },
-      ],
-    });
-    expect(recipe.steps.map(s => s.text)).toEqual(["Couler le caramel sur le fond de tarte et réserver au frais."]);
-  });
-
-  it("ne détruit PAS la seule mention d'une sous-prépa quand aucun composant n'existe", () => {
-    // Sans composant créé, l'étape « méta » est la seule trace : on la garde (mieux
-    // qu'un caramel qui disparaît complètement).
-    const { recipe } = assignIdsAndLink({
-      name: "Tarte au caramel", components: [],
-      ingredients: [{ name: "caramel beurre salé", amount: 400, unit: "g" }],
-      steps: [
-        { text: "Préparer le caramel selon la méthode décrite dans le composant." },
-        { text: "Étaler la pâte et couler le caramel." },
-      ],
-    });
-    expect(recipe.steps).toHaveLength(2);
-  });
-
-  it("ne supprime pas une étape au pluriel « les composants secs »", () => {
-    const { recipe } = assignIdsAndLink({
-      name: "Cake", components: [],
-      ingredients: [{ name: "farine", amount: 200, unit: "g" }],
-      steps: [{ text: "Mélanger tous les composants secs dans un saladier." }],
-    });
-    expect(recipe.steps).toHaveLength(1);
-  });
-
-  it("ligne composant orpheline (composant introuvable) → repli en ligne brute inerte", () => {
-    const { recipe } = assignIdsAndLink({
-      name: "X", components: [], ingredients: [{ component: "Fantôme", amount: 100, unit: "g" }], steps: [],
-    });
-    expect(recipe.ingredients[0].recipeId).toBeUndefined();
-    expect(recipe.ingredients[0].dbId).toBe("");
   });
 });
 
