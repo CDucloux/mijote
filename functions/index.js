@@ -168,8 +168,11 @@ async function extractWithLlm(text, sourceUrl, knownUtensils) {
   return llmToIntermediate(parsed, sourceUrl);
 }
 
+// NB : réactiver `enforceAppCheck: true` dans les options ci-dessous (ET pour
+// importRecipeFromImages) une fois le front déployé avec la clé reCAPTCHA v3
+// (VITE_FIREBASE_RECAPTCHA_SITE_KEY), sinon l'import admin serait rejeté.
 exports.importRecipeFromUrl = onCall(
-  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB", enforceAppCheck: true },
+  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
     // ── Garde admin (côté serveur) ──
     const email = (request.auth?.token?.email || "").toLowerCase();
@@ -213,7 +216,7 @@ exports.importRecipeFromUrl = onCall(
 // Import depuis une ou deux photos (livre de cuisine). Réservé à l'admin (garde
 // serveur identique). Vision Haiku 4.5 ; pas d'images d'étape.
 exports.importRecipeFromImages = onCall(
-  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB", enforceAppCheck: true },
+  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
     const email = (request.auth?.token?.email || "").toLowerCase();
     if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
