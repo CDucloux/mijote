@@ -22,7 +22,8 @@ TITRE & MÉTA
 - `category` : le rôle de la recette dans le repas — un SEUL id EXACT de cette liste, sinon `""` : `aperitif`, `entree`, `soupe`, `salade`, `plat`, `gratin`, `pasta`, `pizza`, `accompagnement`, `dessert`, `tarte`, `petit-dej`, `boisson`, `sauce`, `boulangerie`. Choisis le plus spécifique : un plat de pâtes → `pasta` ; une pizza → `pizza` ; un gratin → `gratin` ; une tarte (salée ou sucrée) → `tarte`.
 
 PRÉPARATIONS DE BASE (`components`) — subdivision, à utiliser AVEC PARCIMONIE
-- Une recette peut se décomposer en **sous-préparations autonomes**, faites séparément puis assemblées : sauces (béchamel, tomate), pâtes (brisée, à choux), crèmes/appareils, coulis, marinades, farces/kima… Mets CHACUNE dans `components`.
+- Une recette peut se décomposer en **sous-préparations autonomes**, faites séparément puis assemblées : sauces (béchamel, tomate), pâtes (brisée, à choux), crèmes/appareils, coulis, marinades, farces/kima, caramel… Mets CHACUNE dans `components`.
+- **SIGNAL FORT de détection.** Si la page organise la recette en **sections** du type « **Pour le/la/les X** », « **Préparation du/de la X** », « **La X** » (ex. « Pour le caramel », « Pour la pâte sablée », « Pour la crème ») AVEC, sous chaque titre, ses propres ingrédients et/ou ses propres étapes → **chacune de ces sections EST un composant**. Crée-le avec les ingrédients ET les étapes listés sous ce titre. Ne fusionne PAS ces sections dans la recette principale. La dernière section (montage / dressage / cuisson finale) reste, elle, la recette principale.
 - Ne subdivise QUE si la sous-préparation est **vraiment autonome et nommée** (elle pourrait se faire à l'avance / se réutiliser). **Dans le doute, NE subdivise PAS** : laisse tout dans la recette principale. Jamais de sur-découpage (une simple vinaigrette, « faire fondre le beurre », etc. ne sont PAS des composants). La plupart des recettes n'ont **aucun** composant → `"components": []`.
 - Un composant contient **uniquement des ingrédients bruts** (jamais un autre composant — mono-niveau). Il a le même format d'ingrédients/étapes que la recette principale.
 - `yield` : le **rendement** du composant (ce qu'il produit), ex. `{ "amount": 500, "unit": "g" }` pour ~500 g de sauce. Estime-le raisonnablement (somme des ingrédients) ; unité `g` ou `ml` de préférence.
@@ -34,6 +35,39 @@ PRÉPARATIONS DE BASE (`components`) — subdivision, à utiliser AVEC PARCIMONI
 - **Si la méthode de la sous-préparation n'est PAS sur la page** (ex. « ajouter 400 g de caramel beurre salé » sans sa recette) : ne crée PAS de composant et n'utilise PAS `component`. Traite-la comme un **ingrédient brut normal** (`{ "name": "caramel beurre salé", "amount": "400", "unit": "g" }`) et n'ajoute aucune étape pour la préparer. Ne crée un composant QUE si tu disposes réellement de ses ingrédients ET de ses étapes.
 - Exemple (moussaka) : `components` = [ « Kima » (bœuf, oignon, tomate, épices — avec SES étapes de cuisson), « Béchamel » (beurre, farine, lait — avec SES étapes) ] ; `ingredients` principaux = aubergines (brut) + `{ "component": "Kima", ... }` + `{ "component": "Béchamel", ... }` ; `steps` principaux = UNIQUEMENT griller les aubergines, monter les couches, napper, enfourner — jamais « préparer la kima » ni « faire la béchamel ».
 - Contre-exemple à NE PAS produire : une étape principale « Préparer le caramel beurre salé selon la méthode décrite dans le composant. » → à la place, les étapes du caramel sont dans le `steps` du composant « Caramel beurre salé », et la principale dit par ex. « Couler le caramel sur le fond de tarte ».
+
+EXEMPLE COMPLET (tarte au caramel — la page a une section « Pour le caramel » et une section « Pour la tarte ») :
+```
+{
+  "name": "Tarte au caramel beurre salé", "cuisine": "Française", "category": "tarte",
+  "prepTime": 30, "cookTime": 25, "servings": 8,
+  "components": [
+    {
+      "name": "Caramel beurre salé",
+      "yield": { "amount": 400, "unit": "g" },
+      "ingredients": [
+        { "name": "sucre", "amount": "200", "unit": "g" },
+        { "name": "beurre demi-sel", "amount": "80", "unit": "g" },
+        { "name": "crème liquide", "amount": "120", "unit": "ml" }
+      ],
+      "steps": [
+        { "text": "Faire fondre le sucre à sec jusqu'à obtenir un caramel ambré.", "tip": "Ne pas remuer, incliner la casserole.", "image": "", "ingredients": ["sucre"], "utensils": [] },
+        { "text": "Hors du feu, incorporer le beurre puis la crème tiède, et remettre à épaissir.", "tip": "", "image": "", "ingredients": ["beurre demi-sel", "crème liquide"], "utensils": [] }
+      ]
+    }
+  ],
+  "ingredients": [
+    { "name": "pâte sablée", "amount": "1", "unit": "" },
+    { "component": "Caramel beurre salé", "amount": "400", "unit": "g" }
+  ],
+  "utensils": [],
+  "steps": [
+    { "text": "Foncer un moule avec la pâte sablée et la cuire à blanc.", "tip": "", "image": "", "ingredients": ["pâte sablée"], "utensils": [] },
+    { "text": "Couler le caramel sur le fond de tarte refroidi et réserver au frais.", "tip": "", "image": "", "ingredients": [], "utensils": [] }
+  ]
+}
+```
+Remarque : les étapes du caramel sont dans SON `steps` ; la recette principale ne parle QUE du fonçage et du coulage — jamais « préparer le caramel ».
 
 INGRÉDIENTS
 - `name` : l'ingrédient seul. Retire la quantité, la préparation (« émincé »), l'usage (« pour servir »), la mouture/goût (« du moulin », « au goût »).
