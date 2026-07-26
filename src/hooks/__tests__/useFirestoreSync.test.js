@@ -19,6 +19,7 @@ vi.mock("../../lib/firestore.js", () => ({
   recipesCol: vi.fn(() => ({})),
   upsertOwnDirectoryEntry: vi.fn(() => Promise.resolve()),
   loadMasterDB: vi.fn(),
+  subscribeMasterDB: vi.fn(() => () => {}),
   loadUserData: vi.fn(),
   migrateLegacyDoc: vi.fn(() => Promise.resolve(null)),
   syncRecipes: vi.fn(() => Promise.resolve(new Map())),

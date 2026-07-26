@@ -240,12 +240,36 @@ export async function loadMasterDB() {
       ingredients: ing.exists() ? (ing.data().items || []) : [],
       utensils: ut.exists() ? (ut.data().items || []) : [],
       techniques: tech.exists() ? (tech.data().items || []) : [],
-      categories: cat.exists() && cat.data().map && Object.keys(cat.data().map).length
-        ? Object.fromEntries(Object.entries({ ...DEFAULT_CATEGORIES, ...cat.data().map }).filter(([k]) => k in DEFAULT_CATEGORIES)) : DEFAULT_CATEGORIES,
+      categories: cat.exists() ? normCategories(cat.data()) : DEFAULT_CATEGORIES,
     };
   } catch {
     return { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
   }
+}
+
+// Normalise le doc `master/categories` (fusion défauts + overrides, filtré aux clés connues).
+function normCategories(data) {
+  return data && data.map && Object.keys(data.map).length
+    ? Object.fromEntries(Object.entries({ ...DEFAULT_CATEGORIES, ...data.map }).filter(([k]) => k in DEFAULT_CATEGORIES))
+    : DEFAULT_CATEGORIES;
+}
+
+// Abonnement TEMPS RÉEL à la base Master (4 docs). Émet l'objet complet à chaque
+// changement d'un des docs, une fois les 4 reçus (évite d'émettre un état partiel).
+// Permet à un 2e appareil (ou un non-admin) de voir les modifs sans recharger.
+export function subscribeMasterDB(cb) {
+  const latest = { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
+  const seen = { ingredients: false, utensils: false, techniques: false, categories: false };
+  const emit = () => { if (seen.ingredients && seen.utensils && seen.techniques && seen.categories) cb({ ...latest }); };
+  const bind = (name, key, pick) => onSnapshot(doc(db, "master", name),
+    s => { latest[key] = pick(s); seen[key] = true; emit(); }, () => { });
+  const subs = [
+    bind("ingredients", "ingredients", s => s.exists() ? (s.data().items || []) : []),
+    bind("utensils", "utensils", s => s.exists() ? (s.data().items || []) : []),
+    bind("techniques", "techniques", s => s.exists() ? (s.data().items || []) : []),
+    bind("categories", "categories", s => s.exists() ? normCategories(s.data()) : DEFAULT_CATEGORIES),
+  ];
+  return () => subs.forEach(u => u());
 }
 
 // Load all of a workspace's data from the split structure.

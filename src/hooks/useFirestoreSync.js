@@ -4,7 +4,7 @@ import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../lib/firebase.js";
 import {
   metaDoc, recipesCol, upsertOwnDirectoryEntry,
-  loadMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
+  loadMasterDB, subscribeMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
   loadSharedData, writeSharedData, setHouseholdPointer,
 } from "../lib/firestore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
@@ -13,6 +13,11 @@ import { soloWorkspace, householdWorkspace } from "../lib/workspace.js";
 import { mergeShared } from "../lib/householdMigration.js";
 
 const mapOf = (recipes) => { const m = new Map(); for (const r of (recipes || [])) if (r.id) m.set(r.id, r); return m; };
+
+// Signature de la base Master (anti-écho écriture↔snapshot) : un snapshot dont la
+// signature égale la dernière appliquée/écrite ne ré-applique rien et ne relance
+// aucune écriture. Doit refléter exactement ce que le push envoie (les 4 slices).
+const masterSig = (m) => JSON.stringify({ i: m.ingredients || [], u: m.utensils || [], t: m.techniques || [], c: m.categories || DEFAULT_CATEGORIES });
 
 // Cache local du foyer actif : permet au bootstrap de charger DIRECTEMENT le bon
 // namespace (foyer) au lieu d'afficher le solo une fraction de seconde avant la
@@ -48,6 +53,7 @@ export function useFirestoreSync({
   const metaTimers = useRef({});       // timers de debounce par méta (écritures groupées, ex. planning)
   const metaPending = useRef({});      // { name: { payload, ws } } en attente de flush
   const recipesSigRef = useRef(null);  // signature des recettes appliquées (load/snapshot) → l'autosave n'écrit QUE sur une vraie modif utilisateur
+  const masterSigRef = useRef("");     // signature de la Master appliquée/écrite (anti-écho écriture↔snapshot temps réel)
   const transitionTargetRef = useRef(undefined); // cible d'une bascule en cours (anti-concurrence)
   const [loadedHid, setLoadedHid] = useState(null); // foyer chargé → déclenche les abonnements temps réel
   const [bootstrapped, setBootstrapped] = useState(false); // miroir d'état de cloudLoaded → ré-exécute le coordinateur quand le bootstrap finit
@@ -158,6 +164,7 @@ export function useFirestoreSync({
         setUserDB(data.userDB || { ingredients: [], utensils: [] });               // perso : toujours solo
         const freshMaster = await masterPromise;
         setMasterDB(freshMaster);
+        masterSigRef.current = masterSig(freshMaster); // seed anti-écho : le 1er snapshot (identique) ne re-déclenche rien
         try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ }
 
         recipeSyncMap.current = mapOf(shared.recipes);
@@ -378,6 +385,9 @@ export function useFirestoreSync({
 
   useEffect(() => {
     if (!user || !cloudLoaded.current || !isAdmin) return;
+    // Pas de vraie modif locale (écho d'un snapshot distant ou seed du bootstrap) → on n'écrit pas.
+    if (masterSig(masterDB) === masterSigRef.current) return;
+    masterSigRef.current = masterSig(masterDB);
     setSyncStatus("syncing");
     Promise.all([
       setDoc(doc(db, "master", "ingredients"), { items: masterDB.ingredients }),
@@ -386,6 +396,21 @@ export function useFirestoreSync({
       setDoc(doc(db, "master", "techniques"), { items: masterDB.techniques || [] }),
     ]).then(() => setSyncStatus("synced")).catch(() => setSyncStatus("error"));
   }, [masterDB, user, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Abonnement temps réel à la Master : un 2e appareil (ou un non-admin) reçoit
+  // les modifs sans recharger. Garde de signature → pas de boucle avec l'écriture
+  // ci-dessus, et un snapshot identique à l'état courant ne ré-applique rien.
+  useEffect(() => {
+    if (!user) return;
+    const unsub = subscribeMasterDB((fresh) => {
+      const sig = masterSig(fresh);
+      if (sig === masterSigRef.current) return; // écho de notre propre écriture / snapshot identique
+      masterSigRef.current = sig;
+      setMasterDB(fresh);
+      try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(fresh)); } catch { /* quota */ }
+    });
+    return () => unsub();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { cloudLoaded, workspaceReady };
 }
