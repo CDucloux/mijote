@@ -27,6 +27,7 @@ import { usePageZoom } from "./hooks/usePageZoom.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
 import { PullToRefresh } from "./components/PullToRefresh.jsx";
 import { Icon } from "./components/Icon.jsx";
+import { BaseIcon } from "./components/BaseIcon.jsx";
 import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/OfflineModal.jsx";
 import { HouseholdWelcome } from "./components/HouseholdWelcome.jsx";
@@ -156,6 +157,7 @@ function AppInner() {
     else navigate(location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname, { replace: true });
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  const [importReview, setImportReview] = useState(null); // { main, components } quand l'IA a détecté des préparations de base
   const [notification, setNotification] = useState(null);
   // Vue d'une recette publique (route /discover/:pubId) – logique isolée dans son hook.
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
@@ -551,30 +553,69 @@ function AppInner() {
     utensils: (recipe.utensils || []).map((u, k) => ({ id: `u${Date.now()}_${k}`, dbId: "", name: "", ...u })),
     steps: (recipe.steps || []).map((s, k) => ({ id: `s${Date.now()}_${k}`, title: "", text: "", ingredients: [], utensils: [], ...s })),
   });
-  // Recette brute extraite (URL ou image) → brouillon prêt pour l'éditeur.
-  const openImportedDraft = (recipe) => {
-    // Complète dbId + Nutri-Score via le pipeline d'import existant (schéma toléré).
-    const res = prepareRecipeImport(JSON.stringify(recipe), { ingredientDB, utensilDB });
-    let draft = res.prepared?.[0] || recipe;
-    // Ustensiles : ne garder QUE ceux réellement en base master (dbId résolu), et
-    // purger les liens d'étapes qui pointaient vers un ustensile écarté.
+  // Recette brute extraite → brouillon : dbId + Nutri-Score (schéma toléré) puis
+  // purge des ustensiles hors base master (et des liens d'étapes devenus orphelins).
+  const prepDraft = (r) => {
+    const res = prepareRecipeImport(JSON.stringify(r), { ingredientDB, utensilDB });
+    const draft = res.prepared?.[0] || r;
     const keptUt = (draft.utensils || []).filter(u => u.dbId);
     const keptIds = new Set(keptUt.map(u => u.id));
-    draft = {
+    return {
       ...draft,
       utensils: keptUt,
       steps: (draft.steps || []).map(s => ({ ...s, utensils: (s.utensils || []).filter(id => keptIds.has(id)) })),
     };
-    setEditingRecipe(withItemIds(draft));
+  };
+  // Import (URL ou image) → éditeur. Si l'IA a détecté des préparations de base,
+  // on passe d'abord par un écran de revue (elles sont créées puis référencées).
+  const openImportedDraft = (recipe, components = []) => {
+    const mainDraft = withItemIds(prepDraft(recipe));
+    if (!components.length) { setEditingRecipe(mainDraft); return; }
+    // Noms uniques (on crée toujours de nouvelles bases — v1, pas de réutilisation).
+    const usedNames = new Set(recipes.map(r => (r.name || "").trim().toLowerCase()));
+    const comps = components.map((c, idx) => {
+      const d = prepDraft(c);
+      const base = (d.name || `Préparation ${idx + 1}`).trim();
+      let name = base, k = 2;
+      while (usedNames.has(name.toLowerCase())) name = `${base} (${k++})`;
+      usedNames.add(name.toLowerCase());
+      return { ...d, name, isComponent: true, yield: c.yield || d.yield || { amount: 1, unit: "g" }, _key: c._key };
+    });
+    // La principale garde recipeId = clé temporaire (_key) ; le remap vers les vrais
+    // ids se fait à la confirmation, une fois les composants sauvegardés.
+    setImportReview({ main: mainDraft, components: comps });
+  };
+  // Confirmation de la revue : crée les préparations de base puis ouvre la recette
+  // principale dans l'éditeur, ses lignes composant reliées aux ids réels.
+  const confirmImportReview = () => {
+    if (!importReview) return;
+    const { main, components } = importReview;
+    let acc = recipes;
+    const keyToId = new Map();
+    for (const c of components) {
+      const res = prepareRecipeForSave(c, { recipes: acc, ingredientDB });
+      if (res.error) { notify(`Préparation « ${c.name} » : ${res.error}`, "error"); return; }
+      keyToId.set(c._key, res.recipe.id);
+      acc = upsertRecipe(acc, res.recipe);
+    }
+    setRecipes(acc);
+    setCollections(prev => recomputeCollectionCounts(prev, acc));
+    const linkedMain = {
+      ...main,
+      ingredients: (main.ingredients || []).map(l => (l.recipeId && keyToId.has(l.recipeId)) ? { ...l, recipeId: keyToId.get(l.recipeId) } : l),
+    };
+    setImportReview(null);
+    setEditingRecipe(linkedMain);
+    notify(`${components.length} préparation${components.length > 1 ? "s" : ""} de base créée${components.length > 1 ? "s" : ""}`, "success");
   };
   const importFromUrl = async (url) => {
-    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
-    openImportedDraft(recipe);
+    const { recipe, components, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
+    openImportedDraft(recipe, components || []);
     return { method };
   };
   const importFromImages = async (images) => {
-    const { recipe, method } = await importRecipeFromImages(images, utensilDB.map(u => u.name));
-    openImportedDraft(recipe);
+    const { recipe, components, method } = await importRecipeFromImages(images, utensilDB.map(u => u.name));
+    openImportedDraft(recipe, components || []);
     return { method };
   };
 
@@ -625,6 +666,36 @@ function AppInner() {
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingTab(null)}>Rester</button>
               <button className="btn btn-danger" style={{ flex: 1 }} onClick={confirmLeaveEditor}>Quitter sans sauvegarder</button>
+            </div>
+          </SwipeableSheet>
+        )}
+        {importReview && (
+          <SwipeableSheet onClose={() => setImportReview(null)}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <BaseIcon size={18} color="var(--accent)" />
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Préparations de base détectées</h3>
+            </div>
+            <p style={{ color: "var(--text2)", fontSize: 13.5, marginBottom: 14, lineHeight: 1.5 }}>
+              L'IA a décomposé « <strong>{importReview.main.name || "cette recette"}</strong> » en {importReview.components.length} préparation{importReview.components.length > 1 ? "s" : ""} de base. Elles seront créées comme recettes-composants, puis référencées dans la recette principale (que tu pourras relire ensuite).
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+              {importReview.components.map((c, i) => (
+                <div key={c._key || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text3)" }}>{(c.ingredients || []).length} ingrédient{(c.ingredients || []).length > 1 ? "s" : ""}</div>
+                  </div>
+                  <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 600, color: "var(--accent)", background: "rgba(232,112,58,0.10)", borderRadius: 20, padding: "3px 10px" }}>
+                    {c.yield?.amount} {c.yield?.unit}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setImportReview(null)}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={confirmImportReview}>Créer et continuer</button>
             </div>
           </SwipeableSheet>
         )}

@@ -83,11 +83,21 @@ function filterUtensilsToKnown(utensils, knownNames) {
   });
 }
 
-// Assemble le brouillon FINAL au schéma Mijoté : ids stables sur ingrédients/
-// ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
-// fourni par le LLM, complété par détection dans le texte de l'étape).
-function assignIdsAndLink(d) {
+// Construit UNE recette au schéma Mijoté : ids stables sur ingrédients/ustensiles,
+// et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite fourni par
+// le LLM, complété par détection dans le texte de l'étape). Une ligne d'ingrédient
+// portant `component` (nom d'une préparation de base) devient une ligne composant
+// (pas d'ingrédient brut) : on la marque `_component` pour résolution ultérieure.
+function buildOneRecipe(d) {
   const ingredients = (d.ingredients || []).map((i, k) => {
+    // Ligne référençant une préparation de base : pas de dbId ni de _raw brut.
+    const compRef = (i.component != null && String(i.component).trim()) ? String(i.component).trim() : "";
+    if (compRef) {
+      const ing = { id: `i${k}`, recipeId: "", name: compRef, _component: norm(compRef), _raw: "" };
+      if (i.amount != null && i.amount !== "") ing.amount = i.amount;
+      if (i.unit) ing.unit = i.unit;
+      return ing;
+    }
     // _raw reconstruit à partir des champs normalisés (texte propre et éditable).
     const raw = [i.amount, i.unit, i.name].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
     const ing = { id: `i${k}`, dbId: "", name: i.name || "", _raw: raw };
@@ -117,6 +127,38 @@ function assignIdsAndLink(d) {
     image: d.image || "",
     ingredients, utensils, steps,
   };
+}
+
+// Assemble le brouillon FINAL : la recette principale + ses préparations de base
+// (composants). Chaque composant est une recette-composant (isComponent + yield,
+// clé temporaire `_key`). Les lignes de la principale qui consomment un composant
+// (`_component`) sont résolues en lignes composant (`recipeId` = clé temp, unité du
+// rendement). Renvoie { recipe, components } — les composants portent `_key` que le
+// client remappe vers de vrais ids à la sauvegarde.
+function assignIdsAndLink(d) {
+  const components = (d.components || [])
+    .filter(c => c && (c.name || "").toString().trim() && (c.ingredients || []).length)
+    .map((c, ci) => {
+      const built = buildOneRecipe(c);
+      const ya = Math.max(0, Number(c.yield && c.yield.amount) || 0);
+      built.isComponent = true;
+      // Rendement obligatoire (> 0) pour être sauvegardable : défaut prudent sinon.
+      built.yield = { amount: ya > 0 ? ya : 1, unit: ((c.yield && c.yield.unit) || (ya > 0 ? "g" : "portion")).toString() };
+      built._key = `cmp${ci}`;
+      return built;
+    });
+  const byName = new Map(components.map(c => [norm(c.name), c]));
+
+  const recipe = buildOneRecipe(d);
+  recipe.ingredients = recipe.ingredients.map((ing) => {
+    if (!ing._component) return ing;
+    const comp = byName.get(ing._component);
+    const { _component: _c, recipeId: _rid, ...rest } = ing; // eslint-disable-line no-unused-vars
+    // Composant introuvable → on retombe sur une ligne brute inerte (éditable).
+    if (!comp) return { ...rest, dbId: "" };
+    return { ...rest, recipeId: comp._key, unit: comp.yield.unit, amount: (ing.amount != null && ing.amount !== "") ? ing.amount : comp.yield.amount, _raw: "" };
+  });
+  return { recipe, components };
 }
 
 // Images décoratives / techniques à ignorer (logo, avatar, icône, pixel, svg…).

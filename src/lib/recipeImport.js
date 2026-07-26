@@ -34,7 +34,9 @@ export function prepareRecipeImport(json, { ingredientDB = [], utensilDB = [] } 
     // l'utilisateur, puis recalcule le score santé. Un dbId déjà présent est respecté.
     const prepared = validRecipes.map(r => {
       const ingredients = (r.ingredients || []).map(ing => {
-        if (ing.dbId) return ing;
+        // Ligne composant (référence une préparation de base) : jamais de dbId,
+        // sinon elle cesse d'être reconnue comme composant (isComponentLine).
+        if (ing.dbId || ing.recipeId) return ing;
         const dbId = matchIng(ing.name);
         if (dbId) linked++;
         return { ...ing, dbId };

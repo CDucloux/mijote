@@ -8,7 +8,8 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
   "cuisine": string,
   "category": string,
   "prepTime": number, "cookTime": number, "servings": number,
-  "ingredients": [{ "name": string, "amount": string, "unit": string }],
+  "components": [{ "name": string, "yield": { "amount": number, "unit": string }, "ingredients": [{ "name": string, "amount": string, "unit": string }], "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string] }] }],
+  "ingredients": [{ "name": string, "amount": string, "unit": string, "component": string }],
   "utensils": [{ "name": string }],
   "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string] }]
 }
@@ -19,6 +20,15 @@ TITRE & MÉTA
 - `prepTime` / `cookTime` : minutes entières (0 si inconnu). `servings` : entier (2 si absent).
 - `cuisine` : une valeur EXACTE de cette liste, sinon `""` : {{CUISINE_LIST}}
 - `category` : le rôle de la recette dans le repas — un SEUL id EXACT de cette liste, sinon `""` : `aperitif`, `entree`, `soupe`, `salade`, `plat`, `gratin`, `pasta`, `pizza`, `accompagnement`, `dessert`, `tarte`, `petit-dej`, `boisson`, `sauce`, `boulangerie`. Choisis le plus spécifique : un plat de pâtes → `pasta` ; une pizza → `pizza` ; un gratin → `gratin` ; une tarte (salée ou sucrée) → `tarte`.
+
+PRÉPARATIONS DE BASE (`components`) — subdivision, à utiliser AVEC PARCIMONIE
+- Une recette peut se décomposer en **sous-préparations autonomes**, faites séparément puis assemblées : sauces (béchamel, tomate), pâtes (brisée, à choux), crèmes/appareils, coulis, marinades, farces/kima… Mets CHACUNE dans `components`.
+- Ne subdivise QUE si la sous-préparation est **vraiment autonome et nommée** (elle pourrait se faire à l'avance / se réutiliser). **Dans le doute, NE subdivise PAS** : laisse tout dans la recette principale. Jamais de sur-découpage (une simple vinaigrette, « faire fondre le beurre », etc. ne sont PAS des composants). La plupart des recettes n'ont **aucun** composant → `"components": []`.
+- Un composant contient **uniquement des ingrédients bruts** (jamais un autre composant — mono-niveau). Il a le même format d'ingrédients/étapes que la recette principale.
+- `yield` : le **rendement** du composant (ce qu'il produit), ex. `{ "amount": 500, "unit": "g" }` pour ~500 g de sauce. Estime-le raisonnablement (somme des ingrédients) ; unité `g` ou `ml` de préférence.
+- Dans la recette principale, une ligne d'ingrédient qui **consomme un composant** porte `"component"` = le nom EXACT du composant, avec `amount`/`unit` exprimés dans **l'unité du rendement** (ex. `{ "component": "Béchamel", "amount": "400", "unit": "g" }`). Ces lignes n'ont pas de `name` d'ingrédient brut.
+- Exemple (moussaka) : `components` = [ « Kima » (bœuf, oignon, tomate, épices), « Béchamel » (beurre, farine, lait) ] ; `ingredients` principaux = aubergines (brut) + `{ "component": "Kima", ... }` + `{ "component": "Béchamel", ... }` ; `steps` principaux = l'assemblage et la cuisson au four.
+- Les étapes propres à un composant vont dans SON tableau `steps`, pas dans celui de la recette principale.
 
 INGRÉDIENTS
 - `name` : l'ingrédient seul. Retire la quantité, la préparation (« émincé »), l'usage (« pour servir »), la mouture/goût (« du moulin », « au goût »).

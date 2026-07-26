@@ -61,7 +61,8 @@ describe("assignIdsAndLink", () => {
         { text: "Mélanger le tout dans un saladier avec la feta.", tip: "", ingredients: ["feta"], utensils: [] },
       ],
     };
-    const r = assignIdsAndLink(inter);
+    const { recipe: r, components } = assignIdsAndLink(inter);
+    expect(components).toEqual([]);
     expect(r.ingredients[0].id).toBe("i0");
     expect(r.ingredients[0]._raw).toBe("1 pastèque");
     expect(r.utensils[0].id).toBe("u0");
@@ -72,13 +73,68 @@ describe("assignIdsAndLink", () => {
   });
   it("porte l'image d'étape et ne lie pas par faux positif de sous-chaîne", () => {
     const inter = { ingredients: [{ name: "sel" }], utensils: [], steps: [{ text: "Ciseler le persil.", image: "https://x/s.jpg" }] };
-    const r = assignIdsAndLink(inter);
+    const { recipe: r } = assignIdsAndLink(inter);
     expect(r.steps[0].ingredients).toEqual([]); // "sel" ⊄ "persil"
     expect(r.steps[0].image).toBe("https://x/s.jpg");
   });
   it("reconstruit _raw proprement à partir des champs", () => {
-    const r = assignIdsAndLink({ ingredients: [{ name: "piment en poudre", amount: 1, unit: "pincée" }], utensils: [], steps: [] });
+    const { recipe: r } = assignIdsAndLink({ ingredients: [{ name: "piment en poudre", amount: 1, unit: "pincée" }], utensils: [], steps: [] });
     expect(r.ingredients[0]._raw).toBe("1 pincée piment en poudre");
+  });
+});
+
+describe("assignIdsAndLink — préparations de base (composants)", () => {
+  const moussaka = {
+    name: "Moussaka",
+    components: [
+      { name: "Kima", yield: { amount: 500, unit: "g" }, ingredients: [{ name: "bœuf haché", amount: 400, unit: "g" }, { name: "oignon", amount: 1 }], steps: [{ text: "Faire revenir le bœuf et l'oignon." }] },
+      { name: "Béchamel", yield: { amount: 400, unit: "g" }, ingredients: [{ name: "beurre", amount: 40, unit: "g" }, { name: "farine", amount: 40, unit: "g" }, { name: "lait", amount: 400, unit: "ml" }], steps: [{ text: "Réaliser un roux puis délayer avec le lait." }] },
+    ],
+    ingredients: [
+      { name: "aubergines", amount: 3 },
+      { component: "Kima", amount: 500, unit: "g" },
+      { component: "Béchamel", amount: 400, unit: "g" },
+    ],
+    utensils: [],
+    steps: [{ text: "Monter la moussaka avec les aubergines, la kima et la béchamel, puis enfourner." }],
+  };
+
+  it("extrait les composants avec isComponent + yield + clé temporaire", () => {
+    const { components } = assignIdsAndLink(moussaka);
+    expect(components.map(c => c.name)).toEqual(["Kima", "Béchamel"]);
+    expect(components.every(c => c.isComponent === true)).toBe(true);
+    expect(components[0].yield).toEqual({ amount: 500, unit: "g" });
+    expect(components.map(c => c._key)).toEqual(["cmp0", "cmp1"]);
+    // Un composant ne contient que des ingrédients bruts (aucune ligne composant).
+    expect(components[0].ingredients.every(i => !i.recipeId)).toBe(true);
+  });
+
+  it("résout les lignes composant de la principale (recipeId = clé temp, unité du rendement)", () => {
+    const { recipe, components } = assignIdsAndLink(moussaka);
+    const kima = recipe.ingredients.find(i => i.name === "Kima");
+    const bech = recipe.ingredients.find(i => i.name === "Béchamel");
+    expect(kima.recipeId).toBe(components[0]._key);
+    expect(kima.dbId).toBeUndefined();      // ligne composant → pas de dbId
+    expect(kima.unit).toBe("g");            // unité du rendement
+    expect(bech.recipeId).toBe(components[1]._key);
+    // L'ingrédient brut reste une ligne normale.
+    expect(recipe.ingredients.find(i => i.name === "aubergines").dbId).toBe("");
+  });
+
+  it("défaut de rendement prudent si le LLM l'omet (> 0, sauvegardable)", () => {
+    const { components } = assignIdsAndLink({
+      name: "X", components: [{ name: "Sauce", ingredients: [{ name: "tomate", amount: 2 }], steps: [] }],
+      ingredients: [{ component: "Sauce", amount: 1 }], steps: [],
+    });
+    expect(components[0].yield.amount).toBeGreaterThan(0);
+  });
+
+  it("ligne composant orpheline (composant introuvable) → repli en ligne brute inerte", () => {
+    const { recipe } = assignIdsAndLink({
+      name: "X", components: [], ingredients: [{ component: "Fantôme", amount: 100, unit: "g" }], steps: [],
+    });
+    expect(recipe.ingredients[0].recipeId).toBeUndefined();
+    expect(recipe.ingredients[0].dbId).toBe("");
   });
 });
 

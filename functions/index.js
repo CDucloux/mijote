@@ -197,14 +197,18 @@ exports.importRecipeFromUrl = onCall(
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
       const inter = await extractWithLlm(text, url, knownUtensils);
       inter.image = ogImage; // le texte n'a pas d'image → on prend l'og:image de la page
+      // Ustensiles connus, sur la recette principale ET chaque préparation de base.
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
+      for (const c of inter.components || []) c.utensils = filterUtensilsToKnown(collectUtensils(c), knownUtensils);
       // Images d'étape : on ne garde que des URLs réellement présentes dans la page
       // (anti-hallucination) et jamais l'image principale du plat.
       const pageImages = imageUrlsInText(text);
-      for (const s of inter.steps) s.image = (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
-      const recipe = assignIdsAndLink(inter);
+      const cleanStepImg = (s) => (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
+      for (const s of inter.steps) s.image = cleanStepImg(s);
+      for (const c of inter.components || []) for (const s of c.steps || []) s.image = cleanStepImg(s);
+      const { recipe, components } = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
-      return { recipe, method: "llm" };
+      return { recipe, components, method: "llm" };
     } catch (e) {
       if (e instanceof HttpsError) throw e; // messages déjà lisibles
       console.error("importRecipeFromUrl — erreur inattendue:", e);
@@ -240,10 +244,12 @@ exports.importRecipeFromImages = onCall(
       const inter = await extractFromImages(images, knownUtensils);
       inter.image = "";
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
+      for (const c of inter.components || []) c.utensils = filterUtensilsToKnown(collectUtensils(c), knownUtensils);
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
-      const recipe = assignIdsAndLink(inter);
+      for (const c of inter.components || []) for (const s of c.steps || []) s.image = "";
+      const { recipe, components } = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");
-      return { recipe, method: "image" };
+      return { recipe, components, method: "image" };
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       console.error("importRecipeFromImages — erreur inattendue:", e);
