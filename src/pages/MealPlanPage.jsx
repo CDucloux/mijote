@@ -158,8 +158,11 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       notify(`${count} repas proposés, à relire et ajuster`, "success");
       // Batch cooking demandé → on ouvre directement la session (tout à préparer).
       if (batch) setShowBatch(true);
+    } else if (!recipes.length) {
+      // Aucune recette en bibliothèque : rien à proposer (≠ semaine déjà remplie).
+      notify("Ajoute d'abord des recettes pour générer une semaine", "info");
     } else notify("Cette semaine est déjà remplie (midi et soir)", "info");
-  }, [generate, weekDays, notify, household]);
+  }, [generate, weekDays, notify, household, recipes]);
   const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
 
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
