@@ -11,7 +11,7 @@
 import { recipeSeasonScore, currentMonth } from "./seasonality.js";
 import { collectIngredientSignals, isEligible } from "./dietFilter.js";
 import { normalizeStr } from "./parseIngredient.js";
-import { roleForCategory, newGroupId } from "./composedMeal.js";
+import { roleForCategory, newGroupId, platNeedsSide } from "./composedMeal.js";
 
 // Types de recette recevables selon le créneau. Le matin ne prend que du
 // petit-déjeuner ; midi/soir prennent les « plats » (et les recettes non typées,
@@ -26,7 +26,32 @@ export function eligibleForSlot(recipe, slot) {
   return !NON_MAIN_TYPES.has(cat); // midi/soir : plats typés + non typés
 }
 
-export const DEFAULT_WEIGHTS = { season: 0.9, health: 0.5, stock: 0.6, effort: 0.4, dislike: 2 };
+export const DEFAULT_WEIGHTS = { season: 0.9, health: 0.5, stock: 0.6, effort: 0.4, dislike: 2, difficulty: 0, simple: 0, dishSeason: 0.5 };
+
+// Affinité saisonnière du TYPE de plat (indépendante des ingrédients) : les plats
+// consistants (gratin, soupe chaude, tarte) ont leur place en hiver ; les plats
+// légers/froids (salade, soupe froide) en été. Renvoie un score ∈ [-1, 1] :
+// +1 = en pleine saison, -1 = à contre-saison, 0 = neutre (mi-saison ou type non concerné).
+const HEARTY_DISHES = new Set(["gratin", "soupe", "tarte"]);   // hivernaux
+const LIGHT_DISHES = new Set(["salade", "soupe-froide"]);      // estivaux
+export function dishSeasonScore(recipe, month = currentMonth()) {
+  const cat = recipe?.category || "";
+  const winter = month === 12 || month === 1 || month === 2;
+  const summer = month === 6 || month === 7 || month === 8;
+  if (HEARTY_DISHES.has(cat)) return winter ? 1 : summer ? -1 : 0;
+  if (LIGHT_DISHES.has(cat)) return summer ? 1 : winter ? -1 : 0;
+  return 0;
+}
+
+// Styles de génération choisis par l'utilisateur (sous-menu « Générer »).
+//  - facile     : privilégie le rapide et le peu d'ingrédients, évite le difficile.
+//  - equilibre  : comportement par défaut (aucun biais).
+//  - aventureux : privilégie les recettes plus longues et plus difficiles.
+export const GEN_STYLES = {
+  facile: { ...DEFAULT_WEIGHTS, effort: 1.4, simple: 0.7, difficulty: -0.6 },
+  equilibre: { ...DEFAULT_WEIGHTS },
+  aventureux: { ...DEFAULT_WEIGHTS, effort: -0.5, difficulty: 1.1 },
+};
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
@@ -34,6 +59,17 @@ const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 export function effortScore(recipe) {
   const min = (Number(recipe.prepTime) || 0) + (Number(recipe.cookTime) || 0);
   return clamp01(1 - Math.max(0, min - 15) / 75);
+}
+
+// Simplicité ∈ [0,1] : 1 = peu d'ingrédients (≤ ~6), décroît ensuite.
+export function simplicityScore(recipe) {
+  const n = (recipe.ingredients || []).length;
+  return clamp01(1 - Math.max(0, n - 6) / 10);
+}
+
+// Difficulté ∈ [0,1] : recipe.difficulty (1..5) normalisée ; inconnue → neutre.
+function difficultyScore(recipe) {
+  return Number.isFinite(recipe.difficulty) ? clamp01((recipe.difficulty - 1) / 4) : 0.4;
 }
 
 // Fraction des ingrédients résolus déjà en stock (composants inclus).
@@ -67,8 +103,14 @@ export function scoreRecipe(recipe, ctx = {}) {
   const health = Number.isFinite(recipe.healthScore) ? recipe.healthScore / 100 : 0.5;
   const stock = stockAffinity(recipe, ctx);
   const effort = effortScore(recipe);
+  const simple = simplicityScore(recipe);
+  const difficulty = difficultyScore(recipe);
+  const dishSeason = dishSeasonScore(recipe, ctx.month ?? currentMonth());
   const dislike = hasDislike(recipe, ctx) ? 1 : 0;
-  return w.season * season + w.health * health + w.stock * stock + w.effort * effort - w.dislike * dislike;
+  return w.season * season + w.health * health + w.stock * stock
+    + w.effort * effort + (w.simple || 0) * simple + (w.difficulty || 0) * difficulty
+    + (w.dishSeason || 0) * dishSeason
+    - w.dislike * dislike;
 }
 
 // Accompagnements candidats pour un plat : recettes de rôle « accompagnement »
@@ -165,7 +207,10 @@ export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, e
       // Repas composé (midi/soir) : entrée + plat + accompagnement + dessert.
       if (compose && slot !== "matin") {
         const groupId = newGroupId();
+        // Certains plats (soupe, pasta, gratin…) se suffisent : on saute le côté.
+        const needsSide = platNeedsSide(plat.recipe);
         for (const role of COMPOSE_ROLES) {
+          if (role === "accompagnement" && !needsSide) continue;
           const pick = role === "plat" ? plat : takeForRole(role, byRole[role], date);
           if (pick) out.push({ date, slot, recipeId: pick.recipe.id, role, groupId, portions: pick.portions });
         }

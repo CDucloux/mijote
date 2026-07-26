@@ -46,29 +46,47 @@ function LoadingOverlay() {
   );
 }
 
-// Ligne-option du sélecteur (empilées verticalement). `accent` = import IA
-// (marqué par une petite tête qui réfléchit plutôt qu'un libellé « IA »).
-function Choice({ icon, title, subtitle, onClick, accent, ai }) {
+// Pastille « IA » : pastille orange, anneau blanc fin (net dans les deux
+// thèmes) et un petit robot blanc (yeux évidés couleur pastille), centré.
+function AiBadge() {
   return (
-    <button onClick={onClick} className="pressable" style={{
-      display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
+    <span title="Extraction par IA" style={{ position: "absolute", top: -6, right: -6, display: "grid", placeItems: "center", width: 21, height: 21, borderRadius: "50%", background: "var(--accent)", border: "1.5px solid rgba(255,255,255,0.92)", boxShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
+        {/* antenne */}
+        <rect x="11" y="2" width="2" height="3.4" rx="1" fill="#fff" />
+        <circle cx="12" cy="2.4" r="2" fill="#fff" />
+        {/* tête */}
+        <rect x="4" y="7" width="16" height="12" rx="4" fill="#fff" />
+        {/* yeux + bouche évidés */}
+        <circle cx="9" cy="12.6" r="1.9" fill="var(--accent)" />
+        <circle cx="15" cy="12.6" r="1.9" fill="var(--accent)" />
+        <rect x="9" y="16" width="6" height="1.6" rx="0.8" fill="var(--accent)" />
+      </svg>
+    </span>
+  );
+}
+
+// Ligne-option du sélecteur (empilées verticalement). `accent` = import IA.
+// `disabled` grise l'option et affiche `note` (raison), sans être cliquable.
+function Choice({ icon, title, subtitle, onClick, accent, ai, disabled, note }) {
+  return (
+    <button onClick={disabled ? undefined : onClick} disabled={disabled} className={disabled ? "" : "pressable"} style={{
+      display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
+      cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1,
       padding: "14px 15px", borderRadius: 16,
-      background: accent ? "linear-gradient(100deg, rgba(232,112,58,0.13), var(--surface2) 75%)" : "var(--surface2)",
-      border: `1px solid ${accent ? "rgba(232,112,58,0.38)" : "var(--border)"}`,
+      background: accent && !disabled ? "linear-gradient(100deg, rgba(232,112,58,0.13), var(--surface2) 75%)" : "var(--surface2)",
+      border: `1px solid ${accent && !disabled ? "rgba(232,112,58,0.38)" : "var(--border)"}`,
     }}>
       <span style={{ position: "relative", flexShrink: 0 }}>
         <span style={{ width: 44, height: 44, borderRadius: 13, display: "grid", placeItems: "center", background: accent ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
           <Icon name={icon} size={21} color={accent ? "var(--accent)" : "var(--text2)"} />
         </span>
-        {ai && (
-          <span title="Extraction par IA" style={{ position: "absolute", top: -5, right: -5, display: "grid", placeItems: "center", width: 19, height: 19, borderRadius: 999, background: "var(--accent)", border: "2px solid var(--surface)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}>
-            <Icon name="thinking" size={11} color="#fff" />
-          </span>
-        )}
+        {ai && <AiBadge />}
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{title}</span>
         <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 3 }}>{subtitle}</span>
+        {note && <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "var(--accent)", marginTop: 6 }}><Icon name="info" size={12} color="var(--accent)" /> {note}</span>}
       </span>
       <Icon name="forward" size={16} color="var(--text3)" />
     </button>
@@ -86,8 +104,9 @@ export function NewRecipeButton({ onManual }) {
   const resetPhotos = () => { photos.forEach(p => URL.revokeObjectURL(p.preview)); setPhotos([]); };
   const openNew = () => {
     setError(""); setUrl(""); resetPhotos();
-    if (isAdmin) setStep("choose");
-    else onManual();               // sans droits d'import : saisie manuelle directe
+    // L'écran de choix est visible par tous ; les options d'import IA sont
+    // désactivées (avec explication) pour les non-admins.
+    setStep("choose");
   };
   const goManual = () => { setStep("idle"); onManual(); };
 
@@ -146,8 +165,8 @@ export function NewRecipeButton({ onManual }) {
           <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Nouvelle recette</h3>
           <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 18px" }}>Comment veux-tu la créer ?</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <Choice icon="link" accent ai title="Importer depuis un lien" subtitle="Colle une URL : l'IA extrait et met en forme la recette." onClick={() => { setError(""); setStep("url"); }} />
-            <Choice icon="photo" accent ai title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => { setError(""); resetPhotos(); setStep("photo"); }} />
+            <Choice icon="link" accent ai disabled={!isAdmin} note={!isAdmin ? "Import par IA en accès limité pour le moment" : undefined} title="Importer depuis un lien" subtitle="Colle une URL : l'IA extrait et met en forme la recette." onClick={() => { setError(""); setStep("url"); }} />
+            <Choice icon="photo" accent ai disabled={!isAdmin} note={!isAdmin ? "Import par IA en accès limité pour le moment" : undefined} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => { setError(""); resetPhotos(); setStep("photo"); }} />
             <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
               <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
               <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>
@@ -192,7 +211,7 @@ export function NewRecipeButton({ onManual }) {
           <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>
             Photographie la recette d'un livre. Ajoute une <strong style={{ color: "var(--text2)" }}>2ᵉ photo</strong> si elle tient sur deux pages. Tu pourras tout relire avant d'enregistrer.
           </p>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple hidden
+          <input ref={fileRef} type="file" accept="image/*" multiple hidden
             onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: error ? 8 : 16 }}>
             {photos.map((p, i) => (

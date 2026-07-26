@@ -54,7 +54,7 @@ function PanForm({ title, pan, set }) {
   );
 }
 
-function MouleTab({ recipeServings, onApply, onReset, applied }) {
+function MouleTab({ onApply, onReset, applied }) {
   const [orig, setOrig] = useState({ shape: "round", diameter: "", length: "", width: "", height: "" });
   const [target, setTarget] = useState({ shape: "round", diameter: "", length: "", width: "", height: "" });
   const factor = panFactor(orig, target);

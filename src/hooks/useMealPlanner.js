@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { currentMonth } from "../lib/seasonality.js";
-import { generateWeek } from "../lib/mealPlanner.js";
+import { generateWeek, GEN_STYLES } from "../lib/mealPlanner.js";
 
 // ─── GÉNÉRATION DU PLANNING (couche I/O) ─────────────────────────────────────
 // Assemble le contexte (résolveur d'ingrédients, stock, préférences, mois) et
@@ -13,9 +13,10 @@ export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = 
   const undoRef = useRef(null);
   const [canUndo, setCanUndo] = useState(false);
 
-  const generate = useCallback((dates = [], slots = ["midi", "soir"], { replace = false, compose = false, portionsPerMeal = 2 } = {}) => {
+  const generate = useCallback((dates = [], slots = ["midi", "soir"], { replace = false, compose = false, portionsPerMeal = 2, style = "equilibre" } = {}) => {
     const byId = new Map(recipes.map(r => [r.id, r]));
-    const ctx = { resolver, byId, month: currentMonth(), stockSet: new Set(stock || []), preferences: preferences || {} };
+    const weights = GEN_STYLES[style] || GEN_STYLES.equilibre;
+    const ctx = { resolver, byId, month: currentMonth(), stockSet: new Set(stock || []), preferences: preferences || {}, weights };
     const assignments = generateWeek({ dates, slots, recipes, ctx, existing: mealPlan, replace, compose, portionsPerMeal });
     if (!assignments.length) return { count: 0 };
 

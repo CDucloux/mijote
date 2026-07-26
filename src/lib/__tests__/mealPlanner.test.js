@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreRecipe, effortScore, eligibleForSlot, generateWeek } from "../mealPlanner.js";
+import { scoreRecipe, effortScore, simplicityScore, dishSeasonScore, eligibleForSlot, generateWeek, GEN_STYLES } from "../mealPlanner.js";
 
 const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const DB = [
@@ -47,6 +47,52 @@ describe("scoreRecipe", () => {
     const r = R("s", { ingredients: [{ name: "Riz" }] });
     const inStock = scoreRecipe(r, { ...ctx, stockSet: new Set(["riz"]) });
     expect(inStock).toBeGreaterThan(scoreRecipe(r, ctx));
+  });
+});
+
+describe("simplicityScore", () => {
+  it("vaut 1 pour peu d'ingrédients et décroît ensuite", () => {
+    expect(simplicityScore({ ingredients: Array.from({ length: 4 }) })).toBe(1);
+    expect(simplicityScore({ ingredients: Array.from({ length: 16 }) })).toBeLessThan(1);
+  });
+});
+
+describe("dishSeasonScore (affinité saisonnière du type de plat)", () => {
+  it("favorise les plats consistants en hiver, les pénalise en été", () => {
+    expect(dishSeasonScore({ category: "gratin" }, 1)).toBe(1);   // janvier
+    expect(dishSeasonScore({ category: "gratin" }, 7)).toBe(-1);  // juillet
+    expect(dishSeasonScore({ category: "soupe" }, 12)).toBe(1);
+  });
+  it("favorise le froid/léger en été, le pénalise en hiver", () => {
+    expect(dishSeasonScore({ category: "soupe-froide" }, 7)).toBe(1);
+    expect(dishSeasonScore({ category: "soupe-froide" }, 1)).toBe(-1);
+    expect(dishSeasonScore({ category: "salade" }, 8)).toBe(1);
+  });
+  it("neutre en mi-saison ou pour un type non concerné", () => {
+    expect(dishSeasonScore({ category: "gratin" }, 4)).toBe(0);   // avril
+    expect(dishSeasonScore({ category: "plat" }, 1)).toBe(0);
+  });
+  it("distingue soupe chaude et soupe froide selon la saison", () => {
+    const chaude = { category: "soupe", ingredients: [] };
+    const froide = { category: "soupe-froide", ingredients: [] };
+    const ete = { ...ctx, month: 7 };
+    const hiver = { ...ctx, month: 1 };
+    expect(scoreRecipe(froide, ete)).toBeGreaterThan(scoreRecipe(chaude, ete));
+    expect(scoreRecipe(chaude, hiver)).toBeGreaterThan(scoreRecipe(froide, hiver));
+  });
+});
+
+describe("styles de génération (GEN_STYLES)", () => {
+  const rapideSimple = R("facile", { prepTime: 5, cookTime: 5, difficulty: 1, ingredients: [{ name: "Riz" }, { name: "Courgette" }] });
+  const longDifficile = R("complexe", { prepTime: 60, cookTime: 60, difficulty: 5, ingredients: Array.from({ length: 14 }, (_, i) => ({ name: `ing${i}` })) });
+
+  it("le style facile préfère la recette rapide et simple", () => {
+    const c = { ...ctx, weights: GEN_STYLES.facile };
+    expect(scoreRecipe(rapideSimple, c)).toBeGreaterThan(scoreRecipe(longDifficile, c));
+  });
+  it("le style aventureux préfère la recette longue et difficile", () => {
+    const c = { ...ctx, weights: GEN_STYLES.aventureux };
+    expect(scoreRecipe(longDifficile, c)).toBeGreaterThan(scoreRecipe(rapideSimple, c));
   });
 });
 
@@ -118,6 +164,19 @@ describe("generateWeek", () => {
     const roles = out.map(a => a.role).sort();
     expect(roles).toEqual(["accompagnement", "dessert", "entree", "plat"]);
     expect(new Set(out.map(a => a.groupId)).size).toBe(1); // un seul repas
+  });
+
+  it("ne met pas d'accompagnement quand le plat se suffit (soupe, pasta…)", () => {
+    const lib = [
+      R("soupe1", { category: "soupe", ingredients: [{ name: "Courgette" }] }),
+      R("ent1", { category: "entree", ingredients: [{ name: "Courgette" }] }),
+      R("acc1", { category: "accompagnement", ingredients: [{ name: "Riz" }] }),
+      R("des1", { category: "dessert", ingredients: [{ name: "Courgette" }] }),
+    ];
+    const out = generateWeek({ dates: ["2026-07-01"], slots: ["midi"], recipes: lib, ctx, compose: true });
+    expect(out.find(a => a.role === "plat").recipeId).toBe("soupe1");
+    expect(out.some(a => a.role === "accompagnement")).toBe(false); // côté sauté
+    expect(out.map(a => a.role).sort()).toEqual(["dessert", "entree", "plat"]);
   });
 
   it("réutilise les portions cuisinées (recette pour 6 replacée sur plusieurs jours)", () => {

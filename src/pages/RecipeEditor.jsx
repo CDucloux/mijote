@@ -13,7 +13,7 @@ import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
-export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, collections, recipes }) {
+export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, recipes }) {
   const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", category: recipe.category || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
   const [section, setSection] = useState("info");
   const up = (f, v) => setForm(p => ({ ...p, [f]: v }));
@@ -76,14 +76,6 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const addComponent = (comp) => {
     up("ingredients", [...form.ingredients, { id: "i" + Date.now(), recipeId: comp.id, name: comp.name, amount: "", unit: comp.yield?.unit || "g" }]);
   };
-
-  // Utensils
-  const addUt = () => {
-    const first = utensilDB[0];
-    up("utensils", [...form.utensils, { id: "u" + Date.now(), dbId: first?.id || "", name: first?.name || "" }]);
-  };
-  const updUt = (id, f, v) => up("utensils", form.utensils.map(u => u.id === id ? { ...u, [f]: v } : u));
-  const remUt = id => up("utensils", form.utensils.filter(u => u.id !== id));
 
   // Steps with drag reorder
   const addStep = () => up("steps", [...form.steps, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [] }]);

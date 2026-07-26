@@ -15,7 +15,7 @@ export function ImageUpload({ value, onChange, style, pathPrefix = "misc" }) {
     try {
       const url = await uploadImage(file, pathPrefix);
       onChange(url);
-    } catch (err) {
+    } catch {
       // Fallback: if Storage upload fails, keep working with compressed base64
       try {
         const { blob } = await compressImage(file);

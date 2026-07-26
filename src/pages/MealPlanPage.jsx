@@ -9,7 +9,7 @@ import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "../lib/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
-import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory } from "../lib/composedMeal.js";
+import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "../lib/composedMeal.js";
 import { suggestSides } from "../lib/mealPlanner.js";
 import { buildBatchSession, weekEntries } from "../lib/batchSession.js";
 import { isEligible } from "../lib/dietFilter.js";
@@ -31,17 +31,12 @@ const MP_SLOT_LABEL = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, `${s.emoji} 
 const MP_SLOT_COLOR = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.color]));
 const MP_SLOT_TEXT = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.text]));
 const MP_SLOT_TIMES = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.ics]));
+const MEAL_ROLE_IDS = ["entree", "plat", "accompagnement", "dessert"];
 
 function mpGetWeekDays(ref) {
   const d = new Date(ref), day = d.getDay(), diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   return Array.from({ length: 7 }, (_, i) => { const dd = new Date(d); dd.setDate(d.getDate() + i); return dd.toISOString().slice(0, 10); });
-}
-function mpGetMonthDays(ref) {
-  const y = ref.getFullYear(), m = ref.getMonth(), first = new Date(y, m, 1), last = new Date(y, m + 1, 0), days = [];
-  for (let i = 0; i < (first.getDay() || 7) - 1; i++) days.push(null);
-  for (let d = 1; d <= last.getDate(); d++) days.push(new Date(y, m, d).toISOString().slice(0, 10));
-  return days;
 }
 function mpPad(n) { return String(n).padStart(2, "0"); }
 function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T" + timeStr; }
@@ -58,7 +53,16 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
       style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
       {groupSlotMeals(meals, recipesById).map((g, gi) => {
-        const composed = !!g.groupId && g.items.length > 1;
+        // Un item généré porte toujours un groupId → c'est un repas (composé),
+        // même s'il n'a qu'un plat pour l'instant (plus de « plat orphelin »).
+        const composed = !!g.groupId;
+        const roles = new Set(g.items.map(({ item }) => itemRole(item, recipesById.get(item.recipeId))));
+        // Un plat qui se suffit (soupe, pasta…) n'attend pas d'accompagnement :
+        // le repas est « complet » sans lui.
+        const platItem = g.items.find(({ item }) => itemRole(item, recipesById.get(item.recipeId)) === "plat");
+        const needsSide = !platItem || platNeedsSide(recipesById.get(platItem.item.recipeId));
+        const required = needsSide ? MEAL_ROLE_IDS : MEAL_ROLE_IDS.filter(r => r !== "accompagnement");
+        const full = required.every(r => roles.has(r));
         return (
           <div key={g.groupId || `g${gi}`} style={composed ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7, display: "flex", flexDirection: "column", gap: 5 } : undefined}>
             {g.items.map(({ item }) => {
@@ -82,7 +86,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
                 </div>
               );
             })}
-            {slot !== "matin" && onComplete && (
+            {slot !== "matin" && onComplete && !full && (
               <button onClick={() => onComplete(date, slot, g)} title="Compléter le repas (entrée, accompagnement, dessert)"
                 style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2, padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: "transparent", color: MP_SLOT_TEXT[slot], border: `1px dashed ${MP_SLOT_TEXT[slot]}`, cursor: "pointer" }}>
                 <Icon name="plus" size={10} color={MP_SLOT_TEXT[slot]} /> Compléter
@@ -110,7 +114,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
-  const monthDays = useMemo(() => mpGetMonthDays(currentDate), [currentDate]);
   const recipesById = useMemo(() => new Map(recipes.map(r => [r.id, r])), [recipes]);
 
   // Composition manuelle : contexte pour suggérer des recettes par rôle.
@@ -140,14 +143,26 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     setComposeFor(null);
   }, [composeFor, setMealPlan, notify]);
 
-  // Génération automatique de la semaine visible (créneaux midi/soir vides).
+  // Génération de la semaine visible (créneaux midi/soir vides), avec un
+  // sous-menu de configuration (style : facile / équilibré / aventureux).
   const [genDone, setGenDone] = useState(false);
-  const handleGenerate = useCallback(() => {
+  const [genOpen, setGenOpen] = useState(false);
+  const [genStyle, setGenStyle] = useState("equilibre");
+  const [genBatch, setGenBatch] = useState(false); // batch cooking : tout préparer d'avance
+  const runGenerate = useCallback((style, batch) => {
     const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
-    const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm });
-    if (count > 0) { setGenDone(true); notify(`${count} repas proposés, à relire et ajuster`, "success"); }
-    else notify("Cette semaine est déjà remplie (midi et soir)", "info");
-  }, [generate, weekDays, notify, household]);
+    const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm, style });
+    setGenOpen(false);
+    if (count > 0) {
+      setGenDone(true);
+      notify(`${count} repas proposés, à relire et ajuster`, "success");
+      // Batch cooking demandé → on ouvre directement la session (tout à préparer).
+      if (batch) setShowBatch(true);
+    } else if (!recipes.length) {
+      // Aucune recette en bibliothèque : rien à proposer (≠ semaine déjà remplie).
+      notify("Ajoute d'abord des recettes pour générer une semaine", "info");
+    } else notify("Cette semaine est déjà remplie (midi et soir)", "info");
+  }, [generate, weekDays, notify, household, recipes]);
   const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
 
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
@@ -161,19 +176,19 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const removeMeal = useCallback((date, idx) => setMealPlan(prev => { const arr = [...(prev[date] || [])]; arr.splice(idx, 1); return { ...prev, [date]: arr }; }), [setMealPlan]);
   const moveMeal = useCallback((fromDate, fromIdx, toDate, toSlot) => setMealPlan(prev => {
-    if (fromDate === toDate) {
-      // Same day: splice + re-insert in one atomic array operation
-      const arr = [...(prev[fromDate] || [])];
-      const [item] = arr.splice(fromIdx, 1);
-      item.slot = toSlot;
-      arr.push(item);
-      return { ...prev, [fromDate]: arr };
-    }
-    // Different days
     const from = [...(prev[fromDate] || [])];
-    const [item] = from.splice(fromIdx, 1);
-    item.slot = toSlot;
-    return { ...prev, [fromDate]: from, [toDate]: [...(prev[toDate] || []), item] };
+    const [orig] = from.splice(fromIdx, 1);
+    if (!orig) return prev;
+    const toArr = fromDate === toDate ? from : [...(prev[toDate] || [])];
+    // Rattache l'item au repas déjà présent sur le créneau cible (même groupId) :
+    // sinon il apparaissait comme un nouveau repas orphelin sous l'existant.
+    // Aucun repas cible → il forme son propre repas (midi/soir), matin = sans groupe.
+    const targetGroup = toArr.find(m => m.slot === toSlot && m.groupId)?.groupId
+      || (toSlot === "matin" ? undefined : newGroupId());
+    const moved = { ...orig, slot: toSlot };
+    if (targetGroup) moved.groupId = targetGroup; else delete moved.groupId;
+    toArr.push(moved);
+    return fromDate === toDate ? { ...prev, [fromDate]: toArr } : { ...prev, [fromDate]: from, [toDate]: toArr };
   }), [setMealPlan]);
   const addMeal = useCallback((date, slots, recipeId) => {
     setMealPlan(prev => { const e = [...(prev[date] || [])]; slots.forEach(slot => e.push({ recipeId, slot, portions: 1 })); return { ...prev, [date]: e }; });
@@ -196,7 +211,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const SLOT_TIMES = MP_SLOT_TIMES;
 
   const pad = mpPad;
-  const toICSDate = mpToICSDate; // eslint-disable-line
+  const toICSDate = mpToICSDate;
   const escapeICS = mpEscapeICS;
 
   const exportICS = () => {
@@ -275,7 +290,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {genDone
               ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
-              : <button onClick={handleGenerate} className="btn btn-primary" style={{ padding: "8px 13px", borderRadius: 12 }}><Icon name="sparkle" size={15} /> Générer</button>}
+              : <button onClick={() => setGenOpen(true)} className="btn btn-primary" style={{ padding: "8px 13px", borderRadius: 12 }}><Icon name="calendar" size={15} /> Générer</button>}
             <UserAvatar />
           </div>
         </div>
@@ -286,9 +301,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </span>
           <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)", flexShrink: 0 }}>Auj.</button>
-          <button onClick={() => setShowBatch(true)} title="Session batch : plats à cuisiner et préparations de base à faire d'avance" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(76,175,125,0.16)", border: "1px solid rgba(76,175,125,0.4)", color: "var(--green)", flexShrink: 0 }}>
-            <Icon name="fire" size={13} color="var(--green)" /> Batch
-          </button>
           <button onClick={exportICS} title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
             <Icon name="calendar" size={13} color="var(--blue)" /> Agenda
           </button>
@@ -316,7 +328,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                     </button>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {MEAL_SLOTS.map(s => (
+                    {MEAL_SLOTS.filter(s => s.id !== "matin" || getMeals(date, s.id).length).map(s => (
                       <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} />
                     ))}
                   </div>
@@ -383,6 +395,63 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             ))}
             {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
           </div>
+        </SwipeableSheet>
+      )}
+
+      {/* Sous-menu de génération : choix du style de repas */}
+      {genOpen && (
+        <SwipeableSheet onClose={() => setGenOpen(false)} style={{ maxHeight: "82dvh" }}>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>
+          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Quel style de repas veux-tu pour les créneaux vides (midi et soir) ?</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+            {[
+              { id: "facile", icon: "clock", title: "Facile et rapide", desc: "Peu d'ingrédients, préparation et cuisson courtes. Idéal quand on manque de temps." },
+              { id: "equilibre", icon: "leaf", title: "Équilibré", desc: "Un bon compromis entre saison, santé, variété et effort." },
+              { id: "aventureux", icon: "fire", title: "Aventureux", desc: "Des recettes plus élaborées et plus difficiles, pour se lancer des défis." },
+            ].map(o => {
+              const active = genStyle === o.id;
+              return (
+                <button key={o.id} onClick={() => setGenStyle(o.id)} className="pressable" style={{
+                  display: "flex", alignItems: "center", gap: 13, width: "100%", textAlign: "left", cursor: "pointer",
+                  padding: "13px 14px", borderRadius: 15,
+                  background: active ? "rgba(232,112,58,0.12)" : "var(--surface2)",
+                  border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
+                }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: active ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
+                    <Icon name={o.icon} size={19} color={active ? "var(--accent)" : "var(--text2)"} />
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 14.5, fontWeight: 600, color: "var(--text)" }}>{o.title}</span>
+                    <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>{o.desc}</span>
+                  </span>
+                  <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: "50%", display: "grid", placeItems: "center", border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accent)" : "transparent" }}>
+                    {active && <Icon name="check" size={12} color="#fff" />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {/* Batch cooking : tout préparer d'avance (ex. le dimanche) */}
+          <button onClick={() => setGenBatch(v => !v)} className="pressable" style={{
+            display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
+            padding: "12px 14px", borderRadius: 14, marginBottom: 16,
+            background: genBatch ? "rgba(76,175,125,0.12)" : "var(--surface2)",
+            border: `1.5px solid ${genBatch ? "var(--green)" : "var(--border)"}`,
+          }}>
+            <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: genBatch ? "rgba(76,175,125,0.2)" : "var(--surface3)" }}>
+              <Icon name="fire" size={18} color={genBatch ? "var(--green)" : "var(--text2)"} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Batch cooking</span>
+              <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>Regroupe tout ce qu'il y a à cuisiner pour la semaine en une seule session à préparer d'avance.</span>
+            </span>
+            <span style={{ flexShrink: 0, width: 42, height: 24, borderRadius: 999, padding: 2, background: genBatch ? "var(--green)" : "var(--surface3)", display: "flex", justifyContent: genBatch ? "flex-end" : "flex-start", transition: "background 0.15s" }}>
+              <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff" }} />
+            </span>
+          </button>
+          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} onClick={() => runGenerate(genStyle, genBatch)}>
+            <Icon name="calendar" size={16} /> Générer la semaine
+          </button>
         </SwipeableSheet>
       )}
 

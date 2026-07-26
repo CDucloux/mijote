@@ -10,19 +10,30 @@ import { useOnline } from "./useOnline.js";
 // Hors-ligne : le cache persistant Firestore sert ce qu'il a ; et si la 1re charge
 // s'est faite sans données (hors-ligne, cache vide), on relance automatiquement
 // au retour de la connexion.
+// Cache module du feed public (par uid + taille). Le composant Découvrir se
+// remonte à chaque retour sur l'Accueil ; sans cache, la liste repart vide et un
+// re-fetch masque la page (le hold de scroll attend l'ancre de la carte). On
+// réhydrate donc le dernier feed connu : affichage instantané, ancre présente
+// tout de suite. La fraîcheur reste assurée par « Rafraîchir » et le reconnect.
+let feedCache = { key: null, recipes: [] };
+
 export function useDiscoverRecipes(user, { enabled = true, max = 120 } = {}) {
   const online = useOnline();
-  const [recipes, setRecipes] = useState([]);
+  const key = user ? `${user.uid}:${max}` : null;
+  const cached = !!(key && feedCache.key === key);
+  const [recipes, setRecipes] = useState(cached ? feedCache.recipes : []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [loadedOnce, setLoadedOnce] = useState(false);
+  const [loadedOnce, setLoadedOnce] = useState(cached);
   const wasOnline = useRef(online);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true); setError(false);
     try {
-      setRecipes(await fetchPublicRecipes(max));
+      const list = await fetchPublicRecipes(max);
+      setRecipes(list);
+      feedCache = { key: `${user.uid}:${max}`, recipes: list };
     } catch {
       setError(true);
     } finally {

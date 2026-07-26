@@ -1,10 +1,10 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { flushSync } from "react-dom";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
-import { signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
 
 import { auth, provider } from "./lib/firebase.js";
-import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer, fetchUserDirectory } from "./lib/firestore.js";
+import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer, fetchUserDirectory, deleteAllUserData } from "./lib/firestore.js";
 import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "./lib/publicRecipes.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
@@ -161,7 +161,7 @@ function AppInner() {
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
-  const { cloudLoaded, workspaceReady } = useFirestoreSync({
+  const { workspaceReady } = useFirestoreSync({
     user, setUser, isAdmin, setSyncStatus, householdPointer,
     recipes, setRecipes,
     collections, setCollections,
@@ -333,7 +333,7 @@ function AppInner() {
     try {
       const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
       const comps = compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : [];
-      const { added, mainId, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
+      const { added, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
       if (alreadyOwned) { notify("Déjà dans tes recettes"); return; }
       const updated = [...added, ...recipes];
       setRecipes(updated);
@@ -369,8 +369,8 @@ function AppInner() {
   };
 
   const exportPDF = recipe => {
-    printRecipe(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes) });
-    notify("PDF en cours de génération…");
+    printRecipe(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes), techniques });
+    notify("Ouverture de l'aperçu d'impression…");
   };
 
   // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer
@@ -433,7 +433,9 @@ function AppInner() {
     if (!returning || !anchor) return;
     lastPublicPubId.current = null;
     setScrollHold(true); // rendu masqué avant peinture → pas de flash en haut
-    const deadline = Date.now() + 3000;
+    // Filet de sécurité : le feed est réhydraté depuis le cache, l'ancre apparaît
+    // donc quasi immédiatement. On borne court pour ne jamais rester blanc longtemps.
+    const deadline = Date.now() + 1200;
     let raf;
     const tryScroll = () => {
       const el = document.getElementById(`discover-card-${anchor}`);
@@ -455,6 +457,31 @@ function AppInner() {
     notify(scope === "all" ? "Données effacées" : "Effacé", "info");
   };
 
+  // Suppression RGPD du compte : efface les données Firestore perso, supprime le
+  // compte d'authentification (avec ré-auth si Firebase l'exige), purge le local.
+  const deleteAccount = async () => {
+    const uid = user?.uid;
+    if (!uid) return false;
+    try {
+      await deleteAllUserData(uid).catch(() => { /* best-effort : on supprime quand même le compte */ });
+      try {
+        await deleteUser(auth.currentUser);
+      } catch (e) {
+        if (e?.code === "auth/requires-recent-login") {
+          // Firebase exige une connexion récente pour supprimer : on ré-authentifie.
+          await signInWithPopup(auth, provider);
+          await deleteUser(auth.currentUser);
+        } else throw e;
+      }
+      try { Object.keys(localStorage).filter(k => k.startsWith("rf_") || k.startsWith("mijote")).forEach(k => localStorage.removeItem(k)); } catch { /* quota */ }
+      setUser(null);
+      return true;
+    } catch {
+      notify("Suppression du compte impossible. Reconnecte-toi puis réessaie.", "error");
+      return false;
+    }
+  };
+
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
@@ -463,7 +490,7 @@ function AppInner() {
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "fridge" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
-      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} onPurge={purgeData} />}
+      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} onPurge={purgeData} onDeleteAccount={deleteAccount} />}
       {tab === "legal" && <LegalPage />}
     </div>
   );

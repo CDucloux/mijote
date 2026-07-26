@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roleForCategory, itemRole, groupSlotMeals, newGroupId } from "../composedMeal.js";
+import { roleForCategory, itemRole, groupSlotMeals, newGroupId, platNeedsSide } from "../composedMeal.js";
 
 describe("roleForCategory", () => {
   it("mappe le type vers un rôle", () => {
@@ -44,5 +44,17 @@ describe("groupSlotMeals", () => {
 describe("newGroupId", () => {
   it("génère des identifiants distincts", () => {
     expect(newGroupId()).not.toBe(newGroupId());
+  });
+});
+
+describe("platNeedsSide", () => {
+  it("un plat générique appelle un accompagnement", () => {
+    expect(platNeedsSide({ category: "plat" })).toBe(true);
+    expect(platNeedsSide({})).toBe(true);
+  });
+  it("les plats complets n'en ont pas besoin", () => {
+    for (const cat of ["soupe", "salade", "pasta", "pizza", "gratin", "tarte"]) {
+      expect(platNeedsSide({ category: cat })).toBe(false);
+    }
   });
 });

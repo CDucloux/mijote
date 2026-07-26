@@ -1811,7 +1811,7 @@ select {
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 8px;
+  margin-top: 20px;
 }
 
 .login-feat {
@@ -1883,15 +1883,48 @@ select {
   left: 3px;
 }
 
-.login-copyright {
+.login-footer {
   position: absolute;
-  bottom: 16px;
-  right: 20px;
-  font-size: 11px;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 20px;
+}
+
+.login-consent {
+  font-size: 10.5px;
   color: var(--text3);
   line-height: 1.5;
+  text-align: center;
+  max-width: 320px;
+  margin: 4px auto 0;
+  opacity: 0.9;
+}
+
+.login-footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.login-copyright {
+  font-size: 10.5px;
+  color: var(--text3);
+  line-height: 1.4;
   text-align: right;
-  pointer-events: none;
+  opacity: 0.65;
+}
+
+.login-version {
+  font-size: 10px;
+  color: var(--text3);
+  opacity: 0.55;
+  letter-spacing: 0.02em;
 }
 
 /* ─── MEAL PLAN : bouton d'ajout extensible (desktop) ──────────────────────── */

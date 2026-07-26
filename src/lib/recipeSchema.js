@@ -4,9 +4,9 @@
 // match the current schema: the top-level `description` and each step's `title`
 // are no longer part of it. Other fields are preserved untouched.
 export function cleanRecipeForExport(recipe) {
-  const { description, steps, ...rest } = recipe;
+  const { description: _description, steps, ...rest } = recipe;
   const cleaned = { ...rest };
-  if (Array.isArray(steps)) cleaned.steps = steps.map(({ title, ...step }) => step);
+  if (Array.isArray(steps)) cleaned.steps = steps.map(({ title: _title, ...step }) => step);
   return cleaned;
 }
 
