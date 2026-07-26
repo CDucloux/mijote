@@ -258,6 +258,10 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
       .hero { height: 200px; }
       .section-title { break-after: avoid; page-break-after: avoid; }
       .step-header { break-after: avoid; page-break-after: avoid; }
+      /* Une étape ne doit jamais être coupée entre deux pages (texte + astuce +
+         pastilles restent solidaires). Si elle ne tient pas, elle bascule en entier
+         sur la page suivante. */
+      .step { break-inside: avoid; page-break-inside: avoid; }
       p { orphans: 3; widows: 3; }
     }
   </style>
