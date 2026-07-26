@@ -208,7 +208,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const SLOT_TIMES = MP_SLOT_TIMES;
 
   const pad = mpPad;
-  const toICSDate = mpToICSDate; // eslint-disable-line
+  const toICSDate = mpToICSDate;
   const escapeICS = mpEscapeICS;
 
   const exportICS = () => {
