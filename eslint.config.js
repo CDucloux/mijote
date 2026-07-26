@@ -18,6 +18,11 @@ export default defineConfig([
       globals: { ...globals.browser, __APP_VERSION__: 'readonly' },
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // Autorise les variables/arguments préfixés par _ (rejets volontaires de
+      // déstructuration, ex. `const { _ro, ...rest } = obj`).
+      'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+    },
   },
   {
     // Fichiers de tests : exposer les globals Vitest et l'environnement Node.

@@ -84,7 +84,7 @@ function DifficultyPips({ level }) {
   );
 }
 
-export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, collections, setCollections, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques }) {
+export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques }) {
   const navigate = useNavigate();
   const location = useLocation();
   const configSectionParam = location.pathname.startsWith("/config/")
@@ -101,12 +101,9 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editTech, setEditTech] = useState(null);
-  const [editCat, setEditCat] = useState(null); // { key, label, color, icon, isNew }
-  const [confirmDelCat, setConfirmDelCat] = useState(null); // { key, label }
   const [confirmDel, setConfirmDel] = useState(null); // { type: "ing" | "ut", item }
   const [dragCat, setDragCat] = useState(null); // key being dragged
   const [overCat, setOverCat] = useState(null); // key currently hovered as drop target
-  const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState("");
   const [schemaOpen, setSchemaOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -162,31 +159,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const delTech = id => setTechniques?.(prev => prev.filter(t => t.id !== id));
 
   // ── Categories (admin only) ─────────────────────────────────────────────────────
-  const slugifyCat = (label) => "cat_" + label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 32);
-  const saveCat = (form) => {
-    const label = (form.label || "").trim();
-    if (!label) return;
-    let key = form.key;
-    if (form.isNew) {
-      key = slugifyCat(label) || ("cat_" + Date.now());
-      if (categories[key]) key = key + "_" + Date.now().toString(36).slice(-4);
-    }
-    const entry = {
-      label,
-      color: form.color || "#9a9490",
-      icon: form.icon || "📦",
-      order: form.isNew
-        ? (Math.max(-1, ...Object.values(categories).map(c => c.order ?? 0)) + 1)
-        : (categories[key]?.order ?? Object.keys(categories).length),
-    };
-    setCategories(prev => ({ ...prev, [key]: entry }));
-    setEditCat(null);
-  };
-  const delCat = (key) => {
-    const inUse = ingredientDB.filter(d => (d.category || "other") === key).length;
-    if (inUse > 0) return; // guarded in UI too
-    setCategories(prev => { const next = { ...prev }; delete next[key]; return next; });
-  };
   // Reorder categories by drag & drop: move `fromKey` to the position of `toKey`.
   const moveCategory = (fromKey, toKey) => {
     if (fromKey === toKey) return;

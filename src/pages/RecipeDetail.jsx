@@ -32,7 +32,7 @@ import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onUpdateCollections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
+export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
   const navigate = useNavigate();
   const location = useLocation();
   // `state.fromPath` = page d'origine (ex. "/home") → on y retourne tel quel.
@@ -164,7 +164,6 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     catch { /* annulé par l'utilisateur */ }
     setShareOpen(false);
   };
-  const isProgrammaticScroll = useRef(false);
   const mult = (servings / (recipe.servings || 2)) * panFactor;
   const seasonResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);

@@ -161,7 +161,7 @@ function AppInner() {
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
-  const { cloudLoaded, workspaceReady } = useFirestoreSync({
+  const { workspaceReady } = useFirestoreSync({
     user, setUser, isAdmin, setSyncStatus, householdPointer,
     recipes, setRecipes,
     collections, setCollections,
@@ -333,7 +333,7 @@ function AppInner() {
     try {
       const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
       const comps = compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : [];
-      const { added, mainId, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
+      const { added, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
       if (alreadyOwned) { notify("Déjà dans tes recettes"); return; }
       const updated = [...added, ...recipes];
       setRecipes(updated);

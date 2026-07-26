@@ -38,12 +38,6 @@ function mpGetWeekDays(ref) {
   d.setDate(d.getDate() + diff);
   return Array.from({ length: 7 }, (_, i) => { const dd = new Date(d); dd.setDate(d.getDate() + i); return dd.toISOString().slice(0, 10); });
 }
-function mpGetMonthDays(ref) {
-  const y = ref.getFullYear(), m = ref.getMonth(), first = new Date(y, m, 1), last = new Date(y, m + 1, 0), days = [];
-  for (let i = 0; i < (first.getDay() || 7) - 1; i++) days.push(null);
-  for (let d = 1; d <= last.getDate(); d++) days.push(new Date(y, m, d).toISOString().slice(0, 10));
-  return days;
-}
 function mpPad(n) { return String(n).padStart(2, "0"); }
 function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T" + timeStr; }
 function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").join("\\,").split(";").join("\\;"); }
@@ -120,7 +114,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
-  const monthDays = useMemo(() => mpGetMonthDays(currentDate), [currentDate]);
   const recipesById = useMemo(() => new Map(recipes.map(r => [r.id, r])), [recipes]);
 
   // Composition manuelle : contexte pour suggérer des recettes par rôle.

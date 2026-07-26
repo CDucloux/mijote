@@ -51,7 +51,6 @@ export function groupSlotMeals(entries = [], recipesById = new Map()) {
   const groups = [];
   const byId = new Map();
   entries.forEach((item, idx) => {
-    const key = item.groupId || `solo-${idx}`;
     let g = item.groupId ? byId.get(item.groupId) : null;
     if (!g) { g = { groupId: item.groupId || null, items: [] }; groups.push(g); if (item.groupId) byId.set(item.groupId, g); }
     g.items.push({ item, idx });

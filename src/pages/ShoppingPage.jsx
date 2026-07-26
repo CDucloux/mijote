@@ -19,14 +19,12 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // l'animation de passage dans « Acheté » (l'article glisse vers le bas en
 // s'estompant avant de rejoindre la section).
 
-export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, stock = [], setStock, lowStock = [], setLowStock }) {
+export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, setStock, setLowStock }) {
   const { notify } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
   const [activeListId, setActiveListId] = useState(null);
   const [newItemName, setNewItemName] = useState("");
-  const [newItemAmount, setNewItemAmount] = useState("");
-  const [newItemUnit, setNewItemUnit] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [confirmClearId, setConfirmClearId] = useState(null);
   const [pending, setPending] = useState(() => new Set()); // articles en cours d'animation → « Acheté »
@@ -69,7 +67,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
     const dbMatch = findIngredientMatch(name, ingredientDB);
     const item = { id: "si" + Date.now(), name, amount: parsed.amount || "", unit: parsed.unit || "", image: dbMatch?.image || "", checked: false };
     updateList(activeList.id, l => ({ ...l, items: [...l.items, item] }));
-    setNewItemName(""); setNewItemAmount(""); setNewItemUnit("");
+    setNewItemName("");
   };
 
   // Catégorie d'un article : résolue depuis la Master DB via le nom (sinon "other").
