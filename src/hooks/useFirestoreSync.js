@@ -66,6 +66,11 @@ export function useFirestoreSync({
   // Snapshot live des slices partagés (pour capturer l'état local au moment d'une fusion).
   const sharedRef = useRef({});
   sharedRef.current = { recipes, collections, mealPlan, shoppingLists, stock, lowStock };
+  // Miroir des préférences locales (perso) : permet au bootstrap de ne pas perdre
+  // un displayName saisi localement mais pas encore synchronisé (sinon un
+  // rechargement l'écrasait par le displayName vide du cloud).
+  const prefsRef = useRef(preferences);
+  prefsRef.current = preferences;
 
   const desiredHid = householdPointer?.id || null;
   // Refs « valeur la plus récente » : les effets d'autosave les lisent au moment de
@@ -135,7 +140,21 @@ export function useFirestoreSync({
         if (shared.shoppingLists) setShoppingLists(shared.shoppingLists);
         if (shared.stock) setStock(shared.stock);
         if (shared.lowStock) setLowStock(shared.lowStock);
-        if (data.preferences) setPreferences(normalizePreferences(data.preferences)); // perso : toujours solo
+        // Préférences (perso, toujours solo). On préserve un displayName saisi
+        // localement mais non encore synchronisé : si le cloud ne l'a pas (vide),
+        // on garde le local ET on le repousse pour qu'il se propage aux autres
+        // appareils. Évite la perte du pseudo au rechargement / sur un 2e appareil.
+        {
+          const localName = (prefsRef.current?.displayName || "").trim();
+          let prefs = data.preferences ? normalizePreferences(data.preferences) : (localName ? normalizePreferences(prefsRef.current) : null);
+          if (prefs) {
+            if (!prefs.displayName && localName) {
+              prefs = { ...prefs, displayName: localName };
+              setDoc(metaDoc(ws, "preferences"), prefs).catch(() => { }); // resynchronise le pseudo
+            }
+            setPreferences(prefs);
+          }
+        }
         setUserDB(data.userDB || { ingredients: [], utensils: [] });               // perso : toujours solo
         const freshMaster = await masterPromise;
         setMasterDB(freshMaster);
