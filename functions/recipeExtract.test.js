@@ -129,6 +129,19 @@ describe("assignIdsAndLink — préparations de base (composants)", () => {
     expect(components[0].yield.amount).toBeGreaterThan(0);
   });
 
+  it("retire des étapes principales les renvois « méta » à un composant", () => {
+    const { recipe } = assignIdsAndLink({
+      name: "Tarte au caramel",
+      components: [{ name: "Caramel beurre salé", yield: { amount: 400, unit: "g" }, ingredients: [{ name: "sucre", amount: 200, unit: "g" }], steps: [{ text: "Faire un caramel à sec puis ajouter le beurre." }] }],
+      ingredients: [{ component: "Caramel beurre salé", amount: 400, unit: "g" }],
+      steps: [
+        { text: "Préparer le caramel beurre salé selon la méthode décrite dans le composant." },
+        { text: "Couler le caramel sur le fond de tarte et réserver au frais." },
+      ],
+    });
+    expect(recipe.steps.map(s => s.text)).toEqual(["Couler le caramel sur le fond de tarte et réserver au frais."]);
+  });
+
   it("ligne composant orpheline (composant introuvable) → repli en ligne brute inerte", () => {
     const { recipe } = assignIdsAndLink({
       name: "X", components: [], ingredients: [{ component: "Fantôme", amount: 100, unit: "g" }], steps: [],
