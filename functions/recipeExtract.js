@@ -47,16 +47,39 @@ function mentions(text, name) {
   return new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(text);
 }
 
+// Union des ustensiles cités PARTOUT par le LLM : le tableau de tête `utensils`
+// ET ceux référencés au fil des étapes. Certains modèles ne remplissent que les
+// étapes (ou renvoient un tableau de tête vide) : sans ça, la recette ressortait
+// sans aucun ustensile. Dédupliqué par nom normalisé.
+function collectUtensils(d) {
+  const byNorm = new Map();
+  const add = (name) => {
+    const nm = (name || "").toString().trim();
+    const key = norm(nm);
+    if (key && !byNorm.has(key)) byNorm.set(key, { name: nm });
+  };
+  (d.utensils || []).forEach(u => add(u.name || u));
+  (d.steps || []).forEach(s => (s.utensils || []).forEach(add));
+  return [...byNorm.values()];
+}
+
 // Ne garde que les ustensiles présents dans la base master (liste de noms connus).
-// Rapprochement tolérant (accents/casse, singulier grossier). Si la liste connue
-// est vide (client ne l'a pas fournie), on ne filtre pas.
+// Rapprochement tolérant (accents/casse, singulier grossier, mot commun ≥ 4). Si la
+// liste connue est vide (client ne l'a pas fournie), on ne filtre pas.
 function filterUtensilsToKnown(utensils, knownNames) {
   if (!knownNames || !knownNames.length) return utensils || [];
   const known = knownNames.map(norm);
   const sing = (s) => s.replace(/s\b/g, "");
+  const words = (s) => s.split(" ").filter(w => w.length >= 4);
   return (utensils || []).filter(u => {
     const n = norm(u.name || u);
-    return n && known.some(k => k === n || sing(k) === sing(n) || k.includes(n) || n.includes(k));
+    if (!n) return false;
+    return known.some(k => {
+      if (k === n || sing(k) === sing(n) || k.includes(n) || n.includes(k)) return true;
+      // mot significatif commun (« batteur électrique » ↔ « batteur », « moule à cake » ↔ « moule à manqué »)
+      const kw = words(k), nw = words(n);
+      return kw.some(w => nw.includes(w));
+    });
   });
 }
 
@@ -139,5 +162,5 @@ function imageUrlsInText(text) {
 
 module.exports = {
   CUISINE_LABELS, matchCuisine, matchCategory, extractOgImage, mentions,
-  filterUtensilsToKnown, assignIdsAndLink, htmlToText, imageUrlsInText,
+  collectUtensils, filterUtensilsToKnown, assignIdsAndLink, htmlToText, imageUrlsInText,
 };

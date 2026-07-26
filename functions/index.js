@@ -12,7 +12,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret, defineString } = require("firebase-functions/params");
 const {
   htmlToText, imageUrlsInText, extractOgImage,
-  assignIdsAndLink, filterUtensilsToKnown, CUISINE_LABELS,
+  assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
 } = require("./recipeExtract.js");
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
@@ -194,7 +194,7 @@ exports.importRecipeFromUrl = onCall(
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
       const inter = await extractWithLlm(text, url, knownUtensils);
       inter.image = ogImage; // le texte n'a pas d'image → on prend l'og:image de la page
-      inter.utensils = filterUtensilsToKnown(inter.utensils, knownUtensils);
+      inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       // Images d'étape : on ne garde que des URLs réellement présentes dans la page
       // (anti-hallucination) et jamais l'image principale du plat.
       const pageImages = imageUrlsInText(text);
@@ -236,7 +236,7 @@ exports.importRecipeFromImages = onCall(
     try {
       const inter = await extractFromImages(images, knownUtensils);
       inter.image = "";
-      inter.utensils = filterUtensilsToKnown(inter.utensils, knownUtensils);
+      inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");

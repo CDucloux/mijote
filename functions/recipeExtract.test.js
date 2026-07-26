@@ -1,7 +1,25 @@
 import { describe, it, expect } from "vitest";
 import {
-  matchCuisine, matchCategory, extractOgImage, assignIdsAndLink, filterUtensilsToKnown, htmlToText, imageUrlsInText,
+  matchCuisine, matchCategory, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText,
 } from "./recipeExtract.js";
+
+describe("collectUtensils", () => {
+  it("réunit les ustensiles de tête ET ceux cités dans les étapes", () => {
+    const d = {
+      utensils: [{ name: "Four" }],
+      steps: [
+        { text: "…", utensils: ["Saladier", "Fouet"] },
+        { text: "…", utensils: ["Four", "Saladier"] }, // doublons
+      ],
+    };
+    const names = collectUtensils(d).map(u => u.name).sort();
+    expect(names).toEqual(["Fouet", "Four", "Saladier"]);
+  });
+  it("récupère les ustensiles même si le tableau de tête est vide (modèle qui ne remplit que les étapes)", () => {
+    const d = { utensils: [], steps: [{ text: "…", utensils: ["Moule à cake", "Batteur électrique"] }] };
+    expect(collectUtensils(d).map(u => u.name).sort()).toEqual(["Batteur électrique", "Moule à cake"]);
+  });
+});
 
 describe("matchCategory", () => {
   it("ne garde qu'un id de catégorie valide", () => {
@@ -73,6 +91,10 @@ describe("filterUtensilsToKnown", () => {
   it("ne filtre pas si aucune liste connue fournie", () => {
     const arr = [{ name: "truc" }];
     expect(filterUtensilsToKnown(arr, [])).toBe(arr);
+  });
+  it("rapproche sur un mot significatif commun", () => {
+    const out = filterUtensilsToKnown([{ name: "Batteur électrique" }, { name: "Grand saladier" }], ["Batteur", "Saladier"]);
+    expect(out.map(u => u.name)).toEqual(["Batteur électrique", "Grand saladier"]);
   });
 });
 
