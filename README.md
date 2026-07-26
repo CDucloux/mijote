@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-3.0.0-e8703a?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.8.1-e8703a?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -17,6 +17,7 @@ toujours avec vous.
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-12-FFCA28?style=flat-square&logo=firebase&logoColor=black)
+![Cloud Functions](https://img.shields.io/badge/Cloud_Functions-Node_22-4285F4?style=flat-square&logo=googlecloud&logoColor=white)
 ![React Router](https://img.shields.io/badge/React_Router-7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-4-6E9F18?style=flat-square&logo=vitest&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-10-4B32C3?style=flat-square&logo=eslint&logoColor=white)
@@ -35,6 +36,7 @@ toujours avec vous.
   - [Configuration](#configuration)
   - [Lancer en développement](#lancer-en-développement)
 - [📜 Scripts](#-scripts)
+- [☁️ Déploiement](#️-déploiement)
 - [🔖 Versionner](#-versionner)
 - [🏗️ Architecture](#️-architecture)
 - [📄 Licence](#-licence)
@@ -42,34 +44,52 @@ toujours avec vous.
 ## ✨ Fonctionnalités
 
 - 📖 **Recettes** — éditeur complet (ingrédients, ustensiles, étapes liées),
-  recherche, tri, et **étapes enrichies** : chaque étape peut porter une photo
-  et une astuce, reprises dans la fiche et le mode pas-à-pas.
-- 📓 **Carnets** — rangez vos recettes dans des carnets colorés (ex-collections),
-  avec création rapide depuis la page Recettes.
+  recherche, filtres et tri (par défaut : les plus récentes d'abord). Chaque
+  étape peut porter une photo et une astuce, reprises dans la fiche et le mode
+  pas-à-pas.
+- 🧩 **Préparations de base** — une recette peut consommer une « base »
+  réutilisable (sauce, pâte, appareil) avec un rendement ; les courses éclatent
+  automatiquement la base en ingrédients bruts.
+- 🤖 **Import par IA** — importez une recette depuis une **URL** ou **1 à 2
+  photos** d'un livre : extraction, structuration et liaison des ingrédients /
+  ustensiles par Claude (Cloud Function réservée à l'administrateur).
+- 📓 **Carnets** — rangez vos recettes dans des carnets colorés (manuels ou
+  « intelligents », dérivés d'un filtre).
 - 🌍 **Style de cuisine** — un champ unique parmi une liste prédéfinie
   (Française, Italienne, Marocaine, Japonaise…) qui sert aussi de filtre.
-- 📓 **Journal d'itérations** — chaque modification de recette est versionnée
+- 📝 **Journal d'itérations** — chaque modification de recette est versionnée
   avec un diff visuel, un commentaire et l'avatar de l'auteur.
-- 🥗 **Nutri-Score & score santé** — calculé automatiquement à partir des
-  ingrédients et de la base nutritionnelle (données Ciqual).
-- 🌿 **Saisonnalité** — déduite des ingrédients ; badge « De saison » sur les
-  cartes et filtre dédié.
-- 📅 **Planning repas** — semainier glisser-déposer, export `.ics` vers votre
-  calendrier.
+- 🥗 **Nutri-Score & score santé** — calculés automatiquement à partir des
+  ingrédients et de la base nutritionnelle (données Ciqual), avec difficulté
+  estimée.
+- 🌿 **Saisonnalité** — déduite des ingrédients ; badge « De saison » et filtre
+  dédié.
+- 📅 **Planning repas** — semainier glisser-déposer, **générateur de semaine**
+  (styles facile / équilibré / aventureux, repas composés, affinité de saison),
+  **session batch** (préparations à cuisiner d'avance) et export `.ics`.
 - 🛒 **Listes de courses** — ajout par collage, tri par rayon, gestes de swipe
-  (→ j'achète, ← je supprime) et **partage temps réel** entre plusieurs membres
-  (jusqu'à 4 personnes).
+  (→ j'achète, ← je supprime).
 - 📦 **Stock** — inventaire « en stock / bientôt vide » ; les achats non
-  périssables rejoignent automatiquement le stock, et le détail recette signale
+  périssables rejoignent automatiquement le stock, et la fiche recette signale
   ce que vous avez déjà.
+- 🏡 **Foyer** — partage temps réel des recettes, du planning et des courses
+  entre les membres d'un même foyer (invitation par e-mail).
+- 🧭 **Découvrir** — recettes publiées par la communauté, filtrables et
+  clonables en un geste ; publication depuis vos propres recettes.
 - 👨‍🍳 **Mode cuisine** — guidage pas-à-pas plein écran, photos et astuces
   d'étape incluses.
-- 🖨️ **Export** — PDF imprimable (sans sauts de page intempestifs) et JSON
-  (import/export de recettes).
-- ☁️ **Synchro cloud** — persistance Firestore hors-ligne (IndexedDB), connexion
-  Google.
+- 🖨️ **Export** — impression PDF propre (texte sélectionnable, étapes non
+  coupées, badges vegan / cuisine / difficulté) et JSON (import / export).
+- 👤 **Profil** — nom d'affichage, heatmap d'activité cuisine façon GitHub, et
+  zone de danger (purge ciblée, **suppression de compte** RGPD).
+- 📜 **Informations légales** — mentions légales, confidentialité, CGU et
+  cookies (Markdown), consultables même déconnecté.
+- ☁️ **Synchro cloud** — persistance Firestore hors-ligne (IndexedDB), base de
+  référence partagée synchronisée **en temps réel**, connexion Google.
+- 🔒 **Anti-abus** — attestation d'origine (Firebase App Check) et règles
+  Firestore durcies contre l'aspiration des données.
 - 🌗 **Thème clair / sombre** et interface responsive mobile + desktop (PWA
-  installable).
+  installable), avec onboarding illustré.
 
 ## 🛠️ Stack technique
 
@@ -78,7 +98,9 @@ toujours avec vous.
 | UI | React 19, React Router 7 |
 | Build | Vite 8 (Rolldown), `vite-plugin-pwa` |
 | Backend | Firebase 12 (Auth, Firestore, Storage) |
-| Tests | Vitest 4 (58 tests unitaires sur les libs critiques) |
+| Serveur | Cloud Functions v2 (Node 22, `europe-west1`) |
+| IA | Claude (Anthropic) pour l'import de recettes (vision + texte) |
+| Tests | Vitest 4 (303 tests unitaires sur les libs et hooks critiques) |
 | CI | GitHub Actions (test + build sur chaque push) |
 | Qualité | ESLint 10 |
 
@@ -88,7 +110,7 @@ toujours avec vous.
 
 - Node.js 22+ et npm
 - Un projet [Firebase](https://console.firebase.google.com/) (Auth Google +
-  Firestore + Storage activés)
+  Firestore + Storage activés ; Cloud Functions pour l'import IA)
 
 ### Installation
 
@@ -101,7 +123,7 @@ npm install
 Créez un fichier `.env` à la racine avec vos clés Firebase :
 
 ```shell
-# Firebase
+# Firebase (obligatoire)
 VITE_FIREBASE_API_KEY=...
 VITE_FIREBASE_AUTH_DOMAIN=...
 VITE_FIREBASE_PROJECT_ID=...
@@ -111,16 +133,23 @@ VITE_FIREBASE_APP_ID=...
 
 # Contrôle d'accès (optionnel)
 VITE_ALLOWED_EMAIL=...   # restreint la connexion à cet e-mail
-VITE_ADMIN_EMAIL=...     # e-mail admin (édition de la base de référence partagée)
+VITE_ADMIN_EMAIL=...     # e-mail admin (édition de la base de référence, import IA)
+
+# App Check / anti-scraping (optionnel — voir Déploiement)
+VITE_FIREBASE_RECAPTCHA_SITE_KEY=...   # active App Check (reCAPTCHA v3) si renseignée
+VITE_APPCHECK_DEBUG_TOKEN=...          # jeton de debug, en développement uniquement
 ```
 
 > [!IMPORTANT]
-> Sans ces variables, Firebase ne s'initialise pas et la connexion échoue.
-> Le fichier `.env` ne doit **jamais** être commité — il est ignoré par git.
+> Sans les variables `VITE_FIREBASE_*`, Firebase ne s'initialise pas et la
+> connexion échoue. Le fichier `.env` ne doit **jamais** être commité — il est
+> ignoré par git.
 
 > [!NOTE]
 > `VITE_ALLOWED_EMAIL` verrouille l'application à une seule adresse Google.
 > Laissez la variable vide pour autoriser n'importe quel compte Google.
+> L'import IA (Cloud Functions) requiert en plus le secret serveur
+> `ANTHROPIC_API_KEY` et le paramètre `ADMIN_EMAIL` (voir `functions/README.md`).
 
 ### Lancer en développement
 
@@ -144,6 +173,21 @@ L'application est disponible sur `http://localhost:5173`.
 | `npm run preview` | Prévisualise le build de production |
 | `npm test` | Lance la suite de tests Vitest |
 | `npm run lint` | Analyse statique ESLint |
+
+## ☁️ Déploiement
+
+Le **front** est hébergé sur Vercel (déploiement à chaque push sur `main`).
+Le **backend Firebase** se déploie via la CLI :
+
+```shell
+# Règles de sécurité + Cloud Functions
+npx firebase deploy --only firestore:rules,storage:rules,functions
+```
+
+> [!NOTE]
+> **App Check** : renseignez `VITE_FIREBASE_RECAPTCHA_SITE_KEY` et déployez le
+> front *avant* d'activer le mode *Enforce* (console Firebase → App Check) sur
+> Firestore / Functions / Storage, sinon vous bloqueriez vos propres requêtes.
 
 ## 🔖 Versionner
 
@@ -171,18 +215,23 @@ src/
 ├── App.jsx          # Shell : routing, état global, câblage
 ├── main.jsx         # Bootstrap React + enregistrement du service worker
 ├── context/         # Concerns transverses (AppShellContext)
-├── hooks/           # Hooks réutilisables (useFirestoreSync, useLS…)
-├── lib/             # Logique pure : domaine (Nutri-Score, parsing,
-│                    #   import/export) + infra Firebase
-├── constants/       # Données figées (catégories, onglets, changelog)
+├── hooks/           # Hooks réutilisables (useFirestoreSync, useHousehold, useLS…)
+├── lib/             # Logique pure : domaine (Nutri-Score, planning, parsing,
+│                    #   import/export, PDF) + infra Firebase
+├── constants/       # Données figées (catégories, créneaux, changelog)
+├── content/         # Contenu Markdown (documents légaux)
 ├── components/      # Composants de présentation réutilisables
-├── screens/         # Écrans (Home, MealPlan, Shopping, Stock, Config…)
+├── pages/           # Écrans (Home, MealPlan, Shopping, Recipes, Profile…)
 └── styles/          # global.css
+
+functions/           # Cloud Functions (import IA) — extraction pure testée à part
+data/                # Base d'ingrédients (YAML, source Ciqual)
+scripts/             # Outils (seed de la base de référence)
 ```
 
 La logique métier (calcul nutritionnel, rapprochement d'ingrédients, génération
-PDF, import de recettes) vit dans `lib/` et est découplée de React, donc
-testable en isolation.
+du planning, import de recettes, PDF) vit dans `lib/` et `functions/`, découplée
+de React et de tout I/O, donc testable en isolation.
 
 ## 📄 Licence
 
