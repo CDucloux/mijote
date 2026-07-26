@@ -142,6 +142,27 @@ describe("assignIdsAndLink — préparations de base (composants)", () => {
     expect(recipe.steps.map(s => s.text)).toEqual(["Couler le caramel sur le fond de tarte et réserver au frais."]);
   });
 
+  it("retire l'étape « méta » même si le modèle a oublié de créer la fiche composant", () => {
+    const { recipe } = assignIdsAndLink({
+      name: "Tarte au caramel", components: [],
+      ingredients: [{ name: "caramel beurre salé", amount: 400, unit: "g" }],
+      steps: [
+        { text: "Préparer le caramel selon la méthode décrite dans le composant." },
+        { text: "Étaler la pâte et couler le caramel." },
+      ],
+    });
+    expect(recipe.steps.map(s => s.text)).toEqual(["Étaler la pâte et couler le caramel."]);
+  });
+
+  it("ne supprime pas une étape au pluriel « les composants secs »", () => {
+    const { recipe } = assignIdsAndLink({
+      name: "Cake", components: [],
+      ingredients: [{ name: "farine", amount: 200, unit: "g" }],
+      steps: [{ text: "Mélanger tous les composants secs dans un saladier." }],
+    });
+    expect(recipe.steps).toHaveLength(1);
+  });
+
   it("ligne composant orpheline (composant introuvable) → repli en ligne brute inerte", () => {
     const { recipe } = assignIdsAndLink({
       name: "X", components: [], ingredients: [{ component: "Fantôme", amount: 100, unit: "g" }], steps: [],
