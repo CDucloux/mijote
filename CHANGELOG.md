@@ -1,5 +1,24 @@
 # Changelog – Mijoté
 
+## v3.8.0 – Safran · Sécurité & synchronisation
+
+### Sécurité
+- **Protection anti-scraping** : attestation d'origine des requêtes (**App Check**) et lecture de la base durcie (requêtes bornées, e-mail vérifié requis) pour éviter l'aspiration des données
+
+### Synchronisation
+- Base d'**ingrédients / ustensiles / techniques** synchronisée **en temps réel** entre appareils : les mises à jour arrivent sans avoir à recharger
+
+### Planning
+- Le créneau **Petit-déjeuner** est masqué par défaut : seuls **Midi** et **Soir** s'affichent tant que rien n'y est prévu
+- Message clair quand la **bibliothèque est vide** (au lieu de « semaine déjà remplie »)
+
+### Export PDF
+- Une **étape** n'est plus **coupée** entre deux pages
+
+### Sous le capot
+- **Import IA** : récupération fiable des ustensiles cités dans les étapes
+- Grand nettoyage du code (variables inutilisées, configuration du linter)
+
 ## v3.7.0 – Safran · Informations légales & finitions
 
 ### Informations légales (RGPD)
