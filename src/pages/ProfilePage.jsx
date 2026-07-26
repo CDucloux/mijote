@@ -5,16 +5,20 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { CookingHeatmap } from "../components/CookingHeatmap.jsx";
 import { buildHeatmap } from "../lib/cookingActivity.js";
 import { DEFAULT_PREFERENCES } from "../constants/preferences.js";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
 // ─── PROFIL ───────────────────────────────────────────────────────────────────
 // Page dédiée (accès depuis le menu avatar) : nom d'affichage, activité cuisine
 // (heatmap façon GitHub) et purge des données.
-export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, mealPlan = {}, onPurge }) {
+export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, mealPlan = {}, onPurge, onDeleteAccount }) {
   const navigate = useNavigate();
+  const isDesktop = useIsDesktop();
   const prefs = preferences || DEFAULT_PREFERENCES;
   const currentName = prefs.displayName || user?.displayName || "";
   const [nameInput, setNameInput] = useState(null);
   const [purgeScope, setPurgeScope] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const editing = nameInput !== null;
 
   const stats = buildHeatmap(mealPlan, { weeks: 26 });
@@ -85,7 +89,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
           <div style={{ borderTop: "1px solid var(--border)", paddingTop: 18 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--red)", marginBottom: 4 }}>Zone de danger</div>
             <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 12px" }}>Efface définitivement des données de ton espace. Irréversible.</p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: isDesktop ? "row" : "column", flexWrap: "wrap", gap: 8 }}>
               {[
                 { scope: "planning", label: "Vider le planning" },
                 { scope: "shopping", label: "Vider les courses" },
@@ -93,11 +97,23 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                 { scope: "all", label: "Tout effacer" },
               ].map(o => (
                 <button key={o.scope} onClick={() => setPurgeScope(o)}
-                  style={{ padding: "8px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: o.scope === "all" ? "rgba(224,82,82,0.14)" : "var(--surface2)", color: o.scope === "all" ? "var(--red)" : "var(--text2)", border: `1px solid ${o.scope === "all" ? "rgba(224,82,82,0.5)" : "var(--border)"}` }}>
+                  style={{ width: isDesktop ? "auto" : "100%", padding: "10px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: o.scope === "all" ? "rgba(224,82,82,0.14)" : "var(--surface2)", color: o.scope === "all" ? "var(--red)" : "var(--text2)", border: `1px solid ${o.scope === "all" ? "rgba(224,82,82,0.5)" : "var(--border)"}` }}>
                   {o.label}
                 </button>
               ))}
             </div>
+            {onDeleteAccount && (
+              <>
+                <div style={{ height: 1, background: "var(--border)", margin: "16px 0 14px" }} />
+                <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, marginBottom: 10 }}>
+                  <strong style={{ color: "var(--text)" }}>Supprimer mon compte</strong> : efface ton compte et toutes tes données (recettes, carnets, planning, courses, stock, préférences). Cette action est définitive.
+                </div>
+                <button onClick={() => setConfirmDelete(true)}
+                  style={{ width: isDesktop ? "auto" : "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", background: "var(--red)", color: "#fff", border: "none" }}>
+                  <Icon name="trash" size={15} color="#fff" /> Supprimer mon compte
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -113,6 +129,25 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPurgeScope(null)}>Annuler</button>
             <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onPurge?.(purgeScope.scope); setPurgeScope(null); }}>Effacer</button>
+          </div>
+        </SwipeableSheet>
+      )}
+
+      {confirmDelete && (
+        <SwipeableSheet onClose={() => { if (!deleting) setConfirmDelete(false); }}>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "grid", placeItems: "center", margin: "0 auto 14px" }}>
+            <Icon name="trash" size={24} color="var(--red)" />
+          </div>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, textAlign: "center" }}>Supprimer définitivement ton compte ?</h3>
+          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.55, textAlign: "center" }}>
+            Ton compte et <strong style={{ color: "var(--text)" }}>toutes tes données</strong> (recettes, carnets, planning, courses, stock, préférences) seront <strong style={{ color: "var(--text)" }}>effacés sans retour possible</strong>. Tu seras déconnecté·e.
+          </p>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} disabled={deleting} onClick={() => setConfirmDelete(false)}>Annuler</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} disabled={deleting}
+              onClick={async () => { setDeleting(true); const ok = await onDeleteAccount?.(); if (!ok) { setDeleting(false); setConfirmDelete(false); } }}>
+              {deleting ? "Suppression…" : "Supprimer"}
+            </button>
           </div>
         </SwipeableSheet>
       )}
