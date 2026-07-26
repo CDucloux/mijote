@@ -158,13 +158,15 @@ function assignIdsAndLink(d) {
     if (!comp) return { ...rest, dbId: "" };
     return { ...rest, recipeId: comp._key, unit: comp.yield.unit, amount: (ing.amount != null && ing.amount !== "") ? ing.amount : comp.yield.amount, _raw: "" };
   });
-  // Filet de sécurité : on retire des étapes de la recette PRINCIPALE toute étape
-  // « méta » qui renvoie à un composant au lieu de l'utiliser (« préparer X selon la
-  // méthode décrite dans le composant »). Le mot « composant » (singulier) n'a rien à
-  // faire dans une instruction destinée au lecteur — même quand le modèle a oublié de
-  // créer la fiche. On ne touche pas au pluriel « les composants secs » (bord de mot
-  // après « composant » : \bcomposant\b ne matche pas « composants »).
-  recipe.steps = recipe.steps.filter(s => !/\bcomposant\b/.test(norm(s.text)));
+  // Filet de sécurité : SEULEMENT si des composants existent, on retire des étapes de
+  // la recette PRINCIPALE toute étape « méta » redondante qui renvoie au composant au
+  // lieu de l'utiliser (« préparer X selon la méthode décrite dans le composant »). On
+  // ne filtre PAS quand aucun composant n'a été créé : l'étape est alors la seule trace
+  // de la sous-préparation, la supprimer effacerait l'info. Singulier uniquement
+  // (\bcomposant\b ne matche pas le pluriel « les composants secs »).
+  if (components.length) {
+    recipe.steps = recipe.steps.filter(s => !/\bcomposant\b/.test(norm(s.text)));
+  }
   return { recipe, components };
 }
 

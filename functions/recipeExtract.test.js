@@ -142,7 +142,9 @@ describe("assignIdsAndLink — préparations de base (composants)", () => {
     expect(recipe.steps.map(s => s.text)).toEqual(["Couler le caramel sur le fond de tarte et réserver au frais."]);
   });
 
-  it("retire l'étape « méta » même si le modèle a oublié de créer la fiche composant", () => {
+  it("ne détruit PAS la seule mention d'une sous-prépa quand aucun composant n'existe", () => {
+    // Sans composant créé, l'étape « méta » est la seule trace : on la garde (mieux
+    // qu'un caramel qui disparaît complètement).
     const { recipe } = assignIdsAndLink({
       name: "Tarte au caramel", components: [],
       ingredients: [{ name: "caramel beurre salé", amount: 400, unit: "g" }],
@@ -151,7 +153,7 @@ describe("assignIdsAndLink — préparations de base (composants)", () => {
         { text: "Étaler la pâte et couler le caramel." },
       ],
     });
-    expect(recipe.steps.map(s => s.text)).toEqual(["Étaler la pâte et couler le caramel."]);
+    expect(recipe.steps).toHaveLength(2);
   });
 
   it("ne supprime pas une étape au pluriel « les composants secs »", () => {

@@ -38,8 +38,13 @@ export function validateRecipeSchema(r, label) {
       const who = `ingrédient #${j + 1}`;
       if (typeof ing !== "object" || ing === null || Array.isArray(ing)) { errs.push(`${label} : ${who} invalide.`); return; }
       if (typeof ing.name !== "string" || !ing.name.trim()) errs.push(`${label} : ${who} sans nom.`);
-      if (ing.amount != null && (typeof ing.amount !== "number" || Number.isNaN(ing.amount) || ing.amount < 0))
-        errs.push(`${label} : ${who} "${ing.name || ""}" → "amount" doit être un nombre positif.`);
+      // `amount` toléré en nombre OU en chaîne numérique ("200", "1,5") : le LLM et
+      // certains fichiers renvoient des chaînes. Le stockage/calcul reste via Number().
+      if (ing.amount != null && ing.amount !== "") {
+        const n = typeof ing.amount === "number" ? ing.amount
+          : (typeof ing.amount === "string" && ing.amount.trim() !== "" ? Number(ing.amount.replace(",", ".")) : NaN);
+        if (Number.isNaN(n) || n < 0) errs.push(`${label} : ${who} "${ing.name || ""}" → "amount" doit être un nombre positif.`);
+      }
       if (ing.unit != null && typeof ing.unit !== "string") errs.push(`${label} : ${who} → "unit" doit être une chaîne.`);
     });
   }
