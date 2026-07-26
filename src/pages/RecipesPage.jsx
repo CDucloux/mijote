@@ -21,7 +21,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
   const [filterCol, setFilterCol] = useState(null);
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState("date"); // tri par défaut : plus récentes d'abord (plus simple à retrouver)
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
   const [filterOpen, setFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
