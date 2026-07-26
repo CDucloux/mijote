@@ -1,5 +1,9 @@
 # Changelog – Mijoté
 
+## v3.8.1 – Safran · Correctifs
+
+- **Mes recettes** : tri par défaut sur les **plus récentes** (au lieu de A → Z) — plus simple pour retrouver ce qu'on vient d'ajouter. Le dernier ajout apparaît bien en tête, même parmi les recettes du même jour. Les tris A → Z et Santé restent disponibles.
+
 ## v3.8.0 – Safran · Sécurité & synchronisation
 
 ### Sécurité

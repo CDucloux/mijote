@@ -17,11 +17,23 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
+// Horodatage ms encodé dans l'id ("r"+Date.now()…) → départage les recettes créées
+// le même jour, car createdAt est au jour près (et parfois absent). 0 si non horodaté.
+const idTimestamp = (id) => { const m = /^r(\d{10,})/.exec(id || ""); return m ? Number(m[1]) : 0; };
+// Tri par récence DÉCROISSANTE (plus récent d'abord) : createdAt (jour) puis, à
+// égalité ou en son absence, l'horodatage encodé dans l'id.
+const byRecent = (a, b) => {
+  const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+  const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+  const da = Number.isNaN(ta) ? 0 : ta, db = Number.isNaN(tb) ? 0 : tb;
+  return db !== da ? db - da : idTimestamp(b.id) - idTimestamp(a.id);
+};
+
 export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
   const [filterCol, setFilterCol] = useState(null);
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState("date"); // tri par défaut : plus récentes d'abord (plus simple à retrouver)
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
   const [filterOpen, setFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -91,7 +103,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       if (filterCol && !r.collections?.includes(filterCol)) return false;
       return matchesFilters(r, filters, { resolver, techniques, techIndex, recipes });
     })
-    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : new Date(b.createdAt) - new Date(a.createdAt)),
+    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : byRecent(a, b)),
   [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]);
 
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, filters]);
