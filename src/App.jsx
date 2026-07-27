@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
@@ -34,17 +34,21 @@ import { OnboardingCarousel } from "./components/OnboardingCarousel.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
-import { RecipesPage } from "./pages/RecipesPage.jsx";
-import { MealPlanPage } from "./pages/MealPlanPage.jsx";
-import { StockPage } from "./pages/StockPage.jsx";
-import { ShoppingPage } from "./pages/ShoppingPage.jsx";
-import { RecipeEditor } from "./pages/RecipeEditor.jsx";
-import { RecipeDetail } from "./pages/RecipeDetail.jsx";
-import { ConfigPage } from "./pages/ConfigPage.jsx";
-import { ProfilePage } from "./pages/ProfilePage.jsx";
-import { LegalPage } from "./pages/LegalPage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
+// Code-splitting : les écrans lourds ou hors du premier rendu sont chargés à la
+// demande (lazy) → allège le chunk initial (TTI). HomePage / Login / Loading
+// restent en eager car sur le chemin critique du premier affichage.
+const namedLazy = (loader, name) => lazy(() => loader().then(m => ({ default: m[name] })));
+const RecipesPage = namedLazy(() => import("./pages/RecipesPage.jsx"), "RecipesPage");
+const MealPlanPage = namedLazy(() => import("./pages/MealPlanPage.jsx"), "MealPlanPage");
+const StockPage = namedLazy(() => import("./pages/StockPage.jsx"), "StockPage");
+const ShoppingPage = namedLazy(() => import("./pages/ShoppingPage.jsx"), "ShoppingPage");
+const RecipeEditor = namedLazy(() => import("./pages/RecipeEditor.jsx"), "RecipeEditor");
+const RecipeDetail = namedLazy(() => import("./pages/RecipeDetail.jsx"), "RecipeDetail");
+const ConfigPage = namedLazy(() => import("./pages/ConfigPage.jsx"), "ConfigPage");
+const ProfilePage = namedLazy(() => import("./pages/ProfilePage.jsx"), "ProfilePage");
+const LegalPage = namedLazy(() => import("./pages/LegalPage.jsx"), "LegalPage");
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
 
@@ -531,6 +535,18 @@ function AppInner() {
     <RecipeNotFound onBack={() => navigate("/recipes")} />
   ) : tabContent;
 
+  // Frontière Suspense pour les écrans chargés en lazy (voir imports) : un bref
+  // spinner centré le temps de récupérer le chunk de la page demandée.
+  const mainScreenView = (
+    <Suspense fallback={
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 26, height: 26, border: "3px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
+      </div>
+    }>
+      {mainScreen}
+    </Suspense>
+  );
+
   // Loading state
   if (user === undefined) return <LoadingPage isDark={isDark} />;
 
@@ -600,7 +616,7 @@ function AppInner() {
           <>
             {/* Les pages légales s'affichent en plein écran : la sidebar y est superflue. */}
             {tab !== "legal" && <DesktopSidebar tab={tab} setTab={requestTab} />}
-            {mainScreen}
+            {mainScreenView}
           </>
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
@@ -609,7 +625,7 @@ function AppInner() {
               threshold={110}
               onRefresh={() => window.location.reload()}
             >
-              {mainScreen}
+              {mainScreenView}
             </PullToRefresh>
             <TabBar tab={tab} setTab={requestTab} />
           </div>
