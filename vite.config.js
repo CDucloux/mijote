@@ -1,17 +1,11 @@
 import { defineConfig } from 'vite'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import babel from '@rolldown/plugin-babel'
+import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import pkg from './package.json';
 
 export default defineConfig({
   plugins: [
     react(),
-    // React Compiler (1.0) via Babel : sous Rolldown, @vitejs/plugin-react utilise
-    // oxc et n'exécute pas les plugins Babel — on passe donc le preset compilateur
-    // par @rolldown/plugin-babel. Cible React 19 (runtime intégré). Auto-mémoïse
-    // composants/hooks → réduit le blast-radius de re-render sans mémo manuelle.
-    babel({ presets: [reactCompilerPreset()] }),
     VitePWA({
       registerType: 'autoUpdate',
       // Manifest fourni en statique (public/manifest.webmanifest) : le plugin ne
