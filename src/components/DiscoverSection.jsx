@@ -210,8 +210,8 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     />
   );
 
-  const chip = (active, onClick, content) => (
-    <button onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? TINT : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{content}</button>
+  const chip = (active, onClick, content, key) => (
+    <button key={key} onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? TINT : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{content}</button>
   );
   const noPublic = pubs.length === 0; // aucun contenu public (ni recette, ni base)
 
@@ -329,7 +329,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
                 <Icon name="globe" size={15} color="var(--accent)" /> Par cuisine
               </h3>
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, flexWrap: "wrap" }}>
-                {cuisines.map(c => chip(false, () => setFilters(f => ({ ...f, cuisines: [c] })), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>))}
+                {cuisines.map(c => chip(false, () => setFilters(f => ({ ...f, cuisines: [c] })), <><span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c)}</span>{c}</>, c))}
               </div>
             </div>
           )}

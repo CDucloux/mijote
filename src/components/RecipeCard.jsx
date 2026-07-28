@@ -12,7 +12,9 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
   const [showBaseInfo, setShowBaseInfo] = useState(false);
   return (
     <>
-    <button className="slide-up recipe-card pressable" onClick={onClick} style={{ width: "100%", display: "block", background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", ...style }}>
+    <div role="button" tabIndex={0} className="slide-up recipe-card pressable" onClick={onClick}
+      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(e); } }}
+      style={{ width: "100%", display: "block", background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer", ...style }}>
       <div className="recipe-card-thumb" style={{ aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} style={{ width: "100%", height: "100%" }} />} />
         {/* Badges empilés en haut à droite */}
@@ -50,7 +52,7 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
           <NutriScoreBadge letter={recipe.nutriLetter} compact />
         </div>
       </div>
-    </button>
+    </div>
     {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
     </>
   );
