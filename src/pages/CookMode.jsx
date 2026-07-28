@@ -10,7 +10,7 @@ import { buildTechniqueIndex } from "../lib/techniques.js";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { consumptionFraction } from "../lib/recipeComponents.js";
-import { capitalize } from "../lib/format.js";
+import { capitalize, fmtQtyUnit } from "../lib/format.js";
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
 // `recipes` + `stockSet` permettent de gérer les composants (préparations de base) :
@@ -79,7 +79,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
         }
         <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{capitalize(displayName)}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: isComp ? "var(--accent)" : "var(--accent)" }}>
-          {+(ing.amount * (mult || 1)).toFixed(2)} {ing.unit}
+          {fmtQtyUnit(ing.amount * (mult || 1), ing.unit)}
         </span>
       </div>
     );
@@ -195,7 +195,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>{comp.name}</div>
                           <div style={{ fontSize: 13, color: "var(--text3)" }}>
-                            {+(line.amount * (mult || 1)).toFixed(2)} {line.unit}
+                            {fmtQtyUnit(line.amount * (mult || 1), line.unit)}
                             {comp.steps?.length ? ` · ${comp.steps.length} étape${comp.steps.length > 1 ? "s" : ""}` : ""}
                           </div>
                         </div>

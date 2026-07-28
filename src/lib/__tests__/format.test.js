@@ -1,5 +1,36 @@
 import { describe, it, expect } from "vitest";
-import { fmtTime, relativeDate } from "../format.js";
+import { fmtTime, relativeDate, fmtQty, fmtQtyUnit } from "../format.js";
+
+describe("fmtQty", () => {
+  it("garde les entiers", () => { expect(fmtQty(1)).toBe("1"); expect(fmtQty(3)).toBe("3"); });
+  it("convertit les fractions courantes en glyphes", () => {
+    expect(fmtQty(0.5)).toBe("½");
+    expect(fmtQty(0.25)).toBe("¼");
+    expect(fmtQty(0.75)).toBe("¾");
+    expect(fmtQty(1 / 3)).toBe("⅓");
+  });
+  it("préfixe la partie entière (« 1 ½ »)", () => {
+    expect(fmtQty(1.5)).toBe("1 ½");
+    expect(fmtQty(2.25)).toBe("2 ¼");
+  });
+  it("suit la mise à l'échelle des portions", () => {
+    expect(fmtQty(0.5 * 2)).toBe("1");   // ½ × 2 → 1
+    expect(fmtQty(0.5 * 3)).toBe("1 ½"); // ½ × 3 → 1 ½
+  });
+  it("décimal court à la française sinon", () => { expect(fmtQty(0.9)).toBe("0,9"); });
+  it("gère vide/invalide", () => { expect(fmtQty("")).toBe(""); expect(fmtQty(null)).toBe(""); });
+});
+
+describe("fmtQtyUnit", () => {
+  it("colle les grammes, décolle le reste", () => {
+    expect(fmtQtyUnit(50, "g")).toBe("50g");
+    expect(fmtQtyUnit(2, "kg")).toBe("2kg");
+    expect(fmtQtyUnit(1, "gousse")).toBe("1 gousse");
+    expect(fmtQtyUnit(20, "ml")).toBe("20 ml");
+    expect(fmtQtyUnit(0.5, "cuillère à café")).toBe("½ cuillère à café");
+  });
+  it("sans unité → quantité seule", () => { expect(fmtQtyUnit(0.5, "")).toBe("½"); });
+});
 
 describe("fmtTime", () => {
   it("renders an em dash for null/undefined", () => {
