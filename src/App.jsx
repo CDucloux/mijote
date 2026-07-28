@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, Profiler } from "react";
 import { flushSync } from "react-dom";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
@@ -484,6 +484,11 @@ function AppInner() {
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
+      {/* [DEBUG PERF — temporaire] mesure la durée de rendu de chaque onglet en dev.
+          À retirer une fois le point chaud identifié. */}
+      <Profiler id={tab} onRender={(id, phase, actualDuration) => {
+        if (import.meta.env.DEV) console.log(`⏱️ [${id}] ${phase} : ${actualDuration.toFixed(1)} ms`);
+      }}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
@@ -492,6 +497,7 @@ function AppInner() {
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
       {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} onPurge={purgeData} onDeleteAccount={deleteAccount} />}
       {tab === "legal" && <LegalPage />}
+      </Profiler>
     </div>
   );
 
