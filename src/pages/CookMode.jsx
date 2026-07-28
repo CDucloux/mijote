@@ -11,6 +11,10 @@ import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { consumptionFraction } from "../lib/recipeComponents.js";
 import { capitalize, fmtQtyUnit } from "../lib/format.js";
+import { AutoResizeTextarea } from "../components/AutoResizeTextarea.jsx";
+import { RatingPicker } from "../components/RatingPicker.jsx";
+import { addVersion, nextVersionLabel } from "../lib/history.js";
+import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
 // `recipes` + `stockSet` permettent de gérer les composants (préparations de base) :
@@ -18,13 +22,24 @@ import { capitalize, fmtQtyUnit } from "../lib/format.js";
 // - dans chaque step : les lignes composant s'affichent avec 🧈 (pas d'image dbId).
 // - bouton « Réaliser » → CookMode imbriqué sur le composant mis à l'échelle.
 
-function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipesById, stockSet, isNested = false }) {
-  const { techniques } = useAppShell();
+function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipesById, stockSet, onUpdateRecipe, isNested = false }) {
+  const { techniques, notify } = useAppShell();
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
   const [subCook, setSubCook] = useState(null); // { recipe, mult }
   const [doneComponents, setDoneComponents] = useState(new Set());
+  // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
+  const [iterOpen, setIterOpen] = useState(false);
+  const [iterRating, setIterRating] = useState(null);
+  const [iterNotes, setIterNotes] = useState("");
+  const canIterate = !isNested && !!onUpdateRecipe;
+  const saveIteration = () => {
+    onUpdateRecipe(addVersion(recipe, { label: nextVersionLabel(recipe.history), rating: iterRating, notes: iterNotes }));
+    setIterOpen(false);
+    notify?.("Itération ajoutée au carnet");
+    onClose();
+  };
 
   // Composants épuisés référencés par cette recette (étape 0)
   const pendingComponents = useMemo(() => {
@@ -117,10 +132,32 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
               ? <>Votre <strong style={{ color: "var(--text)" }}>{recipe.name}</strong> est prêt·e. Revenez à la recette principale.</>
               : <>Votre <strong style={{ color: "var(--text)" }}>{recipe.name}</strong> est prêt·e !</>}
           </p>
-          <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 16, animation: "popIn 0.5s 0.5s both ease" }} onClick={onClose}>
-            <Icon name="check" size={18} /> {isNested ? "Retour" : "Retour à la recette"}
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320, animation: "popIn 0.5s 0.5s both ease" }}>
+            {canIterate && (
+              <button className="btn btn-ghost" style={{ padding: "13px 24px", fontSize: 15, borderRadius: 16 }} onClick={() => { setIterRating(null); setIterNotes(""); setIterOpen(true); }}>
+                <Icon name="sparkle" size={17} /> Noter une itération
+              </button>
+            )}
+            <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 16 }} onClick={onClose}>
+              <Icon name="check" size={18} /> {isNested ? "Retour" : "Retour à la recette"}
+            </button>
+          </div>
         </div>
+      )}
+
+      {/* Ajout d'une itération au carnet depuis l'écran de fin */}
+      {iterOpen && (
+        <SwipeableSheet onClose={() => setIterOpen(false)} style={{ maxHeight: "88dvh" }}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Noter cette fois</h3>
+          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Fige l'état actuel de la recette dans le carnet d'itérations, avec ton ressenti.</p>
+          <div className="field-label">Note du résultat (optionnel)</div>
+          <div style={{ marginBottom: 16 }}><RatingPicker value={iterRating} onChange={setIterRating} /></div>
+          <div className="field-label">Notes de dégustation</div>
+          <AutoResizeTextarea className="field-input" value={iterNotes} onChange={e => setIterNotes(e.target.value)} placeholder="ex : -10 g de sucre, +zeste de citron vert, cuit 4 min de moins → meilleur" style={{ marginBottom: 18 }} />
+          <button className="btn btn-primary" style={{ width: "100%" }} onClick={saveIteration}>
+            <Icon name="check" size={15} /> Enregistrer l'itération
+          </button>
+        </SwipeableSheet>
       )}
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
@@ -278,7 +315,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
   );
 }
 
-export function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose, recipes = [], stockSet }) {
+export function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose, recipes = [], stockSet, onUpdateRecipe }) {
   const recipesById = useMemo(() => new Map((recipes || []).map(r => [r.id, r])), [recipes]);
   return (
     <CookModeInner
@@ -289,6 +326,7 @@ export function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose, recip
       onClose={onClose}
       recipesById={recipesById}
       stockSet={stockSet}
+      onUpdateRecipe={onUpdateRecipe}
     />
   );
 }
