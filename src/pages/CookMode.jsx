@@ -147,7 +147,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
 
       {/* Ajout d'une itération au carnet depuis l'écran de fin */}
       {iterOpen && (
-        <SwipeableSheet onClose={() => setIterOpen(false)} style={{ maxHeight: "88dvh" }}>
+        <SwipeableSheet onClose={() => setIterOpen(false)} zIndex={isNested ? 720 : 620} style={{ maxHeight: "88dvh" }}>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Noter cette fois</h3>
           <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Fige l'état actuel de la recette dans le carnet d'itérations, avec ton ressenti.</p>
           <div className="field-label">Note du résultat (optionnel)</div>
