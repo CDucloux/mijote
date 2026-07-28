@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { ConfirmSheet } from "../components/ConfirmSheet.jsx";
 import { CookingHeatmap } from "../components/CookingHeatmap.jsx";
 import { buildHeatmap } from "../lib/cookingActivity.js";
 import { DEFAULT_PREFERENCES } from "../constants/preferences.js";
@@ -134,22 +135,11 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
       )}
 
       {confirmDelete && (
-        <SwipeableSheet onClose={() => { if (!deleting) setConfirmDelete(false); }}>
-          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "grid", placeItems: "center", margin: "0 auto 14px" }}>
-            <Icon name="trash" size={24} color="var(--red)" />
-          </div>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, textAlign: "center" }}>Supprimer définitivement ton compte ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.55, textAlign: "center" }}>
-            Ton compte et <strong style={{ color: "var(--text)" }}>toutes tes données</strong> (recettes, carnets, planning, courses, stock, préférences) seront <strong style={{ color: "var(--text)" }}>effacés sans retour possible</strong>. Tu seras déconnecté·e.
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} disabled={deleting} onClick={() => setConfirmDelete(false)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} disabled={deleting}
-              onClick={async () => { setDeleting(true); const ok = await onDeleteAccount?.(); if (!ok) { setDeleting(false); setConfirmDelete(false); } }}>
-              {deleting ? "Suppression…" : "Supprimer"}
-            </button>
-          </div>
-        </SwipeableSheet>
+        <ConfirmSheet title="Supprimer définitivement ton compte ?" busy={deleting}
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={async () => { setDeleting(true); const ok = await onDeleteAccount?.(); if (!ok) { setDeleting(false); setConfirmDelete(false); } }}>
+          Ton compte et <strong style={{ color: "var(--text)" }}>toutes tes données</strong> (recettes, carnets, planning, courses, stock, préférences) seront <strong style={{ color: "var(--text)" }}>effacés sans retour possible</strong>. Tu seras déconnecté·e.
+        </ConfirmSheet>
       )}
     </div>
   );
