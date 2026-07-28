@@ -1,9 +1,8 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
-import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
 
-import { auth, provider } from "./lib/firebase.js";
-import { subscribeHouseholdPointer, fetchUserDirectory, deleteAllUserData } from "./lib/firestore.js";
+import { auth } from "./lib/firebase.js";
+import { subscribeHouseholdPointer, fetchUserDirectory } from "./lib/firestore.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
@@ -22,6 +21,7 @@ import { useNotifications } from "./hooks/useNotifications.js";
 import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
 import { usePublicRecipes } from "./hooks/usePublicRecipes.js";
+import { useAccount } from "./hooks/useAccount.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
@@ -277,22 +277,10 @@ function AppInner() {
     setPendingTab(null);
   };
 
-  // Sign in / out handlers
-  const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
-  const handleSignIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      if (ALLOWED_EMAIL && result.user.email !== ALLOWED_EMAIL) {
-        await signOut(auth);
-        notify("Accès non autorisé", "error");
-        return;
-      }
-    } catch (e) {
-      if (e.code === "auth/popup-blocked") signInWithRedirect(auth, provider);
-      else notify("Connexion échouée", "error");
-    }
-  };
-  const handleSignOut = () => { signOut(auth); setUser(null); };
+  // Compte : auth + purge + suppression RGPD (useAccount).
+  const { handleSignIn, handleSignOut, purgeData, deleteAccount } = useAccount({
+    user, setUser, notify, setMealPlan, setShoppingLists, setStock, setLowStock, setRecipes, setCollections,
+  });
 
   // Retour d'une recette publique → on revient sur la carte cliquée dans
   // « Découvrir » via son ancre (#discover-card-<pubId>). `scrollIntoView` est
@@ -326,40 +314,6 @@ function AppInner() {
     return () => cancelAnimationFrame(raf);
   }, [atTabView]);
 
-  // Purge de données (depuis le profil). Vide l'état local ; la synchro propage
-  // l'effacement au cloud. « all » remet l'espace à zéro.
-  const purgeData = (scope) => {
-    if (scope === "planning" || scope === "all") setMealPlan({});
-    if (scope === "shopping" || scope === "all") setShoppingLists([]);
-    if (scope === "stock" || scope === "all") { setStock([]); setLowStock([]); }
-    if (scope === "all") { setRecipes([]); setCollections([]); }
-    notify(scope === "all" ? "Données effacées" : "Effacé", "info");
-  };
-
-  // Suppression RGPD du compte : efface les données Firestore perso, supprime le
-  // compte d'authentification (avec ré-auth si Firebase l'exige), purge le local.
-  const deleteAccount = async () => {
-    const uid = user?.uid;
-    if (!uid) return false;
-    try {
-      await deleteAllUserData(uid).catch(() => { /* best-effort : on supprime quand même le compte */ });
-      try {
-        await deleteUser(auth.currentUser);
-      } catch (e) {
-        if (e?.code === "auth/requires-recent-login") {
-          // Firebase exige une connexion récente pour supprimer : on ré-authentifie.
-          await signInWithPopup(auth, provider);
-          await deleteUser(auth.currentUser);
-        } else throw e;
-      }
-      try { Object.keys(localStorage).filter(k => k.startsWith("rf_") || k.startsWith("mijote")).forEach(k => localStorage.removeItem(k)); } catch { /* quota */ }
-      setUser(null);
-      return true;
-    } catch {
-      notify("Suppression du compte impossible. Reconnecte-toi puis réessaie.", "error");
-      return false;
-    }
-  };
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
