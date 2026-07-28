@@ -4,6 +4,7 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { NewRecipeButton } from "../components/NewRecipeButton.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { ConfirmSheet } from "../components/ConfirmSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "../lib/recipeFilters.js";
@@ -13,6 +14,7 @@ import { isRecipeInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
 import { buildTechniqueIndex } from "../lib/techniques.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { useLS } from "../hooks/useLS.js";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
@@ -29,20 +31,48 @@ const byRecent = (a, b) => {
   return db !== da ? db - da : idTimestamp(b.id) - idTimestamp(a.id);
 };
 
-export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, setTab }) {
+export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
-  const [filterCol, setFilterCol] = useState(null);
-  const [sortBy, setSortBy] = useState("date"); // tri par défaut : plus récentes d'abord (plus simple à retrouver)
-  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+  // Persistés (localStorage, mobile + web) : carnet sélectionné, tri et filtres
+  // survivent au rechargement de la page — plus simple pour retrouver son contexte.
+  const [filterCol, setFilterCol] = useLS("rf_recipes_filterCol", null);
+  const [sortBy, setSortBy] = useLS("rf_recipes_sortBy", "date"); // défaut : plus récentes d'abord
+  const [storedFilters, setFilters] = useLS("rf_recipes_filters", DEFAULT_FILTERS);
+  // Fusion avec les défauts : robuste si DEFAULT_FILTERS gagne une clé après coup.
+  const filters = useMemo(() => ({ ...DEFAULT_FILTERS, ...storedFilters }), [storedFilters]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
+  const [recipeMenu, setRecipeMenu] = useState(null); // recette visée par l'appui long / clic droit (modifier/supprimer)
+  const [confirmDelete, setConfirmDelete] = useState(null); // { kind: "carnet" | "recipe", item } — confirmation avant suppression
   const [editingSmartId, setEditingSmartId] = useState(null); // carnet smart dont on ré-édite la vue de filtres
+  const [dragCarnetId, setDragCarnetId] = useState(null); // carnet en cours de glisser-déposer (réordonnancement)
+
+  // Réordonnancement des carnets (persisté via setCollections → localStorage + cloud).
+  // Déplace `fromId` à la position de `toId` (glisser-déposer, desktop).
+  const reorderCollections = (fromId, toId) => setCollections(prev => {
+    const arr = [...prev];
+    const from = arr.findIndex(c => c.id === fromId), to = arr.findIndex(c => c.id === toId);
+    if (from < 0 || to < 0 || from === to) return prev;
+    const [moved] = arr.splice(from, 1);
+    arr.splice(to, 0, moved);
+    return arr;
+  });
+  // Décale un carnet d'un cran (flèches du menu, mobile). dir = -1 (gauche) / +1 (droite).
+  const moveCarnet = (id, dir) => setCollections(prev => {
+    const arr = [...prev];
+    const i = arr.findIndex(c => c.id === id), j = i + dir;
+    if (i < 0 || j < 0 || j >= arr.length) return prev;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    return arr;
+  });
   const lpTimer = useRef(null);
   const lpFired = useRef(false);
-  const startLongPress = (col) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; setCarnetMenu(col); }, 480); };
+  // Appui long générique : ouvre un menu (callback) après 480 ms ; `lpFired` sert à
+  // annuler le clic qui suit. Utilisé par les carnets ET les cartes recettes.
+  const startLongPress = (onFire) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; onFire(); }, 480); };
   const cancelLongPress = () => clearTimeout(lpTimer.current);
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
@@ -107,6 +137,8 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]);
 
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, filters]);
+  // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
+  useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -180,10 +212,15 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                 return (
                 <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined}
                   onClick={() => { if (lpFired.current) { lpFired.current = false; return; } openCarnet(col); }}
-                  onPointerDown={() => startLongPress(col)} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+                  onPointerDown={() => startLongPress(() => setCarnetMenu(col))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   onContextMenu={(e) => { e.preventDefault(); setCarnetMenu(col); }}
-                  title="Appui long pour modifier ou supprimer"
-                  style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
+                  draggable
+                  onDragStart={() => { cancelLongPress(); setDragCarnetId(col.id); }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => { e.preventDefault(); if (dragCarnetId && dragCarnetId !== col.id) reorderCollections(dragCarnetId, col.id); setDragCarnetId(null); }}
+                  onDragEnd={() => setDragCarnetId(null)}
+                  title="Glisser pour réordonner · appui long pour modifier"
+                  style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "grab", borderRadius: 14, opacity: dragCarnetId === col.id ? 0.4 : 1 }}>
                   <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 8px 22px -10px ${col.color}, 0 0 0 2px ${col.color}` : "0 6px 16px -10px rgba(0,0,0,0.35)" }}>
                     {/* Page lignée + reliure colorée */}
                     <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${col.color}1f 0%, ${col.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${col.color}00 0 27px, ${col.color}22 27px 28px)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -252,7 +289,13 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </h2>
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} inSeason={isRecipeInSeason(r, resolver)} vegan={isRecipeVegan(r, resolver, { recipes })} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
+          {filtered.slice(0, visibleCount).map((r, idx) => (
+            <div key={r.id}
+              onPointerDown={() => startLongPress(() => setRecipeMenu(r))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+              onContextMenu={(e) => { e.preventDefault(); setRecipeMenu(r); }}>
+              <RecipeCard recipe={r} onClick={() => { if (lpFired.current) { lpFired.current = false; return; } onSelect(r.id); }} inSeason={isRecipeInSeason(r, resolver)} vegan={isRecipeVegan(r, resolver, { recipes })} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />
+            </div>
+          ))}
         </div>
         {visibleCount < filtered.length && (
           <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
@@ -279,6 +322,50 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         )}
       </div>
 
+      {/* Confirmation avant suppression (carnet ou recette) */}
+      {confirmDelete && (
+        <ConfirmSheet
+          title={`Supprimer ${confirmDelete.kind === "carnet" ? "ce carnet" : "cette recette"} ?`}
+          onCancel={() => setConfirmDelete(null)}
+          onConfirm={() => {
+            if (confirmDelete.kind === "carnet") {
+              setCollections(prev => prev.filter(c => c.id !== confirmDelete.item.id));
+              if (filterCol === confirmDelete.item.id) setFilterCol(null);
+            } else {
+              onDeleteRecipe?.(confirmDelete.item.id);
+            }
+            setConfirmDelete(null);
+          }}>
+          <strong style={{ color: "var(--text)" }}>« {confirmDelete.item.name} »</strong>
+          {confirmDelete.kind === "carnet"
+            ? " sera supprimé. Tes recettes ne sont pas effacées, seulement le carnet."
+            : " sera définitivement supprimée. Cette action est irréversible."}
+        </ConfirmSheet>
+      )}
+
+      {/* Menu d'une recette (appui long / clic droit) : modifier / supprimer */}
+      {recipeMenu && (
+        <SwipeableSheet onClose={() => setRecipeMenu(null)}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 20 }}>
+              {recipeMenu.image ? <img src={recipeMenu.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (recipeMenu.isComponent ? "🧩" : "🍽️")}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{recipeMenu.name}</div>
+              <div style={{ fontSize: 12, color: "var(--text3)" }}>{recipeMenu.isComponent ? "Préparation de base" : "Recette"}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { onEditRecipe?.(recipeMenu); setRecipeMenu(null); }}>
+              <Icon name="edit" size={16} /> Modifier
+            </button>
+            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setConfirmDelete({ kind: "recipe", item: recipeMenu }); setRecipeMenu(null); }}>
+              <Icon name="trash" size={16} /> Supprimer
+            </button>
+          </div>
+        </SwipeableSheet>
+      )}
+
       {/* Menu d'un carnet (appui long) : modifier / supprimer */}
       {carnetMenu && (
         <SwipeableSheet onClose={() => setCarnetMenu(null)}>
@@ -290,10 +377,22 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {collections.length > 1 && (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn btn-ghost" style={{ flex: 1 }} disabled={collections.findIndex(c => c.id === carnetMenu.id) === 0}
+                  onClick={() => moveCarnet(carnetMenu.id, -1)}>
+                  <Icon name="back" size={15} /> Vers la gauche
+                </button>
+                <button className="btn btn-ghost" style={{ flex: 1 }} disabled={collections.findIndex(c => c.id === carnetMenu.id) === collections.length - 1}
+                  onClick={() => moveCarnet(carnetMenu.id, 1)}>
+                  Vers la droite <Icon name="forward" size={15} />
+                </button>
+              </div>
+            )}
             <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { setNewCarnet({ ...carnetMenu, editing: true }); setCarnetMenu(null); }}>
               <Icon name="edit" size={16} /> Modifier
             </button>
-            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setCollections(prev => prev.filter(c => c.id !== carnetMenu.id)); if (filterCol === carnetMenu.id) setFilterCol(null); setCarnetMenu(null); }}>
+            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setConfirmDelete({ kind: "carnet", item: carnetMenu }); setCarnetMenu(null); }}>
               <Icon name="trash" size={16} /> Supprimer
             </button>
           </div>

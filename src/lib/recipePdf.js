@@ -10,6 +10,7 @@ import { isRecipeVegan } from "./dietary.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { cuisineEmoji, normalizeCuisine } from "../constants/cuisines.js";
 import { DIFFICULTY_LABEL, computeDifficulty } from "./difficulty.js";
+import { fmtQtyUnit } from "./format.js";
 
 // Couleur de difficulté en hex (le PDF n'a pas les variables CSS --green/--red).
 const diffColorPdf = (lvl) => (lvl <= 2 ? "#4caf7d" : lvl === 3 ? "#e8920a" : "#e05252");
@@ -81,10 +82,10 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
       const img = comp?.image || null;
       // Si on a une image de la recette de base, on l'affiche ; sinon icône casserole.
       return img
-        ? pill(img, name, `${ing.amount}${ing.unit || ""}`)
-        : pill(null, name, `${ing.amount}${ing.unit || ""}`, true);
+        ? pill(img, name, fmtQtyUnit(ing.amount, ing.unit))
+        : pill(null, name, fmtQtyUnit(ing.amount, ing.unit), true);
     }
-    return pill(ingImg(ing.dbId), ing.name, `${ing.amount}${ing.unit || ""}`);
+    return pill(ingImg(ing.dbId), ing.name, fmtQtyUnit(ing.amount, ing.unit));
   };
 
   const ingPills = (recipe.ingredients || []).map(ingPill).join("");
@@ -131,14 +132,14 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
       const scaledIngPills = (comp.ingredients || []).map(ci => {
         if (ci.recipeId) return ""; // v1 : pas d'imbrication
         const qty = +(num(ci.amount) * f).toFixed(2);
-        return pill(ingImg(ci.dbId), ci.name, `${qty}${ci.unit || ""}`);
+        return pill(ingImg(ci.dbId), ci.name, fmtQtyUnit(qty, ci.unit));
       }).join("");
 
       // Pill d'un ingrédient du composant, quantité mise à l'échelle par f.
       const compIngPill = ci => {
         if (ci.recipeId) return ""; // v1 : pas d'imbrication
         const qty = +(num(ci.amount) * f).toFixed(2);
-        return pill(ingImg(ci.dbId), ci.name, `${qty}${ci.unit || ""}`);
+        return pill(ingImg(ci.dbId), ci.name, fmtQtyUnit(qty, ci.unit));
       };
 
       const compStepLines = (comp.steps || []).map((s, i) => {
@@ -163,7 +164,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
           <div class="comp-header">
             <span class="comp-icon">${baseIconSvg(20)}</span>
             <span class="comp-name">${comp.name}</span>
-            <span class="comp-yield">${yieldScaled} ${comp.yield.unit}</span>
+            <span class="comp-yield">${fmtQtyUnit(yieldScaled, comp.yield.unit)}</span>
           </div>
           ${scaledIngPills ? `<div class="ing-pills" style="margin-bottom:14px">${scaledIngPills}</div>` : ""}
           ${compStepLines}
@@ -222,7 +223,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
     .pill-comp { border-color: rgba(232,112,58,0.4); background: rgba(232,112,58,0.06); }
     .pill-img { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #fff; border: 1px solid var(--border); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
-    .pill-img img { width: 100%; height: 100%; object-fit: cover; }
+    .pill-img img { width: 100%; height: 100%; object-fit: contain; padding: 8%; box-sizing: border-box; }
     .pill-comp-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(232,112,58,0.12); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
     .pill-name { font-weight: 500; color: var(--text); }
     .pill-comp .pill-name { color: var(--accent); }

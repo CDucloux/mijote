@@ -149,6 +149,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const [genOpen, setGenOpen] = useState(false);
   const [genStyle, setGenStyle] = useState("equilibre");
   const [genBatch, setGenBatch] = useState(false); // batch cooking : tout préparer d'avance
+  const [showBatch, setShowBatch] = useState(false); // panneau session batch ouvert ?
   const runGenerate = useCallback((style, batch) => {
     const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
     const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm, style });
@@ -166,8 +167,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
 
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
-  const [showBatch, setShowBatch] = useState(false);
-  const batch = useMemo(() => buildBatchSession(weekEntries(mealPlan, weekDays), recipes), [mealPlan, weekDays, recipes]);
+  // Calculée UNIQUEMENT quand le panneau batch est ouvert : sinon on la recalculait
+  // à chaque changement de semaine (dép. weekDays) pour un panneau fermé — pur gaspi.
+  const batch = useMemo(
+    () => showBatch ? buildBatchSession(weekEntries(mealPlan, weekDays), recipes) : { dishes: [], bases: [] },
+    [showBatch, mealPlan, weekDays, recipes]
+  );
   // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
   // que pour la dernière génération sur la semaine où elle a eu lieu).
   useEffect(() => { setGenDone(false); }, [weekDays]);

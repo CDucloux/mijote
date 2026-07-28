@@ -549,7 +549,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             <div className="config-ut-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {[...utensilDB].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr")).map((item, ui) => (
                 <div key={item.id} className="slide-up" style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, animationDelay: `${ui * 0.03}s` }}>
-                  <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "#fff" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "#fff", display: "grid", placeItems: "center" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 5, boxSizing: "border-box" }} /></div>
                   <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
                   <div style={{ display: "flex", gap: 8 }}>
                     {item._ro

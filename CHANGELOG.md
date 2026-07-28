@@ -1,5 +1,24 @@
 # Changelog – Mijoté
 
+## v3.8.2 – Safran · Confort & finitions
+
+### Recettes & carnets
+- **Menu contextuel** sur une recette (appui long sur mobile, clic droit sur desktop) : **Modifier** ou **Supprimer**
+- **Confirmation** systématique avant de supprimer une recette **ou** un carnet
+- **Carnets réordonnables** : glisser-déposer (desktop) ou flèches « gauche / droite » (mobile) ; l'ordre est mémorisé
+- **Carnet, tri et filtres mémorisés** au rechargement de la page (mobile & web)
+
+### Cuisine & planning
+- À la fin du **mode cuisine**, un bouton **« Noter une itération »** (note du résultat + notes de dégustation) alimente directement le **carnet d'itérations**
+- Planifier une recette depuis sa fiche crée désormais un **vrai repas** (avec rôle), donc complétable comme un repas composé
+
+### Affichage
+- **Quantités en fractions** lisibles (½, ¼, ¾…) qui évoluent avec les portions ; l'**unité est décollée** de la quantité (« 1 gousse », « 20 ml »), les grammes restant collés
+- **Images d'ustensiles** correctement cadrées (plus de rognage), dans l'app **et** le PDF
+
+### Sous le capot
+- Refonte interne (App découpé en hooks de domaine), nettoyage progressif des styles, correctifs console et intégration continue enrichie (lint)
+
 ## v3.8.1 – Safran · Correctifs
 
 - **Mes recettes** : tri par défaut sur les **plus récentes** (au lieu de A → Z) — plus simple pour retrouver ce qu'on vient d'ajouter. Le dernier ajout apparaît bien en tête, même parmi les recettes du même jour. Les tris A → Z et Santé restent disponibles.

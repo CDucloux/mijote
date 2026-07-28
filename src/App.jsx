@@ -1,27 +1,23 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
-import { flushSync } from "react-dom";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
-import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
 
-import { auth, provider } from "./lib/firebase.js";
-import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds, subscribeHouseholdPointer, fetchUserDirectory, deleteAllUserData } from "./lib/firestore.js";
-import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "./lib/publicRecipes.js";
+import { auth } from "./lib/firebase.js";
+import { subscribeHouseholdPointer, fetchUserDirectory } from "./lib/firestore.js";
 import { cleanRecipeForExport } from "./lib/recipeSchema.js";
-import { deleteImageByUrl } from "./lib/storage.js";
-import { printRecipe } from "./lib/recipePdf.js";
-import { prepareRecipeImport } from "./lib/recipeImport.js";
-import { importRecipeFromUrl, importRecipeFromImages } from "./lib/recipeUrlImport.js";
-import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
-import { recipesReferencing } from "./lib/recipeComponents.js";
-import { buildRecipeIndex } from "./lib/nutriscore.js";
-import {
-  DEFAULT_CATEGORIES, SAMPLE_RECIPES, SAMPLE_COLLECTIONS,
-} from "./constants/categories.js";
+import { newGroupId, roleForCategory } from "./lib/composedMeal.js";
+import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
 import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
+import { useTheme } from "./hooks/useTheme.js";
+import { useNotifications } from "./hooks/useNotifications.js";
+import { useMasterData } from "./hooks/useMasterData.js";
+import { useRecipeImport } from "./hooks/useRecipeImport.js";
+import { usePublicRecipes } from "./hooks/usePublicRecipes.js";
+import { useAccount } from "./hooks/useAccount.js";
+import { useRecipeCrud } from "./hooks/useRecipeCrud.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
@@ -46,6 +42,11 @@ import { LegalPage } from "./pages/LegalPage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
+
+// Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent —
+// et non à chaque render d'App (toast, statut de sync…). Requiert des props stables
+// (setters useState/useLS, valeurs mémoïsées) + une valeur de contexte stable.
+const MealPlanPageMemo = memo(MealPlanPage);
 
 
 function AppInner() {
@@ -78,63 +79,12 @@ function AppInner() {
     try { setDirectory(await fetchUserDirectory()); }
     catch { directoryLoadedRef.current = null; }
   }, [user]);
-  // Reference DBs: shared Master + user's own additions, merged for display.
-  const [masterDB, setMasterDB] = useState(() => {
-    try {
-      const cached = localStorage.getItem("rf_masterDB_cache");
-      if (cached) return JSON.parse(cached);
-    } catch { /* ignore */ }
-    return { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
-  });
-  const [userDB, setUserDB] = useState({ ingredients: [], utensils: [] });
-  // Nutrition categories live in the Master (admin-managed). Fall back to defaults.
-  const categories = useMemo(
-    () => (masterDB.categories && Object.keys(masterDB.categories).length ? masterDB.categories : DEFAULT_CATEGORIES),
-    [masterDB]
-  );
-  const setCategories = useCallback((updater) => {
-    setMasterDB(prev => {
-      const cur = prev.categories && Object.keys(prev.categories).length ? prev.categories : DEFAULT_CATEGORIES;
-      const next = typeof updater === "function" ? updater(cur) : updater;
-      return { ...prev, categories: next };
-    });
-  }, []);
-  // Admins see master items as editable; normal users see them read-only.
-  const ingredientDB = useMemo(
-    () => [...masterDB.ingredients, ...userDB.ingredients].map(i => ({ ...i, _ro: !isAdmin })),
-    [masterDB, userDB, isAdmin]
-  );
-  const utensilDB = useMemo(
-    () => [...masterDB.utensils, ...userDB.utensils].map(u => ({ ...u, _ro: !isAdmin })),
-    [masterDB, userDB, isAdmin]
-  );
-  // Setters: admins write everything to the shared Master (folding in any of their
-  // own/migrated items); normal users only ever write to their own additions.
-  const setIngredientDB = useCallback((updater) => {
-    if (!isAdmin) return; // base de référence en lecture seule pour les non-admins
-    const merged = [...masterDB.ingredients, ...userDB.ingredients];
-    const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
-    setMasterDB(prev => ({ ...prev, ingredients: next }));
-    if (userDB.ingredients.length) setUserDB(prev => ({ ...prev, ingredients: [] }));
-  }, [masterDB, userDB, isAdmin]);
-  const setUtensilDB = useCallback((updater) => {
-    if (!isAdmin) return; // base de référence en lecture seule pour les non-admins
-    const merged = [...masterDB.utensils, ...userDB.utensils];
-    const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
-    setMasterDB(prev => ({ ...prev, utensils: next }));
-    if (userDB.utensils.length) setUserDB(prev => ({ ...prev, utensils: [] }));
-  }, [masterDB, userDB, isAdmin]);
-  // Glossaire des techniques : entièrement Master (pas de pendant userDB). Lecture
-  // pour tous, écriture admin seulement.
-  const techniques = useMemo(() => masterDB.techniques || [], [masterDB]);
-  const setTechniques = useCallback((updater) => {
-    if (!isAdmin) return;
-    setMasterDB(prev => {
-      const cur = prev.techniques || [];
-      const next = typeof updater === "function" ? updater(cur) : updater;
-      return { ...prev, techniques: next };
-    });
-  }, [isAdmin]);
+  // Base de référence (Master partagée + ajouts perso) — voir useMasterData.
+  const {
+    masterDB, setMasterDB, userDB, setUserDB,
+    categories, setCategories, ingredientDB, utensilDB, techniques,
+    setIngredientDB, setUtensilDB, setTechniques,
+  } = useMasterData(isAdmin);
 
   const [stock, setStock] = useLS("rf_stock", []);
   const [lowStock, setLowStock] = useLS("rf_lowStock", []);
@@ -156,7 +106,9 @@ function AppInner() {
     else navigate(location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname, { replace: true });
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
-  const [notification, setNotification] = useState(null);
+  // Import de recette (URL / photos) → ouvre l'éditeur sur le brouillon (useRecipeImport).
+  const { importFromUrl, importFromImages } = useRecipeImport({ ingredientDB, utensilDB, openEditor: setEditingRecipe });
+  const { notification, notify } = useNotifications();
   // Vue d'une recette publique (route /discover/:pubId) – logique isolée dans son hook.
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
@@ -174,39 +126,7 @@ function AppInner() {
     userDB, setUserDB,
   });
 
-  const [isDark, setIsDark] = useState(() => {
-    try { return localStorage.getItem("rf_theme") !== "light"; } catch { return true; }
-  });
-  // Applique le thème au DOM (classe <html> + theme-color de la barre de statut PWA).
-  const applyThemeToDOM = (dark) => {
-    document.documentElement.classList.toggle("light", !dark);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", dark ? "#0e0e0f" : "#f5f0eb");
-  };
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    // Le fondu de thème par élément (règle globale `*`) est écrasé sur toute
-    // page dont les éléments portent une `transition` inline → bascule sèche.
-    // L'API View Transitions capture un instantané du viewport entier et le
-    // fait cross-fader uniformément, indépendamment des transitions par élément.
-    const run = () => {
-      // flushSync : le commit React doit être appliqué DANS le callback pour que
-      // l'instantané « après » du view-transition reflète déjà le nouveau thème.
-      flushSync(() => setIsDark(next));
-      applyThemeToDOM(next);
-      try { localStorage.setItem("rf_theme", next ? "dark" : "light"); } catch { }
-    };
-    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (document.startViewTransition && !reduce) document.startViewTransition(run);
-    else run();
-  };
-
-  // Synchronisation initiale (au montage) : aligne le DOM sur l'état persistant.
-  useEffect(() => {
-    applyThemeToDOM(isDark);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { isDark, toggleTheme } = useTheme();
 
   // Update document title on tab change
   useEffect(() => {
@@ -215,163 +135,37 @@ function AppInner() {
   }, [tab]);
 
 
-  const notify = (msg, type = "success") => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 2800);
-  };
+  // Valeur de contexte À IDENTITÉ STABLE : sans ça, `shellValue` était recréé à
+  // chaque render → TOUS les consommateurs useAppShell (toutes les pages, cartes,
+  // sections…) se re-rendaient à chaque render d'App, même pour un simple toast.
+  // Les fonctions passent par une ref (toujours la dernière closure, jamais périmée
+  // — utile car certaines sont définies après les retours anticipés), et l'objet ne
+  // change que quand une VRAIE valeur change (user, syncStatus, thème, techniques…).
+  // Déclaré AVANT tout return conditionnel (règles des hooks) ; la ref est remplie
+  // plus bas, une fois les fonctions définies.
+  const shellApiRef = useRef({});
+  const stableApi = useMemo(() => ({
+    signOut: (...a) => shellApiRef.current.signOut?.(...a),
+    toggleTheme: (...a) => shellApiRef.current.toggleTheme?.(...a),
+    getSharedData: (...a) => shellApiRef.current.getSharedData?.(...a),
+    loadDirectory: (...a) => shellApiRef.current.loadDirectory?.(...a),
+    importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
+    importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
+  }), []);
+  const shellValue = useMemo(
+    () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, ...stableApi }),
+    [user, syncStatus, isDark, notify, techniques, directory, isAdmin, stableApi]
+  );
 
-  const saveRecipe = r => {
-    const result = prepareRecipeForSave(r, { recipes, ingredientDB });
-    if (result.error) { notify(result.error, "error"); return; }
-    const updatedRecipes = upsertRecipe(recipes, result.recipe);
-    setRecipes(updatedRecipes);
-    setCollections(prev => recomputeCollectionCounts(prev, updatedRecipes));
-    setEditingRecipe(null);
-    notify("Recette sauvegardée");
-  };
+  // Recettes — opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
+  const { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF } = useRecipeCrud({
+    recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
+    ingredientDB, utensilDB, techniques, stock, notify, navigate,
+  });
 
-  const deleteRecipe = id => {
-    const r = recipes.find(x => x.id === id);
-    if (r?.isComponent) {
-      const refs = recipesReferencing(id, recipes);
-      if (refs.length > 0) {
-        const names = refs.slice(0, 3).map(x => `« ${x.name} »`).join(", ");
-        const extra = refs.length > 3 ? ` et ${refs.length - 3} autre(s)` : "";
-        const ok = window.confirm(
-          `Cette base est utilisée dans ${refs.length} recette(s) : ${names}${extra}.\n\nLes lignes qui y font référence seront supprimées. Continuer ?`
-        );
-        if (!ok) return;
-        // Délie les lignes orphelines dans les recettes référencées
-        setRecipes(prev => prev.map(recipe => {
-          if (!refs.some(x => x.id === recipe.id)) return recipe;
-          return {
-            ...recipe,
-            ingredients: (recipe.ingredients || []).filter(ing => ing.recipeId !== id),
-          };
-        }).filter(recipe => recipe.id !== id));
-        if (r?.image) deleteImageByUrl(r.image);
-        navigate("/recipes");
-        notify("Base supprimée");
-        return;
-      }
-    }
-    if (r?.image) deleteImageByUrl(r.image);
-    setRecipes(prev => prev.filter(r => r.id !== id));
-    navigate("/recipes");
-    notify("Recette supprimée");
-  };
-
-  const addToShopping = (recipe, selectedIngredients, mult = 1) => {
-    const items = buildShoppingItems(recipe, selectedIngredients, mult, ingredientDB, buildRecipeIndex(recipes), new Set(stock));
-    if (items.length === 0) return;
-    setShoppingLists(prev => {
-      const existing = prev.find(l => l.type === "recipe" && l.recipeId === recipe.id);
-      if (existing) {
-        return prev.map(l => l.id === existing.id ? { ...l, items: [...l.items, ...items] } : l);
-      }
-      return [...prev, { id: "sl" + Date.now(), name: recipe.name, type: "recipe", recipeId: recipe.id, items }];
-    });
-    notify(`${items.length} ingrédient(s) ajoutés aux courses`);
-  };
-
-  // ── Recettes publiques (communauté) ──────────────────────────────────────────
-  // Publication en cascade : la recette + ses préparations de base partent ensemble
-  // (sinon le clone serait cassé, les bases vivant dans l'espace privé de l'auteur).
-  const publishRecipe = async (recipe) => {
-    if (!user) return;
-    try {
-      const recipesById = buildRecipeIndex(recipes);
-      const { docs } = buildPublishBundle(recipe, user, { ingredientDB, recipesById });
-      await publishPublicBundle(docs);
-      setRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, visibility: "public", publicId: publicId(user.uid, recipe.id) } : r));
-      const bases = docs.length - 1;
-      notify(bases > 0 ? `Recette publiée (+ ${bases} base${bases > 1 ? "s" : ""})` : "Recette publiée");
-    } catch { notify("Publication refusée – règles Firestore déployées ?", "error"); }
-  };
-
-  const unpublishRecipe = async (recipe) => {
-    if (!user) return;
-    try {
-      const recipesById = buildRecipeIndex(recipes);
-      const myPub = publicId(user.uid, recipe.id);
-      const myComps = collectComponentDeps(recipe, recipesById).map(c => publicId(user.uid, c.id));
-      // On ne retire une base que si plus AUCUNE de mes autres recettes publiques ne l'utilise.
-      const stillUsed = new Set();
-      for (const r of recipes) {
-        if (r.id === recipe.id || r.visibility !== "public") continue;
-        for (const c of collectComponentDeps(r, recipesById)) stillUsed.add(publicId(user.uid, c.id));
-      }
-      await unpublishPublicDocs([myPub, ...myComps.filter(id => !stillUsed.has(id))]);
-      setRecipes(prev => prev.map(r => {
-        if (r.id !== recipe.id) return r;
-        const { visibility, publicId: _p, ...rest } = r; void visibility; void _p; return rest;
-      }));
-      notify("Recette dépubliée");
-    } catch { notify("Échec de la dépublication", "error"); }
-  };
-
-  // Clone hybride : récupère la recette publique + ses bases publiques et les
-  // installe comme recettes locales (ids remappés, attribution, anti-doublon).
-  const cloneFromPublic = async (pub) => {
-    if (!pub) return;
-    try {
-      const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
-      const comps = compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : [];
-      const { added, mainId, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
-      if (alreadyOwned) { notify("Déjà dans tes recettes"); navigate(`/recipes/${mainId}`); return; }
-      const updated = [...added, ...recipes];
-      setRecipes(updated);
-      setCollections(prev => recomputeCollectionCounts(prev, updated));
-      const bases = added.length - 1;
-      notify(bases > 0 ? `Ajoutée à tes recettes (+ ${bases} base${bases > 1 ? "s" : ""})` : "Ajoutée à tes recettes");
-      navigate(`/recipes/${mainId}`);
-    } catch { notify("Échec du clonage", "error"); }
-  };
-
-  const quickCloneFromPublic = async (pub) => {
-    if (!pub) return;
-    try {
-      const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
-      const comps = compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : [];
-      const { added, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
-      if (alreadyOwned) { notify("Déjà dans tes recettes"); return; }
-      const updated = [...added, ...recipes];
-      setRecipes(updated);
-      setCollections(prev => recomputeCollectionCounts(prev, updated));
-      const bases = added.length - 1;
-      notify(bases > 0 ? `Ajoutée à tes recettes (+ ${bases} base${bases > 1 ? "s" : ""})` : "Ajoutée à tes recettes");
-    } catch { notify("Échec de l'ajout", "error"); }
-  };
-
-  const exportJSON = recipe => {
-    const blob = new Blob([JSON.stringify(cleanRecipeForExport(recipe), null, 2)], { type: "application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${recipe.name.split(" ").join("_")}.json`; a.click();
-    notify("Export JSON téléchargé");
-  };
-
-  const importJSON = json => {
-    const result = prepareRecipeImport(json, { ingredientDB, utensilDB });
-    if (result.error) { notify(result.error, "error"); return; }
-    const { prepared, linked, rejected } = result;
-    setRecipes(prev => {
-      const existingNames = new Set(prev.map(r => r.name.toLowerCase().trim()));
-      const newOnes = prepared.filter(r => !existingNames.has(r.name.toLowerCase().trim()));
-      const dupes = prepared.length - newOnes.length;
-      const extras = [
-        linked > 0 ? `${linked} élément(s) reliés à ta base` : "",
-        dupes > 0 ? `${dupes} doublon(s) ignoré(s)` : "",
-        rejected > 0 ? `${rejected} recette(s) non conforme(s) écartée(s)` : "",
-      ].filter(Boolean).join(" · ");
-      if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${extras ? ` · ${extras}` : ""}`);
-      else notify(`Aucune recette importée${extras ? ` – ${extras}` : ""}`, "error");
-      return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
-    });
-  };
-
-  const exportPDF = recipe => {
-    printRecipe(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes), techniques });
-    notify("Ouverture de l'aperçu d'impression…");
-  };
+  // Publier / dépublier / cloner des recettes publiques (communauté) — voir usePublicRecipes.
+  const { publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic } =
+    usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, notify, navigate });
 
   // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer
   // à sa création (copie de mes données vers le namespace du foyer).
@@ -398,22 +192,10 @@ function AppInner() {
     setPendingTab(null);
   };
 
-  // Sign in / out handlers
-  const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
-  const handleSignIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      if (ALLOWED_EMAIL && result.user.email !== ALLOWED_EMAIL) {
-        await signOut(auth);
-        notify("Accès non autorisé", "error");
-        return;
-      }
-    } catch (e) {
-      if (e.code === "auth/popup-blocked") signInWithRedirect(auth, provider);
-      else notify("Connexion échouée", "error");
-    }
-  };
-  const handleSignOut = () => { signOut(auth); setUser(null); };
+  // Compte : auth + purge + suppression RGPD (useAccount).
+  const { handleSignIn, handleSignOut, purgeData, deleteAccount } = useAccount({
+    user, setUser, notify, setMealPlan, setShoppingLists, setStock, setLowStock, setRecipes, setCollections,
+  });
 
   // Retour d'une recette publique → on revient sur la carte cliquée dans
   // « Découvrir » via son ancre (#discover-card-<pubId>). `scrollIntoView` est
@@ -447,51 +229,23 @@ function AppInner() {
     return () => cancelAnimationFrame(raf);
   }, [atTabView]);
 
-  // Purge de données (depuis le profil). Vide l'état local ; la synchro propage
-  // l'effacement au cloud. « all » remet l'espace à zéro.
-  const purgeData = (scope) => {
-    if (scope === "planning" || scope === "all") setMealPlan({});
-    if (scope === "shopping" || scope === "all") setShoppingLists([]);
-    if (scope === "stock" || scope === "all") { setStock([]); setLowStock([]); }
-    if (scope === "all") { setRecipes([]); setCollections([]); }
-    notify(scope === "all" ? "Données effacées" : "Effacé", "info");
-  };
-
-  // Suppression RGPD du compte : efface les données Firestore perso, supprime le
-  // compte d'authentification (avec ré-auth si Firebase l'exige), purge le local.
-  const deleteAccount = async () => {
-    const uid = user?.uid;
-    if (!uid) return false;
-    try {
-      await deleteAllUserData(uid).catch(() => { /* best-effort : on supprime quand même le compte */ });
-      try {
-        await deleteUser(auth.currentUser);
-      } catch (e) {
-        if (e?.code === "auth/requires-recent-login") {
-          // Firebase exige une connexion récente pour supprimer : on ré-authentifie.
-          await signInWithPopup(auth, provider);
-          await deleteUser(auth.currentUser);
-        } else throw e;
-      }
-      try { Object.keys(localStorage).filter(k => k.startsWith("rf_") || k.startsWith("mijote")).forEach(k => localStorage.removeItem(k)); } catch { /* quota */ }
-      setUser(null);
-      return true;
-    } catch {
-      notify("Suppression du compte impossible. Reconnecte-toi puis réessaie.", "error");
-      return false;
-    }
-  };
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
+      {/* Moniteur de perf : durée de rendu de chaque onglet. En dev → console ;
+          en prod, brancher ici un envoi vers l'analytics si besoin. */}
+      <Profiler id={tab} onRender={(id, phase, actualDuration) => {
+        if (import.meta.env.DEV) console.log(`⏱️ [${id}] ${phase} : ${actualDuration.toFixed(1)} ms`);
+      }}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
-      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
-      {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
+      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} onEditRecipe={setEditingRecipe} onDeleteRecipe={deleteRecipe} setCollections={setCollections} setTab={setTab} />}
+      {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "fridge" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
       {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} onPurge={purgeData} onDeleteAccount={deleteAccount} />}
       {tab === "legal" && <LegalPage />}
+      </Profiler>
     </div>
   );
 
@@ -525,7 +279,7 @@ function AppInner() {
     )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi" }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
+      <RecipeDetail recipe={currentRecipe} recipes={recipes} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi", groupId: newGroupId(), role: roleForCategory(r.category) }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
   ) : selectedRecipe && !currentRecipe && workspaceReady ? (
     <RecipeNotFound onBack={() => navigate("/recipes")} />
@@ -542,43 +296,13 @@ function AppInner() {
   }
   if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
 
-  // Import depuis une URL (admin) : appelle la Cloud Function puis ouvre l'ÉDITEUR
-  // avec le brouillon (jamais d'enregistrement direct — le créateur relit/corrige).
-  const withItemIds = (recipe) => ({
-    description: "", collections: [], image: "", cuisine: "", category: "", source: "",
-    prepTime: 0, cookTime: 0, servings: 2, ...recipe,
-    ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),
-    utensils: (recipe.utensils || []).map((u, k) => ({ id: `u${Date.now()}_${k}`, dbId: "", name: "", ...u })),
-    steps: (recipe.steps || []).map((s, k) => ({ id: `s${Date.now()}_${k}`, title: "", text: "", ingredients: [], utensils: [], ...s })),
-  });
-  // Recette brute extraite (URL ou image) → brouillon prêt pour l'éditeur.
-  const openImportedDraft = (recipe) => {
-    // Complète dbId + Nutri-Score via le pipeline d'import existant (schéma toléré).
-    const res = prepareRecipeImport(JSON.stringify(recipe), { ingredientDB, utensilDB });
-    let draft = res.prepared?.[0] || recipe;
-    // Ustensiles : ne garder QUE ceux réellement en base master (dbId résolu), et
-    // purger les liens d'étapes qui pointaient vers un ustensile écarté.
-    const keptUt = (draft.utensils || []).filter(u => u.dbId);
-    const keptIds = new Set(keptUt.map(u => u.id));
-    draft = {
-      ...draft,
-      utensils: keptUt,
-      steps: (draft.steps || []).map(s => ({ ...s, utensils: (s.utensils || []).filter(id => keptIds.has(id)) })),
-    };
-    setEditingRecipe(withItemIds(draft));
-  };
-  const importFromUrl = async (url) => {
-    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
-    openImportedDraft(recipe);
-    return { method };
-  };
-  const importFromImages = async (images) => {
-    const { recipe, method } = await importRecipeFromImages(images, utensilDB.map(u => u.name));
-    openImportedDraft(recipe);
-    return { method };
-  };
-
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory, isAdmin, importFromUrl, importFromImages };
+  // La dernière closure des fonctions du shell (définies plus bas, après les retours
+  // anticipés) est publiée dans la ref stable déclarée en tête de composant. Écriture
+  // pendant le render volontaire (motif « latest ref ») : idempotente, sans effet de
+  // bord, et ces fonctions ne sont appelées que sur action utilisateur (jamais au
+  // render ni dans un effet de montage) — donc jamais lue avant d'être remplie.
+  // eslint-disable-next-line react-hooks/refs
+  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages };
 
   return (
     <AppShellProvider value={shellValue}>

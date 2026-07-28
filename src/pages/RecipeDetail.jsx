@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { StepTip } from "../components/StepTip.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
+import { IngredientPill, UtensilPill, UtImage } from "../components/StepPills.jsx";
+import { VeganBadge, SeasonBadge } from "../components/Badges.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
@@ -21,7 +23,7 @@ import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatche
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
-import { fmtTime, capitalize } from "../lib/format.js";
+import { fmtTime, capitalize, fmtQty, fmtQtyUnit } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { computeDifficulty, explainDifficulty } from "../lib/difficulty.js";
@@ -280,16 +282,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               </button>
             )}
             {recipeVegan && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
-                <Icon name="leaf" size={11} color="#fff" />
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>Vegan</span>
-              </span>
+              <VeganBadge />
             )}
             {recipeInSeason && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(232,146,10,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
-                <Icon name="sun" size={11} color="#fff" />
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
-              </span>
+              <SeasonBadge />
             )}
             <DifficultyBadge score={difficulty.score} onImage title={difficultyExplain ? "Voir comment la difficulté est calculée" : difficultyTitle} onClick={difficultyExplain ? () => setShowDifficulty(true) : undefined} />
             {categoryLabel(recipe.category) && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{categoryEmoji(recipe.category)}</span>{categoryLabel(recipe.category)}</span>}
@@ -424,16 +420,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   </button>
                 )}
                 {recipeVegan && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
-                    <Icon name="leaf" size={11} color="#fff" />
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>Vegan</span>
-                  </span>
+                  <VeganBadge />
                 )}
                 {recipeInSeason && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(232,146,10,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
-                    <Icon name="sun" size={11} color="#fff" />
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
-                  </span>
+                  <SeasonBadge />
                 )}
                 <DifficultyBadge score={difficulty.score} onImage title={difficultyExplain ? "Voir comment la difficulté est calculée" : difficultyTitle} onClick={difficultyExplain ? () => setShowDifficulty(true) : undefined} />
                 {categoryLabel(recipe.category) && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{categoryEmoji(recipe.category)}</span>{categoryLabel(recipe.category)}</span>}
@@ -592,7 +582,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 1 }}>{badge.text}</div>}
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
-                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
                         <span style={{ fontSize: 12, color: "var(--text2)" }}>{ing.unit}</span>
                       </div>
                       {clickable && <Icon name="forward" size={14} color="var(--text3)" />}
@@ -607,7 +597,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {(recipe.utensils || []).map(u => (
                   <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", background: "#fff" }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={56} radius={12} />
                     <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
                   </div>
                 ))}
@@ -640,21 +630,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                           {cstep.text && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }}>{cstep.text}</p>}
                           {(cIngs.length > 0 || cUts.length > 0) && (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 8 }}>
-                              {cIngs.map(ing => {
-                                const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
-                                return (
-                                <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                                  <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={22} cover={!!ing.recipeId} />
-                                  {displayName}
-                                  <span style={{ color: "var(--text3)", fontWeight: 400, marginLeft: 2 }}>{ing.amount}{ing.unit}</span>
-                                </span>
-                                );
-                              })}
+                              {cIngs.map(ing => (
+                                <IngredientPill key={ing.id}
+                                  image={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)}
+                                  name={ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name}
+                                  amount={ing.amount} unit={ing.unit} cover={!!ing.recipeId} />
+                              ))}
                               {cUts.map(u => (
-                                <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                                  <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
-                                  {u.name}
-                                </span>
+                                <UtensilPill key={u.id} image={getUtImage(u.dbId, u.name)} name={u.name} />
                               ))}
                             </div>
                           )}
@@ -683,21 +666,14 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                       {step.tip && <StepTip tip={step.tip} style={{ marginBottom: (hasPills || step.image) ? 10 : 0 }} />}
                       {hasPills && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: step.image ? 10 : 0 }}>
-                          {linkedIngs.map(ing => {
-                            const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
-                            return (
-                            <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                              <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={22} cover={!!ing.recipeId} />
-                              {displayName}
-                              <span style={{ color: "var(--text3)", fontWeight: 400, marginLeft: 2 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
-                            </span>
-                          );
-                          })}
+                          {linkedIngs.map(ing => (
+                            <IngredientPill key={ing.id}
+                              image={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)}
+                              name={ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name}
+                              amount={ing.amount * mult} unit={ing.unit} cover={!!ing.recipeId} />
+                          ))}
                           {linkedUts.map(u => (
-                            <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" }}>
-                              <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
-                              {u.name}
-                            </span>
+                            <UtensilPill key={u.id} image={getUtImage(u.dbId, u.name)} name={u.name} />
                           ))}
                         </div>
                       )}
@@ -731,7 +707,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={48} cover />
                         : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
                       <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
-                        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
                         <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
                       </div>
                       <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>
@@ -744,7 +720,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   <div key={ing.id} onClick={() => ing.dbId && navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: ing.dbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (ing.dbId) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
                     <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                     <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{+(ing.amount * mult).toFixed(2)}</span>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
                       <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
                     </div>
                     <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.name)}</div>
@@ -759,7 +735,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {recipe.utensils.map(u => (
                     <div key={u.id} className="ut-pill-desktop" style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                      <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={28} radius={7} />
                       <span style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</span>
                     </div>
                   ))}
@@ -802,13 +778,13 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                               <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
                                 <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} cover={!!ing.recipeId} />
                                 {displayName}
-                                <span style={{ color: "var(--text3)", fontWeight: 500 }}>{ing.amount}{ing.unit}</span>
+                                <span style={{ color: "var(--text3)", fontWeight: 500 }}>{fmtQtyUnit(ing.amount, ing.unit)}</span>
                               </span>
                               );
                             })}
                             {cUts.map(u => (
                               <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                                <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                                <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
                                 {u.name}
                               </span>
                             ))}
@@ -839,13 +815,13 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                           <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
                             <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} cover={!!ing.recipeId} />
                             {displayName}
-                            <span style={{ color: "var(--text3)", fontWeight: 500 }}>{+(ing.amount * mult).toFixed(2)}{ing.unit}</span>
+                            <span style={{ color: "var(--text3)", fontWeight: 500 }}>{fmtQtyUnit(ing.amount * mult, ing.unit)}</span>
                           </span>
                           );
                         })}
                         {linkedUts.map(u => (
                           <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%" }} /></div>
+                            <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
                             {u.name}
                           </span>
                         ))}
@@ -865,7 +841,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
       )}
       {cookMode && recipe.steps?.length > 0 && (
-        <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} recipes={recipes} stockSet={new Set(stock)} onClose={() => setCookMode(false)} />
+        <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} recipes={recipes} stockSet={new Set(stock)} onUpdateRecipe={onUpdateRecipe} onClose={() => setCookMode(false)} />
       )}
 
       {/* Shopping ingredient selection modal */}
@@ -901,7 +877,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 14, fontWeight: 500 }}>{ing.name}</span>
-                      <span style={{ fontSize: 12, color: "var(--text2)" }}>{+(ing.amount * mult).toFixed(2)} {ing.unit}</span>
+                      <span style={{ fontSize: 12, color: "var(--text2)" }}>{fmtQtyUnit(ing.amount * mult, ing.unit)}</span>
                       {inStock && (
                         <span style={{
                           display: "inline-flex", alignItems: "center", gap: 5,
