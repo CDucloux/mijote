@@ -1,5 +1,4 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
-import { flushSync } from "react-dom";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
 
@@ -22,6 +21,8 @@ import { AppShellProvider } from "./context/AppShellContext.jsx";
 import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
+import { useTheme } from "./hooks/useTheme.js";
+import { useNotifications } from "./hooks/useNotifications.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
@@ -161,7 +162,7 @@ function AppInner() {
     else navigate(location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname, { replace: true });
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
-  const [notification, setNotification] = useState(null);
+  const { notification, notify } = useNotifications();
   // Vue d'une recette publique (route /discover/:pubId) – logique isolée dans son hook.
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
@@ -179,39 +180,7 @@ function AppInner() {
     userDB, setUserDB,
   });
 
-  const [isDark, setIsDark] = useState(() => {
-    try { return localStorage.getItem("rf_theme") !== "light"; } catch { return true; }
-  });
-  // Applique le thème au DOM (classe <html> + theme-color de la barre de statut PWA).
-  const applyThemeToDOM = (dark) => {
-    document.documentElement.classList.toggle("light", !dark);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", dark ? "#0e0e0f" : "#f5f0eb");
-  };
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    // Le fondu de thème par élément (règle globale `*`) est écrasé sur toute
-    // page dont les éléments portent une `transition` inline → bascule sèche.
-    // L'API View Transitions capture un instantané du viewport entier et le
-    // fait cross-fader uniformément, indépendamment des transitions par élément.
-    const run = () => {
-      // flushSync : le commit React doit être appliqué DANS le callback pour que
-      // l'instantané « après » du view-transition reflète déjà le nouveau thème.
-      flushSync(() => setIsDark(next));
-      applyThemeToDOM(next);
-      try { localStorage.setItem("rf_theme", next ? "dark" : "light"); } catch { }
-    };
-    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (document.startViewTransition && !reduce) document.startViewTransition(run);
-    else run();
-  };
-
-  // Synchronisation initiale (au montage) : aligne le DOM sur l'état persistant.
-  useEffect(() => {
-    applyThemeToDOM(isDark);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { isDark, toggleTheme } = useTheme();
 
   // Update document title on tab change
   useEffect(() => {
@@ -219,11 +188,6 @@ function AppInner() {
     document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
   }, [tab]);
 
-
-  const notify = useCallback((msg, type = "success") => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 2800);
-  }, []);
 
   // Valeur de contexte À IDENTITÉ STABLE : sans ça, `shellValue` était recréé à
   // chaque render → TOUS les consommateurs useAppShell (toutes les pages, cartes,
