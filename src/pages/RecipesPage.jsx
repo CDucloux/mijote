@@ -40,6 +40,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
   const [recipeMenu, setRecipeMenu] = useState(null); // recette visée par l'appui long / clic droit (modifier/supprimer)
+  const [confirmDelete, setConfirmDelete] = useState(null); // { kind: "carnet" | "recipe", item } — confirmation avant suppression
   const [editingSmartId, setEditingSmartId] = useState(null); // carnet smart dont on ré-édite la vue de filtres
   const [dragCarnetId, setDragCarnetId] = useState(null); // carnet en cours de glisser-déposer (réordonnancement)
 
@@ -313,6 +314,36 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         )}
       </div>
 
+      {/* Confirmation avant suppression (carnet ou recette) */}
+      {confirmDelete && (
+        <SwipeableSheet onClose={() => setConfirmDelete(null)}>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "grid", placeItems: "center", margin: "0 auto 14px" }}>
+            <Icon name="trash" size={24} color="var(--red)" />
+          </div>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, textAlign: "center" }}>
+            Supprimer {confirmDelete.kind === "carnet" ? "ce carnet" : "cette recette"} ?
+          </h3>
+          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.55, textAlign: "center" }}>
+            <strong style={{ color: "var(--text)" }}>« {confirmDelete.item.name} »</strong>
+            {confirmDelete.kind === "carnet"
+              ? " sera supprimé. Tes recettes ne sont pas effacées, seulement le carnet."
+              : " sera définitivement supprimée. Cette action est irréversible."}
+          </p>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDelete(null)}>Annuler</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => {
+              if (confirmDelete.kind === "carnet") {
+                setCollections(prev => prev.filter(c => c.id !== confirmDelete.item.id));
+                if (filterCol === confirmDelete.item.id) setFilterCol(null);
+              } else {
+                onDeleteRecipe?.(confirmDelete.item.id);
+              }
+              setConfirmDelete(null);
+            }}>Supprimer</button>
+          </div>
+        </SwipeableSheet>
+      )}
+
       {/* Menu d'une recette (appui long / clic droit) : modifier / supprimer */}
       {recipeMenu && (
         <SwipeableSheet onClose={() => setRecipeMenu(null)}>
@@ -329,7 +360,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { onEditRecipe?.(recipeMenu); setRecipeMenu(null); }}>
               <Icon name="edit" size={16} /> Modifier
             </button>
-            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { const id = recipeMenu.id; setRecipeMenu(null); onDeleteRecipe?.(id); }}>
+            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setConfirmDelete({ kind: "recipe", item: recipeMenu }); setRecipeMenu(null); }}>
               <Icon name="trash" size={16} /> Supprimer
             </button>
           </div>
@@ -362,7 +393,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { setNewCarnet({ ...carnetMenu, editing: true }); setCarnetMenu(null); }}>
               <Icon name="edit" size={16} /> Modifier
             </button>
-            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setCollections(prev => prev.filter(c => c.id !== carnetMenu.id)); if (filterCol === carnetMenu.id) setFilterCol(null); setCarnetMenu(null); }}>
+            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setConfirmDelete({ kind: "carnet", item: carnetMenu }); setCarnetMenu(null); }}>
               <Icon name="trash" size={16} /> Supprimer
             </button>
           </div>
