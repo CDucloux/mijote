@@ -13,9 +13,7 @@ import { importRecipeFromUrl, importRecipeFromImages } from "./lib/recipeUrlImpo
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
 import { recipesReferencing } from "./lib/recipeComponents.js";
 import { buildRecipeIndex } from "./lib/nutriscore.js";
-import {
-  DEFAULT_CATEGORIES, SAMPLE_RECIPES, SAMPLE_COLLECTIONS,
-} from "./constants/categories.js";
+import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
 import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
@@ -23,6 +21,7 @@ import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useNotifications } from "./hooks/useNotifications.js";
+import { useMasterData } from "./hooks/useMasterData.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
@@ -84,63 +83,12 @@ function AppInner() {
     try { setDirectory(await fetchUserDirectory()); }
     catch { directoryLoadedRef.current = null; }
   }, [user]);
-  // Reference DBs: shared Master + user's own additions, merged for display.
-  const [masterDB, setMasterDB] = useState(() => {
-    try {
-      const cached = localStorage.getItem("rf_masterDB_cache");
-      if (cached) return JSON.parse(cached);
-    } catch { /* ignore */ }
-    return { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
-  });
-  const [userDB, setUserDB] = useState({ ingredients: [], utensils: [] });
-  // Nutrition categories live in the Master (admin-managed). Fall back to defaults.
-  const categories = useMemo(
-    () => (masterDB.categories && Object.keys(masterDB.categories).length ? masterDB.categories : DEFAULT_CATEGORIES),
-    [masterDB]
-  );
-  const setCategories = useCallback((updater) => {
-    setMasterDB(prev => {
-      const cur = prev.categories && Object.keys(prev.categories).length ? prev.categories : DEFAULT_CATEGORIES;
-      const next = typeof updater === "function" ? updater(cur) : updater;
-      return { ...prev, categories: next };
-    });
-  }, []);
-  // Admins see master items as editable; normal users see them read-only.
-  const ingredientDB = useMemo(
-    () => [...masterDB.ingredients, ...userDB.ingredients].map(i => ({ ...i, _ro: !isAdmin })),
-    [masterDB, userDB, isAdmin]
-  );
-  const utensilDB = useMemo(
-    () => [...masterDB.utensils, ...userDB.utensils].map(u => ({ ...u, _ro: !isAdmin })),
-    [masterDB, userDB, isAdmin]
-  );
-  // Setters: admins write everything to the shared Master (folding in any of their
-  // own/migrated items); normal users only ever write to their own additions.
-  const setIngredientDB = useCallback((updater) => {
-    if (!isAdmin) return; // base de référence en lecture seule pour les non-admins
-    const merged = [...masterDB.ingredients, ...userDB.ingredients];
-    const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
-    setMasterDB(prev => ({ ...prev, ingredients: next }));
-    if (userDB.ingredients.length) setUserDB(prev => ({ ...prev, ingredients: [] }));
-  }, [masterDB, userDB, isAdmin]);
-  const setUtensilDB = useCallback((updater) => {
-    if (!isAdmin) return; // base de référence en lecture seule pour les non-admins
-    const merged = [...masterDB.utensils, ...userDB.utensils];
-    const next = (typeof updater === "function" ? updater(merged) : updater).map(({ _ro, ...rest }) => rest);
-    setMasterDB(prev => ({ ...prev, utensils: next }));
-    if (userDB.utensils.length) setUserDB(prev => ({ ...prev, utensils: [] }));
-  }, [masterDB, userDB, isAdmin]);
-  // Glossaire des techniques : entièrement Master (pas de pendant userDB). Lecture
-  // pour tous, écriture admin seulement.
-  const techniques = useMemo(() => masterDB.techniques || [], [masterDB]);
-  const setTechniques = useCallback((updater) => {
-    if (!isAdmin) return;
-    setMasterDB(prev => {
-      const cur = prev.techniques || [];
-      const next = typeof updater === "function" ? updater(cur) : updater;
-      return { ...prev, techniques: next };
-    });
-  }, [isAdmin]);
+  // Base de référence (Master partagée + ajouts perso) — voir useMasterData.
+  const {
+    masterDB, setMasterDB, userDB, setUserDB,
+    categories, setCategories, ingredientDB, utensilDB, techniques,
+    setIngredientDB, setUtensilDB, setTechniques,
+  } = useMasterData(isAdmin);
 
   const [stock, setStock] = useLS("rf_stock", []);
   const [lowStock, setLowStock] = useLS("rf_lowStock", []);
