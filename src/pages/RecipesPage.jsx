@@ -40,6 +40,26 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
   const [editingSmartId, setEditingSmartId] = useState(null); // carnet smart dont on ré-édite la vue de filtres
+  const [dragCarnetId, setDragCarnetId] = useState(null); // carnet en cours de glisser-déposer (réordonnancement)
+
+  // Réordonnancement des carnets (persisté via setCollections → localStorage + cloud).
+  // Déplace `fromId` à la position de `toId` (glisser-déposer, desktop).
+  const reorderCollections = (fromId, toId) => setCollections(prev => {
+    const arr = [...prev];
+    const from = arr.findIndex(c => c.id === fromId), to = arr.findIndex(c => c.id === toId);
+    if (from < 0 || to < 0 || from === to) return prev;
+    const [moved] = arr.splice(from, 1);
+    arr.splice(to, 0, moved);
+    return arr;
+  });
+  // Décale un carnet d'un cran (flèches du menu, mobile). dir = -1 (gauche) / +1 (droite).
+  const moveCarnet = (id, dir) => setCollections(prev => {
+    const arr = [...prev];
+    const i = arr.findIndex(c => c.id === id), j = i + dir;
+    if (i < 0 || j < 0 || j >= arr.length) return prev;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    return arr;
+  });
   const lpTimer = useRef(null);
   const lpFired = useRef(false);
   const startLongPress = (col) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; setCarnetMenu(col); }, 480); };
@@ -182,8 +202,13 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                   onClick={() => { if (lpFired.current) { lpFired.current = false; return; } openCarnet(col); }}
                   onPointerDown={() => startLongPress(col)} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   onContextMenu={(e) => { e.preventDefault(); setCarnetMenu(col); }}
-                  title="Appui long pour modifier ou supprimer"
-                  style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
+                  draggable
+                  onDragStart={() => { cancelLongPress(); setDragCarnetId(col.id); }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => { e.preventDefault(); if (dragCarnetId && dragCarnetId !== col.id) reorderCollections(dragCarnetId, col.id); setDragCarnetId(null); }}
+                  onDragEnd={() => setDragCarnetId(null)}
+                  title="Glisser pour réordonner · appui long pour modifier"
+                  style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "grab", borderRadius: 14, opacity: dragCarnetId === col.id ? 0.4 : 1 }}>
                   <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 8px 22px -10px ${col.color}, 0 0 0 2px ${col.color}` : "0 6px 16px -10px rgba(0,0,0,0.35)" }}>
                     {/* Page lignée + reliure colorée */}
                     <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${col.color}1f 0%, ${col.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${col.color}00 0 27px, ${col.color}22 27px 28px)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -290,6 +315,18 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {collections.length > 1 && (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn btn-ghost" style={{ flex: 1 }} disabled={collections.findIndex(c => c.id === carnetMenu.id) === 0}
+                  onClick={() => moveCarnet(carnetMenu.id, -1)}>
+                  <Icon name="back" size={15} /> Vers la gauche
+                </button>
+                <button className="btn btn-ghost" style={{ flex: 1 }} disabled={collections.findIndex(c => c.id === carnetMenu.id) === collections.length - 1}
+                  onClick={() => moveCarnet(carnetMenu.id, 1)}>
+                  Vers la droite <Icon name="forward" size={15} />
+                </button>
+              </div>
+            )}
             <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { setNewCarnet({ ...carnetMenu, editing: true }); setCarnetMenu(null); }}>
               <Icon name="edit" size={16} /> Modifier
             </button>
