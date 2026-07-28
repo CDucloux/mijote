@@ -9,7 +9,6 @@ import { cleanRecipeForExport } from "./lib/recipeSchema.js";
 import { deleteImageByUrl } from "./lib/storage.js";
 import { printRecipe } from "./lib/recipePdf.js";
 import { prepareRecipeImport } from "./lib/recipeImport.js";
-import { importRecipeFromUrl, importRecipeFromImages } from "./lib/recipeUrlImport.js";
 import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "./lib/recipeActions.js";
 import { recipesReferencing } from "./lib/recipeComponents.js";
 import { buildRecipeIndex } from "./lib/nutriscore.js";
@@ -22,6 +21,7 @@ import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useNotifications } from "./hooks/useNotifications.js";
 import { useMasterData } from "./hooks/useMasterData.js";
+import { useRecipeImport } from "./hooks/useRecipeImport.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
@@ -110,6 +110,8 @@ function AppInner() {
     else navigate(location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname, { replace: true });
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  // Import de recette (URL / photos) → ouvre l'éditeur sur le brouillon (useRecipeImport).
+  const { importFromUrl, importFromImages } = useRecipeImport({ ingredientDB, utensilDB, openEditor: setEditingRecipe });
   const { notification, notify } = useNotifications();
   // Vue d'une recette publique (route /discover/:pubId) – logique isolée dans son hook.
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
@@ -486,42 +488,6 @@ function AppInner() {
     return <div style={{ height: "100dvh", background: "var(--bg)", color: "var(--text)" }}><LegalPage /></div>;
   }
   if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
-
-  // Import depuis une URL (admin) : appelle la Cloud Function puis ouvre l'ÉDITEUR
-  // avec le brouillon (jamais d'enregistrement direct — le créateur relit/corrige).
-  const withItemIds = (recipe) => ({
-    description: "", collections: [], image: "", cuisine: "", category: "", source: "",
-    prepTime: 0, cookTime: 0, servings: 2, ...recipe,
-    ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),
-    utensils: (recipe.utensils || []).map((u, k) => ({ id: `u${Date.now()}_${k}`, dbId: "", name: "", ...u })),
-    steps: (recipe.steps || []).map((s, k) => ({ id: `s${Date.now()}_${k}`, title: "", text: "", ingredients: [], utensils: [], ...s })),
-  });
-  // Recette brute extraite (URL ou image) → brouillon prêt pour l'éditeur.
-  const openImportedDraft = (recipe) => {
-    // Complète dbId + Nutri-Score via le pipeline d'import existant (schéma toléré).
-    const res = prepareRecipeImport(JSON.stringify(recipe), { ingredientDB, utensilDB });
-    let draft = res.prepared?.[0] || recipe;
-    // Ustensiles : ne garder QUE ceux réellement en base master (dbId résolu), et
-    // purger les liens d'étapes qui pointaient vers un ustensile écarté.
-    const keptUt = (draft.utensils || []).filter(u => u.dbId);
-    const keptIds = new Set(keptUt.map(u => u.id));
-    draft = {
-      ...draft,
-      utensils: keptUt,
-      steps: (draft.steps || []).map(s => ({ ...s, utensils: (s.utensils || []).filter(id => keptIds.has(id)) })),
-    };
-    setEditingRecipe(withItemIds(draft));
-  };
-  const importFromUrl = async (url) => {
-    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
-    openImportedDraft(recipe);
-    return { method };
-  };
-  const importFromImages = async (images) => {
-    const { recipe, method } = await importRecipeFromImages(images, utensilDB.map(u => u.name));
-    openImportedDraft(recipe);
-    return { method };
-  };
 
   // La dernière closure des fonctions du shell (définies plus bas, après les retours
   // anticipés) est publiée dans la ref stable déclarée en tête de composant. Écriture
