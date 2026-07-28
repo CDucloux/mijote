@@ -13,6 +13,7 @@ import { isRecipeInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
 import { buildTechniqueIndex } from "../lib/techniques.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { useLS } from "../hooks/useLS.js";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
@@ -32,9 +33,13 @@ const byRecent = (a, b) => {
 export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
-  const [filterCol, setFilterCol] = useState(null);
-  const [sortBy, setSortBy] = useState("date"); // tri par défaut : plus récentes d'abord (plus simple à retrouver)
-  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+  // Persistés (localStorage, mobile + web) : carnet sélectionné, tri et filtres
+  // survivent au rechargement de la page — plus simple pour retrouver son contexte.
+  const [filterCol, setFilterCol] = useLS("rf_recipes_filterCol", null);
+  const [sortBy, setSortBy] = useLS("rf_recipes_sortBy", "date"); // défaut : plus récentes d'abord
+  const [storedFilters, setFilters] = useLS("rf_recipes_filters", DEFAULT_FILTERS);
+  // Fusion avec les défauts : robuste si DEFAULT_FILTERS gagne une clé après coup.
+  const filters = useMemo(() => ({ ...DEFAULT_FILTERS, ...storedFilters }), [storedFilters]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
@@ -131,6 +136,8 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]);
 
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, filters]);
+  // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
+  useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
 
   useEffect(() => {
     const el = sentinelRef.current;
