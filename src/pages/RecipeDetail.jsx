@@ -4,6 +4,7 @@ import { Icon } from "../components/Icon.jsx";
 import { StepTip } from "../components/StepTip.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
 import { IngredientPill, UtensilPill, UtImage } from "../components/StepPills.jsx";
+import { VeganBadge, SeasonBadge } from "../components/Badges.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
@@ -281,16 +282,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               </button>
             )}
             {recipeVegan && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
-                <Icon name="leaf" size={11} color="#fff" />
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>Vegan</span>
-              </span>
+              <VeganBadge />
             )}
             {recipeInSeason && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(232,146,10,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
-                <Icon name="sun" size={11} color="#fff" />
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
-              </span>
+              <SeasonBadge />
             )}
             <DifficultyBadge score={difficulty.score} onImage title={difficultyExplain ? "Voir comment la difficulté est calculée" : difficultyTitle} onClick={difficultyExplain ? () => setShowDifficulty(true) : undefined} />
             {categoryLabel(recipe.category) && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{categoryEmoji(recipe.category)}</span>{categoryLabel(recipe.category)}</span>}
@@ -425,16 +420,10 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   </button>
                 )}
                 {recipeVegan && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(76,175,125,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
-                    <Icon name="leaf" size={11} color="#fff" />
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>Vegan</span>
-                  </span>
+                  <VeganBadge />
                 )}
                 {recipeInSeason && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px 3px 7px", borderRadius: 20, background: "rgba(232,146,10,0.92)", border: "1px solid rgba(255,255,255,0.3)" }}>
-                    <Icon name="sun" size={11} color="#fff" />
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>De saison</span>
-                  </span>
+                  <SeasonBadge />
                 )}
                 <DifficultyBadge score={difficulty.score} onImage title={difficultyExplain ? "Voir comment la difficulté est calculée" : difficultyTitle} onClick={difficultyExplain ? () => setShowDifficulty(true) : undefined} />
                 {categoryLabel(recipe.category) && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}><span style={{ fontSize: 12, lineHeight: 1 }}>{categoryEmoji(recipe.category)}</span>{categoryLabel(recipe.category)}</span>}
