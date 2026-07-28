@@ -22,6 +22,17 @@ export default defineConfig([
       // Autorise les variables/arguments préfixés par _ (rejets volontaires de
       // déstructuration, ex. `const { _ro, ...rest } = obj`).
       'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+      // Règles react-hooks EXPÉRIMENTALES (compiler-aware) : utiles comme indices
+      // mais trop agressives pour BLOQUER la CI → warn. `error` reste réservé aux
+      // vrais problèmes (rules-of-hooks, no-undef, no-unused-vars…).
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/refs': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/static-components': 'warn',
+      'react-hooks/immutability': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
+      // Concerne le Fast Refresh (HMR) en dev, pas la correction du code.
+      'react-refresh/only-export-components': 'warn',
     },
   },
   {

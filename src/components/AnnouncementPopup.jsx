@@ -15,7 +15,7 @@ export function AnnouncementPopup() {
   });
   if (!highlights.length || dismissed) return null;
   const close = () => {
-    try { localStorage.setItem(ANNOUNCE_SEEN_KEY, latest.version); } catch { }
+    try { localStorage.setItem(ANNOUNCE_SEEN_KEY, latest.version); } catch { /* quota */ }
     setDismissed(true);
   };
   return (
