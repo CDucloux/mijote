@@ -29,7 +29,7 @@ const byRecent = (a, b) => {
   return db !== da ? db - da : idTimestamp(b.id) - idTimestamp(a.id);
 };
 
-export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, setCollections, setTab }) {
+export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
   const [filterCol, setFilterCol] = useState(null);
@@ -39,6 +39,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
+  const [recipeMenu, setRecipeMenu] = useState(null); // recette visée par l'appui long / clic droit (modifier/supprimer)
   const [editingSmartId, setEditingSmartId] = useState(null); // carnet smart dont on ré-édite la vue de filtres
   const [dragCarnetId, setDragCarnetId] = useState(null); // carnet en cours de glisser-déposer (réordonnancement)
 
@@ -62,7 +63,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   });
   const lpTimer = useRef(null);
   const lpFired = useRef(false);
-  const startLongPress = (col) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; setCarnetMenu(col); }, 480); };
+  // Appui long générique : ouvre un menu (callback) après 480 ms ; `lpFired` sert à
+  // annuler le clic qui suit. Utilisé par les carnets ET les cartes recettes.
+  const startLongPress = (onFire) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; onFire(); }, 480); };
   const cancelLongPress = () => clearTimeout(lpTimer.current);
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
@@ -200,7 +203,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                 return (
                 <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined}
                   onClick={() => { if (lpFired.current) { lpFired.current = false; return; } openCarnet(col); }}
-                  onPointerDown={() => startLongPress(col)} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+                  onPointerDown={() => startLongPress(() => setCarnetMenu(col))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   onContextMenu={(e) => { e.preventDefault(); setCarnetMenu(col); }}
                   draggable
                   onDragStart={() => { cancelLongPress(); setDragCarnetId(col.id); }}
@@ -277,7 +280,13 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </h2>
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.slice(0, visibleCount).map((r, idx) => <RecipeCard key={r.id} recipe={r} onClick={() => onSelect(r.id)} inSeason={isRecipeInSeason(r, resolver)} vegan={isRecipeVegan(r, resolver, { recipes })} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />)}
+          {filtered.slice(0, visibleCount).map((r, idx) => (
+            <div key={r.id}
+              onPointerDown={() => startLongPress(() => setRecipeMenu(r))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+              onContextMenu={(e) => { e.preventDefault(); setRecipeMenu(r); }}>
+              <RecipeCard recipe={r} onClick={() => { if (lpFired.current) { lpFired.current = false; return; } onSelect(r.id); }} inSeason={isRecipeInSeason(r, resolver)} vegan={isRecipeVegan(r, resolver, { recipes })} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />
+            </div>
+          ))}
         </div>
         {visibleCount < filtered.length && (
           <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
@@ -303,6 +312,29 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         </>
         )}
       </div>
+
+      {/* Menu d'une recette (appui long / clic droit) : modifier / supprimer */}
+      {recipeMenu && (
+        <SwipeableSheet onClose={() => setRecipeMenu(null)}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 20 }}>
+              {recipeMenu.image ? <img src={recipeMenu.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (recipeMenu.isComponent ? "🧩" : "🍽️")}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{recipeMenu.name}</div>
+              <div style={{ fontSize: 12, color: "var(--text3)" }}>{recipeMenu.isComponent ? "Préparation de base" : "Recette"}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { onEditRecipe?.(recipeMenu); setRecipeMenu(null); }}>
+              <Icon name="edit" size={16} /> Modifier
+            </button>
+            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { const id = recipeMenu.id; setRecipeMenu(null); onDeleteRecipe?.(id); }}>
+              <Icon name="trash" size={16} /> Supprimer
+            </button>
+          </div>
+        </SwipeableSheet>
+      )}
 
       {/* Menu d'un carnet (appui long) : modifier / supprimer */}
       {carnetMenu && (
