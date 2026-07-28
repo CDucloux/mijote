@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, Profiler } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
 import { flushSync } from "react-dom";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
@@ -46,6 +46,11 @@ import { LegalPage } from "./pages/LegalPage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
+
+// Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent —
+// et non à chaque render d'App (toast, statut de sync…). Requiert des props stables
+// (setters useState/useLS, valeurs mémoïsées) + une valeur de contexte stable.
+const MealPlanPageMemo = memo(MealPlanPage);
 
 
 function AppInner() {
@@ -215,10 +220,32 @@ function AppInner() {
   }, [tab]);
 
 
-  const notify = (msg, type = "success") => {
+  const notify = useCallback((msg, type = "success") => {
     setNotification({ msg, type });
     setTimeout(() => setNotification(null), 2800);
-  };
+  }, []);
+
+  // Valeur de contexte À IDENTITÉ STABLE : sans ça, `shellValue` était recréé à
+  // chaque render → TOUS les consommateurs useAppShell (toutes les pages, cartes,
+  // sections…) se re-rendaient à chaque render d'App, même pour un simple toast.
+  // Les fonctions passent par une ref (toujours la dernière closure, jamais périmée
+  // — utile car certaines sont définies après les retours anticipés), et l'objet ne
+  // change que quand une VRAIE valeur change (user, syncStatus, thème, techniques…).
+  // Déclaré AVANT tout return conditionnel (règles des hooks) ; la ref est remplie
+  // plus bas, une fois les fonctions définies.
+  const shellApiRef = useRef({});
+  const stableApi = useMemo(() => ({
+    signOut: (...a) => shellApiRef.current.signOut?.(...a),
+    toggleTheme: (...a) => shellApiRef.current.toggleTheme?.(...a),
+    getSharedData: (...a) => shellApiRef.current.getSharedData?.(...a),
+    loadDirectory: (...a) => shellApiRef.current.loadDirectory?.(...a),
+    importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
+    importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
+  }), []);
+  const shellValue = useMemo(
+    () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, ...stableApi }),
+    [user, syncStatus, isDark, notify, techniques, directory, isAdmin, stableApi]
+  );
 
   const saveRecipe = r => {
     const result = prepareRecipeForSave(r, { recipes, ingredientDB });
@@ -491,7 +518,7 @@ function AppInner() {
       }}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} setCollections={setCollections} setTab={setTab} />}
-      {tab === "meal-plan" && <MealPlanPage mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
+      {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "fridge" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
@@ -584,7 +611,13 @@ function AppInner() {
     return { method };
   };
 
-  const shellValue = { user, syncStatus, signOut: handleSignOut, isDark, toggleTheme, notify, techniques, getSharedData, directory, loadDirectory, isAdmin, importFromUrl, importFromImages };
+  // La dernière closure des fonctions du shell (définies plus bas, après les retours
+  // anticipés) est publiée dans la ref stable déclarée en tête de composant. Écriture
+  // pendant le render volontaire (motif « latest ref ») : idempotente, sans effet de
+  // bord, et ces fonctions ne sont appelées que sur action utilisateur (jamais au
+  // render ni dans un effet de montage) — donc jamais lue avant d'être remplie.
+  // eslint-disable-next-line react-hooks/refs
+  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages };
 
   return (
     <AppShellProvider value={shellValue}>
