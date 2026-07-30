@@ -295,7 +295,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {genDone
               ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
-              : <button onClick={() => setGenOpen(true)} className="btn btn-primary" style={{ padding: "8px 13px", borderRadius: 12 }}><Icon name="calendar" size={15} /> Générer</button>}
+              : <button onClick={() => setGenOpen(true)} className="btn btn-primary btn-pill"><Icon name="calendar" size={15} /> Générer</button>}
             <UserAvatar />
           </div>
         </div>

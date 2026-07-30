@@ -155,8 +155,8 @@ export function NewRecipeButton({ onManual }) {
 
   return (
     <>
-      <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={openNew}>
-        <Icon name="plus" size={16} /> Nouvelle
+      <button className="btn btn-primary btn-pill" onClick={openNew}>
+        <Icon name="plus" size={17} /> Nouvelle
       </button>
 
       {/* Sélecteur : importer par lien (admin) ou écrire */}

@@ -292,7 +292,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                 <NotifRow
                   animationDelay={`${(meals.length + (shoppingTodo > 0 ? 1 : 0)) * 0.06 + 0.04}s`}
                   icon="warning" color="#e8920a"
-                  onClick={() => setTab?.("fridge")}
+                  onClick={() => setTab?.("stock")}
                   title={`${lowStockNames.length} ingrédient${lowStockNames.length > 1 ? "s" : ""} à racheter bientôt`}
                   subtitle={lowStockNames.slice(0, 4).join(" · ")} />
               )}

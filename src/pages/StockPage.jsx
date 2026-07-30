@@ -78,12 +78,14 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
 
         {/* Recherche */}
         <div style={{ position: "relative", marginBottom: 14 }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}>
-            <Icon name="search" size={16} color="var(--text3)" />
+          <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}>
+            <Icon name="search" size={17} color="var(--text3)" />
           </span>
-          <input className="field-input" placeholder="Rechercher un ingrédient…" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
+          <input className="field-input recipe-search" placeholder="Rechercher un ingrédient…" value={search} onChange={e => setSearch(e.target.value)}
+            enterKeyHint="search" onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }}
+            style={{ paddingLeft: 44, paddingRight: search ? 40 : 16 }} />
           {search && (
-            <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}>
+            <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
               <Icon name="close" size={13} />
             </button>
           )}
@@ -102,7 +104,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-                  background: active ? "var(--accent)" : "var(--surface2)",
+                  background: active ? "var(--accent)" : "var(--surface)",
                   color: active ? "#fff" : "var(--text2)",
                   border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
                   cursor: "pointer", transition: "all 0.15s",

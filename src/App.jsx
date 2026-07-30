@@ -128,11 +128,6 @@ function AppInner() {
 
   const { isDark, toggleTheme } = useTheme();
 
-  // Update document title on tab change
-  useEffect(() => {
-    const titles = { "home": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration", "profile": "Profil", "legal": "Informations légales" };
-    document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
-  }, [tab]);
 
 
   // Valeur de contexte À IDENTITÉ STABLE : sans ça, `shellValue` était recréé à
@@ -175,6 +170,17 @@ function AppInner() {
   );
   const currentRecipe = recipes.find(r => r.id === selectedRecipe);
   const isDesktop = useIsDesktop();
+
+  // Titre de l'onglet navigateur : nom de la recette quand on en consulte/édite une,
+  // sinon l'onglet courant.
+  useEffect(() => {
+    const TAB_TITLES = { home: "Accueil", recipes: "Recettes", "meal-plan": "Planning", shopping: "Courses", stock: "Mon Stock", config: "Configuration", profile: "Profil", legal: "Informations légales" };
+    const recipeName = editingRecipe !== null
+      ? (editingRecipe.name?.trim() || "Nouvelle recette")
+      : (publicDocs?.pub?.recipe?.name)
+      || (selectedRecipe && currentRecipe ? currentRecipe.name : null);
+    document.title = `Mijoté | ${recipeName || TAB_TITLES[tab] || "Accueil"}`;
+  }, [tab, editingRecipe, publicDocs, selectedRecipe, currentRecipe]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
   // Navigate with guard: if editing, show confirm dialog first
@@ -241,7 +247,7 @@ function AppInner() {
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} onEditRecipe={setEditingRecipe} onDeleteRecipe={deleteRecipe} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
-      {tab === "fridge" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
+      {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
       {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} onPurge={purgeData} onDeleteAccount={deleteAccount} />}
       {tab === "legal" && <LegalPage />}
@@ -364,7 +370,6 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
-      <Route path="/fridge" element={<Navigate to="/stock" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout
           remontage (et donc le flicker de l'écran de chargement) lors de la navigation. */}

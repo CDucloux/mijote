@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { NewRecipeButton } from "../components/NewRecipeButton.jsx";
@@ -7,6 +7,7 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmSheet } from "../components/ConfirmSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
+import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "../lib/recipeSort.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "../lib/recipeFilters.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
@@ -19,17 +20,18 @@ import { useLS } from "../hooks/useLS.js";
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
-// Horodatage ms encodé dans l'id ("r"+Date.now()…) → départage les recettes créées
-// le même jour, car createdAt est au jour près (et parfois absent). 0 si non horodaté.
-const idTimestamp = (id) => { const m = /^r(\d{10,})/.exec(id || ""); return m ? Number(m[1]) : 0; };
-// Tri par récence DÉCROISSANTE (plus récent d'abord) : createdAt (jour) puis, à
-// égalité ou en son absence, l'horodatage encodé dans l'id.
-const byRecent = (a, b) => {
-  const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-  const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-  const da = Number.isNaN(ta) ? 0 : ta, db = Number.isNaN(tb) ? 0 : tb;
-  return db !== da ? db - da : idTimestamp(b.id) - idTimestamp(a.id);
-};
+// Carte mémoïsée : ne re-rend que si SES props changent. Sans ça, chaque palier
+// de scroll infini (setVisibleCount) re-rendait toutes les cartes déjà visibles.
+// Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
+const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress }) {
+  return (
+    <div
+      onPointerDown={() => startLongPress(() => onMenu(recipe))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+      onContextMenu={(e) => { e.preventDefault(); onMenu(recipe); }}>
+      <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />
+    </div>
+  );
+});
 
 export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
@@ -37,12 +39,20 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   // Persistés (localStorage, mobile + web) : carnet sélectionné, tri et filtres
   // survivent au rechargement de la page — plus simple pour retrouver son contexte.
   const [filterCol, setFilterCol] = useLS("rf_recipes_filterCol", null);
-  const [sortBy, setSortBy] = useLS("rf_recipes_sortBy", "date"); // défaut : plus récentes d'abord
+  const [sortBy, setSortBy] = useLS("rf_recipes_sortBy", DEFAULT_SORT_KEY); // défaut : plus récentes d'abord
+  const [sortDir, setSortDir] = useLS("rf_recipes_sortDir", defaultDirFor(DEFAULT_SORT_KEY));
   const [storedFilters, setFilters] = useLS("rf_recipes_filters", DEFAULT_FILTERS);
   // Fusion avec les défauts : robuste si DEFAULT_FILTERS gagne une clé après coup.
   const filters = useMemo(() => ({ ...DEFAULT_FILTERS, ...storedFilters }), [storedFilters]);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Tri « simple » : un clic sur la pilule fait défiler les critères (et remet le
+  // sens naturel du critère) ; la flèche inverse le sens du critère courant.
+  const cycleSort = () => {
+    const keys = SORT_OPTIONS.map(o => o.key);
+    const next = keys[(keys.indexOf(sortBy) + 1) % keys.length];
+    setSortBy(next); setSortDir(defaultDirFor(next));
+  };
+  const toggleSortDir = () => setSortDir(d => (d === "asc" ? "desc" : "asc"));
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
   const [recipeMenu, setRecipeMenu] = useState(null); // recette visée par l'appui long / clic droit (modifier/supprimer)
@@ -72,17 +82,27 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const lpFired = useRef(false);
   // Appui long générique : ouvre un menu (callback) après 480 ms ; `lpFired` sert à
   // annuler le clic qui suit. Utilisé par les carnets ET les cartes recettes.
-  const startLongPress = (onFire) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; onFire(); }, 480); };
-  const cancelLongPress = () => clearTimeout(lpTimer.current);
+  const startLongPress = useCallback((onFire) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; onFire(); }, 480); }, []);
+  const cancelLongPress = useCallback(() => clearTimeout(lpTimer.current), []);
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
   });
   const toggleCarnets = () => setHideCarnets(v => { const n = !v; try { localStorage.setItem("mijote_hideCarnets", n ? "1" : "0"); } catch { /* ignore */ } return n; });
-  const sentinelRef = useRef(null);
 
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
+
+  // Saison / vegan calculés UNE fois par recette (et non à chaque rendu de la grille) :
+  // isRecipeVegan peut remonter récursivement les préparations de base → coûteux au scroll.
+  const seasonVeganById = useMemo(() => {
+    const m = new Map();
+    for (const r of recipes) m.set(r.id, { inSeason: isRecipeInSeason(r, resolver), vegan: isRecipeVegan(r, resolver, { recipes }) });
+    return m;
+  }, [recipes, resolver]);
+  // Callbacks stables → RecipeGridItem (mémoïsé) ne re-rend pas au scroll.
+  const openRecipe = useCallback((r) => { if (lpFired.current) { lpFired.current = false; return; } onSelect(r.id); }, [onSelect]);
+  const openRecipeMenu = useCallback((r) => setRecipeMenu(r), []);
 
   // Styles de cuisine réellement utilisés, dans l'ordre canonique de la liste.
   const usedCuisines = CUISINES.filter(c => recipes.some(r => r.cuisine === c.label));
@@ -133,23 +153,11 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       if (filterCol && !r.collections?.includes(filterCol)) return false;
       return matchesFilters(r, filters, { resolver, techniques, techIndex, recipes });
     })
-    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : byRecent(a, b)),
-  [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]);
+    .sort(makeComparator({ sortBy, sortDir, techniques, techIndex, recipes })),
+  [recipes, search, filterCol, filters, sortBy, sortDir, resolver, techniques, techIndex]);
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, filters]);
   // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
   useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisibleCount(c => c + PAGE_SIZE); },
-      { rootMargin: "240px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [visibleCount, filtered.length]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -161,29 +169,44 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <UserAvatar />
           </div>
         </div>
-        <div style={{ position: "relative", marginBottom: 12 }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
-          <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)}
+        <div style={{ position: "relative", marginBottom: 14 }}>
+          <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}><Icon name="search" size={17} color="var(--text3)" /></span>
+          <input className="field-input recipe-search" placeholder="Rechercher un plat, une cuisine, un ingrédient…" value={search} onChange={e => setSearch(e.target.value)}
             enterKeyHint="search"
             onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }}
-            style={{ paddingLeft: 38 }} />
-          {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
+            style={{ paddingLeft: 44, paddingRight: search ? 40 : 16 }} />
+          {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          {/* Un seul point d'entrée : la feuille « Tous les filtres » (tri + filtres) */}
-          <button className="filter-btn" onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+          {/* Filtres (la feuille de tri est désormais séparée, bouton « Tri ») */}
+          <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
             {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
-          <span style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            Trié par <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{sortBy === "name" ? "A → Z" : sortBy === "health" ? "Santé" : "Récent"}</strong>
-          </span>
+          {/* Pilule + flèche accolées : clic sur la pilule = critère suivant,
+              clic sur la flèche = inverser le sens. */}
+          <div className="sort-control">
+            <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
+              <Icon name="updown" size={15} color="currentColor" />
+              <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
+              <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
+            </button>
+            <button className="toolbar-pill sort-dir" onClick={toggleSortDir}
+              aria-label={`Sens : ${dirLabel(sortBy, sortDir)}`} title={`Sens : ${dirLabel(sortBy, sortDir)} (inverser)`}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transition: "transform 0.2s ease", transform: sortDir === "asc" ? "rotate(180deg)" : "none" }}>
+                <path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+          {recipes.length > 0 && (
+            <span style={{ marginLeft: "auto", fontSize: 12.5, color: "var(--text3)", whiteSpace: "nowrap", flexShrink: 0 }}>{filtered.length} recette{filtered.length > 1 ? "s" : ""}</span>
+          )}
         </div>
       </div>
       {filterOpen && (
         <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => { setFilterOpen(false); setEditingSmartId(null); }}
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => { setFilterOpen(false); setEditingSmartId(null); }}
             alreadySaved={!editingSmartId && collections.some(c => isSmart(c) && smartActive(c))}
             updatingCarnetName={editingSmartId ? collections.find(c => c.id === editingSmartId)?.name : null}
             onSaveAsCarnet={() => {
@@ -288,23 +311,21 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         <>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
-            Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
+            Recettes
           </h2>
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.slice(0, visibleCount).map((r, idx) => (
-            <div key={r.id}
-              onPointerDown={() => startLongPress(() => setRecipeMenu(r))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
-              onContextMenu={(e) => { e.preventDefault(); setRecipeMenu(r); }}>
-              <RecipeCard recipe={r} onClick={() => { if (lpFired.current) { lpFired.current = false; return; } onSelect(r.id); }} inSeason={isRecipeInSeason(r, resolver)} vegan={isRecipeVegan(r, resolver, { recipes })} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />
-            </div>
-          ))}
+          {filtered.map((r, idx) => {
+            const sv = seasonVeganById.get(r.id);
+            return (
+              <RecipeGridItem key={r.id} recipe={r}
+                inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
+                animate={idx < PAGE_SIZE} animDelay={`${idx * 0.075}s`}
+                onOpen={openRecipe} onMenu={openRecipeMenu}
+                startLongPress={startLongPress} cancelLongPress={cancelLongPress} />
+            );
+          })}
         </div>
-        {visibleCount < filtered.length && (
-          <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
-            <div style={{ width: 22, height: 22, border: "2.5px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
-          </div>
-        )}
         {filtered.length === 0 && (
           <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 400, margin: "0 auto" }}>
             <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>

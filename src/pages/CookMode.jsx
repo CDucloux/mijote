@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/Icon.jsx";
+import { parseDurations, fmtCountdown } from "../lib/stepTimers.js";
 import { StepTip } from "../components/StepTip.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
@@ -27,18 +28,30 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
+  const [closing, setClosing] = useState(false);
+  // Fermeture animée : joue la sortie (fondu + glissé) avant de démonter réellement.
+  const requestClose = () => { if (closing) return; setClosing(true); setTimeout(() => onClose(), 280); };
   const [subCook, setSubCook] = useState(null); // { recipe, mult }
   const [doneComponents, setDoneComponents] = useState(new Set());
   // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
   const [iterOpen, setIterOpen] = useState(false);
   const [iterRating, setIterRating] = useState(null);
   const [iterNotes, setIterNotes] = useState("");
+  // Minuteurs déclenchés depuis les mentions de temps de l'étape.
+  const [timers, setTimers] = useState([]); // { id, label, total, remaining, running, done }
+  const notifiedRef = useRef(new Set());
+  const addTimer = (d) => setTimers(prev => prev.some(t => t.id.startsWith(`${d.minutes}-`) && !t.done && t.running)
+    ? prev
+    : [...prev, { id: `${d.minutes}-${Date.now()}`, label: d.label, total: d.minutes * 60, remaining: d.minutes * 60, running: true, done: false }]);
+  const toggleTimer = (id) => setTimers(prev => prev.map(t => t.id === id && !t.done ? { ...t, running: !t.running } : t));
+  const resetTimer = (id) => { notifiedRef.current.delete(id); setTimers(prev => prev.map(t => t.id === id ? { ...t, remaining: t.total, running: true, done: false } : t)); };
+  const removeTimer = (id) => { notifiedRef.current.delete(id); setTimers(prev => prev.filter(t => t.id !== id)); };
   const canIterate = !isNested && !!onUpdateRecipe;
   const saveIteration = () => {
     onUpdateRecipe(addVersion(recipe, { label: nextVersionLabel(recipe.history), rating: iterRating, notes: iterNotes }));
     setIterOpen(false);
     notify?.("Itération ajoutée au carnet");
-    onClose();
+    requestClose();
   };
 
   // Composants épuisés référencés par cette recette (étape 0)
@@ -71,6 +84,65 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
   const progress = ((stepIdx + 1) / totalSteps) * 100;
+
+  // Décompte : 1 tick/s tant qu'un minuteur tourne. Passe à done à 0.
+  useEffect(() => {
+    if (!timers.some(t => t.running && t.remaining > 0)) return;
+    const iv = setInterval(() => {
+      setTimers(prev => prev.map(t => {
+        if (!t.running || t.remaining <= 0) return t;
+        const rem = t.remaining - 1;
+        return rem <= 0 ? { ...t, remaining: 0, running: false, done: true } : { ...t, remaining: rem };
+      }));
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [timers]);
+
+  // Alarme quand un minuteur se termine (une seule fois, compatible StrictMode).
+  useEffect(() => {
+    for (const t of timers) {
+      if (t.done && !notifiedRef.current.has(t.id)) {
+        notifiedRef.current.add(t.id);
+        try { navigator.vibrate?.([200, 100, 200]); } catch { /* ignore */ }
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) {
+            const ctx = new AC();
+            [0, 0.28, 0.56].forEach(off => {
+              const o = ctx.createOscillator(), g = ctx.createGain();
+              o.connect(g); g.connect(ctx.destination); o.type = "sine"; o.frequency.value = 880;
+              const s = ctx.currentTime + off;
+              g.gain.setValueAtTime(0.0001, s);
+              g.gain.exponentialRampToValueAtTime(0.3, s + 0.02);
+              g.gain.exponentialRampToValueAtTime(0.0001, s + 0.2);
+              o.start(s); o.stop(s + 0.22);
+            });
+            setTimeout(() => ctx.close?.(), 1200);
+          }
+        } catch { /* audio indisponible */ }
+        notify?.(`Minuteur terminé — ${t.label}`);
+      }
+    }
+  }, [timers, notify]);
+
+  // Navigation au clavier (desktop) : ← précédent, → suivant (ou terminer).
+  useEffect(() => {
+    if (subCook || done || iterOpen || closing) return;
+    const onKey = (e) => {
+      if (e.defaultPrevented || e.target?.closest?.("input, textarea, [contenteditable=true]")) return;
+      if (e.key === "ArrowRight") {
+        if (stepIdx < totalSteps - 1) { if (!(isStepZero && !allComponentsDone)) setStepIdx(i => i + 1); }
+        else setDone(true);
+      } else if (e.key === "ArrowLeft") {
+        setStepIdx(i => Math.max(0, i - 1));
+      } else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isStepZero, allComponentsDone]);
+
+  const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
 
   // Ingrédients liés à l'étape courante (bruts + composants)
   const linkedIngs = step
@@ -117,7 +189,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
       )}
 
       {done && !subCook && (
-        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", padding: 32, textAlign: "center" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: 32, textAlign: "center" }}>
           {["🍽️", "✨", "🎉", "👨‍🍳", "⭐", "🥳"].map((e, i) => (
             <span key={i} style={{ position: "absolute", fontSize: 28 + i * 4, animation: `floatUp ${1.2 + i * 0.3}s ease forwards`, animationDelay: `${i * 0.15}s`, left: `${10 + i * 14}%`, top: `${60 + Math.sin(i) * 15}%`, pointerEvents: "none" }}>{e}</span>
           ))}
@@ -138,7 +210,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                 <Icon name="sparkle" size={17} /> Noter une itération
               </button>
             )}
-            <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 16 }} onClick={onClose}>
+            <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 16 }} onClick={requestClose}>
               <Icon name="check" size={18} /> {isNested ? "Retour" : "Retour à la recette"}
             </button>
           </div>
@@ -160,10 +232,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
         </SwipeableSheet>
       )}
 
-      <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={requestClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon name={isNested ? "back" : "close"} size={18} />
           </button>
           <div style={{ flex: 1 }}>
@@ -260,7 +332,18 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
                     <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Étape {realIdx + 1}</h2>
                   </div>
-                  <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
+                  <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: stepDurations.length ? 14 : 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
+
+                  {stepDurations.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+                      {stepDurations.map(d => (
+                        <button key={d.minutes} onClick={() => addTimer(d)} className="pressable"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(232,112,58,0.1)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.35)" }}>
+                          <Icon name="clock" size={14} color="var(--accent)" /> Minuteur {d.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {step.tip && <StepTip tip={step.tip} size="lg" style={{ marginBottom: 20 }} />}
 
@@ -296,16 +379,51 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           </div>
         </div>
 
+        {/* Minuteurs actifs — pile flottante au-dessus de la barre de navigation */}
+        {timers.length > 0 && (
+          <div style={{ position: "absolute", right: 14, bottom: 78, display: "flex", flexDirection: "column", gap: 8, zIndex: 5, width: 218, maxWidth: "calc(100% - 28px)" }}>
+            {timers.map(t => {
+              const pct = t.total ? (1 - t.remaining / t.total) * 100 : 0;
+              return (
+                <div key={t.id} className="slide-up" style={{ background: "var(--surface)", border: `1px solid ${t.done ? "var(--green)" : "var(--border)"}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 8px 22px -10px rgba(0,0,0,0.4)", animation: t.done ? "timerPulse 1s ease-in-out infinite" : undefined }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Icon name="clock" size={15} color={t.done ? "var(--green)" : "var(--accent)"} />
+                    <span style={{ flex: 1, fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, letterSpacing: "0.02em", color: t.done ? "var(--green)" : "var(--text)" }}>
+                      {t.done ? "Terminé !" : fmtCountdown(t.remaining)}
+                    </span>
+                    <span style={{ fontSize: 11, color: "var(--text3)", flexShrink: 0 }}>{t.label}</span>
+                  </div>
+                  <div style={{ height: 3, borderRadius: 2, background: "var(--surface2)", margin: "8px 0", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: t.done ? "var(--green)" : "var(--accent)", transition: "width 0.9s linear" }} />
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {t.done
+                      ? <button className="timer-btn timer-btn-accent" onClick={() => resetTimer(t.id)}>
+                          <Icon name="history" size={14} color="var(--accent)" /> Relancer
+                        </button>
+                      : <button className="timer-btn" onClick={() => toggleTimer(t.id)}>
+                          <Icon name={t.running ? "pause" : "play"} size={14} color="var(--text)" /> {t.running ? "Pause" : "Reprendre"}
+                        </button>}
+                    <button className="timer-btn timer-btn-stop" onClick={() => removeTimer(t.id)}>
+                      <Icon name="stop" size={13} color="var(--red)" /> Stop
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Bottom nav */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStepIdx(i => Math.max(0, i - 1))} disabled={stepIdx === 0}>
+          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStepIdx(i => Math.max(0, i - 1))} disabled={stepIdx === 0} title="Précédent (flèche ←)">
             <Icon name="back" size={16} /> Précédent
           </button>
           <span style={{ fontSize: 12, color: "var(--text3)", minWidth: 60, textAlign: "center" }}>
             {isStepZero ? "Bases" : `${realIdx + 1} / ${realStepCount}`}
           </span>
           {stepIdx < totalSteps - 1
-            ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)} disabled={isStepZero && !allComponentsDone}>Suivant <Icon name="forward" size={16} /></button>
+            ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)} disabled={isStepZero && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
             : <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
           }
         </div>

@@ -10,7 +10,7 @@ export const Img = ({ src, alt, style, fallback }) => {
       <Icon name="photo" size={20} />
     </div>
   );
-  return <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer" style={{ objectFit: "cover", ...style }} />;
+  return <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer" loading="lazy" decoding="async" style={{ objectFit: "cover", ...style }} />;
 };
 
 // ─── INGREDIENT IMAGE (round, slightly larger, transparent-friendly) ──────────
