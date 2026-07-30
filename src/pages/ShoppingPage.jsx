@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -7,8 +7,12 @@ import { ShoppingItemRow } from "../components/ShoppingItemRow.jsx";
 import { HeroMenu } from "../components/HeroMenu.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
+import { aggregateShopping } from "../lib/shoppingAggregate.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
+
+// Onglet virtuel « Toutes les courses » (agrégat de toutes les listes actives).
+const ALL_ID = "__all__";
 
 // Bornes pour limiter les écritures Firestore.
 const MAX_LIST_ITEMS = 50;                   // nb max d'articles ajoutés en une fois (collage)
@@ -33,7 +37,13 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const activeList = shoppingLists.find(l => l.id === activeListId) || shoppingLists[0] || null;
+  // L'agrégat n'a de sens qu'à partir de 2 listes. Il devient la vue par défaut
+  // (la « vraie » sortie supermarché), les onglets par recette restant accessibles.
+  const hasAgg = shoppingLists.length >= 2;
+  const effectiveId = activeListId ?? (hasAgg ? ALL_ID : (shoppingLists[0]?.id ?? null));
+  const allMode = hasAgg && effectiveId === ALL_ID;
+  const activeList = allMode ? null : (shoppingLists.find(l => l.id === effectiveId) || shoppingLists[0] || null);
+  const aggregated = useMemo(() => (hasAgg ? aggregateShopping(shoppingLists, ingredientDB) : []), [hasAgg, shoppingLists, ingredientDB]);
 
   const updateList = (id, fn) => setShoppingLists(prev => prev.map(l => l.id === id ? fn(l) : l));
   const deleteList = id => {
@@ -58,6 +68,34 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       }
     }
     updateList(listId, l => ({ ...l, items: l.items.filter(i => !i.checked) }));
+  };
+
+  // ── Agrégat « Toutes les courses » ──
+  // Cocher un article agrégé propage l'état à tous ses contributeurs (chaque
+  // vraie liste). Pas d'animation « strike » ici : le basculement est immédiat.
+  const buyAggregate = (agg) => {
+    const target = !agg.checked;
+    const byList = new Map();
+    for (const c of agg.contributors) { const s = byList.get(c.listId) || new Set(); s.add(c.itemId); byList.set(c.listId, s); }
+    setShoppingLists(prev => prev.map(l => byList.has(l.id)
+      ? { ...l, items: l.items.map(it => byList.get(l.id).has(it.id) ? { ...it, checked: target } : it) }
+      : l));
+  };
+  // Valider l'achat sur l'agrégat : déverse les produits de placard cochés (toutes
+  // listes) dans le stock, puis purge les articles cochés partout.
+  const clearAllChecked = () => {
+    if (setStock) {
+      const toStock = shoppingLists
+        .flatMap(l => (l.items || []).filter(i => i.checked))
+        .map(i => findIngredientMatch(i.name, ingredientDB))
+        .filter(m => m && STOCK_CATEGORIES.has(m.category))
+        .map(m => m.id);
+      if (toStock.length) {
+        setStock(prev => Array.from(new Set([...prev, ...toStock])));
+        if (setLowStock) setLowStock(prev => prev.filter(id => !toStock.includes(id)));
+      }
+    }
+    setShoppingLists(prev => prev.map(l => ({ ...l, items: l.items.filter(i => !i.checked) })));
   };
 
   const addManualItem = () => {
@@ -141,8 +179,29 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
         {/* List selector tabs + menu ⋯ */}
         {shoppingLists.length > 0 && (
           <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, alignItems: "center" }}>
+            {/* Onglet agrégé « Toutes les courses » (≥ 2 listes) */}
+            {hasAgg && (() => {
+              const aggChecked = aggregated.filter(a => a.checked).length;
+              return (
+                <button onClick={() => setActiveListId(ALL_ID)} className="slide-up"
+                  style={{
+                    flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                    background: allMode ? "var(--accent)" : "var(--surface)",
+                    color: allMode ? "#fff" : "var(--accent)",
+                    border: `1px solid ${allMode ? "transparent" : "rgba(232,112,58,0.5)"}`
+                  }}>
+                  <Icon name="grid" size={12} color={allMode ? "#fff" : "var(--accent)"} />
+                  Toutes les courses
+                  {aggregated.length > 0 && (
+                    <span style={{ fontSize: 10, background: allMode ? "rgba(255,255,255,0.25)" : "rgba(232,112,58,0.14)", borderRadius: 10, padding: "1px 6px" }}>
+                      {aggChecked}/{aggregated.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })()}
             {shoppingLists.map((l, idx) => {
-              const isActive = (activeListId === l.id) || (!activeListId && shoppingLists[0] === l);
+              const isActive = !allMode && effectiveId === l.id;
               const lChecked = l.items.filter(i => i.checked).length;
               return (
                 <button key={l.id} onClick={() => setActiveListId(l.id)} className="slide-up"
@@ -183,6 +242,62 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           <Icon name="shopping" size={44} />
           <p style={{ fontSize: 15, fontWeight: 500 }}>Aucune liste de courses</p>
           <p style={{ fontSize: 13 }}>Crée une liste libre ou ajoute une recette depuis sa fiche.</p>
+        </div>
+      )}
+
+      {/* Vue agrégée « Toutes les courses » */}
+      {allMode && (
+        <div key="__all__" className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 32px" }}>
+            {aggregated.length === 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: "60px 32px", textAlign: "center" }}>
+                <Icon name="grid" size={48} color="var(--text3)" />
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)" }}>Rien à acheter</div>
+                <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 260 }}>
+                  Tes listes sont vides. Ajoute des articles ou envoie une recette aux courses, et tout se regroupe ici.
+                </div>
+              </div>
+            ) : (() => {
+              const byName = (a, b) => a.name.localeCompare(b.name, "fr");
+              const todo = aggregated.filter(a => !a.checked);
+              const done = aggregated.filter(a => a.checked);
+              const groups = {};
+              for (const a of todo) { (groups[a.category] = groups[a.category] || []).push(a); }
+              const sections = sortedCategoryEntries(categories)
+                .filter(([k]) => groups[k] && groups[k].length)
+                .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: groups[k].slice().sort(byName) }));
+              const renderAgg = (agg) => (
+                <ShoppingItemRow key={agg.key} disableDelete
+                  item={{ id: agg.key, name: agg.name, amount: agg.qtyDisplay, unit: "", checked: agg.checked }}
+                  imageSrc={agg.image} onBuy={() => buyAggregate(agg)} onDelete={() => {}}
+                  subtitle={agg.sources.length ? `Pour ${agg.sources.join(" + ")}${agg.partial ? " · en partie acheté" : ""}` : (agg.partial ? "En partie acheté" : undefined)} />
+              );
+              return (
+                <>
+                  {sections.map(sec => (
+                    <div key={sec.key}>
+                      {groupHeader(sec.label, sec.icon, sec.items.length)}
+                      {sec.items.map(renderAgg)}
+                    </div>
+                  ))}
+                  {done.length > 0 && (
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, margin: "14px 2px 8px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>
+                        <span style={{ fontSize: 13 }}>✓</span>
+                        <span>Acheté</span>
+                        <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
+                        <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+                        <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(ALL_ID)} title="Confirme l'achat sur toutes les listes – les produits de placard rejoignent ton stock">
+                          <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
+                        </button>
+                      </div>
+                      {done.slice().sort(byName).map(renderAgg)}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
         </div>
       )}
 
@@ -272,8 +387,10 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       )}
       {/* Confirmation : valider l'achat (déversement dans le stock) */}
       {confirmClearId && (() => {
-        const list = shoppingLists.find(l => l.id === confirmClearId);
-        const checked = (list?.items || []).filter(i => i.checked);
+        const isAll = confirmClearId === ALL_ID;
+        const checked = isAll
+          ? shoppingLists.flatMap(l => (l.items || []).filter(i => i.checked))
+          : (shoppingLists.find(l => l.id === confirmClearId)?.items || []).filter(i => i.checked);
         const toStock = checked
           .map(i => findIngredientMatch(i.name, ingredientDB))
           .filter(m => m && STOCK_CATEGORIES.has(m.category));
@@ -294,10 +411,12 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmClearId(null)}>Annuler</button>
               <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => {
-                clearChecked(confirmClearId);
+                if (isAll) clearAllChecked(); else clearChecked(confirmClearId);
                 setConfirmClearId(null);
-                // Un toast de succès par produit ajouté au stock, en cascade.
-                toStock.forEach((m, idx) => setTimeout(() => notify?.(`${m.name} ajouté à ton stock`), idx * 900));
+                // Un toast de succès par produit ajouté au stock, en cascade (dédupliqués).
+                const seen = new Set();
+                toStock.filter(m => !seen.has(m.id) && seen.add(m.id))
+                  .forEach((m, idx) => setTimeout(() => notify?.(`${m.name} ajouté à ton stock`), idx * 900));
               }}>
                 <Icon name="check" size={15} color="#fff" /> Valider
               </button>

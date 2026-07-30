@@ -6,7 +6,7 @@ import { capitalize } from "../lib/format.js";
 
 const SWIPE_MAX = 130, SWIPE_TRIGGER = 64;
 
-export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
+export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc, subtitle, disableDelete = false }) {
   const isDesktop = useIsDesktop();
   const [dx, setDx] = React.useState(0);
   const [animating, setAnimating] = React.useState(false);
@@ -19,7 +19,7 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
     const dX = e.touches[0].clientX - startX.current, dY = e.touches[0].clientY - startY.current;
     if (!axis.current) { if (Math.abs(dX) > 8 || Math.abs(dY) > 8) axis.current = Math.abs(dX) > Math.abs(dY) ? "h" : "v"; }
     if (axis.current === "h") {
-      const lo = -SWIPE_MAX;
+      const lo = disableDelete ? 0 : -SWIPE_MAX;
       const hi = item.checked ? 0 : SWIPE_MAX;
       setDx(Math.max(lo, Math.min(hi, dX)));
     }
@@ -28,7 +28,7 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
     if (axis.current === "h") {
       setAnimating(true);
       if (!item.checked && dx >= SWIPE_TRIGGER) onBuy(item);
-      else if (dx <= -SWIPE_TRIGGER) {
+      else if (!disableDelete && dx <= -SWIPE_TRIGGER) {
         setExiting(true);
         setTimeout(() => onDelete(item), 290);
         return;
@@ -90,9 +90,10 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc }) {
               <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: struck ? "100%" : "0%", transition: "width 0.25s ease" }} />
             </div>
             {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
+            {subtitle && <div style={{ fontSize: 11, color: "var(--text3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 1 }}>{subtitle}</div>}
           </div>
         </button>
-        {isDesktop && (
+        {isDesktop && !disableDelete && (
           <button onClick={() => onDelete(item)} title="Supprimer"
             style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}>
             <Icon name="trash" size={13} color="var(--red)" />
