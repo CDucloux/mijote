@@ -23,12 +23,12 @@ const PAGE_SIZE = 8;
 // Carte mémoïsée : ne re-rend que si SES props changent. Sans ça, chaque palier
 // de scroll infini (setVisibleCount) re-rendait toutes les cartes déjà visibles.
 // Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
-const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, animDelay, onOpen, onMenu, startLongPress, cancelLongPress }) {
+const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress }) {
   return (
     <div
       onPointerDown={() => startLongPress(() => onMenu(recipe))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
       onContextMenu={(e) => { e.preventDefault(); onMenu(recipe); }}>
-      <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} style={{ animationDelay: animDelay }} />
+      <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />
     </div>
   );
 });
@@ -53,7 +53,6 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
     setSortBy(next); setSortDir(defaultDirFor(next));
   };
   const toggleSortDir = () => setSortDir(d => (d === "asc" ? "desc" : "asc"));
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
   const [recipeMenu, setRecipeMenu] = useState(null); // recette visée par l'appui long / clic droit (modifier/supprimer)
@@ -89,7 +88,6 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
   });
   const toggleCarnets = () => setHideCarnets(v => { const n = !v; try { localStorage.setItem("mijote_hideCarnets", n ? "1" : "0"); } catch { /* ignore */ } return n; });
-  const sentinelRef = useRef(null);
 
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
@@ -158,20 +156,8 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
     .sort(makeComparator({ sortBy, sortDir, techniques, techIndex, recipes })),
   [recipes, search, filterCol, filters, sortBy, sortDir, resolver, techniques, techIndex]);
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, sortDir, filters]);
   // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
   useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisibleCount(c => c + PAGE_SIZE); },
-      { rootMargin: "240px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [visibleCount, filtered.length]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -329,22 +315,17 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </h2>
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.slice(0, visibleCount).map((r, idx) => {
+          {filtered.map((r, idx) => {
             const sv = seasonVeganById.get(r.id);
             return (
               <RecipeGridItem key={r.id} recipe={r}
                 inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
-                animDelay={`${(idx % PAGE_SIZE) * 0.04}s`}
+                animate={idx < PAGE_SIZE} animDelay={`${idx * 0.04}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
                 startLongPress={startLongPress} cancelLongPress={cancelLongPress} />
             );
           })}
         </div>
-        {visibleCount < filtered.length && (
-          <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
-            <div style={{ width: 22, height: 22, border: "2.5px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
-          </div>
-        )}
         {filtered.length === 0 && (
           <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 400, margin: "0 auto" }}>
             <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
