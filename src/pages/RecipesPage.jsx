@@ -7,8 +7,7 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmSheet } from "../components/ConfirmSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
-import { SortSheet } from "../components/SortSheet.jsx";
-import { DEFAULT_SORT_KEY, sortOption, defaultDirFor, makeComparator } from "../lib/recipeSort.js";
+import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "../lib/recipeSort.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "../lib/recipeFilters.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
@@ -33,7 +32,14 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   // Fusion avec les défauts : robuste si DEFAULT_FILTERS gagne une clé après coup.
   const filters = useMemo(() => ({ ...DEFAULT_FILTERS, ...storedFilters }), [storedFilters]);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [sortOpen, setSortOpen] = useState(false);
+  // Tri « simple » : un clic sur la pilule fait défiler les critères (et remet le
+  // sens naturel du critère) ; la flèche inverse le sens du critère courant.
+  const cycleSort = () => {
+    const keys = SORT_OPTIONS.map(o => o.key);
+    const next = keys[(keys.indexOf(sortBy) + 1) % keys.length];
+    setSortBy(next); setSortDir(defaultDirFor(next));
+  };
+  const toggleSortDir = () => setSortDir(d => (d === "asc" ? "desc" : "asc"));
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
@@ -168,22 +174,26 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             Filtres
             {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
-          <button className="toolbar-pill" onClick={() => setSortOpen(true)} title="Trier">
-            <Icon name="updown" size={15} color="currentColor" />
-            <span style={{ color: "var(--text3)", fontWeight: 500 }}>Tri :</span>
-            <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ marginLeft: -2, opacity: 0.65 }}><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </button>
+          {/* Pilule + flèche accolées : clic sur la pilule = critère suivant,
+              clic sur la flèche = inverser le sens. */}
+          <div className="sort-control">
+            <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
+              <Icon name="updown" size={15} color="currentColor" />
+              <span style={{ color: "var(--text3)", fontWeight: 500 }}>Tri :</span>
+              <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
+            </button>
+            <button className="toolbar-pill sort-dir" onClick={toggleSortDir}
+              aria-label={`Sens : ${dirLabel(sortBy, sortDir)}`} title={`Sens : ${dirLabel(sortBy, sortDir)} (inverser)`}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transition: "transform 0.2s ease", transform: sortDir === "asc" ? "rotate(180deg)" : "none" }}>
+                <path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
           {recipes.length > 0 && (
             <span style={{ marginLeft: "auto", fontSize: 12.5, color: "var(--text3)", whiteSpace: "nowrap", flexShrink: 0 }}>{filtered.length} recette{filtered.length > 1 ? "s" : ""}</span>
           )}
         </div>
       </div>
-      {sortOpen && (
-        <SortSheet sortBy={sortBy} sortDir={sortDir}
-          onChange={(key, dir) => { setSortBy(key); setSortDir(dir); }}
-          onClose={() => setSortOpen(false)} />
-      )}
       {filterOpen && (
         <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
           <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => { setFilterOpen(false); setEditingSmartId(null); }}
