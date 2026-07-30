@@ -10,7 +10,7 @@ import { householdWorkspace } from "./workspace.js";
 //   users/{uid}/meta/collections     – { items: [...] }
 //   users/{uid}/meta/mealPlan        – { data: {...} }
 //   users/{uid}/meta/shoppingLists   – { items: [...] }
-//   users/{uid}/meta/fridge          – { items: [...], settings: {...} }
+//   users/{uid}/meta/stock           – { items: [...], low: [...] }
 //   users/{uid}/meta/userDB          – { ingredients: [...], utensils: [...] }
 //   master/ingredients               – { items: [...] } (shared, read-only for users)
 //   master/utensils                  – { items: [...] }

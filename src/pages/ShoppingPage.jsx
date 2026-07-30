@@ -148,7 +148,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 <button key={l.id} onClick={() => setActiveListId(l.id)} className="slide-up"
                   style={{
                     flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-                    background: isActive ? "var(--accent)" : "var(--surface2)", animationDelay: `${idx * 0.05}s`,
+                    background: isActive ? "var(--accent)" : "var(--surface)", animationDelay: `${idx * 0.05}s`,
                     color: isActive ? "#fff" : "var(--text2)",
                     border: `1px solid ${isActive ? "transparent" : "var(--border)"}`
                   }}>

@@ -104,7 +104,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-                  background: active ? "var(--accent)" : "var(--surface2)",
+                  background: active ? "var(--accent)" : "var(--surface)",
                   color: active ? "#fff" : "var(--text2)",
                   border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
                   cursor: "pointer", transition: "all 0.15s",
