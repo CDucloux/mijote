@@ -3,7 +3,9 @@ import { Icon } from "./Icon.jsx";
 
 export function UtensilPicker({ utensilDB, selected, onChange }) {
   const [search, setSearch] = useState("");
+  const [replacing, setReplacing] = useState(null); // id de l'ustensile en cours de remplacement
   const selectedIds = new Set(selected.map(u => u.dbId));
+  const replacingName = replacing ? selected.find(u => u.id === replacing)?.name : "";
 
   const toggle = (d) => {
     if (selectedIds.has(d.id)) {
@@ -12,6 +14,15 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
       onChange([...selected, { id: "u" + Date.now(), dbId: d.id, name: d.name }]);
     }
   };
+
+  // Remplace l'ustensile en cours par `d` (dédup par dbId si le remplaçant existe déjà).
+  const replaceWith = (d) => {
+    const next = selected.map(u => u.id === replacing ? { ...u, dbId: d.id, name: d.name } : u);
+    onChange(next.filter((u, i) => next.findIndex(x => x.dbId === u.dbId) === i));
+    setReplacing(null);
+    setSearch("");
+  };
+  const onGridClick = (d) => (replacing ? replaceWith(d) : toggle(d));
 
   const filtered = utensilDB.filter(d =>
     !search || d.name.toLowerCase().includes(search.toLowerCase())
@@ -24,20 +35,35 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
         <div style={{ padding: "14px 16px 0", display: "flex", flexWrap: "wrap", gap: 8, flexShrink: 0 }}>
           {selected.map(u => {
             const db = utensilDB.find(d => d.id === u.dbId);
+            const active = replacing === u.id;
             return (
-              <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: "rgba(232,112,58,0.12)", border: "1px solid rgba(232,112,58,0.35)" }}>
+              <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: active ? "var(--accent)" : "rgba(232,112,58,0.12)", border: `1px solid ${active ? "var(--accent)" : "rgba(232,112,58,0.35)"}`, cursor: "pointer" }}
+                onClick={() => setReplacing(active ? null : u.id)} title="Remplacer cet ustensile">
                 <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {db?.image
                     ? <img src={db.image} alt={u.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} referrerPolicy="no-referrer" loading="lazy" />
                     : <Icon name="photo" size={12} color="#b3afaa" />}
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{u.name}</span>
-                <button onClick={() => toggle({ id: u.dbId, name: u.name })} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
-                  <Icon name="close" size={12} color="var(--accent)" />
+                <span style={{ fontSize: 12, fontWeight: 600, color: active ? "#fff" : "var(--accent)" }}>{u.name}</span>
+                <button onClick={e => { e.stopPropagation(); if (active) setReplacing(null); toggle({ id: u.dbId, name: u.name }); }} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
+                  <Icon name="close" size={12} color={active ? "#fff" : "var(--accent)"} />
                 </button>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Bandeau mode remplacement */}
+      {replacing && (
+        <div className="slide-up" style={{ margin: "12px 16px 0", padding: "9px 12px", borderRadius: 12, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <Icon name="swap" size={14} color="var(--accent)" />
+          <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 500, flex: 1 }}>
+            Choisis un ustensile pour remplacer <strong>{replacingName}</strong>
+          </span>
+          <button onClick={() => setReplacing(null)} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
+            <Icon name="close" size={13} color="var(--accent)" />
+          </button>
         </div>
       )}
 
@@ -66,7 +92,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
             {filtered.map(d => {
               const on = selectedIds.has(d.id);
               return (
-                <button key={d.id} onClick={() => toggle(d)} style={{
+                <button key={d.id} onClick={() => onGridClick(d)} style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
                   padding: "14px 8px 10px",
                   borderRadius: 14,

@@ -128,11 +128,6 @@ function AppInner() {
 
   const { isDark, toggleTheme } = useTheme();
 
-  // Update document title on tab change
-  useEffect(() => {
-    const titles = { "home": "Accueil", "recipes": "Recettes", "meal-plan": "Planning", "shopping": "Courses", "fridge": "Mon Stock", "config": "Configuration", "profile": "Profil", "legal": "Informations légales" };
-    document.title = `Mijoté | ${titles[tab] || "Accueil"}`;
-  }, [tab]);
 
 
   // Valeur de contexte À IDENTITÉ STABLE : sans ça, `shellValue` était recréé à
@@ -175,6 +170,17 @@ function AppInner() {
   );
   const currentRecipe = recipes.find(r => r.id === selectedRecipe);
   const isDesktop = useIsDesktop();
+
+  // Titre de l'onglet navigateur : nom de la recette quand on en consulte/édite une,
+  // sinon l'onglet courant.
+  useEffect(() => {
+    const TAB_TITLES = { home: "Accueil", recipes: "Recettes", "meal-plan": "Planning", shopping: "Courses", fridge: "Mon Stock", config: "Configuration", profile: "Profil", legal: "Informations légales" };
+    const recipeName = editingRecipe !== null
+      ? (editingRecipe.name?.trim() || "Nouvelle recette")
+      : (publicDocs?.pub?.recipe?.name)
+      || (selectedRecipe && currentRecipe ? currentRecipe.name : null);
+    document.title = `Mijoté | ${recipeName || TAB_TITLES[tab] || "Accueil"}`;
+  }, [tab, editingRecipe, publicDocs, selectedRecipe, currentRecipe]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
   // Navigate with guard: if editing, show confirm dialog first
