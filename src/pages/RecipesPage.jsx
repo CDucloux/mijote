@@ -179,7 +179,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           <div className="sort-control">
             <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
               <Icon name="updown" size={15} color="currentColor" />
-              <span style={{ color: "var(--text3)", fontWeight: 500 }}>Tri :</span>
+              <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
               <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
             </button>
             <button className="toolbar-pill sort-dir" onClick={toggleSortDir}

@@ -15,6 +15,7 @@ import { createIngredientResolver } from "../lib/nameMatcher.js";
 import { isRecipeInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters } from "../lib/recipeFilters.js";
+import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "../lib/recipeSort.js";
 import { isEligible } from "../lib/dietFilter.js";
 import { buildTechniqueIndex } from "../lib/techniques.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
@@ -119,7 +120,16 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const [text, setText] = useState("");
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
   const [filterOpen, setFilterOpen] = useState(false);
-  const [sortBy, setSortBy] = useState("date");
+  const [sortBy, setSortBy] = useState(DEFAULT_SORT_KEY);
+  const [sortDir, setSortDir] = useState(defaultDirFor(DEFAULT_SORT_KEY));
+  // Tri simple (comme /recipes) : la pilule fait défiler les critères, la flèche
+  // inverse le sens.
+  const cycleSort = () => {
+    const keys = SORT_OPTIONS.map(o => o.key);
+    const next = keys[(keys.indexOf(sortBy) + 1) % keys.length];
+    setSortBy(next); setSortDir(defaultDirFor(next));
+  };
+  const toggleSortDir = () => setSortDir(d => (d === "asc" ? "desc" : "asc"));
   const [usePrefs, setUsePrefs] = useState(false);
   const [authorUid, setAuthorUid] = useState(null);
   const [spinning, setSpinning] = useState(false);
@@ -159,6 +169,9 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const nActiveFilters = activeFilterCount(filters);
   const filtered = useMemo(() => {
     const q = normalizeStr(text);
+    // Le comparateur travaille sur des recettes « à plat » ; on lui présente une
+    // vue fusionnée (recette + id/date du doc public) et on remonte le doc après tri.
+    const cmp = makeComparator({ sortBy, sortDir, techniques, techIndex, recipes: [] });
     return pubs
       .filter(p => {
         if (q) {
@@ -171,12 +184,10 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         if (usePrefs && !isEligible(p.recipe, preferences, { resolver })) return false;
         return matchesFilters(p.recipe, filters, { resolver, techniques, techIndex });
       })
-      .sort((a, b) => sortBy === "name"
-        ? (a.recipe.name || "").localeCompare(b.recipe.name || "")
-        : sortBy === "health"
-          ? (b.recipe.healthScore || 0) - (a.recipe.healthScore || 0)
-          : new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-  }, [pubs, text, authorUid, usePrefs, preferences, filters, sortBy, resolver, techniques, techIndex]);
+      .map(p => ({ p, view: { ...p.recipe, id: p.pubId, createdAt: p.createdAt } }))
+      .sort((a, b) => cmp(a.view, b.view))
+      .map(x => x.p);
+  }, [pubs, text, authorUid, usePrefs, preferences, filters, sortBy, sortDir, resolver, techniques, techIndex]);
 
   const cuisines = useMemo(() => [...new Set(pubs.filter(p => !p.isComponent && p.cuisine).map(p => p.cuisine))].sort(), [pubs]);
   const usedCuisines = useMemo(() => CUISINES.filter(c => pubs.some(p => p.cuisine === c.label)), [pubs]);
@@ -260,22 +271,34 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         </div>
 
         {/* Recherche */}
-        <div style={{ position: "relative", marginBottom: 10 }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
-          <input className="field-input" placeholder="Rechercher par recette, chef, ingrédient…" value={text} onChange={e => setText(e.target.value)} style={{ paddingLeft: 38 }} />
-          {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
+        <div style={{ position: "relative", marginBottom: 12 }}>
+          <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={17} color="var(--text3)" /></span>
+          <input className="field-input recipe-search" placeholder="Rechercher par recette, chef, ingrédient…" value={text} onChange={e => setText(e.target.value)}
+            enterKeyHint="search" onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }}
+            style={{ paddingLeft: 44, paddingRight: text ? 40 : 16 }} />
+          {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
 
-        {/* Barre de filtres — mêmes options que /recipes (feuille dédiée) */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 4 }}>
-          <button className="filter-btn" onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+        {/* Barre d'outils — filtres + tri (mêmes options que /recipes) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 4, flexWrap: "wrap" }}>
+          <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
             {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
-          <span style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            Trié par <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{sortBy === "name" ? "A → Z" : sortBy === "health" ? "Santé" : "Récent"}</strong>
-          </span>
+          <div className="sort-control">
+            <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
+              <Icon name="updown" size={15} color="currentColor" />
+              <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
+              <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
+            </button>
+            <button className="toolbar-pill sort-dir" onClick={toggleSortDir}
+              aria-label={`Sens : ${dirLabel(sortBy, sortDir)}`} title={`Sens : ${dirLabel(sortBy, sortDir)} (inverser)`}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transition: "transform 0.2s ease", transform: sortDir === "asc" ? "rotate(180deg)" : "none" }}>
+                <path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
           {!!((preferences?.diet && preferences.diet !== "omnivore") || preferences?.allergens?.length || preferences?.excludedCategories?.length) && chip(usePrefs, () => setUsePrefs(v => !v), <><Icon name="heart" size={13} color="currentColor" /> Mes préférences</>)}
           {authorUid && chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Créateur</>)}
         </div>
@@ -283,7 +306,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
       {filterOpen && (
         <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} ingredientDB={ingredientDB} resultCount={filtered.length} onClose={() => setFilterOpen(false)} />
         </SwipeableSheet>
       )}
 
