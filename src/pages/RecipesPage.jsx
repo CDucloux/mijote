@@ -7,6 +7,8 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmSheet } from "../components/ConfirmSheet.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
+import { SortSheet } from "../components/SortSheet.jsx";
+import { DEFAULT_SORT_KEY, sortOption, defaultDirFor, makeComparator } from "../lib/recipeSort.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "../lib/recipeFilters.js";
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { createIngredientResolver } from "../lib/nameMatcher.js";
@@ -19,29 +21,19 @@ import { useLS } from "../hooks/useLS.js";
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
 
-// Horodatage ms encodé dans l'id ("r"+Date.now()…) → départage les recettes créées
-// le même jour, car createdAt est au jour près (et parfois absent). 0 si non horodaté.
-const idTimestamp = (id) => { const m = /^r(\d{10,})/.exec(id || ""); return m ? Number(m[1]) : 0; };
-// Tri par récence DÉCROISSANTE (plus récent d'abord) : createdAt (jour) puis, à
-// égalité ou en son absence, l'horodatage encodé dans l'id.
-const byRecent = (a, b) => {
-  const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-  const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-  const da = Number.isNaN(ta) ? 0 : ta, db = Number.isNaN(tb) ? 0 : tb;
-  return db !== da ? db - da : idTimestamp(b.id) - idTimestamp(a.id);
-};
-
 export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
   // Persistés (localStorage, mobile + web) : carnet sélectionné, tri et filtres
   // survivent au rechargement de la page — plus simple pour retrouver son contexte.
   const [filterCol, setFilterCol] = useLS("rf_recipes_filterCol", null);
-  const [sortBy, setSortBy] = useLS("rf_recipes_sortBy", "date"); // défaut : plus récentes d'abord
+  const [sortBy, setSortBy] = useLS("rf_recipes_sortBy", DEFAULT_SORT_KEY); // défaut : plus récentes d'abord
+  const [sortDir, setSortDir] = useLS("rf_recipes_sortDir", defaultDirFor(DEFAULT_SORT_KEY));
   const [storedFilters, setFilters] = useLS("rf_recipes_filters", DEFAULT_FILTERS);
   // Fusion avec les défauts : robuste si DEFAULT_FILTERS gagne une clé après coup.
   const filters = useMemo(() => ({ ...DEFAULT_FILTERS, ...storedFilters }), [storedFilters]);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
@@ -133,10 +125,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       if (filterCol && !r.collections?.includes(filterCol)) return false;
       return matchesFilters(r, filters, { resolver, techniques, techIndex, recipes });
     })
-    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : sortBy === "health" ? b.healthScore - a.healthScore : byRecent(a, b)),
-  [recipes, search, filterCol, filters, sortBy, resolver, techniques, techIndex]);
+    .sort(makeComparator({ sortBy, sortDir, techniques, techIndex, recipes })),
+  [recipes, search, filterCol, filters, sortBy, sortDir, resolver, techniques, techIndex]);
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, filters]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, filterCol, sortBy, sortDir, filters]);
   // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
   useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
 
@@ -161,29 +153,40 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <UserAvatar />
           </div>
         </div>
-        <div style={{ position: "relative", marginBottom: 12 }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
-          <input className="field-input" placeholder="Rechercher dans Mijoté" value={search} onChange={e => setSearch(e.target.value)}
+        <div style={{ position: "relative", marginBottom: 14 }}>
+          <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}><Icon name="search" size={17} color="var(--text3)" /></span>
+          <input className="field-input recipe-search" placeholder="Rechercher un plat, une cuisine, un ingrédient…" value={search} onChange={e => setSearch(e.target.value)}
             enterKeyHint="search"
             onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }}
-            style={{ paddingLeft: 38 }} />
-          {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
+            style={{ paddingLeft: 44, paddingRight: search ? 40 : 16 }} />
+          {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          {/* Un seul point d'entrée : la feuille « Tous les filtres » (tri + filtres) */}
-          <button className="filter-btn" onClick={() => setFilterOpen(true)} title="Trier et filtrer" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 600, background: nActiveFilters ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: nActiveFilters ? "var(--accent)" : "var(--text2)", border: `1px solid ${nActiveFilters ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>
+          {/* Filtres (la feuille de tri est désormais séparée, bouton « Tri ») */}
+          <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
             {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
-          <span style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            Trié par <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{sortBy === "name" ? "A → Z" : sortBy === "health" ? "Santé" : "Récent"}</strong>
-          </span>
+          <button className="toolbar-pill" onClick={() => setSortOpen(true)} title="Trier">
+            <Icon name="updown" size={15} color="currentColor" />
+            <span style={{ color: "var(--text3)", fontWeight: 500 }}>Tri :</span>
+            <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ marginLeft: -2, opacity: 0.65 }}><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+          {recipes.length > 0 && (
+            <span style={{ marginLeft: "auto", fontSize: 12.5, color: "var(--text3)", whiteSpace: "nowrap", flexShrink: 0 }}>{filtered.length} recette{filtered.length > 1 ? "s" : ""}</span>
+          )}
         </div>
       </div>
+      {sortOpen && (
+        <SortSheet sortBy={sortBy} sortDir={sortDir}
+          onChange={(key, dir) => { setSortBy(key); setSortDir(dir); }}
+          onClose={() => setSortOpen(false)} />
+      )}
       {filterOpen && (
         <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => { setFilterOpen(false); setEditingSmartId(null); }}
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => { setFilterOpen(false); setEditingSmartId(null); }}
             alreadySaved={!editingSmartId && collections.some(c => isSmart(c) && smartActive(c))}
             updatingCarnetName={editingSmartId ? collections.find(c => c.id === editingSmartId)?.name : null}
             onSaveAsCarnet={() => {
@@ -288,7 +291,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         <>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
-            Recettes <span style={{ color: "var(--text3)", fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
+            Recettes
           </h2>
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>

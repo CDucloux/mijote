@@ -120,17 +120,20 @@ export function RecipeFilterSheet({ filters, setFilters, sortBy, setSortBy, used
         <button onClick={onClose} aria-label="Fermer" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "var(--surface2)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>
       </div>
 
-      {/* Trier */}
-      <Group title="Trier par" summary={SORT_LABEL[sortBy]} first>
-        <Row>
-          {["name", "health", "date"].map(s => (
-            <Chip key={s} on={sortBy === s} onClick={() => setSortBy(s)}>{SORT_LABEL[s]}</Chip>
-          ))}
-        </Row>
-      </Group>
+      {/* Trier — présent seulement là où le tri vit dans le panneau de filtres
+          (ex. recettes publiques). Sur /recipes, le tri a sa propre feuille. */}
+      {setSortBy && (
+        <Group title="Trier par" summary={SORT_LABEL[sortBy]} first>
+          <Row>
+            {["name", "health", "date"].map(s => (
+              <Chip key={s} on={sortBy === s} onClick={() => setSortBy(s)}>{SORT_LABEL[s]}</Chip>
+            ))}
+          </Row>
+        </Group>
+      )}
 
       {/* Type de recette (rôle dans le repas) */}
-      <Group title="Type de recette" defaultOpen={false} summary={filters.categories?.length ? `${filters.categories.length} sélectionné${filters.categories.length > 1 ? "s" : ""}` : null}>
+      <Group title="Type de recette" first={!setSortBy} defaultOpen={false} summary={filters.categories?.length ? `${filters.categories.length} sélectionné${filters.categories.length > 1 ? "s" : ""}` : null}>
         <Row>
           {RECIPE_CATEGORIES.map(c => (
             <Chip key={c.id} on={(filters.categories || []).includes(c.id)} onClick={() => toggleCategory(c.id)}>
