@@ -1,11 +1,21 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 
+// Tri « simple » (défilement au clic), cohérent avec Recettes/Découvrir.
+const SORT_MODES = [
+  { key: "default", label: "Ordre par défaut" },
+  { key: "az", label: "A → Z" },
+  { key: "selected", label: "Sélectionnés d'abord" },
+];
+
 export function UtensilPicker({ utensilDB, selected, onChange }) {
   const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState("default");
   const [replacing, setReplacing] = useState(null); // id de l'ustensile en cours de remplacement
   const selectedIds = new Set(selected.map(u => u.dbId));
   const replacingName = replacing ? selected.find(u => u.id === replacing)?.name : "";
+  const sortLabel = SORT_MODES.find(m => m.key === sortKey)?.label || SORT_MODES[0].label;
+  const cycleSort = () => setSortKey(k => SORT_MODES[(SORT_MODES.findIndex(m => m.key === k) + 1) % SORT_MODES.length].key);
 
   const toggle = (d) => {
     if (selectedIds.has(d.id)) {
@@ -27,6 +37,11 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
   const filtered = utensilDB.filter(d =>
     !search || d.name.toLowerCase().includes(search.toLowerCase())
   );
+  const sorted = (() => {
+    if (sortKey === "az") return [...filtered].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    if (sortKey === "selected") return [...filtered].sort((a, b) => (selectedIds.has(b.id) ? 1 : 0) - (selectedIds.has(a.id) ? 1 : 0));
+    return filtered;
+  })();
 
   return (
     <div style={{ minWidth: "100%", scrollSnapAlign: "start", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -70,26 +85,37 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
       {/* Search */}
       <div style={{ padding: "12px 16px 8px", flexShrink: 0 }}>
         <div style={{ position: "relative" }}>
-          <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex" }}>
-            <Icon name="search" size={14} color="var(--text3)" />
+          <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex" }}>
+            <Icon name="search" size={16} color="var(--text3)" />
           </div>
           <input
-            className="field-input"
+            className="field-input recipe-search"
             placeholder="Rechercher un ustensile…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ paddingLeft: 32 }}
+            enterKeyHint="search"
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }}
+            style={{ paddingLeft: 44, paddingRight: search ? 40 : 16 }}
           />
+          {search && <button onClick={() => setSearch("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
+        </div>
+        {/* Tri simple par défilement (pas de filtres ici) */}
+        <div style={{ display: "flex", marginTop: 10 }}>
+          <button className="toolbar-pill" onClick={cycleSort} title="Changer le tri">
+            <Icon name="updown" size={15} color="currentColor" />
+            <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
+            <strong style={{ fontWeight: 700 }}>{sortLabel}</strong>
+          </button>
         </div>
       </div>
 
       {/* Grid */}
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 16px 20px" }}>
-        {filtered.length === 0 ? (
+        {sorted.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "32px 0" }}>Aucun ustensile trouvé</div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {filtered.map(d => {
+            {sorted.map(d => {
               const on = selectedIds.has(d.id);
               return (
                 <button key={d.id} onClick={() => onGridClick(d)} style={{
