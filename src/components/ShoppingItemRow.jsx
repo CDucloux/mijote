@@ -74,9 +74,13 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc, sub
             : `translateX(${dx}px) translateY(${striking ? 14 : 0}px)`,
           transition: exiting
             ? "transform 0.27s cubic-bezier(0.4,0,0.8,0), opacity 0.18s ease"
-            : ((dx === 0 || animating)
-              ? "transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease"
-              : "none"),
+            // Achat : on attend que le barré ait fini de se tracer (0.42s) avant de
+            // faire glisser la ligne vers le bas + l'estomper.
+            : striking
+              ? "transform 0.34s cubic-bezier(0.22,1,0.36,1) 0.42s, opacity 0.34s ease 0.42s"
+              : ((dx === 0 || animating)
+                ? "transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease"
+                : "none"),
         }}>
         <button onClick={() => onBuy(item)}
           style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>

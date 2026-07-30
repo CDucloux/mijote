@@ -72,7 +72,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
   // ── Agrégat « Toutes les courses » ──
   // Cocher un article agrégé propage l'état à tous ses contributeurs (chaque
-  // vraie liste). Pas d'animation « strike » ici : le basculement est immédiat.
+  // vraie liste), avec la même animation d'achat que les listes normales.
   const buyAggregate = (agg) => {
     const target = !agg.checked;
     const byList = new Map();
@@ -88,7 +88,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
     setTimeout(() => {
       apply();
       setPending(prev => { const n = new Set(prev); n.delete(agg.key); return n; });
-    }, 500);
+    }, 800);
   };
   // Valider l'achat sur l'agrégat : déverse les produits de placard cochés (toutes
   // listes) dans le stock, puis purge les articles cochés partout.
@@ -158,7 +158,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
     setTimeout(() => {
       toggleItem(activeList.id, item.id);
       setPending(prev => { const n = new Set(prev); n.delete(item.id); return n; });
-    }, 500);
+    }, 800);
   };
 
   // Ligne d'article : zone principale = achat ; swipe droite = achat, swipe gauche = supprime
