@@ -62,6 +62,12 @@ html.light .field-input {
   background: #ede8e2;
 }
 
+/* Barre de recherche recettes : blanc franc en clair (le halo suffit à la
+   détacher du fond). En sombre, elle garde le --surface défini plus bas. */
+html.light .recipe-search {
+  background: #ffffff;
+}
+
 html.light select option {
   background: #ede8e2;
   color: #1a1614;
