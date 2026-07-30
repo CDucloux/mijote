@@ -88,7 +88,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
     setTimeout(() => {
       apply();
       setPending(prev => { const n = new Set(prev); n.delete(agg.key); return n; });
-    }, 300);
+    }, 500);
   };
   // Valider l'achat sur l'agrégat : déverse les produits de placard cochés (toutes
   // listes) dans le stock, puis purge les articles cochés partout.
@@ -158,7 +158,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
     setTimeout(() => {
       toggleItem(activeList.id, item.id);
       setPending(prev => { const n = new Set(prev); n.delete(item.id); return n; });
-    }, 300);
+    }, 500);
   };
 
   // Ligne d'article : zone principale = achat ; swipe droite = achat, swipe gauche = supprime

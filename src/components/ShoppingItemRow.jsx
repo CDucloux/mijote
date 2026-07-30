@@ -75,7 +75,7 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc, sub
           transition: exiting
             ? "transform 0.27s cubic-bezier(0.4,0,0.8,0), opacity 0.18s ease"
             : ((dx === 0 || animating)
-              ? "transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease"
+              ? "transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease"
               : "none"),
         }}>
         <button onClick={() => onBuy(item)}
@@ -87,7 +87,7 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc, sub
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{capitalize(item.name)}</span>
-              <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: struck ? "100%" : "0%", transition: "width 0.25s ease" }} />
+              <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: struck ? "100%" : "0%", transition: "width 0.4s ease" }} />
             </div>
             {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
             {subtitle && <div style={{ fontSize: 11, color: "var(--text3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 1 }}>{subtitle}</div>}
