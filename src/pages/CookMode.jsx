@@ -28,6 +28,9 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
+  const [closing, setClosing] = useState(false);
+  // Fermeture animée : joue la sortie (fondu + glissé) avant de démonter réellement.
+  const requestClose = () => { if (closing) return; setClosing(true); setTimeout(() => onClose(), 280); };
   const [subCook, setSubCook] = useState(null); // { recipe, mult }
   const [doneComponents, setDoneComponents] = useState(new Set());
   // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
@@ -48,7 +51,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
     onUpdateRecipe(addVersion(recipe, { label: nextVersionLabel(recipe.history), rating: iterRating, notes: iterNotes }));
     setIterOpen(false);
     notify?.("Itération ajoutée au carnet");
-    onClose();
+    requestClose();
   };
 
   // Composants épuisés référencés par cette recette (étape 0)
@@ -124,7 +127,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
 
   // Navigation au clavier (desktop) : ← précédent, → suivant (ou terminer).
   useEffect(() => {
-    if (subCook || done || iterOpen) return;
+    if (subCook || done || iterOpen || closing) return;
     const onKey = (e) => {
       if (e.defaultPrevented || e.target?.closest?.("input, textarea, [contenteditable=true]")) return;
       if (e.key === "ArrowRight") {
@@ -137,7 +140,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [subCook, done, iterOpen, stepIdx, totalSteps, isStepZero, allComponentsDone]);
+  }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isStepZero, allComponentsDone]);
 
   const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
 
@@ -186,7 +189,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
       )}
 
       {done && !subCook && (
-        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", padding: 32, textAlign: "center" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: 32, textAlign: "center" }}>
           {["🍽️", "✨", "🎉", "👨‍🍳", "⭐", "🥳"].map((e, i) => (
             <span key={i} style={{ position: "absolute", fontSize: 28 + i * 4, animation: `floatUp ${1.2 + i * 0.3}s ease forwards`, animationDelay: `${i * 0.15}s`, left: `${10 + i * 14}%`, top: `${60 + Math.sin(i) * 15}%`, pointerEvents: "none" }}>{e}</span>
           ))}
@@ -207,7 +210,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                 <Icon name="sparkle" size={17} /> Noter une itération
               </button>
             )}
-            <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 16 }} onClick={onClose}>
+            <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 16 }} onClick={requestClose}>
               <Icon name="check" size={18} /> {isNested ? "Retour" : "Retour à la recette"}
             </button>
           </div>
@@ -229,10 +232,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
         </SwipeableSheet>
       )}
 
-      <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={requestClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon name={isNested ? "back" : "close"} size={18} />
           </button>
           <div style={{ flex: 1 }}>

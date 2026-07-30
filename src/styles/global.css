@@ -620,6 +620,18 @@ select {
   }
 }
 
+@keyframes cookModeOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.98) translateY(24px);
+  }
+}
+
 /* Boutons de contrôle d'un minuteur (cook mode) : deux pilules jumelles */
 .timer-btn {
   flex: 1;
