@@ -77,9 +77,18 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
     const target = !agg.checked;
     const byList = new Map();
     for (const c of agg.contributors) { const s = byList.get(c.listId) || new Set(); s.add(c.itemId); byList.set(c.listId, s); }
-    setShoppingLists(prev => prev.map(l => byList.has(l.id)
+    const apply = () => setShoppingLists(prev => prev.map(l => byList.has(l.id)
       ? { ...l, items: l.items.map(it => byList.get(l.id).has(it.id) ? { ...it, checked: target } : it) }
       : l));
+    // Décocher est immédiat ; l'achat rejoue l'animation « strike + glisse » (comme
+    // une liste normale), l'article étant identifié par sa clé d'agrégat.
+    if (!target) { apply(); return; }
+    if (pending.has(agg.key)) return;
+    setPending(prev => { const n = new Set(prev); n.add(agg.key); return n; });
+    setTimeout(() => {
+      apply();
+      setPending(prev => { const n = new Set(prev); n.delete(agg.key); return n; });
+    }, 300);
   };
   // Valider l'achat sur l'agrégat : déverse les produits de placard cochés (toutes
   // listes) dans le stock, puis purge les articles cochés partout.
@@ -267,7 +276,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 .filter(([k]) => groups[k] && groups[k].length)
                 .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: groups[k].slice().sort(byName) }));
               const renderAgg = (agg) => (
-                <ShoppingItemRow key={agg.key} disableDelete
+                <ShoppingItemRow key={agg.key} disableDelete striking={pending.has(agg.key)}
                   item={{ id: agg.key, name: agg.name, amount: agg.qtyDisplay, unit: "", checked: agg.checked }}
                   imageSrc={agg.image} onBuy={() => buyAggregate(agg)} onDelete={() => {}}
                   subtitle={agg.sources.length ? `Pour ${agg.sources.join(" + ")}${agg.partial ? " · en partie acheté" : ""}` : (agg.partial ? "En partie acheté" : undefined)} />
