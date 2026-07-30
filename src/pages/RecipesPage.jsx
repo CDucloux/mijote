@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { NewRecipeButton } from "../components/NewRecipeButton.jsx";
@@ -19,6 +19,19 @@ import { useLS } from "../hooks/useLS.js";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
+
+// Carte mémoïsée : ne re-rend que si SES props changent. Sans ça, chaque palier
+// de scroll infini (setVisibleCount) re-rendait toutes les cartes déjà visibles.
+// Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
+const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, animDelay, onOpen, onMenu, startLongPress, cancelLongPress }) {
+  return (
+    <div
+      onPointerDown={() => startLongPress(() => onMenu(recipe))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+      onContextMenu={(e) => { e.preventDefault(); onMenu(recipe); }}>
+      <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} style={{ animationDelay: animDelay }} />
+    </div>
+  );
+});
 
 export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
@@ -70,8 +83,8 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const lpFired = useRef(false);
   // Appui long générique : ouvre un menu (callback) après 480 ms ; `lpFired` sert à
   // annuler le clic qui suit. Utilisé par les carnets ET les cartes recettes.
-  const startLongPress = (onFire) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; onFire(); }, 480); };
-  const cancelLongPress = () => clearTimeout(lpTimer.current);
+  const startLongPress = useCallback((onFire) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; onFire(); }, 480); }, []);
+  const cancelLongPress = useCallback(() => clearTimeout(lpTimer.current), []);
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
   });
@@ -81,6 +94,17 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
+
+  // Saison / vegan calculés UNE fois par recette (et non à chaque rendu de la grille) :
+  // isRecipeVegan peut remonter récursivement les préparations de base → coûteux au scroll.
+  const seasonVeganById = useMemo(() => {
+    const m = new Map();
+    for (const r of recipes) m.set(r.id, { inSeason: isRecipeInSeason(r, resolver), vegan: isRecipeVegan(r, resolver, { recipes }) });
+    return m;
+  }, [recipes, resolver]);
+  // Callbacks stables → RecipeGridItem (mémoïsé) ne re-rend pas au scroll.
+  const openRecipe = useCallback((r) => { if (lpFired.current) { lpFired.current = false; return; } onSelect(r.id); }, [onSelect]);
+  const openRecipeMenu = useCallback((r) => setRecipeMenu(r), []);
 
   // Styles de cuisine réellement utilisés, dans l'ordre canonique de la liste.
   const usedCuisines = CUISINES.filter(c => recipes.some(r => r.cuisine === c.label));
@@ -305,13 +329,16 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </h2>
         </div>
         <div key={filterCol || "all"} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.slice(0, visibleCount).map((r, idx) => (
-            <div key={r.id}
-              onPointerDown={() => startLongPress(() => setRecipeMenu(r))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
-              onContextMenu={(e) => { e.preventDefault(); setRecipeMenu(r); }}>
-              <RecipeCard recipe={r} onClick={() => { if (lpFired.current) { lpFired.current = false; return; } onSelect(r.id); }} inSeason={isRecipeInSeason(r, resolver)} vegan={isRecipeVegan(r, resolver, { recipes })} style={{ animationDelay: `${(idx % PAGE_SIZE) * 0.04}s` }} />
-            </div>
-          ))}
+          {filtered.slice(0, visibleCount).map((r, idx) => {
+            const sv = seasonVeganById.get(r.id);
+            return (
+              <RecipeGridItem key={r.id} recipe={r}
+                inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
+                animDelay={`${(idx % PAGE_SIZE) * 0.04}s`}
+                onOpen={openRecipe} onMenu={openRecipeMenu}
+                startLongPress={startLongPress} cancelLongPress={cancelLongPress} />
+            );
+          })}
         </div>
         {visibleCount < filtered.length && (
           <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
