@@ -320,7 +320,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             return (
               <RecipeGridItem key={r.id} recipe={r}
                 inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
-                animate={idx < PAGE_SIZE} animDelay={`${idx * 0.04}s`}
+                animate={idx < PAGE_SIZE} animDelay={`${idx * 0.075}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
                 startLongPress={startLongPress} cancelLongPress={cancelLongPress} />
             );
