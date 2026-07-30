@@ -1,5 +1,27 @@
 # Changelog – Mijoté
 
+## v3.8.3 – Safran · Recherche, courses & cuisine
+
+### Recherche & tri
+- **Barre de recherche** redessinée (pilule blanche, halo au focus, touche Entrée = loupe) sur **Mes recettes**, **Découvrir**, **Stock** et le sélecteur d'ustensiles
+- **Tri simple** par défilement : un clic fait défiler les critères (**Récent, A → Z, Nutri-Score, Temps, Difficulté**) avec choix du **sens** ; le tri quitte le panneau de filtres
+
+### Courses
+- Nouvel onglet **« Toutes les courses »** : fusionne toutes les listes en une seule liste dédupliquée par ingrédient, **quantités sommées** quand l'unité le permet (« Citrons ×4 »), avec la **provenance** (« Pour X + Y »). Cocher un article le marque acheté dans toutes les listes d'origine
+
+### Mode cuisine
+- **Navigation au clavier** (desktop) : flèches ← / → pour parcourir les étapes
+- **Minuteurs automatiques** : les mentions de temps d'une étape (« 6 min », « 1 h 30 »…) deviennent des minuteurs en un clic, avec compte à rebours flottant (pause / stop), bip et vibration à la fin
+- **Fermeture animée** du mode pas à pas
+
+### Ustensiles & finitions
+- **Remplacer un ustensile** en un geste dans l'éditeur (pratique après un import IA)
+- **Titre d'onglet** du navigateur = nom de la recette consultée
+- Boutons d'action principaux (« Nouvelle », « Générer », « Nouvelle liste ») harmonisés en pilule ; renommage interne « fridge » → **stock**
+
+### Sous le capot
+- **Grille de recettes plus fluide** au défilement (mémoïsation, images en chargement différé, fin du scroll saccadé)
+
 ## v3.8.2 – Safran · Confort & finitions
 
 ### Recettes & carnets
