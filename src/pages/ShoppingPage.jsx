@@ -133,7 +133,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button className="btn btn-primary" style={{ padding: "8px 14px", borderRadius: 12 }} onClick={() => setConfigList({ isNew: true, name: "", type: "free", hideClear: false })}><Icon name="plus" size={16} /> Nouvelle liste</button>
+            <button className="btn btn-primary btn-pill" onClick={() => setConfigList({ isNew: true, name: "", type: "free", hideClear: false })}><Icon name="plus" size={16} /> Nouvelle liste</button>
             <UserAvatar />
           </div>
         </div>

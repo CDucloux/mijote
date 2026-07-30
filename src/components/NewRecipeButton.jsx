@@ -155,7 +155,7 @@ export function NewRecipeButton({ onManual }) {
 
   return (
     <>
-      <button className="btn btn-primary new-recipe-btn" onClick={openNew}>
+      <button className="btn btn-primary btn-pill" onClick={openNew}>
         <Icon name="plus" size={17} /> Nouvelle
       </button>
 
