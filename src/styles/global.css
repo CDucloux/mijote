@@ -620,6 +620,38 @@ select {
   }
 }
 
+/* Boutons de contrôle d'un minuteur (cook mode) : deux pilules jumelles */
+.timer-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.timer-btn:hover { border-color: var(--text3); }
+.timer-btn:active { transform: scale(0.96); }
+.timer-btn-accent {
+  color: var(--accent);
+  background: rgba(232, 112, 58, 0.12);
+  border-color: rgba(232, 112, 58, 0.35);
+}
+.timer-btn-accent:hover { border-color: rgba(232, 112, 58, 0.6); }
+.timer-btn-stop {
+  color: var(--red);
+  background: rgba(224, 82, 82, 0.1);
+  border-color: rgba(224, 82, 82, 0.3);
+}
+.timer-btn-stop:hover { border-color: rgba(224, 82, 82, 0.55); }
+
 @keyframes timerPulse {
   0%, 100% { box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(76, 175, 125, 0.5); }
   50% { box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.4), 0 0 0 6px rgba(76, 175, 125, 0); }

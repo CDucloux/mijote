@@ -393,11 +393,17 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
                   <div style={{ height: 3, borderRadius: 2, background: "var(--surface2)", margin: "8px 0", overflow: "hidden" }}>
                     <div style={{ height: "100%", width: `${pct}%`, background: t.done ? "var(--green)" : "var(--accent)", transition: "width 0.9s linear" }} />
                   </div>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 8 }}>
                     {t.done
-                      ? <button className="btn btn-sm" style={{ flex: 1, padding: "5px 0", fontSize: 12, background: "rgba(232,112,58,0.12)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)" }} onClick={() => resetTimer(t.id)}><Icon name="history" size={12} color="var(--accent)" /> Relancer</button>
-                      : <button className="btn btn-sm" style={{ flex: 1, padding: "5px 0", fontSize: 12, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }} onClick={() => toggleTimer(t.id)}>{t.running ? "Pause" : "Reprendre"}</button>}
-                    <button aria-label="Fermer le minuteur" style={{ flexShrink: 0, width: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }} onClick={() => removeTimer(t.id)}><Icon name="close" size={13} color="var(--text3)" /></button>
+                      ? <button className="timer-btn timer-btn-accent" onClick={() => resetTimer(t.id)}>
+                          <Icon name="history" size={14} color="var(--accent)" /> Relancer
+                        </button>
+                      : <button className="timer-btn" onClick={() => toggleTimer(t.id)}>
+                          <Icon name={t.running ? "pause" : "play"} size={14} color="var(--text)" /> {t.running ? "Pause" : "Reprendre"}
+                        </button>}
+                    <button className="timer-btn timer-btn-stop" onClick={() => removeTimer(t.id)}>
+                      <Icon name="stop" size={13} color="var(--red)" /> Stop
+                    </button>
                   </div>
                 </div>
               );
