@@ -538,16 +538,16 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             </div>
             <div ref={shadeRef} style={{ position: "absolute", inset: 0, willChange: "opacity", background: "linear-gradient(to bottom,rgba(0,0,0,0.34) 0%,transparent 38%,rgba(0,0,0,0.74) 100%)" }} />
             {/* Boutons overlay */}
-            <div ref={ctrlLRef} style={{ position: "absolute", top: 16, left: 16, willChange: "opacity" }}>
+            <div ref={ctrlLRef} style={{ position: "absolute", top: 16, left: 16 }}>
               <button onClick={handleBack} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
             </div>
             {publicMode && onExportPDF && (
-            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, willChange: "opacity" }}>
+            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16 }}>
               <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
             </div>
             )}
             {!publicMode && (
-            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8, willChange: "opacity" }}>
+            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
               <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
               <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
               <HeroMenu
