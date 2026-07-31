@@ -2275,3 +2275,15 @@ select {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Respect de prefers-reduced-motion : le rework ajoute beaucoup de mouvement.
+   On neutralise animations et transitions (le collapse court-circuite déjà
+   parallaxe/échelle/élastique côté JS via matchMedia). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
