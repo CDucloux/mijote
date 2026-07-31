@@ -6,7 +6,7 @@
  *
  * @module shoppingAggregate
  */
-import { findIngredientMatch } from "./nameMatcher.js";
+import { findIngredientMatch, type DbEntry } from "./nameMatcher.js";
 import { normalizeStr } from "./parseIngredient.js";
 import { fmtQtyUnit } from "./format.js";
 
@@ -88,7 +88,7 @@ const canonUnit = (u: string | null | undefined): string => {
  * @param ingredientDB - Base d'ingrédients pour la résolution des noms.
  * @returns Les articles agrégés (ordre d'apparition).
  */
-export function aggregateShopping(lists: ShoppingList[] | null | undefined, ingredientDB: unknown): AggregatedItem[] {
+export function aggregateShopping(lists: ShoppingList[] | null | undefined, ingredientDB: DbEntry[] | null | undefined): AggregatedItem[] {
   const map = new Map<string, Group>();
   for (const list of lists || []) {
     for (const it of list.items || []) {
