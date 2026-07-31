@@ -661,7 +661,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               {TAB_ORDER.map(t => {
                 const on = activeTab === t;
                 return (
-                  <button key={t} onClick={() => setActiveTab(t)} className="tap" style={{
+                  <button key={t} onClick={() => setActiveTab(t)} style={{
                     position: "relative", zIndex: 1, flex: 1, padding: "11px 0", fontSize: 13, fontWeight: 600,
                     border: "none", background: "none", cursor: "pointer",
                     color: on ? "var(--accent)" : "var(--text3)", transition: "color 0.2s ease",
@@ -714,7 +714,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                     else if (!isComp && ing.dbId) navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`);
                   };
                   return (
-                    <div key={ing.id} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
+                    <div key={ing.id} onClick={onClick} className={clickable ? "tap-row" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
                       {isComp && !rc.comp?.image
                         ? <span style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
                         : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
@@ -729,7 +729,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                         <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
                         <span style={{ fontSize: 12, color: "var(--text2)" }}>{ing.unit}</span>
                       </div>
-                      {clickable && <Icon name="forward" size={14} color="var(--text3)" />}
+                      {clickable && <span className="tap-chevron" style={{ display: "flex", flexShrink: 0 }}><Icon name="forward" size={14} color="var(--text3)" /></span>}
                     </div>
                   );
                 })}
@@ -740,7 +740,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             <div style={{ padding: "16px 16px 32px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {(recipe.utensils || []).map(u => (
-                  <div key={u.id} style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
+                  <div key={u.id} className="tap tap-soft" style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
                     <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={56} radius={12} />
                     <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
                   </div>
@@ -799,7 +799,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                   const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
                   const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
                   return (
-                    <div key={step.id} style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
+                    <div key={step.id} className="tap tap-soft" style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: (step.text || step.image || step.tip || hasPills) ? 8 : 0 }}>
                         <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {i + 1}</span>
