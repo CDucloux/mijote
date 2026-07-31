@@ -1,5 +1,23 @@
 # Changelog – Mijoté
 
+## v3.8.4 – Safran · Fiche recette & mode cuisine
+
+### Fiche recette (mobile)
+- **Repli du hero repensé** : image en parallaxe qui monte légèrement en échelle, départ étagé des éléments (badges, puis source, puis titre), et barre compacte qui ne se voile qu'une fois le hero replié. Défilement plus fluide (piloté image par image, sans re-rendu de la page)
+- **Rubber band** : léger zoom du hero quand on tire vers le bas en haut de page, rebond élastique en bas de chaque onglet
+- **Retour au toucher** soigné sur les boutons, pills, steppers et lignes d'ingrédient (le compteur de portions rebondit)
+- Bouton **« Planifier »** en blanc, aligné sur « Courses »
+
+### Mode pas à pas
+- **Porté par l'URL** (`/recipes/:id/cookmode`) : il survit à un dézoom sur desktop, se ferme au bouton retour du navigateur et devient partageable
+- **Navigation au swipe** (mobile) : glisser à gauche pour l'étape suivante, à droite pour la précédente
+
+### Accessibilité
+- Prise en compte de **« mouvement réduit »** (prefers-reduced-motion) : animations et effets élastiques neutralisés
+
+### Sous le capot
+- Amorce de la **migration TypeScript** (chaîne de types + vérification, premier module de logique migré)
+
 ## v3.8.3 – Safran · Recherche, courses & cuisine
 
 ### Recherche & tri
