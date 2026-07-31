@@ -2204,3 +2204,67 @@ select {
     transition: background-color 0.45s ease;
   }
 }
+/* ── Feedback tactile : attaque rapide, retour élastique ──────────────────
+   Opt-in via .tap / .tap-row. Surcharge volontairement la règle :active
+   globale (opacity 0.62) là où elle est appliquée : une chute d'opacité
+   délave les surfaces colorées (pills accent) et se lit comme un bug. */
+.tap {
+  transition:
+    transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tap:active {
+  opacity: 1 !important;                 /* neutralise le fondu global */
+  transform: scale(0.93) !important;
+  transition-duration: 0.09s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Variante pour les grandes surfaces : un scale à 0.93 y paraîtrait excessif. */
+.tap-soft:active {
+  transform: scale(0.975) !important;
+  background-color: var(--surface2);
+}
+
+/* Steppers : un scale plus marqué se lit mieux sur un petit rond. */
+.tap-stepper:active {
+  transform: scale(0.86) !important;
+}
+
+/* Ligne d'ingrédient : le fond s'allume immédiatement et le chevron avance.
+   C'est le déplacement du chevron qui donne la sensation de « réponse ». */
+.tap-row {
+  transition:
+    transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tap-row:active {
+  opacity: 1 !important;
+  transform: scale(0.988) !important;
+  background-color: var(--surface2);
+  transition-duration: 0.09s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.tap-row .tap-chevron {
+  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tap-row:active .tap-chevron {
+  transform: translateX(3px);
+  transition-duration: 0.09s;
+}
+
+/* Le nombre de portions « rebondit » à chaque changement. */
+.tap-bump {
+  animation: tapBump 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tapBump {
+  0%   { transform: scale(1); }
+  38%  { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
