@@ -13,7 +13,7 @@
  *
  * @module difficulty
  */
-import { buildTechniqueIndex, annotateText } from "./techniques.js";
+import { buildTechniqueIndex, annotateText, type TechniqueIndex, type TechniqueEntry } from "./techniques.js";
 
 /** Un geste technique noté (issu du glossaire). */
 export interface Technique {
@@ -49,7 +49,7 @@ export const DIFFICULTY_LABEL: Record<number, string> = { 1: "Très facile", 2: 
 export const difficultyColor = (lvl: number): string => lvl <= 2 ? "var(--green)" : lvl === 3 ? "#e8920a" : "var(--red)";
 
 // Gestes (avec difficulté) repérés dans une liste d'étapes, dédoublonnés.
-function techniquesInSteps(steps: DiffStep[] | undefined, index: unknown): Technique[] {
+function techniquesInSteps(steps: DiffStep[] | undefined, index: TechniqueIndex): Technique[] {
   const found = new Map<string, Technique>();
   for (const step of steps || []) {
     for (const seg of annotateText(step.text || "", index)) {
@@ -79,7 +79,7 @@ interface CollectedTechniques { own: Technique[]; ownIds: Set<string>; bases: Ba
 
 // Gestes de la recette ET de ses bases (héritage simple d'un niveau). `all` =
 // union dédoublonnée où les gestes propres priment.
-function collectTechniques(recipe: DiffRecipe, index: unknown, recipes: DiffRecipe[] | undefined): CollectedTechniques {
+function collectTechniques(recipe: DiffRecipe, index: TechniqueIndex, recipes: DiffRecipe[] | undefined): CollectedTechniques {
   const own = techniquesInSteps(recipe?.steps, index);
   const ownIds = new Set(own.map(t => t.id));
   const bases: BaseTechniques[] = [];
@@ -103,7 +103,7 @@ export function computeDifficulty(recipe: DiffRecipe, techniques?: unknown, opts
   const ov = recipe?.difficultyOverride;
   if (Number.isInteger(ov) && ov! >= 1 && ov! <= 5) return { score: ov!, drivers: [], overridden: true };
 
-  const index = opts.index || buildTechniqueIndex(techniques);
+  const index = (opts.index as TechniqueIndex | undefined) || buildTechniqueIndex(techniques as TechniqueEntry[] | undefined);
   const { all } = collectTechniques(recipe, index, opts.recipes as DiffRecipe[] | undefined);
   if (!all.length) return { score: null, drivers: [], overridden: false };
 
@@ -144,7 +144,7 @@ export function explainDifficulty(recipe: DiffRecipe, techniques?: unknown, opts
     return { score: ov!, overridden: true, base: null, techniques: [], drivers: [], mods: [], modsApplied: 0, modsCapped: false };
   }
 
-  const index = opts.index || buildTechniqueIndex(techniques);
+  const index = (opts.index as TechniqueIndex | undefined) || buildTechniqueIndex(techniques as TechniqueEntry[] | undefined);
   const { ownIds, bases, all } = collectTechniques(recipe, index, opts.recipes as DiffRecipe[] | undefined);
   if (!all.length) return null;
 
