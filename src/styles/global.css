@@ -2210,9 +2210,9 @@ select {
    délave les surfaces colorées (pills accent) et se lit comme un bug. */
 .tap {
   transition:
-    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.38s cubic-bezier(0.33, 1, 0.68, 1),
+    background-color 0.38s cubic-bezier(0.33, 1, 0.68, 1),
+    box-shadow 0.38s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .tap:active {
@@ -2237,8 +2237,8 @@ select {
    C'est le déplacement du chevron qui donne la sensation de « réponse ». */
 .tap-row {
   transition:
-    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.38s cubic-bezier(0.33, 1, 0.68, 1),
+    background-color 0.38s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .tap-row:active {
@@ -2252,7 +2252,7 @@ select {
 }
 
 .tap-row .tap-chevron {
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.38s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .tap-row:active .tap-chevron {
