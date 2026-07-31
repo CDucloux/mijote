@@ -102,8 +102,10 @@ function AppInner() {
   // partageable / navigable au bouton retour).
   const recipeSeg = location.pathname.startsWith("/recipes/") ? location.pathname.slice(9) : "";
   const cookModeRoute = recipeSeg.endsWith("/cookmode");
+  const editRoute = recipeSeg.endsWith("/edit");
+  const routeSuffix = cookModeRoute ? "/cookmode" : editRoute ? "/edit" : "";
   const recipeIdParam = recipeSeg
-    ? decodeURIComponent(cookModeRoute ? recipeSeg.slice(0, -"/cookmode".length) : recipeSeg) || undefined
+    ? decodeURIComponent(routeSuffix ? recipeSeg.slice(0, -routeSuffix.length) : recipeSeg) || undefined
     : undefined;
   const selectedRecipe = recipeIdParam || null;
   const setSelectedRecipe = useCallback((id) => {
@@ -176,21 +178,28 @@ function AppInner() {
   const currentRecipe = recipes.find(r => r.id === selectedRecipe);
   const isDesktop = useIsDesktop();
 
+  // Édition : `editingRecipe` (état) pour une nouvelle recette ou un import IA ;
+  // pour une recette EXISTANTE, l'éditeur est piloté par la route /recipes/:id/edit
+  // (accès direct, survit à un remontage). On dérive donc la recette en cours
+  // d'édition et un booléen unique `isEditing` réutilisé partout.
+  const recipeBeingEdited = editingRecipe ?? (editRoute && currentRecipe ? currentRecipe : null);
+  const isEditing = recipeBeingEdited !== null;
+
   // Titre de l'onglet navigateur : nom de la recette quand on en consulte/édite une,
   // sinon l'onglet courant.
   useEffect(() => {
     const TAB_TITLES = { home: "Accueil", recipes: "Recettes", "meal-plan": "Planning", shopping: "Courses", stock: "Mon Stock", config: "Configuration", profile: "Profil", legal: "Informations légales" };
-    const recipeName = editingRecipe !== null
-      ? (editingRecipe.name?.trim() || "Nouvelle recette")
+    const recipeName = recipeBeingEdited
+      ? (recipeBeingEdited.name?.trim() || "Nouvelle recette")
       : (publicDocs?.pub?.recipe?.name)
       || (selectedRecipe && currentRecipe ? currentRecipe.name : null);
     document.title = `Mijoté | ${recipeName || TAB_TITLES[tab] || "Accueil"}`;
-  }, [tab, editingRecipe, publicDocs, selectedRecipe, currentRecipe]);
+  }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
   // Navigate with guard: if editing, show confirm dialog first
   const requestTab = (newTab) => {
-    if (editingRecipe !== null) {
+    if (isEditing) {
       setPendingTab(newTab);
     } else {
       setTab(newTab);
@@ -199,6 +208,7 @@ function AppInner() {
 
   const confirmLeaveEditor = () => {
     setEditingRecipe(null);
+    if (editRoute) navigate(`/recipes/${selectedRecipe}`, { replace: true });
     setTab(pendingTab);
     setPendingTab(null);
   };
@@ -216,7 +226,7 @@ function AppInner() {
   const wasAtTabView = useRef(true);
   const [scrollHold, setScrollHold] = useState(false); // masque l'onglet le temps de se caler
   useEffect(() => { if (publicPubId) lastPublicPubId.current = publicPubId; }, [publicPubId]);
-  const atTabView = editingRecipe === null && !publicPubId
+  const atTabView = !isEditing && !publicPubId
     && !(selectedRecipe && currentRecipe)
     && !(selectedRecipe && !currentRecipe && workspaceReady);
   useLayoutEffect(() => {
@@ -249,7 +259,7 @@ function AppInner() {
         if (import.meta.env.DEV) console.log(`⏱️ [${id}] ${phase} : ${actualDuration.toFixed(1)} ms`);
       }}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
-      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} onEditRecipe={setEditingRecipe} onDeleteRecipe={deleteRecipe} setCollections={setCollections} setTab={setTab} />}
+      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
@@ -260,9 +270,12 @@ function AppInner() {
     </div>
   );
 
-  const mainScreen = editingRecipe !== null ? (
-    <div className={isDesktop ? "desktop-content editor-layout" : ""} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
-      <RecipeEditor recipe={editingRecipe} onSave={saveRecipe} onCancel={() => setEditingRecipe(null)} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
+  const mainScreen = isEditing ? (
+    <div key={recipeBeingEdited?.id || "new"} className={isDesktop ? "desktop-content editor-layout" : ""} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
+      <RecipeEditor recipe={recipeBeingEdited}
+        onSave={(r) => { const ok = saveRecipe(r); if (ok !== false && editRoute) navigate(`/recipes/${selectedRecipe}`, { replace: true }); }}
+        onCancel={() => { setEditingRecipe(null); if (editRoute) navigate(`/recipes/${selectedRecipe}`); }}
+        ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
     </div>
   ) : publicPubId ? (
     publicDocs ? (
@@ -290,7 +303,7 @@ function AppInner() {
     )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => setSelectedRecipe(null)} onEdit={() => setEditingRecipe(currentRecipe)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi", groupId: newGroupId(), role: roleForCategory(r.category) }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
+      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => setSelectedRecipe(null)} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteRecipe} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi", groupId: newGroupId(), role: roleForCategory(r.category) }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
     </div>
   ) : selectedRecipe && !currentRecipe && workspaceReady ? (
     <RecipeNotFound onBack={() => navigate("/recipes")} />
@@ -340,7 +353,7 @@ function AppInner() {
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
             <PullToRefresh
-              enabled={!isDesktop && editingRecipe === null}
+              enabled={!isDesktop && !isEditing}
               threshold={110}
               onRefresh={() => window.location.reload()}
             >
