@@ -8,6 +8,7 @@ import { HeroMenu } from "../components/HeroMenu.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
 import { aggregateShopping } from "../lib/shoppingAggregate.js";
+import { useHorizontalOverscroll } from "../hooks/useHorizontalOverscroll.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
@@ -36,6 +37,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
   const [showAddModal, setShowAddModal] = useState(false);
+  // Overscroll « stretch » horizontal de la rangée de listes (comme WhatsApp/Maps).
+  const { scrollRef: tabsScrollRef, contentRef: tabsContentRef } = useHorizontalOverscroll({ max: 64 });
 
   // L'agrégat n'a de sens qu'à partir de 2 listes. Il devient la vue par défaut
   // (la « vraie » sortie supermarché), les onglets par recette restant accessibles.
@@ -187,7 +190,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
         {/* List selector tabs + menu ⋯ */}
         {shoppingLists.length > 0 && (
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, alignItems: "center" }}>
+          <div ref={tabsScrollRef} style={{ overflowX: "auto", paddingBottom: 8 }}>
+          <div ref={tabsContentRef} style={{ display: "flex", gap: 6, alignItems: "center", minWidth: "100%" }}>
             {/* Onglet agrégé « Toutes les courses » (≥ 2 listes) */}
             {hasAgg && (() => {
               const aggChecked = aggregated.filter(a => a.checked).length;
@@ -241,6 +245,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                   ]} />
               </div>
             )}
+          </div>
           </div>
         )}
       </div>

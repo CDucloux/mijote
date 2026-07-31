@@ -144,22 +144,58 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
 
   const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
 
-  // Swipe horizontal (mobile) : ← étape suivante, → étape précédente. On verrouille
-  // l'axe dès 8 px pour ne pas déclencher pendant un scroll vertical.
-  const stepSwipe = useRef(null);
-  const onStepTouchStart = (e) => { stepSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, axis: null }; };
-  const onStepTouchMove = (e) => {
-    const s = stepSwipe.current; if (!s || s.axis) return;
-    const dx = Math.abs(e.touches[0].clientX - s.x), dy = Math.abs(e.touches[0].clientY - s.y);
-    if (dx > 8 || dy > 8) s.axis = dx > dy ? "x" : "y";
-  };
-  const onStepTouchEnd = (e) => {
-    const s = stepSwipe.current; stepSwipe.current = null;
-    if (!s || s.axis !== "x" || subCook || done || iterOpen) return;
-    const dx = e.changedTouches[0].clientX - s.x;
-    if (dx < -50) { if (stepIdx < totalSteps - 1 && !(isStepZero && !allComponentsDone)) setStepIdx(i => i + 1); }
-    else if (dx > 50) setStepIdx(i => Math.max(0, i - 1));
-  };
+  // Gestes tactiles sur le contenu d'une étape :
+  //   • swipe horizontal → ← étape suivante, → étape précédente ;
+  //   • rubber band vertical en haut ET en bas (le contenu se soulève/descend
+  //     élastiquement puis revient en ressort).
+  // Listeners natifs (touchmove non passif) : indispensable pour preventDefault()
+  // pendant l'élastique.
+  const stepScrollRef = useRef(null);
+  const stepElasticRef = useRef(null);
+  useEffect(() => {
+    const el = stepScrollRef.current;
+    if (!el || subCook || done || iterOpen) return;
+    const damp = (d, max) => max * (1 - Math.exp(-d / max));
+    const atTop = () => el.scrollTop <= 0;
+    const atBottom = () => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
+    let dragging = false, x0 = 0, y0 = 0, axis = null, edge = null, pull = 0;
+    const applyElastic = (spring) => {
+      const p = stepElasticRef.current; if (!p) return;
+      p.style.transition = spring ? "transform 0.55s cubic-bezier(0.16,1,0.3,1)" : "none";
+      p.style.transform = `translateY(${pull.toFixed(2)}px)`;
+    };
+    const onDown = (e) => { dragging = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; edge = null; pull = 0; };
+    const onMove = (e) => {
+      if (!dragging) return;
+      const dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0;
+      if (!axis) { if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
+      if (axis !== "y") return;
+      if (!edge) edge = atTop() && dy > 0 ? "top" : atBottom() && dy < 0 ? "bottom" : "scroll";
+      if (edge === "top") { pull = damp(dy, 110); applyElastic(false); if (e.cancelable) e.preventDefault(); }
+      else if (edge === "bottom") { pull = -damp(-dy, 110); applyElastic(false); if (e.cancelable) e.preventDefault(); }
+    };
+    const onUp = (e) => {
+      if (!dragging) return;
+      dragging = false;
+      if (axis === "x") {
+        const dx = e.changedTouches[0].clientX - x0;
+        if (dx < -50) { if (stepIdx < totalSteps - 1 && !(isStepZero && !allComponentsDone)) setStepIdx(i => i + 1); }
+        else if (dx > 50) setStepIdx(i => Math.max(0, i - 1));
+      }
+      if (edge === "top" || edge === "bottom") { pull = 0; applyElastic(true); }
+      axis = null; edge = null;
+    };
+    el.addEventListener("touchstart", onDown, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onUp, { passive: true });
+    el.addEventListener("touchcancel", onUp, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onDown);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onUp);
+      el.removeEventListener("touchcancel", onUp);
+    };
+  }, [subCook, done, iterOpen, stepIdx, totalSteps, isStepZero, allComponentsDone]);
 
   // Ingrédients liés à l'étape courante (bruts + composants)
   const linkedIngs = step
@@ -299,8 +335,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           </div>
 
           {/* Step content */}
-          <div onTouchStart={onStepTouchStart} onTouchMove={onStepTouchMove} onTouchEnd={onStepTouchEnd} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
-            <div style={{ maxWidth: 640, margin: "0 auto" }}>
+          <div ref={stepScrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
+            <div ref={stepElasticRef} style={{ maxWidth: 640, margin: "0 auto", willChange: "transform" }}>
               {isStepZero ? (
                 /* ── Étape 0 : préparations de base à réaliser ── */
                 <>

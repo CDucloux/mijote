@@ -251,7 +251,6 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     const damp = (d, max) => max * (1 - Math.exp(-d / max));
 
     let raf = 0;
-    let pull = 0;        // sur-défilement en haut (zoom du hero)
     let bottomPull = 0;  // sur-défilement en bas d'onglet (élastique)
 
     const applyHeroFrame = () => {
@@ -259,12 +258,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       const pMove = clamp(st / MOVE_END);
       const pBar = clamp((st - BAR_START) / (MOVE_END - BAR_START));
 
-      // Image : parallaxe à 0.42× + montée en échelle + zoom au pull.
+      // Image : parallaxe à 0.42× + montée en échelle.
       if (heroImgRef.current) {
-        const z = pull / 380;
         heroImgRef.current.style.transform = reduce
           ? "translateY(0) scale(1)"
-          : `translateY(${(st * 0.42 + pull * 0.5).toFixed(2)}px) scale(${(1 + pMove * 0.16 + z).toFixed(4)})`;
+          : `translateY(${(st * 0.42).toFixed(2)}px) scale(${(1 + pMove * 0.16).toFixed(4)})`;
       }
       if (shadeRef.current) shadeRef.current.style.opacity = (0.55 + pMove * 0.45).toFixed(3);
 
@@ -319,21 +317,17 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       raf = requestAnimationFrame(() => { raf = 0; applyHeroFrame(); });
     };
 
-    // ── Rubber band : zoom en haut, élastique en bas d'onglet ────────────────
+    // ── Rubber band : élastique en bas d'onglet UNIQUEMENT. En haut, on laisse
+    // le geste au pull-to-refresh global (pas d'effet ici → plus de conflit avec
+    // l'image du hero).
     const applyElastic = (spring) => {
       const p = paneRef.current;
       if (!p) return;
       p.style.transition = spring ? "transform 0.85s cubic-bezier(0.16,1,0.3,1)" : "none";
       p.style.transform = `translateY(${(-bottomPull).toFixed(2)}px)`;
     };
-    const applyPull = (spring) => {
-      if (heroImgRef.current)
-        heroImgRef.current.style.transition = spring ? "transform 0.85s cubic-bezier(0.16,1,0.3,1)" : "none";
-      applyHeroFrame();
-    };
 
     let dragging = false, y0 = 0, mode = null;
-    const atTop = () => el.scrollTop <= 0;
     const atBottom = () => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
 
     const onDown = (e) => { dragging = true; y0 = e.touches ? e.touches[0].clientY : e.clientY; mode = null; };
@@ -344,18 +338,15 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       const y = e.touches ? e.touches[0].clientY : e.clientY;
       const dy = y - y0;
       if (!mode) {
-        if (atTop() && dy > 5) mode = "top";
-        else if (atBottom() && dy < -5) mode = "bottom";
+        if (atBottom() && dy < -5) mode = "bottom";
         else if (Math.abs(dy) > 5) mode = "scroll";
       }
       if (reduce) return; // pas d'effet élastique en mouvement réduit
-      if (mode === "top") { pull = damp(dy, 120); applyPull(false); if (e.cancelable) e.preventDefault(); }
-      else if (mode === "bottom") { bottomPull = damp(-dy, 96); applyElastic(false); if (e.cancelable) e.preventDefault(); }
+      if (mode === "bottom") { bottomPull = damp(-dy, 96); applyElastic(false); if (e.cancelable) e.preventDefault(); }
     };
     const onUp = () => {
       if (!dragging) return;
       dragging = false;
-      if (mode === "top") { pull = 0; applyPull(true); }
       if (mode === "bottom") { bottomPull = 0; applyElastic(true); }
       mode = null;
     };
