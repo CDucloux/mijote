@@ -3,7 +3,17 @@
 // d'une étape, pour les surligner et afficher leur définition au survol/tap.
 // Logique pure, sans React : le composant fournit le texte et le glossaire.
 
-import { normalizeName } from "./nameMatcher.js";
+// Normalisation SENSIBLE aux accents : on ignore la casse et la ponctuation, mais
+// on GARDE les accents. Contrairement aux ingrédients (normalizeName retire les
+// accents), les techniques en ont besoin pour éviter les faux positifs :
+// « grillé » ≠ « grille » (grille de cuisson), « glacé » ≠ « glace » (sucre glace).
+function normTech(s) {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[^0-9a-zà-ÿœ ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 // Index de recherche : map « phrase normalisée » → technique, + longueur max en mots.
 // Les formes reconnues = le nom + les `aliases` (déjà des formes du verbe).
@@ -13,7 +23,7 @@ export function buildTechniqueIndex(techniques) {
   for (const t of techniques || []) {
     if (!t?.id) continue;
     for (const form of [t.name, ...(Array.isArray(t.aliases) ? t.aliases : [])]) {
-      const norm = normalizeName(form);
+      const norm = normTech(form);
       if (!norm) continue;
       if (!phrases.has(norm)) phrases.set(norm, t);
       maxWords = Math.max(maxWords, norm.split(" ").length);
@@ -28,7 +38,7 @@ function tokenize(text) {
   const re = /[A-Za-zÀ-ÿ0-9]+/g;
   let m;
   while ((m = re.exec(text))) {
-    tokens.push({ norm: normalizeName(m[0]), start: m.index, end: m.index + m[0].length });
+    tokens.push({ norm: normTech(m[0]), start: m.index, end: m.index + m[0].length });
   }
   return tokens;
 }

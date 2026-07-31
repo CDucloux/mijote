@@ -14,7 +14,8 @@ const hits = (segs) => segs.filter(s => s.tech).map(s => s.text);
 describe("buildTechniqueIndex", () => {
   it("indexes names + aliases and tracks the longest phrase", () => {
     expect(idx.phrases.get("suer").id).toBe("tech_suer");
-    expect(idx.phrases.get("deglacer").id).toBe("tech_deglacer");      // accent-insensitive
+    expect(idx.phrases.get("déglacer").id).toBe("tech_deglacer");      // accents conservés
+    expect(idx.phrases.get("deglacer")).toBeUndefined();               // sensible aux accents
     expect(idx.phrases.get("tailler en julienne").id).toBe("tech_julienne");
     expect(idx.maxWords).toBe(3);
   });
@@ -26,11 +27,22 @@ describe("annotateText", () => {
     expect(plain(annotateText(text, idx))).toBe(text);
   });
 
-  it("highlights a single technique, case/accent-insensitive", () => {
+  it("highlights a single technique, case-insensitive", () => {
     const segs = annotateText("Déglacez la sauteuse.", buildTechniqueIndex([
       { id: "d", name: "Déglacer", aliases: ["déglacer", "déglacez"], definition: "x" },
     ]));
     expect(hits(segs)).toEqual(["Déglacez"]);
+  });
+
+  it("ne matche pas un homographe non accentué (grille ≠ grillé, glace ≠ glacé)", () => {
+    const idx2 = buildTechniqueIndex([
+      { id: "grill", name: "Griller", aliases: ["grillé", "grillée", "griller"], definition: "x" },
+      { id: "glace", name: "Glacer", aliases: ["glacé", "glacée", "glacer"], definition: "x" },
+    ]);
+    expect(hits(annotateText("Poser sur la grille de cuisson.", idx2))).toEqual([]);
+    expect(hits(annotateText("Saupoudrer de sucre glace.", idx2))).toEqual([]);
+    // Les vraies formes accentuées (présentes dans les alias) restent repérées.
+    expect(hits(annotateText("Un poivron grillé au four.", idx2))).toEqual(["grillé"]);
   });
 
   it("prefers the longest phrase (greedy)", () => {
