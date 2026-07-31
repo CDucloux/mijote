@@ -2209,6 +2209,12 @@ select {
    globale (opacity 0.62) là où elle est appliquée : une chute d'opacité
    délave les surfaces colorées (pills accent) et se lit comme un bug. */
 .tap {
+  /* translateZ(0) : promeut l'élément sur son propre calque GPU de façon
+     PERMANENTE. Le scale d'appui garde ce translateZ (voir :active) : le calque
+     n'est jamais détruit, donc le texte n'est pas re-rasterisé au retour à
+     scale(1) → plus de micro-décalage en fin d'animation. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
   transition:
     transform 0.38s cubic-bezier(0.33, 1, 0.68, 1),
     background-color 0.38s cubic-bezier(0.33, 1, 0.68, 1),
@@ -2217,20 +2223,20 @@ select {
 
 .tap:active {
   opacity: 1 !important;                 /* neutralise le fondu global */
-  transform: scale(0.93) !important;
+  transform: scale(0.93) translateZ(0) !important;
   transition-duration: 0.09s;
   transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
 }
 
 /* Variante pour les grandes surfaces : un scale à 0.93 y paraîtrait excessif. */
 .tap-soft:active {
-  transform: scale(0.975) !important;
+  transform: scale(0.975) translateZ(0) !important;
   background-color: var(--surface2);
 }
 
 /* Steppers : un scale plus marqué se lit mieux sur un petit rond. */
 .tap-stepper:active {
-  transform: scale(0.86) !important;
+  transform: scale(0.86) translateZ(0) !important;
 }
 
 /* Ligne d'ingrédient : le fond s'allume immédiatement et le chevron avance.
