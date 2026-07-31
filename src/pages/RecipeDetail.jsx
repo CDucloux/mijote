@@ -34,7 +34,7 @@ import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
+export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
   const navigate = useNavigate();
   const location = useLocation();
   // `state.fromPath` = page d'origine (ex. "/home") → on y retourne tel quel.
@@ -141,7 +141,9 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     setSelectedIngs(flatIngs.filter(fi => !isInStock(fi)).map(fi => fi._fid));
     setShowShoppingModal(true);
   };
-  const [cookMode, setCookMode] = useState(false);
+  // Le mode pas à pas est porté par l'URL (/recipes/:id/cookmode) → il survit à un
+  // remontage (dézoom desktop) et au bouton retour. Fallback local si non fourni.
+  const setCookMode = onSetCookMode || (() => {});
   const [showNutrition, setShowNutrition] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [dockClosing, setDockClosing] = useState(false);
