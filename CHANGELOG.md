@@ -1,5 +1,16 @@
 # Changelog – Mijoté
 
+## v3.8.5 – Safran · Gestes élastiques
+
+### Fiche recette (mobile)
+- En haut de page, le **pull-to-refresh** reprend la main : l'effet de zoom du hero (qui entrait en conflit avec l'image) est retiré
+
+### Mode pas à pas
+- Le contenu des étapes gagne un **rebond élastique** en haut et en bas (en plus du swipe pour changer d'étape)
+
+### Courses
+- **Overscroll « stretch »** de la rangée de listes : en atteignant le début ou la fin, les pills se décalent légèrement puis reviennent en ressort (comme sur WhatsApp / Maps)
+
 ## v3.8.4 – Safran · Fiche recette & mode cuisine
 
 ### Fiche recette (mobile)
