@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { aggregateShopping } from "./shoppingAggregate.js";
+import { aggregateShopping } from "../shoppingAggregate.js";
 
 const DB = [
   { id: "citron", name: "Citron", category: "fruits", image: "citron.png", aliases: ["citrons"] },
