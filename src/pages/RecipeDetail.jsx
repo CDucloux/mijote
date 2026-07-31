@@ -189,8 +189,19 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   }, [actionsOpen]);
 
   const scrollRef = useRef(null);
-  const heroSentinelRef = useRef(null);
-  const [heroProgress, setHeroProgress] = useState(0); // 0 = hero déployé, 1 = barre compacte pleine
+  // Refs d'animation : le collapse écrit directement dans le DOM (pas de state),
+  // pour ne pas re-rendre ce composant (gros) à chaque frame de scroll.
+  const heroImgRef = useRef(null);
+  const shadeRef = useRef(null);
+  const titleRef = useRef(null);
+  const srcRef = useRef(null);
+  const attribRef = useRef(null);
+  const badgesRef = useRef(null);
+  const ctrlLRef = useRef(null);
+  const ctrlRRef = useRef(null);
+  const barRef = useRef(null);
+  const barInnerRef = useRef(null);
+  const paneRef = useRef(null);
   const swipeStart = useRef(null);
   const TAB_ORDER = ["Ingrédients", "Ustensiles", "Étapes"];
   const swipeHandlers = {
@@ -210,29 +221,163 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     },
   };
 
-  // Collapse du hero piloté par la position de scroll (0 → 1) plutôt que par un
-  // basculement binaire : la barre compacte apparaît/disparaît de façon continue,
-  // en suivant le doigt, aussi bien en descendant qu'en remontant vers le hero.
+  // ── Collapse du hero ────────────────────────────────────────────────────────
+  // Deux progressions distinctes, c'est le cœur du rework :
+  //   pMove (0 → HERO_H - BAR_H) : parallaxe, échelle, départ étagé du texte.
+  //   pBar  (44 derniers px)     : fond + flou de la barre UNIQUEMENT → la barre ne
+  //     devient opaque que lorsqu'elle couvre le hero restant (jamais de flou sur
+  //     une image nette).
+  // Tout est écrit directement dans le DOM : aucun setState, donc aucun re-render
+  // de ce composant pendant le scroll.
+  const HERO_H = 300, BAR_H = 52;
+  const MOVE_END = HERO_H - BAR_H;      // 248
+  const BAR_START = MOVE_END - 44;      // 204
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || isDesktop) return;
+
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+    // Fenêtre de fondu : 0 avant `a`, 1 après `b`.
+    const win = (p, a, b) => clamp((p - a) / (b - a));
+    // Résistance croissante : asymptote douce vers `max`, jamais de butée sèche.
+    const damp = (d, max) => max * (1 - Math.exp(-d / max));
+
     let raf = 0;
-    // On ne commence la transition que lorsque le hero restant est ≤ hauteur de la
-    // barre (260 − 52 ≈ 208) : la barre couvre alors toujours entièrement le hero
-    // encore visible → jamais de bande floue posée sur une image nette en dessous.
-    const START = 208, END = 258; // px de scroll : début et fin de la transition
-    const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const p = Math.min(1, Math.max(0, (el.scrollTop - START) / (END - START)));
-        setHeroProgress(p);
-      });
+    let pull = 0;        // sur-défilement en haut (zoom du hero)
+    let bottomPull = 0;  // sur-défilement en bas d'onglet (élastique)
+
+    const applyHeroFrame = () => {
+      const st = Math.max(0, el.scrollTop);
+      const pMove = clamp(st / MOVE_END);
+      const pBar = clamp((st - BAR_START) / (MOVE_END - BAR_START));
+
+      // Image : parallaxe à 0.42× + montée en échelle + zoom au pull.
+      if (heroImgRef.current) {
+        const z = pull / 380;
+        heroImgRef.current.style.transform = reduce
+          ? "translateY(0) scale(1)"
+          : `translateY(${(st * 0.42 + pull * 0.5).toFixed(2)}px) scale(${(1 + pMove * 0.16 + z).toFixed(4)})`;
+      }
+      if (shadeRef.current) shadeRef.current.style.opacity = (0.55 + pMove * 0.45).toFixed(3);
+
+      // Départ ÉTAGÉ : badges, puis source, puis titre → chorégraphie plutôt qu'un
+      // fondu unique.
+      const oB = 1 - win(pMove, 0, 0.34);
+      const oS = 1 - win(pMove, 0.12, 0.48);
+      const oT = 1 - win(pMove, 0.46, 0.90);
+      if (badgesRef.current) {
+        badgesRef.current.style.opacity = oB;
+        badgesRef.current.style.transform = `translateY(${(-14 * (1 - oB)).toFixed(2)}px)`;
+      }
+      for (const r of [srcRef, attribRef]) {
+        if (!r.current) continue;
+        r.current.style.opacity = oS;
+        r.current.style.transform = `translateY(${(-12 * (1 - oS)).toFixed(2)}px)`;
+      }
+      if (titleRef.current) {
+        titleRef.current.style.opacity = oT;
+        titleRef.current.style.transform =
+          `translateY(${(-22 * (1 - oT)).toFixed(2)}px) scale(${(1 - 0.12 * (1 - oT)).toFixed(4)})`;
+      }
+
+      // Boutons overlay du hero : sortent avant que la barre ne prenne le relais.
+      const oC = 1 - win(pMove, 0.5, 0.82);
+      for (const r of [ctrlLRef, ctrlRRef]) {
+        if (!r.current) continue;
+        r.current.style.opacity = oC;
+        r.current.style.transform = `translateY(${(-8 * (1 - oC)).toFixed(2)}px)`;
+        r.current.style.pointerEvents = oC < 0.5 ? "none" : "auto";
+      }
+
+      // Barre : fond/flou tardifs (pBar), contenu juste après la sortie du titre.
+      if (barRef.current) {
+        const b = barRef.current.style;
+        b.background = `rgba(var(--bg-rgb),${(0.86 * pBar).toFixed(3)})`;
+        b.backdropFilter = b.webkitBackdropFilter = `blur(${(18 * pBar).toFixed(2)}px)`;
+        b.boxShadow = `0 1px 0 rgba(0,0,0,${(0.07 * pBar).toFixed(3)})`;
+      }
+      const oI = win(pMove, 0.74, 1);
+      if (barInnerRef.current) {
+        barInnerRef.current.style.opacity = oI;
+        barInnerRef.current.style.transform = `translateY(${(10 * (1 - oI)).toFixed(2)}px)`;
+      }
+      if (barRef.current) barRef.current.style.pointerEvents = oI > 0.5 ? "auto" : "none";
     };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => { el.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
-  }, [isDesktop]);
+
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; applyHeroFrame(); });
+    };
+
+    // ── Rubber band : zoom en haut, élastique en bas d'onglet ────────────────
+    const applyElastic = (spring) => {
+      const p = paneRef.current;
+      if (!p) return;
+      p.style.transition = spring ? "transform 0.62s cubic-bezier(0.16,1,0.3,1)" : "none";
+      p.style.transform = `translateY(${(-bottomPull).toFixed(2)}px)`;
+    };
+    const applyPull = (spring) => {
+      if (heroImgRef.current)
+        heroImgRef.current.style.transition = spring ? "transform 0.62s cubic-bezier(0.16,1,0.3,1)" : "none";
+      applyHeroFrame();
+    };
+
+    let dragging = false, y0 = 0, mode = null;
+    const atTop = () => el.scrollTop <= 0;
+    const atBottom = () => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
+
+    const onDown = (e) => { dragging = true; y0 = e.touches ? e.touches[0].clientY : e.clientY; mode = null; };
+    const onMove = (e) => {
+      if (!dragging) return;
+      // Le swipe horizontal de changement d'onglet est prioritaire.
+      if (swipeStart.current?.axis === "x") return;
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+      const dy = y - y0;
+      if (!mode) {
+        if (atTop() && dy > 5) mode = "top";
+        else if (atBottom() && dy < -5) mode = "bottom";
+        else if (Math.abs(dy) > 5) mode = "scroll";
+      }
+      if (reduce) return; // pas d'effet élastique en mouvement réduit
+      if (mode === "top") { pull = damp(dy, 120); applyPull(false); if (e.cancelable) e.preventDefault(); }
+      else if (mode === "bottom") { bottomPull = damp(-dy, 96); applyElastic(false); if (e.cancelable) e.preventDefault(); }
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      if (mode === "top") { pull = 0; applyPull(true); }
+      if (mode === "bottom") { bottomPull = 0; applyElastic(true); }
+      mode = null;
+    };
+
+    el.addEventListener("scroll", schedule, { passive: true });
+    // touchmove NON passif : indispensable pour preventDefault() pendant le rubber band.
+    el.addEventListener("touchstart", onDown, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onUp, { passive: true });
+    el.addEventListener("touchcancel", onUp, { passive: true });
+
+    applyHeroFrame();
+
+    return () => {
+      el.removeEventListener("scroll", schedule);
+      el.removeEventListener("touchstart", onDown);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onUp);
+      el.removeEventListener("touchcancel", onUp);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [isDesktop, MOVE_END, BAR_START]);
+
+  // Reset de l'élastique bas au changement d'onglet (évite un panneau décalé).
+  useEffect(() => {
+    if (paneRef.current) {
+      paneRef.current.style.transition = "none";
+      paneRef.current.style.transform = "translateY(0px)";
+    }
+  }, [activeTab]);
 
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
@@ -378,18 +523,25 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
         {/* ── MOBILE: scrollable hero + sticky bar + tabs + content ── */}
         <div className="detail-mobile-content" ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
           {/* Hero image – grand et beau */}
-          <div style={{ position: "relative", height: 260, flexShrink: 0, color: "#fff" }}>
-            <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={104} style={{ width: "100%", height: "100%" }} />} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 40%,rgba(0,0,0,0.72) 100%)" }} />
+          <div style={{ position: "relative", height: HERO_H, flexShrink: 0, color: "#fff", overflow: "hidden" }}>
+            {/* Couche de parallaxe : transformée par applyHeroFrame(). transformOrigin en
+                haut pour que la montée en échelle se propage vers le bas et ne laisse
+                jamais de bande vide sous la barre. */}
+            <div ref={heroImgRef} style={{ position: "absolute", inset: 0, transformOrigin: "50% 0%", willChange: "transform" }}>
+              <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={104} style={{ width: "100%", height: "100%" }} />} />
+            </div>
+            <div ref={shadeRef} style={{ position: "absolute", inset: 0, willChange: "opacity", background: "linear-gradient(to bottom,rgba(0,0,0,0.34) 0%,transparent 38%,rgba(0,0,0,0.74) 100%)" }} />
             {/* Boutons overlay */}
-            <button onClick={handleBack} className="tap" style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
+            <div ref={ctrlLRef} style={{ position: "absolute", top: 16, left: 16, willChange: "opacity, transform" }}>
+              <button onClick={handleBack} className="tap" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
+            </div>
             {publicMode && onExportPDF && (
-            <div style={{ position: "absolute", top: 16, right: 16 }}>
+            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, willChange: "opacity, transform" }}>
               <button onClick={() => onExportPDF(recipe)} className="tap" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
             </div>
             )}
             {!publicMode && (
-            <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
+            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8, willChange: "opacity, transform" }}>
               <button onClick={onEdit} className="tap" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
               <button onClick={() => onExportPDF(recipe)} className="tap" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
               <HeroMenu
@@ -404,18 +556,18 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
                 ]} />
             </div>
             )}
-            {/* Titre + source + tags — se fond quand la barre compacte prend le relais */}
-            <div style={{ position: "absolute", bottom: 16, left: 18, right: 18, opacity: 1 - heroProgress, transform: `translateY(${(heroProgress * -8).toFixed(2)}px)` }}>
-              <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff" }}>{recipe.name}</h1>
-              {attribution}
+            {/* Titre + source + tags — départ étagé piloté par applyHeroFrame (refs). */}
+            <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
+              <h1 ref={titleRef} style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff", transformOrigin: "left bottom", willChange: "transform, opacity" }}>{recipe.name}</h1>
+              {attribution && <div ref={attribRef} style={{ willChange: "transform, opacity" }}>{attribution}</div>}
               {!publicMode && recipe.source && (
-                <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source} target="_blank" rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginBottom: 6 }}>
+                <a ref={srcRef} href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source} target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginBottom: 6, willChange: "transform, opacity" }}>
                   {(() => { try { return new URL(recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source).hostname.replace(/^www\./, ""); } catch { return recipe.source.replace(/^https?:\/\/(?:www\.)?/, "").split("/")[0]; } })()}
                   <Icon name="externalLink" size={10} color="rgba(255,255,255,0.65)" />
                 </a>
               )}
-              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
+              <div ref={badgesRef} style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center", willChange: "transform, opacity" }}>
                 {recipe.isComponent && (
                   <button onClick={() => setShowBaseInfo(true)} className="tag" style={{ gap: 5, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.92)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer" }}>
                     <BaseIcon size={12} color="#fff" /> Base
@@ -436,40 +588,26 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             </div>
           </div>
 
-          {/* Sentinelle invisible juste sous le hero – dès qu'elle sort du viewport la barre compacte apparaît */}
-          <div ref={heroSentinelRef} style={{ height: 1, flexShrink: 0 }} />
-
-          {/* Barre compacte sticky – pilotée en continu par heroProgress (0→1) :
-              fond, flou et contenu suivent le scroll, dans les deux sens. */}
-          {(() => {
-            // Le contenu n'apparaît que sur la 2e moitié de la course, pour laisser
-            // le hero se replier d'abord, puis se révéler franchement.
-            const contentOp = Math.min(1, Math.max(0, (heroProgress - 0.35) / 0.65));
-            return (
-          <div style={{
+          {/* Barre compacte sticky – styles dynamiques (fond, flou, contenu) écrits
+              par applyHeroFrame() via barRef / barInnerRef, sans state. */}
+          <div ref={barRef} style={{
             position: "sticky", top: 0, zIndex: 30, flexShrink: 0,
-            background: `rgba(var(--bg-rgb),${(0.85 * heroProgress).toFixed(3)})`,
-            backdropFilter: `blur(${(16 * heroProgress).toFixed(2)}px)`,
-            WebkitBackdropFilter: `blur(${(16 * heroProgress).toFixed(2)}px)`,
-            boxShadow: `0 1px 0 rgba(0,0,0,${(0.08 * heroProgress).toFixed(3)})`,
-            pointerEvents: heroProgress > 0.5 ? "auto" : "none",
             height: 52, marginTop: -52,
             display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px",
+            background: "rgba(var(--bg-rgb),0)", pointerEvents: "none",
+            willChange: "background-color, backdrop-filter",
           }}>
-            <div style={{
+            <div ref={barInnerRef} style={{
               display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
-              opacity: contentOp,
-              transform: `translateY(${((1 - contentOp) * -6).toFixed(2)}px)`,
+              opacity: 0, willChange: "opacity, transform",
             }}>
-              <button onClick={handleBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
+              <button onClick={handleBack} className="tap" style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
               <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipe.name}</span>
               <div style={{ display: "flex", gap: 6 }}>
                 {!publicMode && <button onClick={() => { openShoppingModal(); }} className="tap" style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>}
               </div>
             </div>
           </div>
-            );
-          })()}
 
           {/* Infos + actions – remontés juste sous le hero, au-dessus des onglets */}
           <div style={{ padding: "16px 16px 14px" }}>
@@ -530,7 +668,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
           </div>
 
           {/* Contenu selon onglet actif – swipe horizontal pour changer d'onglet */}
-          <div {...swipeHandlers}>
+          <div ref={paneRef} {...swipeHandlers} style={{ willChange: "transform" }}>
           {activeTab === "Ingrédients" && (
             <div style={{ padding: "16px 16px 32px" }}>
               {/* Portions – pilote les quantités de la liste */}

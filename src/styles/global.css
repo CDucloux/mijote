@@ -2268,3 +2268,10 @@ select {
   38%  { transform: scale(1.28); }
   100% { transform: scale(1); }
 }
+
+/* Conteneur scrollable de la fiche recette (mobile) : l'élastique haut/bas est
+   géré à la main (cf. RecipeDetail), on contient juste le chaînage de scroll. */
+.detail-mobile-content {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
