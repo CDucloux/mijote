@@ -2243,7 +2243,9 @@ select {
 
 .tap-row:active {
   opacity: 1 !important;
-  transform: scale(0.988) !important;
+  /* Pas de scale ici : une ligne pleine largeur qui rétrécit laisse des bords
+     non surlignés (le fond gris ne couvre plus toute la ligne) → inesthétique.
+     Le retour vient du fond qui s'allume + le chevron qui avance. */
   background-color: var(--surface2);
   transition-duration: 0.09s;
   transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
