@@ -23,10 +23,10 @@ const PAGE_SIZE = 8;
 // Carte mémoïsée : ne re-rend que si SES props changent. Sans ça, chaque palier
 // de scroll infini (setVisibleCount) re-rendait toutes les cartes déjà visibles.
 // Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
-const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress }) {
+const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress, moveLongPress }) {
   return (
     <div
-      onPointerDown={() => startLongPress(() => onMenu(recipe))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+      onPointerDown={(e) => startLongPress(e, () => onMenu(recipe))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
       onContextMenu={(e) => { e.preventDefault(); onMenu(recipe); }}>
       <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />
     </div>
@@ -80,10 +80,23 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   });
   const lpTimer = useRef(null);
   const lpFired = useRef(false);
+  const lpStart = useRef(null);
   // Appui long générique : ouvre un menu (callback) après 480 ms ; `lpFired` sert à
   // annuler le clic qui suit. Utilisé par les carnets ET les cartes recettes.
-  const startLongPress = useCallback((onFire) => { lpFired.current = false; clearTimeout(lpTimer.current); lpTimer.current = setTimeout(() => { lpFired.current = true; onFire(); }, 480); }, []);
-  const cancelLongPress = useCallback(() => clearTimeout(lpTimer.current), []);
+  // On mémorise le point de départ : dès que le doigt bouge (> 10 px), c'est un
+  // scroll / pull-to-refresh, pas un appui long → on annule (les deux gestes
+  // deviennent mutuellement exclusifs, plus de menu qui surgit pendant un pull).
+  const startLongPress = useCallback((e, onFire) => {
+    lpFired.current = false;
+    lpStart.current = e ? { x: e.clientX, y: e.clientY } : null;
+    clearTimeout(lpTimer.current);
+    lpTimer.current = setTimeout(() => { lpFired.current = true; lpStart.current = null; onFire(); }, 480);
+  }, []);
+  const cancelLongPress = useCallback(() => { clearTimeout(lpTimer.current); lpStart.current = null; }, []);
+  const moveLongPress = useCallback((e) => {
+    const s = lpStart.current;
+    if (s && (Math.abs(e.clientX - s.x) > 10 || Math.abs(e.clientY - s.y) > 10)) { clearTimeout(lpTimer.current); lpStart.current = null; }
+  }, []);
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
   });
@@ -238,7 +251,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                 return (
                 <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined}
                   onClick={() => { if (lpFired.current) { lpFired.current = false; return; } openCarnet(col); }}
-                  onPointerDown={() => startLongPress(() => setCarnetMenu(col))} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+                  onPointerDown={(e) => startLongPress(e, () => setCarnetMenu(col))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   onContextMenu={(e) => { e.preventDefault(); setCarnetMenu(col); }}
                   draggable
                   onDragStart={() => { cancelLongPress(); setDragCarnetId(col.id); }}
@@ -322,7 +335,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                 inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
                 animate={idx < PAGE_SIZE} animDelay={`${idx * 0.075}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
-                startLongPress={startLongPress} cancelLongPress={cancelLongPress} />
+                startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} />
             );
           })}
         </div>

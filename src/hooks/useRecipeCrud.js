@@ -15,12 +15,13 @@ export function useRecipeCrud({
 }) {
   const saveRecipe = (r) => {
     const result = prepareRecipeForSave(r, { recipes, ingredientDB });
-    if (result.error) { notify(result.error, "error"); return; }
+    if (result.error) { notify(result.error, "error"); return false; }
     const updatedRecipes = upsertRecipe(recipes, result.recipe);
     setRecipes(updatedRecipes);
     setCollections(prev => recomputeCollectionCounts(prev, updatedRecipes));
     setEditingRecipe(null);
     notify("Recette sauvegardée");
+    return true;
   };
 
   const deleteRecipe = (id) => {
