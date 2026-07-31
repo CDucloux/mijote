@@ -287,11 +287,13 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
       }
 
       // Boutons overlay du hero : sortent avant que la barre ne prenne le relais.
+      // Opacité UNIQUEMENT (pas de transform) : un ancêtre transformé casserait le
+      // position:fixed du menu « … » (il se positionnerait par rapport au conteneur
+      // au lieu du viewport) et le placerait sous le titre.
       const oC = 1 - win(pMove, 0.5, 0.82);
       for (const r of [ctrlLRef, ctrlRRef]) {
         if (!r.current) continue;
         r.current.style.opacity = oC;
-        r.current.style.transform = `translateY(${(-8 * (1 - oC)).toFixed(2)}px)`;
         r.current.style.pointerEvents = oC < 0.5 ? "none" : "auto";
       }
 
@@ -536,16 +538,16 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
             </div>
             <div ref={shadeRef} style={{ position: "absolute", inset: 0, willChange: "opacity", background: "linear-gradient(to bottom,rgba(0,0,0,0.34) 0%,transparent 38%,rgba(0,0,0,0.74) 100%)" }} />
             {/* Boutons overlay */}
-            <div ref={ctrlLRef} style={{ position: "absolute", top: 16, left: 16, willChange: "opacity, transform" }}>
+            <div ref={ctrlLRef} style={{ position: "absolute", top: 16, left: 16, willChange: "opacity" }}>
               <button onClick={handleBack} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
             </div>
             {publicMode && onExportPDF && (
-            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, willChange: "opacity, transform" }}>
+            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, willChange: "opacity" }}>
               <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
             </div>
             )}
             {!publicMode && (
-            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8, willChange: "opacity, transform" }}>
+            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8, willChange: "opacity" }}>
               <button onClick={onEdit} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
               <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
               <HeroMenu
