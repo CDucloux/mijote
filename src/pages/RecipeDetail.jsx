@@ -231,7 +231,11 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
   // de ce composant pendant le scroll.
   const HERO_H = 300, BAR_H = 52;
   const MOVE_END = HERO_H - BAR_H;      // 248
-  const BAR_START = MOVE_END - 44;      // 204
+  // Fenêtre très courte et TARDIVE pour le fond/flou de la barre : elle ne se
+  // matérialise que sur les tout derniers px, quand le hero a fini de se replier
+  // (sinon le bandeau translucide apparaît « trop haut », sur une image encore en
+  // mouvement).
+  const BAR_START = MOVE_END - 22;      // 226
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -315,12 +319,12 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
     const applyElastic = (spring) => {
       const p = paneRef.current;
       if (!p) return;
-      p.style.transition = spring ? "transform 0.62s cubic-bezier(0.16,1,0.3,1)" : "none";
+      p.style.transition = spring ? "transform 0.85s cubic-bezier(0.16,1,0.3,1)" : "none";
       p.style.transform = `translateY(${(-bottomPull).toFixed(2)}px)`;
     };
     const applyPull = (spring) => {
       if (heroImgRef.current)
-        heroImgRef.current.style.transition = spring ? "transform 0.62s cubic-bezier(0.16,1,0.3,1)" : "none";
+        heroImgRef.current.style.transition = spring ? "transform 0.85s cubic-bezier(0.16,1,0.3,1)" : "none";
       applyHeroFrame();
     };
 
@@ -633,7 +637,7 @@ export function RecipeDetail({ recipe, recipes = [], onBack, onEdit, onDelete, o
               <div>{keepCta}</div>
             ) : (
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => { openShoppingModal(); }} className="tap" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "none", cursor: "pointer" }}>
+              <button onClick={() => { openShoppingModal(); }} className="tap" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid transparent", cursor: "pointer" }}>
                 <Icon name="shopping" size={14} color="#fff" /> Courses
               </button>
               <button onClick={() => setShowMealModal(true)} className="tap" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--surface)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
