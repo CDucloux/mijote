@@ -144,6 +144,23 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
 
   const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
 
+  // Swipe horizontal (mobile) : ← étape suivante, → étape précédente. On verrouille
+  // l'axe dès 8 px pour ne pas déclencher pendant un scroll vertical.
+  const stepSwipe = useRef(null);
+  const onStepTouchStart = (e) => { stepSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, axis: null }; };
+  const onStepTouchMove = (e) => {
+    const s = stepSwipe.current; if (!s || s.axis) return;
+    const dx = Math.abs(e.touches[0].clientX - s.x), dy = Math.abs(e.touches[0].clientY - s.y);
+    if (dx > 8 || dy > 8) s.axis = dx > dy ? "x" : "y";
+  };
+  const onStepTouchEnd = (e) => {
+    const s = stepSwipe.current; stepSwipe.current = null;
+    if (!s || s.axis !== "x" || subCook || done || iterOpen) return;
+    const dx = e.changedTouches[0].clientX - s.x;
+    if (dx < -50) { if (stepIdx < totalSteps - 1 && !(isStepZero && !allComponentsDone)) setStepIdx(i => i + 1); }
+    else if (dx > 50) setStepIdx(i => Math.max(0, i - 1));
+  };
+
   // Ingrédients liés à l'étape courante (bruts + composants)
   const linkedIngs = step
     ? (recipe.ingredients || []).filter(i => step.ingredients?.includes(i.id))
@@ -282,7 +299,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           </div>
 
           {/* Step content */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
+          <div onTouchStart={onStepTouchStart} onTouchMove={onStepTouchMove} onTouchEnd={onStepTouchEnd} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
             <div style={{ maxWidth: 640, margin: "0 auto" }}>
               {isStepZero ? (
                 /* ── Étape 0 : préparations de base à réaliser ── */

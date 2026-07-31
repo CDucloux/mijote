@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
@@ -32,6 +33,27 @@ export default defineConfig([
       'react-hooks/immutability': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
       // Concerne le Fast Refresh (HMR) en dev, pas la correction du code.
+      'react-refresh/only-export-components': 'warn',
+    },
+  },
+  // TypeScript (migration progressive de src/lib) : parser dédié + preset
+  // recommandé. Le `no-unused-vars` du cœur est remplacé par sa version TS
+  // (sinon faux positifs sur les types), en gardant le motif `^_`.
+  ...tseslint.configs.recommended.map(c => ({ ...c, files: ['**/*.{ts,tsx}'] })),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
+    languageOptions: {
+      globals: { ...globals.browser, __APP_VERSION__: 'readonly' },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/refs': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/static-components': 'warn',
+      'react-hooks/immutability': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': 'warn',
     },
   },
