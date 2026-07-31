@@ -155,24 +155,36 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
   useEffect(() => {
     const el = stepScrollRef.current;
     if (!el || subCook || done || iterOpen) return;
+    // Amplitude plus contenue (max 56 px) et ressort plus posé.
+    const MAX_PULL = 56;
     const damp = (d, max) => max * (1 - Math.exp(-d / max));
     const atTop = () => el.scrollTop <= 0;
     const atBottom = () => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
-    let dragging = false, x0 = 0, y0 = 0, axis = null, edge = null, pull = 0;
-    const applyElastic = (spring) => {
+    let dragging = false, x0 = 0, y0 = 0, axis = null, edge = null, pull = 0, raf = 0;
+    // Écriture du transform batchée à la frame (évite les écritures multiples par
+    // frame pendant le drag → moins de « lag »).
+    const flush = () => { raf = 0; const p = stepElasticRef.current; if (p) p.style.transform = pull ? `translateY(${pull.toFixed(2)}px)` : ""; };
+    const scheduleFlush = () => { if (!raf) raf = requestAnimationFrame(flush); };
+    const setPull = (v) => { pull = v; scheduleFlush(); };
+    const springBack = () => {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      pull = 0;
       const p = stepElasticRef.current; if (!p) return;
-      p.style.transition = spring ? "transform 0.55s cubic-bezier(0.16,1,0.3,1)" : "none";
-      p.style.transform = `translateY(${pull.toFixed(2)}px)`;
+      p.style.transition = "transform 0.8s cubic-bezier(0.22,1,0.3,1)";
+      p.style.transform = "translateY(0px)";
     };
-    const onDown = (e) => { dragging = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; edge = null; pull = 0; };
+    const onDown = (e) => {
+      dragging = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; edge = null; pull = 0;
+      const p = stepElasticRef.current; if (p) p.style.transition = "none"; // suit le doigt sans easing
+    };
     const onMove = (e) => {
       if (!dragging) return;
       const dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0;
       if (!axis) { if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
       if (axis !== "y") return;
       if (!edge) edge = atTop() && dy > 0 ? "top" : atBottom() && dy < 0 ? "bottom" : "scroll";
-      if (edge === "top") { pull = damp(dy, 110); applyElastic(false); if (e.cancelable) e.preventDefault(); }
-      else if (edge === "bottom") { pull = -damp(-dy, 110); applyElastic(false); if (e.cancelable) e.preventDefault(); }
+      if (edge === "top") { setPull(damp(dy, MAX_PULL)); if (e.cancelable) e.preventDefault(); }
+      else if (edge === "bottom") { setPull(-damp(-dy, MAX_PULL)); if (e.cancelable) e.preventDefault(); }
     };
     const onUp = (e) => {
       if (!dragging) return;
@@ -182,7 +194,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
         if (dx < -50) { if (stepIdx < totalSteps - 1 && !(isStepZero && !allComponentsDone)) setStepIdx(i => i + 1); }
         else if (dx > 50) setStepIdx(i => Math.max(0, i - 1));
       }
-      if (edge === "top" || edge === "bottom") { pull = 0; applyElastic(true); }
+      if (edge === "top" || edge === "bottom") springBack();
       axis = null; edge = null;
     };
     el.addEventListener("touchstart", onDown, { passive: true });
@@ -190,6 +202,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
     el.addEventListener("touchend", onUp, { passive: true });
     el.addEventListener("touchcancel", onUp, { passive: true });
     return () => {
+      if (raf) cancelAnimationFrame(raf);
       el.removeEventListener("touchstart", onDown);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onUp);
