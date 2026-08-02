@@ -346,7 +346,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           const reset = () => { setSearch(""); setFilters({ ...DEFAULT_FILTERS }); setFilterCol(null); };
           return (
           <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
-            <div style={{ width: 76, height: 76, borderRadius: 22, background: "linear-gradient(150deg, rgba(232,112,58,0.16), rgba(240,192,96,0.12))", border: "1px solid rgba(232,112,58,0.18)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -14px rgba(232,112,58,0.5)" }}>
+            <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
               <Icon name="search" size={30} color="var(--accent)" />
             </div>
             <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
@@ -377,7 +377,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                 de l'avant ; ce lien reste la porte de retour vers la bibliothèque). */}
             {q && (
               <button onClick={reset} style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
-                <Icon name="history" size={14} color="var(--text3)" /> {hasFilters ? "Réinitialiser recherche et filtres" : "Effacer la recherche"}
+                <Icon name="eraser" size={15} color="var(--text3)" /> {hasFilters ? "Réinitialiser recherche et filtres" : "Effacer la recherche"}
               </button>
             )}
           </div>
