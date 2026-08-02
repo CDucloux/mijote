@@ -554,7 +554,7 @@ select {
 @keyframes alertPopOut {
   to {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.92) translateY(8px);
   }
 }
 
@@ -600,18 +600,18 @@ select {
   width: 100%;
   max-width: 380px;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
-  animation: alertPop 0.2s cubic-bezier(0.34, 1.4, 0.5, 1) backwards;
+  animation: alertPop 0.28s cubic-bezier(0.34, 1.28, 0.5, 1) backwards;
 }
 
 @keyframes alertPop {
   from {
     opacity: 0;
-    transform: scale(0.92);
+    transform: scale(0.9) translateY(12px);
   }
 
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -949,6 +949,17 @@ select {
   color: var(--accent);
   font-weight: 600;
   text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+@media (hover: hover) {
+  .login-consent-link:hover {
+    color: var(--accent-strong, #d1541f);
+    background: rgba(232, 112, 58, 0.12);
+    box-shadow: 0 0 0 3px rgba(232, 112, 58, 0.12);
+  }
 }
 
 /* Rendu Markdown des documents légaux */
