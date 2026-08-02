@@ -1,5 +1,6 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "./firebase.js";
+import { prepareImageForUpload, blobToBase64 } from "./imageResize.js";
 
 // ─── IMPORT DE RECETTE DEPUIS UNE URL (client) ───────────────────────────────
 // Appelle la Cloud Function `importRecipeFromUrl` (fetch serveur + JSON-LD ou LLM).
@@ -28,16 +29,11 @@ export async function importRecipeFromImages(images, knownUtensils = []) {
   }
 }
 
-// Lit un File image → { mediaType, data(base64 sans préfixe) }.
-export function fileToImagePart(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Lecture du fichier impossible."));
-    reader.onload = () => {
-      const s = String(reader.result || "");
-      const comma = s.indexOf(",");
-      resolve({ mediaType: file.type || "image/jpeg", data: comma >= 0 ? s.slice(comma + 1) : s });
-    };
-    reader.readAsDataURL(file);
-  });
+// File image → { mediaType, data(base64 sans préfixe) }. Redimensionne et ré-encode
+// en JPEG avant l'encodage base64 (×15 à ×25 sur le poids transféré → l'upload
+// mobile ne dépasse plus le timeout de la fonction).
+export async function fileToImagePart(file) {
+  const { blob, mediaType } = await prepareImageForUpload(file);
+  const data = await blobToBase64(blob);
+  return { mediaType, data };
 }
