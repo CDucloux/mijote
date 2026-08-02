@@ -1,12 +1,21 @@
+/**
+ * Compression d'image + upload vers Firebase Storage. Compresse un `File` côté
+ * client (redimensionne au bord max). Les images transparentes (PNG/WebP avec
+ * canal alpha) sont conservées en PNG pour préserver la transparence ; tout le
+ * reste est aplati en JPEG (plus léger).
+ *
+ * @module storage
+ */
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { auth, storage } from "./firebase.js";
 
-// ─── IMAGE COMPRESSION + STORAGE UPLOAD ──────────────────────────────────────
-// Compress an image File client-side: resize to max edge.
-// Transparent images (PNG/WebP with alpha) are kept as PNG to preserve
-// transparency; everything else is flattened to JPEG for smaller size.
-// Resolves to { blob, ext, contentType }.
-export function compressImage(file, { maxEdge = 800, quality = 0.75 } = {}) {
+/** Image compressée : blob + extension + type MIME. */
+export interface CompressedImage { blob: Blob; ext: string; contentType: string }
+
+/**
+ * Compresse un `File` image côté client. Résout en `{ blob, ext, contentType }`.
+ */
+export function compressImage(file: File, { maxEdge = 800, quality = 0.75 }: { maxEdge?: number; quality?: number } = {}): Promise<CompressedImage> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -18,6 +27,7 @@ export function compressImage(file, { maxEdge = 800, quality = 0.75 } = {}) {
         const canvas = document.createElement("canvas");
         canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Compression échouée")); return; }
         ctx.drawImage(img, 0, 0, width, height);
         // Detect transparency: PNG/WebP source likely has an alpha channel.
         const maybeTransparent = /image\/(png|webp)/i.test(file.type);
@@ -43,18 +53,20 @@ export function compressImage(file, { maxEdge = 800, quality = 0.75 } = {}) {
         }
       };
       img.onerror = reject;
-      img.src = e.target.result;
+      img.src = String(e.target?.result || "");
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
-// Upload a compressed image to Firebase Storage.
-// `pathPrefix` is e.g. "recipes", "ingredients", "utensils" (stored under the
-// user's folder), or "master/..." (stored at root, readable by all users).
-// Returns the public download URL stored in Firestore.
-export async function uploadImage(file, pathPrefix) {
+/**
+ * Upload une image compressée vers Firebase Storage. `pathPrefix` est p.ex.
+ * « recipes », « ingredients », « utensils » (rangé sous le dossier de l'utilisateur),
+ * ou « master/… » (rangé à la racine, lisible par tous). Renvoie l'URL de download
+ * publique stockée dans Firestore.
+ */
+export async function uploadImage(file: File, pathPrefix: string): Promise<string> {
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error("Non authentifié");
   const { blob, ext, contentType } = await compressImage(file);
@@ -69,8 +81,8 @@ export async function uploadImage(file, pathPrefix) {
   return await getDownloadURL(sRef);
 }
 
-// Delete a previously uploaded image by its download URL (best-effort).
-export async function deleteImageByUrl(url) {
+/** Supprime une image uploadée par son URL de download (best-effort). */
+export async function deleteImageByUrl(url: string | null | undefined): Promise<void> {
   if (!url || !url.includes("firebasestorage")) return;
   try {
     const sRef = storageRef(storage, url);
