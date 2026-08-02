@@ -58,6 +58,6 @@ describe("aggregateShopping", () => {
       { id: "l2", name: "B", items: [{ id: "y", name: "Citron", amount: 50, unit: "g", checked: false }] },
     ];
     const agg = byName(aggregateShopping(mixed, DB));
-    expect(agg.Citron.qtyDisplay).toBe("2 pièce + 50g");
+    expect(agg.Citron.qtyDisplay).toBe("2 pièces + 50g"); // unité accordée au pluriel (≥ 2)
   });
 });

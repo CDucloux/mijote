@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
+import { ErrorModal } from "./ErrorModal.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { fileToImagePart } from "../lib/recipeUrlImport.js";
 
@@ -66,6 +67,18 @@ function AiBadge() {
   );
 }
 
+// Bandeau d'erreur inline (hints de saisie : URL invalide, trop de photos…) :
+// pastille rouge tramée + icône, cohérent avec le reste. Les VRAIS échecs
+// d'import passent, eux, par ErrorModal (popup centrée).
+function InlineError({ children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.28)", margin: "0 0 14px" }}>
+      <Icon name="warning" size={15} color="var(--red)" />
+      <span style={{ fontSize: 12.5, color: "var(--red)", fontWeight: 600, lineHeight: 1.4 }}>{children}</span>
+    </div>
+  );
+}
+
 // Ligne-option du sélecteur (empilées verticalement). `accent` = import IA.
 // `disabled` grise l'option et affiche `note` (raison), sans être cliquable.
 function Choice({ icon, title, subtitle, onClick, accent, ai, disabled, note }) {
@@ -97,7 +110,8 @@ export function NewRecipeButton({ onManual }) {
   const { isAdmin, importFromUrl, importFromImages, notify } = useAppShell();
   const [step, setStep] = useState("idle"); // idle | choose | url | photo | loading
   const [url, setUrl] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState("");            // hints de saisie (inline)
+  const [importError, setImportError] = useState(null); // échec d'import → popup { message, code }
   const [photos, setPhotos] = useState([]); // [{ file, preview, part }], max 2
   const fileRef = useRef(null);
 
@@ -119,9 +133,9 @@ export function NewRecipeButton({ onManual }) {
       setStep("idle"); setUrl("");
       notify?.(method === "jsonld" ? "Recette importée, à relire" : "Recette extraite, à relire");
     } catch (e) {
-      // L'éditeur ne s'ouvre pas : on revient à la saisie d'URL avec le message.
+      // L'éditeur ne s'ouvre pas : retour à la saisie + popup d'erreur détaillée.
       setStep("url");
-      setError(e?.message || "Import impossible.");
+      setImportError({ message: e?.message || "Import impossible.", code: e?.code });
     }
   };
 
@@ -133,7 +147,7 @@ export function NewRecipeButton({ onManual }) {
     const next = [];
     for (const file of files.slice(0, room)) {
       try { next.push({ file, preview: URL.createObjectURL(file), part: await fileToImagePart(file) }); }
-      catch { setError("Une image n'a pas pu être lue."); }
+      catch (e) { setError(e?.message || "Une image n'a pas pu être lue."); }
     }
     setPhotos(p => [...p, ...next]);
   };
@@ -149,7 +163,7 @@ export function NewRecipeButton({ onManual }) {
       notify?.("Recette extraite, à relire");
     } catch (e) {
       setStep("photo");
-      setError(e?.message || "Import impossible.");
+      setImportError({ message: e?.message || "Import impossible.", code: e?.code });
     }
   };
 
@@ -190,8 +204,8 @@ export function NewRecipeButton({ onManual }) {
           <input className="field-input" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
             value={url} autoFocus
             onChange={e => { setUrl(e.target.value); if (error) setError(""); }}
-            onKeyDown={e => e.key === "Enter" && go()} style={{ marginBottom: error ? 8 : 16 }} />
-          {error && <div style={{ fontSize: 12.5, color: "var(--red)", margin: "0 0 14px", lineHeight: 1.4 }}>{error}</div>}
+            onKeyDown={e => e.key === "Enter" && go()} style={{ marginBottom: error ? 10 : 16 }} />
+          {error && <InlineError>{error}</InlineError>}
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStep(isAdmin ? "choose" : "idle")}>Retour</button>
             <button className="btn btn-primary" style={{ flex: 1 }} disabled={!url.trim()} onClick={go}>
@@ -229,7 +243,7 @@ export function NewRecipeButton({ onManual }) {
               </button>
             )}
           </div>
-          {error && <div style={{ fontSize: 12.5, color: "var(--red)", margin: "0 0 14px", lineHeight: 1.4 }}>{error}</div>}
+          {error && <InlineError>{error}</InlineError>}
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => { resetPhotos(); setStep("choose"); }}>Retour</button>
             <button className="btn btn-primary" style={{ flex: 1 }} disabled={!photos.length} onClick={goPhotos}>
@@ -241,6 +255,17 @@ export function NewRecipeButton({ onManual }) {
 
       {/* Attente : non-annulable */}
       {step === "loading" && <LoadingOverlay />}
+
+      {/* Échec d'import → popup claire (message + origine technique) */}
+      {importError && (
+        <ErrorModal
+          title="Import impossible"
+          message={importError.message}
+          code={importError.code}
+          onClose={() => setImportError(null)}
+          onRetry={() => { setImportError(null); if (step === "url") go(); else if (step === "photo") goPhotos(); }}
+        />
+      )}
     </>
   );
 }

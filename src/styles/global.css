@@ -545,6 +545,88 @@ select {
   margin: 0 auto 20px;
 }
 
+/* Dialogue d'alerte centré (confirmations destructives) — jamais un tiroir
+   swipeable : on veut une décision, pas un balayage. Centré sur tous les écrans. */
+.alert-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.16s backwards;
+}
+
+.alert-dialog {
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 24px 22px 20px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+  animation: alertPop 0.2s cubic-bezier(0.34, 1.4, 0.5, 1) backwards;
+}
+
+@keyframes alertPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Menus contextuels (appui long recette / carnet) : tuiles d'actions rapides
+   + lignes de liste. */
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px;
+  border-radius: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+.menu-tile:hover {
+  border-color: var(--text3);
+}
+.menu-tile:active {
+  transform: scale(0.96);
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 13px 6px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.menu-row:active {
+  background: var(--surface2);
+}
+.menu-row-danger {
+  color: var(--red);
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);

@@ -1,5 +1,34 @@
 # Changelog – Mijoté
 
+## v3.8.6 – Safran · Imports fiables & finitions
+
+### Import IA (lien & photo)
+- **Import photo réparé** : les photos sont redimensionnées avant l'envoi — fini l'erreur « deadline-exceeded » sur les grandes images
+- **Recettes en anglais traduites** automatiquement, avec **conversions impériales** (oz, lb, cup, °F, pouces) vers le métrique et un jeu d'**unités normalisé**
+- **Extraction plus fidèle** : aucun ingrédient oublié, noms au singulier **sans le mot de mesure** (« gousse d'ail » → nom « ail », unité « gousse »), et l'unité implicite « pièce » n'encombre plus (« 1 oignon », pas « 1 pièce oignon »)
+- **Erreurs claires** : les échecs d'import s'affichent en **popup** (message + origine) et les hints de saisie (URL invalide…) dans un **bandeau soigné**, plus de texte rouge brut
+
+### Mes recettes
+- **Menus d'appui long repensés** (recette & carnet) : en-tête soigné, **actions rapides** (Ouvrir, Planning, Courses, Carnet / Dupliquer, Partager) et **position du carnet** au sélecteur
+- **État « aucune recette »** devenu utile : chercher le plat **dans la communauté**, le **créer** d'un geste, ou réinitialiser
+- L'**appui long** s'annule dès que le doigt bouge (fin du conflit avec le pull-to-refresh)
+- **Accès direct à l'éditeur** via l'URL `/recipes/:id/edit`
+
+### Suppressions & fenêtres
+- **Confirmations de suppression unifiées** en **dialogue centré** (fini le tiroir qu'on balaie par mégarde), même look partout
+- Plus d'écran **« recette introuvable »** qui clignote juste après une suppression
+- **Fenêtre hors ligne** au tutoiement et raccord au reste de l'app
+
+### Planning
+- Un repas dont la **recette a été supprimée** n'affiche plus un bouton « Compléter » fantôme sur un créneau vide
+
+### Affichage & cuisine
+- **Pluriel** des unités et des noms d'ingrédients comptables (« 2 gousses », « 4 œufs »)
+- **Repérage des techniques sensible aux accents** (« grillé » ≠ « grille », « glacé » ≠ « glace »)
+
+### Sous le capot
+- Poursuite de la **migration TypeScript** de `src/lib` (formats, tri, courses, techniques, Nutri-Score, saisonnalité, régimes…) et regroupement des tests
+
 ## v3.8.5 – Safran · Gestes élastiques
 
 ### Fiche recette (mobile)

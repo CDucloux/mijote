@@ -7,6 +7,7 @@ import { IngredientPill, UtensilPill, UtImage } from "../components/StepPills.js
 import { VeganBadge, SeasonBadge } from "../components/Badges.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { DifficultyBadge } from "../components/DifficultyBadge.jsx";
 import { NutritionModal } from "../components/NutritionModal.jsx";
@@ -23,7 +24,7 @@ import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatche
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
-import { fmtTime, capitalize, fmtQty, fmtQtyUnit } from "../lib/format.js";
+import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { computeDifficulty, explainDifficulty } from "../lib/difficulty.js";
@@ -64,6 +65,18 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const [confirmClone, setConfirmClone] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const isPublished = recipe.visibility === "public";
+
+  // Intention transmise par le menu d'appui long de la liste (« Planning » /
+  // « Partager ») : on ouvre le flux correspondant à l'arrivée, puis on efface
+  // l'intention de l'état de navigation pour ne pas la rejouer à un remontage.
+  const intent = location.state?.intent;
+  useEffect(() => {
+    if (!intent) return;
+    if (intent === "plan") setShowMealModal(true);
+    else if (intent === "share") isPublished ? setShareOpen(true) : setPendingPublish(true);
+    navigate(location.pathname, { replace: true, state: { ...location.state, intent: undefined } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intent]);
   // CTA d'ajout réutilisé (lecture seule d'une recette publique) → ouvre une confirmation.
   const keepCta = owned
     ? <button className="btn btn-ghost" disabled style={{ width: "100%", borderRadius: 30, opacity: 0.85 }}><Icon name="check" size={15} color="var(--green)" /> Déjà dans tes recettes</button>
@@ -714,14 +727,14 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(name)}</span>
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(!isComp && !ing.unit ? pluralizeName(ing.amount * mult, name) : name)}</span>
                           {isComp && <span style={{ fontSize: 9.5, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
                         </div>
                         {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 1 }}>{badge.text}</div>}
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
                         <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
-                        <span style={{ fontSize: 12, color: "var(--text2)" }}>{ing.unit}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)" }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                       </div>
                       {clickable && <span className="tap-chevron" style={{ display: "flex", flexShrink: 0 }}><Icon name="forward" size={14} color="var(--text3)" /></span>}
                     </div>
@@ -846,7 +859,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
                       <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                         <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
-                        <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                       </div>
                       <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>
                         {capitalize(rc.comp ? rc.comp.name : (ing.name || "Base"))}
@@ -859,9 +872,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                     <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                     <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
-                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
+                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                     </div>
-                    <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.name)}</div>
+                    <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.unit ? ing.name : pluralizeName(ing.amount * mult, ing.name))}</div>
                   </div>
                   );
                 })}
@@ -1090,14 +1103,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         </SwipeableSheet>
       )}
       {showDeleteConfirm && (
-        <SwipeableSheet onClose={() => setShowDeleteConfirm(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la recette ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20 }}>Retirer cette recette la supprimera définitivement des recettes enregistrées.</p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
-          </div>
-        </SwipeableSheet>
+        <ConfirmDialog title="Supprimer la recette ?"
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>
+          <strong style={{ color: "var(--text)" }}>« {recipe.name} »</strong> sera définitivement supprimée des recettes enregistrées.
+        </ConfirmDialog>
       )}
       {confirmClone && (
         <SwipeableSheet onClose={() => setConfirmClone(false)}>

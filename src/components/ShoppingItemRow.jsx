@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
-import { capitalize } from "../lib/format.js";
+import { capitalize, pluralizeUnit } from "../lib/format.js";
 
 const SWIPE_MAX = 130, SWIPE_TRIGGER = 64;
 
@@ -93,7 +93,7 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc, sub
               <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{capitalize(item.name)}</span>
               <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: struck ? "100%" : "0%", transition: "width 0.28s ease" }} />
             </div>
-            {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {item.unit}</div>}
+            {(item.amount || item.unit) && <div style={{ fontSize: 12, color: "var(--text2)" }}>{item.amount} {pluralizeUnit(item.amount, item.unit)}</div>}
             {subtitle && <div style={{ fontSize: 11, color: "var(--text3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 1 }}>{subtitle}</div>}
           </div>
         </button>

@@ -16,6 +16,72 @@ const CATEGORY_IDS = ["aperitif", "entree", "soupe", "salade", "plat", "gratin",
 
 const norm = (s) => (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
+// Pluriel des unités comptables pour le texte éditable `_raw` (miroir de
+// src/lib/format.ts). Les abréviations (g, ml, c. à s.…) sont invariables.
+const PLURAL_UNITS = {
+  "cuillère à soupe": "cuillères à soupe", "cuillère à café": "cuillères à café",
+  "pincée": "pincées", "gousse": "gousses", "sachet": "sachets", "tranche": "tranches",
+  "botte": "bottes", "feuille": "feuilles", "branche": "branches", "poignée": "poignées",
+  "verre": "verres", "bol": "bols", "tasse": "tasses", "boîte": "boîtes", "pot": "pots", "pièce": "pièces",
+};
+
+// Unités implicites : « 1 pièce oignon » se dit « 1 oignon ». On ne les stocke pas
+// et on ne les écrit pas dans `_raw`.
+const SILENT_UNITS = new Set(["piece", "pieces", "unite", "unites"]);
+
+// Unité accordée au pluriel selon la quantité (règle française : ≥ 2).
+function pluralUnit(amount, unit) {
+  const u = (unit || "").toString().trim();
+  if (!u) return "";
+  const n = Number(amount);
+  return (Number.isFinite(n) && Math.abs(n) >= 2) ? (PLURAL_UNITS[u.toLowerCase()] || u) : u;
+}
+
+// Retire un mot de mesure en tête de nom quand le LLM l'y a laissé (« gousse
+// d'ail » → « ail », « tranche de pain » → « pain »). Renvoie l'unité canonique
+// (singulier) détectée pour la promouvoir si le champ `unit` est vide — évite le
+// doublon « 2 gousses gousse d'ail » et rétablit le rapprochement à la base.
+function stripMeasurePrefix(name) {
+  const s = (name || "").toString().trim();
+  if (!s) return null;
+  // Orthographes acceptées (singulier + pluriel) → singulier canonique ; on teste
+  // les plus longues d'abord (« cuillère à soupe » avant « cuillère »). « pièce »
+  // est exclu (unité implicite : « pièce d'oignon » n'existe pas).
+  const forms = [];
+  for (const sing of Object.keys(PLURAL_UNITS)) {
+    if (sing === "pièce") continue;
+    forms.push([sing, sing], [PLURAL_UNITS[sing], sing]);
+  }
+  forms.sort((a, b) => b[0].length - a[0].length);
+  for (const [spelling, sing] of forms) {
+    const esc = spelling.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`^${esc}\\s+(?:de\\s+la\\s+|de\\s+l['’]|des\\s+|du\\s+|de\\s+|d['’]\\s*)`, "i");
+    const m = s.match(re);
+    if (m) return { name: s.slice(m[0].length).trim(), measure: sing };
+  }
+  return null;
+}
+
+// Noms en -ou prenant un « x » au pluriel (miroir de src/lib/format.ts).
+const OU_PLURAL_X = new Set(["bijou", "caillou", "chou", "genou", "hibou", "joujou", "pou"]);
+
+// Pluriel français du mot de tête d'un nom d'ingrédient COMPTABLE (sans unité) :
+// « 2 oignon » → « 2 oignons », « 4 œuf » → « 4 œufs ». Le champ `name` stocké
+// reste au singulier canonique ; seul le texte `_raw` est accordé.
+function pluralName(amount, name) {
+  const s = (name || "").toString();
+  const n = Number(amount);
+  if (!s || !Number.isFinite(n) || Math.abs(n) < 2) return s;
+  return s.replace(/^\S+/, (w) => {
+    const lo = w.toLowerCase();
+    if (/[sxz]$/.test(lo)) return w;
+    if (/(au|eau|eu)$/.test(lo)) return w + "x";
+    if (/al$/.test(lo)) return w.slice(0, -2) + "aux";
+    if (/ou$/.test(lo)) return OU_PLURAL_X.has(lo) ? w + "x" : w + "s";
+    return w + "s";
+  });
+}
+
 // Valide un id de catégorie renvoyé par le LLM (ou "").
 function matchCategory(v) {
   const n = norm(Array.isArray(v) ? v[0] : v);
@@ -88,11 +154,21 @@ function filterUtensilsToKnown(utensils, knownNames) {
 // fourni par le LLM, complété par détection dans le texte de l'étape).
 function assignIdsAndLink(d) {
   const ingredients = (d.ingredients || []).map((i, k) => {
+    // Unité implicite (pièce) : on la retire ; sinon on conserve le singulier
+    // canonique dans `unit` mais on écrit le pluriel accordé dans `_raw`.
+    // Le LLM laisse parfois le mot de mesure dans le nom : on le retire et, si
+    // l'unité est absente, on la promeut depuis ce mot.
+    const stripped = stripMeasurePrefix(i.name);
+    const name = stripped ? stripped.name : (i.name || "");
+    const unitRaw = (i.unit || "") || (stripped ? stripped.measure : "");
+    const unit = SILENT_UNITS.has(norm(unitRaw)) ? "" : unitRaw;
     // _raw reconstruit à partir des champs normalisés (texte propre et éditable).
-    const raw = [i.amount, i.unit, i.name].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
-    const ing = { id: `i${k}`, dbId: "", name: i.name || "", _raw: raw };
+    // Sans unité, l'ingrédient est comptable : on accorde le nom au pluriel.
+    const rawName = unit ? name : pluralName(i.amount, name);
+    const raw = [i.amount, pluralUnit(i.amount, unit), rawName].filter(v => v != null && v !== "").join(" ").trim() || name || "";
+    const ing = { id: `i${k}`, dbId: "", name, _raw: raw };
     if (i.amount != null && i.amount !== "") ing.amount = i.amount;
-    if (i.unit) ing.unit = i.unit;
+    if (unit) ing.unit = unit;
     return ing;
   });
   const utensils = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: (u.name || u).toString() }));

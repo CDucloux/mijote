@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
-import { ConfirmSheet } from "../components/ConfirmSheet.jsx";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { CookingHeatmap } from "../components/CookingHeatmap.jsx";
 import { buildHeatmap } from "../lib/cookingActivity.js";
 import { DEFAULT_PREFERENCES } from "../constants/preferences.js";
@@ -135,11 +135,11 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
       )}
 
       {confirmDelete && (
-        <ConfirmSheet title="Supprimer définitivement ton compte ?" busy={deleting}
+        <ConfirmDialog title="Supprimer définitivement ton compte ?" busy={deleting}
           onCancel={() => setConfirmDelete(false)}
           onConfirm={async () => { setDeleting(true); const ok = await onDeleteAccount?.(); if (!ok) { setDeleting(false); setConfirmDelete(false); } }}>
           Ton compte et <strong style={{ color: "var(--text)" }}>toutes tes données</strong> (recettes, carnets, planning, courses, stock, préférences) seront <strong style={{ color: "var(--text)" }}>effacés sans retour possible</strong>. Tu seras déconnecté·e.
-        </ConfirmSheet>
+        </ConfirmDialog>
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { ShoppingItemRow } from "../components/ShoppingItemRow.jsx";
 import { HeroMenu } from "../components/HeroMenu.jsx";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
@@ -388,16 +389,11 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       )}
       {/* Confirm delete modal – only for free lists */}
       {confirmDeleteId && (
-        <SwipeableSheet onClose={() => setConfirmDeleteId(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la liste ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-            "{shoppingLists.find(l => l.id === confirmDeleteId)?.name}" sera supprimée définitivement avec tous ses articles.
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDeleteId(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>Supprimer</button>
-          </div>
-        </SwipeableSheet>
+        <ConfirmDialog title="Supprimer la liste ?"
+          onCancel={() => setConfirmDeleteId(null)}
+          onConfirm={() => { deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>
+          <strong style={{ color: "var(--text)" }}>« {shoppingLists.find(l => l.id === confirmDeleteId)?.name} »</strong> sera supprimée définitivement avec tous ses articles.
+        </ConfirmDialog>
       )}
       {/* Confirmation : valider l'achat (déversement dans le stock) */}
       {confirmClearId && (() => {

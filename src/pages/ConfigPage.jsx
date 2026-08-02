@@ -4,6 +4,7 @@ import { Icon } from "../components/Icon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { TagInput } from "../components/TagInput.jsx";
 import { ChangelogSection } from "../components/ChangelogSection.jsx";
@@ -959,16 +960,11 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
       {/* Category delete confirmation */}
       {confirmDel && (
-        <SwipeableSheet onClose={() => setConfirmDel(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer {confirmDel.type === "ing" ? "l'ingrédient" : confirmDel.type === "tech" ? "le geste" : "l'ustensile"} ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-            « {confirmDel.item.name} » sera retiré de la base Master partagée. Cette action est visible par tous les utilisateurs et irréversible.
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmDel(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { if (confirmDel.type === "ing") delIng(confirmDel.item.id); else if (confirmDel.type === "tech") delTech(confirmDel.item.id); else delUt(confirmDel.item.id); setConfirmDel(null); if (ingDetailId) navigate(-1); }}>Supprimer</button>
-          </div>
-        </SwipeableSheet>
+        <ConfirmDialog title={`Supprimer ${confirmDel.type === "ing" ? "l'ingrédient" : confirmDel.type === "tech" ? "le geste" : "l'ustensile"} ?`}
+          onCancel={() => setConfirmDel(null)}
+          onConfirm={() => { if (confirmDel.type === "ing") delIng(confirmDel.item.id); else if (confirmDel.type === "tech") delTech(confirmDel.item.id); else delUt(confirmDel.item.id); setConfirmDel(null); if (ingDetailId) navigate(-1); }}>
+          <strong style={{ color: "var(--text)" }}>« {confirmDel.item.name} »</strong> sera retiré de la base Master partagée. Cette action est visible par tous les utilisateurs et irréversible.
+        </ConfirmDialog>
       )}
 
       {/* Utensil editor modal */}

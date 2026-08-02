@@ -80,6 +80,48 @@ describe("assignIdsAndLink", () => {
     const r = assignIdsAndLink({ ingredients: [{ name: "piment en poudre", amount: 1, unit: "pincée" }], utensils: [], steps: [] });
     expect(r.ingredients[0]._raw).toBe("1 pincée piment en poudre");
   });
+  it("accorde l'unité au pluriel dans _raw (stockage reste au singulier)", () => {
+    const r = assignIdsAndLink({ ingredients: [
+      { name: "ail", amount: 2, unit: "gousse" },
+      { name: "huile d'olive", amount: 3, unit: "cuillère à soupe" },
+    ], utensils: [], steps: [] });
+    expect(r.ingredients[0]._raw).toBe("2 gousses ail");
+    expect(r.ingredients[0].unit).toBe("gousse");
+    expect(r.ingredients[1]._raw).toBe("3 cuillères à soupe huile d'olive");
+  });
+  it("retire l'unité implicite « pièce » (« 1 oignon », pas « 1 pièce oignon »)", () => {
+    const r = assignIdsAndLink({ ingredients: [{ name: "oignon", amount: 1, unit: "pièce" }], utensils: [], steps: [] });
+    expect(r.ingredients[0]._raw).toBe("1 oignon");
+    expect(r.ingredients[0].unit).toBeUndefined();
+  });
+  it("retire le mot de mesure resté dans le nom (« gousse d'ail » → « ail »)", () => {
+    // unité déjà « gousse » ET nom « gousse d'ail » → pas de doublon, nom nettoyé.
+    const withUnit = assignIdsAndLink({ ingredients: [{ name: "gousse d'ail", amount: 2, unit: "gousse" }], utensils: [], steps: [] });
+    expect(withUnit.ingredients[0].name).toBe("ail");
+    expect(withUnit.ingredients[0].unit).toBe("gousse");
+    expect(withUnit.ingredients[0]._raw).toBe("2 gousses ail");
+    // unité absente → promue depuis le mot de mesure du nom.
+    const noUnit = assignIdsAndLink({ ingredients: [{ name: "tranche de pain", amount: 3 }], utensils: [], steps: [] });
+    expect(noUnit.ingredients[0].name).toBe("pain");
+    expect(noUnit.ingredients[0].unit).toBe("tranche");
+    expect(noUnit.ingredients[0]._raw).toBe("3 tranches pain");
+    // faux positif à éviter : « blanc de poulet » n'est pas une mesure.
+    const keep = assignIdsAndLink({ ingredients: [{ name: "blanc de poulet", amount: 2 }], utensils: [], steps: [] });
+    expect(keep.ingredients[0].name).toBe("blanc de poulet");
+  });
+  it("accorde le NOM au pluriel quand l'ingrédient est comptable (sans unité)", () => {
+    const r = assignIdsAndLink({ ingredients: [
+      { name: "oignon", amount: 2, unit: "pièce" },  // pièce retirée → comptable
+      { name: "œuf", amount: 4 },
+      { name: "poireau", amount: 3 },
+      { name: "tomate", amount: 800, unit: "g" },    // masse → nom au singulier
+    ], utensils: [], steps: [] });
+    expect(r.ingredients[0]._raw).toBe("2 oignons");
+    expect(r.ingredients[0].name).toBe("oignon");    // stockage singulier
+    expect(r.ingredients[1]._raw).toBe("4 œufs");
+    expect(r.ingredients[2]._raw).toBe("3 poireaux");
+    expect(r.ingredients[3]._raw).toBe("800 g tomate");
+  });
 });
 
 describe("filterUtensilsToKnown", () => {
