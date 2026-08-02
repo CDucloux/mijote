@@ -489,7 +489,7 @@ select {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  animation: fadeIn 0.28s backwards;
+  animation: fadeIn 0.2s backwards;
 }
 
 @keyframes toastIn {
@@ -523,7 +523,7 @@ select {
   max-height: 92dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  animation: sheetUp 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+  animation: sheetUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
   will-change: transform;
 }
 
@@ -600,7 +600,7 @@ select {
   width: 100%;
   max-width: 380px;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
-  animation: alertPop 0.4s cubic-bezier(0.32, 1.2, 0.5, 1) backwards;
+  animation: alertPop 0.35s cubic-bezier(0.32, 1.2, 0.5, 1) backwards;
 }
 
 @keyframes alertPop {
