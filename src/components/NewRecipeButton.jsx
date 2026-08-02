@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
+import { ErrorModal } from "./ErrorModal.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { fileToImagePart } from "../lib/recipeUrlImport.js";
 
@@ -97,7 +98,8 @@ export function NewRecipeButton({ onManual }) {
   const { isAdmin, importFromUrl, importFromImages, notify } = useAppShell();
   const [step, setStep] = useState("idle"); // idle | choose | url | photo | loading
   const [url, setUrl] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState("");            // hints de saisie (inline)
+  const [importError, setImportError] = useState(null); // échec d'import → popup { message, code }
   const [photos, setPhotos] = useState([]); // [{ file, preview, part }], max 2
   const fileRef = useRef(null);
 
@@ -119,9 +121,9 @@ export function NewRecipeButton({ onManual }) {
       setStep("idle"); setUrl("");
       notify?.(method === "jsonld" ? "Recette importée, à relire" : "Recette extraite, à relire");
     } catch (e) {
-      // L'éditeur ne s'ouvre pas : on revient à la saisie d'URL avec le message.
+      // L'éditeur ne s'ouvre pas : retour à la saisie + popup d'erreur détaillée.
       setStep("url");
-      setError(e?.message || "Import impossible.");
+      setImportError({ message: e?.message || "Import impossible.", code: e?.code });
     }
   };
 
@@ -133,7 +135,7 @@ export function NewRecipeButton({ onManual }) {
     const next = [];
     for (const file of files.slice(0, room)) {
       try { next.push({ file, preview: URL.createObjectURL(file), part: await fileToImagePart(file) }); }
-      catch { setError("Une image n'a pas pu être lue."); }
+      catch (e) { setError(e?.message || "Une image n'a pas pu être lue."); }
     }
     setPhotos(p => [...p, ...next]);
   };
@@ -149,7 +151,7 @@ export function NewRecipeButton({ onManual }) {
       notify?.("Recette extraite, à relire");
     } catch (e) {
       setStep("photo");
-      setError(e?.message || "Import impossible.");
+      setImportError({ message: e?.message || "Import impossible.", code: e?.code });
     }
   };
 
@@ -241,6 +243,17 @@ export function NewRecipeButton({ onManual }) {
 
       {/* Attente : non-annulable */}
       {step === "loading" && <LoadingOverlay />}
+
+      {/* Échec d'import → popup claire (message + origine technique) */}
+      {importError && (
+        <ErrorModal
+          title="Import impossible"
+          message={importError.message}
+          code={importError.code}
+          onClose={() => setImportError(null)}
+          onRetry={() => { setImportError(null); if (step === "url") go(); else if (step === "photo") goPhotos(); }}
+        />
+      )}
     </>
   );
 }
