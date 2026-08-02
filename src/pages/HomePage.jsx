@@ -168,7 +168,7 @@ function FoyerSection() {
   );
 }
 
-export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic }) {
+export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
 
@@ -301,7 +301,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
         </section>
 
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
-        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} />
+        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
       </div>
     </div>
   );

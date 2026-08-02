@@ -188,6 +188,20 @@ function AppInner() {
     if (justDeleted) navigate("/recipes", { replace: true });
   }, [justDeleted, navigate]);
 
+  // Ouvre l'éditeur sur une recette vierge, éventuellement pré-nommée (ex. depuis
+  // l'état « aucun résultat » : « Créer "X" » passe { name: recherche }). On ne lit
+  // que `name` : certains appelants passent l'évènement click en argument.
+  const startNewRecipe = useCallback((preset) => {
+    const name = preset && typeof preset === "object" && typeof preset.name === "string" ? preset.name : "";
+    setEditingRecipe({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" });
+  }, []);
+
+  // Requête semée dans « Découvrir » depuis un autre onglet (ex. « chercher dans
+  // la communauté » quand la bibliothèque privée ne renvoie rien). Consommée une
+  // fois par DiscoverSection puis remise à zéro.
+  const [discoverSeed, setDiscoverSeed] = useState("");
+  const searchCommunity = useCallback((q) => { setDiscoverSeed((q || "").trim()); setTab("home"); }, [setTab]);
+
   // Édition : `editingRecipe` (état) pour une nouvelle recette ou un import IA ;
   // pour une recette EXISTANTE, l'éditeur est piloté par la route /recipes/:id/edit
   // (accès direct, survit à un remontage). On dérive donc la recette en cours
@@ -268,8 +282,8 @@ function AppInner() {
       <Profiler id={tab} onRender={(id, phase, actualDuration) => {
         if (import.meta.env.DEV) console.log(`⏱️ [${id}] ${phase} : ${actualDuration.toFixed(1)} ms`);
       }}>
-      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} />}
-      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={() => setEditingRecipe({ name: "", description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" })} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} setCollections={setCollections} setTab={setTab} />}
+      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
+      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}

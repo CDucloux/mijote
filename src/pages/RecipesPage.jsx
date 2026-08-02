@@ -33,7 +33,7 @@ const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, a
   );
 });
 
-export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
+export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
   // Persistés (localStorage, mobile + web) : carnet sélectionné, tri et filtres
@@ -339,22 +339,50 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             );
           })}
         </div>
-        {filtered.length === 0 && (
-          <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 400, margin: "0 auto" }}>
-            <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-              <Icon name="search" size={30} color="var(--text3)" />
+        {filtered.length === 0 && (() => {
+          const q = search.trim();
+          const qShort = q.length > 22 ? q.slice(0, 22) + "…" : q;
+          const hasFilters = nActiveFilters > 0 || !!filterCol;
+          const reset = () => { setSearch(""); setFilters({ ...DEFAULT_FILTERS }); setFilterCol(null); };
+          return (
+          <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
+            <div style={{ width: 76, height: 76, borderRadius: 22, background: "linear-gradient(150deg, rgba(232,112,58,0.16), rgba(240,192,96,0.12))", border: "1px solid rgba(232,112,58,0.18)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -14px rgba(232,112,58,0.5)" }}>
+              <Icon name="search" size={30} color="var(--accent)" />
             </div>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Aucune recette trouvée</h3>
-            <p style={{ fontSize: 13.5, color: "var(--text3)", lineHeight: 1.5, marginBottom: 18 }}>
-              {search ? <>Rien ne correspond à « <strong style={{ color: "var(--text2)", fontWeight: 600 }}>{search}</strong> » dans ta bibliothèque.<br />Essaie un autre mot-clé ou ajuste tes filtres.</> : "Aucune recette ne correspond à ces filtres."}
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
+            <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
+              {q
+                ? <>Rien ne correspond à « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans ta bibliothèque.<br />Cherche-la dans la communauté ou crée-la.</>
+                : "Aucune recette ne correspond à ces filtres."}
             </p>
-            {(search || nActiveFilters > 0 || filterCol) && (
-              <button className="btn btn-ghost" style={{ padding: "9px 18px", borderRadius: 12, fontSize: 13.5 }} onClick={() => { setSearch(""); setFilters({ ...DEFAULT_FILTERS }); setFilterCol(null); }}>
-                <Icon name="close" size={14} /> Réinitialiser
+
+            {q ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                {onSearchCommunity && (
+                  <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={() => onSearchCommunity(q)}>
+                    <Icon name="sparkle" size={16} color="#fff" /> Chercher dans la communauté
+                  </button>
+                )}
+                <button className="btn btn-pill" style={{ fontSize: 14, background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }} onClick={() => onNewRecipe({ name: q })}>
+                  <Icon name="plus" size={16} color="currentColor" /> Créer « {qShort} »
+                </button>
+              </div>
+            ) : hasFilters && (
+              <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={reset}>
+                <Icon name="close" size={15} color="#fff" /> Enlever les filtres
+              </button>
+            )}
+
+            {/* Reset discret quand une recherche est active (les CTA principaux vont
+                de l'avant ; ce lien reste la porte de retour vers la bibliothèque). */}
+            {q && (
+              <button onClick={reset} style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
+                <Icon name="history" size={14} color="var(--text3)" /> {hasFilters ? "Réinitialiser recherche et filtres" : "Effacer la recherche"}
               </button>
             )}
           </div>
-        )}
+          );
+        })()}
         </>
         )}
       </div>

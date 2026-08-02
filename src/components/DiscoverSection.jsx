@@ -110,7 +110,7 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
 }
 
 // ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
-export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic }) {
+export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic, initialSearch = "", onSeedConsumed }) {
   const { user, techniques = [] } = useAppShell();
   const navigate = useNavigate();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
@@ -118,6 +118,17 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
 
   const [text, setText] = useState("");
+  const searchRef = useRef(null);
+  // Requête semée depuis un autre onglet (« chercher dans la communauté ») : on
+  // pré-remplit la recherche, on amène la section à l'écran, puis on consomme la
+  // graine pour ne pas la ré-appliquer (l'utilisateur reste libre de la modifier).
+  useEffect(() => {
+    const seed = (initialSearch || "").trim();
+    if (!seed) return;
+    setText(seed);
+    requestAnimationFrame(() => searchRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }));
+    onSeedConsumed?.();
+  }, [initialSearch, onSeedConsumed]);
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState(DEFAULT_SORT_KEY);
@@ -271,7 +282,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         </div>
 
         {/* Recherche */}
-        <div style={{ position: "relative", marginBottom: 12 }}>
+        <div ref={searchRef} style={{ position: "relative", marginBottom: 12, scrollMarginTop: 12 }}>
           <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={17} color="var(--text3)" /></span>
           <input className="field-input recipe-search" placeholder="Rechercher par recette, chef, ingrédient…" value={text} onChange={e => setText(e.target.value)}
             enterKeyHint="search" onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }}
