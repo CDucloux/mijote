@@ -1,24 +1,48 @@
-// ─── IMPORT DE RECETTES ───────────────────────────────────────────────────────
-// Parsing + validation de schéma + rapprochement de noms (dbId) + recalcul du
-// score. Fonction pure : ne touche ni à l'état React ni au DOM. Le composant se
-// contente de dédoublonner contre l'existant et d'afficher le résultat.
-
+/**
+ * Import de recettes. Parsing + validation de schéma + rapprochement de noms
+ * (dbId) + recalcul du score. Fonction pure : ne touche ni à l'état React ni au
+ * DOM. Le composant se contente de dédoublonner contre l'existant et d'afficher
+ * le résultat.
+ *
+ * @module recipeImport
+ */
 import { validateRecipeSchema } from "./recipeSchema.js";
 import { buildNameMatcher } from "./nameMatcher.js";
 import { computeNutriInfo } from "./nutriscore.js";
 
-// → { error } en cas d'échec, sinon { prepared, linked, rejected }.
-export function prepareRecipeImport(json, { ingredientDB = [], utensilDB = [] } = {}) {
-  let data;
+/** Recette importée (forme minimale ; champs additionnels conservés). */
+export interface ImportRecipe {
+  name?: string;
+  ingredients?: { name?: string; dbId?: string }[];
+  utensils?: { name?: string; dbId?: string }[];
+  [k: string]: unknown;
+}
+
+/** Ingrédient / ustensile de la base (forme minimale). */
+export interface ImportDbItem { id: string; name: string; aliases?: string[]; [k: string]: unknown }
+
+/** Résultat d'un import réussi. */
+export interface ImportResult {
+  prepared: ImportRecipe[];
+  linked: number;
+  rejected: number;
+}
+
+/** → `{ error }` en cas d'échec, sinon `{ prepared, linked, rejected }`. */
+export function prepareRecipeImport(
+  json: string,
+  { ingredientDB = [], utensilDB = [] }: { ingredientDB?: ImportDbItem[]; utensilDB?: ImportDbItem[] } = {},
+): { error: string } | ImportResult {
+  let data: unknown;
   try { data = JSON.parse(json); }
   catch { return { error: "JSON invalide : fichier illisible" }; }
 
-  const incoming = Array.isArray(data) ? data : [data];
+  const incoming = (Array.isArray(data) ? data : [data]) as ImportRecipe[];
   if (!incoming.length) return { error: "Aucune recette dans le fichier" };
 
   // Validation de schéma : on écarte les recettes non conformes plutôt que
   // d'injecter des données corrompues. Import refusé si TOUT est invalide.
-  const validRecipes = [], schemaErrors = [];
+  const validRecipes: ImportRecipe[] = [], schemaErrors: string[] = [];
   incoming.forEach((r, i) => {
     const label = `Recette ${r && typeof r === "object" && r.name ? `« ${r.name} »` : `#${i + 1}`}`;
     const e = validateRecipeSchema(r, label);
