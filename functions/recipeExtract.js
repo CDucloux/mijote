@@ -16,6 +16,27 @@ const CATEGORY_IDS = ["aperitif", "entree", "soupe", "salade", "plat", "gratin",
 
 const norm = (s) => (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
+// Pluriel des unités comptables pour le texte éditable `_raw` (miroir de
+// src/lib/format.ts). Les abréviations (g, ml, c. à s.…) sont invariables.
+const PLURAL_UNITS = {
+  "cuillère à soupe": "cuillères à soupe", "cuillère à café": "cuillères à café",
+  "pincée": "pincées", "gousse": "gousses", "sachet": "sachets", "tranche": "tranches",
+  "botte": "bottes", "feuille": "feuilles", "branche": "branches", "poignée": "poignées",
+  "verre": "verres", "bol": "bols", "tasse": "tasses", "boîte": "boîtes", "pot": "pots", "pièce": "pièces",
+};
+
+// Unités implicites : « 1 pièce oignon » se dit « 1 oignon ». On ne les stocke pas
+// et on ne les écrit pas dans `_raw`.
+const SILENT_UNITS = new Set(["piece", "pieces", "unite", "unites"]);
+
+// Unité accordée au pluriel selon la quantité (règle française : ≥ 2).
+function pluralUnit(amount, unit) {
+  const u = (unit || "").toString().trim();
+  if (!u) return "";
+  const n = Number(amount);
+  return (Number.isFinite(n) && Math.abs(n) >= 2) ? (PLURAL_UNITS[u.toLowerCase()] || u) : u;
+}
+
 // Valide un id de catégorie renvoyé par le LLM (ou "").
 function matchCategory(v) {
   const n = norm(Array.isArray(v) ? v[0] : v);
@@ -88,11 +109,14 @@ function filterUtensilsToKnown(utensils, knownNames) {
 // fourni par le LLM, complété par détection dans le texte de l'étape).
 function assignIdsAndLink(d) {
   const ingredients = (d.ingredients || []).map((i, k) => {
+    // Unité implicite (pièce) : on la retire ; sinon on conserve le singulier
+    // canonique dans `unit` mais on écrit le pluriel accordé dans `_raw`.
+    const unit = SILENT_UNITS.has(norm(i.unit)) ? "" : (i.unit || "");
     // _raw reconstruit à partir des champs normalisés (texte propre et éditable).
-    const raw = [i.amount, i.unit, i.name].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
+    const raw = [i.amount, pluralUnit(i.amount, unit), i.name].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
     const ing = { id: `i${k}`, dbId: "", name: i.name || "", _raw: raw };
     if (i.amount != null && i.amount !== "") ing.amount = i.amount;
-    if (i.unit) ing.unit = i.unit;
+    if (unit) ing.unit = unit;
     return ing;
   });
   const utensils = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: (u.name || u).toString() }));
