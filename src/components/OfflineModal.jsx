@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
 import { useOnline } from "../hooks/useOnline.js";
+import { useModalExit } from "../hooks/useModalExit.js";
 
 // Signale une perte de connexion durable via un modal – sans être intempestif :
 // on n'affiche qu'après OFFLINE_DELAY ms hors ligne continu (les micro-coupures
@@ -15,6 +16,7 @@ export function OfflineModal() {
   const online = useOnline();
   const [show, setShow] = useState(false);
   const timer = useRef(null);
+  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(() => setShow(false));
 
   useEffect(() => {
     if (!online) {
@@ -28,18 +30,11 @@ export function OfflineModal() {
     return () => clearTimeout(timer.current);
   }, [online]);
 
-  useEffect(() => {
-    if (!show) return;
-    const onKey = (e) => { if (e.key === "Escape") setShow(false); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [show]);
-
   if (!show) return null;
 
   return createPortal(
-    <div className="alert-backdrop" onClick={() => setShow(false)}>
-      <div className="alert-dialog" role="alertdialog" aria-label="Tu es hors ligne" onClick={e => e.stopPropagation()}>
+    <div className={`alert-backdrop${closing ? " is-closing" : ""}`} onClick={() => beginClose()}>
+      <div ref={surfaceRef} className={`alert-dialog${closing ? " is-closing" : ""}`} role="alertdialog" aria-label="Tu es hors ligne" onClick={e => e.stopPropagation()} onAnimationEnd={onAnimationEnd}>
         <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(240,153,42,0.14)", display: "grid", placeItems: "center", margin: "0 auto 14px" }}>
           <Icon name="wifiOff" size={24} color="var(--orange)" />
         </div>
@@ -47,7 +42,7 @@ export function OfflineModal() {
         <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.55, marginBottom: 22, textAlign: "center" }}>
           Pas d'inquiétude : tu peux continuer à consulter et modifier tes recettes. Tout se synchronisera automatiquement au retour de la connexion.
         </p>
-        <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShow(false)}>J'ai compris</button>
+        <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => beginClose()}>J'ai compris</button>
       </div>
     </div>,
     document.body

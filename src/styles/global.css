@@ -537,6 +537,40 @@ select {
   }
 }
 
+/* Sorties de modales (voir useModalExit) : la classe .is-closing bascule sur la
+   keyframe de sortie, jouée avant le démontage. */
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sheetDown {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes alertPopOut {
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+.modal-backdrop.is-closing {
+  animation: fadeOut 0.24s ease forwards;
+}
+.modal-sheet.is-closing {
+  animation: sheetDown 0.26s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+.alert-backdrop.is-closing {
+  animation: fadeOut 0.17s ease forwards;
+}
+.alert-dialog.is-closing {
+  animation: alertPopOut 0.17s ease-in forwards;
+}
+
 .modal-handle {
   width: 40px;
   height: 4px;
