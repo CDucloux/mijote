@@ -15,5 +15,10 @@ LECTURE
 - Numéros de page, en-têtes / pieds de page, titre de chapitre ou de rubrique, nom de l'auteur, encadrés nutritionnels, anecdotes et notes d'ambiance : ni titre, ni étapes, ni astuces (sauf vraie astuce technique → `tip`).
 - Le `name` est le nom du plat (souvent en gros au-dessus de la recette), jamais le titre du chapitre ou de la section.
 
-IMAGES
+IMAGES D'ÉTAPE
 - Une photo de page n'expose aucune URL exploitable : `image` vaut TOUJOURS `""` pour CHAQUE étape. N'invente pas d'URL ; ignore toute règle de marqueur `⟦IMG:url⟧` (spécifique au web).
+
+PHOTO DE COUVERTURE
+- Il est fréquent qu'une image soit la **photographie du plat fini** et une autre la **page de texte** (ingrédients / étapes) — dans un ordre quelconque.
+- Ajoute au JSON un champ supplémentaire `coverPhoto` : le **numéro** de l'image qui est une photo du plat fini (`1` pour la première image fournie, `2` pour la seconde), ou `0` si AUCUNE image n'est une photo du plat (que du texte).
+- Une image qui mêle photo du plat ET texte compte comme photo du plat. En cas de doute entre deux photos, choisis celle qui montre le mieux le plat terminé.

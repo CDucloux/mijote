@@ -143,7 +143,11 @@ async function extractFromImages(images, knownUtensils) {
   let parsed;
   try { parsed = parseJsonLoose(block.text); }
   catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
-  return llmToIntermediate(parsed, "");
+  // `coverPhoto` : numéro (1-based) de l'image qui est la photo du plat, 0 si aucune.
+  // On le convertit en index 0-based validé (-1 = pas de couverture).
+  const cp = Number(parsed.coverPhoto);
+  const coverIndex = Number.isInteger(cp) && cp >= 1 && cp <= images.length ? cp - 1 : -1;
+  return { inter: llmToIntermediate(parsed, ""), coverIndex };
 }
 
 async function extractWithLlm(text, sourceUrl, knownUtensils) {
@@ -243,13 +247,15 @@ exports.importRecipeFromImages = onCall(
       ? request.data.knownUtensils.map(s => String(s)).filter(Boolean).slice(0, 200) : [];
 
     try {
-      const inter = await extractFromImages(images, knownUtensils);
+      const { inter, coverIndex } = await extractFromImages(images, knownUtensils);
       inter.image = "";
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");
-      return { recipe, method: "image" };
+      // coverIndex : l'image (parmi celles fournies) qui est la photo du plat → le
+      // client s'en sert comme image de couverture. -1 si aucune.
+      return { recipe, method: "image", coverIndex };
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       console.error("importRecipeFromImages — erreur inattendue:", e);
