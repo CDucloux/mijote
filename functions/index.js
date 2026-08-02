@@ -29,6 +29,11 @@ const PROMPT_TEMPLATE = fs
   .readFileSync(path.join(__dirname, "prompts", "recipeExtract.md"), "utf-8")
   .replace("{{CUISINE_LIST}}", CUISINE_LABELS.join(", "));
 
+// Addendum spécifique à l'import PHOTO (mise en page livre/magazine : colonne
+// d'ingrédients, deux pages, à ignorer, images d'étape toujours vides…). Ajouté
+// après le prompt de base, dont il complète et prime les règles.
+const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "prompts", "recipeExtractImage.md"), "utf-8");
+
 function parseJsonLoose(s) {
   let t = (s || "").trim();
   const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -112,7 +117,8 @@ async function extractFromImages(images, knownUtensils) {
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
   const system = PROMPT_TEMPLATE
     .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)")
-    .replace("depuis le texte brut d'une page web", "depuis une ou plusieurs photos (pages d'un livre de cuisine)");
+    .replace("depuis le texte brut d'une page web", "depuis une ou plusieurs photos (pages d'un livre ou magazine de cuisine)")
+    + "\n\n" + IMG_PROMPT_ADDENDUM;
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
   const content = images.map(im => ({
