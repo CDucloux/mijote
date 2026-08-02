@@ -89,6 +89,16 @@ html.light select option {
   mix-blend-mode: normal;
 }
 
+/* Pendant le view-transition, on neutralise le fondu par élément (règle `*`
+   ci-dessus) : le cross-fade de l'instantané fait déjà le fondu, et éviter des
+   milliers de transitions simultanées garde la bascule fluide sur les pages
+   denses. N'affecte pas l'animation du view-transition (qui utilise `animation`). */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
 /* Pas de contour bleu au tap/focus tactile (PWA) ; le focus clavier reste visible via :focus-visible */
 button,
 a,

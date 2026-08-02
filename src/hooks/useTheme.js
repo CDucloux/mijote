@@ -31,8 +31,22 @@ export function useTheme() {
       try { localStorage.setItem("rf_theme", next ? "dark" : "light"); } catch { /* quota */ }
     };
     const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (document.startViewTransition && !reduce) document.startViewTransition(run);
-    else run();
+    if (document.startViewTransition && !reduce) {
+      // Pendant la bascule, on coupe le fondu PAR ÉLÉMENT (règle globale `*`) : le
+      // cross-fade de l'instantané suffit. Sans ça, sur les pages denses (grille de
+      // recettes, feed découverte, stock), des milliers de transitions simultanées
+      // se superposent au view-transition et saccadent la bascule. Les pages légères
+      // (planning, courses) n'en souffraient pas, d'où la différence ressentie.
+      const el = document.documentElement;
+      el.classList.add("theme-switching");
+      const done = () => el.classList.remove("theme-switching");
+      const vt = document.startViewTransition(run);
+      (vt.finished || Promise.resolve()).finally(done);
+      setTimeout(done, 600); // filet de sécurité : ne jamais rester figé sans transitions
+
+    } else {
+      run();
+    }
   };
 
   // Synchronisation initiale (au montage) : aligne le DOM sur l'état persistant.
