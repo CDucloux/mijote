@@ -67,6 +67,18 @@ function AiBadge() {
   );
 }
 
+// Bandeau d'erreur inline (hints de saisie : URL invalide, trop de photos…) :
+// pastille rouge tramée + icône, cohérent avec le reste. Les VRAIS échecs
+// d'import passent, eux, par ErrorModal (popup centrée).
+function InlineError({ children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.28)", margin: "0 0 14px" }}>
+      <Icon name="warning" size={15} color="var(--red)" />
+      <span style={{ fontSize: 12.5, color: "var(--red)", fontWeight: 600, lineHeight: 1.4 }}>{children}</span>
+    </div>
+  );
+}
+
 // Ligne-option du sélecteur (empilées verticalement). `accent` = import IA.
 // `disabled` grise l'option et affiche `note` (raison), sans être cliquable.
 function Choice({ icon, title, subtitle, onClick, accent, ai, disabled, note }) {
@@ -192,8 +204,8 @@ export function NewRecipeButton({ onManual }) {
           <input className="field-input" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
             value={url} autoFocus
             onChange={e => { setUrl(e.target.value); if (error) setError(""); }}
-            onKeyDown={e => e.key === "Enter" && go()} style={{ marginBottom: error ? 8 : 16 }} />
-          {error && <div style={{ fontSize: 12.5, color: "var(--red)", margin: "0 0 14px", lineHeight: 1.4 }}>{error}</div>}
+            onKeyDown={e => e.key === "Enter" && go()} style={{ marginBottom: error ? 10 : 16 }} />
+          {error && <InlineError>{error}</InlineError>}
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStep(isAdmin ? "choose" : "idle")}>Retour</button>
             <button className="btn btn-primary" style={{ flex: 1 }} disabled={!url.trim()} onClick={go}>
@@ -231,7 +243,7 @@ export function NewRecipeButton({ onManual }) {
               </button>
             )}
           </div>
-          {error && <div style={{ fontSize: 12.5, color: "var(--red)", margin: "0 0 14px", lineHeight: 1.4 }}>{error}</div>}
+          {error && <InlineError>{error}</InlineError>}
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => { resetPhotos(); setStep("choose"); }}>Retour</button>
             <button className="btn btn-primary" style={{ flex: 1 }} disabled={!photos.length} onClick={goPhotos}>
