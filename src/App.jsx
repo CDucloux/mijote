@@ -202,6 +202,45 @@ function AppInner() {
   const [discoverSeed, setDiscoverSeed] = useState("");
   const searchCommunity = useCallback((q) => { setDiscoverSeed((q || "").trim()); setTab("home"); }, [setTab]);
 
+  // Bascule l'appartenance d'une recette à un carnet + recalcule les compteurs.
+  // Partagé par la fiche recette et le menu d'appui long de la liste.
+  const toggleRecipeCollection = useCallback((recipeId, colId) => {
+    setRecipes(prev => {
+      const updated = prev.map(r => {
+        if (r.id !== recipeId) return r;
+        const cols = r.collections || [];
+        const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId];
+        return { ...r, collections: next };
+      });
+      setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length })));
+      return updated;
+    });
+  }, []);
+
+  // Ajoute une recette au planning (créneau explicite). Extrait pour être réutilisé
+  // par la fiche et le menu d'appui long (via l'intention « plan »).
+  const addRecipeToMealPlan = useCallback((r, date, portions, slot) => {
+    setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi", groupId: newGroupId(), role: roleForCategory(r.category) }] }));
+    notify("Ajouté au planning");
+  }, [notify]);
+
+  // Duplique une recette : copie privée (pas de lien public), nom suffixé, en tête
+  // de liste ; recalcule les compteurs de carnets (la copie hérite des carnets).
+  const duplicateRecipe = useCallback((recipe) => {
+    const copy = { ...recipe, id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: `${recipe.name} (copie)`, createdAt: Date.now(), updatedAt: Date.now() };
+    delete copy.visibility; delete copy.publicId; delete copy.clonedFrom;
+    setRecipes(prev => {
+      const next = [copy, ...prev];
+      setCollections(c => c.map(col => ({ ...col, count: next.filter(r => (r.collections || []).includes(col.id)).length })));
+      return next;
+    });
+    notify("Recette dupliquée");
+  }, [notify]);
+
+  // Ouvre une recette en transmettant une intention consommée à l'arrivée par la
+  // fiche (« plan » → modale planning, « share » → flux de partage/publication).
+  const openRecipeWithIntent = useCallback((id, intent) => navigate(`/recipes/${id}`, { state: { intent } }), [navigate]);
+
   // Édition : `editingRecipe` (état) pour une nouvelle recette ou un import IA ;
   // pour une recette EXISTANTE, l'éditeur est piloté par la route /recipes/:id/edit
   // (accès direct, survit à un remontage). On dérive donc la recette en cours
@@ -283,7 +322,7 @@ function AppInner() {
         if (import.meta.env.DEV) console.log(`⏱️ [${id}] ${phase} : ${actualDuration.toFixed(1)} ms`);
       }}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
-      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} setCollections={setCollections} setTab={setTab} />}
+      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
@@ -327,7 +366,7 @@ function AppInner() {
     )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => setSelectedRecipe(null)} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={(r, date, portions, slot) => { setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi", groupId: newGroupId(), role: roleForCategory(r.category) }] })); notify("Ajouté au planning"); }} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={(recipeId, colId) => { setRecipes(prev => { const updated = prev.map(r => { if (r.id !== recipeId) return r; const cols = r.collections || []; const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId]; return { ...r, collections: next }; }); setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length }))); return updated; }); }} />
+      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => setSelectedRecipe(null)} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
     </div>
   ) : justDeleted ? (
     // Recette supprimée : la redirection vers /recipes est en cours, on n'affiche

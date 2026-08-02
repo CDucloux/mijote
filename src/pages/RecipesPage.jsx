@@ -33,7 +33,7 @@ const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, a
   );
 });
 
-export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, setCollections, setTab }) {
+export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, onDuplicate, onAddToShopping, onToggleCollection, onPlanRecipe, onShareRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
   // Persistés (localStorage, mobile + web) : carnet sélectionné, tri et filtres
@@ -56,6 +56,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const [newCarnet, setNewCarnet] = useState(null); // { name, color, icon } ou null
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
   const [recipeMenu, setRecipeMenu] = useState(null); // recette visée par l'appui long / clic droit (modifier/supprimer)
+  const [carnetPickFor, setCarnetPickFor] = useState(null); // recette dont on choisit les carnets (action « Carnet »)
   const [confirmDelete, setConfirmDelete] = useState(null); // { kind: "carnet" | "recipe", item } — confirmation avant suppression
   const [editingSmartId, setEditingSmartId] = useState(null); // carnet smart dont on ré-édite la vue de filtres
   const [dragCarnetId, setDragCarnetId] = useState(null); // carnet en cours de glisser-déposer (réordonnancement)
@@ -151,6 +152,11 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
     } else {
       setFilterCol(filterCol === col.id ? null : col.id);
     }
+  };
+  // Rouvre la feuille de filtres sur la vue d'un carnet intelligent (édition).
+  const openCarnetFilters = (col) => {
+    setFilters({ ...DEFAULT_FILTERS, ...col.filters }); setSearch(col.search || "");
+    setEditingSmartId(col.id); setFilterOpen(true);
   };
 
   const filtered = useMemo(() => recipes
@@ -409,61 +415,143 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         </ConfirmDialog>
       )}
 
-      {/* Menu d'une recette (appui long / clic droit) : modifier / supprimer */}
-      {recipeMenu && (
-        <SwipeableSheet onClose={() => setRecipeMenu(null)}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 20 }}>
-              {recipeMenu.image ? <img src={recipeMenu.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (recipeMenu.isComponent ? "🧩" : "🍽️")}
+      {/* Menu d'une recette (appui long / clic droit) : actions rapides + liste */}
+      {recipeMenu && (() => {
+        const rm = recipeMenu;
+        const close = () => setRecipeMenu(null);
+        const isComp = rm.isComponent;
+        // Actions rapides (grille) : « Ouvrir » toujours ; le reste seulement pour
+        // une vraie recette (une base ne se planifie pas / ne se partage pas).
+        const quick = [
+          { icon: "forward", label: "Ouvrir", on: () => { onSelect(rm.id); close(); } },
+          ...(isComp ? [] : [
+            { icon: "calendar", label: "Planning", on: () => { onPlanRecipe?.(rm); close(); } },
+            { icon: "shopping", label: "Courses", on: () => { onAddToShopping?.(rm); close(); } },
+            { icon: "fileText", label: "Carnet", on: () => { close(); setCarnetPickFor(rm); } },
+          ]),
+        ];
+        const list = [
+          { icon: "edit", label: "Modifier", on: () => { onEditRecipe?.(rm); close(); } },
+          { icon: "copy", label: "Dupliquer", on: () => { onDuplicate?.(rm); close(); } },
+          ...(isComp ? [] : [{ icon: "share", label: "Partager", on: () => { onShareRecipe?.(rm); close(); } }]),
+        ];
+        return (
+        <SwipeableSheet onClose={close}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 24 }}>
+              {rm.image ? <img src={rm.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (isComp ? "🧩" : "🍽️")}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{recipeMenu.name}</div>
-              <div style={{ fontSize: 12, color: "var(--text3)" }}>{recipeMenu.isComponent ? "Préparation de base" : "Recette"}</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rm.name}</div>
+              <div style={{ fontSize: 13, color: "var(--text3)" }}>{isComp ? "Préparation de base" : "Recette"}</div>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { onEditRecipe?.(recipeMenu); setRecipeMenu(null); }}>
-              <Icon name="edit" size={16} /> Modifier
-            </button>
-            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setConfirmDelete({ kind: "recipe", item: recipeMenu }); setRecipeMenu(null); }}>
-              <Icon name="trash" size={16} /> Supprimer
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${quick.length}, 1fr)`, gap: 8, marginBottom: 6 }}>
+            {quick.map(a => (
+              <button key={a.label} className="menu-tile" onClick={a.on}>
+                <Icon name={a.icon} size={20} color="var(--accent)" />
+                <span>{a.label}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {list.map(a => (
+              <button key={a.label} className="menu-row" onClick={a.on}>
+                <Icon name={a.icon} size={19} color="var(--text2)" /> {a.label}
+              </button>
+            ))}
+            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onClick={() => { setConfirmDelete({ kind: "recipe", item: rm }); close(); }}>
+              <Icon name="trash" size={19} color="var(--red)" /> Supprimer
             </button>
           </div>
         </SwipeableSheet>
-      )}
+        );
+      })()}
 
-      {/* Menu d'un carnet (appui long) : modifier / supprimer */}
-      {carnetMenu && (
-        <SwipeableSheet onClose={() => setCarnetMenu(null)}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: carnetMenu.color + "33", display: "grid", placeItems: "center", fontSize: 22 }}>{carnetMenu.icon || "📓"}</div>
+      {/* Choix des carnets (action « Carnet » du menu recette) : carnets manuels
+          uniquement — les carnets intelligents se remplissent par leurs filtres. */}
+      {carnetPickFor && (() => {
+        const rec = recipes.find(r => r.id === carnetPickFor.id) || carnetPickFor;
+        const manual = collections.filter(c => !isSmart(c));
+        return (
+        <SwipeableSheet onClose={() => setCarnetPickFor(null)}>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, marginBottom: 4 }}>Ajouter à un carnet</h3>
+          <p style={{ fontSize: 13, color: "var(--text3)", marginBottom: 16 }}>« {rec.name} »</p>
+          {manual.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "8px 0 12px", color: "var(--text3)", fontSize: 13.5 }}>Aucun carnet manuel pour l'instant.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {manual.map(col => {
+                const inCol = (rec.collections || []).includes(col.id);
+                return (
+                  <button key={col.id} onClick={() => onToggleCollection?.(rec.id, col.id)}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: inCol ? "rgba(232,112,58,0.10)" : "var(--surface2)", border: `1px solid ${inCol ? "rgba(232,112,58,0.4)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", transition: "background 0.15s, border-color 0.15s" }}>
+                    <span style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: col.color + "33", display: "grid", placeItems: "center", fontSize: 18 }}>{col.icon || "📓"}</span>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{col.name}</span>
+                    <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: inCol ? "var(--accent)" : "transparent", border: `2px solid ${inCol ? "var(--accent)" : "var(--border)"}`, display: "grid", placeItems: "center" }}>
+                      {inCol && <Icon name="check" size={12} color="#fff" />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <button className="btn btn-primary" style={{ width: "100%", marginTop: 16 }} onClick={() => setCarnetPickFor(null)}>Terminé</button>
+        </SwipeableSheet>
+        );
+      })()}
+
+      {/* Menu d'un carnet (appui long) : actions rapides + position + supprimer */}
+      {carnetMenu && (() => {
+        const cm = carnetMenu;
+        const close = () => setCarnetMenu(null);
+        const smart = isSmart(cm);
+        const idx = collections.findIndex(c => c.id === cm.id);
+        const total = collections.length;
+        const n = countFor(cm);
+        const quick = [
+          { icon: "forward", label: "Ouvrir", on: () => { openCarnet(cm); close(); } },
+          ...(smart ? [{ icon: "edit", label: "Filtres", on: () => { close(); openCarnetFilters(cm); } }] : []),
+        ];
+        const stepBtn = (disabled) => ({ width: 32, height: 30, display: "grid", placeItems: "center", background: "none", border: "none", cursor: disabled ? "default" : "pointer", color: disabled ? "var(--text3)" : "var(--accent)", opacity: disabled ? 0.4 : 1 });
+        return (
+        <SwipeableSheet onClose={close}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: cm.color + "33", display: "grid", placeItems: "center", fontSize: 26 }}>{cm.icon || "📓"}</div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{carnetMenu.name}</div>
-              <div style={{ fontSize: 12, color: "var(--text3)" }}>{isSmart(carnetMenu) ? "Carnet intelligent" : "Carnet"}</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cm.name}</div>
+              <div style={{ fontSize: 13, color: "var(--text3)" }}>{smart ? "Carnet intelligent" : "Carnet"} · {n} recette{n > 1 ? "s" : ""}</div>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {collections.length > 1 && (
-              <div style={{ display: "flex", gap: 8 }}>
-                <button className="btn btn-ghost" style={{ flex: 1 }} disabled={collections.findIndex(c => c.id === carnetMenu.id) === 0}
-                  onClick={() => moveCarnet(carnetMenu.id, -1)}>
-                  <Icon name="back" size={15} /> Vers la gauche
-                </button>
-                <button className="btn btn-ghost" style={{ flex: 1 }} disabled={collections.findIndex(c => c.id === carnetMenu.id) === collections.length - 1}
-                  onClick={() => moveCarnet(carnetMenu.id, 1)}>
-                  Vers la droite <Icon name="forward" size={15} />
-                </button>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${quick.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
+            {quick.map(a => (
+              <button key={a.label} className="menu-tile" onClick={a.on}>
+                <Icon name={a.icon} size={20} color="var(--accent)" />
+                <span>{a.label}</span>
+              </button>
+            ))}
+          </div>
+          {total > 1 && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px 8px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)" }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>Position</span>
+              <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)", padding: 2 }}>
+                <button disabled={idx <= 0} onClick={() => moveCarnet(cm.id, -1)} style={stepBtn(idx <= 0)} aria-label="Reculer"><Icon name="back" size={16} color="currentColor" /></button>
+                <span style={{ fontSize: 14, fontWeight: 700, minWidth: 46, textAlign: "center" }}>{idx + 1} / {total}</span>
+                <button disabled={idx >= total - 1} onClick={() => moveCarnet(cm.id, 1)} style={stepBtn(idx >= total - 1)} aria-label="Avancer"><Icon name="forward" size={16} color="currentColor" /></button>
               </div>
-            )}
-            <button className="btn btn-ghost" style={{ justifyContent: "flex-start" }} onClick={() => { setNewCarnet({ ...carnetMenu, editing: true }); setCarnetMenu(null); }}>
-              <Icon name="edit" size={16} /> Modifier
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", marginTop: 6 }}>
+            <button className="menu-row" onClick={() => { setNewCarnet({ ...cm, editing: true }); close(); }}>
+              <Icon name="edit" size={19} color="var(--text2)" /> Modifier
             </button>
-            <button className="btn btn-danger" style={{ justifyContent: "flex-start" }} onClick={() => { setConfirmDelete({ kind: "carnet", item: carnetMenu }); setCarnetMenu(null); }}>
-              <Icon name="trash" size={16} /> Supprimer
+            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onClick={() => { setConfirmDelete({ kind: "carnet", item: cm }); close(); }}>
+              <Icon name="trash" size={19} color="var(--red)" /> Supprimer le carnet
             </button>
           </div>
         </SwipeableSheet>
-      )}
+        );
+      })()}
 
       {/* Création / modification d'un carnet */}
       {newCarnet && (

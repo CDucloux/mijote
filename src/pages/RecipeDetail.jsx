@@ -65,6 +65,18 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const [confirmClone, setConfirmClone] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const isPublished = recipe.visibility === "public";
+
+  // Intention transmise par le menu d'appui long de la liste (« Planning » /
+  // « Partager ») : on ouvre le flux correspondant à l'arrivée, puis on efface
+  // l'intention de l'état de navigation pour ne pas la rejouer à un remontage.
+  const intent = location.state?.intent;
+  useEffect(() => {
+    if (!intent) return;
+    if (intent === "plan") setShowMealModal(true);
+    else if (intent === "share") isPublished ? setShareOpen(true) : setPendingPublish(true);
+    navigate(location.pathname, { replace: true, state: { ...location.state, intent: undefined } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intent]);
   // CTA d'ajout réutilisé (lecture seule d'une recette publique) → ouvre une confirmation.
   const keepCta = owned
     ? <button className="btn btn-ghost" disabled style={{ width: "100%", borderRadius: 30, opacity: 0.85 }}><Icon name="check" size={15} color="var(--green)" /> Déjà dans tes recettes</button>
