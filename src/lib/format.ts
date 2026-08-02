@@ -63,15 +63,26 @@ const PLURAL_UNITS: Record<string, string> = {
 };
 
 /**
+ * Accorde une unité au pluriel selon la quantité (règle française : pluriel dès
+ * |amount| ≥ 2). Le stockage reste au singulier canonique ; c'est l'affichage qui
+ * accorde. À utiliser quand l'unité est rendue SÉPARÉMENT de la quantité (fiche
+ * recette). Abréviations invariables.
+ */
+export function pluralizeUnit(amount: NumLike, unit: string | null | undefined): string {
+  const u = (unit || "").toString().trim();
+  if (!u) return "";
+  const n = Number(amount);
+  return (Number.isFinite(n) && Math.abs(n) >= 2) ? (PLURAL_UNITS[u.toLowerCase()] || u) : u;
+}
+
+/**
  * Combine quantité et unité pour l'affichage (« 500g », « 1 gousse », « 2 gousses »).
- * L'unité est accordée au pluriel dès que |amount| ≥ 2 (règle française).
+ * L'unité est accordée au pluriel dès que |amount| ≥ 2.
  */
 export function fmtQtyUnit(amount: NumLike, unit: string | null | undefined): string {
   const q = fmtQty(amount);
-  let u = (unit || "").toString().trim();
+  const u = pluralizeUnit(amount, unit);
   if (!u) return q;
-  const n = Number(amount);
-  if (Number.isFinite(n) && Math.abs(n) >= 2) u = PLURAL_UNITS[u.toLowerCase()] || u;
   return GLUED_UNITS.has(u.toLowerCase()) ? `${q}${u}` : `${q} ${u}`;
 }
 

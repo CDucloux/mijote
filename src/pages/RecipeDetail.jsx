@@ -23,7 +23,7 @@ import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatche
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
-import { fmtTime, capitalize, fmtQty, fmtQtyUnit } from "../lib/format.js";
+import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { computeDifficulty, explainDifficulty } from "../lib/difficulty.js";
@@ -721,7 +721,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
                         <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
-                        <span style={{ fontSize: 12, color: "var(--text2)" }}>{ing.unit}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)" }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                       </div>
                       {clickable && <span className="tap-chevron" style={{ display: "flex", flexShrink: 0 }}><Icon name="forward" size={14} color="var(--text3)" /></span>}
                     </div>
@@ -846,7 +846,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
                       <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                         <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
-                        <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                       </div>
                       <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>
                         {capitalize(rc.comp ? rc.comp.name : (ing.name || "Base"))}
@@ -859,7 +859,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                     <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                     <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
-                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{ing.unit}</span>
+                      <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                     </div>
                     <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.name)}</div>
                   </div>
