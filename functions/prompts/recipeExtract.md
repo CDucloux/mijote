@@ -35,7 +35,9 @@ LANGUE & CONVERSIONS
 - Dans `text` / `tip` : convertis les **températures** °F → °C (arrondi au multiple de 5 : `350°F` → 175, `375` → 190, `400` → 205, `425` → 220, `450` → 230) et les **longueurs** pouces → cm (× 2,54, arrondi : `9-inch` → 23 cm, `8-inch` → 20 cm, `13×9` → 33 × 23 cm).
 
 INGRÉDIENTS
-- `name` : l'ingrédient seul. Retire la quantité, la préparation (« émincé »), l'usage (« pour servir »), la mouture/goût (« du moulin », « au goût »).
+- **N'omets AUCUN ingrédient de la liste source.** Reprends toute la liste, ligne par ligne (y compris sel, huile, épices, garnitures). Si la liste et les étapes sont sur deux colonnes/pages, lis bien la colonne des ingrédients en entier.
+- `name` : l'ingrédient seul, au **singulier**. Retire la quantité, la préparation (« émincé »), l'usage (« pour servir »), la mouture/goût (« du moulin », « au goût »).
+  Le **mot de mesure est l'UNITÉ, jamais dans le nom** : « 4 gousses d'ail » → name `ail` (unit `gousse`) ; « 2 tranches de pain » → name `pain` (unit `tranche`) ; « 1 cuillère à soupe d'huile » → name `huile` (unit `cuillère à soupe`) ; « 1 botte de persil » → name `persil` (unit `botte`).
 - `amount` : TOUJOURS un chiffre, jamais `""`. Convertis le vague et estime le manquant : « un peu / une pincée / une pointe » → 1 (unit `pincée`) ; « un filet / un trait » → 1 (unit `cuillère à soupe`) ; « quelques » → 3 ; « une dizaine » → 10 ; « une douzaine » → 12 ; assaisonnement au goût → 1 (unit `pincée`).
 - `unit` : EXACTEMENT une valeur de cette liste FERMÉE, sinon `""` (ingrédient à l'unité, « 3 œufs ») :
   `g` · `kg` · `mg` · `ml` · `cl` · `dl` · `l` · `cuillère à soupe` · `cuillère à café` · `pincée` · `gousse` · `sachet` · `tranche` · `botte` · `feuille` · `branche` · `poignée` · `verre` · `bol` · `tasse` · `boîte` · `pot` · `pièce`.

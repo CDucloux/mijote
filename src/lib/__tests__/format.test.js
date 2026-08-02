@@ -30,6 +30,13 @@ describe("fmtQtyUnit", () => {
     expect(fmtQtyUnit(0.5, "cuillère à café")).toBe("½ cuillère à café");
   });
   it("sans unité → quantité seule", () => { expect(fmtQtyUnit(0.5, "")).toBe("½"); });
+  it("accorde l'unité comptable au pluriel dès 2", () => {
+    expect(fmtQtyUnit(4, "gousse")).toBe("4 gousses");
+    expect(fmtQtyUnit(2, "cuillère à soupe")).toBe("2 cuillères à soupe");
+    expect(fmtQtyUnit(1, "gousse")).toBe("1 gousse");            // singulier < 2
+    expect(fmtQtyUnit(1.5, "pièce")).toBe("1 ½ pièce");          // singulier < 2 (fraction affichée)
+    expect(fmtQtyUnit(3, "g")).toBe("3g");                        // abréviations invariables
+  });
 });
 
 describe("fmtTime", () => {

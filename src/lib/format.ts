@@ -53,11 +53,25 @@ export function fmtQty(n: NumLike): string {
 // Unités collées à la quantité (grammes) ; les autres prennent une espace.
 const GLUED_UNITS = new Set(["g", "kg", "mg"]);
 
-/** Combine quantité et unité pour l'affichage (« 500g », « 1 gousse », « 20 ml »). */
+// Pluriel des unités « comptables » (le stockage reste au singulier canonique ;
+// c'est l'AFFICHAGE qui accorde). Les abréviations (g, ml, c. à s.…) sont invariables.
+const PLURAL_UNITS: Record<string, string> = {
+  "cuillère à soupe": "cuillères à soupe", "cuillère à café": "cuillères à café",
+  "pincée": "pincées", "gousse": "gousses", "sachet": "sachets", "tranche": "tranches",
+  "botte": "bottes", "feuille": "feuilles", "branche": "branches", "poignée": "poignées",
+  "verre": "verres", "bol": "bols", "tasse": "tasses", "boîte": "boîtes", "pot": "pots", "pièce": "pièces",
+};
+
+/**
+ * Combine quantité et unité pour l'affichage (« 500g », « 1 gousse », « 2 gousses »).
+ * L'unité est accordée au pluriel dès que |amount| ≥ 2 (règle française).
+ */
 export function fmtQtyUnit(amount: NumLike, unit: string | null | undefined): string {
   const q = fmtQty(amount);
-  const u = (unit || "").toString().trim();
+  let u = (unit || "").toString().trim();
   if (!u) return q;
+  const n = Number(amount);
+  if (Number.isFinite(n) && Math.abs(n) >= 2) u = PLURAL_UNITS[u.toLowerCase()] || u;
   return GLUED_UNITS.has(u.toLowerCase()) ? `${q}${u}` : `${q} ${u}`;
 }
 
