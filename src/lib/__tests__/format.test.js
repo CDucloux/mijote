@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fmtTime, relativeDate, fmtQty, fmtQtyUnit } from "../format.js";
+import { fmtTime, relativeDate, fmtQty, fmtQtyUnit, pluralizeName } from "../format.js";
 
 describe("fmtQty", () => {
   it("garde les entiers", () => { expect(fmtQty(1)).toBe("1"); expect(fmtQty(3)).toBe("3"); });
@@ -36,6 +36,33 @@ describe("fmtQtyUnit", () => {
     expect(fmtQtyUnit(1, "gousse")).toBe("1 gousse");            // singulier < 2
     expect(fmtQtyUnit(1.5, "pièce")).toBe("1 ½ pièce");          // singulier < 2 (fraction affichée)
     expect(fmtQtyUnit(3, "g")).toBe("3g");                        // abréviations invariables
+  });
+});
+
+describe("pluralizeName", () => {
+  it("accorde le nom dès 2 (règles régulières)", () => {
+    expect(pluralizeName(2, "oignon")).toBe("oignons");
+    expect(pluralizeName(4, "œuf")).toBe("œufs");
+    expect(pluralizeName(3, "tomate")).toBe("tomates");
+  });
+  it("gère les pluriels en -x (-au/-eau/-eu, -ou exceptions, -al)", () => {
+    expect(pluralizeName(3, "poireau")).toBe("poireaux");
+    expect(pluralizeName(2, "chou")).toBe("choux");
+    expect(pluralizeName(2, "navet")).toBe("navets");
+    expect(pluralizeName(2, "cheval")).toBe("chevaux");
+  });
+  it("n'accorde que le mot de tête (compléments invariables)", () => {
+    expect(pluralizeName(2, "pomme de terre")).toBe("pommes de terre");
+    expect(pluralizeName(3, "blanc de poulet")).toBe("blancs de poulet");
+  });
+  it("reste au singulier sous 2, et laisse les -s/-x/-z invariables", () => {
+    expect(pluralizeName(1, "oignon")).toBe("oignon");
+    expect(pluralizeName(0.5, "citron")).toBe("citron");
+    expect(pluralizeName(3, "ananas")).toBe("ananas");
+  });
+  it("gère vide/invalide", () => {
+    expect(pluralizeName(2, "")).toBe("");
+    expect(pluralizeName(2, null)).toBe("");
   });
 });
 

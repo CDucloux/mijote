@@ -94,6 +94,19 @@ describe("assignIdsAndLink", () => {
     expect(r.ingredients[0]._raw).toBe("1 oignon");
     expect(r.ingredients[0].unit).toBeUndefined();
   });
+  it("accorde le NOM au pluriel quand l'ingrédient est comptable (sans unité)", () => {
+    const r = assignIdsAndLink({ ingredients: [
+      { name: "oignon", amount: 2, unit: "pièce" },  // pièce retirée → comptable
+      { name: "œuf", amount: 4 },
+      { name: "poireau", amount: 3 },
+      { name: "tomate", amount: 800, unit: "g" },    // masse → nom au singulier
+    ], utensils: [], steps: [] });
+    expect(r.ingredients[0]._raw).toBe("2 oignons");
+    expect(r.ingredients[0].name).toBe("oignon");    // stockage singulier
+    expect(r.ingredients[1]._raw).toBe("4 œufs");
+    expect(r.ingredients[2]._raw).toBe("3 poireaux");
+    expect(r.ingredients[3]._raw).toBe("800 g tomate");
+  });
 });
 
 describe("filterUtensilsToKnown", () => {

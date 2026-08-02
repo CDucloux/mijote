@@ -23,7 +23,7 @@ import { findIngredientMatch, createIngredientResolver } from "../lib/nameMatche
 import { normalizeStr } from "../lib/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "../lib/seasonality.js";
 import { isRecipeVegan } from "../lib/dietary.js";
-import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit } from "../lib/format.js";
+import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { computeDifficulty, explainDifficulty } from "../lib/difficulty.js";
@@ -714,7 +714,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(name)}</span>
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(!isComp && !ing.unit ? pluralizeName(ing.amount * mult, name) : name)}</span>
                           {isComp && <span style={{ fontSize: 9.5, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
                         </div>
                         {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 1 }}>{badge.text}</div>}
@@ -861,7 +861,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                       <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
                       <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                     </div>
-                    <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.name)}</div>
+                    <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.unit ? ing.name : pluralizeName(ing.amount * mult, ing.name))}</div>
                   </div>
                   );
                 })}

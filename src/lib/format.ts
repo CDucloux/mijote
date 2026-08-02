@@ -86,6 +86,36 @@ export function fmtQtyUnit(amount: NumLike, unit: string | null | undefined): st
   return GLUED_UNITS.has(u.toLowerCase()) ? `${q}${u}` : `${q} ${u}`;
 }
 
+// Noms en -ou prenant un « x » au pluriel (les 7 exceptions classiques + « chou »).
+const OU_PLURAL_X = new Set(["bijou", "caillou", "chou", "genou", "hibou", "joujou", "pou"]);
+
+// Pluriel français d'un mot simple (règles régulières : -s/-x/-z invariables,
+// -au/-eau/-eu → +x, -al → -aux, -ou → +s sauf exceptions). Couvre les noms
+// d'ingrédients courants (oignon, œuf, poireau, chou…) ; la casse est préservée.
+function pluralWord(w: string): string {
+  const lo = w.toLowerCase();
+  if (/[sxz]$/.test(lo)) return w;
+  if (/(au|eau|eu)$/.test(lo)) return w + "x";
+  if (/al$/.test(lo)) return w.slice(0, -2) + "aux";
+  if (/ou$/.test(lo)) return OU_PLURAL_X.has(lo) ? w + "x" : w + "s";
+  return w + "s";
+}
+
+/**
+ * Accorde un NOM d'ingrédient au pluriel selon la quantité (règle française :
+ * pluriel dès |amount| ≥ 2). Seul le mot de tête porte l'accord (« pomme de terre »
+ * → « pommes de terre », « blanc de poulet » → « blancs de poulet »). Le stockage
+ * reste au singulier canonique ; c'est l'AFFICHAGE qui accorde. À n'appliquer qu'aux
+ * ingrédients COMPTABLES (sans unité) : « 800 g tomate » reste au singulier.
+ */
+export function pluralizeName(amount: NumLike, name: string | null | undefined): string {
+  const s = (name || "").toString();
+  if (!s) return "";
+  const n = Number(amount);
+  if (!Number.isFinite(n) || Math.abs(n) < 2) return s;
+  return s.replace(/^\S+/, pluralWord);
+}
+
 /** Durée en minutes → « 45m », « 1h », « 1h30 ». `–` si absente. */
 export function fmtTime(min: number | null | undefined): string {
   if (!min && min !== 0) return "–";

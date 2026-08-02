@@ -37,6 +37,26 @@ function pluralUnit(amount, unit) {
   return (Number.isFinite(n) && Math.abs(n) >= 2) ? (PLURAL_UNITS[u.toLowerCase()] || u) : u;
 }
 
+// Noms en -ou prenant un « x » au pluriel (miroir de src/lib/format.ts).
+const OU_PLURAL_X = new Set(["bijou", "caillou", "chou", "genou", "hibou", "joujou", "pou"]);
+
+// Pluriel français du mot de tête d'un nom d'ingrédient COMPTABLE (sans unité) :
+// « 2 oignon » → « 2 oignons », « 4 œuf » → « 4 œufs ». Le champ `name` stocké
+// reste au singulier canonique ; seul le texte `_raw` est accordé.
+function pluralName(amount, name) {
+  const s = (name || "").toString();
+  const n = Number(amount);
+  if (!s || !Number.isFinite(n) || Math.abs(n) < 2) return s;
+  return s.replace(/^\S+/, (w) => {
+    const lo = w.toLowerCase();
+    if (/[sxz]$/.test(lo)) return w;
+    if (/(au|eau|eu)$/.test(lo)) return w + "x";
+    if (/al$/.test(lo)) return w.slice(0, -2) + "aux";
+    if (/ou$/.test(lo)) return OU_PLURAL_X.has(lo) ? w + "x" : w + "s";
+    return w + "s";
+  });
+}
+
 // Valide un id de catégorie renvoyé par le LLM (ou "").
 function matchCategory(v) {
   const n = norm(Array.isArray(v) ? v[0] : v);
@@ -113,7 +133,9 @@ function assignIdsAndLink(d) {
     // canonique dans `unit` mais on écrit le pluriel accordé dans `_raw`.
     const unit = SILENT_UNITS.has(norm(i.unit)) ? "" : (i.unit || "");
     // _raw reconstruit à partir des champs normalisés (texte propre et éditable).
-    const raw = [i.amount, pluralUnit(i.amount, unit), i.name].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
+    // Sans unité, l'ingrédient est comptable : on accorde le nom au pluriel.
+    const rawName = unit ? (i.name || "") : pluralName(i.amount, i.name);
+    const raw = [i.amount, pluralUnit(i.amount, unit), rawName].filter(v => v != null && v !== "").join(" ").trim() || i.name || "";
     const ing = { id: `i${k}`, dbId: "", name: i.name || "", _raw: raw };
     if (i.amount != null && i.amount !== "") ing.amount = i.amount;
     if (unit) ing.unit = unit;
