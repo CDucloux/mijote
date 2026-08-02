@@ -545,6 +545,42 @@ select {
   margin: 0 auto 20px;
 }
 
+/* Dialogue d'alerte centré (confirmations destructives) — jamais un tiroir
+   swipeable : on veut une décision, pas un balayage. Centré sur tous les écrans. */
+.alert-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.16s backwards;
+}
+
+.alert-dialog {
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 24px 22px 20px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+  animation: alertPop 0.2s cubic-bezier(0.34, 1.4, 0.5, 1) backwards;
+}
+
+@keyframes alertPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);

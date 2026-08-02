@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
+import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
 import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots } from "../lib/history.js";
 import { RatingPicker, ratingColor } from "./RatingPicker.jsx";
@@ -294,14 +295,10 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
 
       {/* Confirmation de suppression */}
       {deleteTarget && (
-        <SwipeableSheet onClose={() => setDeleteTarget(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer « {deleteTarget.label} » ?</h3>
-          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, marginBottom: 18 }}>Cette entrée du journal sera définitivement supprimée. La recette actuelle n'est pas affectée.</p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn" style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)" }} onClick={() => setDeleteTarget(null)}>Annuler</button>
-            <button className="btn" style={{ flex: 1, background: "var(--red)", color: "#fff" }} onClick={doDelete}>Supprimer</button>
-          </div>
-        </SwipeableSheet>
+        <ConfirmDialog title={`Supprimer « ${deleteTarget.label} » ?`}
+          onCancel={() => setDeleteTarget(null)} onConfirm={doDelete}>
+          Cette entrée du journal sera définitivement supprimée. La recette actuelle n'est pas affectée.
+        </ConfirmDialog>
       )}
     </div>
   );

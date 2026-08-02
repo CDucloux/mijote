@@ -4,7 +4,7 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { NewRecipeButton } from "../components/NewRecipeButton.jsx";
 import { RecipeCard } from "../components/RecipeCard.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
-import { ConfirmSheet } from "../components/ConfirmSheet.jsx";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
 import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "../lib/recipeSort.js";
@@ -389,8 +389,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
 
       {/* Confirmation avant suppression (carnet ou recette) */}
       {confirmDelete && (
-        <ConfirmSheet
+        <ConfirmDialog
           title={`Supprimer ${confirmDelete.kind === "carnet" ? "ce carnet" : "cette recette"} ?`}
+          icon={confirmDelete.kind === "carnet" ? "book" : "trash"}
           onCancel={() => setConfirmDelete(null)}
           onConfirm={() => {
             if (confirmDelete.kind === "carnet") {
@@ -405,7 +406,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           {confirmDelete.kind === "carnet"
             ? " sera supprimé. Tes recettes ne sont pas effacées, seulement le carnet."
             : " sera définitivement supprimée. Cette action est irréversible."}
-        </ConfirmSheet>
+        </ConfirmDialog>
       )}
 
       {/* Menu d'une recette (appui long / clic droit) : modifier / supprimer */}

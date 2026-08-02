@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Icon } from "./Icon.jsx";
-import { SwipeableSheet } from "./SwipeableSheet.jsx";
+import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, isOwner, MAX_HOUSEHOLD } from "../lib/household.js";
@@ -156,27 +156,16 @@ export function HouseholdPanel({ onClose }) {
           condition : dès qu'il devient null (dissolution/départ effectif), la feuille
           se démonte sans jamais lire household.name sur une valeur nulle. */}
       {confirmLeave && household && (
-        <SwipeableSheet onClose={() => setConfirmLeave(false)}>
-          <div style={{ textAlign: "center", padding: "4px 4px 0" }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <Icon name="logout" size={26} color="var(--red)" />
-            </div>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, margin: "0 0 8px" }}>
-              {owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
-            </h3>
-            <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: "0 auto 22px", maxWidth: 360 }}>
-              {owner
-                ? <>« {household.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
-                : <>Tu n'auras plus accès aux données partagées de « {household.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
-            </p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmLeave(false)}>Annuler</button>
-              <button className="btn btn-danger" style={{ flex: 1 }} onClick={async () => { const ok = await (owner ? actions.dissolve() : actions.leave()); setConfirmLeave(false); if (ok) onClose?.(); }}>
-                <Icon name={owner ? "trash" : "logout"} size={15} color="var(--red)" /> {owner ? "Dissoudre" : "Quitter"}
-              </button>
-            </div>
-          </div>
-        </SwipeableSheet>
+        <ConfirmDialog
+          title={owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
+          icon={owner ? "trash" : "logout"}
+          confirmLabel={owner ? "Dissoudre" : "Quitter"}
+          onCancel={() => setConfirmLeave(false)}
+          onConfirm={async () => { const ok = await (owner ? actions.dissolve() : actions.leave()); setConfirmLeave(false); if (ok) onClose?.(); }}>
+          {owner
+            ? <>« {household.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
+            : <>Tu n'auras plus accès aux données partagées de « {household.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
+        </ConfirmDialog>
       )}
     </div>
   );

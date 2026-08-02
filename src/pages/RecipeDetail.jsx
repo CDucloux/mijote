@@ -7,6 +7,7 @@ import { IngredientPill, UtensilPill, UtImage } from "../components/StepPills.js
 import { VeganBadge, SeasonBadge } from "../components/Badges.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { DifficultyBadge } from "../components/DifficultyBadge.jsx";
 import { NutritionModal } from "../components/NutritionModal.jsx";
@@ -1090,14 +1091,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         </SwipeableSheet>
       )}
       {showDeleteConfirm && (
-        <SwipeableSheet onClose={() => setShowDeleteConfirm(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Supprimer la recette ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20 }}>Retirer cette recette la supprimera définitivement des recettes enregistrées.</p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>Supprimer</button>
-          </div>
-        </SwipeableSheet>
+        <ConfirmDialog title="Supprimer la recette ?"
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={() => { onDelete(recipe.id); setShowDeleteConfirm(false); }}>
+          <strong style={{ color: "var(--text)" }}>« {recipe.name} »</strong> sera définitivement supprimée des recettes enregistrées.
+        </ConfirmDialog>
       )}
       {confirmClone && (
         <SwipeableSheet onClose={() => setConfirmClone(false)}>
