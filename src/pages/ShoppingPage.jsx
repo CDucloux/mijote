@@ -226,7 +226,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                   onPointerDown={e => startLongPress(e, () => setListMenu(l))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   onContextMenu={e => { e.preventDefault(); setListMenu(l); }}
                   style={{
-                    flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: isActive ? "6px 6px 6px 12px" : "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: "pointer", userSelect: "none",
+                    flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "6px 6px 6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: "pointer", userSelect: "none",
                     background: isActive ? "var(--accent)" : "var(--surface)", animationDelay: `${idx * 0.05}s`,
                     color: isActive ? "#fff" : "var(--text2)",
                     border: `1px solid ${isActive ? "transparent" : "var(--border)"}`
@@ -238,13 +238,13 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                       {lChecked}/{l.items.length}
                     </span>
                   )}
-                  {/* Réglages/suppression : bouton intégré, seulement sur la liste active */}
-                  {isActive && (
-                    <button onClick={e => { e.stopPropagation(); setListMenu(l); }} aria-label="Options de la liste"
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", flexShrink: 0, border: "none", background: "rgba(255,255,255,0.22)", cursor: "pointer", padding: 0 }}>
-                      <Icon name="ellipsis" size={14} color="#fff" />
-                    </button>
-                  )}
+                  {/* Bouton d'options : sa place est TOUJOURS réservée (taille de pastille
+                      stable) ; il ne devient visible/cliquable que sur la liste active. */}
+                  <button onClick={e => { e.stopPropagation(); setListMenu(l); }} aria-label="Options de la liste"
+                    tabIndex={isActive ? 0 : -1} aria-hidden={!isActive}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", flexShrink: 0, border: "none", background: "rgba(255,255,255,0.22)", cursor: "pointer", padding: 0, visibility: isActive ? "visible" : "hidden", opacity: isActive ? 1 : 0, transition: "opacity 0.15s ease" }}>
+                    <Icon name="ellipsis" size={14} color="#fff" />
+                  </button>
                 </div>
               );
             })}
