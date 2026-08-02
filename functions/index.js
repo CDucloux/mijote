@@ -21,6 +21,10 @@ const ADMIN_EMAIL = defineString("ADMIN_EMAIL"); // e-mail autorisé (le créate
 const MAX_HTML_BYTES = 3_000_000; // garde-fou : on ne télécharge pas des pages énormes
 const FETCH_TIMEOUT_MS = 15_000;
 const MODEL = "claude-haiku-4-5";
+// L'extraction PHOTO (OCR d'une page de livre) demande une bien meilleure vision
+// que l'extraction URL (texte déjà propre) : on la confie à Sonnet, plus fiable
+// sur les quantités et la mise en page, et capable de haute résolution.
+const VISION_MODEL = "claude-sonnet-5";
 
 // Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md). La
 // liste des cuisines est fixe (injectée au démarrage) ; la liste des ustensiles
@@ -131,7 +135,7 @@ async function extractFromImages(images, knownUtensils) {
   let response;
   try {
     response = await client.messages.create({
-      model: MODEL, max_tokens: 4096, system,
+      model: VISION_MODEL, max_tokens: 4096, system,
       messages: [{ role: "user", content }],
     });
   } catch (e) {
@@ -226,7 +230,7 @@ exports.importRecipeFromUrl = onCall(
 // Import depuis une ou deux photos (livre de cuisine). Réservé à l'admin (garde
 // serveur identique). Vision Haiku 4.5 ; pas d'images d'étape.
 exports.importRecipeFromImages = onCall(
-  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
+  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
     const email = (request.auth?.token?.email || "").toLowerCase();
     if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");

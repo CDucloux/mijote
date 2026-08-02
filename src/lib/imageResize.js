@@ -3,7 +3,7 @@
 // redimensionnée + ré-encodée en JPEG elle tombe à ~250-400 Ko. On normalise
 // aussi tout en image/jpeg → règle au passage le HEIC iPhone (rejeté côté serveur).
 
-export const MAX_EDGE = 1568;      // au-delà, l'API Anthropic redimensionne de toute façon
+export const MAX_EDGE = 2000;      // vision haute résolution (Sonnet lit jusqu'à 2576px) : plus lisible pour l'OCR d'une page de livre, tout en bornant le poids uploadé
 export const JPEG_QUALITY = 0.82;
 const FALLBACK_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 

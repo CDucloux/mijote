@@ -45,7 +45,7 @@ export async function importRecipeFromUrl(url, knownUtensils = []) {
 // ─── IMPORT DEPUIS UNE OU DEUX PHOTOS (livre de cuisine) ─────────────────────
 // `images` : [{ mediaType, data(base64) }], max 2. Garde admin côté serveur.
 export async function importRecipeFromImages(images, knownUtensils = []) {
-  const call = httpsCallable(functions, "importRecipeFromImages", { timeout: 70000 });
+  const call = httpsCallable(functions, "importRecipeFromImages", { timeout: 115000 });
   try {
     const res = await call({ images, knownUtensils });
     return res.data;
