@@ -1,10 +1,12 @@
-// ─── EXPORT PDF ───────────────────────────────────────────────────────────────
-// `buildRecipePdfHtml` est pure (recette + bases → chaîne HTML).
-// `recipesById` (Map<id, recipe>) permet de résoudre les lignes composant
-// et de générer une annexe « Préparations de base » en fin de document.
-// `printRecipe` ouvre le document et lance l'impression du navigateur (« Enregistrer
-// en PDF ») : texte sélectionnable et rendu fidèle.
-
+/**
+ * Export PDF. `buildRecipePdfHtml` est pure (recette + bases → chaîne HTML).
+ * `recipesById` (Map<id, recipe>) permet de résoudre les lignes composant et de
+ * générer une annexe « Préparations de base » en fin de document. `printRecipe`
+ * ouvre le document et lance l'impression du navigateur (« Enregistrer en PDF ») :
+ * texte sélectionnable et rendu fidèle.
+ *
+ * @module recipePdf
+ */
 import { createIngredientResolver } from "./nameMatcher.js";
 import { isRecipeVegan } from "./dietary.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
@@ -12,21 +14,70 @@ import { cuisineEmoji, normalizeCuisine } from "../constants/cuisines.js";
 import { DIFFICULTY_LABEL, computeDifficulty } from "./difficulty.js";
 import { fmtQtyUnit } from "./format.js";
 
+/** Ligne d'ingrédient/ustensile d'une recette pour le rendu PDF. */
+export interface PdfLine {
+  id?: string;
+  name?: string;
+  amount?: number | string;
+  unit?: string;
+  dbId?: string;
+  recipeId?: string;
+}
+
+/** Étape d'une recette. */
+export interface PdfStep {
+  text?: string;
+  tip?: string;
+  ingredients?: string[];
+  utensils?: string[];
+}
+
+/** Recette à imprimer (forme minimale ; champs additionnels tolérés). */
+export interface PdfRecipe {
+  id?: string;
+  name?: string;
+  image?: string;
+  category?: string;
+  cuisine?: string;
+  source?: string;
+  prepTime?: number;
+  cookTime?: number;
+  servings?: number;
+  nutriLetter?: string | null;
+  ingredients?: PdfLine[];
+  utensils?: PdfLine[];
+  steps?: PdfStep[];
+  yield?: { amount?: number; unit?: string };
+  history?: { label?: string }[];
+  [k: string]: unknown;
+}
+
+/** Élément de base (ingrédient ou ustensile) : id + image. */
+export interface PdfDbItem { id: string; image?: string }
+
+/** Dépendances de rendu (bases d'ingrédients/ustensiles, index de recettes, techniques). */
+export interface PdfDbs {
+  ingredientDB?: PdfDbItem[];
+  utensilDB?: PdfDbItem[];
+  recipesById?: Map<string, PdfRecipe>;
+  techniques?: unknown[];
+}
+
 // Couleur de difficulté en hex (le PDF n'a pas les variables CSS --green/--red).
-const diffColorPdf = (lvl) => (lvl <= 2 ? "#4caf7d" : lvl === 3 ? "#e8920a" : "#e05252");
+const diffColorPdf = (lvl: number): string => (lvl <= 2 ? "#4caf7d" : lvl === 3 ? "#e8920a" : "#e05252");
 
-const NUTRI_COLORS_PDF = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
-const num = v => parseFloat(String(v).replace(",", ".")) || 0;
+const NUTRI_COLORS_PDF: Record<string, string> = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
+const num = (v: number | string | undefined): number => parseFloat(String(v).replace(",", ".")) || 0;
 
-export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], recipesById, techniques = [] } = {}) {
-  const ingImg = dbId => ingredientDB.find(d => d.id === dbId)?.image || "";
-  const utImg = dbId => utensilDB.find(d => d.id === dbId)?.image || "";
+export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utensilDB = [], recipesById, techniques = [] }: PdfDbs = {}): string {
+  const ingImg = (dbId: string | undefined): string => ingredientDB.find(d => d.id === dbId)?.image || "";
+  const utImg = (dbId: string | undefined): string => utensilDB.find(d => d.id === dbId)?.image || "";
 
   // Badges : « Vegan » (même look que dans l'app : pill vert + feuille), type de
   // recette et cuisine. Superposés en haut à droite DANS l'image du plat ; en
   // l'absence d'image, repli en pills claires sous le titre.
   const recipesList = recipesById ? [...recipesById.values()] : [];
-  const resolver = createIngredientResolver(ingredientDB || []);
+  const resolver = createIngredientResolver((ingredientDB || []) as Parameters<typeof createIngredientResolver>[0]);
   const vegan = isRecipeVegan(recipe, resolver, { recipes: recipesList });
   const leafSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
   const cuisineFlag = recipe.cuisine ? cuisineEmoji(normalizeCuisine(recipe.cuisine)) : "";
@@ -61,9 +112,9 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     : "";
 
   // Icône « base » (casserole) – SVG inline, cohérente avec l'app.
-  const baseIconSvg = (size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#e8703a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.5 9H7.5L6 8Z"/><line x1="5" y1="8" x2="19" y2="8"/><path d="M6 10H3.5a1.5 1.5 0 0 0 0 3H6"/><path d="M18 10h2.5a1.5 1.5 0 0 1 0 3H18"/><path d="M10 5c0-1 1-1 1-2"/><path d="M14 5c0-1 1-1 1-2"/></svg>`;
+  const baseIconSvg = (size = 16): string => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#e8703a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.5 9H7.5L6 8Z"/><line x1="5" y1="8" x2="19" y2="8"/><path d="M6 10H3.5a1.5 1.5 0 0 0 0 3H6"/><path d="M18 10h2.5a1.5 1.5 0 0 1 0 3H18"/><path d="M10 5c0-1 1-1 1-2"/><path d="M14 5c0-1 1-1 1-2"/></svg>`;
 
-  const pill = (imgOrEmoji, name, qty, isComp = false) => {
+  const pill = (imgOrEmoji: string | null, name: string | undefined, qty: string, isComp = false): string => {
     const imgHtml = isComp
       ? `<span class="pill-comp-icon">${baseIconSvg(15)}</span>`
       : (imgOrEmoji ? `<span class="pill-img"><img src="${imgOrEmoji}" alt="" /></span>` : `<span class="pill-img"></span>`);
@@ -74,10 +125,10 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
     </span>`;
   };
 
-  const ingPill = (ing) => {
+  const ingPill = (ing: PdfLine): string => {
     const isComp = !!ing.recipeId && !ing.dbId;
     if (isComp) {
-      const comp = recipesById?.get(ing.recipeId);
+      const comp = ing.recipeId ? recipesById?.get(ing.recipeId) : undefined;
       const name = comp?.name || ing.name || "Préparation";
       const img = comp?.image || null;
       // Si on a une image de la recette de base, on l'affiche ; sinon icône casserole.
@@ -90,7 +141,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
 
   const ingPills = (recipe.ingredients || []).map(ingPill).join("");
 
-  const nutriBadge = letter => {
+  const nutriBadge = (letter: string | null | undefined): string => {
     if (!letter) return "";
     return `<div class="nutri-badge">
       ${["A", "B", "C", "D", "E"].map(l => {
@@ -101,8 +152,8 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   };
 
   const stepLines = (recipe.steps || []).map((s, i) => {
-    const linkedIngs = (recipe.ingredients || []).filter(x => s.ingredients?.includes(x.id)).map(ingPill).join("");
-    const linkedUts = (recipe.utensils || []).filter(u => s.utensils?.includes(u.id)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
+    const linkedIngs = (recipe.ingredients || []).filter(x => s.ingredients?.includes(x.id!)).map(ingPill).join("");
+    const linkedUts = (recipe.utensils || []).filter(u => s.utensils?.includes(u.id!)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
     const pills = linkedIngs + linkedUts;
     return `
       <div class="step">
@@ -125,9 +176,10 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
   let annexeHtml = "";
   if (recipesById && componentLines.length > 0) {
     const annexeBlocks = componentLines.map(line => {
-      const comp = recipesById.get(line.recipeId);
-      if (!comp || !(comp.yield && comp.yield.amount > 0)) return "";
-      const f = num(line.amount) / comp.yield.amount;
+      const comp = line.recipeId ? recipesById.get(line.recipeId) : undefined;
+      if (!comp || !(comp.yield && (comp.yield.amount || 0) > 0)) return "";
+      const yieldAmount = comp.yield.amount as number;
+      const f = num(line.amount) / yieldAmount;
 
       const scaledIngPills = (comp.ingredients || []).map(ci => {
         if (ci.recipeId) return ""; // v1 : pas d'imbrication
@@ -136,15 +188,15 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
       }).join("");
 
       // Pill d'un ingrédient du composant, quantité mise à l'échelle par f.
-      const compIngPill = ci => {
+      const compIngPill = (ci: PdfLine): string => {
         if (ci.recipeId) return ""; // v1 : pas d'imbrication
         const qty = +(num(ci.amount) * f).toFixed(2);
         return pill(ingImg(ci.dbId), ci.name, fmtQtyUnit(qty, ci.unit));
       };
 
       const compStepLines = (comp.steps || []).map((s, i) => {
-        const stepIngs = (comp.ingredients || []).filter(x => s.ingredients?.includes(x.id)).map(compIngPill).join("");
-        const stepUts = (comp.utensils || []).filter(u => s.utensils?.includes(u.id)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
+        const stepIngs = (comp.ingredients || []).filter(x => s.ingredients?.includes(x.id!)).map(compIngPill).join("");
+        const stepUts = (comp.utensils || []).filter(u => s.utensils?.includes(u.id!)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
         const stepPills = stepIngs + stepUts;
         return `
         <div class="step comp-step" style="margin-bottom:12px">
@@ -157,7 +209,7 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
         </div>`;
       }).join("");
 
-      const yieldScaled = +(comp.yield.amount * f).toFixed(1);
+      const yieldScaled = +(yieldAmount * f).toFixed(1);
 
       return `
         <div class="comp-block">
@@ -308,16 +360,18 @@ export function buildRecipePdfHtml(recipe, { ingredientDB = [], utensilDB = [], 
 </html>`;
 }
 
-// Ouvre le document dans un nouvel onglet et lance l'impression du navigateur
-// (l'utilisateur choisit « Enregistrer en PDF »). Texte sélectionnable, rendu
-// fidèle. On attend le chargement de l'image de tête pour éviter un aperçu vide.
-export function printRecipe(recipe, dbs = {}) {
+/**
+ * Ouvre le document dans un nouvel onglet et lance l'impression du navigateur
+ * (l'utilisateur choisit « Enregistrer en PDF »). Texte sélectionnable, rendu
+ * fidèle. On attend le chargement de l'image de tête pour éviter un aperçu vide.
+ */
+export function printRecipe(recipe: PdfRecipe, dbs: PdfDbs = {}): void {
   const html = buildRecipePdfHtml(recipe, dbs);
   const w = window.open("", "_blank");
   if (!w) return; // popup bloquée
   w.document.write(html);
   w.document.close();
-  const heroImg = w.document.querySelector(".hero");
+  const heroImg = w.document.querySelector(".hero") as HTMLImageElement | null;
   if (heroImg && !heroImg.complete) {
     heroImg.onload = heroImg.onerror = () => setTimeout(() => w.print(), 300);
   } else {
