@@ -53,19 +53,25 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
       style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
       {groupSlotMeals(meals, recipesById).map((g, gi) => {
+        // On ignore les items dont la recette n'existe plus (recette supprimée de
+        // la bibliothèque → entrée orpheline). Un groupe entièrement orphelin ne
+        // rend rien : sinon la bordure + le bouton « Compléter » restaient affichés
+        // sur un créneau visuellement vide.
+        const items = g.items.filter(({ item }) => recipesById.has(item.recipeId));
+        if (items.length === 0) return null;
         // Un item généré porte toujours un groupId → c'est un repas (composé),
         // même s'il n'a qu'un plat pour l'instant (plus de « plat orphelin »).
         const composed = !!g.groupId;
-        const roles = new Set(g.items.map(({ item }) => itemRole(item, recipesById.get(item.recipeId))));
+        const roles = new Set(items.map(({ item }) => itemRole(item, recipesById.get(item.recipeId))));
         // Un plat qui se suffit (soupe, pasta…) n'attend pas d'accompagnement :
         // le repas est « complet » sans lui.
-        const platItem = g.items.find(({ item }) => itemRole(item, recipesById.get(item.recipeId)) === "plat");
+        const platItem = items.find(({ item }) => itemRole(item, recipesById.get(item.recipeId)) === "plat");
         const needsSide = !platItem || platNeedsSide(recipesById.get(platItem.item.recipeId));
         const required = needsSide ? MEAL_ROLE_IDS : MEAL_ROLE_IDS.filter(r => r !== "accompagnement");
         const full = required.every(r => roles.has(r));
         return (
           <div key={g.groupId || `g${gi}`} style={composed ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7, display: "flex", flexDirection: "column", gap: 5 } : undefined}>
-            {g.items.map(({ item }) => {
+            {items.map(({ item }) => {
               const r = recipesById.get(item.recipeId);
               if (!r) return null;
               const globalIdx = (mealPlan[date] || []).indexOf(item);
