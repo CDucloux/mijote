@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
+import { fmtQtyUnit } from "../lib/format.js";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
 import { ImageUpload } from "./ImageUpload.jsx";
 
@@ -84,7 +85,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
             <button key={ing.id} onClick={() => onUpdate(step.id, "ingredients", linked ? step.ingredients.filter(x => x !== ing.id) : [...(step.ingredients || []), ing.id])}
               style={{ padding: "3px 9px", borderRadius: 20, fontSize: 11, fontWeight: 500, background: linked ? "rgba(232,112,58,0.2)" : "var(--surface2)", color: linked ? "var(--accent)" : "var(--text3)", border: `1px solid ${linked ? "rgba(232,112,58,0.5)" : "var(--border)"}`, display: "flex", alignItems: "center", gap: 4 }}>
               {displayName}
-              {linked && <span style={{ fontSize: 10, color: "var(--accent2)" }}>{ing.amount}{ing.unit}</span>}
+              {linked && <span style={{ fontSize: 10, color: "var(--accent2)" }}>{fmtQtyUnit(ing.amount, ing.unit)}</span>}
             </button>
           );
         })}
