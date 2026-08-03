@@ -1,5 +1,15 @@
 # Changelog – Mijoté
 
+## v3.9.2 – Safran · Batch cooking mutualisé
+
+### Planning
+- **Choix des créneaux à générer** (Midi / Soir) dans l'auto-génération de la semaine — décoche « Midi » quand tu manges à la cantine, l'appli ne remplit alors que le soir. Choix mémorisé d'une semaine à l'autre
+
+### Batch cooking repensé
+- **Mise en place mutualisée** : tous les ingrédients de la semaine, toutes recettes confondues, **regroupés et sommés par ingrédient** (« prépare tous les oignons d'un coup ») — classés par catégorie, avec le **geste de préparation**, l'**estimation en pièces** (« 500 g d'oignons · ~5 ») et une **checklist cochable**
+- **Cuissons à mutualiser** : les plats qui partagent le même appareil (four, plaques…) sont regroupés — on n'allume le four qu'une fois
+- **Récap de session** : nombre d'ingrédients à préparer, de cuissons et de repas couverts
+
 ## v3.9.1 – Safran · TypeScript de bout en bout
 
 ### Sous le capot

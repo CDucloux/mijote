@@ -52,3 +52,52 @@ describe("weekEntries", () => {
     expect(weekEntries(mp, ["2026-07-03"]).length).toBe(0);
   });
 });
+
+import { buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
+
+describe("buildMiseEnPlace – mutualisation par ingrédient", () => {
+  // Deux recettes qui partagent l'oignon : on doit sommer, estimer les pièces, et
+  // remonter le geste de préparation + les recettes concernées.
+  const curry = { id: "curry", name: "Curry", servings: 2, ingredients: [{ dbId: "oignon", name: "Oignon", amount: 200, unit: "g" }, { dbId: "tomate", name: "Tomate", amount: 3, unit: "" }] };
+  const soupe = { id: "soupe", name: "Soupe", servings: 2, ingredients: [{ dbId: "oignon", name: "Oignon", amount: 300, unit: "g" }] };
+  const recs = [curry, soupe];
+  const recipesById = new Map(recs.map(r => [r.id, r]));
+  const ingredientDB = [
+    { id: "oignon", name: "Oignon", category: "vegetable", gramsPerPiece: 110, tips: [{ type: "prep", text: "Émincer finement" }] },
+    { id: "tomate", name: "Tomate", category: "vegetable", gramsPerPiece: 120 },
+  ];
+
+  it("somme un ingrédient partagé et estime les pièces", () => {
+    const { dishes } = buildBatchSession([{ recipeId: "curry", portions: 1 }, { recipeId: "soupe", portions: 1 }], recs);
+    const cat = (c) => ({ vegetable: 0, other: 99 }[c] ?? 99);
+    const groups = buildMiseEnPlace(dishes, { recipesById, ingredientDB, categoryOrder: cat });
+    const veg = groups.find(g => g.category === "vegetable");
+    const oignon = veg.items.find(i => i.dbId === "oignon");
+    expect(oignon.amount).toBe(500);            // 200 + 300
+    expect(oignon.pieces).toBe(5);              // 500 g / 110 g ≈ 5 (arrondi)
+    expect(oignon.prepTip).toBe("Émincer finement");
+    expect(oignon.usedBy.sort()).toEqual(["Curry", "Soupe"]);
+  });
+
+  it("multiplie par le nombre de cuissons", () => {
+    // curry planifié 2× portions=1 → 2 cuissons → 2 × 200 g d'oignon.
+    const { dishes } = buildBatchSession([{ recipeId: "curry", portions: 1 }, { recipeId: "curry", portions: 1 }], recs);
+    const groups = buildMiseEnPlace(dishes, { recipesById, ingredientDB });
+    const oignon = groups.flatMap(g => g.items).find(i => i.dbId === "oignon");
+    expect(oignon.amount).toBe(400);
+  });
+});
+
+describe("groupCookings – cuissons mutualisées", () => {
+  it("regroupe les plats partageant le même appareil (≥ 2)", () => {
+    const g1 = { id: "g1", name: "Gratin", utensils: [{ name: "Plat à gratin" }] };
+    const g2 = { id: "g2", name: "Légumes rôtis", utensils: [{ name: "Four" }] };
+    const p1 = { id: "p1", name: "Poêlée", utensils: [{ name: "Poêle" }] };
+    const dishes = [g1, g2, p1].map(r => ({ recipe: r, meals: 1, cookings: 1, servings: 2 }));
+    const groups = groupCookings(dishes);
+    const four = groups.find(g => g.method === "four");
+    expect(four).toBeTruthy();
+    expect(four.dishes.map(d => d.recipe.id).sort()).toEqual(["g1", "g2"]); // les 2 vont au four
+    expect(groups.find(g => g.method === "plaques")).toBeFalsy();            // un seul plat → pas de mutualisation
+  });
+});
