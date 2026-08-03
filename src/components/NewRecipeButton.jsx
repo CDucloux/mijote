@@ -4,7 +4,7 @@ import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { ErrorModal } from "./ErrorModal.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { fileToImagePart } from "../lib/recipeUrlImport.js";
+import { fileToImagePart } from "@/lib/recipes/recipeUrlImport.js";
 
 // ─── BOUTON « NOUVELLE » (choix : import par lien IA — admin — ou saisie manuelle) ─
 // L'import par lien consomme un crédit IA : l'écran d'attente est VOLONTAIREMENT

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergeShared } from "../householdMigration.js";
+import { mergeShared } from "@/lib/household/householdMigration.js";
 
 describe("mergeShared", () => {
   const local = {

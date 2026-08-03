@@ -6,8 +6,8 @@
  *
  * @module ingredientsMarkdown
  */
-import { parseMonths } from "./seasonality.js";
-import { TIP_TYPES } from "../constants/tipTypes.js";
+import { parseMonths } from "@/lib/food/seasonality.js";
+import { TIP_TYPES } from "@/constants/tipTypes.js";
 
 /** Conseil attaché à un ingrédient. */
 export interface IngredientTip { type: string; text: string }

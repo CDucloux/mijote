@@ -6,9 +6,9 @@
  *
  * @module shoppingAggregate
  */
-import { findIngredientMatch, type DbEntry } from "./nameMatcher.js";
-import { normalizeStr } from "./parseIngredient.js";
-import { fmtQtyUnit } from "./format.js";
+import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { fmtQtyUnit } from "@/lib/format.js";
 
 /** Un article d'une liste de courses. */
 export interface ShoppingItem {

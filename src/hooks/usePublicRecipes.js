@@ -1,7 +1,7 @@
-import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "../lib/firestore.js";
-import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "../lib/publicRecipes.js";
-import { recomputeCollectionCounts } from "../lib/recipeActions.js";
-import { buildRecipeIndex } from "../lib/nutriscore.js";
+import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "@/lib/firebase/firestore.js";
+import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "@/lib/household/publicRecipes.js";
+import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
+import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 
 // ─── RECETTES PUBLIQUES (communauté) ──────────────────────────────────────────
 // Publier / dépublier ses recettes (avec leurs préparations de base) et cloner une

@@ -1,6 +1,6 @@
 import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
-import { auth, provider } from "../lib/firebase.js";
-import { deleteAllUserData } from "../lib/firestore.js";
+import { auth, provider } from "@/lib/firebase/firebase.js";
+import { deleteAllUserData } from "@/lib/firebase/firestore.js";
 
 const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
 

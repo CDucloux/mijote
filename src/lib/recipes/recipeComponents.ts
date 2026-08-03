@@ -7,7 +7,7 @@
  *
  * @module recipeComponents
  */
-import { isComponentLine } from "./nutriscore.js";
+import { isComponentLine } from "@/lib/recipes/nutriscore.js";
 
 /** Ligne d'ingrédient (brute ou référence de composant) manipulée ici. */
 export interface ComponentLine {

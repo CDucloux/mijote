@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
-import { panFactor, roundNice, densityFor, convertQuantity, CONVERT_UNITS } from "../lib/calculators.js";
+import { panFactor, roundNice, densityFor, convertQuantity, CONVERT_UNITS } from "@/lib/food/calculators.js";
 
 // ─── CALCULATRICES DE RECETTE ───────────────────────────────────────────────────
 // Deux outils : adapter les quantités à un autre moule, et convertir une unité

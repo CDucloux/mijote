@@ -6,8 +6,8 @@ import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
 import { UtensilPicker } from "../components/UtensilPicker.jsx";
 import { DraggableStep } from "../components/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
-import { findIngredientMatch } from "../lib/nameMatcher.js";
-import { parseIngredientInput } from "../lib/parseIngredient.js";
+import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 

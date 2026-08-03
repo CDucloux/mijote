@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { fetchPublicRecipes } from "../lib/firestore.js";
+import { fetchPublicRecipes } from "@/lib/firebase/firestore.js";
 import { useOnline } from "./useOnline.js";
 
 // ─── DÉCOUVERTE – chargement des recettes publiques ───────────────────────────

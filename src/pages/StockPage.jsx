@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
-import { normalizeStr } from "../lib/parseIngredient.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────

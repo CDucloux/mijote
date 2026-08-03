@@ -5,7 +5,7 @@ import {
   householdMemberQuery, householdInviteQuery,
   createHousehold, inviteToHousehold, acceptInvite, declineInvite,
   leaveHousehold, dissolveHousehold, clearHouseholdPointer,
-} from "../lib/firestore.js";
+} from "@/lib/firebase/firestore.js";
 
 // ─── HOOK FOYER ───────────────────────────────────────────────────────────────
 // Abonnements temps réel : mon foyer actif (membre par uid) + mes invitations en

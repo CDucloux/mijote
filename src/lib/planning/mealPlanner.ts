@@ -11,10 +11,10 @@
  *
  * @module mealPlanner
  */
-import { recipeSeasonScore, currentMonth } from "./seasonality.js";
-import { collectIngredientSignals, isEligible, type DietPreferences } from "./dietFilter.js";
-import { normalizeStr } from "./parseIngredient.js";
-import { roleForCategory, newGroupId, platNeedsSide, type RoleId } from "./composedMeal.js";
+import { recipeSeasonScore, currentMonth } from "@/lib/food/seasonality.js";
+import { collectIngredientSignals, isEligible, type DietPreferences } from "@/lib/food/dietFilter.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { roleForCategory, newGroupId, platNeedsSide, type RoleId } from "@/lib/planning/composedMeal.js";
 
 /** Résolveur nom d'ingrédient → entrée de base. */
 export type IngredientResolver = (name: string | undefined) => { id: string; category?: string; months?: unknown } | null;

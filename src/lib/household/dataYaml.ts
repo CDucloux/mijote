@@ -11,8 +11,8 @@
  * @module dataYaml
  */
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { ING_MD_BOUNDS } from "./ingredientsMarkdown.js";
-import { TIP_TYPES } from "../constants/tipTypes.js";
+import { ING_MD_BOUNDS } from "@/lib/food/ingredientsMarkdown.js";
+import { TIP_TYPES } from "@/constants/tipTypes.js";
 
 /** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
 export interface ParseResult<T = Record<string, unknown>> {

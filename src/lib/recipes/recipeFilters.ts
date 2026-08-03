@@ -4,11 +4,11 @@
  *
  * @module recipeFilters
  */
-import { isRecipeInSeason } from "./seasonality.js";
-import { isRecipeVegan } from "./dietary.js";
-import { matchesCooking, COOKING_METHODS } from "./cooking.js";
-import { computeDifficulty, DIFFICULTY_LABEL } from "./difficulty.js";
-import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
+import { isRecipeInSeason } from "@/lib/food/seasonality.js";
+import { isRecipeVegan } from "@/lib/food/dietary.js";
+import { matchesCooking, COOKING_METHODS } from "@/lib/recipes/cooking.js";
+import { computeDifficulty, DIFFICULTY_LABEL } from "@/lib/recipes/difficulty.js";
+import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
 
 /** État de filtrage avancé (une « vue » de la bibliothèque). */
 export interface RecipeFilters {

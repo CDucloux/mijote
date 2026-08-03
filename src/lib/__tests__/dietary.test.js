@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isRecipeVegan } from "../dietary.js";
+import { isRecipeVegan } from "@/lib/food/dietary.js";
 
 // resolver simple : name -> { id, category } d'après une petite base.
 const DB = {

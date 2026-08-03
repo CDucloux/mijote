@@ -10,17 +10,17 @@ import { TagInput } from "../components/TagInput.jsx";
 import { ChangelogSection } from "../components/ChangelogSection.jsx";
 import { ReadOnlyBanner, AdminBanner } from "../components/Banners.jsx";
 import { IngredientDetail } from "../components/IngredientDetail.jsx";
-import { normalizeStr } from "../lib/parseIngredient.js";
-import { deleteImageByUrl } from "../lib/storage.js";
-import { ING_MD_COLUMNS, formatTips } from "../lib/ingredientsMarkdown.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { deleteImageByUrl } from "@/lib/firebase/storage.js";
+import { ING_MD_COLUMNS, formatTips } from "@/lib/food/ingredientsMarkdown.js";
 import {
   parseIngredientsYaml, parseUtensilsYaml, parseTechniquesYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
   TECHNIQUE_CATEGORIES, slugifyId,
-} from "../lib/dataYaml.js";
+} from "@/lib/household/dataYaml.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
-import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "../lib/seasonality.js";
+import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "@/lib/food/seasonality.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
 

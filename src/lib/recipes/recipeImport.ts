@@ -6,9 +6,9 @@
  *
  * @module recipeImport
  */
-import { validateRecipeSchema } from "./recipeSchema.js";
-import { buildNameMatcher } from "./nameMatcher.js";
-import { computeNutriInfo } from "./nutriscore.js";
+import { validateRecipeSchema } from "@/lib/recipes/recipeSchema.js";
+import { buildNameMatcher } from "@/lib/food/nameMatcher.js";
+import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 
 /** Recette importée (forme minimale ; champs additionnels conservés). */
 export interface ImportRecipe {

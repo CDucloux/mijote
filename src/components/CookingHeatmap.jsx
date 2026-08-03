@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { buildHeatmap } from "../lib/cookingActivity.js";
+import { buildHeatmap } from "@/lib/planning/cookingActivity.js";
 
 // ─── HEATMAP D'ACTIVITÉ CUISINE (façon GitHub) ───────────────────────────────
 // Colonnes = semaines (lundi→dimanche), teinte selon le nombre de repas du jour.

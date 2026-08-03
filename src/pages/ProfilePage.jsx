@@ -4,7 +4,7 @@ import { Icon } from "../components/Icon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { CookingHeatmap } from "../components/CookingHeatmap.jsx";
-import { buildHeatmap } from "../lib/cookingActivity.js";
+import { buildHeatmap } from "@/lib/planning/cookingActivity.js";
 import { DEFAULT_PREFERENCES } from "../constants/preferences.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 

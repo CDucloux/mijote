@@ -5,7 +5,7 @@
  *
  * @module dashboard
  */
-import { slotOrder } from "../constants/mealSlots.js";
+import { slotOrder } from "@/constants/mealSlots.js";
 
 /** Item de planning (forme minimale). */
 export interface PlanEntry {

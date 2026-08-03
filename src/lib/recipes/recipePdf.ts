@@ -7,12 +7,12 @@
  *
  * @module recipePdf
  */
-import { createIngredientResolver } from "./nameMatcher.js";
-import { isRecipeVegan } from "./dietary.js";
-import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
-import { cuisineEmoji, normalizeCuisine } from "../constants/cuisines.js";
-import { DIFFICULTY_LABEL, computeDifficulty } from "./difficulty.js";
-import { fmtQtyUnit } from "./format.js";
+import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
+import { isRecipeVegan } from "@/lib/food/dietary.js";
+import { categoryLabel, categoryEmoji } from "@/constants/recipeCategories.js";
+import { cuisineEmoji, normalizeCuisine } from "@/constants/cuisines.js";
+import { DIFFICULTY_LABEL, computeDifficulty } from "@/lib/recipes/difficulty.js";
+import { fmtQtyUnit } from "@/lib/format.js";
 
 /** Ligne d'ingrédient/ustensile d'une recette pour le rendu PDF. */
 export interface PdfLine {

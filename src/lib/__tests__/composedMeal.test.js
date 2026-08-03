@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roleForCategory, itemRole, groupSlotMeals, newGroupId, platNeedsSide } from "../composedMeal.js";
+import { roleForCategory, itemRole, groupSlotMeals, newGroupId, platNeedsSide } from "@/lib/planning/composedMeal.js";
 
 describe("roleForCategory", () => {
   it("mappe le type vers un rôle", () => {

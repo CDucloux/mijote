@@ -4,7 +4,7 @@
  *
  * @module recipeSort
  */
-import { computeDifficulty } from "./difficulty.js";
+import { computeDifficulty } from "@/lib/recipes/difficulty.js";
 
 /** Sens de tri. */
 export type SortDir = "asc" | "desc";

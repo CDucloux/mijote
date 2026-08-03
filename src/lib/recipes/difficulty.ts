@@ -13,7 +13,7 @@
  *
  * @module difficulty
  */
-import { buildTechniqueIndex, annotateText, type TechniqueIndex, type TechniqueEntry } from "./techniques.js";
+import { buildTechniqueIndex, annotateText, type TechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
 
 /** Un geste technique noté (issu du glossaire). */
 export interface Technique {

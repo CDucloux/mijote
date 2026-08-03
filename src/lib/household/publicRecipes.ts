@@ -7,8 +7,8 @@
  *
  * @module publicRecipes
  */
-import { normalizeStr } from "./parseIngredient.js";
-import { isComponentLine } from "./nutriscore.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { isComponentLine } from "@/lib/recipes/nutriscore.js";
 
 /** Ligne d'ingrédient (brute ou composant). */
 export interface PubLine {

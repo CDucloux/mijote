@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { createIngredientResolver } from "../lib/nameMatcher.js";
-import { currentMonth } from "../lib/seasonality.js";
-import { generateWeek, GEN_STYLES } from "../lib/mealPlanner.js";
+import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
+import { currentMonth } from "@/lib/food/seasonality.js";
+import { generateWeek, GEN_STYLES } from "@/lib/planning/mealPlanner.js";
 
 // ─── GÉNÉRATION DU PLANNING (couche I/O) ─────────────────────────────────────
 // Assemble le contexte (résolveur d'ingrédients, stock, préférences, mois) et

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { buildTechniqueIndex, annotateText } from "../lib/techniques.js";
-import { TECHNIQUE_CATEGORIES } from "../lib/dataYaml.js";
+import { buildTechniqueIndex, annotateText } from "@/lib/recipes/techniques.js";
+import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
 
 // ─── TEXTE AVEC TECHNIQUES SURLIGNÉES ─────────────────────────────────────────
 // Rend un texte d'étape en repérant les gestes du glossaire (suer, déglacer…) et

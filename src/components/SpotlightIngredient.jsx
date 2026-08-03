@@ -2,7 +2,7 @@ import { Icon } from "./Icon.jsx";
 import { Img, IngImage } from "./Img.jsx";
 import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
-import { ingredientMonths, currentMonth } from "../lib/seasonality.js";
+import { ingredientMonths, currentMonth } from "@/lib/food/seasonality.js";
 import { fmtTime } from "../lib/format.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 

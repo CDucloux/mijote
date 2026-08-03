@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   MAX_HOUSEHOLD, peopleCount, isOwner, isMemberUid, newHouseholdDoc,
   canInvite, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved,
-} from "../household.js";
+} from "@/lib/household/household.js";
 
 const owner = { uid: "u1", email: "Owner@Mail.com" };
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeDifficulty } from "../difficulty.js";
+import { computeDifficulty } from "@/lib/recipes/difficulty.js";
 
 const TECHS = [
   { id: "t1", name: "émincer", aliases: ["émince"], difficulty: 1 },

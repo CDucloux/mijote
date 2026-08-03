@@ -6,16 +6,16 @@ import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
-import { peopleCount } from "../lib/household.js";
+import { peopleCount } from "@/lib/household/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
-import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "../lib/composedMeal.js";
-import { suggestSides } from "../lib/mealPlanner.js";
-import { buildBatchSession, weekEntries } from "../lib/batchSession.js";
-import { isEligible } from "../lib/dietFilter.js";
-import { createIngredientResolver } from "../lib/nameMatcher.js";
-import { currentMonth } from "../lib/seasonality.js";
-import { normalizeStr } from "../lib/parseIngredient.js";
+import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
+import { suggestSides } from "@/lib/planning/mealPlanner.js";
+import { buildBatchSession, weekEntries } from "@/lib/planning/batchSession.js";
+import { isEligible } from "@/lib/food/dietFilter.js";
+import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
+import { currentMonth } from "@/lib/food/seasonality.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 // Rôles proposés pour compléter un repas (le plat existe déjà).
 const COMPLETE_ROLES = [

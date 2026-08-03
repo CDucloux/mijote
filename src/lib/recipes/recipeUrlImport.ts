@@ -6,8 +6,8 @@
  * @module recipeUrlImport
  */
 import { httpsCallable, type HttpsCallableResult } from "firebase/functions";
-import { functions } from "./firebase.js";
-import { prepareImageForUpload, blobToBase64 } from "./imageResize.js";
+import { functions } from "@/lib/firebase/firebase.js";
+import { prepareImageForUpload, blobToBase64 } from "@/lib/firebase/imageResize.js";
 
 /** Erreur d'import : conserve le `code` canonique Firebase (origine visible). */
 export interface ImportError extends Error { code: string }

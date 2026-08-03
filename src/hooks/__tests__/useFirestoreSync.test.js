@@ -13,8 +13,8 @@ vi.mock("firebase/firestore", () => ({
   setDoc: vi.fn(() => Promise.resolve()),
   onSnapshot: vi.fn(() => () => {}),
 }));
-vi.mock("../../lib/firebase.js", () => ({ auth: {}, db: {} }));
-vi.mock("../../lib/firestore.js", () => ({
+vi.mock("@/lib/firebase/firebase.js", () => ({ auth: {}, db: {} }));
+vi.mock("@/lib/firebase/firestore.js", () => ({
   metaDoc: vi.fn(() => ({})),
   recipesCol: vi.fn(() => ({})),
   upsertOwnDirectoryEntry: vi.fn(() => Promise.resolve()),
@@ -27,9 +27,9 @@ vi.mock("../../lib/firestore.js", () => ({
   writeSharedData: vi.fn(() => Promise.resolve(new Map())),
   setHouseholdPointer: vi.fn(() => Promise.resolve()),
 }));
-vi.mock("../../lib/householdMigration.js", () => ({ mergeShared: (_local, remote) => ({ ...remote }) }));
+vi.mock("@/lib/household/householdMigration.js", () => ({ mergeShared: (_local, remote) => ({ ...remote }) }));
 
-import * as fs from "../../lib/firestore.js";
+import * as fs from "@/lib/firebase/firestore.js";
 import { useFirestoreSync } from "../useFirestoreSync.js";
 
 const SETTER_NAMES = ["setUser", "setSyncStatus", "setRecipes", "setCollections", "setMealPlan", "setShoppingLists", "setStock", "setLowStock", "setPreferences", "setMasterDB", "setUserDB"];

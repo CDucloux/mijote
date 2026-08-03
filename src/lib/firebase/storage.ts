@@ -7,7 +7,7 @@
  * @module storage
  */
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { auth, storage } from "./firebase.js";
+import { auth, storage } from "@/lib/firebase/firebase.js";
 
 /** Image compressée : blob + extension + type MIME. */
 export interface CompressedImage { blob: Blob; ext: string; contentType: string }

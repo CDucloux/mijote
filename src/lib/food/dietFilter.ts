@@ -11,8 +11,8 @@
  *
  * @module dietFilter
  */
-import { normalizeStr } from "./parseIngredient.js";
-import { isRecipeVegan } from "./dietary.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { isRecipeVegan } from "@/lib/food/dietary.js";
 
 /** Ingrédient résolu depuis la base (seule la catégorie sert ici). */
 export interface ResolvedItem { id: string; category?: string }

@@ -1,5 +1,5 @@
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
-import { DIFFICULTY_LABEL, difficultyColor } from "../lib/difficulty.js";
+import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
 
 // ─── EXPLICATION DE LA DIFFICULTÉ ─────────────────────────────────────────────
 // Rend transparent le calcul du badge : d'où vient le niveau (geste dominant +

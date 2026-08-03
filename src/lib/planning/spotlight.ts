@@ -4,7 +4,7 @@
  *
  * @module spotlight
  */
-import { ingredientMonths } from "./seasonality.js";
+import { ingredientMonths } from "@/lib/food/seasonality.js";
 
 /** Ingrédient de la base (forme minimale utilisée ici). */
 export interface SpotlightIngredient {

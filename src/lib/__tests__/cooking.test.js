@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { recipeCookingMethods, matchesCooking } from "../cooking.js";
+import { recipeCookingMethods, matchesCooking } from "@/lib/recipes/cooking.js";
 
 const u = (...names) => ({ utensils: names.map((name, i) => ({ id: "u" + i, name })) });
 

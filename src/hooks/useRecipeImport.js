@@ -1,6 +1,6 @@
-import { prepareRecipeImport } from "../lib/recipeImport.js";
-import { importRecipeFromUrl, importRecipeFromImages } from "../lib/recipeUrlImport.js";
-import { uploadImage } from "../lib/storage.js";
+import { prepareRecipeImport } from "@/lib/recipes/recipeImport.js";
+import { importRecipeFromUrl, importRecipeFromImages } from "@/lib/recipes/recipeUrlImport.js";
+import { uploadImage } from "@/lib/firebase/storage.js";
 
 // base64 (sans préfixe) → Blob, pour ré-uploader une photo importée vers Storage.
 function base64ToBlob(b64, type) {

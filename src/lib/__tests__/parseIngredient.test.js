@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeStr, parseIngredientInput } from "../parseIngredient.js";
+import { normalizeStr, parseIngredientInput } from "@/lib/food/parseIngredient.js";
 
 describe("normalizeStr", () => {
   it("lowercases and strips accents", () => {

@@ -10,7 +10,7 @@
  *
  * @module householdMigration
  */
-import { normalizeStr } from "./parseIngredient.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 /** Carnet (forme minimale). */
 export interface SharedCollection { id: string; name?: string }

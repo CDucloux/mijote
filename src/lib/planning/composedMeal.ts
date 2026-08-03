@@ -7,7 +7,7 @@
  *
  * @module composedMeal
  */
-import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
+import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
 
 /** Rôle d'un item dans un repas composé. */
 export type RoleId = "entree" | "plat" | "accompagnement" | "dessert";

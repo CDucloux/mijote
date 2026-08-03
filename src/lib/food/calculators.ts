@@ -6,7 +6,7 @@
  *
  * @module calculators
  */
-import { normalizeStr } from "./parseIngredient.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 /** Forme d'un moule. */
 export type PanShape = "round" | "rect" | string;

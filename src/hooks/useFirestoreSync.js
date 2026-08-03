@@ -1,16 +1,16 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
-import { auth, db } from "../lib/firebase.js";
+import { auth, db } from "@/lib/firebase/firebase.js";
 import {
   metaDoc, recipesCol, upsertOwnDirectoryEntry,
   loadMasterDB, subscribeMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
   loadSharedData, writeSharedData, setHouseholdPointer,
-} from "../lib/firestore.js";
+} from "@/lib/firebase/firestore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { normalizePreferences } from "../constants/preferences.js";
-import { soloWorkspace, householdWorkspace } from "../lib/workspace.js";
-import { mergeShared } from "../lib/householdMigration.js";
+import { soloWorkspace, householdWorkspace } from "@/lib/household/workspace.js";
+import { mergeShared } from "@/lib/household/householdMigration.js";
 
 const mapOf = (recipes) => { const m = new Map(); for (const r of (recipes || [])) if (r.id) m.set(r.id, r); return m; };
 

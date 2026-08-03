@@ -6,7 +6,7 @@
  *
  * @module cooking
  */
-import { normalizeStr } from "./parseIngredient.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 /** Mode de cuisson : id, libellé et mots-clés d'ustensiles associés. */
 export interface CookingMethod {

@@ -1,10 +1,10 @@
-import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "../lib/recipeActions.js";
-import { recipesReferencing } from "../lib/recipeComponents.js";
-import { buildRecipeIndex } from "../lib/nutriscore.js";
-import { cleanRecipeForExport } from "../lib/recipeSchema.js";
-import { prepareRecipeImport } from "../lib/recipeImport.js";
-import { deleteImageByUrl } from "../lib/storage.js";
-import { printRecipe } from "../lib/recipePdf.js";
+import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "@/lib/recipes/recipeActions.js";
+import { recipesReferencing } from "@/lib/recipes/recipeComponents.js";
+import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
+import { prepareRecipeImport } from "@/lib/recipes/recipeImport.js";
+import { deleteImageByUrl } from "@/lib/firebase/storage.js";
+import { printRecipe } from "@/lib/recipes/recipePdf.js";
 
 // ─── RECETTES — opérations cœur (CRUD, courses, import/export) ─────────────────
 // Sauvegarde, suppression (avec déliage des bases référencées), ajout aux courses,

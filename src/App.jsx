@@ -1,10 +1,10 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 
-import { auth } from "./lib/firebase.js";
-import { subscribeHouseholdPointer, fetchUserDirectory } from "./lib/firestore.js";
-import { cleanRecipeForExport } from "./lib/recipeSchema.js";
-import { newGroupId, roleForCategory } from "./lib/composedMeal.js";
+import { auth } from "@/lib/firebase/firebase.js";
+import { subscribeHouseholdPointer, fetchUserDirectory } from "@/lib/firebase/firestore.js";
+import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
+import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
 import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";

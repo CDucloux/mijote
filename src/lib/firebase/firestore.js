@@ -1,8 +1,8 @@
 import { doc, getDoc, collection, getDocs, writeBatch, query, orderBy, limit, where, runTransaction, deleteDoc, setDoc, onSnapshot } from "firebase/firestore";
-import { db } from "./firebase.js";
-import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { newHouseholdDoc, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved, peopleCount, MAX_HOUSEHOLD } from "./household.js";
-import { householdWorkspace } from "./workspace.js";
+import { db } from "@/lib/firebase/firebase.js";
+import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
+import { newHouseholdDoc, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved, peopleCount, MAX_HOUSEHOLD } from "@/lib/household/household.js";
+import { householdWorkspace } from "@/lib/household/workspace.js";
 
 // ─── FIRESTORE DATA LAYER (split documents) ──────────────────────────────────
 // Structure:

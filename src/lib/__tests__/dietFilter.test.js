@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isEligible, collectIngredientSignals, ALLERGEN_SIGNALS } from "../dietFilter.js";
+import { isEligible, collectIngredientSignals, ALLERGEN_SIGNALS } from "@/lib/food/dietFilter.js";
 
 // Base ingrédients minimale : le résolveur mappe un nom → { id, name, category }.
 const DB = [

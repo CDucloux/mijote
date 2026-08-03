@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeName, findIngredientMatch, buildNameMatcher, createIngredientResolver } from "../nameMatcher.js";
+import { normalizeName, findIngredientMatch, buildNameMatcher, createIngredientResolver } from "@/lib/food/nameMatcher.js";
 
 const db = [
   { id: "ail", name: "Ail" },

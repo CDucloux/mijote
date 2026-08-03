@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   panArea, panFactor, roundNice, densityFor, convertQuantity,
-} from "../calculators.js";
+} from "@/lib/food/calculators.js";
 
 describe("panArea", () => {
   it("surface d'un moule rond (π r²)", () => {

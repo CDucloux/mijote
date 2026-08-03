@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { fetchPublicDocsByIds } from "../lib/firestore.js";
-import { publicId } from "../lib/publicRecipes.js";
+import { fetchPublicDocsByIds } from "@/lib/firebase/firestore.js";
+import { publicId } from "@/lib/household/publicRecipes.js";
 
 // ─── VUE D'UNE RECETTE PUBLIQUE (pilotée par l'URL /discover/:pubId) ──────────
 // pubId = "{authorUid}__{recipeId}" : l'auteur est lisible dans l'URL, la vue est

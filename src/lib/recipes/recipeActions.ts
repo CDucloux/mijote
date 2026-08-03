@@ -5,8 +5,8 @@
  *
  * @module recipeActions
  */
-import { computeNutriInfo, buildRecipeIndex, isComponentLine } from "./nutriscore.js";
-import { flattenForShopping, mergeRawLines, type ComponentRecipe } from "./recipeComponents.js";
+import { computeNutriInfo, buildRecipeIndex, isComponentLine } from "@/lib/recipes/nutriscore.js";
+import { flattenForShopping, mergeRawLines, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
 
 /** Ligne d'ingrédient d'une recette (forme minimale manipulée ici). */
 export interface RecipeLine {
