@@ -1,3 +1,10 @@
+/**
+ * Initialisation Firebase (app, App Check, Auth, Firestore, Storage, Functions).
+ * Point d'entrée unique : garde d'environnement, persistance explicite et cache
+ * hors-ligne configurés une seule fois au chargement du module.
+ *
+ * @module firebase
+ */
 import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider } from "firebase/auth";
@@ -39,7 +46,7 @@ const _recaptchaKey = import.meta.env.VITE_FIREBASE_RECAPTCHA_SITE_KEY;
 if (_recaptchaKey) {
   const _debugToken = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN;
   if (import.meta.env.DEV && _debugToken && typeof self !== "undefined") {
-    self.FIREBASE_APPCHECK_DEBUG_TOKEN = _debugToken;
+    (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: string }).FIREBASE_APPCHECK_DEBUG_TOKEN = _debugToken;
   }
   initializeAppCheck(firebaseApp, {
     provider: new ReCaptchaV3Provider(_recaptchaKey),
