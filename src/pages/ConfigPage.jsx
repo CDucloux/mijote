@@ -801,6 +801,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       {/* Ingredient editor modal */}
       {editIng && (
         <SwipeableSheet onClose={() => setEditIng(null)}>
+          {(close) => (<>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
@@ -913,15 +914,17 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditIng(null)}>Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveIng(editIng)}>Sauvegarder</button>
           </div>
+          </>)}
         </SwipeableSheet>
       )}
 
       {/* Éditeur de geste technique (admin) */}
       {editTech && (
         <SwipeableSheet onClose={() => setEditTech(null)}>
+          {(close) => (<>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editTech.id ? "Modifier" : "Nouveau"} geste</h3>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Émulsionner" value={editTech.name} onChange={e => setEditTech(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
@@ -951,9 +954,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <div className="field-label">Source (optionnel)</div>
           <input className="field-input" placeholder="ex: Escoffier, Le Guide Culinaire" value={editTech.source || ""} onChange={e => setEditTech(p => ({ ...p, source: e.target.value }))} style={{ marginBottom: 16 }} />
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditTech(null)}>Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveTech(editTech)}>Sauvegarder</button>
           </div>
+          </>)}
         </SwipeableSheet>
       )}
 
@@ -970,15 +974,17 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       {/* Utensil editor modal */}
       {editUt && (
         <SwipeableSheet onClose={() => setEditUt(null)}>
+          {(close) => (<>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editUt.id ? "Modifier" : "Nouvel"} ustensile</h3>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Casserole" value={editUt.name} onChange={e => setEditUt(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
           <div className="field-label">Photo</div>
           <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} pathPrefix={isAdmin ? "master/utensils" : "utensils"} />
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditUt(null)}>Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}>Sauvegarder</button>
           </div>
+          </>)}
         </SwipeableSheet>
       )}
 

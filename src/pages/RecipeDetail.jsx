@@ -1111,6 +1111,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       )}
       {confirmClone && (
         <SwipeableSheet onClose={() => setConfirmClone(false)}>
+          {(close) => (<>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Ajouter à mes recettes ?</h3>
           <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 14, lineHeight: 1.5 }}>
             Une <strong>copie personnelle</strong> est créée dans ta bibliothèque. C'est elle qui te permet de la planifier, de l'ajouter à tes courses, de la cuisiner en pas-à-pas et de l'<strong>adapter librement</strong> – même hors-ligne. L'auteur d'origine reste crédité.
@@ -1124,13 +1125,15 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
           )}
           <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 6 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmClone(false)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { setConfirmClone(false); onClone?.(); }}>Ajouter</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => onClone?.())}>Ajouter</button>
           </div>
+          </>)}
         </SwipeableSheet>
       )}
       {pendingPublish && (
         <SwipeableSheet onClose={() => setPendingPublish(false)}>
+          {(close) => (<>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Publier cette recette ?</h3>
           <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: recipe.source ? 14 : 12, lineHeight: 1.5 }}>
             Elle rejoindra la communauté Mijoté : chacun pourra la découvrir et l'ajouter à ses recettes. Vous en restez l'auteur·e et pouvez la retirer à tout moment.
@@ -1166,9 +1169,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
           )}
           <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 8 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingPublish(false)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => { onPublish?.(recipe); setPendingPublish(false); }}>Publier</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => onPublish?.(recipe))}>Publier</button>
           </div>
+          </>)}
         </SwipeableSheet>
       )}
       {shareOpen && (

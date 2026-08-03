@@ -430,14 +430,16 @@ function AppInner({ user, isDark, toggleTheme }) {
         {/* Leave editor confirmation modal */}
         {pendingTab && (
           <SwipeableSheet onClose={() => setPendingTab(null)}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Quitter le formulaire ?</h3>
-            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-              Les modifications non sauvegardées seront perdues. Tu peux sauvegarder d'abord en cliquant sur "Sauvegarder" en haut.
-            </p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPendingTab(null)}>Rester</button>
-              <button className="btn btn-danger" style={{ flex: 1 }} onClick={confirmLeaveEditor}>Quitter sans sauvegarder</button>
-            </div>
+            {(close) => (<>
+              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Quitter le formulaire ?</h3>
+              <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
+                Les modifications non sauvegardées seront perdues. Tu peux sauvegarder d'abord en cliquant sur "Sauvegarder" en haut.
+              </p>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Rester</button>
+                <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => close(confirmLeaveEditor)}>Quitter sans sauvegarder</button>
+              </div>
+            </>)}
           </SwipeableSheet>
         )}
         <OfflineModal />
@@ -472,14 +474,16 @@ export default function App() {
   // Thème et auth possédés à la racine : partagés par l'écran de connexion (public)
   // et l'app (protégée), sans doublon d'instance.
   const { isDark, toggleTheme } = useTheme();
-  const user = useAuthUser();
+  const { user, postLogin } = useAuthUser();
   const [signInError, setSignInError] = useState("");
   const onSignIn = useCallback(() => { setSignInError(""); return signInWithGoogle(setSignInError); }, []);
 
   return (
     <Routes>
-      {/* Écran de connexion : route publique dédiée. Déjà connecté → retour à l'origine. */}
-      <Route path="/login" element={user === undefined ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={onSignIn} error={signInError} />} />
+      {/* Écran de connexion : route publique dédiée. Déjà connecté → retour à
+          l'origine, après une brève transition « Connexion en cours… » (postLogin)
+          pour que l'écran de chargement soit visible même quand le login est instantané. */}
+      <Route path="/login" element={user === undefined || postLogin ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={onSignIn} error={signInError} />} />
       <Route path="/" element={<Navigate to="/home" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout

@@ -541,6 +541,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       {/* Création / modification d'un carnet */}
       {newCarnet && (
         <SwipeableSheet onClose={() => setNewCarnet(null)}>
+          {(close) => (<>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{newCarnet.editing ? "Modifier le carnet" : newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
           {newCarnet.smart && (
             <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 16, padding: "10px 12px", borderRadius: 12, background: "rgba(232,112,58,0.08)", border: "1px solid rgba(232,112,58,0.25)" }}>
@@ -596,7 +597,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             );
           })()}
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setNewCarnet(null)}>Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
               if (!newCarnet.name.trim()) return;
               if (newCarnet.editing) {
@@ -613,6 +614,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               setNewCarnet(null);
             }}>{newCarnet.editing ? "Enregistrer" : newCarnet.smart ? "Enregistrer" : "Créer"}</button>
           </div>
+          </>)}
         </SwipeableSheet>
       )}
     </div>
