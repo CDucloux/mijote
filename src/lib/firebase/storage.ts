@@ -16,13 +16,13 @@ export interface CompressedImage { blob: Blob; ext: string; contentType: string 
  * Compresse un `File` image côté client : redimensionne au bord max, puis conserve
  * le PNG si l'image a un canal alpha, sinon aplatit en JPEG.
  *
- * @param file - Le fichier image d'origine.
+ * @param file - Le fichier image d'origine (`File`, ou tout `Blob` — ex. photo importée).
  * @param options - Paramètres de compression.
  * @param options.maxEdge - Bord le plus long en pixels (défaut 800).
  * @param options.quality - Qualité JPEG entre 0 et 1 (défaut 0.75).
  * @returns Une promesse résolue en `{ blob, ext, contentType }`.
  */
-export function compressImage(file: File, { maxEdge = 800, quality = 0.75 }: { maxEdge?: number; quality?: number } = {}): Promise<CompressedImage> {
+export function compressImage(file: Blob, { maxEdge = 800, quality = 0.75 }: { maxEdge?: number; quality?: number } = {}): Promise<CompressedImage> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -70,14 +70,14 @@ export function compressImage(file: File, { maxEdge = 800, quality = 0.75 }: { m
 /**
  * Compresse puis upload une image vers Firebase Storage.
  *
- * @param file - Le fichier image à envoyer.
+ * @param file - Le fichier image à envoyer (`File` ou `Blob`).
  * @param pathPrefix - Préfixe de chemin : p.ex. « recipes », « ingredients »,
  *   « utensils » (rangé sous le dossier de l'utilisateur), ou « master/… » (rangé à
  *   la racine, lisible par tous).
  * @returns L'URL de download publique à stocker dans Firestore.
  * @throws Si l'utilisateur n'est pas authentifié.
  */
-export async function uploadImage(file: File, pathPrefix: string): Promise<string> {
+export async function uploadImage(file: Blob, pathPrefix: string): Promise<string> {
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error("Non authentifié");
   const { blob, ext, contentType } = await compressImage(file);

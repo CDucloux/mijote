@@ -1,17 +1,37 @@
+import type { Dispatch, SetStateAction } from "react";
 import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "@/lib/firebase/firestore.js";
-import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle } from "@/lib/household/publicRecipes.js";
+import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle, type PubUser, type PubRecipe, type PubDbItem, type PublicDoc } from "@/lib/household/publicRecipes.js";
 import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import type { Collection } from "@/lib/types.js";
 
-// ─── RECETTES PUBLIQUES (communauté) ──────────────────────────────────────────
-// Publier / dépublier ses recettes (avec leurs préparations de base) et cloner une
-// recette publique (+ bases) dans sa bibliothèque. Extrait d'App.jsx. Les
-// dépendances (état + notify + navigate) sont injectées.
-export function usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, notify, navigate }) {
-  const publishRecipe = async (recipe) => {
+/** Index de recettes tel qu'attendu par les fonctions de `publicRecipes`. */
+const indexOf = (recipes: PubRecipe[]): Map<string, PubRecipe> =>
+  buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, PubRecipe>;
+
+/** Dépendances injectées (état + notify + navigate). */
+export interface PublicRecipesDeps {
+  user: PubUser | null | undefined;
+  recipes: PubRecipe[];
+  setRecipes: Dispatch<SetStateAction<PubRecipe[]>>;
+  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  ingredientDB: PubDbItem[];
+  notify: (msg: string, type?: string) => void;
+  navigate: (path: string, opts?: { state?: unknown }) => void;
+}
+
+/**
+ * Recettes publiques (communauté) : publier / dépublier ses recettes (avec leurs
+ * préparations de base) et cloner une recette publique (+ bases) dans sa bibliothèque.
+ *
+ * @param deps - État de l'app, `notify` et `navigate`.
+ * @returns `{ publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic }`.
+ */
+export function usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, notify, navigate }: PublicRecipesDeps) {
+  const publishRecipe = async (recipe: PubRecipe): Promise<void> => {
     if (!user) return;
     try {
-      const recipesById = buildRecipeIndex(recipes);
+      const recipesById = indexOf(recipes);
       const { docs } = buildPublishBundle(recipe, user, { ingredientDB, recipesById });
       await publishPublicBundle(docs);
       setRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, visibility: "public", publicId: publicId(user.uid, recipe.id) } : r));
@@ -20,14 +40,14 @@ export function usePublicRecipes({ user, recipes, setRecipes, setCollections, in
     } catch { notify("Publication refusée – règles Firestore déployées ?", "error"); }
   };
 
-  const unpublishRecipe = async (recipe) => {
+  const unpublishRecipe = async (recipe: PubRecipe): Promise<void> => {
     if (!user) return;
     try {
-      const recipesById = buildRecipeIndex(recipes);
+      const recipesById = indexOf(recipes);
       const myPub = publicId(user.uid, recipe.id);
       const myComps = collectComponentDeps(recipe, recipesById).map(c => publicId(user.uid, c.id));
       // On ne retire une base que si plus AUCUNE de mes autres recettes publiques ne l'utilise.
-      const stillUsed = new Set();
+      const stillUsed = new Set<string>();
       for (const r of recipes) {
         if (r.id === recipe.id || r.visibility !== "public") continue;
         for (const c of collectComponentDeps(r, recipesById)) stillUsed.add(publicId(user.uid, c.id));
@@ -43,11 +63,11 @@ export function usePublicRecipes({ user, recipes, setRecipes, setCollections, in
 
   // Clone hybride : récupère la recette publique + ses bases publiques et les
   // installe comme recettes locales (ids remappés, attribution, anti-doublon).
-  const cloneFromPublic = async (pub) => {
+  const cloneFromPublic = async (pub: PublicDoc): Promise<void> => {
     if (!pub) return;
     try {
       const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
-      const comps = compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : [];
+      const comps = (compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : []) as PublicDoc[];
       const { added, mainId, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
       if (alreadyOwned) { notify("Déjà dans tes recettes"); navigate(`/recipes/${mainId}`); return; }
       const updated = [...added, ...recipes];
@@ -59,11 +79,11 @@ export function usePublicRecipes({ user, recipes, setRecipes, setCollections, in
     } catch { notify("Échec du clonage", "error"); }
   };
 
-  const quickCloneFromPublic = async (pub) => {
+  const quickCloneFromPublic = async (pub: PublicDoc): Promise<void> => {
     if (!pub) return;
     try {
       const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
-      const comps = compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : [];
+      const comps = (compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : []) as PublicDoc[];
       const { added, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
       if (alreadyOwned) { notify("Déjà dans tes recettes"); return; }
       const updated = [...added, ...recipes];

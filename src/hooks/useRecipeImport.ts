@@ -1,23 +1,34 @@
-import { prepareRecipeImport } from "@/lib/recipes/recipeImport.js";
-import { importRecipeFromUrl, importRecipeFromImages } from "@/lib/recipes/recipeUrlImport.js";
+import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
+import { importRecipeFromUrl, importRecipeFromImages, type ImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import { uploadImage } from "@/lib/firebase/storage.js";
+import type { Recipe } from "@/lib/types.js";
 
-// base64 (sans préfixe) → Blob, pour ré-uploader une photo importée vers Storage.
-function base64ToBlob(b64, type) {
+/** base64 (sans préfixe) → Blob, pour ré-uploader une photo importée vers Storage. */
+function base64ToBlob(b64: string, type: string): Blob {
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return new Blob([bytes], { type });
 }
 
-// ─── IMPORT DE RECETTE (IA) ───────────────────────────────────────────────────
-// Import admin depuis une URL ou 1-2 photos : appelle la Cloud Function, complète
-// les dbId + Nutri-Score, purge les ustensiles hors base master, puis OUVRE le
-// brouillon dans l'éditeur (jamais d'enregistrement direct — le créateur relit).
-// Extrait d'App.jsx. `openEditor` = ouvre l'éditeur sur un brouillon (setEditingRecipe).
-export function useRecipeImport({ ingredientDB, utensilDB, openEditor }) {
+/** Dépendances : bases de rapprochement + ouverture de l'éditeur sur un brouillon. */
+export interface RecipeImportDeps {
+  ingredientDB: ImportDbItem[];
+  utensilDB: ImportDbItem[];
+  openEditor: (draft: Record<string, unknown>) => void;
+}
+
+/**
+ * Import de recette (IA) depuis une URL ou 1-2 photos : appelle la Cloud Function,
+ * complète les dbId + Nutri-Score, purge les ustensiles hors base master, puis OUVRE
+ * le brouillon dans l'éditeur (jamais d'enregistrement direct — le créateur relit).
+ *
+ * @param deps - Bases d'ingrédients/ustensiles et `openEditor`.
+ * @returns `{ importFromUrl, importFromImages }`.
+ */
+export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeImportDeps) {
   // Ids stables sur les items + valeurs par défaut du schéma éditeur.
-  const withItemIds = (recipe) => ({
+  const withItemIds = (recipe: Recipe): Record<string, unknown> => ({
     description: "", collections: [], image: "", cuisine: "", category: "", source: "",
     prepTime: 0, cookTime: 0, servings: 2, ...recipe,
     ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),
@@ -27,10 +38,10 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }) {
 
   // Recette brute extraite (URL ou image) → brouillon prêt pour l'éditeur.
   // `coverUrl` (optionnel) : image de couverture déjà uploadée (import photo).
-  const openImportedDraft = (recipe, coverUrl = "") => {
+  const openImportedDraft = (recipe: Recipe, coverUrl = ""): void => {
     // Complète dbId + Nutri-Score via le pipeline d'import existant (schéma toléré).
     const res = prepareRecipeImport(JSON.stringify(recipe), { ingredientDB, utensilDB });
-    let draft = res.prepared?.[0] || recipe;
+    let draft: Recipe = ("prepared" in res ? res.prepared[0] : undefined) || recipe;
     // Ustensiles : ne garder QUE ceux réellement en base master (dbId résolu), et
     // purger les liens d'étapes qui pointaient vers un ustensile écarté.
     const keptUt = (draft.utensils || []).filter(u => u.dbId);
@@ -44,13 +55,13 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }) {
     openEditor(withItemIds(draft));
   };
 
-  const importFromUrl = async (url) => {
-    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name));
+  const importFromUrl = async (url: string): Promise<{ method: string }> => {
+    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name)) as { recipe: Recipe; method: string };
     openImportedDraft(recipe);
     return { method };
   };
-  const importFromImages = async (images) => {
-    const { recipe, method, coverIndex } = await importRecipeFromImages(images, utensilDB.map(u => u.name));
+  const importFromImages = async (images: ImagePart[]): Promise<{ method: string }> => {
+    const { recipe, method, coverIndex } = await importRecipeFromImages(images, utensilDB.map(u => u.name)) as { recipe: Recipe; method: string; coverIndex: number };
     // La page identifiée comme photo du plat devient l'image de couverture : on la
     // ré-upload vers Storage (comme n'importe quelle image de recette). Best-effort :
     // un échec d'upload n'empêche pas l'ouverture du brouillon (couverture vide).
