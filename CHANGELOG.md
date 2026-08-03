@@ -1,5 +1,17 @@
 # Changelog – Mijoté
 
+## v3.9.8 – Safran · Gestes & finitions
+
+### Planning
+- **Accès à la session batch repensé** : l'ancien bouton d'en-tête (qui repoussait le titre sur deux lignes) laisse place à une bannière contextuelle claire en tête de semaine, affichée seulement quand il y a des plats à cuisiner
+
+### Import de recettes
+- **Quantités d'épices en grammes** : l'import IA n'emploie plus l'unité imprécise « pincée » — les épices, le sel et le poivre (même « au goût ») sont estimés en grammes *(effectif après mise à jour du serveur)*
+
+### Gestes & mobile
+- **Fermeture au doigt fluide** : glisser une fenêtre vers le bas la fait maintenant filer proprement jusqu'en bas, sans le petit sursaut où elle remontait avant de redescendre
+- **Effet élastique généralisé** : le rebond discret en bas de liste (déjà présent sur les recettes) s'applique désormais au Planning, aux Courses, au Stock et à Mes recettes — et il est plus subtil sur la fiche recette
+
 ## v3.9.7 – Safran · Documentation & barre du bas
 
 ### Documentation

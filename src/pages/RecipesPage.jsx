@@ -17,6 +17,7 @@ import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
@@ -163,6 +164,8 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
   useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
 
+  const { scrollRef, contentRef } = useElasticScroll();
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
@@ -224,7 +227,8 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             }} />
         </SwipeableSheet>
       )}
-      <div style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
+        <div ref={contentRef} style={{ minHeight: "100%" }}>
         {recipes.length > 0 && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -376,6 +380,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         })()}
         </>
         )}
+        </div>
       </div>
 
       {/* Confirmation avant suppression (carnet ou recette) */}

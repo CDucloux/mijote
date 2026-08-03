@@ -19,6 +19,7 @@ import { isEligible } from "@/lib/food/dietFilter.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // Rôles proposés pour compléter un repas (le plat existe déjà).
 const COMPLETE_ROLES = [
@@ -344,18 +345,14 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     notify?.("Planning exporté dans ton calendrier");
   };
 
+  const { scrollRef, contentRef } = useElasticScroll();
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning Repas</h1></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {hasWeekDishes && (
-              <button onClick={() => setShowBatch(true)} title="Session batch : mise en place mutualisée et cuissons regroupées" aria-label="Session batch"
-                style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(76,175,125,0.14)", border: "1px solid rgba(76,175,125,0.3)", cursor: "pointer" }}>
-                <Icon name="fire" size={17} color="var(--green)" />
-              </button>
-            )}
             {genDone
               ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
               : <button onClick={() => setGenOpen(true)} className="btn btn-primary btn-pill"><Icon name="calendar" size={15} /> Générer</button>}
@@ -375,9 +372,27 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
+        <div ref={contentRef} style={{ minHeight: "100%" }}>
         {viewMode === "week" && (
           <div key={`week-${weekDays[0]}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {/* Accès à la session batch : bannière contextuelle (ré-ouvrable), affichée
+                seulement quand la semaine contient au moins un plat. Sortie du header
+                pour ne plus reléguer le titre sur deux lignes. */}
+            {hasWeekDishes && (
+              <button onClick={() => setShowBatch(true)} className="pressable"
+                style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
+                  padding: "12px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(76,175,125,0.18)" }}>
+                  <Icon name="fire" size={19} color="var(--green)" />
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Session batch</span>
+                  <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>Mise en place mutualisée & cuissons regroupées</span>
+                </span>
+                <Icon name="forward" size={16} color="var(--green)" />
+              </button>
+            )}
             {weekDays.map((date, di) => {
               const isToday = date === todayStr;
               const d = new Date(date + "T12:00");
@@ -405,7 +420,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             })}
           </div>
         )}
-
+        </div>
       </div>
 
       {/* Add recipe modal */}

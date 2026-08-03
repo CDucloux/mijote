@@ -12,6 +12,7 @@ import { aggregateShopping } from "@/lib/food/shoppingAggregate.js";
 import { useHorizontalOverscroll } from "../hooks/useHorizontalOverscroll.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // Onglet virtuel « Toutes les courses » (agrégat de toutes les listes actives).
 const ALL_ID = "__all__";
@@ -175,6 +176,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       onBuy={buyItem} onDelete={it => deleteItem(activeList.id, it.id)} />
   );
 
+  const { scrollRef: aggScrollRef, contentRef: aggContentRef } = useElasticScroll();   // vue « Toutes les courses »
+  const { scrollRef: listScrollRef, contentRef: listContentRef } = useElasticScroll(); // vue d'une liste
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -266,7 +269,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       {/* Vue agrégée « Toutes les courses » */}
       {allMode && (
         <div key="__all__" className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 32px" }}>
+          <div ref={aggScrollRef} style={{ flex: 1, overflowY: "auto", padding: "12px 20px 32px" }}>
+            <div ref={aggContentRef} style={{ minHeight: "100%" }}>
             {aggregated.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: "60px 32px", textAlign: "center" }}>
                 <Icon name="grid" size={48} color="var(--text3)" />
@@ -315,6 +319,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 </>
               );
             })()}
+            </div>
           </div>
         </div>
       )}
@@ -331,7 +336,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           )}
 
           {/* Liste – pleine largeur, défilante */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px 80px" }}>
+          <div ref={listScrollRef} style={{ flex: 1, overflowY: "auto", padding: "12px 20px 80px" }}>
+            <div ref={listContentRef} style={{ minHeight: "100%" }}>
 
             {activeList.items.length === 0 && activeList.type !== "free" && (
               <div style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>
@@ -387,6 +393,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 </>
               );
             })()}
+            </div>
           </div>
         </div>
       )}

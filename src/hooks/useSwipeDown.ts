@@ -40,6 +40,9 @@ export function useSwipeDown(onClose: () => void, threshold = 140) {
     startY.current = e.touches[0].clientY;
     startX.current = e.touches[0].clientX;
     dragging.current = false;
+    // Réinitialise une éventuelle transition laissée par un retour/fling précédent :
+    // le suivi du doigt doit être instantané, pas amorti.
+    if (sheetRef.current) sheetRef.current.style.transition = "";
     scrollEl.current = nearestScrollable(e.target, sheetRef.current);
     // On n'arme le glisser-pour-fermer que si on est en haut du contenu scrollé.
     armed.current = atTop();
@@ -63,8 +66,24 @@ export function useSwipeDown(onClose: () => void, threshold = 140) {
     if (startY.current === null) return;
     const dy = e.changedTouches[0].clientY - startY.current;
     const dx = Math.abs(e.changedTouches[0].clientX - (startX.current ?? 0));
-    if (sheetRef.current) sheetRef.current.style.transform = "";
-    if (armed.current && dragging.current && dy > threshold && dy > dx) onClose();
+    const sheet = sheetRef.current;
+    const shouldClose = armed.current && dragging.current && dy > threshold && dy > dx;
+    if (shouldClose && sheet) {
+      // Poursuit le glissement vers le bas jusqu'à disparition, PUIS ferme — sans
+      // remettre `transform` à zéro ni rejouer l'animation de sortie (qui ferait
+      // « remonter » la feuille avant de la faire redescendre : effet de collision).
+      let done = false;
+      const finish = (): void => { if (done) return; done = true; onClose(); };
+      sheet.style.transition = "transform 0.2s cubic-bezier(0.4,0,1,1)";
+      sheet.style.transform = `translateY(${window.innerHeight}px)`;
+      sheet.addEventListener("transitionend", finish, { once: true });
+      setTimeout(finish, 240); // filet de sécurité si transitionend ne se déclenche pas
+    } else {
+      // Sous le seuil : retour en douceur à la position (au lieu d'un saut sec).
+      if (sheet && dragging.current) { sheet.style.transition = "transform 0.18s ease-out"; sheet.style.transform = ""; }
+      else if (sheet) sheet.style.transform = "";
+      if (shouldClose) onClose();
+    }
     startY.current = null;
     startX.current = null;
     armed.current = false;

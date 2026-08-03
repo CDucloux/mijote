@@ -15,9 +15,11 @@ import { useModalExit } from "../hooks/useModalExit.js";
 // « Annuler » internes, qui sinon démontent la feuille d'un coup, sans animation.
 export function SwipeableSheet({ onClose, children, style, hideHandle = false, zIndex }) {
   const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(onClose);
-  // Backdrop, swipe et Échap déclenchent la sortie animée ; le vrai `onClose`
-  // (démontage par le parent) est appelé à la fin de l'animation.
-  const { sheetRef, onTouchStart, onTouchMove, onTouchEnd } = useSwipeDown(beginClose);
+  // Backdrop et Échap déclenchent la sortie animée (keyframe). Le swipe, lui, ferme
+  // en PROLONGEANT le glissement du doigt vers le bas puis démonte directement
+  // (`onClose`) : rejouer la keyframe ferait remonter la feuille avant de la
+  // redescendre (collision). D'où deux callbacks distincts.
+  const { sheetRef, onTouchStart, onTouchMove, onTouchEnd } = useSwipeDown(onClose);
   const setRefs = (el) => { sheetRef.current = el; surfaceRef.current = el; };
   return createPortal(
     <div className={`modal-backdrop${closing ? " is-closing" : ""}`} onClick={() => beginClose()} style={zIndex != null ? { zIndex } : undefined}>
