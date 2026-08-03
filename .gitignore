@@ -32,3 +32,5 @@ dist-ssr
 serviceAccount*.json
 *-firebase-adminsdk-*.json
 secrets/
+# Documentation TypeDoc générée (publiée via GitHub Pages, cf. .github/workflows/docs.yml)
+docs/api/

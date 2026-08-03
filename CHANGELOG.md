@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.9.7 – Safran · Documentation & barre du bas
+
+### Documentation
+- **Documentation technique publiée** : la bibliothèque métier (`src/lib`, 40 modules / 187 fonctions) est désormais générée en site statique via TypeDoc et publiée sur GitHub Pages à chaque mise à jour
+
+### Interface mobile & PWA
+- **Barre de navigation système au thème** : en PWA installée, la barre du bas (gestes Android / indicateur iOS) prend la couleur de l'appli au lieu de la couleur système — la barre d'onglets peint désormais la zone système sous elle
+
 ## v3.9.6 – Safran · Import & finitions mobiles
 
 ### Import de recettes

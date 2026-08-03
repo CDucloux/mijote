@@ -1,0 +1,20 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Mijoté — Bibliothèque métier (src/lib)",
+  "entryPoints": ["src/lib"],
+  "entryPointStrategy": "expand",
+  "exclude": ["**/__tests__/**", "**/*.test.*"],
+  "out": "docs/api",
+  "tsconfig": "tsconfig.json",
+  "readme": "docs/lib-overview.md",
+  "includeVersion": true,
+  "hideGenerator": false,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "categorizeByGroup": true,
+  "navigationLinks": {
+    "Dépôt": "https://github.com/CDucloux/mijote"
+  },
+  "sort": ["source-order"],
+  "gitRevision": "main"
+}
