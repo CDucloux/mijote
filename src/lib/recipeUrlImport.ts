@@ -12,8 +12,10 @@ import { prepareImageForUpload, blobToBase64 } from "./imageResize.js";
 /** Erreur d'import : conserve le `code` canonique Firebase (origine visible). */
 export interface ImportError extends Error { code: string }
 
-// Messages par défaut, par code canonique — utilisés quand le serveur n'a pas
-// fourni de message lisible (crash → le message vaut littéralement le code).
+/**
+ * Messages par défaut, par code canonique — utilisés quand le serveur n'a pas
+ * fourni de message lisible (crash → le message vaut littéralement le code).
+ */
 const ERROR_MESSAGES: Record<string, string> = {
   "deadline-exceeded": "L'extraction a pris trop de temps. Réessaie avec une seule page, ou une photo plus nette.",
   "permission-denied": "L'import IA est réservé au créateur pour le moment.",

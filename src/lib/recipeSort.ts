@@ -61,24 +61,46 @@ export const SORT_OPTIONS: SortOption[] = [
 
 export const DEFAULT_SORT_KEY: SortKey = "date";
 
-/** L'option d'un critère (retombe sur la première si `key` est inconnu). */
+/**
+ * L'option d'un critère de tri.
+ *
+ * @param key - La clé de critère.
+ * @returns L'option correspondante (la première si `key` est inconnu).
+ */
 export const sortOption = (key: SortKey): SortOption => SORT_OPTIONS.find(o => o.key === key) || SORT_OPTIONS[0];
 
-/** Sens par défaut d'un critère. */
+/**
+ * Sens de tri par défaut d'un critère.
+ *
+ * @param key - La clé de critère.
+ * @returns Le sens par défaut (`asc` ou `desc`).
+ */
 export const defaultDirFor = (key: SortKey): SortDir => sortOption(key).dirs[0].dir;
 
-/** Libellé d'un sens donné pour un critère. */
+/**
+ * Libellé d'un sens donné pour un critère.
+ *
+ * @param key - La clé de critère.
+ * @param dir - Le sens de tri.
+ * @returns Le libellé affichable de ce sens.
+ */
 export const dirLabel = (key: SortKey, dir: SortDir): string =>
   (sortOption(key).dirs.find(d => d.dir === dir) || sortOption(key).dirs[0]).label;
 
-// L'horodatage ms encodé dans l'id ("r"+Date.now()…) départage les recettes du même
-// jour (createdAt est au jour près, et parfois absent).
+/**
+ * L'horodatage ms encodé dans l'id (`"r"+Date.now()…`) départage les recettes du
+ * même jour (`createdAt` est au jour près, et parfois absent).
+ */
 const idTimestamp = (id: string | undefined): number => { const m = /^r(\d{10,})/.exec(id || ""); return m ? Number(m[1]) : 0; };
 
 /**
  * Comparateur de récence décroissante (plus récent d'abord) : `createdAt` puis,
  * à égalité ou en son absence, l'horodatage encodé dans l'id. Sert aussi de
  * départage stable pour les autres tris.
+ *
+ * @param a - Première recette.
+ * @param b - Seconde recette.
+ * @returns Un nombre négatif si `a` est plus récente, positif sinon.
  */
 export const byRecent = (a: SortRecipe, b: SortRecipe): number => {
   const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -107,6 +129,8 @@ export interface ComparatorParams {
  * Les recettes sans valeur pour le critère (temps, nutri ou difficulté inconnus)
  * sont toujours reléguées en fin de liste, quel que soit le sens.
  *
+ * @param params - Critère (`sortBy`), sens (`sortDir`) et dépendances (techniques,
+ *   index, recettes) nécessaires au tri par difficulté.
  * @returns Un comparateur `(a, b) => number` utilisable avec `Array.prototype.sort`.
  */
 export function makeComparator({ sortBy, sortDir, techniques, techIndex, recipes }: ComparatorParams): (a: SortRecipe, b: SortRecipe) => number {

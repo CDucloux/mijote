@@ -63,7 +63,7 @@ export interface PdfDbs {
   techniques?: unknown[];
 }
 
-// Couleur de difficulté en hex (le PDF n'a pas les variables CSS --green/--red).
+/** Couleur de difficulté en hex (le PDF n'a pas les variables CSS `--green`/`--red`). */
 const diffColorPdf = (lvl: number): string => (lvl <= 2 ? "#4caf7d" : lvl === 3 ? "#e8920a" : "#e05252");
 
 const NUTRI_COLORS_PDF: Record<string, string> = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };

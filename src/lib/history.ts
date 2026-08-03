@@ -43,7 +43,12 @@ export interface HistoryRecipe {
 
 const SNAPSHOT_FIELDS = ["ingredients", "utensils", "steps", "prepTime", "cookTime", "servings", "yield", "nutriLetter", "healthScore"] as const;
 
-/** Snapshot de l'état courant (copie défensive des tableaux). */
+/**
+ * Snapshot de l'état courant (copie défensive des tableaux).
+ *
+ * @param recipe - La recette à figer.
+ * @returns Un instantané des champs versionnés (ingrédients, étapes, temps…).
+ */
 export function snapshotOf(recipe: HistoryRecipe): Snapshot {
   const snap: Snapshot = {};
   for (const f of SNAPSHOT_FIELDS) {
@@ -54,12 +59,26 @@ export function snapshotOf(recipe: HistoryRecipe): Snapshot {
   return snap;
 }
 
-/** Prochain label par défaut : v1, v2, … selon le nombre d'entrées. */
+/**
+ * Prochain label par défaut : v1, v2, … selon le nombre d'entrées.
+ *
+ * @param history - L'historique courant.
+ * @returns Le label de version suivant (`v{n+1}`).
+ */
 export function nextVersionLabel(history: HistoryEntry[] | null | undefined): string {
   return "v" + ((history?.length || 0) + 1);
 }
 
-/** Ajoute une entrée (snapshot courant + métadonnées) et renvoie la recette mise à jour. */
+/**
+ * Ajoute une entrée d'historique (snapshot courant + métadonnées).
+ *
+ * @param recipe - La recette à versionner.
+ * @param meta - Métadonnées de la version.
+ * @param meta.label - Libellé (repli sur `v{n+1}` si vide).
+ * @param meta.rating - Note optionnelle (0–5).
+ * @param meta.notes - Notes libres.
+ * @returns La recette avec la nouvelle entrée ajoutée à `history`.
+ */
 export function addVersion(recipe: HistoryRecipe, { label, rating, notes }: { label?: string; rating?: number | null; notes?: string }): HistoryRecipe {
   const entry: HistoryEntry = {
     id: "h" + Date.now(),
@@ -72,8 +91,14 @@ export function addVersion(recipe: HistoryRecipe, { label, rating, notes }: { la
   return { ...recipe, history: [...(recipe.history || []), entry] };
 }
 
-/** Restaure une version : réécrit les champs live, après avoir figé l'état courant
- * en entrée auto (pour ne rien perdre). */
+/**
+ * Restaure une version : réécrit les champs live, après avoir figé l'état courant
+ * en entrée auto (pour ne rien perdre).
+ *
+ * @param recipe - La recette courante.
+ * @param entryId - L'id de l'entrée à restaurer.
+ * @returns La recette restaurée (+ sauvegarde auto), ou inchangée si l'entrée est absente.
+ */
 export function restoreVersion(recipe: HistoryRecipe, entryId: string): HistoryRecipe {
   const history = recipe.history || [];
   const target = history.find(h => h.id === entryId);
@@ -89,7 +114,13 @@ export function restoreVersion(recipe: HistoryRecipe, entryId: string): HistoryR
   return { ...recipe, ...target.snapshot, history: [...history, autoEntry] };
 }
 
-/** Supprime une entrée d'historique. */
+/**
+ * Supprime une entrée d'historique.
+ *
+ * @param recipe - La recette.
+ * @param entryId - L'id de l'entrée à retirer.
+ * @returns La recette sans cette entrée d'historique.
+ */
 export function deleteVersion(recipe: HistoryRecipe, entryId: string): HistoryRecipe {
   return { ...recipe, history: (recipe.history || []).filter(h => h.id !== entryId) };
 }
@@ -121,6 +152,10 @@ const diffKey = (n: string | undefined): string => (n || "").trim().toLowerCase(
 /**
  * Compare un snapshot `base` (ancien) à `target` (récent). Ingrédients et
  * ustensiles sont appariés par nom normalisé ; les étapes par position.
+ *
+ * @param base - Snapshot de référence (ancien).
+ * @param target - Snapshot comparé (récent).
+ * @returns Le diff façon « git » (ingrédients, ustensiles, étapes, scalaires + `hasChanges`).
  */
 export function diffSnapshots(base: Snapshot | null | undefined, target: Snapshot | null | undefined): SnapshotDiff {
   const b = base || {}, t = target || {};

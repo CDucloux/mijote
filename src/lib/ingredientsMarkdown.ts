@@ -23,8 +23,12 @@ export interface MdColumn {
 }
 
 // ─── TIPS (conseils) ↔ MARKDOWN ─────────────────────────────────────────────
-// Sérialisation dans une cellule unique : chaque conseil = « type: texte »,
-// conseils séparés par « ;; ». Le pipe est échappé en amont par l'export.
+
+/**
+ * Types de conseils reconnus. Sérialisation dans une cellule unique : chaque
+ * conseil = « type: texte », conseils séparés par « ;; ». Le pipe est échappé en
+ * amont par l'export.
+ */
 const TIP_TYPE_KEYS = new Set(Object.keys(TIP_TYPES));
 
 /**
