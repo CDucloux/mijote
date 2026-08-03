@@ -42,6 +42,8 @@ import { ProfilePage } from "./pages/ProfilePage.jsx";
 import { LegalPage } from "./pages/LegalPage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
+import { ImportFromUrl } from "./pages/ImportFromUrl.jsx";
+import { ImportFromPicture } from "./pages/ImportFromPicture.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent —
@@ -59,7 +61,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : "home");
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : location.pathname.startsWith("/recipes") ? "recipes" : "home");
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/home"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
@@ -110,12 +112,14 @@ function AppInner({ user, isDark, toggleTheme }) {
   // porté par l'URL → survit à un remontage, ex. dézoom desktop, et est
   // partageable / navigable au bouton retour).
   const recipeSeg = location.pathname.startsWith("/recipes/") ? location.pathname.slice(9) : "";
+  // Pages d'import IA (routes dédiées) : ne correspondent à aucune recette.
+  const importRoute = recipeSeg === "import-from-url" ? "url" : recipeSeg === "import-from-picture" ? "picture" : null;
   const cookModeRoute = recipeSeg.endsWith("/cookmode");
   const editRoute = recipeSeg.endsWith("/edit");
   const routeSuffix = cookModeRoute ? "/cookmode" : editRoute ? "/edit" : "";
-  const recipeIdParam = recipeSeg
-    ? decodeURIComponent(routeSuffix ? recipeSeg.slice(0, -routeSuffix.length) : recipeSeg) || undefined
-    : undefined;
+  const recipeIdParam = importRoute || !recipeSeg
+    ? undefined
+    : decodeURIComponent(routeSuffix ? recipeSeg.slice(0, -routeSuffix.length) : recipeSeg) || undefined;
   const selectedRecipe = recipeIdParam || null;
   const setSelectedRecipe = useCallback((id) => {
     if (id) navigate(`/recipes/${id}`);
@@ -347,6 +351,10 @@ function AppInner({ user, isDark, toggleTheme }) {
         onSave={(r) => { const ok = saveRecipe(r); if (ok !== false && editRoute) navigate(`/recipes/${selectedRecipe}`, { replace: true }); }}
         onCancel={() => { setEditingRecipe(null); if (editRoute) navigate(`/recipes/${selectedRecipe}`); }}
         ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
+    </div>
+  ) : importRoute ? (
+    <div className={isDesktop ? "desktop-content" : ""} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
+      {importRoute === "url" ? <ImportFromUrl /> : <ImportFromPicture />}
     </div>
   ) : publicPubId ? (
     publicDocs ? (
