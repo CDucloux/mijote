@@ -1,21 +1,57 @@
-import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "@/lib/recipes/recipeActions.js";
+import type { Dispatch, SetStateAction } from "react";
+import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems, type ActionDbItem } from "@/lib/recipes/recipeActions.js";
 import { recipesReferencing } from "@/lib/recipes/recipeComponents.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
-import { prepareRecipeImport } from "@/lib/recipes/recipeImport.js";
+import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
-import { printRecipe } from "@/lib/recipes/recipePdf.js";
+import { printRecipe, type PdfRecipe } from "@/lib/recipes/recipePdf.js";
+import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
+import type { ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
 
-// ─── RECETTES — opérations cœur (CRUD, courses, import/export) ─────────────────
-// Sauvegarde, suppression (avec déliage des bases référencées), ajout aux courses,
-// import/export JSON et impression PDF. Extrait d'App.jsx ; dépendances injectées.
+/** Liste de courses (forme minimale manipulée ici). */
+export interface ShoppingList {
+  id: string;
+  name?: string;
+  type?: string;
+  recipeId?: string;
+  items: unknown[];
+}
+
+/** Dépendances injectées (état de l'app + setters + notify/navigate). */
+export interface RecipeCrudDeps {
+  recipes: Recipe[];
+  setRecipes: Dispatch<SetStateAction<Recipe[]>>;
+  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  setEditingRecipe: (r: Recipe | null) => void;
+  setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
+  ingredientDB: ActionDbItem[];
+  utensilDB: ImportDbItem[];
+  techniques: unknown[];
+  stock: string[];
+  notify: (msg: string, type?: string) => void;
+  navigate: (path: string) => void;
+}
+
+/** Index de recettes tel qu'attendu par les helpers courses/PDF (composants). */
+const componentIndex = (recipes: Recipe[]): Map<string, ComponentRecipe> =>
+  buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, ComponentRecipe>;
+
+/**
+ * Recettes — opérations cœur (CRUD, courses, import/export). Sauvegarde, suppression
+ * (avec déliage des bases référencées), ajout aux courses, import/export JSON et
+ * impression PDF.
+ *
+ * @param deps - État de l'app, setters et `notify`/`navigate`.
+ * @returns `{ saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF }`.
+ */
 export function useRecipeCrud({
   recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
   ingredientDB, utensilDB, techniques, stock, notify, navigate,
-}) {
-  const saveRecipe = (r) => {
+}: RecipeCrudDeps) {
+  const saveRecipe = (r: Recipe): boolean => {
     const result = prepareRecipeForSave(r, { recipes, ingredientDB });
-    if (result.error) { notify(result.error, "error"); return false; }
+    if ("error" in result) { notify(result.error, "error"); return false; }
     const updatedRecipes = upsertRecipe(recipes, result.recipe);
     setRecipes(updatedRecipes);
     setCollections(prev => recomputeCollectionCounts(prev, updatedRecipes));
@@ -24,7 +60,7 @@ export function useRecipeCrud({
     return true;
   };
 
-  const deleteRecipe = (id) => {
+  const deleteRecipe = (id: string): void => {
     const r = recipes.find(x => x.id === id);
     if (r?.isComponent) {
       const refs = recipesReferencing(id, recipes);
@@ -52,8 +88,8 @@ export function useRecipeCrud({
     notify("Recette supprimée");
   };
 
-  const addToShopping = (recipe, selectedIngredients, mult = 1) => {
-    const items = buildShoppingItems(recipe, selectedIngredients, mult, ingredientDB, buildRecipeIndex(recipes), new Set(stock));
+  const addToShopping = (recipe: Recipe, selectedIngredients: IngredientLine[] | null | undefined, mult = 1): void => {
+    const items = buildShoppingItems(recipe, selectedIngredients, mult, ingredientDB, componentIndex(recipes), new Set(stock));
     if (items.length === 0) return;
     setShoppingLists(prev => {
       const existing = prev.find(l => l.type === "recipe" && l.recipeId === recipe.id);
@@ -63,19 +99,19 @@ export function useRecipeCrud({
     notify(`${items.length} ingrédient(s) ajoutés aux courses`);
   };
 
-  const exportJSON = (recipe) => {
+  const exportJSON = (recipe: Recipe): void => {
     const blob = new Blob([JSON.stringify(cleanRecipeForExport(recipe), null, 2)], { type: "application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${recipe.name.split(" ").join("_")}.json`; a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${(recipe.name || "").split(" ").join("_")}.json`; a.click();
     notify("Export JSON téléchargé");
   };
 
-  const importJSON = (json) => {
-    const result = prepareRecipeImport(json, { ingredientDB, utensilDB });
-    if (result.error) { notify(result.error, "error"); return; }
+  const importJSON = (json: string): void => {
+    const result = prepareRecipeImport(json, { ingredientDB: ingredientDB as unknown as ImportDbItem[], utensilDB });
+    if ("error" in result) { notify(result.error, "error"); return; }
     const { prepared, linked, rejected } = result;
     setRecipes(prev => {
-      const existingNames = new Set(prev.map(r => r.name.toLowerCase().trim()));
-      const newOnes = prepared.filter(r => !existingNames.has(r.name.toLowerCase().trim()));
+      const existingNames = new Set(prev.map(r => (r.name || "").toLowerCase().trim()));
+      const newOnes = prepared.filter(r => !existingNames.has((r.name || "").toLowerCase().trim()));
       const dupes = prepared.length - newOnes.length;
       const extras = [
         linked > 0 ? `${linked} élément(s) reliés à ta base` : "",
@@ -88,8 +124,12 @@ export function useRecipeCrud({
     });
   };
 
-  const exportPDF = (recipe) => {
-    printRecipe(recipe, { ingredientDB, utensilDB, recipesById: buildRecipeIndex(recipes), techniques });
+  const exportPDF = (recipe: Recipe): void => {
+    printRecipe(recipe as unknown as PdfRecipe, {
+      ingredientDB, utensilDB,
+      recipesById: buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, PdfRecipe>,
+      techniques,
+    } as Parameters<typeof printRecipe>[1]);
     notify("Ouverture de l'aperçu d'impression…");
   };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { onSnapshot } from "firebase/firestore";
+import { onSnapshot, type DocumentData, type Unsubscribe } from "firebase/firestore";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import {
   householdMemberQuery, householdInviteQuery,
@@ -16,13 +16,27 @@ import {
 // l'Accueil se remonte à chaque navigation ; sans ce cache, `loading` repart à
 // `true` et un skeleton grisé clignote le temps du 1er snapshot Firestore. On
 // réhydrate donc immédiatement l'état connu et le snapshot ne fait que rafraîchir.
-let hhCache = { uid: null, household: null, invites: [] };
+let hhCache: { uid: string | null; household: DocumentData | null; invites: DocumentData[] } = { uid: null, household: null, invites: [] };
+
+/**
+ * Appartenance à un foyer (abonnements temps réel + actions serveur). Expose mon
+ * foyer actif, mes invitations en attente et un jeu d'actions online-only
+ * (création, invitation, adhésion, départ, dissolution…).
+ *
+ * @returns `{ household, invites, loading, actions }`.
+ */
+/** Sous-ensemble du contexte applicatif consommé par ce hook. */
+interface AppShellSlice {
+  user: { uid: string; email?: string } | null | undefined;
+  notify: (msg: string, type?: string) => void;
+  getSharedData?: () => unknown;
+}
 
 export function useHousehold() {
-  const { user, notify, getSharedData } = useAppShell();
+  const { user, notify, getSharedData } = useAppShell() as AppShellSlice;
   const cached = hhCache.uid && hhCache.uid === user?.uid;
-  const [household, setHousehold] = useState(cached ? hhCache.household : null);
-  const [invites, setInvites] = useState(cached ? hhCache.invites : []);
+  const [household, setHousehold] = useState<DocumentData | null>(cached ? hhCache.household : null);
+  const [invites, setInvites] = useState<DocumentData[]>(cached ? hhCache.invites : []);
   const [loading, setLoading] = useState(!cached);
   const hadHousehold = useRef(!!(cached && hhCache.household));
 
@@ -39,7 +53,7 @@ export function useHousehold() {
       if (hadHousehold.current && !h) clearHouseholdPointer(user.uid);
       hadHousehold.current = !!h;
     }, () => setLoading(false));
-    let unsubInvite = () => {};
+    let unsubInvite: Unsubscribe = () => {};
     if (user.email) {
       unsubInvite = onSnapshot(householdInviteQuery(user.email),
         snap => { const arr = snap.docs.map(d => d.data()); hhCache = { ...hhCache, uid: user.uid, invites: arr }; setInvites(arr); }, () => {});
@@ -49,7 +63,7 @@ export function useHousehold() {
 
   // Garde online : les opérations d'appartenance ne doivent pas partir en file
   // offline (plafond + transactions serveur).
-  const online = useCallback(() => {
+  const online = useCallback((): boolean => {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
       notify("Action indisponible hors ligne", "error");
       return false;
@@ -57,20 +71,20 @@ export function useHousehold() {
     return true;
   }, [notify]);
 
-  const run = useCallback(async (fn, errMsg) => {
+  const run = useCallback(async (fn: () => Promise<unknown>, errMsg: string): Promise<boolean> => {
     if (!online()) return false;
     try { await fn(); return true; }
-    catch (e) { notify(e?.message ? `${errMsg} : ${e.message}` : errMsg, "error"); return false; }
+    catch (e) { const msg = (e as { message?: string })?.message; notify(msg ? `${errMsg} : ${msg}` : errMsg, "error"); return false; }
   }, [online, notify]);
 
   const actions = {
-    create: (name) => run(() => createHousehold(user, name, getSharedData?.()), "Création du foyer échouée"),
-    invite: (email) => run(() => inviteToHousehold(household.id, email), "Invitation échouée"),
-    accept: (hid) => run(() => acceptInvite(hid, user), "Adhésion échouée"),
-    decline: (hid) => run(() => declineInvite(hid, user.email), "Refus échoué"),
-    cancelInvite: (email) => run(() => declineInvite(household.id, email), "Annulation échouée"),
-    leave: () => run(() => leaveHousehold(household.id, user), "Départ échoué"),
-    dissolve: () => run(() => dissolveHousehold(household.id, user.uid), "Dissolution échouée"),
+    create: (name: string) => run(() => createHousehold(user!, name, getSharedData?.() as Parameters<typeof createHousehold>[2]), "Création du foyer échouée"),
+    invite: (email: string) => run(() => inviteToHousehold(household?.id, email), "Invitation échouée"),
+    accept: (hid: string) => run(() => acceptInvite(hid, user!), "Adhésion échouée"),
+    decline: (hid: string) => run(() => declineInvite(hid, user!.email!), "Refus échoué"),
+    cancelInvite: (email: string) => run(() => declineInvite(household?.id, email), "Annulation échouée"),
+    leave: () => run(() => leaveHousehold(household?.id, user!), "Départ échoué"),
+    dissolve: () => run(() => dissolveHousehold(household?.id, user!.uid), "Dissolution échouée"),
   };
 
   return { household, invites, loading, actions };
