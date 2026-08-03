@@ -1,20 +1,20 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/Icon.jsx";
-import { parseDurations, fmtCountdown } from "../lib/stepTimers.js";
+import { parseDurations, fmtCountdown } from "@/lib/planning/stepTimers.js";
 import { StepTip } from "../components/StepTip.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
 import { TechniqueText } from "../components/TechniqueText.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { buildTechniqueIndex } from "../lib/techniques.js";
-import { findIngredientMatch } from "../lib/nameMatcher.js";
-import { normalizeStr } from "../lib/parseIngredient.js";
-import { consumptionFraction } from "../lib/recipeComponents.js";
+import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
+import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { consumptionFraction } from "@/lib/recipes/recipeComponents.js";
 import { capitalize, fmtQtyUnit } from "../lib/format.js";
 import { AutoResizeTextarea } from "../components/AutoResizeTextarea.jsx";
 import { RatingPicker } from "../components/RatingPicker.jsx";
-import { addVersion, nextVersionLabel } from "../lib/history.js";
+import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { DIFFICULTY_LABEL, difficultyColor } from "../lib/difficulty.js";
+import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
 
 // ─── BADGE DE DIFFICULTÉ ──────────────────────────────────────────────────────
 // Chip « pastilles + libellé » (Très facile → Expert). `onImage` : variante claire

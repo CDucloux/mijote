@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { pickSpotlightIngredient, publicRecipesWithIngredient } from "../spotlight.js";
-import { createIngredientResolver } from "../nameMatcher.js";
+import { pickSpotlightIngredient, publicRecipesWithIngredient } from "@/lib/planning/spotlight.js";
+import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 
 // août = mois 8
 const AUG = new Date(2025, 7, 15);

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   ingredientMonths, isIngredientInSeason, recipeSeasonScore, isRecipeInSeason,
   parseMonths, formatMonths,
-} from "../seasonality.js";
+} from "@/lib/food/seasonality.js";
 
 describe("ingredientMonths", () => {
   it("returns null when months is missing or not an array", () => {

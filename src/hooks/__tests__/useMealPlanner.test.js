@@ -3,11 +3,11 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
 // On isole la LOGIQUE du hook (branchement, undo) en simulant la génération pure.
-vi.mock("../../lib/mealPlanner.js", () => ({
+vi.mock("@/lib/planning/mealPlanner.js", () => ({
   generateWeek: vi.fn(),
   GEN_STYLES: { equilibre: {}, facile: {}, aventureux: {} },
 }));
-import { generateWeek } from "../../lib/mealPlanner.js";
+import { generateWeek } from "@/lib/planning/mealPlanner.js";
 import { useMealPlanner } from "../useMealPlanner.js";
 
 function setup(initialPlan = {}) {

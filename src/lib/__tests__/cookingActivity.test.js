@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { activityCounts, activityLevel, buildHeatmap } from "../cookingActivity.js";
+import { activityCounts, activityLevel, buildHeatmap } from "@/lib/planning/cookingActivity.js";
 
 describe("activityCounts", () => {
   it("compte les items par jour, ignore les jours vides", () => {

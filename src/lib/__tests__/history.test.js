@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { snapshotOf, nextVersionLabel, addVersion, deleteVersion, diffSnapshots } from "../history.js";
+import { snapshotOf, nextVersionLabel, addVersion, deleteVersion, diffSnapshots } from "@/lib/recipes/history.js";
 
 const baseRecipe = () => ({
   name: "Test",

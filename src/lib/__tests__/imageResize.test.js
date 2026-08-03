@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resizeDimensions, prepareImageForUpload, MAX_EDGE } from "../imageResize.js";
+import { resizeDimensions, prepareImageForUpload, MAX_EDGE } from "@/lib/firebase/imageResize.js";
 
 describe("resizeDimensions", () => {
   it("réduit une grande image sous MAX_EDGE en préservant le ratio", () => {

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   todayKey, getTodayMeals, upcomingSlot, countShoppingTodo,
   getLowStockNames, buildDashboardSummary,
-} from "../dashboard.js";
+} from "@/lib/planning/dashboard.js";
 
 const recipes = [
   { id: "r1", name: "Soupe" },

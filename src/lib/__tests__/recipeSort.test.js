@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { makeComparator, defaultDirFor, dirLabel } from "../recipeSort.js";
+import { makeComparator, defaultDirFor, dirLabel } from "@/lib/recipes/recipeSort.js";
 
 const sortIds = (recipes, sortBy, sortDir) =>
   [...recipes].sort(makeComparator({ sortBy, sortDir, techniques: [], techIndex: {}, recipes })).map(r => r.id);

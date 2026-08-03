@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   publicId, collectComponentDeps, deriveDietTags, buildKeywords,
   toPublicRecipe, buildPublishBundle, clonePublicBundle, filterPublicRecipes,
-} from "../publicRecipes.js";
+} from "@/lib/household/publicRecipes.js";
 
 const user = { uid: "u1", displayName: "Chef Test", photoURL: "p.jpg" };
 

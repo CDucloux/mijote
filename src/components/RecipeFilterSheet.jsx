@@ -4,10 +4,10 @@ import { BaseIcon } from "./BaseIcon.jsx";
 import { IngImage } from "./Img.jsx";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
-import { DIFFICULTY_LABEL, difficultyColor } from "../lib/difficulty.js";
-import { DEFAULT_FILTERS, activeFilterCount } from "../lib/recipeFilters.js";
-import { COOKING_METHODS } from "../lib/cooking.js";
-import { normalizeStr } from "../lib/parseIngredient.js";
+import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
+import { DEFAULT_FILTERS, activeFilterCount } from "@/lib/recipes/recipeFilters.js";
+import { COOKING_METHODS } from "@/lib/recipes/cooking.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 const COOKING_EMOJI = { four: "🔥", airfryer: "🌀", plaques: "🍳", vapeur: "♨️", grill: "🍢", "micro-ondes": "📡" };
 

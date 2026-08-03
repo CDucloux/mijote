@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildRecipePdfHtml } from "../recipePdf.js";
+import { buildRecipePdfHtml } from "@/lib/recipes/recipePdf.js";
 
 const DB = [
   { id: "courgette", name: "Courgette", category: "vegetable" },

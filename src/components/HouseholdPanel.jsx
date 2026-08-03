@@ -3,7 +3,7 @@ import { Icon } from "./Icon.jsx";
 import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
-import { peopleCount, isOwner, MAX_HOUSEHOLD } from "../lib/household.js";
+import { peopleCount, isOwner, MAX_HOUSEHOLD } from "@/lib/household/household.js";
 
 // Avatar rond : photo si disponible, sinon initiale colorée.
 function Avatar({ photo, label, size = 34, dim = false }) {

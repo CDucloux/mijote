@@ -7,10 +7,10 @@ import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
-import { peopleCount, MAX_HOUSEHOLD } from "../lib/household.js";
-import { buildDashboardSummary } from "../lib/dashboard.js";
+import { peopleCount, MAX_HOUSEHOLD } from "@/lib/household/household.js";
+import { buildDashboardSummary } from "@/lib/planning/dashboard.js";
 import { SLOT_BY_ID } from "../constants/mealSlots.js";
-import { itemRole, roleOrder } from "../lib/composedMeal.js";
+import { itemRole, roleOrder } from "@/lib/planning/composedMeal.js";
 import { fmtTime } from "../lib/format.js";
 
 // ─── HOME / ACCUEIL ───────────────────────────────────────────────────────────

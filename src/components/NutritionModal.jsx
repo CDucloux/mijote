@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
-import { computeNutritionDetail, buildRecipeIndex } from "../lib/nutriscore.js";
+import { computeNutritionDetail, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 
 // ─── NUTRITION ANALYSIS MODAL ─────────────────────────────────────────────────

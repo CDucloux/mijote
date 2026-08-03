@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeNutriInfo, computeHealthScore } from "../nutriscore.js";
+import { computeNutriInfo, computeHealthScore } from "@/lib/recipes/nutriscore.js";
 
 const DB = [
   { id: "beurre", name: "Beurre", nutrition: { calories: 745, fat: 82, saturatedFat: 51, salt: 0.02, sugar: 0.6, protein: 0.7, fiber: 0 } },

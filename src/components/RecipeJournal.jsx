@@ -3,7 +3,7 @@ import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
-import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots } from "../lib/history.js";
+import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots } from "@/lib/recipes/history.js";
 import { RatingPicker, ratingColor } from "./RatingPicker.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 

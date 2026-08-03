@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildTechniqueIndex, annotateText, hasTechnique } from "../techniques.js";
+import { buildTechniqueIndex, annotateText, hasTechnique } from "@/lib/recipes/techniques.js";
 
 const TECHS = [
   { id: "tech_suer", name: "Suer", aliases: ["suer", "faire suer"], definition: "Cuire doux." },

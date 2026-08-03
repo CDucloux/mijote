@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseDurations, fmtCountdown } from "../stepTimers.js";
+import { parseDurations, fmtCountdown } from "@/lib/planning/stepTimers.js";
 
 const mins = (t) => parseDurations(t).map(d => d.minutes);
 

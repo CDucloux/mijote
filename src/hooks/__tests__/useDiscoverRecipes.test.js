@@ -2,8 +2,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 
-vi.mock("../../lib/firestore.js", () => ({ fetchPublicRecipes: vi.fn() }));
-import { fetchPublicRecipes } from "../../lib/firestore.js";
+vi.mock("@/lib/firebase/firestore.js", () => ({ fetchPublicRecipes: vi.fn() }));
+import { fetchPublicRecipes } from "@/lib/firebase/firestore.js";
 import { useDiscoverRecipes } from "../useDiscoverRecipes.js";
 
 describe("useDiscoverRecipes", () => {

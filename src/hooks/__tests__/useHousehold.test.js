@@ -17,7 +17,7 @@ vi.mock("firebase/firestore", () => ({
   },
 }));
 
-vi.mock("../../lib/firestore.js", () => ({
+vi.mock("@/lib/firebase/firestore.js", () => ({
   householdMemberQuery: () => ({ type: "member" }),
   householdInviteQuery: () => ({ type: "invite" }),
   createHousehold: vi.fn(), inviteToHousehold: vi.fn(), acceptInvite: vi.fn(),

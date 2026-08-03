@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Icon } from "./Icon.jsx";
 import { Img } from "./Img.jsx";
-import { uploadImage, compressImage } from "../lib/storage.js";
+import { uploadImage, compressImage } from "@/lib/firebase/storage.js";
 
 // ─── IMAGE UPLOAD ─────────────────────────────────────────────────────────────
 export function ImageUpload({ value, onChange, style, pathPrefix = "misc" }) {

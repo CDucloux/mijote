@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { soloWorkspace, householdWorkspace, isHousehold, workspaceId } from "../workspace.js";
+import { soloWorkspace, householdWorkspace, isHousehold, workspaceId } from "@/lib/household/workspace.js";
 
 describe("workspace", () => {
   it("solo résout vers users/{uid}", () => {

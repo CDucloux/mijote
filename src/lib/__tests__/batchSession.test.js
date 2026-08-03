@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildBatchSession, weekEntries } from "../batchSession.js";
+import { buildBatchSession, weekEntries } from "@/lib/planning/batchSession.js";
 
 const bechamel = { id: "bech", name: "Béchamel", isComponent: true, yield: { amount: 500, unit: "g" }, ingredients: [{ name: "Lait" }, { name: "Farine" }] };
 const gratin = { id: "gratin", name: "Gratin", servings: 4, ingredients: [{ recipeId: "bech", amount: 300, unit: "g" }, { name: "Courgette" }] };

@@ -3,9 +3,9 @@ import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
-import { computeNutriInfo } from "../lib/nutriscore.js";
+import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { ingredientMonths, isIngredientInSeason, MONTHS_SHORT_FR, MONTHS_FR, currentMonth } from "../lib/seasonality.js";
+import { ingredientMonths, isIngredientInSeason, MONTHS_SHORT_FR, MONTHS_FR, currentMonth } from "@/lib/food/seasonality.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 import { TIP_TYPES, TIP_ORDER } from "../constants/tipTypes.js";
 

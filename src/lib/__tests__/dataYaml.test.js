@@ -3,7 +3,7 @@ import {
   parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
   slugifyId, TECHNIQUE_CATEGORIES,
-} from "../dataYaml.js";
+} from "@/lib/household/dataYaml.js";
 
 describe("slugifyId", () => {
   it("slugs and strips accents", () => {

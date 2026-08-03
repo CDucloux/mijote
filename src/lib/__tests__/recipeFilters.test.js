@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual } from "../recipeFilters.js";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual } from "@/lib/recipes/recipeFilters.js";
 
 describe("matchesFilters – catégorie (type de recette)", () => {
   const dessert = { name: "Tarte", category: "dessert", ingredients: [], isComponent: false };

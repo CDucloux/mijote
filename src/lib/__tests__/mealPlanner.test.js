@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreRecipe, effortScore, simplicityScore, dishSeasonScore, eligibleForSlot, generateWeek, GEN_STYLES } from "../mealPlanner.js";
+import { scoreRecipe, effortScore, simplicityScore, dishSeasonScore, eligibleForSlot, generateWeek, GEN_STYLES } from "@/lib/planning/mealPlanner.js";
 
 const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const DB = [
