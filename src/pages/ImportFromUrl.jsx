@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
 import { LoadingOverlay, InlineError, HintCard, ImportHeader } from "../components/ImportUI.jsx";
@@ -14,6 +14,7 @@ const URL_RE = /^https?:\/\/.+/i;
 export function ImportFromUrl() {
   const { importFromUrl, notify, isAdmin } = useAppShell();
   const navigate = useNavigate();
+  const location = useLocation();
   const [url, setUrl] = useState("");
   const [clip, setClip] = useState("");        // URL détectée dans le presse-papiers
   const [error, setError] = useState("");        // hint de saisie (inline)
@@ -22,6 +23,19 @@ export function ImportFromUrl() {
 
   // Accès direct à la route par un non-admin : on renvoie à la bibliothèque.
   useEffect(() => { if (!isAdmin) navigate("/recipes", { replace: true }); }, [isAdmin, navigate]);
+
+  // Partage natif vers l'appli (share_target du manifest) : la page/le lien
+  // partagé arrive en query (`url`, ou dans `text`/`title` selon la source). On
+  // en extrait la 1ʳᵉ URL, on pré-remplit le champ, puis on nettoie la query
+  // (évite de re-déclencher au retour arrière ou au rechargement).
+  useEffect(() => {
+    if (!location.search) return;
+    const p = new URLSearchParams(location.search);
+    const shared = `${p.get("url") || ""} ${p.get("text") || ""} ${p.get("title") || ""}`;
+    const m = shared.match(/https?:\/\/[^\s]+/i);
+    if (m) setUrl(m[0]);
+    navigate("/recipes/import-from-url", { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Lecture best-effort du presse-papiers : si un lien y est copié, on propose de
   // le coller en un tap. Peut échouer (permission, navigateur) → simplement ignoré.
