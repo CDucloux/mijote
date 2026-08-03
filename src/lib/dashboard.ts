@@ -36,7 +36,12 @@ export interface TodayMeal extends PlanEntry {
   recipe: DashRecipe | undefined;
 }
 
-/** Clé ISO du jour (`YYYY-MM-DD`), cohérente avec les clés de planning. */
+/**
+ * Clé ISO du jour (`YYYY-MM-DD`), cohérente avec les clés de planning.
+ *
+ * @param date - Date de référence (défaut : aujourd'hui).
+ * @returns La clé `YYYY-MM-DD`.
+ */
 export function todayKey(date: Date = new Date()): string {
   return date.toISOString().slice(0, 10);
 }
@@ -44,6 +49,11 @@ export function todayKey(date: Date = new Date()): string {
 /**
  * Repas planifiés pour une date donnée, enrichis de la recette résolue et triés
  * matin → midi → soir.
+ *
+ * @param mealPlan - Le planning indexé par date.
+ * @param recipes - Les recettes (résolution par id).
+ * @param key - La clé du jour (défaut : aujourd'hui).
+ * @returns Les repas du jour résolus et triés (repas sans recette exclus).
  */
 export function getTodayMeals(
   mealPlan: Record<string, PlanEntry[]> = {},
@@ -58,18 +68,34 @@ export function getTodayMeals(
     .sort((a, b) => slotOrder(a.slot) - slotOrder(b.slot));
 }
 
-/** Le créneau « à venir » selon l'heure : matin avant 11h, midi avant 15h, sinon soir. */
+/**
+ * Le créneau « à venir » selon l'heure : matin avant 11h, midi avant 15h, sinon soir.
+ *
+ * @param date - Date/heure de référence (défaut : maintenant).
+ * @returns Le créneau à venir (`matin`, `midi` ou `soir`).
+ */
 export function upcomingSlot(date: Date = new Date()): "matin" | "midi" | "soir" {
   const h = date.getHours();
   return h < 11 ? "matin" : h < 15 ? "midi" : "soir";
 }
 
-/** Nombre total d'articles non cochés sur l'ensemble des listes de courses. */
+/**
+ * Nombre total d'articles non cochés sur l'ensemble des listes de courses.
+ *
+ * @param lists - Les listes de courses.
+ * @returns Le total d'articles restant à acheter.
+ */
 export function countShoppingTodo(lists: ShoppingList[] = []): number {
   return lists.reduce((sum, l) => sum + ((l.items || []).filter(i => !i.checked).length), 0);
 }
 
-/** Noms (résolus via la base d'ingrédients) des ingrédients marqués « bientôt vide ». */
+/**
+ * Noms (résolus via la base d'ingrédients) des ingrédients marqués « bientôt vide ».
+ *
+ * @param lowStock - Ids des ingrédients en stock bas.
+ * @param ingredientDB - Base d'ingrédients (résolution id → nom).
+ * @returns Les noms des ingrédients bientôt épuisés.
+ */
 export function getLowStockNames(lowStock: string[] = [], ingredientDB: DashIngredient[] = []): string[] {
   const byId = new Map(ingredientDB.map(i => [i.id, i]));
   return lowStock.map(id => byId.get(id)).filter((i): i is DashIngredient => !!i).map(i => i.name || "");
@@ -85,7 +111,13 @@ export interface DashboardInput {
   date?: Date;
 }
 
-/** Agrège tout ce dont l'en-tête « Aujourd'hui » a besoin + un drapeau « rien à signaler ». */
+/**
+ * Agrège tout ce dont l'en-tête « Aujourd'hui » a besoin, plus un drapeau
+ * « rien à signaler ».
+ *
+ * @param input - Sources agrégées (planning, recettes, listes, stock bas, base, date).
+ * @returns Le résumé du jour : repas, créneau à venir, courses, stock bas, `isCalm`.
+ */
 export function buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowStock, ingredientDB, date = new Date() }: DashboardInput = {}) {
   const key = todayKey(date);
   const meals = getTodayMeals(mealPlan, recipes, key);

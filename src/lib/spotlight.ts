@@ -24,7 +24,12 @@ type IngredientResolver = (name: string | undefined) => { id?: string } | null;
 
 const SPOTLIGHT_CATEGORIES = new Set(["fruit", "vegetable"]);
 
-/** Index de semaine déterministe (rotation hebdomadaire de la vedette). */
+/**
+ * Index de semaine déterministe (rotation hebdomadaire de la vedette).
+ *
+ * @param date - Date de référence (défaut : aujourd'hui).
+ * @returns Le numéro de semaine depuis le 1er janvier.
+ */
 export function weekIndex(date: Date = new Date()): number {
   const start = new Date(date.getFullYear(), 0, 1);
   const days = Math.floor((date.getTime() - start.getTime()) / 86400000);
@@ -37,6 +42,10 @@ export function weekIndex(date: Date = new Date()): number {
  *
  * La description ne fait qu'enrichir la carte : la préférer figeait la rotation
  * quand un seul ingrédient en avait une.
+ *
+ * @param ingredientDB - Base d'ingrédients (fruits/légumes candidats).
+ * @param date - Date de référence (mois + rotation hebdomadaire).
+ * @returns L'ingrédient vedette de la semaine, ou `null` si aucun candidat de saison.
  */
 export function pickSpotlightIngredient(
   ingredientDB: SpotlightIngredient[] | null | undefined,
@@ -57,6 +66,12 @@ export function pickSpotlightIngredient(
  * Recettes publiques (hors préparations de base) utilisant l'ingrédient vedette.
  * `resolver` (createIngredientResolver) gère pluriels, qualificatifs et distingue
  * les proches (« poire » ≠ « poireau »).
+ *
+ * @param ingredient - L'ingrédient vedette.
+ * @param pubs - Les recettes publiques candidates.
+ * @param resolver - Résolveur nom → ingrédient (pluriels, qualificatifs).
+ * @param max - Nombre maximum de recettes retournées (défaut 10).
+ * @returns Les recettes publiques (hors bases) qui utilisent l'ingrédient.
  */
 export function publicRecipesWithIngredient(
   ingredient: SpotlightIngredient | null | undefined,

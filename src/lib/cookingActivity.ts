@@ -29,7 +29,12 @@ export interface Heatmap {
   max: number;
 }
 
-/** Clé jour → nombre d'items de repas (compatible avec les clés `YYYY-MM-DD`). */
+/**
+ * Compte les items de repas par jour (compatible avec les clés `YYYY-MM-DD`).
+ *
+ * @param mealPlan - Le planning indexé par date.
+ * @returns Une map jour → nombre d'items (jours vides omis).
+ */
 export function activityCounts(mealPlan: MealPlan = {}): Map<string, number> {
   const m = new Map<string, number>();
   for (const [date, items] of Object.entries(mealPlan)) {
@@ -38,7 +43,12 @@ export function activityCounts(mealPlan: MealPlan = {}): Map<string, number> {
   return m;
 }
 
-/** Niveau d'intensité 0..4 pour la couleur d'une case. */
+/**
+ * Niveau d'intensité 0..4 pour la couleur d'une case.
+ *
+ * @param count - Nombre d'items de repas du jour.
+ * @returns Un niveau de 0 (rien) à 4 (très actif).
+ */
 export function activityLevel(count: number): number {
   if (!count) return 0;
   if (count <= 2) return 1;
@@ -51,8 +61,13 @@ const keyOf = (d: Date): string => d.toISOString().slice(0, 10);
 const addDays = (d: Date, n: number): Date => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 
 /**
- * Construit la grille de la heatmap : colonnes = semaines (lundi→dimanche), se
- * terminant à `end` (défaut : aujourd'hui).
+ * Construit la grille de la heatmap : colonnes = semaines (lundi→dimanche).
+ *
+ * @param mealPlan - Le planning indexé par date.
+ * @param options - Options de fenêtre.
+ * @param options.weeks - Nombre de colonnes/semaines (défaut 26).
+ * @param options.end - Fin de la fenêtre (défaut : aujourd'hui).
+ * @returns La heatmap (colonnes de cases + statistiques : total, série, max).
  */
 export function buildHeatmap(mealPlan: MealPlan = {}, { weeks = 26, end }: { weeks?: number; end?: Date | string } = {}): Heatmap {
   const counts = activityCounts(mealPlan);

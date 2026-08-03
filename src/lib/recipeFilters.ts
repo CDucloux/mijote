@@ -55,6 +55,10 @@ const COOK_LABEL = new Map<string, string>(COOKING_METHODS.map((m: { id: string;
 /**
  * Résumé lisible d'une vue de filtres (pour l'affichage d'un carnet intelligent) :
  * une liste de courtes étiquettes.
+ *
+ * @param f - L'état de filtrage (partiel).
+ * @param search - Le texte de recherche associé.
+ * @returns Les étiquettes lisibles décrivant la vue.
  */
 export function summarizeFilters(f: Partial<RecipeFilters> = {}, search = ""): string[] {
   const out: string[] = [];
@@ -74,7 +78,12 @@ export function summarizeFilters(f: Partial<RecipeFilters> = {}, search = ""): s
   return out;
 }
 
-/** Nombre de critères actifs dans une vue de filtres. */
+/**
+ * Nombre de critères actifs dans une vue de filtres.
+ *
+ * @param f - L'état de filtrage.
+ * @returns Le nombre de critères non neutres.
+ */
 export function activeFilterCount(f: RecipeFilters): number {
   return (f.season ? 1 : 0) + (f.vegan ? 1 : 0) + (f.type !== "all" ? 1 : 0)
     + (f.categories?.length ? 1 : 0)
@@ -85,6 +94,10 @@ export function activeFilterCount(f: RecipeFilters): number {
 /**
  * Deux états de filtres décrivent-ils la même vue ? Comparaison indépendante de
  * l'ordre pour les tableaux. Sert à repérer quel carnet intelligent est actif.
+ *
+ * @param a - Premier état de filtrage.
+ * @param b - Second état de filtrage.
+ * @returns `true` si les deux vues sont équivalentes.
  */
 export function filtersEqual(a: Partial<RecipeFilters> = {}, b: Partial<RecipeFilters> = {}): boolean {
   const A = { ...DEFAULT_FILTERS, ...a }, B = { ...DEFAULT_FILTERS, ...b };
@@ -99,6 +112,11 @@ export function filtersEqual(a: Partial<RecipeFilters> = {}, b: Partial<RecipeFi
  * Une recette passe-t-elle l'état de filtrage `f` ? `ctx` fournit les dépendances
  * facultatives (résolveur d'ingrédients, techniques + index, liste de recettes pour
  * l'héritage des bases). Utilisé tel quel par /recipes et « Découvrir ».
+ *
+ * @param r - La recette à tester.
+ * @param f - L'état de filtrage à appliquer.
+ * @param ctx - Dépendances facultatives (résolveur, techniques + index, recettes).
+ * @returns `true` si la recette passe tous les critères actifs.
  */
 export function matchesFilters(r: FilterableRecipe, f: RecipeFilters, ctx: FilterContext = {}): boolean {
   const { resolver, techniques, techIndex, recipes } = ctx;

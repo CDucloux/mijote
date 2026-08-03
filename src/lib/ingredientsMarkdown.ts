@@ -27,7 +27,12 @@ export interface MdColumn {
 // conseils séparés par « ;; ». Le pipe est échappé en amont par l'export.
 const TIP_TYPE_KEYS = new Set(Object.keys(TIP_TYPES));
 
-/** Sérialise une liste de conseils en une cellule (`""` si vide). */
+/**
+ * Sérialise une liste de conseils en une cellule Markdown.
+ *
+ * @param tips - Les conseils (type + texte).
+ * @returns La cellule sérialisée (`""` si aucun conseil valide).
+ */
 export function formatTips(tips: { type?: string; text?: string }[] | null | undefined): string {
   if (!Array.isArray(tips)) return "";
   return tips
@@ -36,7 +41,12 @@ export function formatTips(tips: { type?: string; text?: string }[] | null | und
     .join(" ;; ");
 }
 
-/** Parse une cellule de conseils sérialisés (ignore les types inconnus). */
+/**
+ * Parse une cellule de conseils sérialisés (ignore les types inconnus).
+ *
+ * @param str - La cellule sérialisée.
+ * @returns Les conseils reconnus (type valide + texte non vide).
+ */
 export function parseTips(str: string | null | undefined): IngredientTip[] {
   if (!str) return [];
   return str
@@ -90,7 +100,12 @@ export const ING_MD_BOUNDS: Record<string, [number, number]> = {
   salt: [0, 100], gramsPerPiece: [0, 10000],
 };
 
-/** Découpe une ligne de tableau Markdown en cellules, en respectant les `\|` échappés. */
+/**
+ * Découpe une ligne de tableau Markdown en cellules, en respectant les `\|` échappés.
+ *
+ * @param line - La ligne de tableau (avec ou sans pipes de bord).
+ * @returns Les cellules, déséchappées et rognées.
+ */
 export function splitMarkdownRow(line: string): string[] {
   const inner = line.replace(/^\s*\|/, "").replace(/\|\s*$/, "");
   return inner.split(/(?<!\\)\|/).map(c => c.replace(/\\\|/g, "|").trim());
@@ -99,6 +114,9 @@ export function splitMarkdownRow(line: string): string[] {
 /**
  * Parse un export Markdown d'ingrédients → liste d'objets partiels (clés présentes
  * seulement). Robuste à l'ordre des colonnes : on s'aligne sur l'en-tête.
+ *
+ * @param text - Le Markdown d'export.
+ * @returns Une ligne par ingrédient (objets partiels), vide si l'en-tête est absent.
  */
 export function parseIngredientsMarkdown(text: string | null | undefined): Record<string, unknown>[] {
   const lines = (text || "").split(/\r?\n/);

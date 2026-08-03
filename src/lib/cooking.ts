@@ -31,7 +31,12 @@ export const COOKING_METHODS: CookingMethod[] = [
 
 const RULES = COOKING_METHODS.map(m => ({ id: m.id, keys: m.keywords.map(normalizeStr) }));
 
-/** Modes de cuisson d'une recette, d'après les noms de ses ustensiles. */
+/**
+ * Modes de cuisson d'une recette, déduits des noms de ses ustensiles.
+ *
+ * @param recipe - La recette (ses ustensiles).
+ * @returns L'ensemble des ids de modes de cuisson détectés.
+ */
 export function recipeCookingMethods(recipe: CookableRecipe | null | undefined): Set<string> {
   const found = new Set<string>();
   for (const u of recipe?.utensils || []) {
@@ -43,8 +48,11 @@ export function recipeCookingMethods(recipe: CookableRecipe | null | undefined):
 }
 
 /**
- * La recette passe-t-elle le filtre de cuisson ? `selected` = liste d'ids de modes,
- * plus le pseudo-mode « mixte » (≥ 2 modes). Sémantique OU (comme cuisine).
+ * La recette passe-t-elle le filtre de cuisson ? Sémantique OU (comme cuisine).
+ *
+ * @param recipe - La recette à tester.
+ * @param selected - Ids de modes sélectionnés, plus le pseudo-mode « mixte » (≥ 2 modes).
+ * @returns `true` si aucun filtre, ou si la recette satisfait l'un des modes.
  */
 export function matchesCooking(recipe: CookableRecipe | null | undefined, selected: string[] | null | undefined): boolean {
   if (!selected?.length) return true;
