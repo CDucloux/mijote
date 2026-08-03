@@ -1,8 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
-import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 
-import { auth, provider } from "@/lib/firebase/firebase.js";
+import { signInWithGoogle } from "@/lib/firebase/auth.js";
 import { subscribeHouseholdPointer, fetchUserDirectory } from "@/lib/firebase/firestore.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
 import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
@@ -13,7 +12,7 @@ import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
-const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
+import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useNotifications } from "./hooks/useNotifications.js";
 import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
@@ -449,21 +448,6 @@ function AppInner({ user, isDark, toggleTheme }) {
   );
 }
 
-// Connexion Google autonome (utilisable hors de l'app authentifiée, sur /login).
-// Filtre l'e-mail autorisé et retombe sur la redirection si la popup est bloquée.
-async function signInWithGoogle(setError) {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    if (ALLOWED_EMAIL && result.user.email !== ALLOWED_EMAIL) {
-      await signOut(auth);
-      setError?.("Accès non autorisé pour ce compte.");
-    }
-  } catch (e) {
-    if (e?.code === "auth/popup-blocked") signInWithRedirect(auth, provider);
-    else if (e?.code !== "auth/cancelled-popup-request" && e?.code !== "auth/popup-closed-by-user") setError?.("Connexion échouée. Réessaie.");
-  }
-}
-
 // Une fois connecté sur /login, on revient à la page d'origine (mémorisée dans
 // l'état de navigation lors de la redirection), sinon à l'accueil.
 function RedirectFromLogin() {
@@ -488,8 +472,7 @@ export default function App() {
   // Thème et auth possédés à la racine : partagés par l'écran de connexion (public)
   // et l'app (protégée), sans doublon d'instance.
   const { isDark, toggleTheme } = useTheme();
-  const [user, setUser] = useState(() => auth.currentUser ?? undefined);
-  useEffect(() => onAuthStateChanged(auth, u => setUser(u ?? null)), []);
+  const user = useAuthUser();
   const [signInError, setSignInError] = useState("");
   const onSignIn = useCallback(() => { setSignInError(""); return signInWithGoogle(setSignInError); }, []);
 
