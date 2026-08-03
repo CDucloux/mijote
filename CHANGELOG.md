@@ -1,5 +1,16 @@
 # Changelog – Mijoté
 
+## v3.9.6 – Safran · Import & finitions mobiles
+
+### Import de recettes
+- **Pages d'import repensées** : l'import par lien et par photo passent en pages plein écran dédiées (adresses propres `/recipes/import-from-url` et `/recipes/import-from-picture`), navigables et partageables
+- **Coller le lien copié** : si un lien de recette est dans le presse-papiers, un bouton le propose en un tap
+- **Partage vers Mijoté** : partage une page depuis ton navigateur (feuille de partage du système) et la recette arrive directement dans l'import, le lien pré-rempli — il ne reste qu'à confirmer *(PWA installée)*
+
+### Interface mobile & PWA
+- **Onglet actif en surbrillance** : la barre du bas met en évidence l'onglet sélectionné par une pastille derrière l'icône
+- **Barres système au thème de l'appli** : en PWA installée, les barres du haut et du bas suivent le thème clair/sombre de Mijoté (et non celui du système), sans clignotement au lancement
+
 ## v3.9.5 – Safran · Détails soignés
 
 ### Connexion
