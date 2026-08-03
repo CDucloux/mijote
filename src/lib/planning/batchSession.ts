@@ -10,6 +10,7 @@
  *
  * @module batchSession
  */
+import type { IngredientLine, RecipeYield } from "@/lib/types.js";
 
 /** Item du mealPlan (forme minimale). */
 export interface BatchEntry {
@@ -17,11 +18,8 @@ export interface BatchEntry {
   portions?: number | string;
 }
 
-/** Ligne d'ingrédient (forme minimale : une base est référencée par `recipeId`). */
-export interface BatchIngredient {
-  recipeId?: string;
-  amount?: number | string;
-}
+/** Ligne d'ingrédient (alias de domaine : une base est référencée par `recipeId`). */
+export type BatchIngredient = IngredientLine;
 
 /** Recette de la bibliothèque (forme minimale utilisée par le batch). */
 export interface BatchRecipe {
@@ -30,7 +28,7 @@ export interface BatchRecipe {
   isComponent?: boolean;
   servings?: number | string;
   ingredients?: BatchIngredient[];
-  yield?: { amount?: number | string; unit?: string };
+  yield?: RecipeYield;
 }
 
 /** Plat à cuisiner, avec nombre de cuissons déduit du partage de portions. */

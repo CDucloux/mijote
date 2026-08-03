@@ -9,29 +9,16 @@
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";
+import type { Recipe, IngredientLine } from "@/lib/types.js";
 
-/** Ligne d'ingrédient (brute ou composant). */
-export interface PubLine {
-  name?: string;
-  dbId?: string;
-  recipeId?: string;
-  [k: string]: unknown;
-}
+/** Ligne d'ingrédient (brute ou composant — alias de domaine). */
+export type PubLine = IngredientLine;
 
-/** Recette locale (forme minimale utilisée par la publication / le clone). */
-export interface PubRecipe {
+/** Recette locale (type de domaine avec `id` garanti + attribution de clone). */
+export type PubRecipe = Recipe & {
   id: string;
-  name?: string;
-  cuisine?: string;
-  nutriLetter?: string | null;
-  healthScore?: number;
-  isComponent?: boolean;
-  tags?: string[];
-  ingredients?: PubLine[];
-  collections?: string[];
   clonedFrom?: { publicId: string; authorUid?: string; authorName?: string };
-  [k: string]: unknown;
-}
+};
 
 /** Utilisateur auteur (forme minimale). */
 export interface PubUser {

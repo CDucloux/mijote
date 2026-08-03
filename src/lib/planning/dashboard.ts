@@ -6,13 +6,10 @@
  * @module dashboard
  */
 import { slotOrder } from "@/constants/mealSlots.js";
+import type { MealItem } from "@/lib/types.js";
 
-/** Item de planning (forme minimale). */
-export interface PlanEntry {
-  recipeId?: string;
-  portions?: number;
-  slot?: string;
-}
+/** Item de planning (alias de domaine). */
+export type PlanEntry = MealItem;
 
 /** Recette résolue (forme minimale). */
 export interface DashRecipe {

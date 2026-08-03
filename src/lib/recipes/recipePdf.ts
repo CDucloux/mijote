@@ -13,24 +13,13 @@ import { categoryLabel, categoryEmoji } from "@/constants/recipeCategories.js";
 import { cuisineEmoji, normalizeCuisine } from "@/constants/cuisines.js";
 import { DIFFICULTY_LABEL, computeDifficulty } from "@/lib/recipes/difficulty.js";
 import { fmtQtyUnit } from "@/lib/format.js";
+import type { IngredientLine, Step } from "@/lib/types.js";
 
-/** Ligne d'ingrédient/ustensile d'une recette pour le rendu PDF. */
-export interface PdfLine {
-  id?: string;
-  name?: string;
-  amount?: number | string;
-  unit?: string;
-  dbId?: string;
-  recipeId?: string;
-}
+/** Ligne d'ingrédient/ustensile d'une recette pour le rendu PDF (alias de domaine). */
+export type PdfLine = IngredientLine;
 
-/** Étape d'une recette. */
-export interface PdfStep {
-  text?: string;
-  tip?: string;
-  ingredients?: string[];
-  utensils?: string[];
-}
+/** Étape d'une recette (alias de domaine). */
+export type PdfStep = Step;
 
 /** Recette à imprimer (forme minimale ; champs additionnels tolérés). */
 export interface PdfRecipe {
