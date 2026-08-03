@@ -5,8 +5,13 @@
  * @module parseIngredient
  */
 
-/** Minuscule + suppression des accents (NFD) + trim : base de comparaison
- * insensible à la casse et aux accents. */
+/**
+ * Minuscule + suppression des accents (NFD) + trim : base de comparaison
+ * insensible à la casse et aux accents.
+ *
+ * @param s - La chaîne à normaliser.
+ * @returns La chaîne minusculée, sans accents ni espaces de bord.
+ */
 export function normalizeStr(s: string | null | undefined): string {
   return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -22,6 +27,9 @@ export interface ParsedIngredient {
  * Analyse une saisie libre en `{ amount, unit, name }` (« 2 gousses d'ail » →
  * `{ amount: 2, unit: "gousses", name: "ail" }`). Gère les entiers, décimaux et
  * fractions (`1/2`, « 1 1/2 »). Sans quantité reconnue, tout part dans `name`.
+ *
+ * @param raw - La saisie libre de l'utilisateur.
+ * @returns `{ amount, unit, name }` (`amount` = `""` si aucune quantité reconnue).
  */
 export function parseIngredientInput(raw: string | null | undefined): ParsedIngredient {
   if (!raw || !raw.trim()) return { amount: "", unit: "", name: (raw || "").trim() };

@@ -40,8 +40,10 @@ export function normalizeName(s: string | null | undefined): string {
     .trim();
 }
 
-// Singulier FR approximatif : -aux→-al, -x→∅, -s→∅ (gardes de longueur pour
-// épargner ail, jus, riz…).
+/**
+ * Singulier FR approximatif : -aux→-al, -x→∅, -s→∅ (gardes de longueur pour
+ * épargner ail, jus, riz…).
+ */
 function singularizeWord(w: string): string {
   if (w.length > 3 && w.endsWith("aux")) return w.slice(0, -3) + "al";
   if (w.length > 2 && w.endsWith("x")) return w.slice(0, -1);
@@ -52,14 +54,17 @@ function singularizeName(n: string): string {
   return n.split(" ").filter(Boolean).map(singularizeWord).join(" ");
 }
 
-// Connecteurs (issus aussi des apostrophes : « d'olive » → « d olive »).
+/** Connecteurs (issus aussi des apostrophes : « d'olive » → « d olive »). */
 const MATCH_CONNECTORS = new Set([
   "de", "d", "du", "des", "la", "le", "les", "l", "a", "au", "aux",
   "en", "et", "ou", "avec", "sans",
 ]);
-// Qualificatifs de PRÉPARATION / d'ÉTAT, non discriminants → retirés au palier C.
-// Dérivés des formes accentuées via la même normalisation/singularisation, pour
-// éviter toute erreur de translittération. Liste curée et ajustable.
+
+/**
+ * Qualificatifs de PRÉPARATION / d'ÉTAT, non discriminants → retirés au palier C.
+ * Dérivés des formes accentuées via la même normalisation/singularisation, pour
+ * éviter toute erreur de translittération. Liste curée et ajustable.
+ */
 const RAW_QUALIFIERS = [
   "émincé", "émincée", "ciselé", "ciselée", "haché", "hachée", "râpé", "râpée",
   "moulu", "moulue", "concassé", "concassée", "écrasé", "écrasée", "pressé", "pressée",
@@ -94,6 +99,10 @@ interface SubsetEntry { item: DbEntry; tokens: string[]; ntok: number; len: numb
  * Recréé à chaque appel de {@link findIngredientMatch} (coût O(n), comme un
  * `db.find`). Si la base grossit beaucoup, mémoïser côté appelant :
  * `useMemo(() => createIngredientResolver(db), [db])`.
+ *
+ * @param db - La base d'ingrédients (ou d'ustensiles).
+ * @returns Un résolveur `(name) => entrée | null` à 4 paliers (exact, singulier,
+ *   canonique, sous-ensemble de tokens).
  */
 export function createIngredientResolver(db: DbEntry[] | null | undefined): Resolver {
   const exact = new Map<string, DbEntry>(), singular = new Map<string, DbEntry>(), canonical = new Map<string, DbEntry>();
@@ -131,13 +140,24 @@ export function createIngredientResolver(db: DbEntry[] | null | undefined): Reso
   };
 }
 
-/** Rapproche un nom et renvoie l'ENTRÉE (ou `null`). Pour l'éditeur et les listes. */
+/**
+ * Rapproche un nom et renvoie l'ENTRÉE de la base (pour l'éditeur et les listes).
+ *
+ * @param name - Le nom saisi.
+ * @param db - La base à interroger.
+ * @returns L'entrée correspondante, ou `null`.
+ */
 export function findIngredientMatch(name: string | null | undefined, db: DbEntry[] | null | undefined): DbEntry | null {
   if (!name || !db || !db.length) return null;
   return createIngredientResolver(db)(name);
 }
 
-/** Résolveur `(name) => id` (ou `""`). Pour l'import. */
+/**
+ * Construit un résolveur `(name) => id` (pour l'import).
+ *
+ * @param db - La base à interroger.
+ * @returns Une fonction qui renvoie l'id de l'entrée rapprochée, ou `""` si aucune.
+ */
 export function buildNameMatcher(db: DbEntry[] | null | undefined): (name: string | null | undefined) => string {
   const resolve = createIngredientResolver(db);
   return (name) => { const m = resolve(name); return m ? m.id : ""; };

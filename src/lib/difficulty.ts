@@ -46,9 +46,15 @@ export interface DifficultyResult {
 }
 
 export const DIFFICULTY_LABEL: Record<number, string> = { 1: "Très facile", 2: "Facile", 3: "Intermédiaire", 4: "Difficile", 5: "Expert" };
+/**
+ * Couleur associée à un niveau de difficulté (vert ≤ 2, orange = 3, rouge ≥ 4).
+ *
+ * @param lvl - Le niveau de difficulté (1–5).
+ * @returns La variable/valeur CSS de couleur.
+ */
 export const difficultyColor = (lvl: number): string => lvl <= 2 ? "var(--green)" : lvl === 3 ? "#e8920a" : "var(--red)";
 
-// Gestes (avec difficulté) repérés dans une liste d'étapes, dédoublonnés.
+/** Gestes (avec difficulté) repérés dans une liste d'étapes, dédoublonnés. */
 function techniquesInSteps(steps: DiffStep[] | undefined, index: TechniqueIndex): Technique[] {
   const found = new Map<string, Technique>();
   for (const step of steps || []) {
@@ -65,7 +71,7 @@ function componentCount(recipe: DiffRecipe): number {
   return ids.size;
 }
 
-// Préparations de base résolues (héritage simple, non récursif).
+/** Préparations de base résolues (héritage simple, non récursif). */
 function baseRecipesOf(recipe: DiffRecipe, recipes: DiffRecipe[] | undefined): DiffRecipe[] {
   const ids = new Set<string>();
   for (const ing of recipe?.ingredients || []) if (ing.recipeId) ids.add(ing.recipeId);
@@ -77,8 +83,10 @@ function baseRecipesOf(recipe: DiffRecipe, recipes: DiffRecipe[] | undefined): D
 interface BaseTechniques { name?: string; techs: Technique[] }
 interface CollectedTechniques { own: Technique[]; ownIds: Set<string>; bases: BaseTechniques[]; all: Technique[] }
 
-// Gestes de la recette ET de ses bases (héritage simple d'un niveau). `all` =
-// union dédoublonnée où les gestes propres priment.
+/**
+ * Gestes de la recette ET de ses bases (héritage simple d'un niveau). `all` =
+ * union dédoublonnée où les gestes propres priment.
+ */
 function collectTechniques(recipe: DiffRecipe, index: TechniqueIndex, recipes: DiffRecipe[] | undefined): CollectedTechniques {
   const own = techniquesInSteps(recipe?.steps, index);
   const ownIds = new Set(own.map(t => t.id));
@@ -98,6 +106,8 @@ function collectTechniques(recipe: DiffRecipe, index: TechniqueIndex, recipes: D
  *
  * @param recipe - La recette (forme souple ; on lit override/ingrédients/étapes).
  * @param techniques - Glossaire des techniques (sauf si `opts.index` est fourni).
+ * @param opts - Options : `index` (index pré-construit), `recipes` (pour les bases).
+ * @returns `{ score, drivers, overridden }` (`score` = `null` si aucun geste noté).
  */
 export function computeDifficulty(recipe: DiffRecipe, techniques?: unknown, opts: DiffOpts = {}): DifficultyResult {
   const ov = recipe?.difficultyOverride;
@@ -137,6 +147,11 @@ export interface DifficultyExplain {
  * Décompose le calcul (geste dominant, gestes détectés, modificateurs appliqués
  * avec le plafond de +2). Renvoie `null` s'il n'y a rien à expliquer (score non
  * calculé faute de geste noté).
+ *
+ * @param recipe - La recette à expliquer.
+ * @param techniques - Glossaire des techniques (sauf si `opts.index` est fourni).
+ * @param opts - Options : `index` (index pré-construit), `recipes` (pour les bases).
+ * @returns La décomposition détaillée, ou `null` s'il n'y a rien à expliquer.
  */
 export function explainDifficulty(recipe: DiffRecipe, techniques?: unknown, opts: DiffOpts = {}): DifficultyExplain | null {
   const ov = recipe?.difficultyOverride;

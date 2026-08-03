@@ -30,9 +30,11 @@ export interface Segment {
 
 interface Token { norm: string; start: number; end: number }
 
-// SENSIBLE aux accents (contrairement aux ingrédients) : « grillé » ≠ « grille »
-// (grille de cuisson), « glacé » ≠ « glace » (sucre glace). Casse et ponctuation
-// restent ignorées.
+/**
+ * Normalisation SENSIBLE aux accents (contrairement aux ingrédients) : « grillé »
+ * ≠ « grille » (grille de cuisson), « glacé » ≠ « glace » (sucre glace). Casse et
+ * ponctuation restent ignorées.
+ */
 function normTech(s: string | null | undefined): string {
   return (s || "")
     .toLowerCase()
@@ -41,7 +43,13 @@ function normTech(s: string | null | undefined): string {
     .trim();
 }
 
-/** Construit l'index à partir du glossaire (nom + alias indexés à l'identique). */
+/**
+ * Construit l'index de recherche à partir du glossaire (nom + alias indexés à
+ * l'identique).
+ *
+ * @param techniques - Le glossaire des techniques.
+ * @returns L'index `{ phrases, maxWords }` consommé par {@link annotateText}.
+ */
 export function buildTechniqueIndex(techniques: TechniqueEntry[] | null | undefined): TechniqueIndex {
   const phrases = new Map<string, TechniqueEntry>();
   let maxWords = 1;
@@ -57,7 +65,7 @@ export function buildTechniqueIndex(techniques: TechniqueEntry[] | null | undefi
   return { phrases, maxWords };
 }
 
-// Tokens « mots » (lettres accentuées + chiffres) avec leurs offsets.
+/** Tokens « mots » (lettres accentuées + chiffres) avec leurs offsets. */
 function tokenize(text: string): Token[] {
   const tokens: Token[] = [];
   const re = /[A-Za-zÀ-ÿ0-9]+/g;
@@ -74,6 +82,11 @@ function tokenize(text: string): Token[] {
  * Le texte original (casse, ponctuation, espaces) est intégralement préservé :
  * concaténer les `.text` redonne l'entrée. Correspondance gloutonne, la phrase la
  * plus longue d'abord.
+ *
+ * @param text - Le texte à annoter (ex. une étape de recette).
+ * @param index - L'index de techniques (voir {@link buildTechniqueIndex}).
+ * @returns Les segments : concaténer les `.text` redonne l'entrée ; `tech` marque
+ *   les portions à surligner.
  */
 export function annotateText(text: string | null | undefined, index: TechniqueIndex | null | undefined): Segment[] {
   if (!text) return [{ text: "", tech: null }];
@@ -105,7 +118,13 @@ export function annotateText(text: string | null | undefined, index: TechniqueIn
   return segments;
 }
 
-/** Au moins une technique est-elle repérée dans le texte ? */
+/**
+ * Au moins une technique est-elle repérée dans le texte ?
+ *
+ * @param text - Le texte à examiner.
+ * @param index - L'index de techniques.
+ * @returns `true` si au moins un geste est détecté.
+ */
 export function hasTechnique(text: string | null | undefined, index: TechniqueIndex | null | undefined): boolean {
   return annotateText(text, index).some(s => s.tech);
 }

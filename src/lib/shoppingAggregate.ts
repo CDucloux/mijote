@@ -69,8 +69,10 @@ const toNum = (a: number | string | null | undefined): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-// Clé d'unité pour SOMMER : sans accent et singularisée, pour que « pièces » et
-// « pièce » fusionnent. L'orthographe d'origine, elle, est conservée pour l'affichage.
+/**
+ * Clé d'unité pour SOMMER : sans accent et singularisée, pour que « pièces » et
+ * « pièce » fusionnent. L'orthographe d'origine, elle, est conservée pour l'affichage.
+ */
 const canonUnit = (u: string | null | undefined): string => {
   const c = normalizeStr(u);
   return c.length > 2 && c.endsWith("s") ? c.slice(0, -1) : c;
