@@ -42,8 +42,10 @@ export function useTheme(): { isDark: boolean; toggleTheme: () => void } {
       try { localStorage.setItem("rf_theme", next ? "dark" : "light"); } catch { /* quota */ }
     };
     const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    const startViewTransition = (document as ViewTransitionDocument).startViewTransition;
-    if (startViewTransition && !reduce) {
+    // Appel LIÉ à `document` : extraire la méthode dans une variable puis l'appeler
+    // détachée lève « Illegal invocation » (l'API native exige `this === document`).
+    const doc = document as ViewTransitionDocument;
+    if (doc.startViewTransition && !reduce) {
       // Pendant la bascule, on coupe le fondu PAR ÉLÉMENT (règle globale `*`) : le
       // cross-fade de l'instantané suffit. Sans ça, sur les pages denses (grille de
       // recettes, feed découverte, stock), des milliers de transitions simultanées
@@ -52,7 +54,7 @@ export function useTheme(): { isDark: boolean; toggleTheme: () => void } {
       const el = document.documentElement;
       el.classList.add("theme-switching");
       const done = (): void => el.classList.remove("theme-switching");
-      const vt = startViewTransition(run);
+      const vt = doc.startViewTransition(run);
       (vt.finished || Promise.resolve()).finally(done);
       setTimeout(done, 600); // filet de sécurité : ne jamais rester figé sans transitions
 

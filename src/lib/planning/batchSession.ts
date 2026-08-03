@@ -176,6 +176,12 @@ export interface MiseEnPlaceContext {
   stockSet?: Set<string>;
   /** Ordre + libellé des catégories (clé → order). Sert au tri des groupes. */
   categoryOrder?: (cat: string) => number;
+  /**
+   * Catégories retenues pour la mutualisation. La découpe/préparation ne se
+   * mutualise vraiment que pour les produits frais à travailler (légumes, herbes) ;
+   * pour les autres (épices, huiles…) l'intérêt est faible. `undefined` = toutes.
+   */
+  includeCategories?: Set<string>;
 }
 
 const G_PER_UNIT: Record<string, number> = { g: 1, kg: 1000, mg: 0.001 };
@@ -199,7 +205,7 @@ const canonUnit = (u: string | null | undefined): string => {
  * @returns Les groupes d'ingrédients à préparer, ordonnés par catégorie.
  */
 export function buildMiseEnPlace(dishes: BatchDish[], ctx: MiseEnPlaceContext): PrepGroup[] {
-  const { recipesById, resolver, ingredientDB = [], stockSet, categoryOrder } = ctx;
+  const { recipesById, resolver, ingredientDB = [], stockSet, categoryOrder, includeCategories } = ctx;
   const dbById = new Map(ingredientDB.map(i => [i.id, i]));
 
   interface Acc { dbId?: string; name: string; image?: string; category: string; amount: number; unit: string; usedBy: Set<string> }
@@ -233,7 +239,10 @@ export function buildMiseEnPlace(dishes: BatchDish[], ctx: MiseEnPlaceContext): 
 
   const order = categoryOrder || (() => 99);
   const groups = new Map<string, PrepItem[]>();
-  for (const it of items) { const g = groups.get(it.category) || []; g.push(it); groups.set(it.category, g); }
+  for (const it of items) {
+    if (includeCategories && !includeCategories.has(it.category)) continue; // catégorie non mutualisée
+    const g = groups.get(it.category) || []; g.push(it); groups.set(it.category, g);
+  }
   return [...groups.entries()]
     .map(([category, its]) => ({ category, items: its.sort((a, b) => b.usedBy.length - a.usedBy.length || a.name.localeCompare(b.name, "fr")) }))
     .sort((a, b) => order(a.category) - order(b.category));
