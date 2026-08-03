@@ -22,7 +22,13 @@ export interface PanDims {
 
 // ── MOULE ─────────────────────────────────────────────────────────────────────
 
-/** Surface (cm²) d'un moule d'après sa forme et ses dimensions. */
+/**
+ * Surface (cm²) d'un moule d'après sa forme et ses dimensions.
+ *
+ * @param shape - Forme du moule (`round` ou `rect`).
+ * @param d - Dimensions (diamètre, ou longueur × largeur).
+ * @returns La surface en cm² (0 si la forme est inconnue ou les dimensions absentes).
+ */
 export function panArea(shape: PanShape, d: PanDims = {}): number {
   if (shape === "round") { const r = (Number(d.diameter) || 0) / 2; return Math.PI * r * r; }
   if (shape === "rect") { return (Number(d.length) || 0) * (Number(d.width) || 0); }
@@ -31,8 +37,11 @@ export function panArea(shape: PanShape, d: PanDims = {}): number {
 
 /**
  * Facteur multiplicateur pour passer du moule `orig` au moule `target`. Ratio de
- * volume si les DEUX hauteurs sont renseignées (> 0), sinon de surface. `null` si
- * un moule est incomplet.
+ * volume si les DEUX hauteurs sont renseignées (> 0), sinon de surface.
+ *
+ * @param orig - Moule d'origine (celui de la recette).
+ * @param target - Moule cible (celui du cuisinier).
+ * @returns Le facteur à appliquer aux quantités, ou `null` si un moule est incomplet.
  */
 export function panFactor(orig: PanDims, target: PanDims): number | null {
   const a1 = panArea(orig.shape || "", orig);
@@ -42,7 +51,12 @@ export function panFactor(orig: PanDims, target: PanDims): number | null {
   return (h1 > 0 && h2 > 0) ? (a2 * h2) / (a1 * h1) : a2 / a1;
 }
 
-/** Arrondi « cuisine » : plus la valeur est grande, moins on garde de décimales. */
+/**
+ * Arrondi « cuisine » : plus la valeur est grande, moins on garde de décimales.
+ *
+ * @param x - La valeur à arrondir.
+ * @returns La valeur arrondie de façon lisible (multiples de 5 au-delà de 100, etc.).
+ */
 export function roundNice(x: number): number {
   if (!Number.isFinite(x)) return 0;
   const a = Math.abs(x);
@@ -69,7 +83,13 @@ export const DENSITIES: Record<string, number> = {
   "yaourt": 1.03, "eau de fleur d'oranger": 1.0,
 };
 
-/** Devine la densité (g/ml) d'un ingrédient d'après son nom (`null` si inconnu). */
+/**
+ * Devine la densité (g/ml) d'un ingrédient d'après son nom, en retenant la clé la
+ * plus spécifique (la plus longue) contenue dans le nom.
+ *
+ * @param name - Nom de l'ingrédient.
+ * @returns La densité en g/ml, ou `null` si aucune ne correspond.
+ */
 export function densityFor(name: string | null | undefined): number | null {
   const n = normalizeStr(name);
   if (!n) return null;
@@ -85,8 +105,13 @@ export function densityFor(name: string | null | undefined): number | null {
 const unitKind = (u: string): "mass" | "volume" | null => (u in MASS_G ? "mass" : u in VOLUME_ML ? "volume" : null);
 
 /**
- * Convertit `value` de l'unité `from` vers `to`. `density` (g/ml) requis seulement
- * pour une conversion masse ↔ volume. `null` si la conversion est impossible.
+ * Convertit une quantité d'une unité vers une autre (masse ou volume).
+ *
+ * @param value - La valeur à convertir.
+ * @param from - Unité source.
+ * @param to - Unité cible.
+ * @param density - Densité (g/ml), requise seulement pour un croisement masse ↔ volume.
+ * @returns La valeur convertie, ou `null` si la conversion est impossible.
  */
 export function convertQuantity(value: number | string, from: string, to: string, density?: number): number | null {
   const v = Number(value);

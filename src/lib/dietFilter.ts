@@ -72,6 +72,13 @@ export const ALLERGEN_SIGNALS: Record<string, { categories: string[]; keywords: 
  * Collecte récursive des signaux des ingrédients d'une recette : catégories
  * rencontrées, noms (normalisés) et nombre d'ingrédients réellement identifiés.
  * Descend dans les préparations de base (`recipeId`).
+ *
+ * @param recipe - La recette à analyser.
+ * @param ctx - Contexte de résolution.
+ * @param ctx.resolver - Résolveur nom → ingrédient de la base.
+ * @param ctx.byId - Index des recettes (descente dans les composants).
+ * @param ctx.seen - Ids déjà visités (garde-fou anti-cycle).
+ * @returns `{ categories, names, resolved }` agrégés sur la recette et ses bases.
  */
 export function collectIngredientSignals(
   recipe: EligibleRecipe | null | undefined,
@@ -113,8 +120,13 @@ const hasAllergen = (allergen: string, sig: IngredientSignals): boolean => {
 };
 
 /**
- * Une recette est-elle éligible au regard des préférences (contraintes dures) ?
- * `ctx` fournit le résolveur d'ingrédients et la liste de recettes (pour les bases).
+ * Une recette est-elle éligible au regard des préférences (contraintes dures :
+ * régime, catégories exclues, allergènes) ?
+ *
+ * @param recipe - La recette à tester.
+ * @param preferences - Préférences alimentaires (régime, catégories exclues, allergènes).
+ * @param ctx - Résolveur d'ingrédients + liste/index des recettes (pour les bases).
+ * @returns `true` si la recette respecte toutes les contraintes dures.
  */
 export function isEligible(
   recipe: EligibleRecipe | null | undefined,

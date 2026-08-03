@@ -8,6 +8,9 @@
  * Retire les champs dépréciés avant d'exporter une recette en JSON, afin que les
  * fichiers générés collent au schéma courant : le `description` de tête et le
  * `title` de chaque étape n'en font plus partie. Les autres champs sont préservés.
+ *
+ * @param recipe - La recette à exporter.
+ * @returns Une copie sans les champs dépréciés (recette + étapes).
  */
 export function cleanRecipeForExport(recipe: Record<string, unknown>): Record<string, unknown> {
   const { description: _description, steps, ...rest } = recipe;
@@ -23,6 +26,7 @@ export function cleanRecipeForExport(recipe: Record<string, unknown>): Record<st
  *
  * @param r - Donnée importée, de forme inconnue (validée ici avant tout usage).
  * @param label - Étiquette de la recette dans les messages d'erreur.
+ * @returns La liste des erreurs de schéma (vide = recette conforme).
  */
 export function validateRecipeSchema(r: unknown, label: string): string[] {
   const errs: string[] = [];

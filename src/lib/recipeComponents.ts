@@ -37,15 +37,25 @@ export interface ReferencingRecipe {
 
 const num = (v: number | string | null | undefined): number => parseFloat(String(v).replace(",", ".")) || 0;
 
-/** Fraction d'un composant consommée par une ligne parente (`0` si rendement absent). */
+/**
+ * Fraction d'un composant consommée par une ligne parente.
+ *
+ * @param line - La ligne parente référençant le composant.
+ * @param component - La recette-composant (rendement).
+ * @returns Le rapport quantité consommée / rendement, ou `0` si le rendement est absent.
+ */
 export function consumptionFraction(line: ComponentLine, component: ComponentRecipe | null | undefined): number {
   if (!component || !(component.yield && (component.yield.amount || 0) > 0)) return 0;
   return num(line.amount) / (component.yield!.amount as number);
 }
 
 /**
- * Recettes (non-composants) qui référencent un composant donné — pour avertir
- * avant sa suppression / son déliage.
+ * Recettes qui référencent un composant donné — pour avertir avant sa suppression
+ * / son déliage.
+ *
+ * @param componentId - L'id du composant.
+ * @param recipes - Toutes les recettes à examiner.
+ * @returns Les recettes (autres que le composant lui-même) qui le référencent.
  */
 export function recipesReferencing(componentId: string, recipes: ReferencingRecipe[] | null | undefined): ReferencingRecipe[] {
   return (recipes || []).filter(r =>
@@ -59,6 +69,11 @@ export function recipesReferencing(componentId: string, recipes: ReferencingReci
  * - ligne composant (`recipeId`) → remplacée par ses ingrédients bruts × `f`,
  *   sauf si le composant est en stock (`stockSet`) → « déjà préparé », exclu ;
  * - composant introuvable → ligne marquée orpheline (conservée, signalée).
+ *
+ * @param lines - Lignes d'ingrédients (brutes et/ou composants).
+ * @param recipesById - Index des recettes (résolution des composants).
+ * @param stockSet - Ids des composants déjà en stock (exclus de l'éclatement).
+ * @returns Les lignes aplaties en ingrédients bruts (composants éclatés × fraction).
  */
 export function flattenForShopping(
   lines: ComponentLine[] | null | undefined,
@@ -80,7 +95,13 @@ export function flattenForShopping(
   return out;
 }
 
-/** Fusionne les lignes brutes identiques (même `dbId` + unité) en cumulant les quantités. */
+/**
+ * Fusionne les lignes brutes identiques (même `dbId` + unité) en cumulant les
+ * quantités, en préservant l'ordre de première apparition.
+ *
+ * @param lines - Lignes brutes à cumuler.
+ * @returns Les lignes fusionnées, quantités additionnées.
+ */
 export function mergeRawLines(lines: ComponentLine[] | null | undefined): ComponentLine[] {
   const map = new Map<string, ComponentLine>();
   const order: string[] = [];
