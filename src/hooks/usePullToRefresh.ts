@@ -1,14 +1,29 @@
 import { useState, useEffect, useRef } from "react";
 
-// Détecte un tirage vers le bas UNIQUEMENT quand le conteneur scrollable réel
-// sous le doigt est déjà tout en haut (le scroll mobile vit dans des div internes
-// en overflow:auto, pas sur window/body). Listener touchmove non-passif pour
-// pouvoir bloquer l'overscroll natif pendant le geste.
-export function usePullToRefresh(onRefresh, { enabled = true, threshold = 110, max = 170 } = {}) {
-  const containerRef = useRef(null);
+/** État interne du geste de tirage (mutable, hors cycle de rendu). */
+interface PullGesture { startY: number; startX: number; active: boolean; pull: number; dirLocked: boolean }
+
+/**
+ * Détecte un tirage vers le bas UNIQUEMENT quand le conteneur scrollable réel sous
+ * le doigt est déjà tout en haut (le scroll mobile vit dans des div internes en
+ * `overflow:auto`, pas sur window/body). Listener touchmove non-passif pour pouvoir
+ * bloquer l'overscroll natif pendant le geste.
+ *
+ * @param onRefresh - Rappel déclenché quand le tirage dépasse le seuil.
+ * @param options - Réglages.
+ * @param options.enabled - Active le geste (défaut `true`).
+ * @param options.threshold - Distance (px) déclenchant le refresh (défaut 110).
+ * @param options.max - Distance maximale du rubber-band (défaut 170).
+ * @returns `{ containerRef, pull, refreshing }` (ref à câbler + état d'affichage).
+ */
+export function usePullToRefresh(
+  onRefresh: () => unknown,
+  { enabled = true, threshold = 110, max = 170 }: { enabled?: boolean; threshold?: number; max?: number } = {},
+) {
+  const containerRef = useRef<HTMLElement | null>(null);
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const g = useRef({ startY: 0, active: false, pull: 0 });
+  const g = useRef<PullGesture>({ startY: 0, startX: 0, active: false, pull: 0, dirLocked: false });
   const cb = useRef(onRefresh);
   cb.current = onRefresh;
 
@@ -17,8 +32,8 @@ export function usePullToRefresh(onRefresh, { enabled = true, threshold = 110, m
     if (!el || !enabled) return;
 
     // Le scrollable sous `target` est-il déjà tout en haut ?
-    const atTop = (target) => {
-      let n = target;
+    const atTop = (target: EventTarget | null): boolean => {
+      let n = target as HTMLElement | null;
       while (n && n !== el.parentElement) {
         if (n.scrollHeight > n.clientHeight) {
           const oy = getComputedStyle(n).overflowY;
@@ -29,16 +44,17 @@ export function usePullToRefresh(onRefresh, { enabled = true, threshold = 110, m
       return true; // aucun scrollable trouvé → on considère qu'on est en haut
     };
 
-    const onStart = (e) => {
+    const onStart = (e: TouchEvent): void => {
+      const t = e.target as Element | null;
       if (refreshing || e.touches.length !== 1) { g.current.active = false; return; }
-      if (e.target.closest && e.target.closest(".modal-backdrop")) { g.current.active = false; return; }
+      if (t?.closest?.(".modal-backdrop")) { g.current.active = false; return; }
       if (!atTop(e.target)) { g.current.active = false; return; }
       g.current.startY = e.touches[0].clientY;
       g.current.startX = e.touches[0].clientX;
       g.current.dirLocked = false;
       g.current.active = true;
     };
-    const onMove = (e) => {
+    const onMove = (e: TouchEvent): void => {
       if (!g.current.active) return;
       const dy = e.touches[0].clientY - g.current.startY;
       const dx = e.touches[0].clientX - g.current.startX;
@@ -54,7 +70,7 @@ export function usePullToRefresh(onRefresh, { enabled = true, threshold = 110, m
       setPull(dist);
       e.preventDefault(); // bloque l'overscroll natif pendant le tirage
     };
-    const onEnd = () => {
+    const onEnd = (): void => {
       if (!g.current.active) return;
       g.current.active = false;
       if (g.current.pull >= threshold) {

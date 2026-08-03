@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
 
-// État de connexion réseau (online/offline), pour distinguer « hors ligne » d'une erreur de sync.
-export function useOnline() {
+/**
+ * État de connexion réseau (online/offline), pour distinguer « hors ligne » d'une
+ * erreur de sync.
+ *
+ * @returns `true` si le navigateur se déclare en ligne.
+ */
+export function useOnline(): boolean {
   const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
   useEffect(() => {
-    const on = () => setOnline(true), off = () => setOnline(false);
+    const on = (): void => setOnline(true), off = (): void => setOnline(false);
     window.addEventListener("online", on);
     window.addEventListener("offline", off);
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
