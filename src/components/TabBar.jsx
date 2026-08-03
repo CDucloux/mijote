@@ -5,8 +5,14 @@ import { TABS } from "../constants/tabs.js";
 // L'onglet actif est signalé par une pastille en surbrillance derrière l'icône
 // (fond teinté à l'accent), en plus de la couleur et du libellé en gras.
 export function TabBar({ tab, setTab }) {
+  // `paddingBottom` = zone système du bas (gestes Android / home indicator iOS) :
+  // en PWA edge-to-edge, la barre de navigation de l'OS affiche les pixels de la
+  // page à cet endroit → on y étend le fond `--surface` pour qu'elle prenne la
+  // couleur de l'appli (thème) plutôt que la couleur système. La rangée d'onglets
+  // garde sa hauteur `--tab-h` dans un conteneur interne.
   return (
-    <div style={{ height: "var(--tab-h)", background: "var(--surface)", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", flexShrink: 0 }}>
+    <div style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0, paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div style={{ height: "var(--tab-h)", display: "flex", alignItems: "center" }}>
       {TABS.map(t => {
         const active = tab === t.id;
         return (
@@ -18,6 +24,7 @@ export function TabBar({ tab, setTab }) {
           </button>
         );
       })}
+      </div>
     </div>
   );
 }
