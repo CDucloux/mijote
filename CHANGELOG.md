@@ -1,5 +1,27 @@
 # Changelog – Mijoté
 
+## v3.9.0 – Safran · Fenêtres animées & courses affûtées
+
+### Fenêtres & animations
+- **Animation de sortie** sur toutes les fenêtres modales et alertes (fini la disparition sèche), avec un **timing d'entrée** retravaillé (feuilles et alertes)
+- **Liens légaux** de la page d'accueil (CGU, Politique de confidentialité) en **surbrillance au survol** sur desktop
+
+### Courses
+- **Options de liste intégrées à la pastille active** (le « ⋯ » n'apparaît que sur la liste sélectionnée) et **appui long** pour modifier ou supprimer une liste
+- **Hauteur des pastilles uniformisée** — fini les pastilles de tailles inégales
+
+### Import photo
+- **Extraction sur Sonnet 5** en **haute résolution** : lecture bien plus fidèle des pages de livre (moins d'oublis, moins d'erreurs de lecture)
+- **Prompt dédié aux photos** (mise en page en colonnes, deux pages, aplatissement des groupes d'ingrédients)
+- **Détection de la photo du plat** parmi les pages fournies → utilisée automatiquement en **image de couverture**
+
+### Thème & affichage
+- Bascule **clair / sombre fluide** sur les pages denses (accueil, recettes, stock)
+- **Éditeur** : les unités des ingrédients liés ne collent plus à la quantité et le **pluriel** est appliqué correctement
+
+### Sous le capot
+- **Migration TypeScript** de `src/lib` quasi terminée (planificateur, courses batch, foyer, import/export, PDF, recettes publiques, stockage…) — il ne reste que `firebase` et `firestore`
+
 ## v3.8.6 – Safran · Imports fiables & finitions
 
 ### Import IA (lien & photo)

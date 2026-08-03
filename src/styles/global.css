@@ -89,6 +89,16 @@ html.light select option {
   mix-blend-mode: normal;
 }
 
+/* Pendant le view-transition, on neutralise le fondu par élément (règle `*`
+   ci-dessus) : le cross-fade de l'instantané fait déjà le fondu, et éviter des
+   milliers de transitions simultanées garde la bascule fluide sur les pages
+   denses. N'affecte pas l'animation du view-transition (qui utilise `animation`). */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
 /* Pas de contour bleu au tap/focus tactile (PWA) ; le focus clavier reste visible via :focus-visible */
 button,
 a,
@@ -537,6 +547,40 @@ select {
   }
 }
 
+/* Sorties de modales (voir useModalExit) : la classe .is-closing bascule sur la
+   keyframe de sortie, jouée avant le démontage. */
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sheetDown {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes alertPopOut {
+  to {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+}
+
+.modal-backdrop.is-closing {
+  animation: fadeOut 0.24s ease forwards;
+}
+.modal-sheet.is-closing {
+  animation: sheetDown 0.26s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+.alert-backdrop.is-closing {
+  animation: fadeOut 0.17s ease forwards;
+}
+.alert-dialog.is-closing {
+  animation: alertPopOut 0.17s ease-in forwards;
+}
+
 .modal-handle {
   width: 40px;
   height: 4px;
@@ -556,7 +600,7 @@ select {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: fadeIn 0.16s backwards;
+  animation: fadeIn 0.24s backwards;
 }
 
 .alert-dialog {
@@ -566,18 +610,18 @@ select {
   width: 100%;
   max-width: 380px;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
-  animation: alertPop 0.2s cubic-bezier(0.34, 1.4, 0.5, 1) backwards;
+  animation: alertPop 0.35s cubic-bezier(0.32, 1.2, 0.5, 1) backwards;
 }
 
 @keyframes alertPop {
   from {
     opacity: 0;
-    transform: scale(0.92);
+    transform: scale(0.9) translateY(12px);
   }
 
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -915,6 +959,17 @@ select {
   color: var(--accent);
   font-weight: 600;
   text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+@media (hover: hover) {
+  .login-consent-link:hover {
+    color: var(--accent-strong, #d1541f);
+    background: rgba(232, 112, 58, 0.12);
+    box-shadow: 0 0 0 3px rgba(232, 112, 58, 0.12);
+  }
 }
 
 /* Rendu Markdown des documents légaux */

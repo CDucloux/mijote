@@ -1,15 +1,24 @@
-// ─── COUCHE DE DONNÉES YAML (parsing + validation, pur) ───────────────────────
-// Source unique pour l'import YAML (UI admin) ET le script de seed (Node).
-// Aucune dépendance React/Firestore. L'export reste en Markdown (lisible) ;
-// l'import est en YAML (plus simple à écrire et versionner que le Markdown).
-//
-// Chaque parseur renvoie { items, errors } : si `errors` n'est pas vide,
-// l'appelant DOIT annuler l'import en entier (jamais d'écrasement partiel de la
-// base master), comme le faisait déjà l'import Markdown.
-
+/**
+ * Couche de données YAML (parsing + validation, pur). Source unique pour l'import
+ * YAML (UI admin) ET le script de seed (Node). Aucune dépendance React/Firestore.
+ * L'export reste en Markdown (lisible) ; l'import est en YAML (plus simple à écrire
+ * et versionner que le Markdown).
+ *
+ * Chaque parseur renvoie `{ items, errors }` : si `errors` n'est pas vide,
+ * l'appelant DOIT annuler l'import en entier (jamais d'écrasement partiel de la
+ * base master), comme le faisait déjà l'import Markdown.
+ *
+ * @module dataYaml
+ */
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { ING_MD_BOUNDS } from "./ingredientsMarkdown.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
+
+/** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
+export interface ParseResult<T = Record<string, unknown>> {
+  items: T[];
+  errors: string[];
+}
 
 // Clés nutritionnelles exportées (ordre stable), hors `isVegetable` qui est recalculé.
 const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat", "omega3", "fiber", "salt"];
@@ -17,13 +26,13 @@ const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat"
 // lisibles dans une revue de diff Git. On aère ensuite le rendu : une ligne vide
 // après l'en-tête et entre chaque entrée de 1er niveau (les marqueurs `- ` en
 // colonne 0). Sans incidence au ré-import – YAML ignore les lignes vides.
-const dumpYaml = (rows, header) => {
+const dumpYaml = (rows: unknown, header: string): string => {
   const body = stringifyYaml(rows, { lineWidth: 0 }).replace(/\n(- )/g, "\n\n$1");
   return header.replace(/\s*$/, "") + "\n\n" + body;
 };
 
-// Catégories du glossaire des techniques (clé → libellé affiché).
-export const TECHNIQUE_CATEGORIES = {
+/** Catégories du glossaire des techniques (clé → libellé affiché). */
+export const TECHNIQUE_CATEGORIES: Record<string, string> = {
   decoupe: "Découpe",
   cuisson: "Cuisson",
   liaison: "Liaison",
@@ -31,40 +40,43 @@ export const TECHNIQUE_CATEGORIES = {
   dressage: "Dressage",
 };
 
-// Slug stable à partir d'un nom (pour générer un id absent).
-export function slugifyId(prefix, name) {
+/** Slug stable à partir d'un nom (pour générer un id absent). */
+export function slugifyId(prefix: string, name: string): string {
   const base = String(name || "")
     .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
   return prefix + (base || Date.now().toString(36));
 }
 
-// Charge un document YAML attendu comme une LISTE d'objets. Renvoie
-// { list, error } : `error` non nul si le YAML est invalide ou n'est pas une liste.
-function loadYamlList(text) {
-  let doc;
+/**
+ * Charge un document YAML attendu comme une LISTE d'objets. Renvoie
+ * `{ list, error }` : `error` non nul si le YAML est invalide ou n'est pas une liste.
+ */
+function loadYamlList(text: string): { list: unknown[] | null; error: string | null } {
+  let doc: unknown;
   try {
     doc = parseYaml(text);
   } catch (e) {
-    return { list: null, error: `YAML invalide : ${e.message || e}.` };
+    return { list: null, error: `YAML invalide : ${(e as Error)?.message || e}.` };
   }
   if (doc == null) return { list: null, error: "Fichier vide." };
   if (!Array.isArray(doc)) return { list: null, error: "Le document doit être une liste d'entrées (« - … »)." };
   return { list: doc, error: null };
 }
 
-const isObj = (v) => v && typeof v === "object" && !Array.isArray(v);
-const str = (v) => (typeof v === "string" ? v.trim() : "");
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
 // ─── TECHNIQUES ───────────────────────────────────────────────────────────────
-export function parseTechniquesYaml(text) {
+export function parseTechniquesYaml(text: string): ParseResult {
   const { list, error } = loadYamlList(text);
   if (error) return { items: [], errors: [error] };
 
-  const errors = [];
-  const items = [];
-  const seenIds = new Set();
-  list.forEach((raw, i) => {
+  const errors: string[] = [];
+  const items: Record<string, unknown>[] = [];
+  const seenIds = new Set<string>();
+  (list || []).forEach((rawEntry, i) => {
+    const raw = rawEntry as Record<string, unknown>;
     const where = `Entrée #${i + 1}${raw && raw.name ? ` « ${raw.name} »` : ""}`;
     if (!isObj(raw)) { errors.push(`${where} : ce n'est pas un objet.`); return; }
     const name = str(raw.name);
@@ -76,7 +88,8 @@ export function parseTechniquesYaml(text) {
       errors.push(`${where} : catégorie « ${category || "?"} » inconnue (${Object.keys(TECHNIQUE_CATEGORIES).join(", ")}).`);
     if (raw.aliases != null && (!Array.isArray(raw.aliases) || raw.aliases.some(a => typeof a !== "string")))
       errors.push(`${where} : « aliases » doit être une liste de chaînes.`);
-    if (raw.difficulty != null && (!Number.isInteger(raw.difficulty) || raw.difficulty < 1 || raw.difficulty > 5))
+    const difficulty = raw.difficulty;
+    if (difficulty != null && (!Number.isInteger(difficulty) || (difficulty as number) < 1 || (difficulty as number) > 5))
       errors.push(`${where} : « difficulty » doit être un entier de 1 à 5.`);
 
     const id = str(raw.id) || slugifyId("tech_", name);
@@ -87,9 +100,9 @@ export function parseTechniquesYaml(text) {
       ? [...new Set(raw.aliases.map(a => str(a).toLowerCase()).filter(Boolean))]
       : [];
     // N'inclure que des clés définies : Firestore rejette les valeurs `undefined`.
-    const item = { id, name, category, definition };
+    const item: Record<string, unknown> = { id, name, category, definition };
     if (aliases.length) item.aliases = aliases;
-    if (Number.isInteger(raw.difficulty) && raw.difficulty >= 1 && raw.difficulty <= 5) item.difficulty = raw.difficulty;
+    if (Number.isInteger(difficulty) && (difficulty as number) >= 1 && (difficulty as number) <= 5) item.difficulty = difficulty;
     const source = str(raw.source);
     if (source) item.source = source;
     items.push(item);
@@ -97,28 +110,39 @@ export function parseTechniquesYaml(text) {
   return { items: errors.length ? [] : items, errors };
 }
 
-// Export Markdown lisible du glossaire (revue / partage). Trié par catégorie puis nom.
-export function formatTechniquesMarkdown(list) {
-  const esc = s => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
+/** Technique (forme minimale utilisée par les exports). */
+interface TechniqueRow {
+  id?: string;
+  name?: string;
+  category?: string;
+  definition?: string;
+  aliases?: string[];
+  difficulty?: number;
+  source?: string;
+}
+
+/** Export Markdown lisible du glossaire (revue / partage). Trié par catégorie puis nom. */
+export function formatTechniquesMarkdown(list: TechniqueRow[]): string {
+  const esc = (s: unknown): string => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
   const cats = Object.keys(TECHNIQUE_CATEGORIES);
   const rows = [...(list || [])].sort((a, b) => {
-    const ca = cats.indexOf(a.category), cb = cats.indexOf(b.category);
+    const ca = cats.indexOf(a.category || ""), cb = cats.indexOf(b.category || "");
     return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr");
   });
   const header = "| Technique | Catégorie | Difficulté | Définition | Aliases | Source |\n|---|---|---|---|---|---|";
   const body = rows.map(r =>
-    `| ${esc(r.name)} | ${esc(TECHNIQUE_CATEGORIES[r.category] || r.category)} | ${r.difficulty ? `${r.difficulty}/5` : "–"} | ${esc(r.definition)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.source)} |`
+    `| ${esc(r.name)} | ${esc(TECHNIQUE_CATEGORIES[r.category || ""] || r.category)} | ${r.difficulty ? `${r.difficulty}/5` : "–"} | ${esc(r.definition)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.source)} |`
   ).join("\n");
   return `# Glossaire des techniques Mijoté (${rows.length})\n\n${header}\n${body}\n`;
 }
 
-// Export YAML du glossaire – réimportable (round-trip fidèle avec parseTechniquesYaml).
-export function formatTechniquesYaml(list) {
+/** Export YAML du glossaire – réimportable (round-trip fidèle avec parseTechniquesYaml). */
+export function formatTechniquesYaml(list: TechniqueRow[]): string {
   const cats = Object.keys(TECHNIQUE_CATEGORIES);
   const rows = [...(list || [])]
-    .sort((a, b) => { const ca = cats.indexOf(a.category), cb = cats.indexOf(b.category); return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr"); })
+    .sort((a, b) => { const ca = cats.indexOf(a.category || ""), cb = cats.indexOf(b.category || ""); return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr"); })
     .map(t => {
-      const o = { id: t.id, name: t.name, category: t.category };
+      const o: Record<string, unknown> = { id: t.id, name: t.name, category: t.category };
       if (t.aliases?.length) o.aliases = t.aliases;
       if (t.difficulty) o.difficulty = t.difficulty;
       o.definition = t.definition;
@@ -128,10 +152,24 @@ export function formatTechniquesYaml(list) {
   return dumpYaml(rows, `# Glossaire des techniques Mijoté (${rows.length}) – généré, réimportable.\n`);
 }
 
+/** Ingrédient (forme minimale utilisée par l'export). */
+interface IngredientRow {
+  id?: string;
+  name?: string;
+  aliases?: string[];
+  category?: string;
+  description?: string;
+  months?: number[];
+  gramsPerPiece?: number;
+  image?: string;
+  tips?: { type: string; text: string }[];
+  nutrition?: Record<string, number>;
+}
+
 // ─── EXPORTS YAML (réimportables, pour versionner dans data/) ──────────────────
 // Inverses de parse*Yaml : on retire les champs dérivés/internes (_ro, isVegetable)
 // pour que parse(format(x)) redonne x.
-export function formatIngredientsYaml(list, { categoryOrder = [] } = {}) {
+export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [] }: { categoryOrder?: string[] } = {}): string {
   const order = categoryOrder.length ? categoryOrder : null;
   const rows = [...(list || [])]
     .sort((a, b) => {
@@ -139,7 +177,7 @@ export function formatIngredientsYaml(list, { categoryOrder = [] } = {}) {
       return (a.name || "").localeCompare(b.name || "", "fr");
     })
     .map(d => {
-      const o = {};
+      const o: Record<string, unknown> = {};
       if (d.id) o.id = d.id;
       o.name = d.name;
       if (d.aliases?.length) o.aliases = d.aliases;
@@ -150,7 +188,7 @@ export function formatIngredientsYaml(list, { categoryOrder = [] } = {}) {
       if (d.image) o.image = d.image;
       if (d.tips?.length) o.tips = d.tips.map(t => ({ type: t.type, text: t.text }));
       if (d.nutrition) {
-        const n = {};
+        const n: Record<string, number> = {};
         for (const k of NUT_KEYS) if (d.nutrition[k] != null) n[k] = d.nutrition[k];
         if (Object.keys(n).length) o.nutrition = n;
       }
@@ -159,23 +197,27 @@ export function formatIngredientsYaml(list, { categoryOrder = [] } = {}) {
   return dumpYaml(rows, `# Base d'ingrédients Mijoté (${rows.length}) – généré, réimportable. Valeurs pour 100 g.\n`);
 }
 
-export function formatUtensilsYaml(list) {
+/** Ustensile (forme minimale utilisée par l'export). */
+interface UtensilRow { id?: string; name?: string; image?: string }
+
+export function formatUtensilsYaml(list: UtensilRow[]): string {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
-    .map(d => { const o = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.image) o.image = d.image; return o; });
+    .map(d => { const o: Record<string, unknown> = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.image) o.image = d.image; return o; });
   return dumpYaml(rows, `# Base d'ustensiles Mijoté (${rows.length}) – généré, réimportable.\n`);
 }
 
 // ─── INGRÉDIENTS ──────────────────────────────────────────────────────────────
-// `validCategories` : Set ou tableau des clés de catégories acceptées.
-export function parseIngredientsYaml(text, { validCategories } = {}) {
+/** `validCategories` : Set ou tableau des clés de catégories acceptées. */
+export function parseIngredientsYaml(text: string, { validCategories }: { validCategories?: Set<string> | string[] } = {}): ParseResult {
   const { list, error } = loadYamlList(text);
   if (error) return { items: [], errors: [error] };
 
   const valid = validCategories instanceof Set ? validCategories : new Set(validCategories || []);
-  const errors = [];
-  const items = [];
-  list.forEach((raw, i) => {
+  const errors: string[] = [];
+  const items: Record<string, unknown>[] = [];
+  (list || []).forEach((rawEntry, i) => {
+    const raw = rawEntry as Record<string, unknown>;
     const where = `Entrée #${i + 1}${raw && raw.name ? ` « ${raw.name} »` : ""}`;
     if (!isObj(raw)) { errors.push(`${where} : ce n'est pas un objet.`); return; }
     const name = str(raw.name);
@@ -183,7 +225,7 @@ export function parseIngredientsYaml(text, { validCategories } = {}) {
     if (raw.category != null && valid.size && !valid.has(str(raw.category)))
       errors.push(`${where} : catégorie inconnue « ${raw.category} ».`);
 
-    const row = { name };
+    const row: Record<string, unknown> = { name };
     if (raw.id != null) row.id = str(raw.id);
     if (raw.category != null) row.category = str(raw.category);
     if (raw.image != null) row.image = str(raw.image);
@@ -197,7 +239,7 @@ export function parseIngredientsYaml(text, { validCategories } = {}) {
       if (a.length) row.aliases = a;
     }
     if (Array.isArray(raw.tips)) {
-      const tips = [];
+      const tips: { type: string; text: string }[] = [];
       raw.tips.forEach(t => {
         if (!isObj(t)) { errors.push(`${where} : tip invalide.`); return; }
         const type = str(t.type).toLowerCase();
@@ -209,7 +251,7 @@ export function parseIngredientsYaml(text, { validCategories } = {}) {
       if (tips.length) row.tips = tips;
     }
     if (Array.isArray(raw.months)) {
-      const m = raw.months.filter(x => Number.isInteger(x) && x >= 1 && x <= 12);
+      const m = raw.months.filter((x): x is number => Number.isInteger(x) && x >= 1 && x <= 12);
       if (m.length !== raw.months.length) errors.push(`${where} : « months » doit contenir des entiers 1–12.`);
       if (m.length) row.months = [...new Set(m)].sort((x, y) => x - y);
     }
@@ -222,7 +264,7 @@ export function parseIngredientsYaml(text, { validCategories } = {}) {
     if (raw.nutrition != null) {
       if (!isObj(raw.nutrition)) errors.push(`${where} : « nutrition » doit être un objet.`);
       else {
-        const nut = {};
+        const nut: Record<string, unknown> = {};
         Object.entries(raw.nutrition).forEach(([k, val]) => {
           const bounds = ING_MD_BOUNDS[k];
           if (!bounds) return; // champ nutrition inconnu : ignoré
@@ -243,14 +285,15 @@ export function parseIngredientsYaml(text, { validCategories } = {}) {
 }
 
 // ─── USTENSILES ───────────────────────────────────────────────────────────────
-export function parseUtensilsYaml(text) {
+export function parseUtensilsYaml(text: string): ParseResult {
   const { list, error } = loadYamlList(text);
   if (error) return { items: [], errors: [error] };
 
-  const errors = [];
-  const items = [];
-  const seenIds = new Set();
-  list.forEach((raw, i) => {
+  const errors: string[] = [];
+  const items: Record<string, unknown>[] = [];
+  const seenIds = new Set<string>();
+  (list || []).forEach((rawEntry, i) => {
+    const raw = rawEntry as Record<string, unknown>;
     const where = `Entrée #${i + 1}${raw && raw.name ? ` « ${raw.name} »` : ""}`;
     if (!isObj(raw)) { errors.push(`${where} : ce n'est pas un objet.`); return; }
     const name = str(raw.name);
@@ -262,7 +305,7 @@ export function parseUtensilsYaml(text) {
     const id = str(raw.id) || slugifyId("db_u_", name);
     if (seenIds.has(id)) { errors.push(`${where} : id en double « ${id} ».`); return; }
     seenIds.add(id);
-    const row = { id, name };
+    const row: Record<string, unknown> = { id, name };
     if (raw.image != null) row.image = str(raw.image);
     items.push(row);
   });

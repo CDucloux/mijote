@@ -5,7 +5,7 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { ShoppingItemRow } from "../components/ShoppingItemRow.jsx";
-import { HeroMenu } from "../components/HeroMenu.jsx";
+import { useLongPress } from "../hooks/useLongPress.js";
 import { findIngredientMatch } from "../lib/nameMatcher.js";
 import { parseIngredientInput } from "../lib/parseIngredient.js";
 import { aggregateShopping } from "../lib/shoppingAggregate.js";
@@ -38,6 +38,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
   const [showAddModal, setShowAddModal] = useState(false);
+  const [listMenu, setListMenu] = useState(null);      // liste dont le menu (⋯ / appui long) est ouvert
+  const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
   // Overscroll « stretch » horizontal de la rangée de listes (comme WhatsApp/Maps).
   const { scrollRef: tabsScrollRef, contentRef: tabsContentRef } = useHorizontalOverscroll({ max: 64 });
 
@@ -199,7 +201,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
               return (
                 <button onClick={() => setActiveListId(ALL_ID)} className="slide-up"
                   style={{
-                    flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                    flexShrink: 0, display: "flex", alignItems: "center", gap: 6, height: 34, boxSizing: "border-box", padding: "0 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
                     background: allMode ? "var(--accent)" : "var(--surface)",
                     color: allMode ? "#fff" : "var(--accent)",
                     border: `1px solid ${allMode ? "transparent" : "rgba(232,112,58,0.5)"}`
@@ -218,9 +220,13 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
               const isActive = !allMode && effectiveId === l.id;
               const lChecked = l.items.filter(i => i.checked).length;
               return (
-                <button key={l.id} onClick={() => setActiveListId(l.id)} className="slide-up"
+                <div key={l.id} role="button" tabIndex={0} className="slide-up"
+                  onClick={() => { if (wasLongPress()) return; setActiveListId(l.id); }}
+                  onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveListId(l.id); } }}
+                  onPointerDown={e => startLongPress(e, () => setListMenu(l))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+                  onContextMenu={e => { e.preventDefault(); setListMenu(l); }}
                   style={{
-                    flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
+                    flexShrink: 0, display: "flex", alignItems: "center", gap: 6, height: 34, boxSizing: "border-box", padding: isActive ? "0 6px 0 12px" : "0 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: "pointer", userSelect: "none",
                     background: isActive ? "var(--accent)" : "var(--surface)", animationDelay: `${idx * 0.05}s`,
                     color: isActive ? "#fff" : "var(--text2)",
                     border: `1px solid ${isActive ? "transparent" : "var(--border)"}`
@@ -232,20 +238,17 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                       {lChecked}/{l.items.length}
                     </span>
                   )}
-                </button>
+                  {/* Options : uniquement sur la liste active. La hauteur fixe de la
+                      pastille empêche le bouton (22px) de la faire grandir. */}
+                  {isActive && (
+                    <button onClick={e => { e.stopPropagation(); setListMenu(l); }} aria-label="Options de la liste"
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", flexShrink: 0, border: "none", background: "rgba(255,255,255,0.22)", cursor: "pointer", padding: 0 }}>
+                      <Icon name="ellipsis" size={14} color="#fff" />
+                    </button>
+                  )}
+                </div>
               );
             })}
-            {activeList && (
-              <div style={{ flexShrink: 0, marginLeft: "auto" }}>
-                <HeroMenu
-                  icon="ellipsis" iconColor="var(--text2)" iconSize={18} className="icon-btn-soft"
-                  btnStyle={{ width: 34, height: 34, borderRadius: 9, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-                  items={[
-                    { label: "Paramètres de la liste", icon: "settings", onClick: () => setConfigList({ ...activeList }) },
-                    { label: "Supprimer la liste", icon: "trash", danger: true, onClick: () => activeList.type === "free" ? setConfirmDeleteId(activeList.id) : deleteList(activeList.id) },
-                  ]} />
-              </div>
-            )}
           </div>
           </div>
         )}
@@ -388,6 +391,34 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
         </div>
       )}
       {/* Confirm delete modal – only for free lists */}
+      {/* Menu d'une liste (⋯ de la pastille active / appui long) */}
+      {listMenu && (() => {
+        const lm = listMenu;
+        const close = () => setListMenu(null);
+        return (
+        <SwipeableSheet onClose={close}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center" }}>
+              <Icon name={lm.type === "recipe" ? "book" : "shopping"} size={24} color="var(--accent)" />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lm.name}</div>
+              <div style={{ fontSize: 13, color: "var(--text3)" }}>{lm.type === "recipe" ? "Depuis une recette" : "Liste libre"} · {lm.items.length} article{lm.items.length > 1 ? "s" : ""}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <button className="menu-row" onClick={() => { setConfigList({ ...lm }); close(); }}>
+              <Icon name="settings" size={19} color="var(--text2)" /> Paramètres de la liste
+            </button>
+            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }}
+              onClick={() => { close(); lm.type === "free" ? setConfirmDeleteId(lm.id) : deleteList(lm.id); }}>
+              <Icon name="trash" size={19} color="var(--red)" /> Supprimer la liste
+            </button>
+          </div>
+        </SwipeableSheet>
+        );
+      })()}
+
       {confirmDeleteId && (
         <ConfirmDialog title="Supprimer la liste ?"
           onCancel={() => setConfirmDeleteId(null)}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { NewRecipeButton } from "../components/NewRecipeButton.jsx";
@@ -16,6 +16,7 @@ import { isRecipeVegan } from "../lib/dietary.js";
 import { buildTechniqueIndex } from "../lib/techniques.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
+import { useLongPress } from "../hooks/useLongPress.js";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 const PAGE_SIZE = 8;
@@ -79,25 +80,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
     [arr[i], arr[j]] = [arr[j], arr[i]];
     return arr;
   });
-  const lpTimer = useRef(null);
-  const lpFired = useRef(false);
-  const lpStart = useRef(null);
-  // Appui long générique : ouvre un menu (callback) après 480 ms ; `lpFired` sert à
-  // annuler le clic qui suit. Utilisé par les carnets ET les cartes recettes.
-  // On mémorise le point de départ : dès que le doigt bouge (> 10 px), c'est un
-  // scroll / pull-to-refresh, pas un appui long → on annule (les deux gestes
-  // deviennent mutuellement exclusifs, plus de menu qui surgit pendant un pull).
-  const startLongPress = useCallback((e, onFire) => {
-    lpFired.current = false;
-    lpStart.current = e ? { x: e.clientX, y: e.clientY } : null;
-    clearTimeout(lpTimer.current);
-    lpTimer.current = setTimeout(() => { lpFired.current = true; lpStart.current = null; onFire(); }, 480);
-  }, []);
-  const cancelLongPress = useCallback(() => { clearTimeout(lpTimer.current); lpStart.current = null; }, []);
-  const moveLongPress = useCallback((e) => {
-    const s = lpStart.current;
-    if (s && (Math.abs(e.clientX - s.x) > 10 || Math.abs(e.clientY - s.y) > 10)) { clearTimeout(lpTimer.current); lpStart.current = null; }
-  }, []);
+  // Appui long générique (carnets ET cartes recettes) : ouvre un menu après un
+  // délai, s'annule au moindre mouvement (scroll / pull-to-refresh).
+  const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
   });
@@ -115,7 +100,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
     return m;
   }, [recipes, resolver]);
   // Callbacks stables → RecipeGridItem (mémoïsé) ne re-rend pas au scroll.
-  const openRecipe = useCallback((r) => { if (lpFired.current) { lpFired.current = false; return; } onSelect(r.id); }, [onSelect]);
+  const openRecipe = useCallback((r) => { if (wasLongPress()) return; onSelect(r.id); }, [onSelect, wasLongPress]);
   const openRecipeMenu = useCallback((r) => setRecipeMenu(r), []);
 
   // Styles de cuisine réellement utilisés, dans l'ordre canonique de la liste.
@@ -256,7 +241,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                 const count = countFor(col);
                 return (
                 <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined}
-                  onClick={() => { if (lpFired.current) { lpFired.current = false; return; } openCarnet(col); }}
+                  onClick={() => { if (wasLongPress()) return; openCarnet(col); }}
                   onPointerDown={(e) => startLongPress(e, () => setCarnetMenu(col))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   onContextMenu={(e) => { e.preventDefault(); setCarnetMenu(col); }}
                   draggable

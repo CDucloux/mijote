@@ -1,27 +1,46 @@
-// ─── MIGRATION / FUSION DES DONNÉES DE FOYER (pur) ───────────────────────────
-// À l'adhésion, on FUSIONNE de façon additive les données du nouveau membre dans
-// celles du foyer, sans rien détruire :
-//   • recettes & carnets : union, dédup par nom normalisé (la version du foyer
-//     gagne en cas d'homonyme ; les références de carnets locales sont remappées) ;
-//   • stock : union des ids ;
-//   • planning & listes de courses : on ADOPTE ceux du foyer (un calendrier/des
-//     listes partagés ne se fusionnent pas ligne à ligne ; la copie perso reste
-//     en sauvegarde dans l'espace solo).
-
+/**
+ * Migration / fusion des données de foyer (pur). À l'adhésion, on FUSIONNE de façon
+ * additive les données du nouveau membre dans celles du foyer, sans rien détruire :
+ *   • recettes & carnets : union, dédup par nom normalisé (la version du foyer
+ *     gagne en cas d'homonyme ; les références de carnets locales sont remappées) ;
+ *   • stock : union des ids ;
+ *   • planning & listes de courses : on ADOPTE ceux du foyer (un calendrier/des
+ *     listes partagés ne se fusionnent pas ligne à ligne ; la copie perso reste
+ *     en sauvegarde dans l'espace solo).
+ *
+ * @module householdMigration
+ */
 import { normalizeStr } from "./parseIngredient.js";
 
-const byNameSet = (arr, key = "name") => new Set((arr || []).map(x => normalizeStr(x?.[key] || "")));
+/** Carnet (forme minimale). */
+export interface SharedCollection { id: string; name?: string }
 
-// Fusionne les données locales (`local`) DANS celles du foyer (`remote`).
-export function mergeShared(local, remote) {
+/** Recette (forme minimale utilisée par la fusion). */
+export interface SharedRecipe { id: string; name?: string; collections?: string[] }
+
+/** Espace de données partageable (perso ou foyer). */
+export interface SharedData {
+  recipes?: SharedRecipe[];
+  collections?: SharedCollection[];
+  mealPlan?: Record<string, unknown>;
+  shoppingLists?: unknown[];
+  stock?: string[];
+  lowStock?: string[];
+}
+
+const byNameSet = (arr: { name?: string }[] | undefined, key: "name" = "name"): Set<string> =>
+  new Set((arr || []).map(x => normalizeStr(x?.[key] || "")));
+
+/** Fusionne les données locales (`local`) DANS celles du foyer (`remote`). */
+export function mergeShared(local: SharedData | null | undefined, remote: SharedData | null | undefined): Required<SharedData> {
   local = local || {};
   remote = remote || {};
 
   // ── Carnets : dédup par nom, remap des références locales en conflit ──
   const remoteCols = remote.collections || [];
   const remoteColByName = new Map(remoteCols.map(c => [normalizeStr(c.name || ""), c.id]));
-  const idRemap = new Map();
-  const keptLocalCols = [];
+  const idRemap = new Map<string, string>();
+  const keptLocalCols: SharedCollection[] = [];
   for (const c of (local.collections || [])) {
     const remoteId = remoteColByName.get(normalizeStr(c.name || ""));
     if (remoteId) idRemap.set(c.id, remoteId);        // homonyme : on pointe vers celui du foyer
@@ -32,11 +51,11 @@ export function mergeShared(local, remote) {
   // ── Recettes : union, dédup par nom ; remap des carnets ; id local régénéré si collision ──
   const remoteNames = byNameSet(remote.recipes);
   const remoteIds = new Set((remote.recipes || []).map(r => r.id));
-  const remapCols = (r) => {
+  const remapCols = (r: SharedRecipe): SharedRecipe => {
     const cols = (r.collections || []).map(id => idRemap.get(id) || id);
     return cols.length ? { ...r, collections: [...new Set(cols)] } : r;
   };
-  const addedLocal = [];
+  const addedLocal: SharedRecipe[] = [];
   for (const r of (local.recipes || [])) {
     if (remoteNames.has(normalizeStr(r.name || ""))) continue;     // homonyme : on garde celle du foyer
     let rr = remapCols(r);

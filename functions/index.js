@@ -21,6 +21,10 @@ const ADMIN_EMAIL = defineString("ADMIN_EMAIL"); // e-mail autorisé (le créate
 const MAX_HTML_BYTES = 3_000_000; // garde-fou : on ne télécharge pas des pages énormes
 const FETCH_TIMEOUT_MS = 15_000;
 const MODEL = "claude-haiku-4-5";
+// L'extraction PHOTO (OCR d'une page de livre) demande une bien meilleure vision
+// que l'extraction URL (texte déjà propre) : on la confie à Sonnet, plus fiable
+// sur les quantités et la mise en page, et capable de haute résolution.
+const VISION_MODEL = "claude-sonnet-5";
 
 // Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md). La
 // liste des cuisines est fixe (injectée au démarrage) ; la liste des ustensiles
@@ -28,6 +32,11 @@ const MODEL = "claude-haiku-4-5";
 const PROMPT_TEMPLATE = fs
   .readFileSync(path.join(__dirname, "prompts", "recipeExtract.md"), "utf-8")
   .replace("{{CUISINE_LIST}}", CUISINE_LABELS.join(", "));
+
+// Addendum spécifique à l'import PHOTO (mise en page livre/magazine : colonne
+// d'ingrédients, deux pages, à ignorer, images d'étape toujours vides…). Ajouté
+// après le prompt de base, dont il complète et prime les règles.
+const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "prompts", "recipeExtractImage.md"), "utf-8");
 
 function parseJsonLoose(s) {
   let t = (s || "").trim();
@@ -112,7 +121,8 @@ async function extractFromImages(images, knownUtensils) {
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
   const system = PROMPT_TEMPLATE
     .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)")
-    .replace("depuis le texte brut d'une page web", "depuis une ou plusieurs photos (pages d'un livre de cuisine)");
+    .replace("depuis le texte brut d'une page web", "depuis une ou plusieurs photos (pages d'un livre ou magazine de cuisine)")
+    + "\n\n" + IMG_PROMPT_ADDENDUM;
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
   const content = images.map(im => ({
@@ -125,7 +135,7 @@ async function extractFromImages(images, knownUtensils) {
   let response;
   try {
     response = await client.messages.create({
-      model: MODEL, max_tokens: 4096, system,
+      model: VISION_MODEL, max_tokens: 4096, system,
       messages: [{ role: "user", content }],
     });
   } catch (e) {
@@ -137,7 +147,11 @@ async function extractFromImages(images, knownUtensils) {
   let parsed;
   try { parsed = parseJsonLoose(block.text); }
   catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
-  return llmToIntermediate(parsed, "");
+  // `coverPhoto` : numéro (1-based) de l'image qui est la photo du plat, 0 si aucune.
+  // On le convertit en index 0-based validé (-1 = pas de couverture).
+  const cp = Number(parsed.coverPhoto);
+  const coverIndex = Number.isInteger(cp) && cp >= 1 && cp <= images.length ? cp - 1 : -1;
+  return { inter: llmToIntermediate(parsed, ""), coverIndex };
 }
 
 async function extractWithLlm(text, sourceUrl, knownUtensils) {
@@ -216,7 +230,7 @@ exports.importRecipeFromUrl = onCall(
 // Import depuis une ou deux photos (livre de cuisine). Réservé à l'admin (garde
 // serveur identique). Vision Haiku 4.5 ; pas d'images d'étape.
 exports.importRecipeFromImages = onCall(
-  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
+  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
     const email = (request.auth?.token?.email || "").toLowerCase();
     if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
@@ -237,13 +251,15 @@ exports.importRecipeFromImages = onCall(
       ? request.data.knownUtensils.map(s => String(s)).filter(Boolean).slice(0, 200) : [];
 
     try {
-      const inter = await extractFromImages(images, knownUtensils);
+      const { inter, coverIndex } = await extractFromImages(images, knownUtensils);
       inter.image = "";
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");
-      return { recipe, method: "image" };
+      // coverIndex : l'image (parmi celles fournies) qui est la photo du plat → le
+      // client s'en sert comme image de couverture. -1 si aucune.
+      return { recipe, method: "image", coverIndex };
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       console.error("importRecipeFromImages — erreur inattendue:", e);
