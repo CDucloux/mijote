@@ -1,5 +1,14 @@
 # Changelog – Mijoté
 
+## v3.9.5 – Safran · Détails soignés
+
+### Connexion
+- **Écran « Connexion en cours… » toujours visible** : après une connexion, l'écran de chargement s'affiche désormais au moins une seconde — fini le flash imperceptible quand la session est déjà en cache. Sans effet quand on rouvre l'app déjà connecté (aucun délai inutile)
+
+### Fenêtres modales
+- **Animation de sortie sur « Annuler »** : les boutons « Annuler » des fenêtres jouent maintenant la même animation de fermeture que le glissé ou le clic sur le fond, au lieu de disparaître d'un coup (planning, courses, carnets, profil, fiche recette, configuration…)
+- **Déconnexion harmonisée** : la fenêtre de confirmation de déconnexion adopte le style commun (animation d'entrée et de sortie, focus sur « Annuler », fermeture par Échap)
+
 ## v3.9.4 – Safran · Connexion isolée
 
 ### Corrections
