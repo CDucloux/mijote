@@ -20,12 +20,19 @@ export interface ParseResult<T = Record<string, unknown>> {
   errors: string[];
 }
 
-// Clés nutritionnelles exportées (ordre stable), hors `isVegetable` qui est recalculé.
+/** Clés nutritionnelles exportées (ordre stable), hors `isVegetable` qui est recalculé. */
 const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat", "omega3", "fiber", "salt"];
-// stringify sans repli de ligne : les définitions/tips restent sur une ligne, plus
-// lisibles dans une revue de diff Git. On aère ensuite le rendu : une ligne vide
-// après l'en-tête et entre chaque entrée de 1er niveau (les marqueurs `- ` en
-// colonne 0). Sans incidence au ré-import – YAML ignore les lignes vides.
+
+/**
+ * Sérialise des lignes en YAML précédé d'un en-tête. `stringify` sans repli de
+ * ligne : les définitions/tips restent sur une ligne, plus lisibles dans une revue
+ * de diff Git. On aère ensuite le rendu (ligne vide après l'en-tête et entre chaque
+ * entrée de 1er niveau) — sans incidence au ré-import, YAML ignorant les lignes vides.
+ *
+ * @param rows - Données à sérialiser (liste d'objets).
+ * @param header - En-tête (commentaire `#`) placé en tête du document.
+ * @returns Le document YAML complet (en-tête aéré + corps).
+ */
 const dumpYaml = (rows: unknown, header: string): string => {
   const body = stringifyYaml(rows, { lineWidth: 0 }).replace(/\n(- )/g, "\n\n$1");
   return header.replace(/\s*$/, "") + "\n\n" + body;
@@ -40,7 +47,17 @@ export const TECHNIQUE_CATEGORIES: Record<string, string> = {
   dressage: "Dressage",
 };
 
-/** Slug stable à partir d'un nom (pour générer un id absent). */
+/**
+ * Construit un identifiant stable à partir d'un nom (pour générer un id absent) :
+ * translittère, minusculise et remplace tout caractère non alphanumérique par `_`.
+ *
+ * @param prefix - Préfixe collé devant le slug (ex. `"tech_"`).
+ * @param name - Nom source à translittérer.
+ * @returns Le slug préfixé ; repli sur un jeton temporel si le nom est vide.
+ *
+ * @example
+ * slugifyId("tech_", "Découpe à cru"); // → "tech_decoupe_a_cru"
+ */
 export function slugifyId(prefix: string, name: string): string {
   const base = String(name || "")
     .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -49,8 +66,10 @@ export function slugifyId(prefix: string, name: string): string {
 }
 
 /**
- * Charge un document YAML attendu comme une LISTE d'objets. Renvoie
- * `{ list, error }` : `error` non nul si le YAML est invalide ou n'est pas une liste.
+ * Charge un document YAML attendu comme une LISTE d'objets.
+ *
+ * @param text - Source YAML brute.
+ * @returns `{ list, error }` : `error` non nul si le YAML est invalide ou n'est pas une liste.
  */
 function loadYamlList(text: string): { list: unknown[] | null; error: string | null } {
   let doc: unknown;
@@ -68,6 +87,14 @@ const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
 // ─── TECHNIQUES ───────────────────────────────────────────────────────────────
+
+/**
+ * Parse et valide un export YAML du glossaire des techniques.
+ *
+ * @param text - Source YAML brute.
+ * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide
+ *   (import à annuler en entier — jamais d'écrasement partiel).
+ */
 export function parseTechniquesYaml(text: string): ParseResult {
   const { list, error } = loadYamlList(text);
   if (error) return { items: [], errors: [error] };
@@ -121,7 +148,13 @@ interface TechniqueRow {
   source?: string;
 }
 
-/** Export Markdown lisible du glossaire (revue / partage). Trié par catégorie puis nom. */
+/**
+ * Rend le glossaire des techniques en tableau Markdown lisible (revue / partage),
+ * trié par catégorie puis par nom.
+ *
+ * @param list - Techniques à exporter.
+ * @returns Le document Markdown (titre + tableau).
+ */
 export function formatTechniquesMarkdown(list: TechniqueRow[]): string {
   const esc = (s: unknown): string => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
   const cats = Object.keys(TECHNIQUE_CATEGORIES);
@@ -136,7 +169,13 @@ export function formatTechniquesMarkdown(list: TechniqueRow[]): string {
   return `# Glossaire des techniques Mijoté (${rows.length})\n\n${header}\n${body}\n`;
 }
 
-/** Export YAML du glossaire – réimportable (round-trip fidèle avec parseTechniquesYaml). */
+/**
+ * Rend le glossaire des techniques en YAML réimportable (round-trip fidèle avec
+ * {@link parseTechniquesYaml}), trié par catégorie puis par nom.
+ *
+ * @param list - Techniques à exporter.
+ * @returns Le document YAML réimportable.
+ */
 export function formatTechniquesYaml(list: TechniqueRow[]): string {
   const cats = Object.keys(TECHNIQUE_CATEGORIES);
   const rows = [...(list || [])]
@@ -167,8 +206,17 @@ interface IngredientRow {
 }
 
 // ─── EXPORTS YAML (réimportables, pour versionner dans data/) ──────────────────
-// Inverses de parse*Yaml : on retire les champs dérivés/internes (_ro, isVegetable)
-// pour que parse(format(x)) redonne x.
+
+/**
+ * Rend la base d'ingrédients en YAML réimportable. Inverse de
+ * {@link parseIngredientsYaml} : retire les champs dérivés/internes (`_ro`,
+ * `isVegetable`) pour que `parse(format(x))` redonne `x`.
+ *
+ * @param list - Ingrédients à exporter.
+ * @param options - Options de tri.
+ * @param options.categoryOrder - Ordre des catégories (sinon tri alphabétique seul).
+ * @returns Le document YAML réimportable.
+ */
 export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [] }: { categoryOrder?: string[] } = {}): string {
   const order = categoryOrder.length ? categoryOrder : null;
   const rows = [...(list || [])]
@@ -200,6 +248,12 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
 /** Ustensile (forme minimale utilisée par l'export). */
 interface UtensilRow { id?: string; name?: string; image?: string }
 
+/**
+ * Rend la base d'ustensiles en YAML réimportable, trié par nom.
+ *
+ * @param list - Ustensiles à exporter.
+ * @returns Le document YAML réimportable.
+ */
 export function formatUtensilsYaml(list: UtensilRow[]): string {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
@@ -208,7 +262,16 @@ export function formatUtensilsYaml(list: UtensilRow[]): string {
 }
 
 // ─── INGRÉDIENTS ──────────────────────────────────────────────────────────────
-/** `validCategories` : Set ou tableau des clés de catégories acceptées. */
+
+/**
+ * Parse et valide un export YAML de la base d'ingrédients (bornes nutritionnelles,
+ * conseils, mois de saison…).
+ *
+ * @param text - Source YAML brute.
+ * @param options - Options de validation.
+ * @param options.validCategories - Set ou tableau des clés de catégories acceptées.
+ * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
+ */
 export function parseIngredientsYaml(text: string, { validCategories }: { validCategories?: Set<string> | string[] } = {}): ParseResult {
   const { list, error } = loadYamlList(text);
   if (error) return { items: [], errors: [error] };
@@ -285,6 +348,14 @@ export function parseIngredientsYaml(text: string, { validCategories }: { validC
 }
 
 // ─── USTENSILES ───────────────────────────────────────────────────────────────
+
+/**
+ * Parse et valide un export YAML de la base d'ustensiles. Génère un id stable
+ * depuis le nom quand il est absent (comme les techniques).
+ *
+ * @param text - Source YAML brute.
+ * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
+ */
 export function parseUtensilsYaml(text: string): ParseResult {
   const { list, error } = loadYamlList(text);
   if (error) return { items: [], errors: [error] };

@@ -26,9 +26,12 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 /**
- * Normalise une erreur Firebase callable en `Error` lisible + `code` :
- * - le code perdu par `new Error(e.message)` est CONSERVÉ (origine visible) ;
- * - un message serveur en français prime ; sinon on retombe sur la table.
+ * Normalise une erreur Firebase callable en `Error` lisible portant le `code`
+ * canonique : le code (perdu par `new Error(e.message)`) est CONSERVÉ (origine
+ * visible) ; un message serveur en français prime, sinon on retombe sur la table.
+ *
+ * @param e - L'erreur brute remontée par le SDK callable.
+ * @returns Une `Error` avec un message lisible et un champ `code` canonique.
  */
 export function mapImportError(e: unknown): ImportError {
   const err = e as { code?: string; message?: string } | null;
@@ -42,8 +45,13 @@ export function mapImportError(e: unknown): ImportError {
 }
 
 /**
- * Import de recette depuis une URL. Appelle `importRecipeFromUrl` (fetch serveur +
- * JSON-LD ou LLM). Renvoie `{ recipe, method: "jsonld" | "llm" }`.
+ * Import de recette depuis une URL. Appelle la Cloud Function `importRecipeFromUrl`
+ * (fetch serveur + JSON-LD ou LLM). La garde admin est faite côté serveur.
+ *
+ * @param url - URL de la page recette.
+ * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
+ * @returns La charge utile serveur `{ recipe, method: "jsonld" | "llm" }`.
+ * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
  */
 export async function importRecipeFromUrl(url: string, knownUtensils: string[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromUrl", { timeout: 70000 });
@@ -59,8 +67,13 @@ export async function importRecipeFromUrl(url: string, knownUtensils: string[] =
 export interface ImagePart { mediaType: string; data: string }
 
 /**
- * Import depuis une ou deux photos (livre de cuisine). `images` : max 2. Garde
- * admin côté serveur.
+ * Import depuis une ou deux photos (livre de cuisine). Appelle la Cloud Function
+ * `importRecipeFromImages`. Garde admin côté serveur.
+ *
+ * @param images - Parties image (base64), max 2.
+ * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
+ * @returns La charge utile serveur (recette + éventuel index de couverture).
+ * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
  */
 export async function importRecipeFromImages(images: ImagePart[], knownUtensils: string[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromImages", { timeout: 115000 });
@@ -73,9 +86,12 @@ export async function importRecipeFromImages(images: ImagePart[], knownUtensils:
 }
 
 /**
- * File image → `{ mediaType, data(base64 sans préfixe) }`. Redimensionne et
- * ré-encode en JPEG avant l'encodage base64 (×15 à ×25 sur le poids transféré →
- * l'upload mobile ne dépasse plus le timeout de la fonction).
+ * Prépare un fichier image pour l'envoi au serveur : redimensionne et ré-encode en
+ * JPEG avant l'encodage base64 (×15 à ×25 sur le poids transféré → l'upload mobile
+ * ne dépasse plus le timeout de la fonction).
+ *
+ * @param file - Le fichier image sélectionné.
+ * @returns `{ mediaType, data }` où `data` est le base64 sans préfixe `data:`.
  */
 export async function fileToImagePart(file: File): Promise<ImagePart> {
   const { blob, mediaType } = await prepareImageForUpload(file);

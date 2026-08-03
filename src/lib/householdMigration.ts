@@ -31,7 +31,15 @@ export interface SharedData {
 const byNameSet = (arr: { name?: string }[] | undefined, key: "name" = "name"): Set<string> =>
   new Set((arr || []).map(x => normalizeStr(x?.[key] || "")));
 
-/** Fusionne les données locales (`local`) DANS celles du foyer (`remote`). */
+/**
+ * Fusionne les données locales DANS celles du foyer, de façon additive (sans rien
+ * détruire) : recettes et carnets dédupliqués par nom (la version du foyer gagne),
+ * stock en union, planning et listes adoptés depuis le foyer.
+ *
+ * @param local - Données personnelles du membre entrant.
+ * @param remote - Données existantes du foyer (prioritaires en cas d'homonyme).
+ * @returns L'espace de données fusionné (recettes, carnets, planning, listes, stock).
+ */
 export function mergeShared(local: SharedData | null | undefined, remote: SharedData | null | undefined): Required<SharedData> {
   local = local || {};
   remote = remote || {};

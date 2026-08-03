@@ -47,8 +47,16 @@ export interface ActionCollection {
 const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();
 
 /**
- * Valide et normalise une recette avant sauvegarde.
- * → `{ error }` si invalide, sinon `{ recipe }` prête à insérer/remplacer.
+ * Valide et normalise une recette avant sauvegarde : quantités présentes, règles
+ * des composants (rendement, mono-niveau, unité de consommation), unicité du nom,
+ * puis recalcul du Nutri-Score.
+ *
+ * @param r - La recette à valider (édition ou création).
+ * @param ctx - Contexte de validation.
+ * @param ctx.recipes - Toutes les recettes existantes (unicité du nom, résolution des composants).
+ * @param ctx.ingredientDB - Base d'ingrédients (calcul du Nutri-Score).
+ * @returns `{ error }` si invalide, sinon `{ recipe }` prête à insérer/remplacer
+ *   (id et `createdAt` ajoutés en création).
  */
 export function prepareRecipeForSave(
   r: ActionRecipe,
@@ -98,14 +106,27 @@ export function prepareRecipeForSave(
   return { recipe: { ...withScore, id: "r" + Date.now(), createdAt: new Date().toISOString().slice(0, 10) } };
 }
 
-/** Insère ou remplace la recette dans la liste selon son id. */
+/**
+ * Insère ou remplace la recette dans la liste selon son id (nouvelle recette en tête).
+ *
+ * @param recipes - Liste courante.
+ * @param recipe - Recette à insérer ou remplacer.
+ * @returns Une nouvelle liste avec la recette insérée (en tête) ou remplacée sur place.
+ */
 export function upsertRecipe(recipes: ActionRecipe[], recipe: ActionRecipe): ActionRecipe[] {
   return recipes.some(x => x.id === recipe.id)
     ? recipes.map(x => x.id === recipe.id ? recipe : x)
     : [recipe, ...recipes];
 }
 
-/** Recalcule le compteur de recettes de chaque collection. */
+/**
+ * Recalcule le compteur de recettes de chaque carnet manuel. Les carnets
+ * intelligents (vues de filtres) sont laissés intacts (contenu calculé à l'affichage).
+ *
+ * @param collections - Les carnets.
+ * @param recipes - Toutes les recettes (pour compter l'appartenance).
+ * @returns Les carnets avec leur `count` à jour (carnets intelligents inchangés).
+ */
 export function recomputeCollectionCounts(collections: ActionCollection[], recipes: ActionRecipe[]): ActionCollection[] {
   // Les carnets intelligents (vues de filtres) n'ont pas d'appartenance explicite :
   // leur contenu est calculé à l'affichage. On ne touche qu'aux carnets manuels.
@@ -127,8 +148,16 @@ export interface ShoppingItem {
 
 /**
  * Construit les items de liste de courses à partir d'une recette. Les composants
- * sont éclatés en ingrédients bruts (× fraction consommée × mult), puis les lignes
+ * sont éclatés en ingrédients bruts (× fraction consommée × `mult`), puis les lignes
  * identiques sont cumulées. Un composant en stock est exclu.
+ *
+ * @param recipe - La recette source.
+ * @param selectedIngredients - Sous-ensemble d'ingrédients retenus (sinon tous ceux de la recette).
+ * @param mult - Multiplicateur de portions (défaut 1).
+ * @param ingredientDB - Base d'ingrédients (résolution des images).
+ * @param recipesById - Index des recettes (résolution des composants).
+ * @param stockSet - Ids des composants déjà en stock (exclus de la liste).
+ * @returns Les items de courses cumulés et prêts à ajouter à une liste.
  */
 export function buildShoppingItems(
   recipe: ActionRecipe,

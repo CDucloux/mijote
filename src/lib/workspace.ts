@@ -34,19 +34,42 @@ export interface HouseholdWorkspace {
 /** Namespace Firestore actif : personnel ou foyer. */
 export type Workspace = SoloWorkspace | HouseholdWorkspace;
 
+/**
+ * Construit le workspace personnel d'un utilisateur (`users/{uid}`).
+ *
+ * @param uid - Identifiant de l'utilisateur.
+ * @returns Le workspace solo (préfixe de chemin `["users", uid]`).
+ */
 export function soloWorkspace(uid: string): SoloWorkspace {
   return { kind: "solo", uid, id: uid, segments: ["users", uid] };
 }
 
+/**
+ * Construit le workspace d'un foyer (`households/{hid}`).
+ *
+ * @param hid - Identifiant du foyer.
+ * @returns Le workspace foyer (préfixe de chemin `["households", hid]`).
+ */
 export function householdWorkspace(hid: string): HouseholdWorkspace {
   return { kind: "household", hid, id: hid, segments: ["households", hid] };
 }
 
+/**
+ * Garde de type : le workspace est-il celui d'un foyer ?
+ *
+ * @param ws - Le workspace actif.
+ * @returns `true` (et rétrécit le type) si c'est un {@link HouseholdWorkspace}.
+ */
 export function isHousehold(ws: Workspace | null | undefined): ws is HouseholdWorkspace {
   return ws?.kind === "household";
 }
 
-/** Identifiant du namespace (uid ou hid) – utile comme clé de cache locale. */
+/**
+ * Identifiant du namespace (uid ou hid) – utile comme clé de cache locale.
+ *
+ * @param ws - Le workspace actif.
+ * @returns L'id du workspace, ou `null` s'il est absent.
+ */
 export function workspaceId(ws: Workspace | null | undefined): string | null {
   return ws?.id ?? null;
 }

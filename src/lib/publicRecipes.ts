@@ -63,15 +63,28 @@ export interface PublicDoc {
   updatedAt: number;
 }
 
-// Compte officiel sous lequel sont publiées les préparations de base seedées.
-// Synthétique (aucune connexion) → seul le script de seed (SDK Admin) l'écrit.
+/**
+ * Compte officiel sous lequel sont publiées les préparations de base seedées.
+ * Synthétique (aucune connexion) → seul le script de seed (SDK Admin) l'écrit.
+ */
 export const OFFICIAL_AUTHOR_UID = "mijote-official";
 export const OFFICIAL_AUTHOR_NAME = "Mijoté";
+
+/**
+ * Indique si un uid est le compte officiel Mijoté.
+ *
+ * @param uid - Identifiant auteur à tester.
+ * @returns `true` si `uid` est {@link OFFICIAL_AUTHOR_UID}.
+ */
 export const isOfficialAuthor = (uid: string): boolean => uid === OFFICIAL_AUTHOR_UID;
 
 /**
  * Identifiant stable d'un doc public : préfixé par l'uid → unicité garantie et
  * vérifiable côté règles Firestore (l'auteur ne peut écrire que sous son uid).
+ *
+ * @param uid - Identifiant de l'auteur.
+ * @param recipeId - Identifiant local de la recette.
+ * @returns L'id public `` `${uid}__${recipeId}` ``.
  */
 export function publicId(uid: string, recipeId: string): string {
   return `${uid}__${recipeId}`;
@@ -80,6 +93,10 @@ export function publicId(uid: string, recipeId: string): string {
 /**
  * Composants (préparations de base) directement référencés par une recette.
  * Mono-niveau : pas de récursion à faire.
+ *
+ * @param recipe - La recette dont on collecte les dépendances.
+ * @param recipesById - Index des recettes locales (résolution des composants).
+ * @returns Les recettes-composants référencées, dédupliquées.
  */
 export function collectComponentDeps(recipe: PubRecipe | null | undefined, recipesById: Map<string, PubRecipe>): PubRecipe[] {
   const ids = new Set<string>();
@@ -112,6 +129,11 @@ function collectCategories(recipe: PubRecipe | null | undefined, ingredientDB: P
  * Toujours omnivore/flexitarien ; pescatarien si pas de viande ; végétarien si ni
  * viande ni poisson ; végan si en plus pas de produit laitier. Approximation
  * volontaire (ignore œufs/miel/gélatine) – sert au filtre « selon mes préférences ».
+ *
+ * @param recipe - La recette à classer.
+ * @param ingredientDB - Base d'ingrédients (résolution des catégories).
+ * @param recipesById - Index des recettes (catégories des composants, mono-niveau).
+ * @returns Les tags de régime compatibles (toujours au moins omnivore/flexitarien).
  */
 export function deriveDietTags(recipe: PubRecipe, ingredientDB: PubDbItem[], recipesById?: Map<string, PubRecipe>): string[] {
   const cats = collectCategories(recipe, ingredientDB, recipesById);
@@ -125,7 +147,14 @@ export function deriveDietTags(recipe: PubRecipe, ingredientDB: PubDbItem[], rec
   return tags;
 }
 
-/** Jetons de recherche (nom, cuisine, auteur, ingrédients), normalisés & dédoublonnés. */
+/**
+ * Construit les jetons de recherche (nom, cuisine, auteur, ingrédients),
+ * normalisés et dédoublonnés (mots de 2+ lettres).
+ *
+ * @param recipe - La recette source.
+ * @param authorName - Nom d'affichage de l'auteur.
+ * @returns La liste de mots-clés indexables.
+ */
 export function buildKeywords(recipe: PubRecipe | null | undefined, authorName: string): string[] {
   const out = new Set<string>();
   const push = (s: string | undefined): void => { const n = normalizeStr(s || ""); if (n) n.split(/\s+/).forEach(w => w.length > 1 && out.add(w)); };
@@ -148,9 +177,16 @@ function stripForPublic(recipe: PubRecipe): Record<string, unknown> {
 }
 
 /**
- * Construit le doc public d'une recette (ou d'un composant).
- * `componentRefs` = liste des ids LOCAUX (auteur) des composants référencés ;
- * chaque composant publié porte `originalId` pour relier ces refs au clone.
+ * Construit le doc public d'une recette (ou d'un composant). `componentRefs` =
+ * liste des ids LOCAUX (auteur) des composants référencés ; chaque composant publié
+ * porte `originalId` pour relier ces refs au clone.
+ *
+ * @param recipe - La recette à publier.
+ * @param user - L'auteur (uid, nom d'affichage, photo).
+ * @param options - Bases de résolution.
+ * @param options.ingredientDB - Base d'ingrédients (tags de régime).
+ * @param options.recipesById - Index des recettes (composants).
+ * @returns Le document public dénormalisé prêt à écrire.
  */
 export function toPublicRecipe(recipe: PubRecipe, user: PubUser, { ingredientDB = [], recipesById = new Map<string, PubRecipe>() }: { ingredientDB?: PubDbItem[]; recipesById?: Map<string, PubRecipe> } = {}): PublicDoc {
   const authorName = user?.displayName || "";
@@ -176,7 +212,16 @@ export function toPublicRecipe(recipe: PubRecipe, user: PubUser, { ingredientDB 
   };
 }
 
-/** Construit le bundle public complet (recette + composants) à publier en une fois. */
+/**
+ * Construit le bundle public complet (recette + ses composants) à publier en une fois.
+ *
+ * @param recipe - La recette principale à publier.
+ * @param user - L'auteur.
+ * @param options - Bases de résolution.
+ * @param options.ingredientDB - Base d'ingrédients.
+ * @param options.recipesById - Index des recettes (composants).
+ * @returns `{ docs, components }` : docs publics à écrire + recettes-composants sources.
+ */
 export function buildPublishBundle(recipe: PubRecipe, user: PubUser, { ingredientDB = [], recipesById = new Map<string, PubRecipe>() }: { ingredientDB?: PubDbItem[]; recipesById?: Map<string, PubRecipe> } = {}): { docs: PublicDoc[]; components: PubRecipe[] } {
   const components = collectComponentDeps(recipe, recipesById);
   const docs = [
@@ -202,10 +247,17 @@ function cloneOne(pub: PublicDoc, newId: string, now: number): PubRecipe {
 
 /**
  * Clone hybride : recette publique + ses composants publics → recettes locales.
- * - remappe les ids des composants et réécrit les lignes `recipeId` ;
- * - dédoublonne contre ce que l'utilisateur possède déjà (par `source.publicId`) ;
- * - composant manquant (dé-publié) → la ligne orpheline est retirée proprement.
- * → `{ added: Recipe[], mainId, alreadyOwned }`.
+ * Remappe les ids des composants et réécrit les lignes `recipeId` ; dédoublonne
+ * contre ce que l'utilisateur possède déjà (par `clonedFrom.publicId`) ; une ligne
+ * dont le composant est manquant (dé-publié) est retirée proprement.
+ *
+ * @param pub - Le doc public de la recette principale.
+ * @param publicComponents - Les docs publics de ses composants.
+ * @param options - Contexte de clonage.
+ * @param options.existingRecipes - Recettes déjà possédées (dédup par `clonedFrom.publicId`).
+ * @param options.now - Horodatage injecté (pour des ids déterministes en test).
+ * @returns `{ added, mainId, alreadyOwned }` : recettes à ajouter, id de la principale,
+ *   et `alreadyOwned` si elle avait déjà été clonée.
  */
 export function clonePublicBundle(
   pub: PublicDoc,
@@ -259,8 +311,18 @@ export interface DiscoverFilters {
   seasonOnly?: boolean;
 }
 
-// `isInSeason(pubRecipePayload)` injecté par l'appelant (dépend de la base d'ingrédients).
 const LETTER_RANK: Record<string, number> = { A: 1, B: 2, C: 3, D: 4, E: 5 };
+
+/**
+ * Filtre une liste de docs publics côté découverte (texte, cuisine, auteur, régime,
+ * Nutri-Score max, saison). Les composants (bases) ne s'affichent jamais seuls.
+ *
+ * @param list - Les docs publics à filtrer.
+ * @param filters - Les critères actifs.
+ * @param ctx - Dépendances injectées.
+ * @param ctx.isInSeason - Prédicat de saisonnalité (dépend de la base d'ingrédients).
+ * @returns Les docs publics qui satisfont tous les critères.
+ */
 export function filterPublicRecipes(
   list: PublicDoc[],
   filters: DiscoverFilters = {},

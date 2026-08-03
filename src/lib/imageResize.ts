@@ -16,7 +16,15 @@ const FALLBACK_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 /** Image préparée : blob JPEG (ou d'origine en repli) + type MIME. */
 export interface PreparedImage { blob: Blob; mediaType: string }
 
-/** Dimensions cibles : on ne fait que RÉDUIRE (facteur plafonné à 1, jamais d'upscale). */
+/**
+ * Calcule les dimensions cibles : on ne fait que RÉDUIRE (facteur plafonné à 1,
+ * jamais d'upscale).
+ *
+ * @param w - Largeur d'origine en pixels.
+ * @param h - Hauteur d'origine en pixels.
+ * @param maxEdge - Bord le plus long autorisé (défaut {@link MAX_EDGE}).
+ * @returns `{ width, height, scale }` : dimensions réduites et facteur appliqué (≤ 1).
+ */
 export function resizeDimensions(w: number, h: number, maxEdge: number = MAX_EDGE): { width: number; height: number; scale: number } {
   const scale = Math.min(1, maxEdge / Math.max(w, h || 1));
   return { width: Math.round(w * scale), height: Math.round(h * scale), scale };
@@ -27,6 +35,10 @@ export function resizeDimensions(w: number, h: number, maxEdge: number = MAX_EDG
  * ne doit pas arriver couchée : ça dégrade l'OCR), redimensionne sur canvas,
  * ré-encode en JPEG. Repli sur le fichier d'origine si l'API canvas manque — mais
  * seulement pour un type déjà supporté par l'API vision.
+ *
+ * @param file - Le fichier image d'origine.
+ * @returns `{ blob, mediaType }` : JPEG redimensionné, ou le fichier d'origine en repli.
+ * @throws Si le repli porte sur un type d'image non supporté par l'API vision.
  */
 export async function prepareImageForUpload(file: File): Promise<PreparedImage> {
   const canCanvas = typeof createImageBitmap === "function" && typeof document !== "undefined";
@@ -56,7 +68,12 @@ function fallback(file: File): PreparedImage {
   return { blob: file, mediaType: type };
 }
 
-/** Blob → base64 (sans le préfixe `data:`). */
+/**
+ * Encode un blob en base64.
+ *
+ * @param blob - Le blob à encoder.
+ * @returns Une promesse résolue en base64 sans le préfixe `data:`.
+ */
 export function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

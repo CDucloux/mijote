@@ -28,7 +28,18 @@ export interface ImportResult {
   rejected: number;
 }
 
-/** → `{ error }` en cas d'échec, sinon `{ prepared, linked, rejected }`. */
+/**
+ * Parse un JSON d'import, valide chaque recette contre le schéma, relie les `dbId`
+ * par rapprochement de nom contre les bases de l'utilisateur, puis recalcule le
+ * Nutri-Score. Import refusé si TOUTES les recettes sont invalides.
+ *
+ * @param json - Contenu JSON brut (recette unique ou tableau).
+ * @param dbs - Bases de rapprochement.
+ * @param dbs.ingredientDB - Base d'ingrédients (liaison + Nutri-Score).
+ * @param dbs.utensilDB - Base d'ustensiles (liaison).
+ * @returns `{ error }` en cas d'échec, sinon `{ prepared, linked, rejected }`
+ *   (`linked` = nb de liaisons créées, `rejected` = recettes écartées).
+ */
 export function prepareRecipeImport(
   json: string,
   { ingredientDB = [], utensilDB = [] }: { ingredientDB?: ImportDbItem[]; utensilDB?: ImportDbItem[] } = {},

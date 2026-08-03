@@ -62,8 +62,12 @@ const num = (x: unknown): number => {
 };
 
 /**
- * `entries` : items du mealPlan de la semaine (aplatis, tous jours/créneaux).
- * `recipes` : bibliothèque. Renvoie `{ dishes, bases }`.
+ * Agrège la session batch de la semaine : plats à cuisiner (regroupés, avec nombre
+ * de cuissons déduit du partage de portions) et préparations de base partagées.
+ *
+ * @param entries - Items du mealPlan de la semaine (aplatis, tous jours/créneaux).
+ * @param recipes - Bibliothèque de recettes.
+ * @returns `{ dishes, bases }` : plats triés par fréquence, bases triées par partage.
  */
 export function buildBatchSession(entries: BatchEntry[] = [], recipes: BatchRecipe[] = []): BatchSession {
   const byId = new Map(recipes.map(r => [r.id, r]));
@@ -107,7 +111,13 @@ export function buildBatchSession(entries: BatchEntry[] = [], recipes: BatchReci
   return { dishes, bases };
 }
 
-/** Aplatit le mealPlan (objet `{date: [items]}`) sur une liste de dates en une liste d'items. */
+/**
+ * Aplatit le mealPlan (objet `{date: [items]}`) sur une liste de dates.
+ *
+ * @param mealPlan - Planning indexé par date.
+ * @param dates - Dates à retenir (ISO `YYYY-MM-DD`).
+ * @returns La liste d'items de tous les créneaux des dates données.
+ */
 export function weekEntries(mealPlan: Record<string, BatchEntry[]> = {}, dates: string[] = []): BatchEntry[] {
   const out: BatchEntry[] = [];
   for (const d of dates) for (const it of mealPlan[d] || []) out.push(it);
