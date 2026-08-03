@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.9.3 – Safran · Correctifs
+
+- **Bascule clair / sombre réparée** : le changement de thème ne fonctionnait plus (ni sur la page d'accueil, ni dans l'app) — corrigé
+- **Session batch ré-ouvrable** : un bouton dédié dans l'en-tête du planning permet de rouvrir la session batch à tout moment (plus seulement juste après une génération)
+- **Mise en place ciblée** : la préparation mutualisée ne liste plus que les **légumes et herbes aromatiques** (les seuls produits frais dont la découpe se mutualise vraiment)
+
 ## v3.9.2 – Safran · Batch cooking mutualisé
 
 ### Planning

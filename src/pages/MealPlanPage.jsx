@@ -196,11 +196,20 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   // Mise en place mutualisée (par ingrédient) + cuissons regroupées : calculées
   // uniquement quand le panneau est ouvert (dérivées des plats de la session).
   const categoryOrder = useCallback(cat => DEFAULT_CATEGORIES[cat]?.order ?? 99, []);
+  // Seuls les produits frais à travailler valent la mutualisation de la découpe.
+  const PREP_CATEGORIES = useMemo(() => new Set(["vegetable", "herbs"]), []);
   const miseEnPlace = useMemo(
-    () => showBatch ? buildMiseEnPlace(batch.dishes, { recipesById, resolver, ingredientDB: ingredientDB || [], stockSet: new Set(stock || []), categoryOrder }) : [],
-    [showBatch, batch, recipesById, resolver, ingredientDB, stock, categoryOrder]
+    () => showBatch ? buildMiseEnPlace(batch.dishes, { recipesById, resolver, ingredientDB: ingredientDB || [], stockSet: new Set(stock || []), categoryOrder, includeCategories: PREP_CATEGORIES }) : [],
+    [showBatch, batch, recipesById, resolver, ingredientDB, stock, categoryOrder, PREP_CATEGORIES]
   );
   const cookingGroups = useMemo(() => showBatch ? groupCookings(batch.dishes) : [], [showBatch, batch]);
+  // La semaine visible contient-elle au moins un plat (≠ base) ? Conditionne l'accès
+  // à la session batch depuis le header (ré-ouvrable à tout moment, pas seulement
+  // juste après une génération).
+  const hasWeekDishes = useMemo(() => {
+    const ids = new Set(recipes.filter(r => !r.isComponent).map(r => r.id));
+    return weekEntries(mealPlan, weekDays).some(e => ids.has(e.recipeId));
+  }, [mealPlan, weekDays, recipes]);
   const prepCount = useMemo(() => miseEnPlace.reduce((n, g) => n + g.items.length, 0), [miseEnPlace]);
   const [checkedPrep, setCheckedPrep] = useState(() => new Set());
   const togglePrep = useCallback(key => setCheckedPrep(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; }), []);
@@ -326,6 +335,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning Repas</h1></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {hasWeekDishes && (
+              <button onClick={() => setShowBatch(true)} title="Session batch : mise en place mutualisée et cuissons regroupées" aria-label="Session batch"
+                style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(76,175,125,0.14)", border: "1px solid rgba(76,175,125,0.3)", cursor: "pointer" }}>
+                <Icon name="fire" size={17} color="var(--green)" />
+              </button>
+            )}
             {genDone
               ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
               : <button onClick={() => setGenOpen(true)} className="btn btn-primary btn-pill"><Icon name="calendar" size={15} /> Générer</button>}
