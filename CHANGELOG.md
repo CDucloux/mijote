@@ -1,5 +1,16 @@
 # Changelog – Mijoté
 
+## v3.9.4 – Safran · Connexion isolée
+
+### Corrections
+- **Récap de session batch honnête** : le récap comptait des items là où il fallait compter des créneaux — il affiche désormais le vrai nombre de **repas couverts** (créneaux date × midi/soir distincts) et de **cuissons** (seuls les plats qui cuisent réellement)
+- **Glissement du toggle de thème** : sur la page d'accueil, la bascule clair / sombre passe désormais **progressivement** d'un état à l'autre au lieu de sauter
+
+### Sous le capot
+- **Module d'authentification dédié** : toute la logique de connexion Google (allowlist, repli sur redirection, déconnexion) est sortie d'`App.jsx` vers `lib/firebase/auth.ts` (découplé de React) et un hook `useAuthUser` — `App.jsx` ne manipule plus le SDK Firebase Auth directement
+- **Route `/login` dédiée** : l'écran de connexion a désormais sa propre route publique, séparée des routes protégées ; à la déconnexion, la page précédente n'est plus laissée montée derrière, et à la reconnexion on revient à la dernière page consultée
+- Aucun changement fonctionnel visible : réorganisation interne pour la maintenabilité
+
 ## v3.9.3 – Safran · Correctifs
 
 - **Bascule clair / sombre réparée** : le changement de thème ne fonctionnait plus (ni sur la page d'accueil, ni dans l'app) — corrigé
