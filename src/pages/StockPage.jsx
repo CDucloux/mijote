@@ -4,6 +4,7 @@ import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
 // Gestion binaire du stock (placards / étagères) : j'en ai / j'en ai pas.
@@ -61,6 +62,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   }, [filtered, categories]);
 
   const inStockCount = stock.length;
+  const { scrollRef, contentRef } = useElasticScroll();
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -122,7 +124,8 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       </div>
 
       {/* Corps scrollable */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
+        <div ref={contentRef} style={{ minHeight: "100%" }}>
         {ingredientDB.length === 0 ? (
           <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text3)", gap: 12, padding: "0 40px", textAlign: "center" }}>
             <Icon name="box" size={44} />
@@ -220,6 +223,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
             );
           })
         )}
+        </div>
       </div>
     </div>
   );

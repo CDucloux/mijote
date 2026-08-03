@@ -19,6 +19,7 @@ import { isEligible } from "@/lib/food/dietFilter.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // Rôles proposés pour compléter un repas (le plat existe déjà).
 const COMPLETE_ROLES = [
@@ -344,6 +345,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     notify?.("Planning exporté dans ton calendrier");
   };
 
+  const { scrollRef, contentRef } = useElasticScroll();
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
@@ -369,7 +372,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
+        <div ref={contentRef} style={{ minHeight: "100%" }}>
         {viewMode === "week" && (
           <div key={`week-${weekDays[0]}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {/* Accès à la session batch : bannière contextuelle (ré-ouvrable), affichée
@@ -416,7 +420,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             })}
           </div>
         )}
-
+        </div>
       </div>
 
       {/* Add recipe modal */}

@@ -336,7 +336,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     const applyElastic = (spring) => {
       const p = paneRef.current;
       if (!p) return;
-      p.style.transition = spring ? "transform 0.85s cubic-bezier(0.16,1,0.3,1)" : "none";
+      p.style.transition = spring ? "transform 0.5s cubic-bezier(0.16,1,0.3,1)" : "none";
       p.style.transform = `translateY(${(-bottomPull).toFixed(2)}px)`;
     };
 
@@ -355,7 +355,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         else if (Math.abs(dy) > 5) mode = "scroll";
       }
       if (reduce) return; // pas d'effet élastique en mouvement réduit
-      if (mode === "bottom") { bottomPull = damp(-dy, 96); applyElastic(false); if (e.cancelable) e.preventDefault(); }
+      if (mode === "bottom") { bottomPull = damp(-dy, 48); applyElastic(false); if (e.cancelable) e.preventDefault(); }
     };
     const onUp = () => {
       if (!dragging) return;
