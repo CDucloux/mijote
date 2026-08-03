@@ -1,38 +1,108 @@
 import { useEffect, useRef, useCallback, useState } from "react";
-import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { getRedirectResult, onAuthStateChanged, type User } from "firebase/auth";
+import { doc, setDoc, onSnapshot, type DocumentData, type Unsubscribe } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/firebase.js";
 import {
   metaDoc, recipesCol, upsertOwnDirectoryEntry,
   loadMasterDB, subscribeMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
   loadSharedData, writeSharedData, setHouseholdPointer,
+  type WorkspaceRef, type MasterDB,
 } from "@/lib/firebase/firestore.js";
-import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { normalizePreferences } from "../constants/preferences.js";
-import { soloWorkspace, householdWorkspace } from "@/lib/household/workspace.js";
-import { mergeShared } from "@/lib/household/householdMigration.js";
+import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
+import { normalizePreferences } from "@/constants/preferences.js";
+import { soloWorkspace, householdWorkspace, type Workspace } from "@/lib/household/workspace.js";
+import { mergeShared, type SharedData } from "@/lib/household/householdMigration.js";
+import type { Recipe } from "@/lib/types.js";
 
-const mapOf = (recipes) => { const m = new Map(); for (const r of (recipes || [])) if (r.id) m.set(r.id, r); return m; };
+/** Slices partagés (recettes, carnets, planning, listes, stock) — formes opaques. */
+interface SharedSlices {
+  recipes?: Recipe[] | null;
+  collections?: unknown[] | null;
+  mealPlan?: Record<string, unknown> | null;
+  shoppingLists?: unknown[] | null;
+  stock?: unknown[] | null;
+  lowStock?: unknown[] | null;
+}
+
+/** Données de bootstrap (workspace solo/foyer), recettes garanties, reste optionnel. */
+interface BootData {
+  recipes: DocumentData[];
+  collections?: unknown[] | null;
+  mealPlan?: Record<string, unknown> | null;
+  shoppingLists?: unknown[] | null;
+  stock?: unknown[] | null;
+  lowStock?: unknown[] | null;
+  userDB?: DocumentData | null;
+  preferences?: DocumentData | null;
+}
+
+/** Base Master côté hook (drapeaux de longueur + signatures). */
+interface MasterLike {
+  ingredients: unknown[];
+  utensils: unknown[];
+  techniques?: unknown[];
+  categories?: unknown;
+}
+
+/** Pointeur du foyer actif. */
+interface HouseholdPointer { id?: string; migrated?: boolean }
+
+/** Dépendances : utilisateur, statut, pointeur foyer + slices d'état et leurs setters. */
+export interface FirestoreSyncDeps {
+  user: User | null;
+  setUser: (u: User | null) => void;
+  isAdmin: boolean;
+  setSyncStatus: (s: string) => void;
+  householdPointer: HouseholdPointer | null | undefined;
+  recipes: Recipe[];
+  setRecipes: (v: Recipe[]) => void;
+  collections: unknown[];
+  setCollections: (v: unknown[]) => void;
+  mealPlan: Record<string, unknown>;
+  setMealPlan: (v: Record<string, unknown>) => void;
+  shoppingLists: unknown[];
+  setShoppingLists: (v: unknown[]) => void;
+  stock: unknown[];
+  setStock: (v: unknown[]) => void;
+  lowStock: unknown[];
+  setLowStock: (v: unknown[]) => void;
+  preferences: unknown;
+  setPreferences: (v: unknown) => void;
+  masterDB: MasterLike;
+  setMasterDB: (v: MasterLike) => void;
+  userDB: unknown;
+  setUserDB: (v: unknown) => void;
+}
+
+const mapOf = (recipes: DocumentData[] | null | undefined): Map<string, Recipe> => {
+  const m = new Map<string, Recipe>();
+  for (const r of (recipes || [])) if (r.id) m.set(r.id, r);
+  return m;
+};
 
 // Signature de la base Master (anti-écho écriture↔snapshot) : un snapshot dont la
 // signature égale la dernière appliquée/écrite ne ré-applique rien et ne relance
 // aucune écriture. Doit refléter exactement ce que le push envoie (les 4 slices).
-const masterSig = (m) => JSON.stringify({ i: m.ingredients || [], u: m.utensils || [], t: m.techniques || [], c: m.categories || DEFAULT_CATEGORIES });
+const masterSig = (m: MasterLike): string => JSON.stringify({ i: m.ingredients || [], u: m.utensils || [], t: m.techniques || [], c: m.categories || DEFAULT_CATEGORIES });
 
 // Cache local du foyer actif : permet au bootstrap de charger DIRECTEMENT le bon
 // namespace (foyer) au lieu d'afficher le solo une fraction de seconde avant la
 // bascule du coordinateur (anti-flicker solo→foyer au rechargement).
-const hidCacheKey = (uid) => "rf_active_hid_" + uid;
-const readCachedHid = (uid) => { try { return localStorage.getItem(hidCacheKey(uid)) || null; } catch { return null; } };
-const writeCachedHid = (uid, hid) => { try { if (hid) localStorage.setItem(hidCacheKey(uid), hid); else localStorage.removeItem(hidCacheKey(uid)); } catch { /* quota */ } };
+const hidCacheKey = (uid: string): string => "rf_active_hid_" + uid;
+const readCachedHid = (uid: string): string | null => { try { return localStorage.getItem(hidCacheKey(uid)) || null; } catch { return null; } };
+const writeCachedHid = (uid: string, hid: string | null): void => { try { if (hid) localStorage.setItem(hidCacheKey(uid), hid); else localStorage.removeItem(hidCacheKey(uid)); } catch { /* quota */ } };
 
-// ─── COUCHE DE SYNCHRONISATION FIRESTORE ──────────────────────────────────────
-// Les slices PARTAGÉS (recettes, carnets, planning, listes, stock) sont lus/écrits
-// dans le « workspace actif » : l'espace perso (solo) ou un foyer. Les slices
-// PERSONNELS (préférences, ajouts perso à la base) restent toujours en solo.
-// Le pointeur `users/{uid}/meta/household` ({ id, migrated }) désigne le foyer
-// actif ; le coordinateur ci-dessous bascule le namespace et migre les données
-// une seule fois (à l'adhésion), sans course ni écho destructeur.
+/**
+ * Couche de synchronisation Firestore. Les slices PARTAGÉS (recettes, carnets,
+ * planning, listes, stock) sont lus/écrits dans le « workspace actif » (espace perso
+ * solo ou foyer) ; les slices PERSONNELS (préférences, ajouts perso) restent en solo.
+ * Le pointeur `users/{uid}/meta/household` désigne le foyer actif ; le coordinateur
+ * bascule le namespace et migre les données une seule fois (à l'adhésion), sans
+ * course ni écho destructeur.
+ *
+ * @param deps - Utilisateur, statut de sync, pointeur foyer, slices d'état + setters.
+ * @returns `{ cloudLoaded, workspaceReady }`.
+ */
 export function useFirestoreSync({
   user, setUser, isAdmin, setSyncStatus, householdPointer,
   recipes, setRecipes,
@@ -44,23 +114,23 @@ export function useFirestoreSync({
   preferences, setPreferences,
   masterDB, setMasterDB,
   userDB, setUserDB,
-}) {
+}: FirestoreSyncDeps) {
   const cloudLoaded = useRef(false);
-  const recipeSyncMap = useRef(new Map());
-  const activeHidRef = useRef(null);   // hid du workspace partagé chargé (null = solo)
+  const recipeSyncMap = useRef<Map<string, Recipe>>(new Map());
+  const activeHidRef = useRef<string | null>(null);   // hid du workspace partagé chargé (null = solo)
   const migratingRef = useRef(false);  // true pendant la bascule/migration → suspend l'autosave
-  const metaSigRef = useRef({});       // signatures JSON des méta partagées (anti-écho push/snapshot)
-  const metaTimers = useRef({});       // timers de debounce par méta (écritures groupées, ex. planning)
-  const metaPending = useRef({});      // { name: { payload, ws } } en attente de flush
-  const recipesSigRef = useRef(null);  // signature des recettes appliquées (load/snapshot) → l'autosave n'écrit QUE sur une vraie modif utilisateur
+  const metaSigRef = useRef<Record<string, string>>({});       // signatures JSON des méta partagées (anti-écho push/snapshot)
+  const metaTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});       // timers de debounce par méta (écritures groupées, ex. planning)
+  const metaPending = useRef<Record<string, { payload: unknown; ws: WorkspaceRef }>>({});      // { name: { payload, ws } } en attente de flush
+  const recipesSigRef = useRef<string | null>(null);  // signature des recettes appliquées (load/snapshot) → l'autosave n'écrit QUE sur une vraie modif utilisateur
   const masterSigRef = useRef("");     // signature de la Master appliquée/écrite (anti-écho écriture↔snapshot temps réel)
-  const transitionTargetRef = useRef(undefined); // cible d'une bascule en cours (anti-concurrence)
-  const [loadedHid, setLoadedHid] = useState(null); // foyer chargé → déclenche les abonnements temps réel
+  const transitionTargetRef = useRef<string | null | undefined>(undefined); // cible d'une bascule en cours (anti-concurrence)
+  const [loadedHid, setLoadedHid] = useState<string | null>(null); // foyer chargé → déclenche les abonnements temps réel
   const [bootstrapped, setBootstrapped] = useState(false); // miroir d'état de cloudLoaded → ré-exécute le coordinateur quand le bootstrap finit
   const [workspaceReady, setWorkspaceReady] = useState(false); // true quand le namespace chargé == le namespace voulu (évite le flash 404 pendant la bascule solo→foyer)
 
   // Mémorise les signatures des méta partagées chargées (un snapshot identique ne ré-applique rien).
-  const seedSigs = useCallback((d) => {
+  const seedSigs = useCallback((d: SharedSlices) => {
     metaSigRef.current = {
       collections: JSON.stringify(d.collections || []),
       mealPlan: JSON.stringify(d.mealPlan || {}),
@@ -70,25 +140,25 @@ export function useFirestoreSync({
   }, []);
 
   // Snapshot live des slices partagés (pour capturer l'état local au moment d'une fusion).
-  const sharedRef = useRef({});
+  const sharedRef = useRef<SharedSlices>({});
   sharedRef.current = { recipes, collections, mealPlan, shoppingLists, stock, lowStock };
   // Miroir des préférences locales (perso) : permet au bootstrap de ne pas perdre
   // un displayName saisi localement mais pas encore synchronisé (sinon un
   // rechargement l'écrasait par le displayName vide du cloud).
-  const prefsRef = useRef(preferences);
-  prefsRef.current = preferences;
+  const prefsRef = useRef<{ displayName?: string } | null | undefined>(preferences as { displayName?: string } | null | undefined);
+  prefsRef.current = preferences as { displayName?: string } | null | undefined;
 
   const desiredHid = householdPointer?.id || null;
   // Refs « valeur la plus récente » : les effets d'autosave les lisent au moment de
   // s'exécuter (et non via leur closure, potentiellement périmée), sinon une écriture
   // tardive réécrirait une vieille valeur par-dessus un changement distant reçu entre-temps.
-  const desiredHidRef = useRef(null); desiredHidRef.current = desiredHid;
+  const desiredHidRef = useRef<string | null>(null); desiredHidRef.current = desiredHid;
   // Le workspace est « prêt » quand le bootstrap est fini ET que le foyer chargé
   // (loadedHid) correspond au foyer voulu (desiredHid). Tant qu'une bascule
   // solo→foyer est en cours, on reste « pas prêt » → l'écran 404 ne flashe pas.
   useEffect(() => { setWorkspaceReady(bootstrapped && loadedHid === desiredHid); }, [bootstrapped, loadedHid, desiredHid]);
-  const sharedWsNow = (uid) => (desiredHidRef.current ? householdWorkspace(desiredHidRef.current) : soloWorkspace(uid));
-  const applyShared = useCallback((d) => {
+  const sharedWsNow = (uid: string): Workspace => (desiredHidRef.current ? householdWorkspace(desiredHidRef.current) : soloWorkspace(uid));
+  const applyShared = useCallback((d: SharedSlices) => {
     setRecipes(d.recipes || []);
     setCollections(d.collections || []);
     setMealPlan(d.mealPlan || {});
@@ -115,7 +185,7 @@ export function useFirestoreSync({
         // (pas de flash solo→foyer au reload). Le coordinateur confirmera/corrigera.
         const bootHid = readCachedHid(u.uid);
 
-        let data = await loadUserData(ws);
+        let data: BootData = await loadUserData(ws);
         const isEmpty = !bootHid && data.recipes.length === 0 && !data.collections && !data.userDB
           && !data.mealPlan && !data.shoppingLists && !data.stock;
         if (isEmpty) {
@@ -134,7 +204,7 @@ export function useFirestoreSync({
         // Slices PARTAGÉS : depuis le foyer si connu, sinon depuis le solo (`data`).
         // Si le cache est périmé (foyer quitté/dissous ailleurs), le chargement échoue
         // → on retombe sur le solo, le coordinateur rebasculera proprement.
-        let shared = data, loadedFromHousehold = false;
+        let shared: BootData = data, loadedFromHousehold = false;
         if (bootHid) {
           try { shared = await loadSharedData(householdWorkspace(bootHid)); loadedFromHousehold = true; }
           catch { shared = data; }
@@ -190,7 +260,7 @@ export function useFirestoreSync({
       } catch { setSyncStatus("error"); }
     });
     return () => unsub();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Coordinateur de workspace : bascule solo↔foyer + migration unique ─────────
   useEffect(() => {
@@ -209,13 +279,13 @@ export function useFirestoreSync({
           if (cancelled) return;
           if (householdPointer?.migrated) {
             applyShared(remote);                       // membre déjà à jour : simple chargement
-            recipeSyncMap.current = mapOf(remote.recipes);
+            recipeSyncMap.current = mapOf(remote.recipes as DocumentData[]);
             recipesSigRef.current = JSON.stringify(remote.recipes || []);
             seedSigs(remote);
           } else {
             // 1ère adhésion : fusion additive de MES données (snapshot local) dans le foyer.
-            const merged = mergeShared(sharedRef.current, remote);
-            const newMap = await writeSharedData(ws, merged, mapOf(remote.recipes));
+            const merged = mergeShared(sharedRef.current as SharedData, remote);
+            const newMap = await writeSharedData(ws, merged, mapOf(remote.recipes as DocumentData[]));
             if (cancelled) return;
             applyShared(merged);
             recipeSyncMap.current = newMap;
@@ -244,7 +314,7 @@ export function useFirestoreSync({
             stock: sharedRef.current.stock || [],
             lowStock: sharedRef.current.lowStock || [],
           };
-          const newMap = await writeSharedData(soloWs, keep, mapOf(soloPrev.recipes));
+          const newMap = await writeSharedData(soloWs, keep as SharedData, mapOf(soloPrev.recipes as DocumentData[]));
           if (cancelled) return;
           applyShared(keep);
           recipeSyncMap.current = newMap;
@@ -268,12 +338,12 @@ export function useFirestoreSync({
 
   // Autosave d'un slice partagé : uniquement quand le workspace est totalement chargé
   // (activeHidRef aligné sur desiredHid) et hors fenêtre de migration → pas d'écho.
-  const canAutosaveShared = () => cloudLoaded.current && !migratingRef.current && activeHidRef.current === desiredHidRef.current;
+  const canAutosaveShared = (): boolean => cloudLoaded.current && !migratingRef.current && activeHidRef.current === desiredHidRef.current;
 
-  const saveMeta = useCallback(async (name, payload, ws) => {
+  const saveMeta = useCallback(async (name: string, payload: unknown, ws: WorkspaceRef) => {
     if (!user || !cloudLoaded.current) return;
     setSyncStatus("syncing");
-    try { await setDoc(metaDoc(ws, name), payload); setSyncStatus("synced"); }
+    try { await setDoc(metaDoc(ws, name), payload as DocumentData); setSyncStatus("synced"); }
     catch { setSyncStatus("error"); }
   }, [user, setSyncStatus]);
 
@@ -299,7 +369,7 @@ export function useFirestoreSync({
   // Écrit une méta partagée si elle a changé (signature) : on note la signature avant
   // d'écrire, si bien que le snapshot de notre propre écriture (même JSON) est ignoré.
   // `localVal` est toujours lu depuis sharedRef (valeur la plus récente).
-  const pushSharedMeta = (name, localVal, payload, { debounce = 0 } = {}) => {
+  const pushSharedMeta = (name: string, localVal: unknown, payload: unknown, { debounce = 0 }: { debounce?: number } = {}): void => {
     if (!user || !canAutosaveShared()) return;
     const sig = JSON.stringify(localVal);
     if (metaSigRef.current[name] === sig) return; // écho ou no-op
@@ -323,7 +393,7 @@ export function useFirestoreSync({
 
   // Flush des méta debouncées encore en attente (fermeture d'onglet, démontage).
   useEffect(() => {
-    const flush = () => {
+    const flush = (): void => {
       for (const name of Object.keys(metaPending.current)) {
         clearTimeout(metaTimers.current[name]);
         const p = metaPending.current[name];
@@ -350,7 +420,7 @@ export function useFirestoreSync({
   useEffect(() => {
     if (!user || !loadedHid) return;
     const ws = householdWorkspace(loadedHid);
-    const unsubs = [];
+    const unsubs: Unsubscribe[] = [];
     unsubs.push(onSnapshot(recipesCol(ws), snap => {
       if (snap.metadata.hasPendingWrites) return;
       if (snap.metadata.fromCache && snap.empty) return; // ne pas écraser des données valides avec un cache vide
@@ -359,19 +429,19 @@ export function useFirestoreSync({
       recipesSigRef.current = JSON.stringify(remote);
       setRecipes(remote);
     }));
-    const metaSub = (name, fromSnap, apply) => onSnapshot(metaDoc(ws, name), snap => {
+    const metaSub = (name: string, fromSnap: (d: DocumentData) => unknown, apply: (v: never) => void): Unsubscribe => onSnapshot(metaDoc(ws, name), snap => {
       if (snap.metadata.hasPendingWrites) return;
       if (snap.metadata.fromCache && !snap.exists()) return; // cache absent : ne pas réinitialiser
       const val = fromSnap(snap.exists() ? snap.data() : {});
       const sig = JSON.stringify(val);
       if (metaSigRef.current[name] === sig) return;
       metaSigRef.current[name] = sig;
-      apply(val);
+      apply(val as never);
     });
-    unsubs.push(metaSub("collections", d => d.items || [], setCollections));
-    unsubs.push(metaSub("mealPlan", d => d.data || {}, setMealPlan));
-    unsubs.push(metaSub("shoppingLists", d => d.items || [], setShoppingLists));
-    unsubs.push(metaSub("stock", d => ({ items: d.items || [], low: d.low || [] }), v => { setStock(v.items); setLowStock(v.low); }));
+    unsubs.push(metaSub("collections", d => d.items || [], setCollections as (v: never) => void));
+    unsubs.push(metaSub("mealPlan", d => d.data || {}, setMealPlan as (v: never) => void));
+    unsubs.push(metaSub("shoppingLists", d => d.items || [], setShoppingLists as (v: never) => void));
+    unsubs.push(metaSub("stock", d => ({ items: d.items || [], low: d.low || [] }), ((v: { items: unknown[]; low: unknown[] }) => { setStock(v.items); setLowStock(v.low); }) as (v: never) => void));
     return () => unsubs.forEach(u => u());
   }, [user, loadedHid]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -402,7 +472,7 @@ export function useFirestoreSync({
   // ci-dessus, et un snapshot identique à l'état courant ne ré-applique rien.
   useEffect(() => {
     if (!user) return;
-    const unsub = subscribeMasterDB((fresh) => {
+    const unsub = subscribeMasterDB((fresh: MasterDB) => {
       const sig = masterSig(fresh);
       if (sig === masterSigRef.current) return; // écho de notre propre écriture / snapshot identique
       masterSigRef.current = sig;

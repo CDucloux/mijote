@@ -13,10 +13,10 @@
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 /** Carnet (forme minimale). */
-export interface SharedCollection { id: string; name?: string }
+export interface SharedCollection { id: string; name?: string; [k: string]: unknown }
 
-/** Recette (forme minimale utilisée par la fusion). */
-export interface SharedRecipe { id: string; name?: string; collections?: string[] }
+/** Recette (forme minimale utilisée par la fusion ; champs additionnels tolérés). */
+export interface SharedRecipe { id: string; name?: string; collections?: string[]; [k: string]: unknown }
 
 /** Espace de données partageable (perso ou foyer). */
 export interface SharedData {
