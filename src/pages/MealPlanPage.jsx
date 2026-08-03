@@ -9,6 +9,7 @@ import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "@/lib/household/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
+import { useLS } from "../hooks/useLS.js";
 import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildBatchSession, weekEntries } from "@/lib/planning/batchSession.js";
@@ -155,10 +156,21 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const [genOpen, setGenOpen] = useState(false);
   const [genStyle, setGenStyle] = useState("equilibre");
   const [genBatch, setGenBatch] = useState(false); // batch cooking : tout préparer d'avance
+  // Créneaux à remplir à la génération auto. Persisté : c'est une habitude récurrente
+  // (ex. cantine le midi en semaine → on ne génère que le soir). Au moins un créneau.
+  const [genSlots, setGenSlots] = useLS("rf_gen_slots", ["midi", "soir"]);
+  const toggleGenSlot = useCallback((slot) => setGenSlots(prev => {
+    const set = new Set(prev);
+    if (set.has(slot)) { if (set.size === 1) return prev; set.delete(slot); } else set.add(slot);
+    // Ordre stable midi → soir (indépendant de l'ordre de clic).
+    return ["midi", "soir"].filter(s => set.has(s));
+  }), [setGenSlots]);
   const [showBatch, setShowBatch] = useState(false); // panneau session batch ouvert ?
   const runGenerate = useCallback((style, batch) => {
     const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
-    const { count } = generate(weekDays, ["midi", "soir"], { compose: true, portionsPerMeal: ppm, style });
+    const slots = genSlots.length ? genSlots : ["midi", "soir"];
+    const slotsLabel = slots.map(s => SLOT_BY_ID[s]?.label || s).join(" et ").toLowerCase();
+    const { count } = generate(weekDays, slots, { compose: true, portionsPerMeal: ppm, style });
     setGenOpen(false);
     if (count > 0) {
       setGenDone(true);
@@ -168,8 +180,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     } else if (!recipes.length) {
       // Aucune recette en bibliothèque : rien à proposer (≠ semaine déjà remplie).
       notify("Ajoute d'abord des recettes pour générer une semaine", "info");
-    } else notify("Cette semaine est déjà remplie (midi et soir)", "info");
-  }, [generate, weekDays, notify, household, recipes]);
+    } else notify(`Cette semaine est déjà remplie (${slotsLabel})`, "info");
+  }, [generate, weekDays, notify, household, recipes, genSlots]);
   const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
 
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
@@ -413,7 +425,33 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       {genOpen && (
         <SwipeableSheet onClose={() => setGenOpen(false)} style={{ maxHeight: "82dvh" }}>
           <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>
-          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Quel style de repas veux-tu pour les créneaux vides (midi et soir) ?</p>
+          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Quel style de repas veux-tu pour les créneaux vides&nbsp;?</p>
+
+          {/* Créneaux à remplir : par défaut midi + soir. Décocher « Midi » quand on
+              mange à la cantine en semaine (l'auto-génération le laisse alors libre). */}
+          <div style={{ marginBottom: 18 }}>
+            <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Créneaux à remplir</span>
+            <div style={{ display: "flex", gap: 10 }}>
+              {["midi", "soir"].map(slot => {
+                const active = genSlots.includes(slot);
+                return (
+                  <button key={slot} onClick={() => toggleGenSlot(slot)} className="pressable" style={{
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer",
+                    padding: "11px 0", borderRadius: 13, fontSize: 14, fontWeight: 600,
+                    color: active ? "var(--accent)" : "var(--text3)",
+                    background: active ? "rgba(232,112,58,0.12)" : "var(--surface2)",
+                    border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
+                  }}>
+                    <span style={{ width: 18, height: 18, borderRadius: "50%", display: "grid", placeItems: "center", border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accent)" : "transparent" }}>
+                      {active && <Icon name="check" size={11} color="#fff" />}
+                    </span>
+                    {SLOT_BY_ID[slot]?.label || slot}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
             {[
               { id: "facile", icon: "clock", title: "Facile et rapide", desc: "Peu d'ingrédients, préparation et cuisson courtes. Idéal quand on manque de temps." },
