@@ -49,6 +49,9 @@ export const roleOrder = (id: string | null | undefined): number => ROLE_BY_ID[i
  * Rôle « naturel » d'une recette d'après sa catégorie. Les formes de plat (gratin,
  * pasta, pizza, soupe, salade, tarte…) sont des plats ; entrée / accompagnement /
  * dessert gardent leur rôle.
+ *
+ * @param cat - La catégorie de la recette.
+ * @returns Le rôle correspondant (`plat` par défaut).
  */
 export function roleForCategory(cat: string | null | undefined): RoleId {
   if (cat === "entree") return "entree";
@@ -57,21 +60,36 @@ export function roleForCategory(cat: string | null | undefined): RoleId {
   return "plat";
 }
 
-// Plats « complets » qui se suffisent à eux-mêmes : pas besoin d'accompagnement.
+/** Plats « complets » qui se suffisent à eux-mêmes : pas besoin d'accompagnement. */
 const SELF_SUFFICIENT_CATEGORIES = new Set(["soupe", "soupe-froide", "salade", "pasta", "pizza", "gratin", "tarte"]);
 
-/** `true` si le plat appelle un accompagnement (un plat générique en veut un ;
- * une soupe / salade / pasta / pizza / gratin / tarte se suffit). */
+/**
+ * Le plat appelle-t-il un accompagnement ? Un plat générique en veut un ; une soupe /
+ * salade / pasta / pizza / gratin / tarte se suffit.
+ *
+ * @param recipe - La recette (sa catégorie décide).
+ * @returns `true` si un accompagnement est pertinent.
+ */
 export function platNeedsSide(recipe: CategorizedRecipe | null | undefined): boolean {
   return !SELF_SUFFICIENT_CATEGORIES.has(recipe?.category || "");
 }
 
-/** Identifiant de repas (groupe d'items partageant le créneau). */
+/**
+ * Génère un identifiant de repas (groupe d'items partageant le créneau).
+ *
+ * @returns Un nouvel id de groupe unique.
+ */
 export function newGroupId(): string {
   return "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-/** Rôle effectif d'un item de planning (explicite, sinon déduit de la recette). */
+/**
+ * Rôle effectif d'un item de planning : explicite s'il est posé, sinon déduit de la recette.
+ *
+ * @param item - L'item de planning (peut porter un `role` explicite).
+ * @param recipe - La recette liée (repli sur sa catégorie).
+ * @returns Le rôle effectif de l'item.
+ */
 export function itemRole(item: MealItem | null | undefined, recipe: CategorizedRecipe | null | undefined): RoleId {
   return (item?.role as RoleId) || roleForCategory(recipe?.category || "");
 }
@@ -80,6 +98,10 @@ export function itemRole(item: MealItem | null | undefined, recipe: CategorizedR
  * Groupe les items d'un créneau en repas composés : ceux qui partagent un `groupId`
  * forment un repas (items triés par rôle) ; les autres sont des repas d'un item.
  * Ordre des groupes = ordre d'apparition.
+ *
+ * @param entries - Les items du créneau.
+ * @param recipesById - Index des recettes (pour trier les items par rôle).
+ * @returns Les groupes-repas, dans l'ordre d'apparition.
  */
 export function groupSlotMeals(
   entries: MealItem[] = [],
@@ -98,7 +120,12 @@ export function groupSlotMeals(
   return groups;
 }
 
-/** Catégories jouant un rôle donné (pour les pickers manuels). */
+/**
+ * Catégories jouant un rôle donné (pour les pickers manuels).
+ *
+ * @param role - Le rôle recherché.
+ * @returns Les catégories de recette dont le rôle naturel correspond.
+ */
 export function categoriesForRole(role: RoleId): { id: string; label: string; emoji: string }[] {
   return RECIPE_CATEGORIES.filter((c: { id: string }) => roleForCategory(c.id) === role);
 }

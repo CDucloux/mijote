@@ -59,12 +59,20 @@ export interface GeneratedCell {
   portions: number;
 }
 
-// Types de recette recevables selon le créneau. Le matin ne prend que du
-// petit-déjeuner ; midi/soir prennent les « plats » (et les recettes non typées).
+/**
+ * Types de recette recevables selon le créneau. Le matin ne prend que du
+ * petit-déjeuner ; midi/soir prennent les « plats » (et les recettes non typées).
+ */
 const BREAKFAST_TYPES = new Set(["petit-dej", "boulangerie", "boisson"]);
 const NON_MAIN_TYPES = new Set(["dessert", "aperitif", "boisson", "sauce", "accompagnement", "entree", "petit-dej", "gouter", "boulangerie"]);
 
-/** La recette convient-elle à ce créneau ? (matin = petit-déj ; midi/soir = plats). */
+/**
+ * La recette convient-elle à ce créneau ? (matin = petit-déj ; midi/soir = plats).
+ *
+ * @param recipe - La recette candidate.
+ * @param slot - Le créneau (`matin`, `midi`, `soir`).
+ * @returns `true` si la recette est un plat/petit-déj adapté au créneau.
+ */
 export function eligibleForSlot(recipe: PlannerRecipe | null | undefined, slot: string): boolean {
   if (!recipe || recipe.isComponent) return false;
   const cat = recipe.category || "";
@@ -74,7 +82,7 @@ export function eligibleForSlot(recipe: PlannerRecipe | null | undefined, slot: 
 
 export const DEFAULT_WEIGHTS: Weights = { season: 0.9, health: 0.5, stock: 0.6, effort: 0.4, dislike: 2, difficulty: 0, simple: 0, dishSeason: 0.5 };
 
-// Affinité saisonnière du TYPE de plat (indépendante des ingrédients).
+/** Affinité saisonnière du TYPE de plat (indépendante des ingrédients). */
 const HEARTY_DISHES = new Set(["gratin", "soupe", "tarte"]);   // hivernaux
 const LIGHT_DISHES = new Set(["salade", "soupe-froide"]);      // estivaux
 
@@ -82,6 +90,10 @@ const LIGHT_DISHES = new Set(["salade", "soupe-froide"]);      // estivaux
  * Score saisonnier du TYPE de plat ∈ [-1, 1] : +1 = en pleine saison, -1 = à
  * contre-saison, 0 = neutre (mi-saison ou type non concerné). Les plats consistants
  * ont leur place en hiver, les légers/froids en été.
+ *
+ * @param recipe - La recette (sa catégorie détermine le type de plat).
+ * @param month - Mois courant 1–12 (défaut : mois système).
+ * @returns Le score saisonnier du type de plat, entre -1 et 1.
  */
 export function dishSeasonScore(recipe: PlannerRecipe | null | undefined, month: number = currentMonth()): number {
   const cat = recipe?.category || "";
@@ -105,24 +117,40 @@ export const GEN_STYLES: Record<string, Weights> = {
 
 const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
 
-/** Effort ∈ [0,1] : 1 = rapide (≤ ~15 min), 0 = long (≥ ~90 min). */
+/**
+ * Effort ∈ [0,1] : 1 = rapide (≤ ~15 min), 0 = long (≥ ~90 min).
+ *
+ * @param recipe - La recette (temps de prépa + cuisson).
+ * @returns Le score d'effort, entre 0 et 1.
+ */
 export function effortScore(recipe: PlannerRecipe): number {
   const min = (Number(recipe.prepTime) || 0) + (Number(recipe.cookTime) || 0);
   return clamp01(1 - Math.max(0, min - 15) / 75);
 }
 
-/** Simplicité ∈ [0,1] : 1 = peu d'ingrédients (≤ ~6), décroît ensuite. */
+/**
+ * Simplicité ∈ [0,1] : 1 = peu d'ingrédients (≤ ~6), décroît ensuite.
+ *
+ * @param recipe - La recette (nombre d'ingrédients).
+ * @returns Le score de simplicité, entre 0 et 1.
+ */
 export function simplicityScore(recipe: PlannerRecipe): number {
   const n = (recipe.ingredients || []).length;
   return clamp01(1 - Math.max(0, n - 6) / 10);
 }
 
-// Difficulté ∈ [0,1] : recipe.difficulty (1..5) normalisée ; inconnue → neutre.
+/** Difficulté ∈ [0,1] : `recipe.difficulty` (1..5) normalisée ; inconnue → neutre. */
 function difficultyScore(recipe: PlannerRecipe): number {
   return Number.isFinite(recipe.difficulty) ? clamp01(((recipe.difficulty as number) - 1) / 4) : 0.4;
 }
 
-/** Fraction des ingrédients résolus déjà en stock (composants inclus). */
+/**
+ * Fraction des ingrédients résolus déjà en stock (composants inclus).
+ *
+ * @param recipe - La recette évaluée.
+ * @param ctx - Contexte de scoring (résolveur d'ingrédients + set du stock).
+ * @returns La proportion d'ingrédients en stock, entre 0 et 1.
+ */
 export function stockAffinity(recipe: PlannerRecipe, ctx: PlannerContext): number {
   const { resolver, stockSet } = ctx;
   if (!stockSet || !stockSet.size) return 0;
@@ -136,7 +164,7 @@ export function stockAffinity(recipe: PlannerRecipe, ctx: PlannerContext): numbe
   return total ? have / total : 0;
 }
 
-// La recette contient-elle un ingrédient non aimé (aversion douce, pas un filtre) ?
+/** La recette contient-elle un ingrédient non aimé (aversion douce, pas un filtre) ? */
 function hasDislike(recipe: PlannerRecipe, ctx: PlannerContext): boolean {
   const dislikes = (ctx.preferences?.dislikes || []).map(normalizeStr).filter(Boolean);
   if (!dislikes.length) return false;
@@ -145,8 +173,14 @@ function hasDislike(recipe: PlannerRecipe, ctx: PlannerContext): boolean {
 }
 
 /**
- * Note intrinsèque d'une recette (indépendante de la semaine). `ctx` :
- * `{ resolver, byId, month, stockSet, preferences, weights }`.
+ * Note intrinsèque d'une recette (indépendante de la semaine) : combinaison pondérée
+ * de la saison, du Nutri-Score, de l'affinité stock, de l'effort, de la simplicité,
+ * de la difficulté et de la saison du type de plat, moins une pénalité d'aversion.
+ *
+ * @param recipe - La recette à noter.
+ * @param ctx - Contexte de scoring (`resolver`, `byId`, `month`, `stockSet`,
+ *   `preferences`, `weights`).
+ * @returns La note intrinsèque (échelle libre, comparable entre recettes).
  */
 export function scoreRecipe(recipe: PlannerRecipe, ctx: PlannerContext = {}): number {
   const w = ctx.weights || DEFAULT_WEIGHTS;
@@ -166,8 +200,16 @@ export function scoreRecipe(recipe: PlannerRecipe, ctx: PlannerContext = {}): nu
 }
 
 /**
- * Accompagnements candidats pour un plat : recettes de rôle « accompagnement »
- * éligibles, classées par note (saison…), en excluant le plat lui-même.
+ * Accompagnements candidats pour un plat : recettes du rôle demandé, éligibles,
+ * classées par note (saison…), en excluant le plat lui-même.
+ *
+ * @param main - Le plat principal (exclu des suggestions).
+ * @param pool - Le vivier de recettes candidates.
+ * @param ctx - Contexte de scoring.
+ * @param options - Options de sélection.
+ * @param options.role - Rôle recherché (défaut `accompagnement`).
+ * @param options.max - Nombre maximum de suggestions (défaut 8).
+ * @returns Les meilleures recettes du rôle, triées par note décroissante.
  */
 export function suggestSides(
   main: PlannerRecipe | null | undefined,
@@ -183,19 +225,23 @@ export function suggestSides(
     .map(x => x.r);
 }
 
-// Ensemble des préparations de base (recipeId) utilisées par une recette.
+/** Ensemble des préparations de base (`recipeId`) utilisées par une recette. */
 function componentsOf(recipe: PlannerRecipe): Set<string> {
   return new Set((recipe.ingredients || []).filter(i => i.recipeId).map(i => i.recipeId as string));
 }
 
-// Pénalités de niveau semaine (variété + étalement de l'effort + bonus batch).
+/** Pénalités de niveau semaine (variété + étalement de l'effort + bonus batch). */
 const WEEK = { repeat: 0.6, category: 0.09, cuisine: 0.05, dayEffort: 0.12, batchBonus: 0.12 };
-// Rôles d'un repas composé complet, dans l'ordre de service.
+/** Rôles d'un repas composé complet, dans l'ordre de service. */
 const COMPOSE_ROLES: RoleId[] = ["entree", "plat", "accompagnement", "dessert"];
 
 /**
  * Combien de repas une cuisson couvre-t-elle ? `servings / portions par repas`.
  * Une recette pour 4 avec 2 portions/repas = 2 repas → 1 « reste » à replacer.
+ *
+ * @param recipe - La recette cuisinée.
+ * @param portionsPerMeal - Portions consommées par repas (défaut 2).
+ * @returns Le nombre de repas couverts, borné à [1, 7].
  */
 export function batchMeals(recipe: PlannerRecipe, portionsPerMeal = 2): number {
   const s = Number(recipe.servings) || 2;
@@ -216,11 +262,21 @@ interface GenerateArgs {
 interface RolePick { recipe: PlannerRecipe; portions: number; leftover: boolean }
 
 /**
- * Remplit les créneaux vides de la semaine. `dates` (YYYY-MM-DD), `slots`,
- * `recipes`, `existing` (planning actuel). Avec `compose`, chaque repas midi/soir
+ * Remplit les créneaux vides de la semaine. Avec `compose`, chaque repas midi/soir
  * devient entrée + plat + accompagnement + dessert (selon le vivier). Avec
  * `portionsPerMeal`, les portions cuisinées en trop sont RÉUTILISÉES plus tard
  * (files de « restes » par rôle) au lieu de cuisiner du neuf.
+ *
+ * @param args - Paramètres de génération.
+ * @param args.dates - Dates à remplir (`YYYY-MM-DD`).
+ * @param args.slots - Créneaux à remplir par jour (`matin`, `midi`, `soir`).
+ * @param args.recipes - Vivier de recettes.
+ * @param args.ctx - Contexte de scoring.
+ * @param args.existing - Planning actuel (créneaux déjà occupés, non écrasés sauf `replace`).
+ * @param args.replace - Remplacer aussi les créneaux déjà occupés.
+ * @param args.compose - Composer des repas complets (entrée/plat/accompagnement/dessert).
+ * @param args.portionsPerMeal - Portions par repas (pilote la réutilisation des restes).
+ * @returns Les cellules de planning générées pour les créneaux remplis.
  */
 export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, existing = {}, replace = false, compose = false, portionsPerMeal = 2 }: GenerateArgs): GeneratedCell[] {
   const byId = ctx.byId || new Map(recipes.map(r => [r.id as string, r]));

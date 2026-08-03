@@ -45,7 +45,7 @@ export interface IngredientSignals {
   resolved: number;
 }
 
-// Catégories d'ingrédient d'origine animale (miroir de dietary.js).
+/** Catégories d'ingrédient d'origine animale (miroir de `dietary.js`). */
 const MEAT = "meat";
 const FISH = "fish_seafood";
 

@@ -69,6 +69,19 @@ const diffColorPdf = (lvl: number): string => (lvl <= 2 ? "#4caf7d" : lvl === 3 
 const NUTRI_COLORS_PDF: Record<string, string> = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
 const num = (v: number | string | undefined): number => parseFloat(String(v).replace(",", ".")) || 0;
 
+/**
+ * Construit le document HTML complet d'une recette pour l'export PDF (fonction pure).
+ * Résout les lignes composant via `recipesById` et génère une annexe « Préparations
+ * de base » mise à l'échelle, afin que le document soit autonome.
+ *
+ * @param recipe - La recette à rendre.
+ * @param dbs - Dépendances de rendu.
+ * @param dbs.ingredientDB - Base d'ingrédients (images).
+ * @param dbs.utensilDB - Base d'ustensiles (images).
+ * @param dbs.recipesById - Index des recettes (résolution des composants + annexe).
+ * @param dbs.techniques - Glossaire des techniques (calcul de difficulté).
+ * @returns Le document HTML complet (chaîne), prêt à imprimer.
+ */
 export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utensilDB = [], recipesById, techniques = [] }: PdfDbs = {}): string {
   const ingImg = (dbId: string | undefined): string => ingredientDB.find(d => d.id === dbId)?.image || "";
   const utImg = (dbId: string | undefined): string => utensilDB.find(d => d.id === dbId)?.image || "";
@@ -364,6 +377,10 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
  * Ouvre le document dans un nouvel onglet et lance l'impression du navigateur
  * (l'utilisateur choisit « Enregistrer en PDF »). Texte sélectionnable, rendu
  * fidèle. On attend le chargement de l'image de tête pour éviter un aperçu vide.
+ *
+ * @param recipe - La recette à imprimer.
+ * @param dbs - Dépendances de rendu (voir {@link buildRecipePdfHtml}).
+ * @returns Rien ; sans effet si la popup est bloquée par le navigateur.
  */
 export function printRecipe(recipe: PdfRecipe, dbs: PdfDbs = {}): void {
   const html = buildRecipePdfHtml(recipe, dbs);
