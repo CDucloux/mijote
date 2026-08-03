@@ -9,14 +9,10 @@
 import { validateRecipeSchema } from "@/lib/recipes/recipeSchema.js";
 import { buildNameMatcher } from "@/lib/food/nameMatcher.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
+import type { Recipe } from "@/lib/types.js";
 
-/** Recette importée (forme minimale ; champs additionnels conservés). */
-export interface ImportRecipe {
-  name?: string;
-  ingredients?: { name?: string; dbId?: string }[];
-  utensils?: { name?: string; dbId?: string }[];
-  [k: string]: unknown;
-}
+/** Recette importée (alias du type de domaine). */
+export type ImportRecipe = Recipe;
 
 /** Ingrédient / ustensile de la base (forme minimale). */
 export interface ImportDbItem { id: string; name: string; aliases?: string[]; [k: string]: unknown }

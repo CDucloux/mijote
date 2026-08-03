@@ -9,6 +9,7 @@ import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { matchesCooking, COOKING_METHODS } from "@/lib/recipes/cooking.js";
 import { computeDifficulty, DIFFICULTY_LABEL } from "@/lib/recipes/difficulty.js";
 import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
+import type { Recipe } from "@/lib/types.js";
 
 /** État de filtrage avancé (une « vue » de la bibliothèque). */
 export interface RecipeFilters {
@@ -24,19 +25,8 @@ export interface RecipeFilters {
   ingredients: string[];
 }
 
-/** Recette filtrable (forme minimale ; les appelants en portent plus). */
-export interface FilterableRecipe {
-  id?: string;
-  isComponent?: boolean;
-  category?: string;
-  cuisine?: string;
-  prepTime?: number;
-  cookTime?: number;
-  nutriLetter?: string;
-  difficultyOverride?: number;
-  ingredients?: { name?: string; recipeId?: string }[];
-  utensils?: { name?: string }[];
-}
+/** Recette filtrable (alias du type de domaine). */
+export type FilterableRecipe = Recipe;
 
 /** Dépendances facultatives pour le prédicat (résolveur, techniques, recettes). */
 export interface FilterContext {

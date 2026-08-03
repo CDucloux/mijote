@@ -8,16 +8,12 @@
  * @module composedMeal
  */
 import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
+import type { MealItem } from "@/lib/types.js";
+
+export type { MealItem };
 
 /** Rôle d'un item dans un repas composé. */
 export type RoleId = "entree" | "plat" | "accompagnement" | "dessert";
-
-/** Item de planning (forme minimale utilisée ici ; les appelants en portent plus). */
-export interface MealItem {
-  recipeId?: string;
-  groupId?: string | null;
-  role?: string;
-}
 
 /** Recette (forme minimale) : seule la catégorie sert au calcul des rôles. */
 export interface CategorizedRecipe {

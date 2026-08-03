@@ -7,42 +7,19 @@
  */
 import { computeNutriInfo, buildRecipeIndex, isComponentLine } from "@/lib/recipes/nutriscore.js";
 import { flattenForShopping, mergeRawLines, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
+import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
 
-/** Ligne d'ingrédient d'une recette (forme minimale manipulée ici). */
-export interface RecipeLine {
-  name?: string;
-  amount?: number | string;
-  unit?: string;
-  dbId?: string;
-  recipeId?: string;
-  image?: string;
-}
+/** Ligne d'ingrédient manipulée par les actions (alias du type de domaine). */
+export type RecipeLine = IngredientLine;
 
-/** Recette manipulée par les actions (forme minimale, champs additionnels tolérés). */
-export interface ActionRecipe {
-  id?: string;
-  name?: string;
-  isComponent?: boolean;
-  ingredients?: RecipeLine[];
-  utensils?: { name?: string; dbId?: string }[];
-  yield?: { amount?: number | string; unit?: string };
-  healthScore?: number;
-  nutriLetter?: string | null;
-  collections?: string[];
-  createdAt?: string;
-  [k: string]: unknown;
-}
+/** Recette manipulée par les actions (alias du type de domaine). */
+export type ActionRecipe = Recipe;
 
 /** Ingrédient de la base (forme minimale). */
 export interface ActionDbItem { id: string; image?: string }
 
-/** Carnet (manuel ou intelligent). */
-export interface ActionCollection {
-  id: string;
-  kind?: string;
-  count?: number;
-  [k: string]: unknown;
-}
+/** Carnet (manuel ou intelligent — alias du type de domaine). */
+export type ActionCollection = Collection;
 
 const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();
 

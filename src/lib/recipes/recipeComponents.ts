@@ -8,15 +8,10 @@
  * @module recipeComponents
  */
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";
+import type { IngredientLine, RecipeYield } from "@/lib/types.js";
 
 /** Ligne d'ingrédient (brute ou référence de composant) manipulée ici. */
-export interface ComponentLine {
-  amount?: number | string;
-  unit?: string;
-  dbId?: string;
-  recipeId?: string;
-  name?: string;
-  image?: string;
+export interface ComponentLine extends IngredientLine {
   /** Marqueur : composant référencé mais introuvable (conservé, signalé). */
   _orphan?: boolean;
 }
@@ -24,7 +19,7 @@ export interface ComponentLine {
 /** Recette-composant : rendement + ingrédients bruts. */
 export interface ComponentRecipe {
   id?: string;
-  yield?: { amount?: number; unit?: string };
+  yield?: RecipeYield;
   ingredients?: ComponentLine[];
 }
 
@@ -45,8 +40,8 @@ const num = (v: number | string | null | undefined): number => parseFloat(String
  * @returns Le rapport quantité consommée / rendement, ou `0` si le rendement est absent.
  */
 export function consumptionFraction(line: ComponentLine, component: ComponentRecipe | null | undefined): number {
-  if (!component || !(component.yield && (component.yield.amount || 0) > 0)) return 0;
-  return num(line.amount) / (component.yield!.amount as number);
+  if (!component || !(component.yield && num(component.yield.amount) > 0)) return 0;
+  return num(line.amount) / num(component.yield!.amount);
 }
 
 /**
@@ -84,7 +79,7 @@ export function flattenForShopping(
   for (const line of lines || []) {
     if (!isComponentLine(line)) { out.push(line); continue; }
     const comp = recipesById && line.recipeId ? recipesById.get(line.recipeId) : undefined;
-    if (!comp || !(comp.yield && (comp.yield.amount || 0) > 0)) { out.push({ ...line, _orphan: true }); continue; }
+    if (!comp || !(comp.yield && num(comp.yield.amount) > 0)) { out.push({ ...line, _orphan: true }); continue; }
     if (stockSet && comp.id && stockSet.has(comp.id)) continue; // déjà préparé → pas d'éclatement
     const f = consumptionFraction(line, comp);
     for (const ci of comp.ingredients || []) {

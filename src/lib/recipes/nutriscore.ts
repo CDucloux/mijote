@@ -6,12 +6,12 @@
  * @module nutriscore
  */
 
+import type { IngredientLine } from "@/lib/types.js";
+
 /** Nutriments pour 100 g (`isVegetable` est traité comme drapeau numérique). */
 type Nutrition = Record<string, number>;
 /** Entrée de base minimale exploitée pour le calcul. */
 interface DbItem { id: string; gramsPerPiece?: number; nutrition?: Nutrition }
-/** Ligne d'ingrédient de recette (brute ou composant). */
-interface IngredientLine { amount?: number | string; unit?: string; dbId?: string; recipeId?: string }
 /** Recette (utilisée comme composant : rendement + ingrédients bruts). */
 interface NutriRecipe { id?: string; ingredients?: IngredientLine[]; yield?: { amount?: number; unit?: string } }
 type RecipeIndex = Map<string, NutriRecipe> | null | undefined;
