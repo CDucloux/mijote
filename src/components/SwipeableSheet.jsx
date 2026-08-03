@@ -8,6 +8,11 @@ import { useModalExit } from "../hooks/useModalExit.js";
 // l'échelle), sans quoi la feuille se retrouve rognée en haut de l'écran.
 // `zIndex` : surcharge le z-index du backdrop (défaut CSS = 200). Utile quand la
 // feuille doit passer AU-DESSUS d'un overlay plein écran (ex. fin de cook mode).
+//
+// `children` accepte une fonction `(close) => …` (render-prop) : `close(cb?)`
+// déclenche la MÊME sortie animée que le backdrop/swipe, puis exécute `cb` (ou, à
+// défaut, `onClose`) une fois l'animation terminée. Indispensable pour les boutons
+// « Annuler » internes, qui sinon démontent la feuille d'un coup, sans animation.
 export function SwipeableSheet({ onClose, children, style, hideHandle = false, zIndex }) {
   const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(onClose);
   // Backdrop, swipe et Échap déclenchent la sortie animée ; le vrai `onClose`
@@ -24,7 +29,7 @@ export function SwipeableSheet({ onClose, children, style, hideHandle = false, z
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}>
         {!hideHandle && <div className="modal-handle" />}
-        {children}
+        {typeof children === "function" ? children(beginClose) : children}
       </div>
     </div>,
     document.body

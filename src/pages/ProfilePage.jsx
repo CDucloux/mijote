@@ -121,16 +121,18 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
 
       {purgeScope && (
         <SwipeableSheet onClose={() => setPurgeScope(null)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{purgeScope.label} ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-            {purgeScope.scope === "all"
-              ? "Toutes tes recettes, carnets, planning, courses et stock seront définitivement effacés. Cette action est irréversible."
-              : "Ces données seront définitivement effacées. Cette action est irréversible."}
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setPurgeScope(null)}>Annuler</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onPurge?.(purgeScope.scope); setPurgeScope(null); }}>Effacer</button>
-          </div>
+          {(close) => (<>
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{purgeScope.label} ?</h3>
+            <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
+              {purgeScope.scope === "all"
+                ? "Toutes tes recettes, carnets, planning, courses et stock seront définitivement effacés. Cette action est irréversible."
+                : "Ces données seront définitivement effacées. Cette action est irréversible."}
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => close(() => onPurge?.(purgeScope.scope))}>Effacer</button>
+            </div>
+          </>)}
         </SwipeableSheet>
       )}
 

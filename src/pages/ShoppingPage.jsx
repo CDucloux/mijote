@@ -437,6 +437,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           .filter(m => m && STOCK_CATEGORIES.has(m.category));
         return (
           <SwipeableSheet onClose={() => setConfirmClearId(null)}>
+            {(close) => (<>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
               <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(76,175,125,0.14)", border: "1px solid rgba(76,175,125,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name="shopping" size={20} color="var(--green)" />
@@ -450,18 +451,18 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 : <> Aucun produit de placard à ajouter au stock (uniquement des produits frais).</>}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfirmClearId(null)}>Annuler</button>
-              <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => {
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+              <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => close(() => {
                 if (isAll) clearAllChecked(); else clearChecked(confirmClearId);
-                setConfirmClearId(null);
                 // Un toast de succès par produit ajouté au stock, en cascade (dédupliqués).
                 const seen = new Set();
                 toStock.filter(m => !seen.has(m.id) && seen.add(m.id))
                   .forEach((m, idx) => setTimeout(() => notify?.(`${m.name} ajouté à ton stock`), idx * 900));
-              }}>
+              })}>
                 <Icon name="check" size={15} color="#fff" /> Valider
               </button>
             </div>
+            </>)}
           </SwipeableSheet>
         );
       })()}
@@ -550,6 +551,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       {/* Configuration de la liste */}
       {configList && (
         <SwipeableSheet onClose={() => setConfigList(null)}>
+          {(close) => (<>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{configList.isNew ? "Nouvelle liste" : "Configurer la liste"}</h3>
 
           <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Nom de la liste</div>
@@ -569,8 +571,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           </button>
 
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setConfigList(null)}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} disabled={!configList.name.trim()} onClick={() => {
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} disabled={!configList.name.trim()} onClick={() => close(() => {
               const name = configList.name.trim();
               if (configList.isNew) {
                 const l = { id: "sl" + Date.now(), name, type: "free", items: [], hideClear: !!configList.hideClear };
@@ -579,9 +581,9 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
               } else {
                 updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear }));
               }
-              setConfigList(null);
-            }}>{configList.isNew ? "Créer" : "Enregistrer"}</button>
+            })}>{configList.isNew ? "Créer" : "Enregistrer"}</button>
           </div>
+          </>)}
         </SwipeableSheet>
       )}
     </div>

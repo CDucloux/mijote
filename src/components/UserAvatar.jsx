@@ -6,6 +6,7 @@ import { useOnline } from "../hooks/useOnline.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { AboutModal } from "./AboutModal.jsx";
+import { ConfirmDialog } from "./ConfirmDialog.jsx";
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
 export function UserAvatar() {
@@ -108,24 +109,12 @@ export function UserAvatar() {
         </>,
         document.body
       )}
-      {confirmSignOut && createPortal(
-        <div style={{ position: "fixed", inset: 0, zIndex: 1400, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.18s ease" }}
-          onClick={() => setConfirmSignOut(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 340, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "26px 22px 20px", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", textAlign: "center", animation: "modalIn 0.32s cubic-bezier(0.16,1,0.3,1)" }}>
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(224,82,82,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
-              <Icon name="logout" size={24} color="var(--red)" />
-            </div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Se déconnecter ?</div>
-            <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
-              Vos recettes restent synchronisées. Vous pourrez vous reconnecter à tout moment.
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setConfirmSignOut(false)} style={{ flex: 1, padding: "11px 0", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
-              <button onClick={() => { setConfirmSignOut(false); onSignOut(); }} style={{ flex: 1, padding: "11px 0", borderRadius: 12, background: "var(--red)", border: "1px solid var(--red)", color: "#fff", fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Déconnexion</button>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {confirmSignOut && (
+        <ConfirmDialog title="Se déconnecter ?" icon="logout" confirmLabel="Déconnexion" zIndex={1400}
+          onCancel={() => setConfirmSignOut(false)}
+          onConfirm={() => { setConfirmSignOut(false); onSignOut(); }}>
+          Vos recettes restent synchronisées. Vous pourrez vous reconnecter à tout moment.
+        </ConfirmDialog>
       )}
       {about && <AboutModal onClose={() => setAbout(false)} />}
     </div>
