@@ -1,5 +1,14 @@
 # Changelog – Mijoté
 
+## v3.9.1 – Safran · TypeScript de bout en bout
+
+### Sous le capot
+- **Fin de la migration TypeScript** : tout `src/lib` (37 modules) et tous les hooks (21) sont désormais typés — y compris `firebase`/`firestore` et la couche de synchronisation
+- **Réorganisation de `src/lib`** en 5 sous-dossiers (`firebase/`, `recipes/`, `food/`, `planning/`, `household/`) + alias de chemin `@/` (imports stables et lisibles)
+- **Types de domaine partagés** (`lib/types.ts`) : fin des variantes redondantes de « recette » et de « ligne d'ingrédient »
+- Documentation TSDoc homogène (`@param`/`@returns`) sur les fonctions exposées
+- Aucun changement fonctionnel : fiabilisation interne (le typage a permis de corriger quelques frontières de données au passage)
+
 ## v3.9.0 – Safran · Fenêtres animées & courses affûtées
 
 ### Fenêtres & animations
