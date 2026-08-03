@@ -12,7 +12,9 @@ import { useMealPlanner } from "../hooks/useMealPlanner.js";
 import { useLS } from "../hooks/useLS.js";
 import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
-import { buildBatchSession, weekEntries } from "@/lib/planning/batchSession.js";
+import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
+import { DEFAULT_CATEGORIES } from "../constants/categories.js";
+import { fmtQtyUnit } from "@/lib/format.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
@@ -191,6 +193,19 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     () => showBatch ? buildBatchSession(weekEntries(mealPlan, weekDays), recipes) : { dishes: [], bases: [] },
     [showBatch, mealPlan, weekDays, recipes]
   );
+  // Mise en place mutualisée (par ingrédient) + cuissons regroupées : calculées
+  // uniquement quand le panneau est ouvert (dérivées des plats de la session).
+  const categoryOrder = useCallback(cat => DEFAULT_CATEGORIES[cat]?.order ?? 99, []);
+  const miseEnPlace = useMemo(
+    () => showBatch ? buildMiseEnPlace(batch.dishes, { recipesById, resolver, ingredientDB: ingredientDB || [], stockSet: new Set(stock || []), categoryOrder }) : [],
+    [showBatch, batch, recipesById, resolver, ingredientDB, stock, categoryOrder]
+  );
+  const cookingGroups = useMemo(() => showBatch ? groupCookings(batch.dishes) : [], [showBatch, batch]);
+  const prepCount = useMemo(() => miseEnPlace.reduce((n, g) => n + g.items.length, 0), [miseEnPlace]);
+  const [checkedPrep, setCheckedPrep] = useState(() => new Set());
+  const togglePrep = useCallback(key => setCheckedPrep(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; }), []);
+  // Repartir d'une checklist vierge à chaque ouverture / changement de session.
+  useEffect(() => { if (showBatch) setCheckedPrep(new Set()); }, [showBatch, weekDays]);
   // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
   // que pour la dernière génération sur la semaine où elle a eu lieu).
   useEffect(() => { setGenDone(false); }, [weekDays]);
@@ -511,30 +526,115 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={16} color="var(--green)" /></span>
             <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0 }}>Session batch</h3>
           </div>
-          <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 16px" }}>Cuisine en une fois pour la semaine visible : les portions en trop couvrent les jours suivants, et les préparations de base partagées se font d'avance.</p>
+          <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>Prépare une fois pour toute la semaine : on mutualise la découpe des ingrédients et les cuissons.</p>
 
-          {batch.bases.length > 0 && (
-            <div style={{ marginBottom: 18 }}>
-              <div className="field-label" style={{ marginBottom: 10 }}>À préparer d'avance</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {batch.bases.map(b => (
-                  <div key={b.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(b.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: b.shared ? "rgba(76,175,125,0.08)" : "var(--surface2)", borderRadius: 12, border: `1px solid ${b.shared ? "rgba(76,175,125,0.3)" : "var(--border)"}`, cursor: "pointer" }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13.5, fontWeight: 600 }}>{b.recipe.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Pour {b.usedBy.join(", ")}</div>
-                    </div>
-                    {b.shared && <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.16)", padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Partagé</span>}
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>{b.amount} {b.unit}</span>
+          {batch.dishes.length === 0
+            ? <p style={{ fontSize: 13, color: "var(--text3)", padding: "8px 0" }}>Planifie des repas cette semaine pour voir la session batch.</p>
+            : <>
+              {/* Récap de session */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+                {[
+                  { n: prepCount, l: "ingrédient", icon: "🔪" },
+                  { n: batch.dishes.reduce((s, d) => s + d.cookings, 0), l: "cuisson", icon: "🔥" },
+                  { n: batch.dishes.reduce((s, d) => s + d.meals, 0), l: "repas couverts", icon: "🍽️" },
+                ].map((c, i) => (
+                  <div key={i} style={{ flex: 1, minWidth: 88, padding: "9px 10px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)" }}>{c.n}</div>
+                    <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>{c.icon} {c.l}{c.n > 1 ? "s" : ""}</div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
 
-          <div className="field-label" style={{ marginBottom: 10 }}>À cuisiner</div>
-          {batch.dishes.length === 0
-            ? <p style={{ fontSize: 13, color: "var(--text3)", padding: "8px 0" }}>Planifie des repas cette semaine pour voir la session batch.</p>
-            : <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {/* ── 1. Mise en place mutualisée (par ingrédient) ── */}
+              {miseEnPlace.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div className="field-label" style={{ marginBottom: 4 }}>Mise en place</div>
+                  <p style={{ fontSize: 11, color: "var(--text3)", margin: "0 0 12px", lineHeight: 1.4 }}>Prépare tous ces ingrédients d'un coup, toutes recettes confondues.</p>
+                  {miseEnPlace.map(group => {
+                    const cat = DEFAULT_CATEGORIES[group.category] || { label: "Autres", icon: "📦" };
+                    return (
+                      <div key={group.category} style={{ marginBottom: 14 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
+                          <span style={{ fontSize: 13 }}>{cat.icon}</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{cat.label}</span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {group.items.map(it => {
+                            const done = checkedPrep.has(it.key);
+                            const qty = it.unit ? fmtQtyUnit(it.amount, it.unit) : `${it.amount}`;
+                            return (
+                              <button key={it.key} onClick={() => togglePrep(it.key)} className="pressable" style={{
+                                display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", cursor: "pointer",
+                                padding: "8px 10px", borderRadius: 11, background: done ? "rgba(76,175,125,0.08)" : "var(--surface2)",
+                                border: `1px solid ${done ? "rgba(76,175,125,0.3)" : "var(--border)"}`, opacity: done ? 0.7 : 1,
+                              }}>
+                                <span style={{ width: 20, height: 20, flexShrink: 0, borderRadius: 6, display: "grid", placeItems: "center", border: `2px solid ${done ? "var(--green)" : "var(--border)"}`, background: done ? "var(--green)" : "transparent" }}>
+                                  {done && <Icon name="check" size={12} color="#fff" />}
+                                </span>
+                                {it.image && <span style={{ width: 26, height: 26, borderRadius: 7, overflow: "hidden", flexShrink: 0, background: "#fff", border: "1px solid var(--border)" }}><Img src={it.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 2 }} /></span>}
+                                <span style={{ flex: 1, minWidth: 0 }}>
+                                  <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", textDecoration: done ? "line-through" : "none" }}>{it.name}</span>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)" }}>{qty}{it.pieces ? ` · ~${it.pieces}` : ""}</span>
+                                  </span>
+                                  {(it.prepTip || it.usedBy.length > 1) && (
+                                    <span style={{ display: "block", fontSize: 10.5, color: "var(--text3)", marginTop: 1 }}>
+                                      {it.prepTip ? it.prepTip : ""}{it.prepTip && it.usedBy.length > 1 ? " · " : ""}{it.usedBy.length > 1 ? `pour ${it.usedBy.length} recettes` : ""}
+                                    </span>
+                                  )}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ── 2. Cuissons regroupées (mutualiser le four / les feux) ── */}
+              {cookingGroups.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div className="field-label" style={{ marginBottom: 4 }}>Cuissons à mutualiser</div>
+                  <p style={{ fontSize: 11, color: "var(--text3)", margin: "0 0 12px", lineHeight: 1.4 }}>Ces plats partagent le même appareil — lance-les ensemble.</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {cookingGroups.map(g => (
+                      <div key={g.method} style={{ padding: "10px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
+                          <span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={13} color="var(--accent)" /></span>
+                          <span style={{ fontSize: 13, fontWeight: 600 }}>{g.label}</span>
+                          <span style={{ fontSize: 10.5, color: "var(--text3)" }}>· {g.dishes.length} plats</span>
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "var(--text2)", paddingLeft: 31 }}>{g.dishes.map(d => d.recipe.name).join(" · ")}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 3. Préparations de base à faire d'avance ── */}
+              {batch.bases.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div className="field-label" style={{ marginBottom: 10 }}>À préparer d'avance</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {batch.bases.map(b => (
+                      <div key={b.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(b.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: b.shared ? "rgba(76,175,125,0.08)" : "var(--surface2)", borderRadius: 12, border: `1px solid ${b.shared ? "rgba(76,175,125,0.3)" : "var(--border)"}`, cursor: "pointer" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 600 }}>{b.recipe.name}</div>
+                          <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Pour {b.usedBy.join(", ")}</div>
+                        </div>
+                        {b.shared && <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.16)", padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Partagé</span>}
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>{b.amount} {b.unit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 4. Plats à cuisiner ── */}
+              <div className="field-label" style={{ marginBottom: 10 }}>À cuisiner</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {batch.dishes.map(d => (
                   <button key={d.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(d.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
                     <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={d.recipe.image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
@@ -545,7 +645,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                     <Icon name="forward" size={15} color="var(--text3)" />
                   </button>
                 ))}
-              </div>}
+              </div>
+            </>}
         </SwipeableSheet>
       )}
 
