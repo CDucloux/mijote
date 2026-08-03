@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { fileURLToPath, URL } from 'node:url'
 import pkg from './package.json';
 
 export default defineConfig({
@@ -49,6 +50,13 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    // Alias racine `@/` → `src/` : imports stables et lisibles, insensibles aux
+    // déplacements de fichiers (hérité par Vitest via la config Vite).
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },

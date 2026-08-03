@@ -8,6 +8,10 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
 
+    /* Alias racine `@/` → `src/` (miroir de resolve.alias côté Vite).
+       Sans baseUrl : les chemins de `paths` sont résolus relativement à ce tsconfig. */
+    "paths": { "@/*": ["./src/*"] },
+
     /* Cohabitation .js / .ts : on autorise le JS mais on ne le type-check PAS.
        On durcit fichier par fichier en migrant vers .ts. */
     "allowJs": true,
