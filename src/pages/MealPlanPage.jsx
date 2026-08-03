@@ -210,6 +210,21 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const ids = new Set(recipes.filter(r => !r.isComponent).map(r => r.id));
     return weekEntries(mealPlan, weekDays).some(e => ids.has(e.recipeId));
   }, [mealPlan, weekDays, recipes]);
+  // Repas couverts = occasions distinctes (date × créneau) occupées par un plat —
+  // un repas composé (entrée + plat + dessert sur le même créneau) compte pour 1.
+  const mealOccasions = useMemo(() => {
+    const ids = new Set(recipes.filter(r => !r.isComponent).map(r => r.id));
+    let n = 0;
+    for (const date of weekDays) {
+      const slots = new Set();
+      for (const it of (mealPlan[date] || [])) if (ids.has(it.recipeId)) slots.add(it.slot || "midi");
+      n += slots.size;
+    }
+    return n;
+  }, [mealPlan, weekDays, recipes]);
+  // Cuissons = sessions de cuisson réelles : seuls les plats qui cuisent (cookTime > 0)
+  // comptent, pondérés par leur nombre de cuissons (une cuisson batch couvre plusieurs repas).
+  const cookCount = useMemo(() => batch.dishes.reduce((s, d) => s + (Number(d.recipe.cookTime) > 0 ? d.cookings : 0), 0), [batch]);
   const prepCount = useMemo(() => miseEnPlace.reduce((n, g) => n + g.items.length, 0), [miseEnPlace]);
   const [checkedPrep, setCheckedPrep] = useState(() => new Set());
   const togglePrep = useCallback(key => setCheckedPrep(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; }), []);
@@ -549,13 +564,13 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {/* Récap de session */}
               <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
                 {[
-                  { n: prepCount, l: "ingrédient", icon: "🔪" },
-                  { n: batch.dishes.reduce((s, d) => s + d.cookings, 0), l: "cuisson", icon: "🔥" },
-                  { n: batch.dishes.reduce((s, d) => s + d.meals, 0), l: "repas couverts", icon: "🍽️" },
+                  { n: prepCount, l: prepCount > 1 ? "ingrédients" : "ingrédient", icon: "🔪" },
+                  { n: cookCount, l: cookCount > 1 ? "cuissons" : "cuisson", icon: "🔥" },
+                  { n: mealOccasions, l: "repas couverts", icon: "🍽️" },
                 ].map((c, i) => (
                   <div key={i} style={{ flex: 1, minWidth: 88, padding: "9px 10px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "center" }}>
                     <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)" }}>{c.n}</div>
-                    <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>{c.icon} {c.l}{c.n > 1 ? "s" : ""}</div>
+                    <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>{c.icon} {c.l}</div>
                   </div>
                 ))}
               </div>

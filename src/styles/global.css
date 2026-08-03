@@ -2143,6 +2143,11 @@ select {
   border-radius: 50%;
   background: #fff;
   transition: left 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Nom de transition dédié : pendant la bascule de thème (view-transition), le
+     navigateur ANIME la position du curseur (vrai glissement) au lieu de le fondre
+     avec le reste de la page. Hors view-transition, la `transition: left` ci-dessus
+     assure le glissement. */
+  view-transition-name: theme-toggle-thumb;
 }
 
 .login-toggle-thumb.dark {
