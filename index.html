@@ -12,14 +12,26 @@
           var vp = document.querySelector('meta[name="viewport"]');
           if (vp) vp.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover");
         }
+        // Applique le thème AVANT le premier rendu (pas de flash) et surtout : cale la
+        // couleur des barres système (statut / navigation) sur le thème de l'appli —
+        // et non sur celui du système. La balise theme-color unique ci-dessous est
+        // ensuite pilotée en direct par le toggle in-app (useTheme → applyThemeToDOM).
+        try {
+          var dark = localStorage.getItem("rf_theme") !== "light";
+          if (!dark) document.documentElement.classList.add("light");
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute("content", dark ? "#0e0e0f" : "#f5f0eb");
+        } catch (e) {}
       })();
     </script>
 
     <!-- Identité -->
     <title>Mijoté, l'atelier de vos recettes</title>
     <meta name="description" content="Mijoté : créez, affinez et partagez vos recettes. Journal d'itérations, Nutri-Score, saisonnalité des ingrédients, planning repas et liste de courses, synchronisés sur tous vos appareils." />
-    <meta name="theme-color" content="#f5f0eb" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0e0e0f" media="(prefers-color-scheme: dark)" />
+    <!-- Balise UNIQUE (sans media) pilotée par l'appli : la couleur des barres PWA
+         suit le thème in-app, pas celui du système. Valeur par défaut = thème sombre
+         (défaut de l'appli), ajustée très tôt par le script ci-dessus puis en direct. -->
+    <meta name="theme-color" content="#0e0e0f" />
     <link rel="canonical" href="https://VOTRE-DOMAINE/" />
 
     <!-- Icônes -->
