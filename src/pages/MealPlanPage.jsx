@@ -378,7 +378,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {hasWeekDishes && (
               <button onClick={() => setShowBatch(true)} className="pressable"
                 style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
-                  padding: "12px 14px", borderRadius: 14, background: "linear-gradient(100deg, rgba(76,175,125,0.16), var(--surface) 80%)", border: "1px solid rgba(76,175,125,0.35)" }}>
+                  padding: "12px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
                 <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(76,175,125,0.18)" }}>
                   <Icon name="fire" size={19} color="var(--green)" />
                 </span>
