@@ -1,7 +1,8 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 
-import { auth } from "@/lib/firebase/firebase.js";
+import { auth, provider } from "@/lib/firebase/firebase.js";
 import { subscribeHouseholdPointer, fetchUserDirectory } from "@/lib/firebase/firestore.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
 import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
@@ -12,6 +13,7 @@ import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
+const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
 import { useNotifications } from "./hooks/useNotifications.js";
 import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
@@ -49,7 +51,12 @@ import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 const MealPlanPageMemo = memo(MealPlanPage);
 
 
-function AppInner() {
+const NOOP = () => {};
+
+// AppInner n'est monté QUE lorsqu'un utilisateur est connecté (garde d'auth au
+// niveau du routeur racine). `user`, `isDark` et `toggleTheme` sont donc fournis
+// par le haut : l'écran de connexion ne monte plus la machinerie de l'app.
+function AppInner({ user, isDark, toggleTheme }) {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
@@ -60,7 +67,10 @@ function AppInner() {
   // Au remontage du composant lors d'une navigation, Firebase est déjà initialisé :
   // `auth.currentUser` renvoie l'utilisateur synchronement, évitant un flash de l'écran
   // de chargement entre les onglets.
-  const [user, setUser] = useState(() => auth.currentUser ?? undefined);
+  // L'auth est possédée par le routeur racine (`App`) ; ici `user` est un prop.
+  // `setUser` reste un no-op : la déconnexion se fait via `signOut(auth)`, dont
+  // l'écouteur racine déclenche la redirection vers /login (démontage d'AppInner).
+  const setUser = NOOP;
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
   const isAdmin = !!(user && ADMIN_EMAIL && user.email === ADMIN_EMAIL);
@@ -133,7 +143,6 @@ function AppInner() {
     userDB, setUserDB,
   });
 
-  const { isDark, toggleTheme } = useTheme();
 
 
 
@@ -277,7 +286,7 @@ function AppInner() {
   };
 
   // Compte : auth + purge + suppression RGPD (useAccount).
-  const { handleSignIn, handleSignOut, purgeData, deleteAccount } = useAccount({
+  const { handleSignOut, purgeData, deleteAccount } = useAccount({
     user, setUser, notify, setMealPlan, setShoppingLists, setStock, setLowStock, setRecipes, setCollections,
   });
 
@@ -376,17 +385,6 @@ function AppInner() {
     <RecipeNotFound onBack={() => navigate("/recipes")} />
   ) : tabContent;
 
-  // Loading state
-  if (user === undefined) return <LoadingPage isDark={isDark} />;
-
-  // Login screen
-  // Les documents légaux sont publics : accessibles même sans être connecté
-  // (l'écran de connexion y renvoie). On les rend en autonomie, avant la garde d'auth.
-  if (!user && location.pathname.startsWith("/legal")) {
-    return <div style={{ height: "100dvh", background: "var(--bg)", color: "var(--text)" }}><LegalPage /></div>;
-  }
-  if (!user) return <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={handleSignIn} />;
-
   // La dernière closure des fonctions du shell (définies plus bas, après les retours
   // anticipés) est publiée dans la ref stable déclarée en tête de composant. Écriture
   // pendant le render volontaire (motif « latest ref ») : idempotente, sans effet de
@@ -451,14 +449,59 @@ function AppInner() {
   );
 }
 
+// Connexion Google autonome (utilisable hors de l'app authentifiée, sur /login).
+// Filtre l'e-mail autorisé et retombe sur la redirection si la popup est bloquée.
+async function signInWithGoogle(setError) {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    if (ALLOWED_EMAIL && result.user.email !== ALLOWED_EMAIL) {
+      await signOut(auth);
+      setError?.("Accès non autorisé pour ce compte.");
+    }
+  } catch (e) {
+    if (e?.code === "auth/popup-blocked") signInWithRedirect(auth, provider);
+    else if (e?.code !== "auth/cancelled-popup-request" && e?.code !== "auth/popup-closed-by-user") setError?.("Connexion échouée. Réessaie.");
+  }
+}
+
+// Une fois connecté sur /login, on revient à la page d'origine (mémorisée dans
+// l'état de navigation lors de la redirection), sinon à l'accueil.
+function RedirectFromLogin() {
+  const location = useLocation();
+  return <Navigate to={location.state?.from || "/home"} replace />;
+}
+
+// Garde d'auth au niveau du routeur : écran de chargement tant que l'auth se
+// résout, documents légaux publics, redirection vers /login sinon, et l'app
+// complète (AppInner + toute sa machinerie) UNIQUEMENT une fois connecté.
+function ProtectedRoutes({ user, isDark, toggleTheme }) {
+  const location = useLocation();
+  if (user === undefined) return <LoadingPage isDark={isDark} />;
+  if (!user && location.pathname.startsWith("/legal")) {
+    return <div style={{ height: "100dvh", background: "var(--bg)", color: "var(--text)" }}><LegalPage /></div>;
+  }
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  return <AppInner user={user} isDark={isDark} toggleTheme={toggleTheme} />;
+}
+
 export default function App() {
+  // Thème et auth possédés à la racine : partagés par l'écran de connexion (public)
+  // et l'app (protégée), sans doublon d'instance.
+  const { isDark, toggleTheme } = useTheme();
+  const [user, setUser] = useState(() => auth.currentUser ?? undefined);
+  useEffect(() => onAuthStateChanged(auth, u => setUser(u ?? null)), []);
+  const [signInError, setSignInError] = useState("");
+  const onSignIn = useCallback(() => { setSignInError(""); return signInWithGoogle(setSignInError); }, []);
+
   return (
     <Routes>
+      {/* Écran de connexion : route publique dédiée. Déjà connecté → retour à l'origine. */}
+      <Route path="/login" element={user === undefined ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={onSignIn} error={signInError} />} />
       <Route path="/" element={<Navigate to="/home" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout
           remontage (et donc le flicker de l'écran de chargement) lors de la navigation. */}
-      <Route path="*" element={<AppInner />} />
+      <Route path="*" element={<ProtectedRoutes user={user} isDark={isDark} toggleTheme={toggleTheme} />} />
     </Routes>
   );
 }
