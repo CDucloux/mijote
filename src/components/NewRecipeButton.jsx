@@ -71,21 +71,22 @@ export function NewRecipeButton({ onManual }) {
       </button>
 
       {open && (
+        // Les choix naviguent IMMÉDIATEMENT (pas de `close(cb)` qui attendrait la
+        // sortie de la feuille) : la page cible glisse par-dessus, ce qui supprime
+        // le petit temps mort ressenti avant. La feuille se démonte avec la vue.
         <SwipeableSheet onClose={() => setOpen(false)}>
-          {(close) => (<>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Nouvelle recette</h3>
-            <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 18px" }}>Comment veux-tu la créer ?</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <Choice icon="link" accent ai disabled={!isAdmin} note={aiNote} title="Importer depuis un lien" subtitle="Colle une URL : l'IA extrait et met en forme la recette." onClick={() => close(() => goImport("/recipes/import-from-url"))} />
-              <Choice icon="photo" accent ai disabled={!isAdmin} note={aiNote} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => close(() => goImport("/recipes/import-from-picture"))} />
-              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
-                <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>
-                <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
-              </div>
-              <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={() => close(goManual)} />
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Nouvelle recette</h3>
+          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 18px" }}>Comment veux-tu la créer ?</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <Choice icon="link" accent ai disabled={!isAdmin} note={aiNote} title="Importer depuis un lien" subtitle="Colle une URL : l'IA extrait et met en forme la recette." onClick={() => goImport("/recipes/import-from-url")} />
+            <Choice icon="photo" accent ai disabled={!isAdmin} note={aiNote} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImport("/recipes/import-from-picture")} />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
+              <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
+              <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>
+              <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
             </div>
-          </>)}
+            <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
+          </div>
         </SwipeableSheet>
       )}
     </>
