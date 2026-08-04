@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.9.9 – Safran · Transitions & import soigné
+
+### Navigation
+- **Transitions de page** : les écrans (Profil, Configuration, Informations légales et les onglets) apparaissent désormais avec une animation d'entrée douce, au lieu de surgir d'un coup
+
+### Import de recettes
+- **Pages d'import redessinées** : boutons en pastilles, champ et cartes d'aide en blanc, et cartes « partage » / « confidentialité » avec pastille d'icône colorée — plus lisibles et plus nettes
+
 ## v3.9.8 – Safran · Gestes & finitions
 
 ### Planning
