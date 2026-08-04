@@ -44,6 +44,7 @@ import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { ImportFromUrl } from "./pages/ImportFromUrl.jsx";
 import { ImportFromPicture } from "./pages/ImportFromPicture.jsx";
+import { PlusPage } from "./pages/PlusPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent —
@@ -114,6 +115,8 @@ function AppInner({ user, isDark, toggleTheme }) {
   const recipeSeg = location.pathname.startsWith("/recipes/") ? location.pathname.slice(9) : "";
   // Pages d'import IA (routes dédiées) : ne correspondent à aucune recette.
   const importRoute = recipeSeg === "import-from-url" ? "url" : recipeSeg === "import-from-picture" ? "picture" : null;
+  // Page d'offre Mijoté+ (route dédiée).
+  const plusRoute = location.pathname === "/plus";
   const cookModeRoute = recipeSeg.endsWith("/cookmode");
   const editRoute = recipeSeg.endsWith("/edit");
   const routeSuffix = cookModeRoute ? "/cookmode" : editRoute ? "/edit" : "";
@@ -166,9 +169,12 @@ function AppInner({ user, isDark, toggleTheme }) {
     importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
   }), []);
+  // Accès à l'offre Mijoté+ (imports IA, journal, génération, batch cooking).
+  // Placeholder : dérivé de `isAdmin` en attendant un vrai système d'abonnement.
+  const isPlus = isAdmin;
   const shellValue = useMemo(
-    () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, ...stableApi }),
-    [user, syncStatus, isDark, notify, techniques, directory, isAdmin, stableApi]
+    () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, ...stableApi }),
+    [user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, stableApi]
   );
 
   // Recettes — opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
@@ -360,6 +366,10 @@ function AppInner({ user, isDark, toggleTheme }) {
   ) : importRoute ? (
     <div key={importRoute} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
       {importRoute === "url" ? <ImportFromUrl /> : <ImportFromPicture />}
+    </div>
+  ) : plusRoute ? (
+    <div className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
+      <PlusPage />
     </div>
   ) : publicPubId ? (
     publicDocs ? (

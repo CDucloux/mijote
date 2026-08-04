@@ -186,7 +186,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const seasonResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);
   const recipeVegan = useMemo(() => isRecipeVegan(recipe, seasonResolver, { recipes }), [recipe, seasonResolver, recipes]);
-  const { techniques } = useAppShell();
+  const { techniques, isPlus } = useAppShell();
+  // Journal d'itérations = fonctionnalité Mijoté+ : en gratuit → page d'offre.
+  const openJournal = () => isPlus ? setJournalOpen(true) : navigate("/plus");
   const difficulty = useMemo(() => computeDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
   const difficultyExplain = useMemo(() => explainDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
   const difficultyTitle = difficulty.overridden
@@ -414,7 +416,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           <HeroMenu
             btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
             items={[
-              { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
+              { label: "Journal d'itérations", icon: "history", onClick: openJournal },
               ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "globe", onClick: togglePublish }] : []),
               ...(isPublished ? [{ label: "Partager", icon: "share", onClick: () => setShareOpen(true) }] : []),
               { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
@@ -559,7 +561,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <HeroMenu
                 btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
                 items={[
-                  { label: "Journal d'itérations", icon: "history", onClick: () => setJournalOpen(true) },
+                  { label: "Journal d'itérations", icon: "history", onClick: openJournal },
                   ...(!recipe.isComponent && onPublish ? [{ label: isPublished ? "Rendre privée" : "Rendre publique", icon: isPublished ? "eyeOff" : "globe", onClick: togglePublish }] : []),
                   ...(isPublished ? [{ label: "Partager", icon: "share", onClick: () => setShareOpen(true) }] : []),
                   { label: "Télécharger (JSON)", icon: "download", onClick: () => onExportJSON(recipe) },
