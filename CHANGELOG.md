@@ -1,5 +1,16 @@
 # Changelog – Mijoté
 
+## v3.9.13 – Safran · Mijoté+ (abonnement & finitions)
+
+### Mijoté+
+- **Abonnement en ligne** : le paiement est branché (Stripe) — l'accès Mijoté+ s'active automatiquement, avec gestion de l'abonnement
+- **Limite du plan gratuit** : au-delà de 50 recettes, la création renvoie vers l'offre Mijoté+
+- **Ton plan dans le Profil** : plan actuel, décompte de recettes et lien vers l'offre
+
+### Finitions
+- **Fin du mode cuisine** : boutons en pastilles et retour à la recette immédiat
+- **Desktop** : survol des cartes de recette plus fluide
+
 ## v3.9.12 – Safran · Mijoté+ (tarifs & foyer)
 
 ### Mijoté+
