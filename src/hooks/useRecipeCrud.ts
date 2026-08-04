@@ -4,6 +4,7 @@ import { recipesReferencing } from "@/lib/recipes/recipeComponents.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
 import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
+import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
 import { printRecipe, type PdfRecipe } from "@/lib/recipes/recipePdf.js";
 import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
@@ -29,6 +30,7 @@ export interface RecipeCrudDeps {
   utensilDB: ImportDbItem[];
   techniques: unknown[];
   stock: string[];
+  isPlus: boolean;
   notify: (msg: string, type?: string) => void;
   navigate: (path: string) => void;
 }
@@ -47,11 +49,24 @@ const componentIndex = (recipes: Recipe[]): Map<string, ComponentRecipe> =>
  */
 export function useRecipeCrud({
   recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
-  ingredientDB, utensilDB, techniques, stock, notify, navigate,
+  ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate,
 }: RecipeCrudDeps) {
+  // Quota du plan gratuit : bloque la création au-delà de la limite. `redirect`
+  // renvoie vers l'offre — désactivé depuis l'éditeur (qui masquerait /plus).
+  const guardQuota = (adding = 1, redirect = true): boolean => {
+    if (canAddRecipes(recipes, isPlus, adding)) return true;
+    notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");
+    if (redirect) navigate("/plus");
+    return false;
+  };
+
   const saveRecipe = (r: Recipe): boolean => {
     const result = prepareRecipeForSave(r, { recipes, ingredientDB });
     if ("error" in result) { notify(result.error, "error"); return false; }
+    // Création d'une NOUVELLE recette (≠ édition) : soumise au quota du plan.
+    // Filet de sécurité (l'ouverture est déjà gardée en amont) → sans redirection.
+    const isNew = !recipes.some(x => x.id === result.recipe.id) && !result.recipe.isComponent;
+    if (isNew && !guardQuota(1, false)) return false;
     const updatedRecipes = upsertRecipe(recipes, result.recipe);
     setRecipes(updatedRecipes);
     setCollections(prev => recomputeCollectionCounts(prev, updatedRecipes));
@@ -109,6 +124,8 @@ export function useRecipeCrud({
     const result = prepareRecipeImport(json, { ingredientDB: ingredientDB as unknown as ImportDbItem[], utensilDB });
     if ("error" in result) { notify(result.error, "error"); return; }
     const { prepared, linked, rejected } = result;
+    // Quota du plan : borne haute (avant déduplication) des recettes ajoutées.
+    if (!guardQuota(prepared.filter(r => !r.isComponent).length)) return;
     setRecipes(prev => {
       const existingNames = new Set(prev.map(r => (r.name || "").toLowerCase().trim()));
       const newOnes = prepared.filter(r => !existingNames.has((r.name || "").toLowerCase().trim()));
