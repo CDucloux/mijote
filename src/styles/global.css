@@ -1566,12 +1566,19 @@ select {
     overflow: hidden;
   }
 
+  /* Couche GPU permanente (translateZ) : le zoom au survol est alors composité et
+     fluide, sans re-rastérisation de l'image à chaque frame (rendu « qui bave »).
+     L'état au repos garde une transform → pas de bascule none↔transform (qui
+     provoquait un micro-décalage sur les cartes « découvrir »). */
   .recipe-card-thumb img {
-    transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
 
   .recipe-card:hover .recipe-card-thumb img {
-    transform: scale(1.08);
+    transform: scale(1.06);
   }
 
   .recipe-card {
@@ -1643,7 +1650,9 @@ select {
   }
 
   .discover-card .recipe-card:hover .recipe-card-thumb img {
-    transform: none;
+    /* Pas de zoom sur les cartes « découvrir » (elles se soulèvent) — on reste sur
+       l'identité GPU (translateZ), jamais `none`, pour éviter tout saut de rendu. */
+    transform: translateZ(0);
   }
 
   .notebook-add-plus {
