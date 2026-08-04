@@ -1,7 +1,14 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
+
+// Tarifs Mijoté+.
+const PRICES = {
+  monthly: { amount: "3,99 €", per: "/ mois", cta: "3,99 €/mois" },
+  yearly: { amount: "29,99 €", per: "/ an", cta: "29,99 €/an", note: "soit 2,50 €/mois · économise 18 €/an" },
+};
 
 // ─── MIJOTÉ+ (route /plus) ───────────────────────────────────────────────────
 // Page de présentation / achat de l'offre Mijoté+ : tableau comparatif Gratuit vs
@@ -15,7 +22,7 @@ const FEATURES = [
   { label: "Planning repas & liste de courses", free: true, plus: true },
   { label: "Nutri-Score & saisonnalité", free: true, plus: true },
   { label: "Mode hors-ligne", free: true, plus: true },
-  { label: "Foyer partagé", free: true, plus: true },
+  { label: "Foyer partagé", free: false, plus: true },
   { label: "Import IA depuis un lien", free: false, plus: true },
   { label: "Import IA depuis une photo", free: false, plus: true },
   { label: "Journal d'itérations", free: false, plus: true },
@@ -35,6 +42,8 @@ function Cell({ value, accent }) {
 export function PlusPage() {
   const navigate = useNavigate();
   const { isPlus, notify } = useAppShell();
+  const [billing, setBilling] = useState("yearly"); // annuel mis en avant par défaut
+  const price = PRICES[billing];
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -62,19 +71,44 @@ export function PlusPage() {
           {/* Tableau comparatif */}
           <div style={{ border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", background: "var(--surface)" }}>
             {/* En-tête colonnes */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 64px 64px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 74px 74px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)" }}>Fonctionnalité</span>
-              <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textAlign: "center" }}>Gratuit</span>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--accent)", textAlign: "center" }}>Mijoté+</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />gratuit</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Mijoté+</span>
             </div>
             {FEATURES.map((f, i) => (
-              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 64px 64px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
+              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 74px 74px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
                 <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.35 }}>{f.label}</span>
                 <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.free} /></span>
                 <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.plus} accent /></span>
               </div>
             ))}
           </div>
+
+          {/* Tarifs : bascule mensuel / annuel */}
+          {!isPlus && (
+            <div style={{ border: "1px solid var(--border)", borderRadius: 16, padding: "16px 16px 18px", background: "var(--surface)", textAlign: "center" }}>
+              <div style={{ display: "inline-flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 999, marginBottom: 14 }}>
+                {[["monthly", "Mensuel"], ["yearly", "Annuel"]].map(([key, label]) => (
+                  <button key={key} onClick={() => setBilling(key)} style={{
+                    display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 999, border: "none", cursor: "pointer",
+                    fontSize: 13, fontWeight: 600,
+                    background: billing === key ? "var(--surface)" : "transparent",
+                    color: billing === key ? "var(--text)" : "var(--text3)",
+                    boxShadow: billing === key ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+                  }}>
+                    {label}
+                    {key === "yearly" && <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: "var(--green)", borderRadius: 999, padding: "1px 6px" }}>-37%</span>}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6 }}>
+                <span style={{ fontFamily: "var(--ff-display)", fontSize: 34, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>{price.amount}</span>
+                <span style={{ fontSize: 14, color: "var(--text3)", fontWeight: 500 }}>{price.per}</span>
+              </div>
+              {price.note && <div style={{ fontSize: 12, color: "var(--green)", fontWeight: 600, marginTop: 4 }}>{price.note}</div>}
+            </div>
+          )}
 
           <p style={{ fontSize: 11.5, color: "var(--text3)", textAlign: "center", lineHeight: 1.5, margin: 0 }}>
             L'abonnement Mijoté+ arrive bientôt. Les imports IA restent en accès limité en attendant.
@@ -90,7 +124,7 @@ export function PlusPage() {
           </button>
         ) : (
           <button className="btn btn-primary btn-pill" style={{ width: "100%" }} onClick={() => notify?.("L'abonnement Mijoté+ arrive bientôt !")}>
-            <Icon name="sparkle" size={15} /> Passer à Mijoté+
+            <Icon name="sparkle" size={15} /> Passer à Mijoté+ · {price.cta}
           </button>
         )}
       </div>
