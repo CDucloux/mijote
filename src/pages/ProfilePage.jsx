@@ -4,16 +4,21 @@ import { Icon } from "../components/Icon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { CookingHeatmap } from "../components/CookingHeatmap.jsx";
+import { PlusBadge } from "../components/PlusBadge.jsx";
 import { buildHeatmap } from "@/lib/planning/cookingActivity.js";
+import { recipeQuotaCount, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { DEFAULT_PREFERENCES } from "../constants/preferences.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── PROFIL ───────────────────────────────────────────────────────────────────
 // Page dédiée (accès depuis le menu avatar) : nom d'affichage, activité cuisine
 // (heatmap façon GitHub) et purge des données.
-export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, mealPlan = {}, onPurge, onDeleteAccount }) {
+export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, mealPlan = {}, recipes = [], onPurge, onDeleteAccount }) {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
+  const { isPlus } = useAppShell();
+  const recipeCount = recipeQuotaCount(recipes);
   const prefs = preferences || DEFAULT_PREFERENCES;
   const currentName = prefs.displayName || user?.displayName || "";
   const [nameInput, setNameInput] = useState(null);
@@ -64,6 +69,30 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
               )}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 6 }}>C'est le nom utilisé dans l'interface (accueil, foyer).</div>
+          </div>
+
+          {/* Plan */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <Icon name="sparkle" size={16} color="var(--accent)" />
+              <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Ton plan</h3>
+            </div>
+            <div style={{ border: "1px solid var(--border)", borderRadius: 16, background: "var(--surface)", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>{isPlus ? "Plan Mijoté+" : "Plan gratuit"}</span>
+                  {isPlus && <PlusBadge />}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 3 }}>
+                  {isPlus
+                    ? "Recettes illimitées et toutes les fonctionnalités."
+                    : <><strong style={{ color: recipeCount >= FREE_RECIPE_LIMIT ? "var(--red)" : "var(--text2)" }}>{recipeCount} / {FREE_RECIPE_LIMIT}</strong> recettes · fonctionnalités de base.</>}
+                </div>
+              </div>
+              <button className="btn btn-pill" style={{ flexShrink: 0, fontSize: 13, background: isPlus ? "var(--surface2)" : "var(--accent)", color: isPlus ? "var(--text)" : "#fff", border: isPlus ? "1px solid var(--border)" : "none", boxShadow: isPlus ? "none" : undefined }} onClick={() => navigate("/plus")}>
+                {isPlus ? "Gérer" : "Découvrir"}
+              </button>
+            </div>
           </div>
 
           {/* Activité cuisine */}
