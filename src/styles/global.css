@@ -391,6 +391,15 @@ select {
   background: var(--surface2);
 }
 
+/* Boutons DANS les modals (bottom sheets `.modal-sheet` + dialogues centrés
+   `.alert-dialog`) en pilules : plus net / moderne. `!important` sur le seul rayon
+   pour primer d'éventuels `borderRadius` inline — les couleurs et surtout les
+   états :hover (desktop) restent inchangés. */
+.modal-sheet .btn,
+.alert-dialog .btn {
+  border-radius: 999px !important;
+}
+
 /* Bouton d'action principal en pilule pleine avec halo orange
    (« Nouvelle », « Générer », « Nouvelle liste »…) */
 .btn-pill {
