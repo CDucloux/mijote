@@ -15,7 +15,7 @@ const FEATURES = [
   { label: "Planning repas & liste de courses", free: true, plus: true },
   { label: "Nutri-Score & saisonnalité", free: true, plus: true },
   { label: "Mode hors-ligne", free: true, plus: true },
-  { label: "Foyer partagé", free: true, plus: true },
+  { label: "Foyer partagé", free: false, plus: true },
   { label: "Import IA depuis un lien", free: false, plus: true },
   { label: "Import IA depuis une photo", free: false, plus: true },
   { label: "Journal d'itérations", free: false, plus: true },

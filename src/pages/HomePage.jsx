@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { PlusBadge } from "../components/PlusBadge.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
@@ -90,9 +92,12 @@ function MemberStack({ emails, photoFor, nameFor }) {
 // différente des bandes de notification au-dessus. Elle s'ouvre sur le panneau
 // de gestion complet. Évite d'aller fouiller dans la Configuration.
 function FoyerSection() {
-  const { user, directory = [], loadDirectory } = useAppShell();
+  const { user, directory = [], loadDirectory, isPlus } = useAppShell();
   const { household, invites, loading } = useHousehold();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  // Foyer partagé = fonctionnalité Mijoté+ : en gratuit, la carte renvoie vers l'offre.
+  const openFoyer = () => isPlus ? setOpen(v => !v) : navigate("/plus");
   // Annuaire chargé à la demande, seulement s'il y a un foyer (avatars des membres).
   useEffect(() => { if (household || invites.length) loadDirectory?.(); }, [household, invites.length, loadDirectory]);
   // Pendant le chargement : on réserve l'espace avec un skeleton de même hauteur
@@ -118,7 +123,7 @@ function FoyerSection() {
     <section style={{ marginBottom: 26 }}>
       {/* Carte foyer : surface neutre + liseré accent à gauche (inset box-shadow,
           épouse les coins) + perforation pointillée comme séparateur distinctif. */}
-      <button onClick={() => setOpen(v => !v)} aria-label="Ouvrir le foyer" className="pressable"
+      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable"
         style={{
           position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
           display: "flex", alignItems: "stretch", gap: 0, padding: 0,
@@ -144,9 +149,11 @@ function FoyerSection() {
                 {household ? household.name : "Mon foyer"}
               </span>
               {!household && (
-                <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", color: "var(--accent)", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>
-                  {hasInvite ? "Invitation" : "Nouveau"}
-                </span>
+                !isPlus
+                  ? <PlusBadge />
+                  : <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", color: "var(--accent)", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>
+                      {hasInvite ? "Invitation" : "Nouveau"}
+                    </span>
               )}
             </span>
             <span style={{ display: "block", fontSize: 12.5, color: "var(--text2)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
