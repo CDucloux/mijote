@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.9.12 – Safran · Mijoté+ (tarifs & foyer)
+
+### Mijoté+
+- **Foyer partagé** rejoint les fonctionnalités Mijoté+
+- **Tarifs affichés** : bascule mensuel (3,99 €/mois) / annuel (29,99 €/an, -37 %)
+- Comparatif : colonnes « Plan gratuit » et « Plan Mijoté+ » distinctes
+
 ## v3.9.11 – Safran · Mijoté+
 
 ### Nouveauté : l'offre Mijoté+
