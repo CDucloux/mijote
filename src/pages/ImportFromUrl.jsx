@@ -104,14 +104,15 @@ export function ImportFromUrl() {
           <input className="field-input" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
             value={url} autoFocus
             onChange={e => { setUrl(e.target.value); if (error) setError(""); }}
-            onKeyDown={e => e.key === "Enter" && go()} />
+            onKeyDown={e => e.key === "Enter" && go()}
+            style={{ background: "var(--surface)", padding: "13px 16px", borderRadius: 14 }} />
           {error && <InlineError>{error}</InlineError>}
 
           {/* Aides */}
-          <HintCard icon="share">
+          <HintCard icon="share" iconColor="var(--blue)" tint="rgba(91,156,246,0.14)">
             Tu peux aussi <strong style={{ color: "var(--text)" }}>partager une page vers Mijoté</strong> depuis ton navigateur : la recette arrive directement ici.
           </HintCard>
-          <HintCard icon="lock" iconColor="#e8920a">
+          <HintCard icon="lock" iconColor="#e8920a" tint="rgba(224,146,10,0.14)">
             Le lien est envoyé à notre prestataire d'IA pour l'extraction. <strong style={{ color: "var(--text)" }}>Aucune donnée de ton compte</strong> n'est transmise.
           </HintCard>
         </div>
@@ -119,8 +120,8 @@ export function ImportFromUrl() {
 
       {/* Actions */}
       <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", gap: 10, maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => navigate(-1)}>Retour</button>
-        <button className="btn btn-primary" style={{ flex: 1.4 }} disabled={!url.trim()} onClick={go}>
+        <button className="btn btn-ghost" style={{ flex: 1, borderRadius: 999 }} onClick={() => navigate(-1)}>Retour</button>
+        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!url.trim()} onClick={go}>
           <Icon name="sparkle" size={15} /> Importer
         </button>
       </div>

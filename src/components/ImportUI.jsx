@@ -55,12 +55,15 @@ export function InlineError({ children }) {
   );
 }
 
-/** Carte d'aide discrète (icône + texte) : partage navigateur, confidentialité… */
-export function HintCard({ icon, iconColor = "var(--text3)", children }) {
+/** Carte d'aide (pastille d'icône colorée + texte) : partage navigateur,
+ * confidentialité… Fond blanc/surface, pastille teintée pour un rendu net. */
+export function HintCard({ icon, iconColor = "var(--text2)", tint = "var(--surface3)", children }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 11, padding: "13px 14px", borderRadius: 14, background: "var(--surface2)", border: "1px solid var(--border)" }}>
-      <Icon name={icon} size={17} color={iconColor} />
-      <span style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5 }}>{children}</span>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 15px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
+      <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: tint }}>
+        <Icon name={icon} size={16} color={iconColor} />
+      </span>
+      <span style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, paddingTop: 3 }}>{children}</span>
     </div>
   );
 }
