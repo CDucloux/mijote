@@ -14,6 +14,7 @@ import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useAuthUser } from "./hooks/useAuthUser.js";
+import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
 import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
@@ -170,9 +171,10 @@ function AppInner({ user, isDark, toggleTheme }) {
     importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
   }), []);
-  // Accès à l'offre Mijoté+ (imports IA, journal, génération, batch cooking).
-  // Placeholder : dérivé de `isAdmin` en attendant un vrai système d'abonnement.
-  const isPlus = isAdmin;
+  // Accès à l'offre Mijoté+ : abonnement Stripe actif (extension Firebase) OU
+  // admin (accès complet du propriétaire de l'app).
+  const subscribed = useSubscription(user?.uid);
+  const isPlus = isAdmin || subscribed;
   const shellValue = useMemo(
     () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, ...stableApi }),
     [user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, stableApi]
