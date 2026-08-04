@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.9.10 – Safran · Import photo peaufiné
+
+### Import de recettes
+- **Transition fluide vers l'import** : ouvrir « Importer depuis un lien » ou « une photo » enchaîne désormais proprement (la page glisse à l'entrée), sans le petit temps mort d'avant
+- **Bouton « Retour » clarifié** : en blanc avec une icône retour
+- **Ajout de photo repensé** : à vide, un emplacement centré et soigné (pastille d'icône, cadre pointillé) ; dès la première photo, la seconde se place à droite
+
 ## v3.9.9 – Safran · Transitions & import soigné
 
 ### Navigation

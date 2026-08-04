@@ -12,6 +12,24 @@ import { fileToImagePart } from "@/lib/recipes/recipeUrlImport.js";
 
 const MAX_PHOTOS = 2;
 
+/** Emplacement d'ajout de photo : pastille d'icône accent + libellé, cadre pointillé. */
+function AddPhoto({ label, hint, onClick, style }) {
+  return (
+    <button onClick={onClick} className="pressable" style={{
+      aspectRatio: "3/4", borderRadius: 16, border: "1.5px dashed rgba(232,112,58,0.4)",
+      background: "rgba(232,112,58,0.05)", padding: 12,
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer",
+      ...style,
+    }}>
+      <span style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center" }}>
+        <Icon name="photo" size={22} color="var(--accent)" />
+      </span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>{label}</span>
+      {hint && <span style={{ fontSize: 11, color: "var(--text3)", textAlign: "center", lineHeight: 1.4 }}>{hint}</span>}
+    </button>
+  );
+}
+
 export function ImportFromPicture() {
   const { importFromImages, notify, isAdmin } = useAppShell();
   const navigate = useNavigate();
@@ -79,22 +97,27 @@ export function ImportFromPicture() {
 
           <input ref={fileRef} type="file" accept="image/*" multiple hidden
             onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {photos.map((p, i) => (
-              <div key={i} style={{ position: "relative", aspectRatio: "3/4", borderRadius: 14, overflow: "hidden", border: "1px solid var(--border)" }}>
-                <img src={p.preview} alt={`page ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                <button onClick={() => removePhoto(i)} aria-label="Retirer" style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.6)", color: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
-                  <Icon name="close" size={13} />
-                </button>
-              </div>
-            ))}
-            {photos.length < MAX_PHOTOS && (
-              <button onClick={() => fileRef.current?.click()} className="pressable" style={{ aspectRatio: "3/4", borderRadius: 14, border: "1.5px dashed var(--border)", background: "var(--surface2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text3)", cursor: "pointer" }}>
-                <Icon name="plus" size={20} color="var(--accent)" />
-                <span style={{ fontSize: 12, fontWeight: 600 }}>{photos.length ? "Ajouter la page 2" : "Ajouter une photo"}</span>
-              </button>
-            )}
-          </div>
+          {/* Vide → un seul emplacement centré. Dès qu'il y a une photo → grille
+              2 colonnes : image(s) à gauche, second emplacement à droite. */}
+          {photos.length === 0 ? (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <AddPhoto onClick={() => fileRef.current?.click()} label="Ajouter une photo" hint="Livre, magazine ou fiche" style={{ width: "min(72%, 240px)" }} />
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {photos.map((p, i) => (
+                <div key={i} style={{ position: "relative", aspectRatio: "3/4", borderRadius: 16, overflow: "hidden", border: "1px solid var(--border)" }}>
+                  <img src={p.preview} alt={`page ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <button onClick={() => removePhoto(i)} aria-label="Retirer" style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.6)", color: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
+                    <Icon name="close" size={13} />
+                  </button>
+                </div>
+              ))}
+              {photos.length < MAX_PHOTOS && (
+                <AddPhoto onClick={() => fileRef.current?.click()} label="Ajouter la page 2" />
+              )}
+            </div>
+          )}
           {error && <InlineError>{error}</InlineError>}
 
           <HintCard icon="lock" iconColor="#e8920a" tint="rgba(224,146,10,0.14)">
@@ -104,7 +127,9 @@ export function ImportFromPicture() {
       </div>
 
       <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", gap: 10, maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        <button className="btn btn-ghost" style={{ flex: 1, borderRadius: 999 }} onClick={() => navigate(-1)}>Retour</button>
+        <button className="btn" style={{ flex: 1, borderRadius: 999, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }} onClick={() => navigate(-1)}>
+          <Icon name="back" size={15} /> Retour
+        </button>
         <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!photos.length} onClick={go}>
           <Icon name="sparkle" size={15} /> Extraire
         </button>
