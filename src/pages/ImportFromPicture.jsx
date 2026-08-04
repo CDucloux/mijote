@@ -22,7 +22,7 @@ function AddPhoto({ label, hint, onClick, style }) {
       ...style,
     }}>
       <span style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center" }}>
-        <Icon name="photo" size={22} color="var(--accent)" />
+        <Icon name="plus" size={24} color="var(--accent)" />
       </span>
       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>{label}</span>
       {hint && <span style={{ fontSize: 11, color: "var(--text3)", textAlign: "center", lineHeight: 1.4 }}>{hint}</span>}
@@ -78,7 +78,7 @@ export function ImportFromPicture() {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <ImportHeader icon="photo" title="Importer une photo" onBack={() => navigate(-1)} />
+      <ImportHeader title="Importer une photo" onBack={() => navigate(-1)} />
 
       <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 24px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560, margin: "0 auto" }}>

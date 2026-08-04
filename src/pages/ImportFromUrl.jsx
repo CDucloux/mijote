@@ -68,7 +68,7 @@ export function ImportFromUrl() {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <ImportHeader icon="link" title="Importer depuis un lien" onBack={() => navigate(-1)} />
+      <ImportHeader title="Importer depuis un lien" onBack={() => navigate(-1)} />
 
       <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 24px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560, margin: "0 auto" }}>

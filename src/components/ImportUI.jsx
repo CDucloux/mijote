@@ -68,16 +68,14 @@ export function HintCard({ icon, iconColor = "var(--text2)", tint = "var(--surfa
   );
 }
 
-/** En-tête de page d'import : bouton retour + pastille + titre. */
-export function ImportHeader({ icon, title, onBack }) {
+/** En-tête de page d'import : bouton retour + titre. L'icône identitaire vit dans
+ * le bloc d'intro (une seule occurrence) — pas de répétition ici. */
+export function ImportHeader({ title, onBack }) {
   return (
     <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
       <button onClick={onBack} aria-label="Retour" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
         <Icon name="back" size={17} />
       </button>
-      <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(232,112,58,0.15)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-        <Icon name={icon} size={16} color="var(--accent)" />
-      </span>
       <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
     </div>
   );
