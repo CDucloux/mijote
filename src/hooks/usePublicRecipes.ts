@@ -3,6 +3,7 @@ import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "
 import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle, type PubUser, type PubRecipe, type PubDbItem, type PublicDoc } from "@/lib/household/publicRecipes.js";
 import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import type { Collection } from "@/lib/types.js";
 
 /** Index de recettes tel qu'attendu par les fonctions de `publicRecipes`. */
@@ -16,6 +17,7 @@ export interface PublicRecipesDeps {
   setRecipes: Dispatch<SetStateAction<PubRecipe[]>>;
   setCollections: Dispatch<SetStateAction<Collection[]>>;
   ingredientDB: PubDbItem[];
+  isPlus: boolean;
   notify: (msg: string, type?: string) => void;
   navigate: (path: string, opts?: { state?: unknown }) => void;
 }
@@ -27,7 +29,15 @@ export interface PublicRecipesDeps {
  * @param deps - État de l'app, `notify` et `navigate`.
  * @returns `{ publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic }`.
  */
-export function usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, notify, navigate }: PublicRecipesDeps) {
+export function usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate }: PublicRecipesDeps) {
+  // Quota du plan gratuit : cloner une recette publique compte pour 1 (les bases
+  // sont des composants, hors quota). Bloque + renvoie vers l'offre si dépassé.
+  const guardQuota = (): boolean => {
+    if (canAddRecipes(recipes, isPlus, 1)) return true;
+    notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");
+    navigate("/plus");
+    return false;
+  };
   const publishRecipe = async (recipe: PubRecipe): Promise<void> => {
     if (!user) return;
     try {
@@ -70,6 +80,7 @@ export function usePublicRecipes({ user, recipes, setRecipes, setCollections, in
       const comps = (compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : []) as PublicDoc[];
       const { added, mainId, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
       if (alreadyOwned) { notify("Déjà dans tes recettes"); navigate(`/recipes/${mainId}`); return; }
+      if (!guardQuota()) return;
       const updated = [...added, ...recipes];
       setRecipes(updated);
       setCollections(prev => recomputeCollectionCounts(prev, updated));
@@ -86,6 +97,7 @@ export function usePublicRecipes({ user, recipes, setRecipes, setCollections, in
       const comps = (compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : []) as PublicDoc[];
       const { added, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
       if (alreadyOwned) { notify("Déjà dans tes recettes"); return; }
+      if (!guardQuota()) return;
       const updated = [...added, ...recipes];
       setRecipes(updated);
       setCollections(prev => recomputeCollectionCounts(prev, updated));

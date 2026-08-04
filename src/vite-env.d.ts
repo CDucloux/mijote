@@ -15,6 +15,10 @@ interface ImportMetaEnv {
   readonly VITE_APPCHECK_DEBUG_TOKEN?: string;
   readonly VITE_ADMIN_EMAIL?: string;
   readonly VITE_ALLOWED_EMAIL?: string;
+  // Tarifs Stripe (Mijoté+) — IDs de prix `price_…` de l'extension firestore-stripe-payments.
+  readonly VITE_STRIPE_PRICE_MONTHLY?: string;
+  readonly VITE_STRIPE_PRICE_YEARLY?: string;
+  readonly VITE_STRIPE_EXT_REGION?: string;
 }
 
 interface ImportMeta {

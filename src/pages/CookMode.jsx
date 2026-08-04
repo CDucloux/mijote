@@ -272,11 +272,13 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320, animation: "popIn 0.5s 0.5s both ease" }}>
             {canIterate && (
-              <button className="btn btn-ghost" style={{ padding: "13px 24px", fontSize: 15, borderRadius: 16 }} onClick={() => { setIterRating(null); setIterNotes(""); setIterOpen(true); }}>
+              <button className="btn btn-ghost" style={{ padding: "13px 24px", fontSize: 15, borderRadius: 999 }} onClick={() => { setIterRating(null); setIterNotes(""); setIterOpen(true); }}>
                 <Icon name="sparkle" size={17} /> Noter une itération
               </button>
             )}
-            <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 16 }} onClick={requestClose}>
+            {/* Retour DIRECT depuis l'écran de fin (onClose sans `requestClose`) :
+                le fondu de sortie depuis cet écran paraissait étrange. */}
+            <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 999 }} onClick={onClose}>
               <Icon name="check" size={18} /> {isNested ? "Retour" : "Retour à la recette"}
             </button>
           </div>

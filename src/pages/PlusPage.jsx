@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { startCheckout, openBillingPortal } from "@/lib/firebase/subscription.js";
 
-// Tarifs Mijoté+.
+// Tarifs Mijoté+. `price` = ID Stripe (extension), fourni par l'env.
 const PRICES = {
-  monthly: { amount: "3,99 €", per: "/ mois", cta: "3,99 €/mois" },
-  yearly: { amount: "29,99 €", per: "/ an", cta: "29,99 €/an", note: "soit 2,50 €/mois · économise 18 €/an" },
+  monthly: { amount: "3,99 €", per: "/ mois", cta: "3,99 €/mois", price: import.meta.env.VITE_STRIPE_PRICE_MONTHLY },
+  yearly: { amount: "29,99 €", per: "/ an", cta: "29,99 €/an", note: "soit 2,50 €/mois · économise 18 €/an", price: import.meta.env.VITE_STRIPE_PRICE_YEARLY },
 };
 
 // ─── MIJOTÉ+ (route /plus) ───────────────────────────────────────────────────
@@ -41,9 +42,31 @@ function Cell({ value, accent }) {
 
 export function PlusPage() {
   const navigate = useNavigate();
-  const { isPlus, notify } = useAppShell();
+  const { isPlus, notify, user } = useAppShell();
+  const location = useLocation();
   const [billing, setBilling] = useState("yearly"); // annuel mis en avant par défaut
+  const [busy, setBusy] = useState(false);
   const price = PRICES[billing];
+
+  // Retour de Stripe Checkout (success_url) : petit message, puis on nettoie la query.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("checkout") === "success") {
+      notify?.("Bienvenue dans Mijoté+ ! 🎉");
+      navigate("/plus", { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Lance le paiement Stripe (extension Firebase) puis redirige. Si les tarifs ne
+  // sont pas encore configurés (env absente), on informe simplement.
+  const onSubscribe = async () => {
+    if (!user?.uid || !price.price) { notify?.("L'abonnement Mijoté+ arrive bientôt !"); return; }
+    setBusy(true);
+    await startCheckout(user.uid, price.price, msg => { setBusy(false); notify?.(msg, "error"); });
+  };
+  const onManage = async () => {
+    setBusy(true);
+    await openBillingPortal(msg => { setBusy(false); notify?.(msg, "error"); });
+  };
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -119,12 +142,12 @@ export function PlusPage() {
       {/* CTA */}
       <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", maxWidth: 560, margin: "0 auto", width: "100%" }}>
         {isPlus ? (
-          <button className="btn" style={{ width: "100%", borderRadius: 999, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }} onClick={() => navigate(-1)}>
-            <Icon name="check" size={15} color="var(--green)" /> Tu as déjà Mijoté+
+          <button className="btn" style={{ width: "100%", borderRadius: 999, background: "var(--surface2)", color: "var(--text)", border: "1px solid var(--border)" }} disabled={busy} onClick={onManage}>
+            <Icon name="settings" size={15} /> Gérer mon abonnement
           </button>
         ) : (
-          <button className="btn btn-primary btn-pill" style={{ width: "100%" }} onClick={() => notify?.("L'abonnement Mijoté+ arrive bientôt !")}>
-            <Icon name="sparkle" size={15} /> Passer à Mijoté+ · {price.cta}
+          <button className="btn btn-primary btn-pill" style={{ width: "100%" }} disabled={busy} onClick={onSubscribe}>
+            <Icon name="sparkle" size={15} /> {busy ? "Redirection…" : `Passer à Mijoté+ · ${price.cta}`}
           </button>
         )}
       </div>

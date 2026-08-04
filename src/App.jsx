@@ -4,6 +4,7 @@ import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-
 import { signInWithGoogle } from "@/lib/firebase/auth.js";
 import { subscribeHouseholdPointer, fetchUserDirectory } from "@/lib/firebase/firestore.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
+import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
 import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
@@ -13,6 +14,7 @@ import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useAuthUser } from "./hooks/useAuthUser.js";
+import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
 import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
@@ -169,9 +171,10 @@ function AppInner({ user, isDark, toggleTheme }) {
     importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
   }), []);
-  // Accès à l'offre Mijoté+ (imports IA, journal, génération, batch cooking).
-  // Placeholder : dérivé de `isAdmin` en attendant un vrai système d'abonnement.
-  const isPlus = isAdmin;
+  // Accès à l'offre Mijoté+ : abonnement Stripe actif (extension Firebase) OU
+  // admin (accès complet du propriétaire de l'app).
+  const subscribed = useSubscription(user?.uid);
+  const isPlus = isAdmin || subscribed;
   const shellValue = useMemo(
     () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, ...stableApi }),
     [user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, stableApi]
@@ -180,12 +183,12 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Recettes — opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
   const { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF } = useRecipeCrud({
     recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
-    ingredientDB, utensilDB, techniques, stock, notify, navigate,
+    ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate,
   });
 
   // Publier / dépublier / cloner des recettes publiques (communauté) — voir usePublicRecipes.
   const { publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic } =
-    usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, notify, navigate });
+    usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate });
 
   // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer
   // à sa création (copie de mes données vers le namespace du foyer).
@@ -210,9 +213,16 @@ function AppInner({ user, isDark, toggleTheme }) {
   // l'état « aucun résultat » : « Créer "X" » passe { name: recherche }). On ne lit
   // que `name` : certains appelants passent l'évènement click en argument.
   const startNewRecipe = useCallback((preset) => {
+    // Quota du plan gratuit vérifié À L'OUVERTURE (évite de remplir le formulaire
+    // pour rien) : au-delà de la limite → offre Mijoté+.
+    if (!canAddRecipes(recipes, isPlus, 1)) {
+      notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");
+      navigate("/plus");
+      return;
+    }
     const name = preset && typeof preset === "object" && typeof preset.name === "string" ? preset.name : "";
     setEditingRecipe({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" });
-  }, []);
+  }, [recipes, isPlus, notify, navigate]);
 
   // Requête semée dans « Découvrir » depuis un autre onglet (ex. « chercher dans
   // la communauté » quand la bibliothèque privée ne renvoie rien). Consommée une
@@ -245,6 +255,11 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Duplique une recette : copie privée (pas de lien public), nom suffixé, en tête
   // de liste ; recalcule les compteurs de carnets (la copie hérite des carnets).
   const duplicateRecipe = useCallback((recipe) => {
+    if (!canAddRecipes(recipes, isPlus, 1)) {
+      notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");
+      navigate("/plus");
+      return;
+    }
     const copy = { ...recipe, id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: `${recipe.name} (copie)`, createdAt: Date.now(), updatedAt: Date.now() };
     delete copy.visibility; delete copy.publicId; delete copy.clonedFrom;
     setRecipes(prev => {
@@ -253,7 +268,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       return next;
     });
     notify("Recette dupliquée");
-  }, [notify]);
+  }, [notify, recipes, isPlus, navigate]);
 
   // Ouvre une recette en transmettant une intention consommée à l'arrivée par la
   // fiche (« plan » → modale planning, « share » → flux de partage/publication).
@@ -349,7 +364,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
       {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
-      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} onPurge={purgeData} onDeleteAccount={deleteAccount} />}
+      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} mealPlan={mealPlan} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} />}
       {tab === "legal" && <LegalPage />}
       </div>
       </Profiler>
