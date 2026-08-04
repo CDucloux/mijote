@@ -1,5 +1,16 @@
 # Changelog – Mijoté
 
+## v3.9.11 – Safran · Mijoté+
+
+### Nouveauté : l'offre Mijoté+
+- **Page Mijoté+** avec un tableau comparatif Gratuit vs Mijoté+
+- **Fonctionnalités Mijoté+** : import de recettes par IA (lien & photo), journal d'itérations, génération de planning et batch cooking. En plan gratuit, ces options mènent à la page de présentation
+- **Recettes** : jusqu'à 50 en gratuit, illimitées en Mijoté+
+
+### Interface
+- **Boutons des fenêtres en pastilles** partout, pour un rendu plus net
+- **Pages d'import affinées** : une seule icône par page, emplacement d'ajout de photo centré et soigné
+
 ## v3.9.10 – Safran · Import photo peaufiné
 
 ### Import de recettes
