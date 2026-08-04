@@ -97,15 +97,15 @@ export function ImportFromPicture() {
           </div>
           {error && <InlineError>{error}</InlineError>}
 
-          <HintCard icon="lock" iconColor="#e8920a">
+          <HintCard icon="lock" iconColor="#e8920a" tint="rgba(224,146,10,0.14)">
             Les photos sont envoyées à notre prestataire d'IA pour l'extraction. <strong style={{ color: "var(--text)" }}>Aucune donnée de ton compte</strong> n'est transmise.
           </HintCard>
         </div>
       </div>
 
       <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", gap: 10, maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => navigate(-1)}>Retour</button>
-        <button className="btn btn-primary" style={{ flex: 1.4 }} disabled={!photos.length} onClick={go}>
+        <button className="btn btn-ghost" style={{ flex: 1, borderRadius: 999 }} onClick={() => navigate(-1)}>Retour</button>
+        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!photos.length} onClick={go}>
           <Icon name="sparkle" size={15} /> Extraire
         </button>
       </div>

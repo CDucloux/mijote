@@ -734,6 +734,25 @@ select {
   animation: editorSlideIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
+/* Entrée douce des pages d'onglet (Accueil, Recettes, Planning, Profil, Légal,
+   Config…) : fondu + léger glissement, rejoué à chaque changement d'onglet
+   (clé React = tab). Volontairement subtil pour ne pas alourdir la navigation. */
+.page-enter {
+  animation: pageEnter 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes cookModeIn {
   from {
     opacity: 0;
