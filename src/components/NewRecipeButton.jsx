@@ -59,14 +59,13 @@ function Choice({ icon, title, subtitle, onClick, accent, ai, badge }) {
 }
 
 export function NewRecipeButton({ onManual }) {
-  const { isAdmin } = useAppShell();
+  const { isPlus } = useAppShell();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const goManual = () => { setOpen(false); onManual(); };
-  // Imports IA = fonctionnalité Mijoté+. En plan gratuit (proxy : non-admin), on
-  // renvoie vers la page d'offre au lieu d'ouvrir l'import.
-  const isPlus = isAdmin;
+  // Imports IA = fonctionnalité Mijoté+. En plan gratuit, on renvoie vers la page
+  // d'offre au lieu d'ouvrir l'import.
   const goImportOrPlus = (path) => { setOpen(false); navigate(isPlus ? path : "/plus"); };
   const plusBadge = !isPlus ? <PlusBadge /> : undefined;
 

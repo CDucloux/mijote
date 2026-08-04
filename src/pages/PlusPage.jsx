@@ -8,28 +8,33 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // Mijoté+. Le paiement n'est pas encore branché (CTA « bientôt »). Le plan est
 // dérivé de `isAdmin` en attendant un vrai système d'abonnement.
 
-// Différenciateurs mis en avant (les fonctionnalités communes sont listées plus bas).
+// Comparatif Gratuit vs Mijoté+. Une valeur booléenne rend une coche / un tiret ;
+// une chaîne rend un libellé (ex. quota de recettes).
 const FEATURES = [
-  { label: "Recettes personnelles illimitées", free: true, plus: true },
+  { label: "Nombre de recettes", free: "50", plus: "Illimité" },
   { label: "Planning repas & liste de courses", free: true, plus: true },
   { label: "Nutri-Score & saisonnalité", free: true, plus: true },
   { label: "Mode hors-ligne", free: true, plus: true },
   { label: "Foyer partagé", free: true, plus: true },
   { label: "Import IA depuis un lien", free: false, plus: true },
   { label: "Import IA depuis une photo", free: false, plus: true },
-  { label: "Nouveaux imports IA en priorité", free: false, plus: true },
+  { label: "Journal d'itérations", free: false, plus: true },
+  { label: "Génération de planning", free: false, plus: true },
+  { label: "Batch cooking", free: false, plus: true },
 ];
 
-function Cell({ on }) {
-  return on
+function Cell({ value, accent }) {
+  if (typeof value === "string") {
+    return <span style={{ fontSize: 12.5, fontWeight: 700, color: accent ? "var(--accent)" : "var(--text2)" }}>{value}</span>;
+  }
+  return value
     ? <Icon name="check" size={17} color="var(--green)" />
     : <span style={{ display: "inline-block", width: 12, height: 2, borderRadius: 2, background: "var(--text3)", opacity: 0.5 }} />;
 }
 
 export function PlusPage() {
   const navigate = useNavigate();
-  const { isAdmin, notify } = useAppShell();
-  const isPlus = isAdmin; // placeholder : à remplacer par le vrai statut d'abonnement
+  const { isPlus, notify } = useAppShell();
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -65,8 +70,8 @@ export function PlusPage() {
             {FEATURES.map((f, i) => (
               <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 64px 64px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
                 <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.35 }}>{f.label}</span>
-                <span style={{ display: "grid", placeItems: "center" }}><Cell on={f.free} /></span>
-                <span style={{ display: "grid", placeItems: "center" }}><Cell on={f.plus} /></span>
+                <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.free} /></span>
+                <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.plus} accent /></span>
               </div>
             ))}
           </div>

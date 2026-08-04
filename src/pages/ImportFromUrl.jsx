@@ -12,7 +12,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 const URL_RE = /^https?:\/\/.+/i;
 
 export function ImportFromUrl() {
-  const { importFromUrl, notify, isAdmin } = useAppShell();
+  const { importFromUrl, notify, isPlus } = useAppShell();
   const navigate = useNavigate();
   const location = useLocation();
   const [url, setUrl] = useState("");
@@ -22,7 +22,7 @@ export function ImportFromUrl() {
   const [loading, setLoading] = useState(false);
 
   // Accès direct à la route par un non-admin : on renvoie à la bibliothèque.
-  useEffect(() => { if (!isAdmin) navigate("/recipes", { replace: true }); }, [isAdmin, navigate]);
+  useEffect(() => { if (!isPlus) navigate("/recipes", { replace: true }); }, [isPlus, navigate]);
 
   // Partage natif vers l'appli (share_target du manifest) : la page/le lien
   // partagé arrive en query (`url`, ou dans `text`/`title` selon la source). On

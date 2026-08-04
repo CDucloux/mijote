@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { PlusBadge } from "../components/PlusBadge.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
@@ -111,7 +113,11 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
 export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [] }) {
-  const { notify, user } = useAppShell();
+  const { notify, user, isPlus } = useAppShell();
+  // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
+  // vers l'offre Mijoté+ quand une fonctionnalité premium est verrouillée.
+  const gotoRoute = useNavigate();
+  const goPlus = () => gotoRoute("/plus");
   const { household } = useHousehold();
   const { generate, undo } = useMealPlanner({ recipes, ingredientDB, preferences, stock, mealPlan, setMealPlan });
   const [viewMode] = useState("week");
@@ -355,7 +361,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {genDone
               ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
-              : <button onClick={() => setGenOpen(true)} className="btn btn-primary btn-pill"><Icon name="calendar" size={15} /> Générer</button>}
+              : <button onClick={() => isPlus ? setGenOpen(true) : goPlus()} className="btn btn-primary btn-pill"><Icon name={isPlus ? "calendar" : "sparkle"} size={15} /> Générer</button>}
             <UserAvatar />
           </div>
         </div>
@@ -380,14 +386,17 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 seulement quand la semaine contient au moins un plat. Sortie du header
                 pour ne plus reléguer le titre sur deux lignes. */}
             {hasWeekDishes && (
-              <button onClick={() => setShowBatch(true)} className="pressable"
+              <button onClick={() => isPlus ? setShowBatch(true) : goPlus()} className="pressable"
                 style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
                   padding: "12px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
                 <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(76,175,125,0.18)" }}>
                   <Icon name="fire" size={19} color="var(--green)" />
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Session batch</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Session batch</span>
+                    {!isPlus && <PlusBadge />}
+                  </span>
                   <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>Mise en place mutualisée & cuissons regroupées</span>
                 </span>
                 <Icon name="forward" size={16} color="var(--green)" />

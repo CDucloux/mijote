@@ -31,7 +31,7 @@ function AddPhoto({ label, hint, onClick, style }) {
 }
 
 export function ImportFromPicture() {
-  const { importFromImages, notify, isAdmin } = useAppShell();
+  const { importFromImages, notify, isPlus } = useAppShell();
   const navigate = useNavigate();
   const [photos, setPhotos] = useState([]); // [{ file, preview, part }]
   const [error, setError] = useState("");
@@ -44,7 +44,7 @@ export function ImportFromPicture() {
   useEffect(() => { photosRef.current = photos; }, [photos]);
 
   // Accès direct par un non-admin → retour bibliothèque.
-  useEffect(() => { if (!isAdmin) navigate("/recipes", { replace: true }); }, [isAdmin, navigate]);
+  useEffect(() => { if (!isPlus) navigate("/recipes", { replace: true }); }, [isPlus, navigate]);
   // Libère les URLs d'aperçu au démontage uniquement.
   useEffect(() => () => { photosRef.current.forEach(p => URL.revokeObjectURL(p.preview)); }, []);
 

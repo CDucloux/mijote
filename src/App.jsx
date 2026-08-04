@@ -169,9 +169,12 @@ function AppInner({ user, isDark, toggleTheme }) {
     importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
   }), []);
+  // Accès à l'offre Mijoté+ (imports IA, journal, génération, batch cooking).
+  // Placeholder : dérivé de `isAdmin` en attendant un vrai système d'abonnement.
+  const isPlus = isAdmin;
   const shellValue = useMemo(
-    () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, ...stableApi }),
-    [user, syncStatus, isDark, notify, techniques, directory, isAdmin, stableApi]
+    () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, ...stableApi }),
+    [user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, stableApi]
   );
 
   // Recettes — opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
