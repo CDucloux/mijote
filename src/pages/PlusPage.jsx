@@ -82,16 +82,32 @@ export function PlusPage() {
 
       <div style={{ flex: 1, overflowY: "auto", padding: "22px 20px 24px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 560, margin: "0 auto" }}>
-          {/* Hero */}
-          <div style={{ textAlign: "center" }}>
-            <div style={{ display: "inline-flex", marginBottom: 12 }}><PlusBadge size="lg" /></div>
-            <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-              Passe à la vitesse supérieure
-            </h2>
-            <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0, maxWidth: 420, marginInline: "auto" }}>
-              Débloque l'<strong style={{ color: "var(--text)" }}>import de recettes par IA</strong> — depuis un lien ou une photo de livre — et gagne un temps fou à saisir tes recettes.
-            </p>
-          </div>
+          {/* Hero : bandeau de confirmation vert si abonné, sinon pitch */}
+          {isPlus ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, background: "rgba(76,175,125,0.1)", border: "1px solid rgba(76,175,125,0.4)" }}>
+              <span style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--green)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 5px 16px -5px rgba(76,175,125,0.65)" }}>
+                <Icon name="check" size={24} color="#fff" />
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  Tu es abonné·e à Mijoté+ <PlusBadge />
+                </div>
+                <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "3px 0 0" }}>
+                  Merci de ton soutien&nbsp;! Tu profites de toutes les fonctionnalités : recettes illimitées, imports IA, foyer partagé…
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ display: "inline-flex", marginBottom: 12 }}><PlusBadge size="lg" /></div>
+              <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+                Passe à la vitesse supérieure
+              </h2>
+              <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0, maxWidth: 420, marginInline: "auto" }}>
+                Débloque l'<strong style={{ color: "var(--text)" }}>import de recettes par IA</strong> (depuis un lien ou une photo de livre) et gagne un temps fou à saisir tes recettes.
+              </p>
+            </div>
+          )}
 
           {/* Tableau comparatif */}
           <div style={{ border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", background: "var(--surface)" }}>
