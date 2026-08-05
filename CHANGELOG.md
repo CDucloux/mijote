@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.9.21 – Safran · Nouvelle recette
+
+### Création
+- **Sélecteur « Nouvelle recette » modernisé** : en-tête à pastille d'icône, cartes plus claires, chevron circulaire et survol soigné sur desktop
+
 ## v3.9.20 – Safran · Profil & finitions
 
 ### Profil
