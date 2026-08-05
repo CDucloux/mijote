@@ -812,11 +812,13 @@ select {
    positionnée en `fixed` par TechniqueText ; ici uniquement l'apparence + le
    fondu d'entrée. */
 .tech-pop {
+  position: relative;
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: 0 14px 40px -12px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 12px 14px;
+  padding: 14px 14px 12px;
   text-align: left;
   animation: techPop 0.17s cubic-bezier(0.22, 0.61, 0.36, 1);
 }

@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.9.24 – Safran · Bulle technique enrichie
+
+### Mode cuisine
+- **Bulle de définition d'une technique** nettement enrichie : pastille emoji et couleur selon la catégorie (découpe, cuisson, liaison, préparation, dressage), niveau de difficulté et source mieux mise en valeur
+
 ## v3.9.23 – Safran · Techniques & correctif
 
 ### Mode cuisine
