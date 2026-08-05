@@ -1,18 +1,21 @@
 /**
- * Abonnement Mijoté+ via l'extension Firebase **firestore-stripe-payments**.
- * L'extension synchronise les abonnements dans `customers/{uid}/subscriptions` et
- * consomme un doc écrit dans `customers/{uid}/checkout_sessions` pour créer une
- * session Stripe Checkout. Ce module ne fait qu'écrire/écouter ces documents —
- * toute la logique de paiement vit dans l'extension (webhooks Stripe côté serveur).
+ * Abonnement Mijoté+ — intégration Stripe MAISON (Cloud Functions, sans dépendre
+ * de l'extension Firebase en fin de vie). Le front :
+ *   • écoute `customers/{uid}/subscriptions` (statut renseigné par le webhook) ;
+ *   • appelle `createStripeCheckout` pour obtenir l'URL de Stripe Checkout ;
+ *   • appelle `createStripePortal` pour ouvrir le portail de facturation.
+ * Toute la logique de paiement vit côté fonctions (voir functions/stripe.js).
  *
  * @module subscription
  */
-import { collection, addDoc, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { httpsCallable, getFunctions } from "firebase/functions";
 import { db, firebaseApp } from "@/lib/firebase/firebase.js";
 
 /** Statuts Stripe considérés comme « abonné actif ». */
 const ACTIVE_STATUSES = ["trialing", "active"];
+/** Région des Cloud Functions Mijoté (surchargée via env si besoin). */
+const REGION = import.meta.env.VITE_STRIPE_EXT_REGION || "europe-west1";
 
 /**
  * Écoute l'état d'abonnement de l'utilisateur.
@@ -28,43 +31,38 @@ export function subscribeToPlan(uid: string, cb: (active: boolean) => void): () 
 
 /**
  * Lance un Stripe Checkout (mode abonnement) pour un tarif donné, puis redirige
- * vers la page de paiement Stripe. L'extension remplit l'URL de façon asynchrone.
+ * vers la page de paiement. La session est créée côté serveur (uid dérivé du token
+ * d'authentification, d'où le `_uid` inutilisé ici — conservé pour l'appelant).
  *
- * @param uid - L'identifiant de l'utilisateur.
+ * @param _uid - L'identifiant de l'utilisateur (non utilisé : le serveur le dérive).
  * @param priceId - L'ID de tarif Stripe (`price_…`).
  * @param onError - Rappel optionnel invoqué avec un message lisible en cas d'échec.
  */
-export async function startCheckout(uid: string, priceId: string, onError?: (msg: string) => void): Promise<void> {
+export async function startCheckout(_uid: string, priceId: string, onError?: (msg: string) => void): Promise<void> {
   try {
-    const ref = await addDoc(collection(db, "customers", uid, "checkout_sessions"), {
-      mode: "subscription",
+    const fn = httpsCallable(getFunctions(firebaseApp, REGION), "createStripeCheckout");
+    const { data } = await fn({
       price: priceId,
-      allow_promotion_codes: true,
-      success_url: `${window.location.origin}/plus?checkout=success`,
-      cancel_url: `${window.location.origin}/plus`,
+      successUrl: `${window.location.origin}/plus?checkout=success`,
+      cancelUrl: `${window.location.origin}/plus`,
     });
-    const unsub = onSnapshot(ref, snap => {
-      const data = snap.data() as { error?: { message?: string }; url?: string } | undefined;
-      if (!data) return;
-      if (data.error) { unsub(); onError?.(data.error.message || "Paiement impossible."); }
-      else if (data.url) { unsub(); window.location.assign(data.url); }
-    });
+    const url = (data as { url?: string })?.url;
+    if (url) window.location.assign(url);
+    else onError?.("Paiement impossible.");
   } catch (e) {
     onError?.((e as { message?: string })?.message || "Paiement impossible.");
   }
 }
 
 /**
- * Ouvre le portail de facturation Stripe (gérer / annuler l'abonnement) via la
- * fonction appelable de l'extension, puis redirige.
+ * Ouvre le portail de facturation Stripe (gérer / annuler l'abonnement), puis
+ * redirige.
  *
  * @param onError - Rappel optionnel invoqué avec un message lisible en cas d'échec.
  */
 export async function openBillingPortal(onError?: (msg: string) => void): Promise<void> {
   try {
-    // Région de l'extension (par défaut us-central1 ; surcharge via env si déployée ailleurs).
-    const region = import.meta.env.VITE_STRIPE_EXT_REGION || "us-central1";
-    const fn = httpsCallable(getFunctions(firebaseApp, region), "ext-firestore-stripe-payments-createPortalLink");
+    const fn = httpsCallable(getFunctions(firebaseApp, REGION), "createStripePortal");
     const { data } = await fn({ returnUrl: `${window.location.origin}/plus` });
     const url = (data as { url?: string })?.url;
     if (url) window.location.assign(url);

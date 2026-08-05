@@ -35,6 +35,19 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
+    // ── Abonnements Stripe (Mijoté+) ──────────────────────────────────────────
+    // Écriture RÉSERVÉE au serveur (webhook via Admin SDK, qui contourne les
+    // règles) ; le client lit seulement SES propres documents (statut d'abonnement,
+    // mapping client Stripe). Aucun secret Stripe n'y est stocké.
+    match /customers/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+      match /subscriptions/{subId} {
+        allow read: if isSignedIn() && request.auth.uid == uid;
+        allow write: if false;
+      }
+    }
+
     // ── Base Master partagée (écriture : admin) ──────────────────────────────
     // Lecture par DOC uniquement (`get`), jamais par requête (`list`) : la base
     // d'ingrédients enrichie (Ciqual) n'est pas énumérable/aspirable en masse. Le

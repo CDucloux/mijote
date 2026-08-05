@@ -15,6 +15,13 @@ const {
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
 } = require("./recipeExtract.js");
 
+// Paiement Mijoté+ (Stripe maison) : createStripeCheckout / createStripePortal /
+// stripeWebhook. Défini dans son propre module, ré-exporté ici pour le déploiement.
+Object.assign(exports, require("./stripe.js"));
+
+// Contrôle d'accès Mijoté+ (admin OU abonné actif) pour les fonctions coûteuses.
+const { assertPlusOrAdmin } = require("./access.js");
+
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 const ADMIN_EMAIL = defineString("ADMIN_EMAIL"); // e-mail autorisé (le créateur)
 
@@ -188,11 +195,8 @@ async function extractWithLlm(text, sourceUrl, knownUtensils) {
 exports.importRecipeFromUrl = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
-    // ── Garde admin (côté serveur) ──
-    const email = (request.auth?.token?.email || "").toLowerCase();
-    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
-    const admin = (ADMIN_EMAIL.value() || "").toLowerCase();
-    if (!admin || email !== admin) throw new HttpsError("permission-denied", "Fonctionnalité réservée au créateur.");
+    // ── Garde d'accès (côté serveur) : admin OU abonné Mijoté+ actif ──
+    await assertPlusOrAdmin(request, ADMIN_EMAIL.value());
 
     const url = String(request.data?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
@@ -232,10 +236,8 @@ exports.importRecipeFromUrl = onCall(
 exports.importRecipeFromImages = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
-    const email = (request.auth?.token?.email || "").toLowerCase();
-    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
-    const admin = (ADMIN_EMAIL.value() || "").toLowerCase();
-    if (!admin || email !== admin) throw new HttpsError("permission-denied", "Fonctionnalité réservée au créateur.");
+    // ── Garde d'accès (côté serveur) : admin OU abonné Mijoté+ actif ──
+    await assertPlusOrAdmin(request, ADMIN_EMAIL.value());
 
     const raw = Array.isArray(request.data?.images) ? request.data.images : [];
     const images = raw.slice(0, 2).map(im => ({

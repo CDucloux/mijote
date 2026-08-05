@@ -37,7 +37,7 @@ function Cell({ value, accent }) {
   }
   return value
     ? <Icon name="check" size={17} color="var(--green)" />
-    : <span style={{ display: "inline-block", width: 12, height: 2, borderRadius: 2, background: "var(--text3)", opacity: 0.5 }} />;
+    : <Icon name="close" size={14} color="var(--red)" />;
 }
 
 export function PlusPage() {
@@ -47,6 +47,8 @@ export function PlusPage() {
   const [billing, setBilling] = useState("yearly"); // annuel mis en avant par défaut
   const [busy, setBusy] = useState(false);
   const price = PRICES[billing];
+  // Le paiement est prêt dès que les deux tarifs Stripe sont fournis par l'env.
+  const paymentReady = !!(PRICES.monthly.price && PRICES.yearly.price);
 
   // Retour de Stripe Checkout (success_url) : petit message, puis on nettoie la query.
   useEffect(() => {
@@ -80,27 +82,43 @@ export function PlusPage() {
 
       <div style={{ flex: 1, overflowY: "auto", padding: "22px 20px 24px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 560, margin: "0 auto" }}>
-          {/* Hero */}
-          <div style={{ textAlign: "center" }}>
-            <div style={{ display: "inline-flex", marginBottom: 12 }}><PlusBadge size="lg" /></div>
-            <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-              Passe à la vitesse supérieure
-            </h2>
-            <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0, maxWidth: 420, marginInline: "auto" }}>
-              Débloque l'<strong style={{ color: "var(--text)" }}>import de recettes par IA</strong> — depuis un lien ou une photo de livre — et gagne un temps fou à saisir tes recettes.
-            </p>
-          </div>
+          {/* Hero : bandeau de confirmation vert si abonné, sinon pitch */}
+          {isPlus ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, background: "rgba(76,175,125,0.1)", border: "1px solid rgba(76,175,125,0.4)" }}>
+              <span style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--green)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 5px 16px -5px rgba(76,175,125,0.65)" }}>
+                <Icon name="check" size={24} color="#fff" />
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  Tu es abonné·e à Mijoté+ <PlusBadge />
+                </div>
+                <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "3px 0 0" }}>
+                  Merci de ton soutien&nbsp;! Tu profites de l'ensemble des fonctionnalités disponibles dans Mijoté.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ display: "inline-flex", marginBottom: 12 }}><PlusBadge size="lg" /></div>
+              <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+                Passe à la vitesse supérieure
+              </h2>
+              <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0, maxWidth: 420, marginInline: "auto" }}>
+                Débloque l'<strong style={{ color: "var(--text)" }}>import de recettes par IA</strong> (depuis un lien ou une photo de livre) et gagne un temps fou à saisir tes recettes.
+              </p>
+            </div>
+          )}
 
           {/* Tableau comparatif */}
           <div style={{ border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", background: "var(--surface)" }}>
             {/* En-tête colonnes */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 74px 74px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)" }}>Fonctionnalité</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />gratuit</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Mijoté+</span>
             </div>
             {FEATURES.map((f, i) => (
-              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 74px 74px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
+              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
                 <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.35 }}>{f.label}</span>
                 <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.free} /></span>
                 <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.plus} accent /></span>
@@ -134,7 +152,9 @@ export function PlusPage() {
           )}
 
           <p style={{ fontSize: 11.5, color: "var(--text3)", textAlign: "center", lineHeight: 1.5, margin: 0 }}>
-            L'abonnement Mijoté+ arrive bientôt. Les imports IA restent en accès limité en attendant.
+            {paymentReady
+              ? "Paiement sécurisé via Stripe · résiliable à tout moment."
+              : "L'abonnement Mijoté+ arrive bientôt. Les imports IA restent en accès limité en attendant."}
           </p>
         </div>
       </div>
