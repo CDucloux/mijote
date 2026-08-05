@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.9.17 – Safran · Retouches mode cuisine
+
+### Mode pas à pas
+- « Mise en place » : formulation plus claire
+- Pastille « Précédent » : suppression de l'ombre parasite
+- Numéro d'étape : correction de l'affichage (plus de bascule noir → blanc)
+
 ## v3.9.16 – Safran · Finitions mode cuisine & import
 
 ### Mode pas à pas
