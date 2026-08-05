@@ -1,5 +1,14 @@
 # Changelog – Mijoté
 
+## v3.9.20 – Safran · Profil & finitions
+
+### Profil
+- **Page profil retravaillée** : carte d'identité unifiée, plan mis en avant (barre de quota / carte Mijoté+), tuiles d'activité avec icônes et responsive, zone de danger encadrée
+
+### Mes Recettes
+- **Carnets** sur une seule ligne avec défilement horizontal sur desktop (comme sur mobile)
+- **Fondu doux** de la grille à chaque changement de résultats (recherche, tri, carnet)
+
 ## v3.9.19 – Safran · Ajouter une recette
 
 ### Planning
