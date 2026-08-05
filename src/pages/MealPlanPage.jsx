@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { Img } from "../components/Img.jsx";
@@ -174,7 +175,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     // Ordre stable midi → soir (indépendant de l'ordre de clic).
     return ["midi", "soir"].filter(s => set.has(s));
   }), [setGenSlots]);
-  const [showBatch, setShowBatch] = useState(false); // panneau session batch ouvert ?
+  // Session batch = PAGE dédiée portée par l'URL (/meal-plan/batch), comme le mode
+  // cuisine : accès direct, retour arrière propre, survit à un remontage.
+  const location = useLocation();
+  const batchOpen = location.pathname === "/meal-plan/batch";
+  const openBatch = useCallback(() => gotoRoute("/meal-plan/batch"), [gotoRoute]);
+  const closeBatch = useCallback(() => gotoRoute("/meal-plan"), [gotoRoute]);
   const runGenerate = useCallback((style, batch) => {
     const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
     const slots = genSlots.length ? genSlots : ["midi", "soir"];
@@ -185,7 +191,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       setGenDone(true);
       notify(`${count} repas proposés, à relire et ajuster`, "success");
       // Batch cooking demandé → on ouvre directement la session (tout à préparer).
-      if (batch) setShowBatch(true);
+      if (batch) openBatch();
     } else if (!recipes.length) {
       // Aucune recette en bibliothèque : rien à proposer (≠ semaine déjà remplie).
       notify("Ajoute d'abord des recettes pour générer une semaine", "info");
@@ -249,7 +255,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     </div>
   );
   // Repartir d'une checklist vierge à chaque ouverture / changement de session.
-  useEffect(() => { if (showBatch) setCheckedPrep(new Set()); }, [showBatch, weekDays]);
+  useEffect(() => { if (batchOpen) setCheckedPrep(new Set()); }, [batchOpen, weekDays]);
   // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
   // que pour la dernière génération sur la semaine où elle a eu lieu).
   useEffect(() => { setGenDone(false); }, [weekDays]);
@@ -399,7 +405,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 seulement quand la semaine contient au moins un plat. Sortie du header
                 pour ne plus reléguer le titre sur deux lignes. */}
             {hasWeekDishes && (
-              <button onClick={() => isPlus ? setShowBatch(true) : goPlus()} className="pressable"
+              <button onClick={() => isPlus ? openBatch() : goPlus()} className="pressable"
                 style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
                   padding: "12px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
                 <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(76,175,125,0.18)" }}>
@@ -618,17 +624,22 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         </SwipeableSheet>
       )}
 
-      {/* Session batch : plats à cuisiner + préparations de base partagées */}
-      {showBatch && (
-        <SwipeableSheet onClose={() => setShowBatch(false)} style={{ maxHeight: "84dvh" }}>
-          {/* En-tête */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <span style={{ width: 42, height: 42, borderRadius: 13, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={21} color="var(--green)" /></span>
+      {/* Session batch : PAGE dédiée (route /meal-plan/batch), portée en plein écran */}
+      {batchOpen && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 450, background: "var(--bg)", display: "flex", flexDirection: "column", animation: "cookModeIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
+          {/* En-tête de page */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
+            <button onClick={closeBatch} className="cook-close-btn" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
+            <span style={{ width: 34, height: 34, borderRadius: 11, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={18} color="var(--green)" /></span>
             <div style={{ minWidth: 0 }}>
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Session batch</h3>
-              <p style={{ fontSize: 12, color: "var(--text3)", margin: "2px 0 0", lineHeight: 1.4 }}>Tout préparer d'un coup pour la semaine.</p>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.15 }}>Session batch</div>
+              <div style={{ fontSize: 11, color: "var(--text3)" }}>{`Semaine du ${new Date(weekDays[0] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[0] + "T12:00").getMonth()]}`}</div>
             </div>
           </div>
+          {/* Contenu défilant */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            <div style={{ maxWidth: 600, margin: "0 auto", padding: "18px 20px 48px" }}>
+              <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 18px" }}>Tout préparer d'un coup pour la semaine : on mutualise la découpe des ingrédients et les cuissons.</p>
 
           {batch.dishes.length === 0
             ? (
@@ -725,7 +736,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   {secHead("🧩", "À préparer d'avance", "Les bases partagées entre plusieurs plats.")}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {batch.bases.map(b => (
-                      <button key={b.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(b.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", background: b.shared ? "rgba(76,175,125,0.07)" : "var(--surface)", borderRadius: 14, border: `1px solid ${b.shared ? "rgba(76,175,125,0.35)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                      <button key={b.recipe.id} onClick={() => { onSelectRecipe(b.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", background: b.shared ? "rgba(76,175,125,0.07)" : "var(--surface)", borderRadius: 14, border: `1px solid ${b.shared ? "rgba(76,175,125,0.35)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, fontWeight: 700 }}>{b.recipe.name}</div>
                           <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Pour {b.usedBy.join(", ")}</div>
@@ -742,7 +753,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {secHead("🍽️", "À cuisiner", null)}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {batch.dishes.map(d => (
-                  <button key={d.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(d.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                  <button key={d.recipe.id} onClick={() => { onSelectRecipe(d.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                     <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={d.recipe.image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{d.recipe.name}</div>
@@ -757,7 +768,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 ))}
               </div>
             </>}
-        </SwipeableSheet>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Compléter un repas : entrée / accompagnement / dessert, suggérés de saison */}
