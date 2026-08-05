@@ -1,5 +1,19 @@
 # Changelog – Mijoté
 
+## v3.9.15 – Safran · Mode cuisine & finitions
+
+### Mode pas à pas
+- **Mise en place** : une première page liste tous les ingrédients et ustensiles — on peut cuisiner du début à la fin sans revenir à la fiche
+- **Chrono** : le temps écoulé depuis le lancement de la recette s'affiche en continu dans l'en-tête
+
+### Profil
+- L'activité cuisine compte désormais les **plats réellement cuisinés** (menés au bout du mode pas à pas), et non plus les repas planifiés
+
+### Corrections
+- **Ingrédient reconnu après coup** : sa valeur nutritionnelle compte dans le Nutri-Score et son détail est accessible depuis la fiche, sans ré-enregistrer
+- **Import IA** : l'anneau de progression se remplit correctement, calé sur la durée d'extraction
+- **Mes Recettes** : animation d'entrée sur toutes les cartes
+
 ## v3.9.14 – Safran · Import & fluidité
 
 ### Import IA
