@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.9.19 – Safran · Ajouter une recette
+
+### Planning
+- **« Ajouter une recette »** retravaillée dans le même esprit que « Compléter le repas » : en-tête daté, créneaux en contrôle segmenté, recherche épurée et cartes enrichies (cuisine, temps, ingrédients, Nutri-Score)
+
 ## v3.9.18 – Safran · Compléter le repas
 
 ### Planning
