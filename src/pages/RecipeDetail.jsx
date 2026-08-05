@@ -36,7 +36,7 @@ import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
+export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
   const navigate = useNavigate();
   const location = useLocation();
   // `state.fromPath` = page d'origine (ex. "/home") → on y retourne tel quel.
@@ -1008,7 +1008,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
       )}
       {cookMode && recipe.steps?.length > 0 && (
-        <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} recipes={recipes} stockSet={new Set(stock)} onUpdateRecipe={onUpdateRecipe} onClose={() => setCookMode(false)} />
+        <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} recipes={recipes} stockSet={new Set(stock)} onUpdateRecipe={onUpdateRecipe} onCooked={onCooked} onClose={() => setCookMode(false)} />
       )}
 
       {/* Shopping ingredient selection modal */}

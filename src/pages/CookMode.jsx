@@ -17,17 +17,39 @@ import { RatingPicker } from "../components/RatingPicker.jsx";
 import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 
+// Formate un temps écoulé en `m:ss` (ou `h:mm:ss` au-delà d'une heure).
+function fmtElapsed(s) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
 // `recipes` + `stockSet` permettent de gérer les composants (préparations de base) :
 // - étape 0 : liste des composants épuisés à réaliser avant de commencer ;
 // - dans chaque step : les lignes composant s'affichent avec 🧈 (pas d'image dbId).
 // - bouton « Réaliser » → CookMode imbriqué sur le composant mis à l'échelle.
 
-function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipesById, stockSet, onUpdateRecipe, isNested = false }) {
+function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooked, recipesById, stockSet, onUpdateRecipe, isNested = false }) {
   const { techniques, notify } = useAppShell();
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
+  // Chrono global : « depuis quand la recette est lancée » (recette principale
+  // uniquement). Gelé une fois la recette terminée.
+  const startedAtRef = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (isNested || done) return;
+    const iv = setInterval(() => setElapsed(Math.floor((Date.now() - startedAtRef.current) / 1000)), 1000);
+    return () => clearInterval(iv);
+  }, [isNested, done]);
+  // Consigne le plat au journal de cuisine, une seule fois, à l'arrivée sur l'écran
+  // de fin de la recette PRINCIPALE (les bases imbriquées ne comptent pas).
+  const cookedLoggedRef = useRef(false);
+  useEffect(() => {
+    if (done && !isNested && !cookedLoggedRef.current) { cookedLoggedRef.current = true; onCooked?.(recipe.id); }
+  }, [done, isNested, onCooked, recipe.id]);
   const [closing, setClosing] = useState(false);
   // Fermeture animée : joue la sortie (fondu + glissé) avant de démonter réellement.
   const requestClose = () => { if (closing) return; setClosing(true); setTimeout(() => onClose(), 280); };
@@ -68,13 +90,28 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
       .filter(Boolean);
   }, [recipe, recipesById, stockSet, mult]);
 
-  // Étapes effectives : étape 0 virtuelle (composants à préparer) + étapes réelles
-  const STEP_ZERO = pendingComponents.length > 0;
+  // Pages virtuelles du mode pas à pas, dans l'ordre :
+  //   • « aperçu » (mise en place) : TOUS les ingrédients + ustensiles, pour ne
+  //     jamais avoir à revenir à la fiche ;
+  //   • « bases » : préparations de base épuisées à réaliser d'abord (si besoin) ;
+  //   • une page par étape réelle.
+  const overviewIngs = recipe.ingredients || [];
+  const overviewUts = recipe.utensils || [];
+  const hasOverview = overviewIngs.length > 0 || overviewUts.length > 0;
   const realStepCount = (recipe.steps || []).length;
-  const totalSteps = (STEP_ZERO ? 1 : 0) + realStepCount;
-  const isStepZero = STEP_ZERO && stepIdx === 0;
-  const realIdx = STEP_ZERO ? stepIdx - 1 : stepIdx;
-  const step = isStepZero ? null : (recipe.steps || [])[realIdx];
+  const pages = useMemo(() => {
+    const arr = [];
+    if (hasOverview) arr.push({ kind: "overview" });
+    if (pendingComponents.length > 0) arr.push({ kind: "bases" });
+    (recipe.steps || []).forEach((s, i) => arr.push({ kind: "step", step: s, realIdx: i }));
+    return arr;
+  }, [hasOverview, pendingComponents.length, recipe.steps]);
+  const totalSteps = pages.length || 1;
+  const cur = pages[Math.min(stepIdx, pages.length - 1)] || { kind: "overview" };
+  const isOverview = cur.kind === "overview";
+  const isBases = cur.kind === "bases";
+  const step = cur.kind === "step" ? cur.step : null;
+  const realIdx = cur.kind === "step" ? cur.realIdx : -1;
 
   // Toutes les bases avec étapes doivent être réalisées avant de passer à la suite.
   const allComponentsDone = pendingComponents
@@ -131,7 +168,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
     const onKey = (e) => {
       if (e.defaultPrevented || e.target?.closest?.("input, textarea, [contenteditable=true]")) return;
       if (e.key === "ArrowRight") {
-        if (stepIdx < totalSteps - 1) { if (!(isStepZero && !allComponentsDone)) setStepIdx(i => i + 1); }
+        if (stepIdx < totalSteps - 1) { if (!(isBases && !allComponentsDone)) setStepIdx(i => i + 1); }
         else setDone(true);
       } else if (e.key === "ArrowLeft") {
         setStepIdx(i => Math.max(0, i - 1));
@@ -140,7 +177,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isStepZero, allComponentsDone]);
+  }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isBases, allComponentsDone]);
 
   const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
 
@@ -191,7 +228,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
       dragging = false;
       if (axis === "x") {
         const dx = e.changedTouches[0].clientX - x0;
-        if (dx < -50) { if (stepIdx < totalSteps - 1 && !(isStepZero && !allComponentsDone)) setStepIdx(i => i + 1); }
+        if (dx < -50) { if (stepIdx < totalSteps - 1 && !(isBases && !allComponentsDone)) setStepIdx(i => i + 1); }
         else if (dx > 50) setStepIdx(i => Math.max(0, i - 1));
       }
       if (edge === "top" || edge === "bottom") springBack();
@@ -208,7 +245,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
       el.removeEventListener("touchend", onUp);
       el.removeEventListener("touchcancel", onUp);
     };
-  }, [subCook, done, iterOpen, stepIdx, totalSteps, isStepZero, allComponentsDone]);
+  }, [subCook, done, iterOpen, stepIdx, totalSteps, isBases, allComponentsDone]);
 
   // Ingrédients liés à l'étape courante (bruts + composants)
   const linkedIngs = step
@@ -306,15 +343,22 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           <button onClick={requestClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon name={isNested ? "back" : "close"} size={18} />
           </button>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {isNested && <span style={{ display: "inline-flex", alignItems: "center", marginRight: 6 }}><BaseIcon size={14} /></span>}
               {recipe.name}
             </div>
             <div style={{ fontSize: 12, color: "var(--text3)" }}>
-              {isStepZero ? "Bases" : `Étape ${stepIdx + (STEP_ZERO ? 0 : 1)} / ${realStepCount}`}
+              {isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`}
             </div>
           </div>
+          {/* Chrono global : temps écoulé depuis le lancement de la recette. */}
+          {!isNested && (
+            <div title="Temps écoulé depuis le lancement" style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 11px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontVariantNumeric: "tabular-nums" }}>
+              <Icon name="clock" size={14} color="var(--accent)" />
+              <span style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: "0.02em", color: "var(--text)" }}>{fmtElapsed(elapsed)}</span>
+            </div>
+          )}
         </div>
 
         {/* Progress bar */}
@@ -326,24 +370,21 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
         <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
           {/* Desktop sidebar */}
           <div className="cook-mode-sidebar" style={{ display: "none", width: 260, minWidth: 260, overflowY: "auto", borderRight: "1px solid var(--border)", padding: "12px 0" }}>
-            {STEP_ZERO && (
-              <button onClick={() => setStepIdx(0)}
-                style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", background: stepIdx === 0 ? "rgba(232,112,58,0.1)" : "none", borderLeft: `3px solid ${stepIdx === 0 ? "var(--accent)" : "transparent"}`, textAlign: "left", transition: "all 0.15s" }}>
-                <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: stepIdx === 0 ? "var(--accent)" : stepIdx > 0 ? "var(--green)" : "var(--surface2)", color: stepIdx >= 0 ? "#fff" : "var(--text3)" }}>
-                  {stepIdx > 0 ? <Icon name="check" size={11} color="#fff" /> : <BaseIcon size={12} color="#fff" />}
-                </div>
-                <span style={{ fontSize: 13, color: stepIdx === 0 ? "var(--accent)" : "var(--text3)", fontWeight: stepIdx === 0 ? 600 : 400, lineHeight: 1.4 }}>Bases</span>
-              </button>
-            )}
-            {(recipe.steps || []).map((s, i) => {
-              const sIdx = i + (STEP_ZERO ? 1 : 0);
+            {pages.map((pg, idx) => {
+              const active = idx === stepIdx, passed = idx < stepIdx;
+              const label = pg.kind === "overview" ? "Mise en place" : pg.kind === "bases" ? "Bases" : `Étape ${pg.realIdx + 1}`;
+              const dotBg = active ? "var(--accent)" : passed ? "var(--green)" : "var(--surface2)";
+              const dotFg = active || passed ? "#fff" : "var(--text3)";
               return (
-                <button key={s.id} onClick={() => setStepIdx(sIdx)}
-                  style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", background: sIdx === stepIdx ? "rgba(232,112,58,0.1)" : "none", borderLeft: `3px solid ${sIdx === stepIdx ? "var(--accent)" : "transparent"}`, textAlign: "left", transition: "all 0.15s" }}>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: sIdx < stepIdx ? "var(--green)" : sIdx === stepIdx ? "var(--accent)" : "var(--surface2)", color: sIdx <= stepIdx ? "#fff" : "var(--text3)" }}>
-                    {sIdx < stepIdx ? <Icon name="check" size={11} color="#fff" /> : i + 1}
+                <button key={pg.kind === "step" ? pg.step.id : pg.kind} onClick={() => setStepIdx(idx)}
+                  style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", background: active ? "rgba(232,112,58,0.1)" : "none", borderLeft: `3px solid ${active ? "var(--accent)" : "transparent"}`, textAlign: "left", transition: "all 0.15s" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: dotBg, color: dotFg }}>
+                    {passed ? <Icon name="check" size={11} color="#fff" />
+                      : pg.kind === "step" ? pg.realIdx + 1
+                      : pg.kind === "bases" ? <BaseIcon size={12} color={active ? "#fff" : "var(--text3)"} />
+                      : <Icon name="fileText" size={11} color={dotFg} />}
                   </div>
-                  <span style={{ fontSize: 13, color: sIdx === stepIdx ? "var(--accent)" : sIdx < stepIdx ? "var(--text3)" : "var(--text2)", fontWeight: sIdx === stepIdx ? 600 : 400, lineHeight: 1.4 }}>{`Étape ${i + 1}`}</span>
+                  <span style={{ fontSize: 13, color: active ? "var(--accent)" : passed ? "var(--text3)" : "var(--text2)", fontWeight: active ? 600 : 400, lineHeight: 1.4 }}>{label}</span>
                 </button>
               );
             })}
@@ -352,8 +393,40 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
           {/* Step content */}
           <div ref={stepScrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
             <div ref={stepElasticRef} style={{ maxWidth: 640, margin: "0 auto", willChange: "transform" }}>
-              {isStepZero ? (
-                /* ── Étape 0 : préparations de base à réaliser ── */
+              {isOverview ? (
+                /* ── Aperçu (mise en place) : tous les ingrédients + ustensiles ── */
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="fileText" size={19} color="#fff" /></div>
+                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Mise en place</h2>
+                  </div>
+                  <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
+                    Réunis tout avant de commencer — tu peux rester en mode pas à pas du début à la fin.
+                  </p>
+                  {overviewIngs.length > 0 && (
+                    <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ingrédients · {overviewIngs.length}</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {overviewIngs.map(renderIngLine)}
+                      </div>
+                    </div>
+                  )}
+                  {overviewUts.length > 0 && (
+                    <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles · {overviewUts.length}</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {overviewUts.map(u => (
+                          <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
+                            {u.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : isBases ? (
+                /* ── Bases : préparations de base à réaliser ── */
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={20} color="#fff" /></div>
@@ -488,10 +561,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
             <Icon name="back" size={16} /> Précédent
           </button>
           <span style={{ fontSize: 12, color: "var(--text3)", minWidth: 60, textAlign: "center" }}>
-            {isStepZero ? "Bases" : `${realIdx + 1} / ${realStepCount}`}
+            {isOverview ? "Aperçu" : isBases ? "Bases" : `${realIdx + 1} / ${realStepCount}`}
           </span>
           {stepIdx < totalSteps - 1
-            ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)} disabled={isStepZero && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
+            ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)} disabled={isBases && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
             : <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
           }
         </div>
@@ -501,7 +574,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, recipes
   );
 }
 
-export function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose, recipes = [], stockSet, onUpdateRecipe }) {
+export function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose, onCooked, recipes = [], stockSet, onUpdateRecipe }) {
   const recipesById = useMemo(() => new Map((recipes || []).map(r => [r.id, r])), [recipes]);
   return (
     <CookModeInner
@@ -510,6 +583,7 @@ export function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose, recip
       ingredientDB={ingredientDB}
       utensilDB={utensilDB}
       onClose={onClose}
+      onCooked={onCooked}
       recipesById={recipesById}
       stockSet={stockSet}
       onUpdateRecipe={onUpdateRecipe}

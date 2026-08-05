@@ -8,6 +8,9 @@ export const DEFAULT_PREFERENCES = {
   allergens: [],
   excludedCategories: [],
   dislikes: [],
+  // Journal de cuisine : jour `YYYY-MM-DD` → liste d'ids de recettes RÉELLEMENT
+  // cuisinées (mode pas à pas mené jusqu'au bout). Alimente la heatmap du profil.
+  cookLog: {},
 };
 
 export const DIETS = [
@@ -32,5 +35,21 @@ export function normalizePreferences(p) {
     allergens: Array.isArray(src.allergens) ? src.allergens.filter(x => typeof x === "string") : [],
     excludedCategories: Array.isArray(src.excludedCategories) ? src.excludedCategories.filter(x => typeof x === "string") : [],
     dislikes: Array.isArray(src.dislikes) ? src.dislikes.filter(x => typeof x === "string") : [],
+    cookLog: normalizeCookLog(src.cookLog),
   };
+}
+
+// Nettoie le journal de cuisine : ne garde que les clés `YYYY-MM-DD` dont la valeur
+// est une liste d'ids (chaînes). Robuste aux données legacy / corrompues.
+function normalizeCookLog(raw) {
+  const out = {};
+  if (raw && typeof raw === "object") {
+    for (const [day, ids] of Object.entries(raw)) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(day) && Array.isArray(ids)) {
+        const clean = ids.filter(x => typeof x === "string");
+        if (clean.length) out[day] = clean;
+      }
+    }
+  }
+  return out;
 }
