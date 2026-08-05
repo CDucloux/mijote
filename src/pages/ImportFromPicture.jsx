@@ -68,7 +68,7 @@ export function ImportFromPicture() {
     setError(""); setLoading(true);
     try {
       await importFromImages(parts);
-      navigate("/recipes", { replace: true });
+      // Le brouillon s'ouvre dans l'éditeur (route /recipes/new posée par le shell).
       notify?.("Recette extraite, à relire");
     } catch (e) {
       setLoading(false);
@@ -135,7 +135,8 @@ export function ImportFromPicture() {
         </button>
       </div>
 
-      {loading && <LoadingOverlay />}
+      {/* Estimation : ~11 s de base + ~7 s par photo (extraction Sonnet plus lente). */}
+      {loading && <LoadingOverlay estimateMs={11000 + photos.length * 7000} />}
       {importError && (
         <ErrorModal title="Import impossible" message={importError.message} code={importError.code}
           onClose={() => setImportError(null)}

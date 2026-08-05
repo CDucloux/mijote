@@ -117,12 +117,17 @@ function AppInner({ user, isDark, toggleTheme }) {
   const recipeSeg = location.pathname.startsWith("/recipes/") ? location.pathname.slice(9) : "";
   // Pages d'import IA (routes dédiées) : ne correspondent à aucune recette.
   const importRoute = recipeSeg === "import-from-url" ? "url" : recipeSeg === "import-from-picture" ? "picture" : null;
+  // Éditeur d'une NOUVELLE recette (création manuelle ou brouillon d'import IA) :
+  // route dédiée pour lui donner une URL stable — le retour arrière / rafraîchis-
+  // sement ont un comportement défini et le brouillon extrait n'est plus perdu par
+  // mégarde (il est aussi mis en cache en sessionStorage, restauré ci-dessous).
+  const newRoute = recipeSeg === "new";
   // Page d'offre Mijoté+ (route dédiée).
   const plusRoute = location.pathname === "/plus";
   const cookModeRoute = recipeSeg.endsWith("/cookmode");
   const editRoute = recipeSeg.endsWith("/edit");
   const routeSuffix = cookModeRoute ? "/cookmode" : editRoute ? "/edit" : "";
-  const recipeIdParam = importRoute || !recipeSeg
+  const recipeIdParam = importRoute || newRoute || !recipeSeg
     ? undefined
     : decodeURIComponent(routeSuffix ? recipeSeg.slice(0, -routeSuffix.length) : recipeSeg) || undefined;
   const selectedRecipe = recipeIdParam || null;
@@ -131,8 +136,35 @@ function AppInner({ user, isDark, toggleTheme }) {
     else navigate(location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname, { replace: true });
   }, [navigate, location.pathname, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  const DRAFT_KEY = "mijote_draft";
+  // Ouvre l'éditeur sur un brouillon (nouvelle recette / import IA) et pose l'URL
+  // /recipes/new : le brouillon extrait survit ainsi à une navigation ou un
+  // rafraîchissement accidentel (restauré depuis sessionStorage plus bas).
+  const openDraftEditor = useCallback((draft) => {
+    setEditingRecipe(draft);
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* quota / privé */ }
+    navigate("/recipes/new");
+  }, [navigate]);
+  // Ferme l'éditeur de brouillon : purge le cache et quitte la route /recipes/new.
+  const closeDraftEditor = useCallback((to) => {
+    setEditingRecipe(null);
+    try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+    if (to) navigate(to, { replace: true });
+  }, [navigate]);
   // Import de recette (URL / photos) → ouvre l'éditeur sur le brouillon (useRecipeImport).
-  const { importFromUrl, importFromImages } = useRecipeImport({ ingredientDB, utensilDB, openEditor: setEditingRecipe });
+  const { importFromUrl, importFromImages } = useRecipeImport({ ingredientDB, utensilDB, openEditor: openDraftEditor });
+  // Restauration du brouillon : on arrive sur /recipes/new sans brouillon en
+  // mémoire (rafraîchissement, retour arrière) → on rejoue le cache s'il existe,
+  // sinon la route n'a plus d'objet → retour propre à la bibliothèque.
+  const draftRestored = useRef(false);
+  useEffect(() => {
+    if (draftRestored.current || !newRoute || editingRecipe) return;
+    draftRestored.current = true;
+    let cached = null;
+    try { cached = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null"); } catch { /* ignore */ }
+    if (cached) setEditingRecipe(cached);
+    else navigate("/recipes", { replace: true });
+  }, [newRoute, editingRecipe, navigate]);
   const { notification, notify } = useNotifications();
   // Vue d'une recette publique (route /discover/:pubId) – logique isolée dans son hook.
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
@@ -221,8 +253,8 @@ function AppInner({ user, isDark, toggleTheme }) {
       return;
     }
     const name = preset && typeof preset === "object" && typeof preset.name === "string" ? preset.name : "";
-    setEditingRecipe({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" });
-  }, [recipes, isPlus, notify, navigate]);
+    openDraftEditor({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" });
+  }, [recipes, isPlus, notify, navigate, openDraftEditor]);
 
   // Requête semée dans « Découvrir » depuis un autre onglet (ex. « chercher dans
   // la communauté » quand la bibliothèque privée ne renvoie rien). Consommée une
@@ -303,8 +335,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   };
 
   const confirmLeaveEditor = () => {
-    setEditingRecipe(null);
-    if (editRoute) navigate(`/recipes/${selectedRecipe}`, { replace: true });
+    closeDraftEditor(editRoute ? `/recipes/${selectedRecipe}` : "/recipes");
     setTab(pendingTab);
     setPendingTab(null);
   };
@@ -374,8 +405,13 @@ function AppInner({ user, isDark, toggleTheme }) {
   const mainScreen = isEditing ? (
     <div key={recipeBeingEdited?.id || "new"} className={isDesktop ? "desktop-content editor-layout" : ""} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
       <RecipeEditor recipe={recipeBeingEdited}
-        onSave={(r) => { const ok = saveRecipe(r); if (ok !== false && editRoute) navigate(`/recipes/${selectedRecipe}`, { replace: true }); }}
-        onCancel={() => { setEditingRecipe(null); if (editRoute) navigate(`/recipes/${selectedRecipe}`); }}
+        onSave={(r) => {
+          const ok = saveRecipe(r);
+          if (ok === false) return; // quota atteint → l'éditeur reste ouvert
+          if (editRoute) navigate(`/recipes/${selectedRecipe}`, { replace: true });
+          else closeDraftEditor("/recipes"); // brouillon enregistré → cache purgé
+        }}
+        onCancel={() => { if (editRoute) { setEditingRecipe(null); navigate(`/recipes/${selectedRecipe}`); } else closeDraftEditor("/recipes"); }}
         ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
     </div>
   ) : importRoute ? (

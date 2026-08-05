@@ -53,9 +53,8 @@ export function ImportFromUrl() {
     setError(""); setLoading(true);
     try {
       const { method } = await importFromUrl(u);
-      // Le brouillon est ouvert dans l'éditeur (state applicatif) ; on quitte la
-      // route d'import vers la bibliothèque, sur laquelle l'éditeur se superpose.
-      navigate("/recipes", { replace: true });
+      // Le brouillon est ouvert dans l'éditeur (route /recipes/new, posée par le
+      // shell) : il survit désormais à un rafraîchissement / retour accidentel.
       notify?.(method === "jsonld" ? "Recette importée, à relire" : "Recette extraite, à relire");
     } catch (e) {
       setLoading(false);
@@ -128,7 +127,8 @@ export function ImportFromUrl() {
         </button>
       </div>
 
-      {loading && <LoadingOverlay />}
+      {/* Estimation : l'extraction d'une page tourne autour de ~14 s. */}
+      {loading && <LoadingOverlay estimateMs={14000} />}
       {importError && (
         <ErrorModal title="Import impossible" message={importError.message} code={importError.code}
           onClose={() => setImportError(null)}
