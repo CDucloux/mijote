@@ -1,5 +1,15 @@
 # Changelog – Mijoté
 
+## v3.9.14 – Safran · Import & fluidité
+
+### Import IA
+- **Barre de progression** pendant l'extraction : un anneau qui se remplit, calé sur la durée estimée (lien / photo(s)), au lieu du simple cercle qui tourne
+- **Marmite figée** au centre de l'anneau (fin de l'animation de pulsation)
+- **Brouillon préservé** : l'éditeur d'une nouvelle recette a désormais une URL dédiée (`/recipes/new`) et un cache — le contenu extrait n'est plus perdu par un rafraîchissement ou un retour arrière accidentel
+
+### Performance
+- **Page « Mes Recettes »** nettement plus fluide au scroll sur mobile : suppression du flou d'arrière-plan des badges (Vegan, De saison, Base) et rendu différé des cartes hors écran
+
 ## v3.9.13 – Safran · Mijoté+ (abonnement & finitions)
 
 ### Mijoté+
