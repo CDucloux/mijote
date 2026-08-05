@@ -13,6 +13,7 @@ const { defineSecret } = require("firebase-functions/params");
 const { initializeApp, getApps } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const Stripe = require("stripe");
+const { uidFromMetadata, subscriptionDocFields, ACTIVE_STATUSES } = require("./stripeHelpers.js");
 
 if (!getApps().length) initializeApp();
 const dbAdmin = getFirestore();
@@ -54,7 +55,22 @@ exports.createStripeCheckout = onCall(
     if (!successUrl || !cancelUrl) throw new HttpsError("invalid-argument", "URLs de retour manquantes.");
     const stripe = stripeClient();
     try {
+      // Durcissement : on n'accepte QUE des tarifs Stripe actifs et récurrents
+      // (bloque un `price` ponctuel / inactif / inconnu passé par un client forgé).
+      let priceObj;
+      try { priceObj = await stripe.prices.retrieve(price); }
+      catch { throw new HttpsError("invalid-argument", "Tarif inconnu."); }
+      if (!priceObj.active || priceObj.type !== "recurring") throw new HttpsError("invalid-argument", "Tarif invalide pour un abonnement.");
+
       const customer = await ensureCustomer(stripe, uid, email);
+
+      // Garde anti-double-abonnement : si un abonnement actif/en essai existe déjà,
+      // on refuse un nouveau Checkout (évite le double prélèvement) → gérer via le portail.
+      const existing = await stripe.subscriptions.list({ customer, status: "all", limit: 10 });
+      if (existing.data.some(s => ACTIVE_STATUSES.includes(s.status))) {
+        throw new HttpsError("failed-precondition", "Tu as déjà un abonnement actif. Gère-le depuis « Gérer mon abonnement ».");
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer,
@@ -97,7 +113,8 @@ exports.createStripePortal = onCall(
 
 // ── Retrouve l'uid Firebase d'un abonnement (métadonnée, sinon via le client) ──
 async function uidForSubscription(stripe, sub) {
-  if (sub.metadata && sub.metadata.firebaseUID) return sub.metadata.firebaseUID;
+  const fromMeta = uidFromMetadata(sub);
+  if (fromMeta) return fromMeta;
   const cust = await stripe.customers.retrieve(sub.customer);
   return cust && !cust.deleted && cust.metadata ? (cust.metadata.firebaseUID || null) : null;
 }
@@ -106,15 +123,10 @@ async function uidForSubscription(stripe, sub) {
 async function syncSubscription(stripe, sub) {
   const uid = await uidForSubscription(stripe, sub);
   if (!uid) { console.warn("stripeWebhook : aucun firebaseUID pour l'abonnement", sub.id); return; }
-  const price = sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].price ? sub.items.data[0].price.id : null;
-  await dbAdmin.doc(`customers/${uid}/subscriptions/${sub.id}`).set({
-    status: sub.status,                                   // active / trialing / canceled / …
-    price,
-    cancelAtPeriodEnd: !!sub.cancel_at_period_end,
-    currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
-    created: sub.created ? new Date(sub.created * 1000) : null,
-    updated: FieldValue.serverTimestamp(),
-  }, { merge: true });
+  await dbAdmin.doc(`customers/${uid}/subscriptions/${sub.id}`).set(
+    { ...subscriptionDocFields(sub), updated: FieldValue.serverTimestamp() },
+    { merge: true }
+  );
 }
 
 // ── Webhook Stripe (signature vérifiée) ──────────────────────────────────────
