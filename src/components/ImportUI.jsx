@@ -75,7 +75,10 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
         </div>
         <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, margin: "0 0 6px" }}>On mijote ta recette…</h3>
         <div style={{ fontSize: 13.5, color: "var(--accent)", fontWeight: 600, minHeight: 20 }}>{LOADING_STEPS[stepIdx]} · {pct}%</div>
-        <div style={{ fontSize: 11.5, color: "var(--text3)", lineHeight: 1.5, marginTop: 12 }}>
+        <div style={{ display: "inline-flex", gap: 4, margin: "12px 0 14px" }}>
+          {[0, 1, 2].map(d => <span key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", animation: `importDots 1.2s ${d * 0.16}s ease-in-out infinite` }} />)}
+        </div>
+        <div style={{ fontSize: 11.5, color: "var(--text3)", lineHeight: 1.5 }}>
           Garde cette fenêtre ouverte : l'extraction est en cours et ne peut pas être interrompue.
         </div>
       </div>
