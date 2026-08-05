@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { Icon } from "./Icon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex, annotateText } from "@/lib/recipes/techniques.js";
 import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
@@ -28,7 +29,17 @@ const wordBtn = (active) => ({
 });
 
 const POP_MARGIN = 10;   // marge minimale avec les bords de l'écran
-const POP_MAX_W = 300;   // largeur maximale de la bulle
+const POP_MAX_W = 306;   // largeur maximale de la bulle
+
+// Identité visuelle par catégorie de technique : pastille emoji + couleur.
+const TECH_CAT = {
+  decoupe: { emoji: "🔪", color: "#e0894a" },
+  cuisson: { emoji: "🔥", color: "#e0524f" },
+  liaison: { emoji: "🥣", color: "#c8951f" },
+  preparation: { emoji: "🧑‍🍳", color: "#5b9cf6" },
+  dressage: { emoji: "🍽️", color: "#9b87f5" },
+};
+const techCat = (c) => TECH_CAT[c] || { emoji: "🍳", color: "var(--accent)" };
 
 export function TechniqueText({ text, index: indexProp }) {
   const { techniques } = useAppShell();
@@ -92,16 +103,39 @@ export function TechniqueText({ text, index: indexProp }) {
       {pop && createPortal(
         <div style={{ position: "fixed", left: pop.left, top: pop.top, width: pop.width, zIndex: 500, transform: pop.above ? "translateY(-100%)" : "none", pointerEvents: pinned ? "auto" : "none" }}
           onClick={e => e.stopPropagation()}>
-          <div className="tech-pop" role="tooltip" style={{ transformOrigin: pop.above ? "bottom left" : "top left" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em" }}>{pop.tech.name}</span>
-              <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                {TECHNIQUE_CATEGORIES[pop.tech.category] || pop.tech.category}
-              </span>
-            </div>
-            <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5 }}>{pop.tech.definition}</div>
-            {pop.tech.source && <div style={{ fontSize: 10.5, color: "var(--text3)", marginTop: 7 }}>{pop.tech.source}</div>}
-          </div>
+          {(() => {
+            const c = techCat(pop.tech.category);
+            const catLabel = TECHNIQUE_CATEGORIES[pop.tech.category] || pop.tech.category;
+            const diff = Number(pop.tech.difficulty) || 0;
+            return (
+              <div className="tech-pop" role="tooltip" style={{ transformOrigin: pop.above ? "bottom left" : "top left" }}>
+                {/* barre d'accent colorée en tête, selon la catégorie */}
+                <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "14px 14px 0 0", background: c.color }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
+                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 20, background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}>{c.emoji}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>{pop.tech.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4 }}>
+                      <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.color, background: `color-mix(in srgb, ${c.color} 14%, transparent)`, padding: "2px 8px", borderRadius: 999 }}>{catLabel}</span>
+                      {diff > 0 && (
+                        <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 2.5, alignItems: "center" }}>
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: i <= diff ? c.color : "var(--surface3)" }} />
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.55 }}>{pop.tech.definition}</div>
+                {pop.tech.source && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10.5, color: "var(--text3)", marginTop: 9, paddingTop: 9, borderTop: "1px solid var(--border)" }}>
+                    <Icon name="book" size={11} color="var(--text3)" /> {pop.tech.source}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>,
         document.body
       )}
