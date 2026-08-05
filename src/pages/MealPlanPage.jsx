@@ -196,20 +196,23 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
   // Calculée UNIQUEMENT quand le panneau batch est ouvert : sinon on la recalculait
   // à chaque changement de semaine (dép. weekDays) pour un panneau fermé — pur gaspi.
+  // Session batch : VUE LIVE dérivée du planning de la semaine visible. Recalculée
+  // à chaque changement du planning (ajout / retrait) pour rester toujours à jour —
+  // c'est une vue pure et peu coûteuse (une semaine de repas).
   const batch = useMemo(
-    () => showBatch ? buildBatchSession(weekEntries(mealPlan, weekDays), recipes) : { dishes: [], bases: [] },
-    [showBatch, mealPlan, weekDays, recipes]
+    () => buildBatchSession(weekEntries(mealPlan, weekDays), recipes),
+    [mealPlan, weekDays, recipes]
   );
-  // Mise en place mutualisée (par ingrédient) + cuissons regroupées : calculées
-  // uniquement quand le panneau est ouvert (dérivées des plats de la session).
+  // Mise en place mutualisée (par ingrédient) + cuissons regroupées, dérivées des
+  // plats de la session (donc elles aussi toujours à jour).
   const categoryOrder = useCallback(cat => DEFAULT_CATEGORIES[cat]?.order ?? 99, []);
   // Seuls les produits frais à travailler valent la mutualisation de la découpe.
   const PREP_CATEGORIES = useMemo(() => new Set(["vegetable", "herbs"]), []);
   const miseEnPlace = useMemo(
-    () => showBatch ? buildMiseEnPlace(batch.dishes, { recipesById, resolver, ingredientDB: ingredientDB || [], stockSet: new Set(stock || []), categoryOrder, includeCategories: PREP_CATEGORIES }) : [],
-    [showBatch, batch, recipesById, resolver, ingredientDB, stock, categoryOrder, PREP_CATEGORIES]
+    () => buildMiseEnPlace(batch.dishes, { recipesById, resolver, ingredientDB: ingredientDB || [], stockSet: new Set(stock || []), categoryOrder, includeCategories: PREP_CATEGORIES }),
+    [batch, recipesById, resolver, ingredientDB, stock, categoryOrder, PREP_CATEGORIES]
   );
-  const cookingGroups = useMemo(() => showBatch ? groupCookings(batch.dishes) : [], [showBatch, batch]);
+  const cookingGroups = useMemo(() => groupCookings(batch.dishes), [batch]);
   // La semaine visible contient-elle au moins un plat (≠ base) ? Conditionne l'accès
   // à la session batch depuis le header (ré-ouvrable à tout moment, pas seulement
   // juste après une génération).
@@ -235,6 +238,16 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const prepCount = useMemo(() => miseEnPlace.reduce((n, g) => n + g.items.length, 0), [miseEnPlace]);
   const [checkedPrep, setCheckedPrep] = useState(() => new Set());
   const togglePrep = useCallback(key => setCheckedPrep(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; }), []);
+  // En-tête de section de la feuille batch : pastille emoji + titre (+ sous-titre).
+  const secHead = (emoji, title, sub) => (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+        <span style={{ width: 28, height: 28, borderRadius: 9, background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 15, flexShrink: 0 }}>{emoji}</span>
+        <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: "-0.01em" }}>{title}</span>
+      </div>
+      {sub && <p style={{ fontSize: 11.5, color: "var(--text3)", margin: "7px 0 0", lineHeight: 1.45, paddingLeft: 37 }}>{sub}</p>}
+    </div>
+  );
   // Repartir d'une checklist vierge à chaque ouverture / changement de session.
   useEffect(() => { if (showBatch) setCheckedPrep(new Set()); }, [showBatch, weekDays]);
   // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
@@ -608,41 +621,49 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       {/* Session batch : plats à cuisiner + préparations de base partagées */}
       {showBatch && (
         <SwipeableSheet onClose={() => setShowBatch(false)} style={{ maxHeight: "84dvh" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={16} color="var(--green)" /></span>
-            <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0 }}>Session batch</h3>
+          {/* En-tête */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <span style={{ width: 42, height: 42, borderRadius: 13, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={21} color="var(--green)" /></span>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Session batch</h3>
+              <p style={{ fontSize: 12, color: "var(--text3)", margin: "2px 0 0", lineHeight: 1.4 }}>Tout préparer d'un coup pour la semaine.</p>
+            </div>
           </div>
-          <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>Prépare une fois pour toute la semaine : on mutualise la découpe des ingrédients et les cuissons.</p>
 
           {batch.dishes.length === 0
-            ? <p style={{ fontSize: 13, color: "var(--text3)", padding: "8px 0" }}>Planifie des repas cette semaine pour voir la session batch.</p>
+            ? (
+              <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
+                <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--surface2)", display: "grid", placeItems: "center", margin: "0 auto 12px", fontSize: 26 }}>🍳</div>
+                <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Planifie des repas cette semaine<br />pour préparer ta session batch.</p>
+              </div>
+            )
             : <>
-              {/* Récap de session */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+              {/* Récap de session : tuiles blanches */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 22 }}>
                 {[
                   { n: prepCount, l: prepCount > 1 ? "ingrédients" : "ingrédient", icon: "🔪" },
                   { n: cookCount, l: cookCount > 1 ? "cuissons" : "cuisson", icon: "🔥" },
-                  { n: mealOccasions, l: "repas couverts", icon: "🍽️" },
+                  { n: mealOccasions, l: mealOccasions > 1 ? "repas" : "repas", icon: "🍽️" },
                 ].map((c, i) => (
-                  <div key={i} style={{ flex: 1, minWidth: 88, padding: "9px 10px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "center" }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)" }}>{c.n}</div>
-                    <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>{c.icon} {c.l}</div>
+                  <div key={i} style={{ padding: "13px 8px", background: "var(--surface)", borderRadius: 15, border: "1px solid var(--border)", textAlign: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                    <div style={{ fontSize: 15, marginBottom: 3 }}>{c.icon}</div>
+                    <div style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, color: "var(--accent)", lineHeight: 1 }}>{c.n}</div>
+                    <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 4 }}>{c.l}</div>
                   </div>
                 ))}
               </div>
 
               {/* ── 1. Mise en place mutualisée (par ingrédient) ── */}
               {miseEnPlace.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <div className="field-label" style={{ marginBottom: 4 }}>Mise en place</div>
-                  <p style={{ fontSize: 11, color: "var(--text3)", margin: "0 0 12px", lineHeight: 1.4 }}>Prépare tous ces ingrédients d'un coup, toutes recettes confondues.</p>
+                <div style={{ marginBottom: 24 }}>
+                  {secHead("🔪", "Mise en place", "Prépare tous ces ingrédients d'un coup, toutes recettes confondues.")}
                   {miseEnPlace.map(group => {
                     const cat = DEFAULT_CATEGORIES[group.category] || { label: "Autres", icon: "📦" };
                     return (
                       <div key={group.category} style={{ marginBottom: 14 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                           <span style={{ fontSize: 13 }}>{cat.icon}</span>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{cat.label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{cat.label}</span>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {group.items.map(it => {
@@ -650,21 +671,21 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                             const qty = it.unit ? fmtQtyUnit(it.amount, it.unit) : `${it.amount}`;
                             return (
                               <button key={it.key} onClick={() => togglePrep(it.key)} className="pressable" style={{
-                                display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", cursor: "pointer",
-                                padding: "8px 10px", borderRadius: 11, background: done ? "rgba(76,175,125,0.08)" : "var(--surface2)",
-                                border: `1px solid ${done ? "rgba(76,175,125,0.3)" : "var(--border)"}`, opacity: done ? 0.7 : 1,
+                                display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", cursor: "pointer",
+                                padding: "10px 12px", borderRadius: 13, background: done ? "rgba(76,175,125,0.07)" : "var(--surface)",
+                                border: `1px solid ${done ? "rgba(76,175,125,0.35)" : "var(--border)"}`, boxShadow: done ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
                               }}>
-                                <span style={{ width: 20, height: 20, flexShrink: 0, borderRadius: 6, display: "grid", placeItems: "center", border: `2px solid ${done ? "var(--green)" : "var(--border)"}`, background: done ? "var(--green)" : "transparent" }}>
-                                  {done && <Icon name="check" size={12} color="#fff" />}
+                                <span style={{ width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: "grid", placeItems: "center", border: `2px solid ${done ? "var(--green)" : "var(--border)"}`, background: done ? "var(--green)" : "transparent", transition: "background 0.15s, border-color 0.15s" }}>
+                                  {done && <Icon name="check" size={13} color="#fff" />}
                                 </span>
-                                {it.image && <span style={{ width: 26, height: 26, borderRadius: 7, overflow: "hidden", flexShrink: 0, background: "#fff", border: "1px solid var(--border)" }}><Img src={it.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 2 }} /></span>}
+                                {it.image && <span style={{ width: 30, height: 30, borderRadius: 9, overflow: "hidden", flexShrink: 0, background: "#fff", border: "1px solid var(--border)" }}><Img src={it.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 2 }} /></span>}
                                 <span style={{ flex: 1, minWidth: 0 }}>
                                   <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", textDecoration: done ? "line-through" : "none" }}>{it.name}</span>
+                                    <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)", textDecoration: done ? "line-through" : "none", opacity: done ? 0.6 : 1 }}>{it.name}</span>
                                     <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)" }}>{qty}{it.pieces ? ` · ~${it.pieces}` : ""}</span>
                                   </span>
                                   {(it.prepTip || it.usedBy.length > 1) && (
-                                    <span style={{ display: "block", fontSize: 10.5, color: "var(--text3)", marginTop: 1 }}>
+                                    <span style={{ display: "block", fontSize: 10.5, color: "var(--text3)", marginTop: 2 }}>
                                       {it.prepTip ? it.prepTip : ""}{it.prepTip && it.usedBy.length > 1 ? " · " : ""}{it.usedBy.length > 1 ? `pour ${it.usedBy.length} recettes` : ""}
                                     </span>
                                   )}
@@ -681,18 +702,17 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
               {/* ── 2. Cuissons regroupées (mutualiser le four / les feux) ── */}
               {cookingGroups.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <div className="field-label" style={{ marginBottom: 4 }}>Cuissons à mutualiser</div>
-                  <p style={{ fontSize: 11, color: "var(--text3)", margin: "0 0 12px", lineHeight: 1.4 }}>Ces plats partagent le même appareil — lance-les ensemble.</p>
+                <div style={{ marginBottom: 24 }}>
+                  {secHead("🔥", "Cuissons à mutualiser", "Ces plats partagent le même appareil, lance-les ensemble.")}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {cookingGroups.map(g => (
-                      <div key={g.method} style={{ padding: "10px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
-                          <span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={13} color="var(--accent)" /></span>
-                          <span style={{ fontSize: 13, fontWeight: 600 }}>{g.label}</span>
-                          <span style={{ fontSize: 10.5, color: "var(--text3)" }}>· {g.dishes.length} plats</span>
+                      <div key={g.method} style={{ padding: "12px 14px", background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                          <span style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={14} color="var(--accent)" /></span>
+                          <span style={{ fontSize: 13.5, fontWeight: 700 }}>{g.label}</span>
+                          <span style={{ marginLeft: "auto", fontSize: 10.5, fontWeight: 600, color: "var(--text3)", background: "var(--surface2)", padding: "2px 8px", borderRadius: 999 }}>{g.dishes.length} plats</span>
                         </div>
-                        <div style={{ fontSize: 11.5, color: "var(--text2)", paddingLeft: 31 }}>{g.dishes.map(d => d.recipe.name).join(" · ")}</div>
+                        <div style={{ fontSize: 11.5, color: "var(--text2)", paddingLeft: 34, lineHeight: 1.45 }}>{g.dishes.map(d => d.recipe.name).join(" · ")}</div>
                       </div>
                     ))}
                   </div>
@@ -701,34 +721,38 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
               {/* ── 3. Préparations de base à faire d'avance ── */}
               {batch.bases.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <div className="field-label" style={{ marginBottom: 10 }}>À préparer d'avance</div>
+                <div style={{ marginBottom: 24 }}>
+                  {secHead("🧩", "À préparer d'avance", "Les bases partagées entre plusieurs plats.")}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {batch.bases.map(b => (
-                      <div key={b.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(b.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: b.shared ? "rgba(76,175,125,0.08)" : "var(--surface2)", borderRadius: 12, border: `1px solid ${b.shared ? "rgba(76,175,125,0.3)" : "var(--border)"}`, cursor: "pointer" }}>
+                      <button key={b.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(b.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", background: b.shared ? "rgba(76,175,125,0.07)" : "var(--surface)", borderRadius: 14, border: `1px solid ${b.shared ? "rgba(76,175,125,0.35)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13.5, fontWeight: 600 }}>{b.recipe.name}</div>
+                          <div style={{ fontSize: 13.5, fontWeight: 700 }}>{b.recipe.name}</div>
                           <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Pour {b.usedBy.join(", ")}</div>
                         </div>
-                        {b.shared && <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.16)", padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Partagé</span>}
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>{b.amount} {b.unit}</span>
-                      </div>
+                        {b.shared && <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.16)", padding: "3px 8px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0 }}>Partagé</span>}
+                        <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>{b.amount} {b.unit}</span>
+                      </button>
                     ))}
                   </div>
                 </div>
               )}
 
               {/* ── 4. Plats à cuisiner ── */}
-              <div className="field-label" style={{ marginBottom: 10 }}>À cuisiner</div>
+              {secHead("🍽️", "À cuisiner", null)}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {batch.dishes.map(d => (
-                  <button key={d.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(d.recipe.id); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
-                    <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={d.recipe.image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <button key={d.recipe.id} onClick={() => { setShowBatch(false); onSelectRecipe(d.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={d.recipe.image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.recipe.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>{d.meals} repas · {d.cookings} cuisson{d.cookings > 1 ? "s" : ""} · {d.servings} portions</div>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{d.recipe.name}</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{d.meals} repas</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--accent)", background: "rgba(232,112,58,0.1)", borderRadius: 6, padding: "2px 7px" }}>{d.cookings} cuisson{d.cookings > 1 ? "s" : ""}</span>
+                        <span style={{ fontSize: 10.5, color: "var(--text3)", padding: "2px 0" }}>{d.servings} portions</span>
+                      </div>
                     </div>
-                    <Icon name="forward" size={15} color="var(--text3)" />
+                    <span className="complete-add" style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--surface2)", color: "var(--text3)" }}><Icon name="forward" size={15} color="currentColor" /></span>
                   </button>
                 ))}
               </div>
