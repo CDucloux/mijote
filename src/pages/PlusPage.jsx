@@ -37,7 +37,7 @@ function Cell({ value, accent }) {
   }
   return value
     ? <Icon name="check" size={17} color="var(--green)" />
-    : <span style={{ display: "inline-block", width: 12, height: 2, borderRadius: 2, background: "var(--text3)", opacity: 0.5 }} />;
+    : <Icon name="close" size={14} color="var(--red)" />;
 }
 
 export function PlusPage() {
@@ -93,7 +93,7 @@ export function PlusPage() {
                   Tu es abonné·e à Mijoté+ <PlusBadge />
                 </div>
                 <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "3px 0 0" }}>
-                  Merci de ton soutien&nbsp;! Tu profites de toutes les fonctionnalités : recettes illimitées, imports IA, foyer partagé…
+                  Merci de ton soutien&nbsp;! Tu profites de l'ensemble des fonctionnalités disponibles dans Mijoté.
                 </p>
               </div>
             </div>
@@ -112,13 +112,13 @@ export function PlusPage() {
           {/* Tableau comparatif */}
           <div style={{ border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", background: "var(--surface)" }}>
             {/* En-tête colonnes */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 74px 74px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)" }}>Fonctionnalité</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />gratuit</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Mijoté+</span>
             </div>
             {FEATURES.map((f, i) => (
-              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 74px 74px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
+              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
                 <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.35 }}>{f.label}</span>
                 <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.free} /></span>
                 <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.plus} accent /></span>
