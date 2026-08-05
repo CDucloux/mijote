@@ -1138,6 +1138,30 @@ select {
     background: var(--accent);
     color: #fff;
   }
+
+  /* Choix « Nouvelle recette » : survol accent (import IA) / neutre (manuel). */
+  .nr-choice:hover {
+    border-color: rgba(232, 112, 58, 0.5);
+    box-shadow: 0 8px 22px -12px rgba(232, 112, 58, 0.55);
+  }
+
+  .nr-choice.nr-neutral:hover {
+    border-color: var(--text3);
+    box-shadow: 0 8px 22px -14px rgba(0, 0, 0, 0.3);
+  }
+
+  .nr-choice:hover .nr-chev {
+    background: var(--accent);
+    color: #fff;
+  }
+}
+
+.nr-choice {
+  transition: border-color 0.15s ease, box-shadow 0.2s ease;
+}
+
+.nr-chev {
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .complete-row {
