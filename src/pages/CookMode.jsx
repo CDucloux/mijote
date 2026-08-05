@@ -310,7 +310,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320, animation: "popIn 0.5s 0.5s both ease" }}>
             {canIterate && (
               <button className="btn btn-ghost" style={{ padding: "13px 24px", fontSize: 15, borderRadius: 999 }} onClick={() => { setIterRating(null); setIterNotes(""); setIterOpen(true); }}>
-                <Icon name="sparkle" size={17} /> Noter une itération
+                <Icon name="star" size={17} /> Noter une itération
               </button>
             )}
             {/* Retour DIRECT depuis l'écran de fin (onClose sans `requestClose`) :
