@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.9.23 – Safran · Techniques & correctif
+
+### Mode cuisine
+- **Bulle de définition d'une technique** retravaillée : plus jamais coupée sur les bords (mobile), apparition en fondu, style plus soigné
+
+### Correctif
+- La feuille **« Nouvelle liste »** ne se rouvre plus après la création d'une liste
+
 ## v3.9.22 – Safran · Fiche ingrédient & courses
 
 ### Ingrédients
