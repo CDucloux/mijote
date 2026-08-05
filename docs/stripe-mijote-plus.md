@@ -1,52 +1,74 @@
-# Paiement Mijoté+ — extension Firebase Stripe
+# Paiement Mijoté+ — intégration Stripe maison
 
-Le front est câblé pour l'extension officielle **`firestore-stripe-payments`**
-(Invertase/Stripe). Toute la logique de paiement (Checkout, webhooks, statut
-d'abonnement) vit dans l'extension ; l'app ne fait qu'écrire/écouter des documents
-Firestore. Étapes de configuration côté projet (à faire une fois) :
+Le paiement **ne dépend PAS** de l'extension Firebase (`firestore-stripe-payments`),
+annoncée en fin de vie (arrêt mars 2027). Tout vit dans nos propres Cloud Functions
+(`functions/stripe.js`) :
 
-## 1. Compte & produits Stripe
-1. Créer un compte Stripe, récupérer la **clé secrète** (`sk_…`).
-2. Créer un produit **Mijoté+** avec deux tarifs récurrents :
-   - **Mensuel** : 3,99 €/mois → note l'ID `price_…`
-   - **Annuel** : 29,99 €/an → note l'ID `price_…`
+| Fonction | Type | Rôle |
+| --- | --- | --- |
+| `createStripeCheckout` | callable | crée une session Stripe Checkout (abonnement) → renvoie l'URL |
+| `createStripePortal` | callable | ouvre le portail de facturation Stripe → renvoie l'URL |
+| `stripeWebhook` | HTTP | Stripe → Firestore : écrit le statut d'abonnement |
 
-## 2. Installer l'extension
-Firebase Console → Extensions → **Run Payments with Stripe**
-(`firestore-stripe-payments`). Pendant l'installation :
-- **Products/Pricing & subscriptions collection** : laisser `products` / `customers`
-  (valeurs par défaut attendues par le front).
-- **Stripe API key** : la clé secrète (via Secret Manager).
-- **Sync new users** : activer la synchro auto des utilisateurs vers des clients Stripe.
-- Après installation, configurer le **webhook Stripe** avec l'URL fournie par
-  l'extension (elle indique les événements à cocher) et coller le **signing secret**.
+Le front (`src/lib/firebase/subscription.ts`) appelle les deux callables et écoute
+`customers/{uid}/subscriptions` (statut `active`/`trialing`) pour débloquer Mijoté+.
+Le lien uid Firebase ↔ client Stripe est stocké dans `customers/{uid}.stripeId` et
+dupliqué en métadonnée Stripe (`firebaseUID`). Région des fonctions : `europe-west1`.
 
-L'extension déploie aussi les **règles Firestore** pour `customers/{uid}/…`
-(lecture de ses propres abonnements). Vérifier qu'elles sont bien en place.
+## 1. Produits Stripe (déjà fait)
+Un produit **Mijoté+** avec deux tarifs récurrents : **3,99 €/mois** et **29,99 €/an**.
+Noter les deux identifiants `price_…` (bien ceux du **mode test** pour tester).
 
-## 3. Variables d'environnement du front
-Dans le `.env` (préfixe `VITE_`) :
-
-```
-VITE_STRIPE_PRICE_MONTHLY=price_xxx   # tarif mensuel
-VITE_STRIPE_PRICE_YEARLY=price_yyy    # tarif annuel
-# Optionnel — seulement si l'extension n'est pas en us-central1 :
-VITE_STRIPE_EXT_REGION=us-central1
+## 2. Secrets côté fonctions
+Depuis la racine du projet :
+```bash
+firebase functions:secrets:set STRIPE_SECRET_KEY      # coller sk_test_… (puis sk_live_… en prod)
+firebase functions:secrets:set STRIPE_WEBHOOK_SECRET  # coller whsec_… (obtenu à l'étape 4)
 ```
 
-Tant que ces variables sont absentes, le bouton « Passer à Mijoté+ » affiche
-simplement « arrive bientôt » (aucun appel Stripe).
+## 3. Déployer les fonctions
+```bash
+firebase deploy --only functions
+```
+Le déploiement installe la dépendance `stripe` et publie les 3 fonctions. Récupère
+l'URL publique de `stripeWebhook` affichée à la fin (forme
+`https://europe-west1-<projet>.cloudfunctions.net/stripeWebhook`).
 
-## 4. Comment ça marche côté app
-- **Statut** : `useSubscription(uid)` écoute `customers/{uid}/subscriptions`
-  (statut `active`/`trialing`) → `isPlus = isAdmin || abonné`.
-- **Achat** : le CTA écrit un doc dans `customers/{uid}/checkout_sessions` ;
-  l'extension y renvoie l'`url` de Stripe Checkout → redirection.
-- **Gestion** : « Gérer mon abonnement » appelle la fonction
-  `ext-firestore-stripe-payments-createPortalLink` (portail de facturation Stripe).
-- **Retour** : `success_url = /plus?checkout=success` → message de bienvenue ;
-  le statut bascule dès que le webhook a créé l'abonnement.
+## 4. Webhook Stripe
+Stripe → **Développeurs → Webhooks → + Ajouter un endpoint** :
+- **URL** : celle de `stripeWebhook` (étape 3).
+- **Événements** : `checkout.session.completed`, `customer.subscription.created`,
+  `customer.subscription.updated`, `customer.subscription.deleted`.
+- Créer, copier le **Signing secret** `whsec_…`, le poser via `functions:secrets:set`
+  (étape 2) puis **re-déployer** (`firebase deploy --only functions`) pour que le
+  secret soit pris en compte.
 
-## Test
-Utiliser le **mode test** de Stripe (clés `sk_test_…`, carte `4242 4242 4242 4242`)
-avant de passer en production.
+## 5. Règles Firestore
+`firestore.rules` autorise chaque utilisateur à LIRE `customers/{uid}` et
+`customers/{uid}/subscriptions/**` ; l'écriture est réservée au serveur (webhook via
+Admin SDK). Déployer si besoin :
+```bash
+firebase deploy --only firestore:rules
+```
+
+## 6. Variables d'environnement du front
+Dans `.env.local` (préfixe `VITE_`, **baké au build** → rebuild après) :
+```
+VITE_STRIPE_PRICE_MONTHLY=price_…   # tarif mensuel
+VITE_STRIPE_PRICE_YEARLY=price_…    # tarif annuel
+# Optionnel — seulement si les fonctions ne sont PAS en europe-west1 :
+# VITE_STRIPE_EXT_REGION=europe-west1
+```
+Tant que ces prix sont absents, le CTA « Passer à Mijoté+ » affiche « arrive bientôt ».
+
+## 7. Test de bout en bout (mode test)
+- `/plus` → « Passer à Mijoté+ » → Stripe Checkout.
+- Carte de test `4242 4242 4242 4242`, date future, CVC quelconque.
+- Retour sur `/plus?checkout=success` → `isPlus` bascule dès que le webhook a écrit
+  l'abonnement (quelques secondes).
+- « Gérer » → portail de facturation Stripe.
+
+## Passage en production
+Refaire produits/tarifs en **mode live**, poser les secrets `sk_live_…` /
+`whsec_…` (live), recréer le webhook sur l'URL live, et mettre les `price_…` live
+dans les variables d'env de build.

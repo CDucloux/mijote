@@ -15,6 +15,10 @@ const {
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
 } = require("./recipeExtract.js");
 
+// Paiement Mijoté+ (Stripe maison) : createStripeCheckout / createStripePortal /
+// stripeWebhook. Défini dans son propre module, ré-exporté ici pour le déploiement.
+Object.assign(exports, require("./stripe.js"));
+
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 const ADMIN_EMAIL = defineString("ADMIN_EMAIL"); // e-mail autorisé (le créateur)
 
