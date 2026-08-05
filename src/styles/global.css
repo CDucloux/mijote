@@ -715,6 +715,20 @@ select {
   }
 }
 
+/* Remplissage de l'anneau d'import : de 0 % (offset 100) à ~92 % (offset 8).
+   Piloté en CSS — INDÉPENDANT des rendus React — pour rester fluide même quand
+   le thread principal est occupé par l'extraction. `pathLength=100` sur le cercle
+   fait que l'offset s'exprime en pourcentage. */
+@keyframes ringFill {
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: 8;
+  }
+}
+
 @keyframes expandDown {
   from {
     opacity: 0;
