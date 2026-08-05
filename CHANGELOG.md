@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.9.25 – Safran · Éditeur repensé
+
+### Création / édition
+- **Éditeur de recette repensé** : barre d'action épurée, onglets segmentés à icônes, section « Infos » réorganisée, zones d'ajout modernisées et rendu centré sur desktop
+
 ## v3.9.24 – Safran · Bulle technique enrichie
 
 ### Mode cuisine
