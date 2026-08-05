@@ -434,58 +434,90 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
       {/* Add recipe modal */}
       {addModal && (
-        <SwipeableSheet onClose={() => { setAddModal(null); setSearchQ(""); }} style={{ maxHeight: "80dvh" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 4 }}>Ajouter une recette</h3>
-          <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12 }}>
-            {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+        <SwipeableSheet onClose={() => { setAddModal(null); setSearchQ(""); }} style={{ maxHeight: "86dvh" }}>
+          {/* En-tête : puce calendrier + titre + date */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
+              <Icon name="calendar" size={21} color="var(--accent)" />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Ajouter une recette</h3>
+              <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+              </div>
+            </div>
           </div>
-          <div style={{ marginBottom: 14 }}>
-            <div className="field-label" style={{ marginBottom: 8 }}>Repas</div>
-            {(() => {
-              const slots = addModal.slots;
-              // Multi-sélection : on peut ajouter la recette à un ou plusieurs créneaux.
-              const toggle = (id) => setAddModal(p => {
-                const has = p.slots.includes(id);
-                const next = has ? p.slots.filter(s => s !== id) : [...p.slots, id];
-                return { ...p, slots: next.length ? next : p.slots }; // garde toujours ≥ 1
-              });
+
+          {/* Créneaux : contrôle segmenté sur rail (multi-sélection) */}
+          {(() => {
+            const slots = addModal.slots;
+            const toggle = (id) => setAddModal(p => {
+              const has = p.slots.includes(id);
+              const next = has ? p.slots.filter(s => s !== id) : [...p.slots, id];
+              return { ...p, slots: next.length ? next : p.slots }; // garde toujours ≥ 1
+            });
+            return (
+              <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
+                {MEAL_SLOTS.map(s => {
+                  const active = slots.includes(s.id);
+                  return (
+                    <button key={s.id} onClick={() => toggle(s.id)}
+                      style={{ flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
+                        background: active ? "var(--surface)" : "transparent",
+                        color: active ? s.text : "var(--text3)",
+                        boxShadow: active ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                        transition: "color 0.15s ease, background-color 0.15s ease" }}>
+                      <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* Recherche : champ blanc, coins doux */}
+          <div style={{ position: "relative", marginBottom: 16 }}>
+            <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
+            <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)}
+              style={{ paddingLeft: 40, background: "var(--surface)", borderRadius: 13, height: 46 }} />
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <Icon name={searchQ.trim() ? "search" : "book"} size={13} color="var(--accent)" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{searchQ.trim() ? "Résultats" : "Ta bibliothèque"}</span>
+            {filteredRecipes.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{filteredRecipes.length}</span>}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto", maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }}>
+            {filteredRecipes.map(r => {
+              const total = (r.prepTime || 0) + (r.cookTime || 0);
+              const nIng = r.ingredients?.length || 0;
               return (
-                <div style={{ display: "flex", gap: 5, padding: 5, background: "var(--surface2)", borderRadius: 14, border: "1px solid var(--border)" }}>
-                  {MEAL_SLOTS.map(s => {
-                    const active = slots.includes(s.id);
-                    return (
-                      <button key={s.id} onClick={() => toggle(s.id)}
-                        style={{ flex: 1, padding: "9px 6px", borderRadius: 10, fontSize: 13, fontWeight: 700,
-                          background: active ? s.color : "transparent",
-                          color: active ? s.text : "var(--text3)",
-                          border: `1px solid ${active ? "transparent" : "var(--border)"}`, cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                          transition: "all 0.18s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
-                        <span style={{ fontSize: 15 }}>{s.emoji}</span>{s.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                <button key={r.id} onClick={() => addMeal(addModal.date, addModal.slots, r.id)} className="complete-row"
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                  <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
+                      {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
+                      {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
+                      {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
+                    </div>
+                  </div>
+                  <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)", color: "var(--accent)" }}>
+                    <Icon name="plus" size={17} color="currentColor" />
+                  </span>
+                </button>
               );
-            })()}
-          </div>
-          <div style={{ position: "relative", marginBottom: 12 }}>
-            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
-            <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{ paddingLeft: 34 }} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "44vh" }}>
-            {filteredRecipes.map(r => (
-              <button key={r.id} onClick={() => addMeal(addModal.date, addModal.slots, r.id)}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>{r.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)" }}>{(r.prepTime || 0) + (r.cookTime || 0)}min | {r.servings} portions</div>
-                </div>
-                <NutriScoreBadge letter={r.nutriLetter} compact />
-              </button>
-            ))}
-            {filteredRecipes.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette trouvée</p>}
+            })}
+            {filteredRecipes.length === 0 && (
+              <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
+                <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--surface2)", display: "grid", placeItems: "center", margin: "0 auto 12px" }}><Icon name="search" size={24} color="var(--text3)" /></div>
+                <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette {searchQ.trim() ? "ne correspond à ta recherche" : "dans ta bibliothèque"}.</p>
+              </div>
+            )}
           </div>
         </SwipeableSheet>
       )}
