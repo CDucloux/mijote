@@ -613,6 +613,9 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
               } else {
                 updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear }));
               }
+              // `close(cb)` exécute cb À LA PLACE de `onClose` → on ferme nous-mêmes,
+              // sinon la feuille se rouvre sur le même brouillon.
+              setConfigList(null);
             })}>{configList.isNew ? "Créer la liste" : "Enregistrer"}</button>
           </div>
           </>)}
