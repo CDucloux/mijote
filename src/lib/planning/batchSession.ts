@@ -274,7 +274,10 @@ export function groupCookings(dishes: BatchDish[]): CookingGroup[] {
     for (const k of keys) { const g = groups.get(k) || []; g.push(d); groups.set(k, g); }
   }
   return [...groups.entries()]
-    .map(([method, ds]) => ({ method, label: method === "autre" ? "Autre" : (labelOf.get(method) || method), dishes: ds }))
-    .filter(g => g.dishes.length > 1) // seul l'intérêt de MUTUALISER (≥ 2 plats) est montré
+    .map(([method, ds]) => ({ method, label: labelOf.get(method) || method, dishes: ds }))
+    // « autre » = aucune méthode de cuisson détectée → ce n'est PAS une cuisson à
+    // mutualiser (souvent : plat sans cuisson). On ne montre que les vrais appareils
+    // partagés (≥ 2 plats).
+    .filter(g => g.method !== "autre" && g.dishes.length > 1)
     .sort((a, b) => b.dishes.length - a.dishes.length);
 }
