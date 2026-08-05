@@ -16,7 +16,7 @@ import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platN
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { fmtQtyUnit } from "@/lib/format.js";
+import { fmtQtyUnit, fmtTime } from "@/lib/format.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
@@ -712,34 +712,75 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           ? eligiblePool.filter(r => roleForCategory(r.category || "") === completeRole && normalizeStr(r.name).includes(q)).slice(0, 20)
           : suggestSides(base, eligiblePool, suggestCtx, { role: completeRole, max: 12 });
         return (
-          <SwipeableSheet onClose={() => setComposeFor(null)} style={{ maxHeight: "82dvh" }}>
-            <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 2 }}>Compléter le repas</h3>
-            {base && <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 14 }}>Autour de <strong style={{ color: "var(--text2)" }}>{base.name}</strong></div>}
-            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-              {COMPLETE_ROLES.map(r => (
-                <button key={r.id} onClick={() => setCompleteRole(r.id)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                  background: completeRole === r.id ? "rgba(232,112,58,0.16)" : "var(--surface2)", color: completeRole === r.id ? "var(--accent)" : "var(--text2)",
-                  border: `1px solid ${completeRole === r.id ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{r.label}</button>
-              ))}
+          <SwipeableSheet onClose={() => setComposeFor(null)} style={{ maxHeight: "86dvh" }}>
+            {/* En-tête : vignette du plat de base + titre contextuel */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+              <div style={{ width: 46, height: 46, borderRadius: 13, overflow: "hidden", flexShrink: 0, background: "var(--surface2)", display: "grid", placeItems: "center" }}>
+                {base?.image ? <Img src={base.image} alt={base.name} style={{ width: "100%", height: "100%" }} /> : <Icon name="plus" size={20} color="var(--accent)" />}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Compléter le repas</h3>
+                {base && <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Autour de <strong style={{ color: "var(--text2)" }}>{base.name}</strong></div>}
+              </div>
             </div>
-            <div style={{ position: "relative", marginBottom: 12 }}>
-              <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={15} color="var(--text3)" /></span>
-              <input className="field-input" placeholder={`Rechercher ${roleLabel(completeRole).toLowerCase()}…`} value={completeSearch} onChange={e => setCompleteSearch(e.target.value)} style={{ paddingLeft: 34 }} />
+
+            {/* Contrôle segmenté (rôle) : pastille active blanche sur rail teinté */}
+            <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
+              {COMPLETE_ROLES.map(r => {
+                const active = completeRole === r.id;
+                return (
+                  <button key={r.id} onClick={() => setCompleteRole(r.id)}
+                    style={{ flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", border: "none",
+                      background: active ? "var(--surface)" : "transparent", color: active ? "var(--accent)" : "var(--text3)",
+                      boxShadow: active ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "color 0.15s ease, background-color 0.15s ease" }}>
+                    {r.label}
+                  </button>
+                );
+              })}
             </div>
-            {!q && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}><Icon name="sun" size={12} color="var(--accent)" /> Suggestions de saison</div>}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", maxHeight: "48vh" }}>
-              {list.map(r => (
-                <button key={r.id} onClick={() => attachToMeal(r.id, completeRole)}
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textAlign: "left" }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                    {r.cuisine && <div style={{ fontSize: 11, color: "var(--text3)" }}>{r.cuisine}</div>}
-                  </div>
-                  <Icon name="plus" size={16} color="var(--accent)" />
-                </button>
-              ))}
-              {list.length === 0 && <p style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>Aucune recette « {roleLabel(completeRole).toLowerCase()} » {q ? "trouvée" : "disponible"}</p>}
+
+            {/* Recherche : champ blanc, coins doux */}
+            <div style={{ position: "relative", marginBottom: 16 }}>
+              <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
+              <input className="field-input" placeholder={`Rechercher ${roleLabel(completeRole).toLowerCase()}…`} value={completeSearch} onChange={e => setCompleteSearch(e.target.value)}
+                style={{ paddingLeft: 40, background: "var(--surface)", borderRadius: 13, height: 46 }} />
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+              <Icon name={q ? "search" : "sun"} size={13} color="var(--accent)" />
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{q ? "Résultats" : "Suggestions de saison"}</span>
+              {list.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{list.length}</span>}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto", maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }}>
+              {list.map(r => {
+                const total = (r.prepTime || 0) + (r.cookTime || 0);
+                const nIng = r.ingredients?.length || 0;
+                return (
+                  <button key={r.id} onClick={() => attachToMeal(r.id, completeRole)} className="complete-row"
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                    <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
+                        {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
+                        {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
+                        {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
+                      </div>
+                    </div>
+                    <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)", color: "var(--accent)" }}>
+                      <Icon name="plus" size={17} color="currentColor" />
+                    </span>
+                  </button>
+                );
+              })}
+              {list.length === 0 && (
+                <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--surface2)", display: "grid", placeItems: "center", margin: "0 auto 12px" }}><Icon name="search" size={24} color="var(--text3)" /></div>
+                  <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette « {roleLabel(completeRole).toLowerCase()} » {q ? "ne correspond à ta recherche" : "disponible pour l'instant"}.</p>
+                </div>
+              )}
             </div>
           </SwipeableSheet>
         );
