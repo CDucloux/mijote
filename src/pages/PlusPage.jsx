@@ -47,6 +47,8 @@ export function PlusPage() {
   const [billing, setBilling] = useState("yearly"); // annuel mis en avant par défaut
   const [busy, setBusy] = useState(false);
   const price = PRICES[billing];
+  // Le paiement est prêt dès que les deux tarifs Stripe sont fournis par l'env.
+  const paymentReady = !!(PRICES.monthly.price && PRICES.yearly.price);
 
   // Retour de Stripe Checkout (success_url) : petit message, puis on nettoie la query.
   useEffect(() => {
@@ -134,7 +136,9 @@ export function PlusPage() {
           )}
 
           <p style={{ fontSize: 11.5, color: "var(--text3)", textAlign: "center", lineHeight: 1.5, margin: 0 }}>
-            L'abonnement Mijoté+ arrive bientôt. Les imports IA restent en accès limité en attendant.
+            {paymentReady
+              ? "Paiement sécurisé via Stripe · résiliable à tout moment."
+              : "L'abonnement Mijoté+ arrive bientôt. Les imports IA restent en accès limité en attendant."}
           </p>
         </div>
       </div>
