@@ -1,5 +1,18 @@
 # Changelog – Mijoté
 
+## v3.9.16 – Safran · Finitions mode cuisine & import
+
+### Mode pas à pas
+- Boutons **Précédent / Suivant / Terminé** en pastilles ; bouton fermer avec survol sur desktop
+- Icône **étoile** pour « Noter une itération » (au lieu de l'étincelle)
+- Rendu net du numéro d'étape
+
+### Import IA
+- **Anneau de progression** enfin fluide : remplissage régulier calé sur la durée d'extraction (animation CSS, indépendante des rendus)
+
+### Rédaction
+- Suppression des **tirets cadratins « — »** (marqueur IA) dans les textes d'étape, à l'affichage comme à l'extraction
+
 ## v3.9.15 – Safran · Mode cuisine & finitions
 
 ### Mode pas à pas

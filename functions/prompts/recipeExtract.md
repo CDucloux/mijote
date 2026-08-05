@@ -57,3 +57,4 @@ USTENSILES
 
 RÈGLES
 - N'invente rien d'absent de la page. Si ce n'est pas une recette, renvoie `"name": ""` et des tableaux vides.
+- **Ponctuation** : n'utilise JAMAIS de tiret cadratin « — » (ni « – ») dans `name`, `description`, `text` ou `tip`. Emploie une virgule, une parenthèse ou un point. Le trait d'union « - » reste autorisé pour les mots composés (« sous-vide ») et les plages (« 10-12 min »).

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex, annotateText } from "@/lib/recipes/techniques.js";
 import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
+import { stripAiDashes } from "@/lib/format.js";
 
 // ─── TEXTE AVEC TECHNIQUES SURLIGNÉES ─────────────────────────────────────────
 // Rend un texte d'étape en repérant les gestes du glossaire (suer, déglacer…) et
@@ -34,7 +35,9 @@ export function TechniqueText({ text, index: indexProp }) {
   const { techniques } = useAppShell();
   const builtIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const index = indexProp || builtIndex;
-  const segments = useMemo(() => annotateText(text, index), [text, index]);
+  // On retire les tirets cadratins « — » (marqueur des textes IA) avant tout.
+  const clean = useMemo(() => stripAiDashes(text), [text]);
+  const segments = useMemo(() => annotateText(clean, index), [clean, index]);
   const [openId, setOpenId] = useState(null);   // épinglé au tap (mobile)
   const [hoverId, setHoverId] = useState(null);  // au survol (desktop)
   const [align, setAlign] = useState("left");    // "right" si le mot est côté droit → évite le débordement
@@ -53,8 +56,8 @@ export function TechniqueText({ text, index: indexProp }) {
     return () => document.removeEventListener("click", close);
   }, [openId]);
 
-  // Rien à surligner → on rend le texte brut.
-  if (segments.length === 1 && !segments[0].tech) return text;
+  // Rien à surligner → on rend le texte (nettoyé) brut.
+  if (segments.length === 1 && !segments[0].tech) return clean;
 
   return segments.map((seg, i) => {
     if (!seg.tech) return <span key={i}>{seg.text}</span>;

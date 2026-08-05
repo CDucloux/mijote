@@ -33,6 +33,7 @@ export const Icon = ({ name, size = 20, color = "currentColor" }) => {
     logout: <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>,
     warning: <svg {...p} strokeWidth="2"><path d="M12 4 21 20 3 20Z"/><line x1="12" y1="10" x2="12" y2="14.5"/><line x1="12" y1="17.5" x2="12.01" y2="17.5"/></svg>,
     sparkle: <svg {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>,
+    star: <svg {...p} strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>,
     user: <svg {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>,
     thinking: <svg {...p} strokeWidth="1.6"><path d="M10 3c.4 3 1.5 4.5 5 5-3.5.5-4.6 2-5 5-.4-3-1.5-4.5-5-5 3.5-.5 4.6-2 5-5z" fill={color} stroke="none" /><path d="M18 13c.2 1.5.8 2.3 2.5 2.5-1.7.2-2.3 1-2.5 2.5-.2-1.5-.8-2.3-2.5-2.5 1.7-.2 2.3-1 2.5-2.5z" fill={color} stroke="none" /></svg>,
     bulb: <svg {...p}><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></svg>,

@@ -715,6 +715,20 @@ select {
   }
 }
 
+/* Remplissage de l'anneau d'import : de 0 % (offset 100) à ~92 % (offset 8).
+   Piloté en CSS — INDÉPENDANT des rendus React — pour rester fluide même quand
+   le thread principal est occupé par l'extraction. `pathLength=100` sur le cercle
+   fait que l'offset s'exprime en pourcentage. */
+@keyframes ringFill {
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: 8;
+  }
+}
+
 @keyframes expandDown {
   from {
     opacity: 0;
@@ -1070,6 +1084,16 @@ select {
   .onb-cta:hover {
     transform: translateY(-2px);
     box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Bouton fermer du mode cuisine : retour de survol (desktop). */
+  .cook-close-btn {
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .cook-close-btn:hover {
+    background: var(--surface3);
+    color: var(--text);
   }
 }
 

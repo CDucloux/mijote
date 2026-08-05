@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
 
@@ -32,26 +32,22 @@ const RING_R = 34; // rayon de l'anneau (le tracé raisonne en % via pathLength)
  * @param estimateMs - Durée estimée de l'extraction en ms (défaut 14000).
  */
 export function LoadingOverlay({ estimateMs = 14000 }) {
+  const dur = Math.max(2000, estimateMs);
+  // L'ANNEAU est animé en CSS (voir `ringFill`), donc fluide même si React ne
+  // re-rend pas pendant l'extraction. Le compteur textuel, lui, suit la MÊME
+  // courbe (easeOutCubic) via un timer — secondaire : s'il saute, ce n'est que
+  // le chiffre, pas le cercle.
   const [progress, setProgress] = useState(0);
-  const startRef = useRef(0);
-
   useEffect(() => {
-    startRef.current = performance.now();
-    // tau règle la « raideur » : à t = estimateMs la courbe vaut ~1-e^-2 ≈ 0.86,
-    // puis rampe vers le plafond de 0.92. Bornée pour ne jamais mentir un « 100 % ».
-    const tau = Math.max(2000, estimateMs) * 0.5;
-    let raf;
-    const tick = () => {
-      const t = performance.now() - startRef.current;
-      const p = Math.min(0.92, 1 - Math.exp(-t / tau));
-      setProgress(p);
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [estimateMs]);
+    const start = performance.now();
+    const id = setInterval(() => {
+      const x = Math.min(1, (performance.now() - start) / dur);
+      setProgress(0.92 * (1 - Math.pow(1 - x, 3))); // easeOutCubic, plafonné à 92 %
+    }, 200);
+    return () => clearInterval(id);
+  }, [dur]);
 
-  const stepIdx = Math.min(LOADING_STEPS.length - 1, Math.floor(progress * LOADING_STEPS.length));
+  const stepIdx = Math.min(LOADING_STEPS.length - 1, Math.floor((progress / 0.92) * LOADING_STEPS.length));
   const pct = Math.round(progress * 100);
 
   return createPortal(
@@ -67,9 +63,9 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
           <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true">
             <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--surface3)" strokeWidth="5" />
             <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round"
-              pathLength="100" strokeDasharray="100" strokeDashoffset={100 - progress * 100}
+              pathLength="100" strokeDasharray="100" strokeDashoffset="100"
               transform="rotate(-90 46 46)"
-              style={{ transition: "stroke-dashoffset 0.2s linear" }} />
+              style={{ animation: `ringFill ${dur}ms cubic-bezier(0.215,0.61,0.355,1) forwards` }} />
           </svg>
           <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 34 }}>🍲</div>
         </div>
