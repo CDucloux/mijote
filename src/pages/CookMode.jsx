@@ -209,10 +209,15 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
       const p = stepElasticRef.current; if (!p) return;
       p.style.transition = "transform 0.8s cubic-bezier(0.22,1,0.3,1)";
       p.style.transform = "translateY(0px)";
+      // Retire la couche GPU une fois le ressort terminé (rendu texte net au repos).
+      const clear = () => { p.style.willChange = ""; p.removeEventListener("transitionend", clear); };
+      p.addEventListener("transitionend", clear);
     };
     const onDown = (e) => {
       dragging = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; edge = null; pull = 0;
-      const p = stepElasticRef.current; if (p) p.style.transition = "none"; // suit le doigt sans easing
+      // `will-change` posé UNIQUEMENT le temps du drag : une couche GPU permanente
+      // sur ce conteneur dégradait le rendu du texte (chiffres « qui bavent »).
+      const p = stepElasticRef.current; if (p) { p.style.transition = "none"; p.style.willChange = "transform"; }
     };
     const onMove = (e) => {
       if (!dragging) return;
@@ -232,6 +237,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
         else if (dx > 50) setStepIdx(i => Math.max(0, i - 1));
       }
       if (edge === "top" || edge === "bottom") springBack();
+      else { const p = stepElasticRef.current; if (p) p.style.willChange = ""; } // pas de ressort → on retire la couche GPU tout de suite
       axis = null; edge = null;
     };
     el.addEventListener("touchstart", onDown, { passive: true });
@@ -340,7 +346,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          <button onClick={requestClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button className="cook-close-btn" onClick={requestClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon name={isNested ? "back" : "close"} size={18} />
           </button>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -392,7 +398,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
 
           {/* Step content */}
           <div ref={stepScrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
-            <div ref={stepElasticRef} style={{ maxWidth: 640, margin: "0 auto", willChange: "transform" }}>
+            <div ref={stepElasticRef} style={{ maxWidth: 640, margin: "0 auto" }}>
               {isOverview ? (
                 /* ── Aperçu (mise en place) : tous les ingrédients + ustensiles ── */
                 <>
@@ -557,15 +563,15 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
 
         {/* Bottom nav */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStepIdx(i => Math.max(0, i - 1))} disabled={stepIdx === 0} title="Précédent (flèche ←)">
+          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => setStepIdx(i => Math.max(0, i - 1))} disabled={stepIdx === 0} title="Précédent (flèche ←)">
             <Icon name="back" size={16} /> Précédent
           </button>
           <span style={{ fontSize: 12, color: "var(--text3)", minWidth: 60, textAlign: "center" }}>
             {isOverview ? "Aperçu" : isBases ? "Bases" : `${realIdx + 1} / ${realStepCount}`}
           </span>
           {stepIdx < totalSteps - 1
-            ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)} disabled={isBases && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
-            : <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
+            ? <button className="btn btn-primary btn-pill" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)} disabled={isBases && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
+            : <button className="btn btn-primary btn-pill" style={{ flex: 1, background: "var(--green)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
           }
         </div>
       </div>

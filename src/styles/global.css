@@ -1071,6 +1071,16 @@ select {
     transform: translateY(-2px);
     box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5);
   }
+
+  /* Bouton fermer du mode cuisine : retour de survol (desktop). */
+  .cook-close-btn {
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .cook-close-btn:hover {
+    background: var(--surface3);
+    color: var(--text);
+  }
 }
 
 .onb-cta:active {

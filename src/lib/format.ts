@@ -168,3 +168,17 @@ export function relativeDate(ts: number | null | undefined, now: number = Date.n
   if (days < 365) { const m = Math.floor(days / 30); return `il y a ${m} mois`; }
   const y = Math.floor(days / 365); return `il y a ${y} an${y > 1 ? "s" : ""}`;
 }
+
+/**
+ * Retire les tirets cadratins « — » (typiques des textes générés par IA) d'un
+ * texte d'affichage : la parenthèse en incise devient une virgule, plus naturelle
+ * en français. Les traits d'union « - » et les demi-cadratins « – » (plages de
+ * valeurs, ex. « 10–12 min ») sont préservés.
+ *
+ * @param s - Le texte à nettoyer.
+ * @returns Le texte sans tiret cadratin.
+ */
+export function stripAiDashes(s: string | null | undefined): string {
+  if (typeof s !== "string") return s ?? "";
+  return s.replace(/\s*—\s*/g, ", ").replace(/\s+,/g, ",").replace(/ {2,}/g, " ").trim();
+}
