@@ -14,7 +14,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // ─── PROFIL ───────────────────────────────────────────────────────────────────
 // Page dédiée (accès depuis le menu avatar) : nom d'affichage, activité cuisine
 // (heatmap façon GitHub) et purge des données.
-export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, mealPlan = {}, recipes = [], onPurge, onDeleteAccount }) {
+export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, recipes = [], onPurge, onDeleteAccount }) {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
   const { isPlus } = useAppShell();
@@ -27,9 +27,12 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
   const [deleting, setDeleting] = useState(false);
   const editing = nameInput !== null;
 
-  const stats = buildHeatmap(mealPlan, { weeks: 26 });
+  // Activité cuisine = plats RÉELLEMENT cuisinés (mode pas à pas mené au bout),
+  // consignés dans le journal de cuisine — et non les repas simplement planifiés.
+  const cookLog = prefs.cookLog || {};
+  const stats = buildHeatmap(cookLog, { weeks: 26 });
   const STAT = [
-    { label: "Repas cuisinés", value: stats.total },
+    { label: "Plats cuisinés", value: stats.total },
     { label: "Jours actifs", value: stats.activeDays },
     { label: "Série en cours", value: `${stats.streak} j` },
     { label: "7 derniers jours", value: stats.thisWeek },
@@ -110,9 +113,9 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
               ))}
             </div>
             <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "16px 14px" }}>
-              <CookingHeatmap mealPlan={mealPlan} weeks={26} />
+              <CookingHeatmap mealPlan={cookLog} weeks={26} />
             </div>
-            <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>D'après tes repas planifiés sur les 6 derniers mois.</div>
+            <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>D'après les plats que tu as cuisinés en mode pas à pas sur les 6 derniers mois.</div>
           </div>
 
           {/* Zone danger */}

@@ -15,8 +15,7 @@ const LOADING_STEPS = [
   "Presque prêt…",
 ];
 
-const RING_R = 34;
-const RING_C = 2 * Math.PI * RING_R; // circonférence pour le tracé de l'arc
+const RING_R = 34; // rayon de l'anneau (le tracé raisonne en % via pathLength)
 
 /**
  * Overlay plein écran non-annulable pendant l'extraction IA, avec une barre de
@@ -60,17 +59,26 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
       <div style={{ width: "100%", maxWidth: 340, background: "var(--surface)", borderRadius: 24, padding: "34px 26px 28px", textAlign: "center", boxShadow: "0 24px 70px rgba(0,0,0,0.45)" }}>
         {/* Marmite STATIQUE au centre d'un anneau de progression qui se remplit. */}
         <div style={{ position: "relative", width: 92, height: 92, margin: "0 auto 18px" }}>
-          <svg width="92" height="92" viewBox="0 0 92 92" style={{ transform: "rotate(-90deg)" }} aria-hidden="true">
+          {/* `pathLength="100"` → dash/offset raisonnent en POURCENTAGE, indépendamment
+              du rayon (aucun calcul de circonférence à faire, aucun décalage possible).
+              Rotation de -90° portée par un attribut SVG (origine explicite 46,46) pour
+              démarrer l'arc en haut — la version CSS `transform` sur le <svg> souffrait
+              d'une origine de transformation ambiguë selon le navigateur. */}
+          <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true">
             <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--surface3)" strokeWidth="5" />
             <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round"
-              strokeDasharray={RING_C} strokeDashoffset={RING_C * (1 - progress)}
-              style={{ transition: "stroke-dashoffset 0.15s linear" }} />
+              pathLength="100" strokeDasharray="100" strokeDashoffset={100 - progress * 100}
+              transform="rotate(-90 46 46)"
+              style={{ transition: "stroke-dashoffset 0.2s linear" }} />
           </svg>
           <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 34 }}>🍲</div>
         </div>
         <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, margin: "0 0 6px" }}>On mijote ta recette…</h3>
         <div style={{ fontSize: 13.5, color: "var(--accent)", fontWeight: 600, minHeight: 20 }}>{LOADING_STEPS[stepIdx]} · {pct}%</div>
-        <div style={{ fontSize: 11.5, color: "var(--text3)", lineHeight: 1.5, marginTop: 12 }}>
+        <div style={{ display: "inline-flex", gap: 4, margin: "12px 0 14px" }}>
+          {[0, 1, 2].map(d => <span key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", animation: `importDots 1.2s ${d * 0.16}s ease-in-out infinite` }} />)}
+        </div>
+        <div style={{ fontSize: 11.5, color: "var(--text3)", lineHeight: 1.5 }}>
           Garde cette fenêtre ouverte : l'extraction est en cours et ne peut pas être interrompue.
         </div>
       </div>

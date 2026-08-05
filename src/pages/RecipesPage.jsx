@@ -20,7 +20,9 @@ import { useLongPress } from "../hooks/useLongPress.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
-const PAGE_SIZE = 8;
+// Toutes les cartes s'animent à l'entrée ; le décalage est plafonné pour que les
+// dernières n'attendent pas indéfiniment (cf. animDelay dans la grille).
+const MAX_STAGGER = 0.6; // s — plafond du délai d'animation d'entrée
 
 // Carte mémoïsée : ne re-rend que si SES props changent. Sans ça, chaque palier
 // de scroll infini (setVisibleCount) re-rendait toutes les cartes déjà visibles.
@@ -328,7 +330,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             return (
               <RecipeGridItem key={r.id} recipe={r}
                 inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
-                animate={idx < PAGE_SIZE} animDelay={`${idx * 0.075}s`}
+                animate animDelay={`${Math.min(idx * 0.045, MAX_STAGGER)}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
                 startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} />
             );

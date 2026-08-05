@@ -7,6 +7,7 @@
  */
 
 import type { IngredientLine } from "@/lib/types.js";
+import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 
 /** Nutriments pour 100 g (`isVegetable` est traité comme drapeau numérique). */
 type Nutrition = Record<string, number>;
@@ -116,6 +117,23 @@ export const isComponentLine = (line: IngredientLine | null | undefined): boolea
 export const buildRecipeIndex = (recipes: NutriRecipe[] | null | undefined): Map<string, NutriRecipe> =>
   new Map((recipes || []).filter((r): r is NutriRecipe & { id: string } => !!r.id).map(r => [r.id, r]));
 
+/**
+ * Résout l'entrée de base d'une ligne d'ingrédient BRUTE. Le `dbId` stocké est un
+ * instantané figé à l'enregistrement : si l'ingrédient n'était pas encore dans la
+ * base à ce moment-là, il est vide. On retombe alors sur un appariement par NOM
+ * (comme l'image, la saison et le stock côté fiche), pour que la nutrition tienne
+ * compte des ingrédients appariés après coup — sans devoir ré-enregistrer.
+ */
+function dbItemFor(line: IngredientLine, ingredientDB: DbItem[]): DbItem | undefined {
+  if (line.dbId) {
+    const byId = ingredientDB.find(d => d.id === line.dbId);
+    if (byId) return byId;
+  }
+  // `findIngredientMatch` type sa base avec `name` requis ; notre `DbItem` (calcul)
+  // ne modélise que id/nutrition. La base réelle porte `name` → cast sûr.
+  return line.name ? (findIngredientMatch(line.name, ingredientDB as unknown as Parameters<typeof findIngredientMatch>[1]) as DbItem | null) ?? undefined : undefined;
+}
+
 interface RawAgg { tot: Record<string, number>; mass: number; covered: number; vegMass: number }
 
 /** Agrège les ingrédients BRUTS d'une liste (ignore les sous-références composant). */
@@ -124,7 +142,7 @@ function aggregateRaw(ingredients: IngredientLine[] | undefined, ingredientDB: D
   let mass = 0, covered = 0, vegMass = 0;
   for (const ci of ingredients || []) {
     if (!ci || ci.recipeId) continue;
-    const di = ingredientDB.find(d => d.id === ci.dbId);
+    const di = dbItemFor(ci, ingredientDB);
     if (!di) continue;
     const cm = ingredientGrams(ci, di);
     mass += cm;
@@ -181,7 +199,7 @@ export function computeNutriInfo(ingredients: IngredientLine[] | null | undefine
       mass += c.coveredAdd;
       continue;
     }
-    const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
+    const dbItem = dbItemFor(recipeIng, ingredientDB);
     if (!dbItem || !dbItem.nutrition) continue;
     const m = ingredientGrams(recipeIng, dbItem);
     const n = dbItem.nutrition;
@@ -260,7 +278,7 @@ export function computeNutritionDetail(ingredients: IngredientLine[] | null | un
       covered += c.coveredAdd;
       continue;
     }
-    const dbItem = ingredientDB.find(d => d.id === recipeIng.dbId);
+    const dbItem = dbItemFor(recipeIng, ingredientDB);
     if (!dbItem) continue;
     const m = ingredientGrams(recipeIng, dbItem);
     mass += m;
