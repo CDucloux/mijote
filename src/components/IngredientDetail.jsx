@@ -50,46 +50,47 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
     { key: "salt", label: "Sel", value: n.salt, color: "#9aa0a6" },
   ];
 
+  const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
+
   return (
     <div key={ingredient.id} className="editor-enter" style={{ flex: 1, overflowY: "auto" }}>
       <div style={{ maxWidth: 580, margin: "0 auto", padding: "16px 20px 48px" }}>
         {/* Barre haute : retour + actions admin */}
-        <div className="slide-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, animationDelay: "0.04s" }}>
-          <button onClick={onBack} className="btn-back-ing" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, padding: "6px 14px", cursor: "pointer", transition: "background 0.15s, color 0.15s" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "var(--surface2)"; e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text2)"; }}>
+        <div className="slide-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, animationDelay: "0.04s" }}>
+          <button onClick={onBack} className="ing-hover" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--text2)", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
             <Icon name="back" size={14} color="currentColor" /> Retour
           </button>
           {isAdmin ? (
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={onEdit}><Icon name="edit" size={14} /> Modifier</button>
-              <button className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--red)" }} onClick={onDelete}><Icon name="trash" size={14} color="var(--red)" /></button>
+              <button className="btn btn-ghost btn-pill btn-sm" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={onEdit}><Icon name="edit" size={14} /> Modifier</button>
+              <button className="btn btn-ghost btn-pill btn-sm" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--red)" }} onClick={onDelete} aria-label="Supprimer"><Icon name="trash" size={14} color="var(--red)" /></button>
             </div>
           ) : (
-            <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "3px 10px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8 }}>Lecture seule</span>
+            <span style={{ fontSize: 10.5, color: "rgba(155,135,245,1)", fontWeight: 700, padding: "4px 11px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 999 }}>Lecture seule</span>
           )}
         </div>
 
-        {/* En-tête : image + nom + catégorie + Nutri-Score */}
-        <div className="slide-up" style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 22, animationDelay: "0.1s" }}>
-          <IngImage src={ingredient.image} alt={ingredient.name} size={88} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 27, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8 }}>{ingredient.name}</h1>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, padding: "3px 12px", fontSize: 12, color: "var(--text2)" }}>
-              <span>{cat.icon}</span> {cat.label}
+        {/* En-tête : carte identité (image + nom + catégorie + Nutri-Score) */}
+        <div className="slide-up" style={{ ...CARD, padding: 18, marginBottom: 14, animationDelay: "0.1s" }}>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <div style={{ flexShrink: 0, borderRadius: "50%", boxShadow: "0 4px 14px -6px rgba(0,0,0,0.25)" }}><IngImage src={ingredient.image} alt={ingredient.name} size={82} /></div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 25, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8 }}>{ingredient.name}</h1>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 999, padding: "4px 12px", fontSize: 12, fontWeight: 600, color: "var(--text2)" }}>
+                <span>{cat.icon}</span> {cat.label}
+              </div>
+              {aliases.length > 0 && (
+                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>Aussi : {aliases.join(", ")}</div>
+              )}
             </div>
-            {aliases.length > 0 && (
-              <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>Aussi : {aliases.join(", ")}</div>
-            )}
+            <div style={{ flexShrink: 0 }}><NutriScoreBadge letter={letter} /></div>
           </div>
-          <div style={{ flexShrink: 0 }}><NutriScoreBadge letter={letter} /></div>
+          {ingredient.gramsPerPiece != null && (
+            <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "var(--text2)", background: "var(--surface2)", borderRadius: 999, padding: "6px 13px", marginTop: 14, width: "fit-content" }}>
+              <Icon name="portions" size={14} color="var(--accent)" /> 1 pièce ≈ <strong>{ingredient.gramsPerPiece} g</strong>
+            </div>
+          )}
         </div>
-
-        {ingredient.gramsPerPiece != null && (
-          <div className="slide-up" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text2)", background: "var(--surface2)", borderRadius: 10, padding: "8px 12px", marginBottom: 18, animationDelay: "0.16s" }}>
-            <Icon name="portions" size={14} color="var(--text3)" /> 1 pièce ≈ <strong>{ingredient.gramsPerPiece} g</strong>
-          </div>
-        )}
 
         {/* Saisonnalité : bandeau des 12 mois + statut du mois courant */}
         {(() => {
@@ -99,24 +100,26 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           const inSeason = isIngredientInSeason(ingredient);
           const cm = currentMonth();
           return (
-            <div className="slide-up" style={{ background: "var(--surface2)", borderRadius: 12, padding: "12px 14px", marginBottom: 18, animationDelay: "0.18s" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>
-                  <span style={{ fontSize: 15 }}>🗓️</span> Saisonnalité
+            <div className="slide-up" style={{ ...CARD, padding: "14px 16px", marginBottom: 14, animationDelay: "0.16s" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  <span style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="calendar" size={15} color="var(--green)" /></span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Saisonnalité</span>
                 </div>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                  background: inSeason ? "rgba(76,175,125,0.14)" : "var(--surface)", color: inSeason ? "var(--green)" : "var(--text3)",
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 999,
+                  background: inSeason ? "rgba(76,175,125,0.14)" : "var(--surface2)", color: inSeason ? "var(--green)" : "var(--text3)",
                   border: `1px solid ${inSeason ? "rgba(76,175,125,0.4)" : "var(--border)"}` }}>
                   {inSeason ? "● De saison" : "○ Hors saison"}
                 </span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: 3 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: 4 }}>
                 {MONTHS_SHORT_FR.map((lbl, i) => {
                   const m = i + 1, on = set.has(m), now = m === cm;
                   return (
-                    <div key={m} title={MONTHS_FR[i]} style={{ textAlign: "center", padding: "5px 0", borderRadius: 6, fontSize: 11, fontWeight: now ? 800 : 600,
-                      background: on ? "var(--green)" : "var(--surface)", color: on ? "#fff" : "var(--text3)",
-                      border: now ? "1.5px solid var(--accent)" : "1px solid var(--border)" }}>{lbl}</div>
+                    <div key={m} title={MONTHS_FR[i]} style={{ textAlign: "center", padding: "6px 0", borderRadius: 8, fontSize: 11, fontWeight: now ? 800 : 600,
+                      background: on ? "var(--green)" : "var(--surface2)", color: on ? "#fff" : "var(--text3)",
+                      boxShadow: now ? "0 0 0 2px var(--surface), 0 0 0 3.5px var(--accent)" : "none",
+                      transition: "background 0.2s ease" }}>{lbl}</div>
                   );
                 })}
               </div>
@@ -126,36 +129,36 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
 
         {/* Nutrition pour 100 g */}
         <div className="slide-up" style={{ animationDelay: "0.2s" }}>
-        <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, marginBottom: 12 }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
+        <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "18px 0 12px" }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
 
         {hasNutrition ? (
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "16px 18px", background: "var(--surface2)", borderRadius: 16, marginBottom: 16 }}>
+            <div style={{ ...CARD, display: "flex", alignItems: "center", gap: 18, padding: "18px 18px", marginBottom: 12 }}>
               <Donut size={128} stroke={17} segments={macroSegs} centerLabel={kcal} centerSub="kcal" />
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 11 }}>
                 <div style={{ fontSize: 11, color: "var(--text3)" }}>{kj.toLocaleString("fr-FR")} kJ pour 100 g</div>
                 {macroSegs.map(seg => (
                   <div key={seg.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ width: 10, height: 10, borderRadius: 3, background: seg.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, flex: 1 }}>{seg.label}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{fmt(seg.grams)}</span>
+                    <span style={{ fontSize: 12.5, flex: 1 }}>{seg.label}</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 700 }}>{fmt(seg.grams)}</span>
                     <span style={{ fontSize: 11, color: "var(--text3)", width: 34, textAlign: "right" }}>{Math.round(seg.value / macroTot * 100)}%</span>
                   </div>
                 ))}
               </div>
             </div>
-            <button onClick={() => setDetailOpen(o => !o)} aria-expanded={detailOpen}
-              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, cursor: "pointer", color: "var(--text2)" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600 }}>
-                <Icon name="fileText" size={14} color="var(--text3)" /> Détail par nutriment
+            <button onClick={() => setDetailOpen(o => !o)} aria-expanded={detailOpen} className="ing-hover"
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "12px 16px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, cursor: "pointer", color: "var(--text2)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, fontWeight: 600 }}>
+                <span style={{ width: 26, height: 26, borderRadius: 8, background: "var(--surface2)", display: "grid", placeItems: "center" }}><Icon name="fileText" size={14} color="var(--text3)" /></span> Détail par nutriment
               </span>
               <span style={{ display: "inline-flex", transition: "transform 0.2s ease", transform: detailOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
                 <Icon name="forward" size={16} color="var(--text3)" />
               </span>
             </button>
             {detailOpen && (
-              <>
-                <div style={{ display: "flex", flexDirection: "column", gap: 11, margin: "14px 0 8px" }}>
+              <div style={{ ...CARD, padding: "16px 16px 14px", marginTop: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {rows.map(row => {
                     const pct = riPct(row.key, row.value);
                     return (
@@ -167,19 +170,19 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                             {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", minWidth: 46, flexShrink: 0, whiteSpace: "nowrap", textAlign: "right" }}>{pct}% AJR</span>}
                           </span>
                         </div>
-                        <div style={{ height: 6, borderRadius: 3, background: "var(--surface)", overflow: "hidden" }}>
+                        <div style={{ height: 6, borderRadius: 3, background: "var(--surface2)", overflow: "hidden" }}>
                           <div style={{ width: `${Math.min(100, pct || 0)}%`, height: "100%", borderRadius: 3, background: row.color, transition: "width 0.4s ease" }} />
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 12 }}>% AJR = apports journaliers recommandés (régime de référence 2000 kcal)</div>
-              </>
+                <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 14 }}>% AJR = apports journaliers recommandés (régime de référence 2000 kcal)</div>
+              </div>
             )}
           </>
         ) : (
-          <div style={{ fontSize: 13, color: "var(--text3)", fontStyle: "italic", padding: "16px 0" }}>Aucune donnée nutritionnelle renseignée pour cet ingrédient.</div>
+          <div style={{ ...CARD, fontSize: 13, color: "var(--text3)", fontStyle: "italic", padding: "18px 16px", textAlign: "center" }}>Aucune donnée nutritionnelle renseignée pour cet ingrédient.</div>
         )}
         </div>
 
@@ -193,10 +196,10 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                 .map((tip, i) => {
                   const t = TIP_TYPES[tip.type] || TIP_TYPES.prep;
                   return (
-                    <div key={i} style={{ display: "flex", gap: 12, padding: "12px 14px", background: "var(--surface2)", borderRadius: 14, alignItems: "flex-start" }}>
-                      <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: t.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>{t.icon}</span>
+                    <div key={i} style={{ ...CARD, display: "flex", gap: 13, padding: "13px 15px", alignItems: "flex-start" }}>
+                      <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 11, background: t.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{t.icon}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: t.color, marginBottom: 3 }}>{t.label}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: t.color, marginBottom: 3, letterSpacing: "0.01em" }}>{t.label}</div>
                         <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>{tip.text}</div>
                       </div>
                     </div>
@@ -207,13 +210,13 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
         )}
 
         {/* Source des données nutritionnelles – attribution Ciqual (obligatoire) */}
-        <a className="slide-up" href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer"
-          style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 32, padding: "12px 14px", background: "var(--surface2)", borderRadius: 12, border: "1px solid var(--border)", textDecoration: "none", animationDelay: "0.32s" }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#1a8a3c,#4caf7d)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(26,138,60,0.35)" }}>
+        <a className="slide-up ing-hover" href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer"
+          style={{ ...CARD, display: "flex", alignItems: "center", gap: 12, marginTop: 28, padding: "12px 14px", textDecoration: "none", animationDelay: "0.32s" }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#1a8a3c,#4caf7d)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(26,138,60,0.35)" }}>
             <Icon name="leaf" size={16} color="#fff" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text)", letterSpacing: "0.01em" }}>Ciqual 2025</div>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text)", letterSpacing: "0.01em" }}>Ciqual 2025</div>
             <div style={{ fontSize: 10, color: "var(--text3)", lineHeight: 1.4, marginTop: 1 }}>Table de composition nutritionnelle · Anses</div>
           </div>
           <Icon name="externalLink" size={13} color="var(--text3)" />
