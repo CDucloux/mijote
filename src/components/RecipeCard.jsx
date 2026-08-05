@@ -24,7 +24,7 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
             {vegan && <VeganBadge glass />}
             {inSeason && <SeasonBadge glass />}
             {recipe.isComponent && (
-              <button onClick={e => { e.stopPropagation(); setShowBaseInfo(true); }} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px 4px 7px", borderRadius: 20, background: "rgba(20,18,16,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", cursor: "pointer" }}>
+              <button onClick={e => { e.stopPropagation(); setShowBaseInfo(true); }} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px 4px 7px", borderRadius: 20, background: "rgba(20,18,16,0.74)", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", cursor: "pointer" }}>
                 <BaseIcon size={12} color="#fff" />
                 <span style={{ fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>Base</span>
               </button>

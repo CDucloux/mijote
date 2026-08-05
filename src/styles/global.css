@@ -2369,6 +2369,16 @@ select {
   .pressable {
     transition: transform 0.14s ease, opacity 0.14s ease !important;
   }
+
+  /* La grille « Mes recettes » monte TOUTES les cartes d'un coup (jusqu'à 50).
+     `content-visibility: auto` laisse le navigateur sauter la mise en page et le
+     rendu des cartes hors écran → beaucoup moins de travail par frame au scroll.
+     `contain-intrinsic-size` réserve une hauteur estimée pour que la barre de
+     défilement reste stable ; `auto` mémorise la taille réelle une fois rendue. */
+  .recipe-grid > * {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 190px;
+  }
 }
 
 /* Appui maintenu : le fond s'éclaircit progressivement tant que le doigt reste

@@ -5,7 +5,11 @@ import { Icon } from "./Icon.jsx";
 // sur une image) ou plat. Extrait des styles inline répétés (RecipeCard, fiche).
 
 const LABEL = { fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" };
-const GLASS = { padding: "4px 9px 4px 7px", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" };
+// NB : pas de `backdrop-filter` ici. Le flou d'arrière-plan est recalculé à chaque
+// frame de scroll pour CHAQUE badge → dans la grille de recettes (des dizaines de
+// cartes), c'était la cause n°1 des saccades sur mobile. Le fond est déjà ~92 %
+// opaque : sur une photo le rendu est quasi identique, mais composité gratuitement.
+const GLASS = { padding: "4px 9px 4px 7px", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" };
 const FLAT = { padding: "3px 10px 3px 7px" };
 
 export function OverlayBadge({ icon, label, bg, title, glass = false }) {
