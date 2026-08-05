@@ -1,5 +1,20 @@
 # Changelog – Mijoté
 
+## v3.10.0 – Safran · Mijoté+ & Batch cooking
+
+### Mijoté+ (abonnement)
+- **Paiement en ligne** entièrement fonctionnel via une intégration **Stripe maison** (Cloud Functions), sans dépendance à l'extension Firebase : souscription, portail de gestion et résiliation
+- **Sécurité** : webhook à signature vérifiée, validation du tarif, garde anti-double-abonnement, accès aux imports IA ouvert aux abonnés (vérifié côté serveur)
+- Page **/plus** : bandeau de confirmation quand tu es abonné, comparatif plus lisible (croix rouges), badge Mijoté+ restylé
+
+### Batch cooking
+- La **session batch** devient une **page dédiée** (mise en place, cuissons à mutualiser, bases, plats) qui reflète **en direct** le planning de la semaine
+
+### Rework UI/UX
+- **Éditeur de recette** repensé, **profil** et **fiche ingrédient** modernisés
+- Feuilles **Ajouter / Compléter un repas**, **Nouvelle liste**, sélecteur **Nouvelle recette** et **bulle des techniques** retravaillés
+- Détails : carnets sur une seule ligne, fondu de la grille de recettes
+
 ## v3.9.25 – Safran · Éditeur repensé
 
 ### Création / édition
