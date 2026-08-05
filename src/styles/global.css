@@ -1102,6 +1102,25 @@ select {
     background: var(--surface3);
     color: var(--text);
   }
+
+  /* Ligne de suggestion « compléter le repas » : mise en avant au survol. */
+  .complete-row:hover {
+    border-color: rgba(232, 112, 58, 0.45);
+    box-shadow: 0 6px 18px -10px rgba(232, 112, 58, 0.55);
+  }
+
+  .complete-row:hover .complete-add {
+    background: var(--accent);
+    color: #fff;
+  }
+}
+
+.complete-row {
+  transition: border-color 0.15s ease, box-shadow 0.2s ease;
+}
+
+.complete-add {
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .onb-cta:active {

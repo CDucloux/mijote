@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.9.18 – Safran · Compléter le repas
+
+### Planning
+- **« Compléter le repas »** entièrement retravaillée : en-tête avec vignette du plat, sélecteur de rôle segmenté, cartes de suggestion enrichies (cuisine, temps, ingrédients, Nutri-Score) et bouton d'ajout plus lisible
+
 ## v3.9.17 – Safran · Retouches mode cuisine
 
 ### Mode pas à pas
