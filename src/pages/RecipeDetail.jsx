@@ -24,6 +24,7 @@ import { findIngredientMatch, createIngredientResolver } from "@/lib/food/nameMa
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
+import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
@@ -185,6 +186,15 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const mult = (servings / (recipe.servings || 2)) * panFactor;
   const seasonResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const recipeInSeason = useMemo(() => isRecipeInSeason(recipe, seasonResolver), [recipe, seasonResolver]);
+  // Nutri-Score recalculé À L'AFFICHAGE : `recipe.nutriLetter` est un instantané
+  // figé à l'enregistrement ; en le recomputant (avec appariement par nom pour les
+  // ingrédients non liés à un `dbId`), un ingrédient reconnu après coup est bien
+  // pris en compte, sans devoir ré-enregistrer la recette. Repli sur la valeur
+  // stockée si le calcul ne trouve rien.
+  const nutriLetter = useMemo(
+    () => computeNutriInfo(recipe.ingredients, ingredientDB, recipesById).letter ?? recipe.nutriLetter,
+    [recipe.ingredients, recipe.nutriLetter, ingredientDB, recipesById]
+  );
   const recipeVegan = useMemo(() => isRecipeVegan(recipe, seasonResolver, { recipes }), [recipe, seasonResolver, recipes]);
   const { techniques, isPlus } = useAppShell();
   // Journal d'itérations = fonctionnalité Mijoté+ : en gratuit → page d'offre.
@@ -482,7 +492,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           {/* Nutri-Score */}
           <button onClick={() => setShowNutrition(true)} title="Analyse nutritionnelle" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer" }}>
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <NutriScoreBadge letter={recipe.nutriLetter} />
+              <NutriScoreBadge letter={nutriLetter} />
             </div>
             <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 2, marginTop: 3 }}>Nutri-Score <Icon name="forward" size={9} color="var(--text3)" /></span>
           </button>
@@ -638,7 +648,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               </div>
               <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
               <button onClick={() => setShowNutrition(true)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer" }}>
-                <NutriScoreBadge letter={recipe.nutriLetter} />
+                <NutriScoreBadge letter={nutriLetter} />
                 <span style={{ fontSize: 10, color: "var(--text3)", display: "flex", alignItems: "center", gap: 2 }}>Nutri-Score <Icon name="forward" size={9} color="var(--text3)" /></span>
               </button>
             </div>
@@ -717,10 +727,14 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   else if (inSeason) badge = { text: "de saison", color: "var(--green)" };
 
                   const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;
-                  const clickable = isComp ? !!rc.comp : !!ing.dbId;
+                  // `dbId` figé à l'enregistrement peut être vide pour un ingrédient
+                  // reconnu après coup → on le résout par nom pour rendre la ligne
+                  // cliquable (accès au détail sans passer par « Modifier »).
+                  const effDbId = isComp ? "" : (ing.dbId || findIngredientMatch(ing.name, ingredientDB)?.id || "");
+                  const clickable = isComp ? !!rc.comp : !!effDbId;
                   const onClick = () => {
                     if (isComp && rc.comp) navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } });
-                    else if (!isComp && ing.dbId) navigate(`/config/ingredients/${encodeURIComponent(ing.dbId)}`);
+                    else if (!isComp && effDbId) navigate(`/config/ingredients/${encodeURIComponent(effDbId)}`);
                   };
                   return (
                     <div key={ing.id} onClick={onClick} className={clickable ? "tap-row" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
