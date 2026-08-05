@@ -783,6 +783,31 @@ select {
   }
 }
 
+/* Fondu doux de la grille de recettes à chaque nouveau jeu de résultats
+   (recherche / tri / carnet). Volontairement discret (démarre à 0.45, léger
+   glissé) pour rester agréable même si la clé change à chaque frappe. */
+.recipe-grid-fade {
+  animation: recipeGridFade 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes recipeGridFade {
+  from {
+    opacity: 0.45;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recipe-grid-fade {
+    animation: none;
+  }
+}
+
 @keyframes cookModeIn {
   from {
     opacity: 0;
@@ -1543,15 +1568,12 @@ select {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
   }
 
+  /* Carnets : une SEULE ligne, scroll horizontal quand ça déborde (comme sur
+     mobile) — plus de passage à la ligne / grille multi-lignes sur desktop. */
   .desktop-content .collections-row {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
-    gap: 12px !important;
-    overflow: visible !important;
-  }
-
-  .desktop-content .collections-row button {
-    width: auto !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
   }
 
   /* Config ustensiles : 4 cartes par ligne sur desktop (au lieu de 2), pleine largeur */
