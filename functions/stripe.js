@@ -20,11 +20,14 @@ const dbAdmin = getFirestore();
 const STRIPE_SECRET = defineSecret("STRIPE_SECRET_KEY");        // sk_test_… / sk_live_…
 const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET"); // whsec_…
 const REGION = "europe-west1"; // même région que les autres fonctions
+// Version d'API Stripe épinglée : « Managed Payments » (activé par défaut sur les
+// nouveaux comptes) exige ≥ 2025-03-31.basil.
+const STRIPE_API_VERSION = "2025-03-31.basil";
 
 function stripeClient() {
   const key = STRIPE_SECRET.value();
   if (!key || !key.startsWith("sk_")) throw new HttpsError("failed-precondition", "Le paiement n'est pas encore configuré (clé Stripe manquante).");
-  return new Stripe(key);
+  return new Stripe(key, { apiVersion: STRIPE_API_VERSION });
 }
 
 // Récupère (ou crée) le client Stripe lié à un uid Firebase. Le mapping est stocké
@@ -118,7 +121,7 @@ async function syncSubscription(stripe, sub) {
 exports.stripeWebhook = onRequest(
   { secrets: [STRIPE_SECRET, STRIPE_WEBHOOK_SECRET], region: REGION, timeoutSeconds: 60, memory: "256MiB" },
   async (req, res) => {
-    const stripe = new Stripe(STRIPE_SECRET.value());
+    const stripe = new Stripe(STRIPE_SECRET.value(), { apiVersion: STRIPE_API_VERSION });
     let event;
     try {
       event = stripe.webhooks.constructEvent(req.rawBody, req.headers["stripe-signature"], STRIPE_WEBHOOK_SECRET.value());
