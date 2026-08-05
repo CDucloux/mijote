@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.9.22 – Safran · Fiche ingrédient & courses
+
+### Ingrédients
+- **Fiche aliment retravaillée** : système de cartes claires, saisonnalité et nutrition plus lisibles, survols soignés sur desktop
+
+### Courses
+- **Feuille « Nouvelle liste » modernisée** : en-tête à pastille, suggestions de noms, réglages plus clairs
+
 ## v3.9.21 – Safran · Nouvelle recette
 
 ### Création
