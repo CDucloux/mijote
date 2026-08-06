@@ -5,8 +5,33 @@
 // le serveur). Toute divergence est tranchée par le serveur : ces chiffres sont
 // indicatifs. Les limites DOIVENT rester alignées avec functions/quota.js.
 
+/** Type d'import IA soumis à quota. */
+export type ImportKind = "url" | "photo";
+
+/** Compteurs stockés pour un type dans `aiUsage/{uid}`. */
+export interface KindUsage {
+  day?: string;
+  dayCount?: number;
+  month?: string;
+  monthCount?: number;
+}
+
+/** Document `aiUsage/{uid}` (partiel — un champ par type d'import). */
+export type UsageDoc = Partial<Record<ImportKind, KindUsage>> & Record<string, unknown>;
+
+/** Reliquat calculé pour un type d'import. */
+export interface Remaining {
+  dayUsed: number;
+  dayLeft: number;
+  dayLimit: number;
+  monthUsed: number;
+  monthLeft: number;
+  monthLimit: number;
+  blocked: boolean;
+}
+
 /** Limites par type d'import : `day` (par jour) et `month` (par mois). */
-export const LIMITS = {
+export const LIMITS: Record<ImportKind, { day: number; month: number }> = {
   url: { day: 5, month: 60 },
   photo: { day: 3, month: 30 },
 };
@@ -15,11 +40,11 @@ export const LIMITS = {
  * Clés de période (jour `YYYY-MM-DD`, mois `YYYY-MM`) en fuseau Europe/Paris —
  * identique au serveur pour que le reliquat affiché corresponde au décompte réel.
  *
- * @param {Date} [now] Instant de référence (défaut : maintenant).
+ * @param now - Instant de référence (défaut : maintenant).
  */
-export function periodKeys(now = new Date()) {
+export function periodKeys(now: Date = new Date()): { day: string; month: string } {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
-  const get = (t) => parts.find((p) => p.type === t).value;
+  const get = (t: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === t)!.value;
   const y = get("year"), m = get("month"), d = get("day");
   return { day: `${y}-${m}-${d}`, month: `${y}-${m}` };
 }
@@ -28,11 +53,11 @@ export function periodKeys(now = new Date()) {
  * Compteurs courants d'un type, avec remise à zéro implicite si le jour / mois
  * stocké ne correspond plus à la période courante (comme le serveur).
  *
- * @param {object} [kindData] Données stockées (`{ day, dayCount, month, monthCount }`).
- * @param {string} day Clé jour courante.
- * @param {string} month Clé mois courante.
+ * @param kindData - Données stockées (`{ day, dayCount, month, monthCount }`).
+ * @param day - Clé jour courante.
+ * @param month - Clé mois courante.
  */
-export function currentCounts(kindData, day, month) {
+export function currentCounts(kindData: KindUsage | undefined, day: string, month: string): { dayCount: number; monthCount: number } {
   const k = kindData || {};
   return {
     dayCount: k.day === day ? (k.dayCount || 0) : 0,
@@ -43,12 +68,11 @@ export function currentCounts(kindData, day, month) {
 /**
  * Reliquat d'imports pour un type, à partir du document `aiUsage`.
  *
- * @param {object} [usageDoc] Le document `aiUsage/{uid}` (ou null).
- * @param {"url"|"photo"} kind Type d'import.
- * @param {Date} [now] Instant de référence.
- * @returns {{ dayUsed, dayLeft, dayLimit, monthUsed, monthLeft, monthLimit, blocked }}
+ * @param usageDoc - Le document `aiUsage/{uid}` (ou null).
+ * @param kind - Type d'import.
+ * @param now - Instant de référence.
  */
-export function remainingFor(usageDoc, kind, now = new Date()) {
+export function remainingFor(usageDoc: UsageDoc | null | undefined, kind: ImportKind, now: Date = new Date()): Remaining {
   const lim = LIMITS[kind];
   const { day, month } = periodKeys(now);
   const { dayCount, monthCount } = currentCounts((usageDoc || {})[kind], day, month);
