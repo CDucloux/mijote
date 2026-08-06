@@ -24,6 +24,45 @@ import { useElasticScroll } from "../hooks/useElasticScroll.js";
 // dernières n'attendent pas indéfiniment (cf. animDelay dans la grille).
 const MAX_STAGGER = 0.6; // s — plafond du délai d'animation d'entrée
 
+// Squelette de chargement (une seule fois par session) : laisse aux images le
+// temps d'arriver avant de révéler les cartes avec leur animation d'entrée.
+let recipeSkeletonSeen = false;
+const SKELETON_MS = 550;
+
+// Rangée de carnets « fantômes » (forme livre : page carrée + tranche blanche).
+function CarnetsSkeleton({ count = 5 }) {
+  return (
+    <div style={{ display: "flex", gap: 14, overflow: "hidden", padding: "7px 3px 8px" }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} style={{ flexShrink: 0, width: 134, borderRadius: 14, overflow: "hidden", border: "1px solid var(--border)" }}>
+          <div className="skeleton" style={{ aspectRatio: "1/1" }} />
+          <div style={{ padding: "9px 11px 12px", background: "var(--surface)" }}>
+            <div className="skeleton" style={{ height: 11, width: "78%", borderRadius: 5 }} />
+            <div className="skeleton" style={{ height: 8, width: "46%", borderRadius: 5, marginTop: 6 }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Grille de cartes « fantômes », calquée sur la vraie grille (image 16/10 + méta).
+function RecipeGridSkeleton({ count = 12 }) {
+  return (
+    <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} style={{ background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)" }}>
+          <div className="skeleton" style={{ width: "100%", aspectRatio: "16/10" }} />
+          <div style={{ padding: "10px 12px 12px" }}>
+            <div className="skeleton" style={{ height: 11, width: "85%", borderRadius: 5 }} />
+            <div className="skeleton" style={{ height: 9, width: "55%", borderRadius: 5, marginTop: 8 }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Carte mémoïsée : ne re-rend que si SES props changent. Sans ça, chaque palier
 // de scroll infini (setVisibleCount) re-rendait toutes les cartes déjà visibles.
 // Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
@@ -40,6 +79,17 @@ const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, a
 export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, onDuplicate, onAddToShopping, onToggleCollection, onPlanRecipe, onShareRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
+  // Squelette de chargement au 1er affichage de l'onglet dans la session (si des
+  // recettes existent) : les images ont le temps de se charger, puis les cartes
+  // apparaissent avec leur animation. Ne se rejoue pas aux changements d'onglet.
+  const [booting, setBooting] = useState(() => !recipeSkeletonSeen && (recipes?.length || 0) > 0);
+  useEffect(() => {
+    if (recipeSkeletonSeen) return;
+    recipeSkeletonSeen = true;
+    if (!booting) return;
+    const t = setTimeout(() => setBooting(false), SKELETON_MS);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Persistés (localStorage, mobile + web) : carnet sélectionné, tri et filtres
   // survivent au rechargement de la page — plus simple pour retrouver son contexte.
   const [filterCol, setFilterCol] = useLS("rf_recipes_filterCol", null);
@@ -231,6 +281,12 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       )}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
+        {booting ? (
+          <>
+            <CarnetsSkeleton />
+            <div style={{ marginTop: 22 }}><RecipeGridSkeleton /></div>
+          </>
+        ) : (<>
         {recipes.length > 0 && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -387,6 +443,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         })()}
         </>
         )}
+        </>)}
         </div>
       </div>
 
