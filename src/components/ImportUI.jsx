@@ -107,6 +107,59 @@ export function HintCard({ icon, iconColor = "var(--text2)", tint = "var(--surfa
   );
 }
 
+/**
+ * Compteur de quota d'import IA (reliquat jour + mois) pour les abonnés Mijoté+.
+ * Purement INDICATIF : l'autorité reste le serveur. Deux jauges compactes (jour /
+ * mois) avec un liseré rouge quand la limite est atteinte. L'admin voit « Illimité ».
+ *
+ * @param label - Libellé du type (« depuis un lien », « photo »).
+ * @param rem - Reliquat renvoyé par `remainingFor` (dayUsed/dayLimit/monthUsed/monthLimit/blocked).
+ * @param unlimited - `true` pour l'admin (illimité).
+ */
+export function QuotaMeter({ label, rem, unlimited }) {
+  if (unlimited) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 14px", borderRadius: 14, background: "rgba(232,112,58,0.08)", border: "1px solid rgba(232,112,58,0.22)" }}>
+        <span style={{ fontSize: 16 }}>👑</span>
+        <span style={{ fontSize: 12.5, color: "var(--text2)", fontWeight: 600 }}>Imports {label} <strong style={{ color: "var(--accent)" }}>illimités</strong> (admin).</span>
+      </div>
+    );
+  }
+  if (!rem) return null;
+
+  const Gauge = ({ tag, used, limit }) => {
+    const left = Math.max(0, limit - used);
+    const frac = limit ? Math.min(1, used / limit) : 0;
+    const out = left === 0;
+    return (
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+          <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em" }}>{tag}</span>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: out ? "var(--red)" : "var(--text)" }}>{left}<span style={{ color: "var(--text3)", fontWeight: 500 }}> / {limit}</span></span>
+        </div>
+        <div style={{ height: 6, borderRadius: 999, background: "var(--surface3)", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${frac * 100}%`, borderRadius: 999, background: out ? "var(--red)" : "var(--accent)", transition: "width 0.3s ease" }} />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ padding: "13px 15px", borderRadius: 16, background: "var(--surface)", border: `1px solid ${rem.blocked ? "rgba(224,82,82,0.35)" : "var(--border)"}`, boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 11 }}>
+        <Icon name={rem.blocked ? "warning" : "sparkle"} size={13} color={rem.blocked ? "var(--red)" : "var(--accent)"} />
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: rem.blocked ? "var(--red)" : "var(--text2)" }}>
+          {rem.blocked ? "Limite atteinte" : "Imports restants"} · {label}
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: 16 }}>
+        <Gauge tag="Aujourd'hui" used={rem.dayUsed} limit={rem.dayLimit} />
+        <Gauge tag="Ce mois-ci" used={rem.monthUsed} limit={rem.monthLimit} />
+      </div>
+    </div>
+  );
+}
+
 /** En-tête de page d'import : bouton retour + titre. L'icône identitaire vit dans
  * le bloc d'intro (une seule occurrence) — pas de répétition ici. */
 export function ImportHeader({ title, onBack }) {
