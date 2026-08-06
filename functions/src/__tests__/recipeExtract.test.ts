@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText,
-} from "./recipeExtract.js";
+} from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
   it("réunit les ustensiles de tête ET ceux cités dans les étapes", () => {

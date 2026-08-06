@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type Stripe from "stripe";
-import { isActiveStatus, uidFromMetadata, subscriptionDocFields, ACTIVE_STATUSES } from "./stripeHelpers.js";
+import { isActiveStatus, uidFromMetadata, subscriptionDocFields, ACTIVE_STATUSES } from "../stripeHelpers.js";
 
 /** Fabrique un abonnement Stripe partiel typé pour les tests (champs non pertinents ignorés). */
 const sub = (o: Record<string, unknown>) => o as unknown as Stripe.Subscription;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { LIMITS, periodKeys, currentCounts, quotaError } from "./quota.js";
+import { LIMITS, periodKeys, currentCounts, quotaError } from "../quota.js";
 
 describe("periodKeys", () => {
   it("formate jour YYYY-MM-DD et mois YYYY-MM en Europe/Paris", () => {
