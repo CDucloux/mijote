@@ -156,7 +156,17 @@ body {
 }
 
 #root {
-  height: 100dvh;
+  /* Hauteur du shell mobile. On utilise `svh` (SMALL viewport height, mesuré
+     barre d'adresse/outils du navigateur AFFICHÉE) et NON `dvh` : un élément de
+     100svh tient TOUJOURS dans la zone visible, quel que soit l'état des barres
+     du navigateur. Avec `dvh` (dynamique), tirer/overscroller fait apparaître la
+     barre d'outils du navigateur, la hauteur mesurée dépasse alors la zone
+     visible et la barre d'onglets (dernier enfant de la colonne) se retrouve
+     poussée hors écran → elle « disparaît ». `svh` supprime ce cas à la racine
+     (fix pérenne). En PWA installée (standalone), svh == dvh : aucun effet de bord.
+     `vh` reste en repli pour les très vieux navigateurs sans unité `svh`. */
+  height: 100vh;
+  height: 100svh;
   display: flex;
   flex-direction: column;
   max-width: 480px;
