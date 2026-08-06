@@ -1,7 +1,42 @@
 # Cloud Functions — Mijoté
 
-Une seule fonction pour l'instant : **`importRecipeFromUrl`** — importe une recette
-depuis une URL. Réservée au créateur (garde côté serveur sur l'e-mail du token Auth).
+Fonctions déployées :
+
+- **`importRecipeFromUrl`** / **`importRecipeFromImages`** — import d'une recette
+  depuis une URL ou 1–2 photos. Accès vérifié **côté serveur** (admin illimité,
+  abonné Mijoté+ avec quotas jour/mois).
+- **`createStripeCheckout`** / **`createStripePortal`** / **`stripeWebhook`** —
+  paiement Mijoté+ (intégration Stripe maison).
+
+## Structure & build (TypeScript)
+
+Le code source est en **TypeScript** dans `functions/src/` et compilé vers
+`functions/lib/` (ignoré par git). Node exécute le JS compilé (`lib/index.js`),
+jamais le `.ts` directement.
+
+```bash
+cd functions
+npm install       # installe aussi typescript, @types/node, typedoc
+npm run build     # tsc → lib/
+npm run docs      # TypeDoc → functions/docs/ (documentation d'API)
+```
+
+Le déploiement recompile automatiquement via le hook `predeploy` de
+`firebase.json` (`npm --prefix functions run build`) — pas besoin de builder à la
+main avant `firebase deploy`. Les tests (`*.test.ts`) tournent avec Vitest à la
+racine (`npm test`) et sont exclus de la compilation.
+
+Le code est organisé par **domaine** :
+
+| Module | Rôle |
+| --- | --- |
+| `src/index.ts` | **Point d'entrée** : ré-exporte les fonctions déployées (aucune logique) |
+| `src/imports/recipeImport.ts` | Handlers d'import (onCall) : URL / photo |
+| `src/imports/recipeExtract.ts` | Mise en forme pure du brouillon (ids, `_raw`, liaisons) |
+| `src/subscriptions/stripe.ts` | Checkout / portail / webhook Stripe |
+| `src/subscriptions/stripeHelpers.ts` | Helpers purs abonnement (sans I/O) |
+| `src/quota/access.ts` | Contrôle d'accès + consommation de quota (transaction) |
+| `src/quota/quota.ts` | Limites & logique de quota (pure) |
 
 ## Fonctionnement
 
@@ -46,7 +81,7 @@ firebase deploy --only functions
 ```
 
 > `ADMIN_EMAIL` doit correspondre à `VITE_ADMIN_EMAIL` côté client (même e-mail).
-> Région : **`europe-west1`** (alignée entre `functions/index.js` et
+> Région : **`europe-west1`** (alignée entre `functions/src/index.ts` et
 > `getFunctions(firebaseApp, "europe-west1")` dans `src/lib/firebase.js`).
 
 ## Émulateur (test local)

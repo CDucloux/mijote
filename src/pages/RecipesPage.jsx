@@ -29,6 +29,11 @@ const MAX_STAGGER = 0.6; // s — plafond du délai d'animation d'entrée
 let recipeSkeletonSeen = false;
 const SKELETON_MS = 550;
 
+// Titre de section « fantôme » (barre courte à la place de « Carnets »/« Recettes »).
+function SectionTitleSkeleton({ width = 96 }) {
+  return <div className="skeleton" style={{ height: 15, width, borderRadius: 6, marginBottom: 12 }} />;
+}
+
 // Rangée de carnets « fantômes » (forme livre : page carrée + tranche blanche).
 function CarnetsSkeleton({ count = 5 }) {
   return (
@@ -283,8 +288,12 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         <div ref={contentRef} style={{ minHeight: "100%" }}>
         {booting ? (
           <>
+            <SectionTitleSkeleton width={96} />
             <CarnetsSkeleton />
-            <div style={{ marginTop: 22 }}><RecipeGridSkeleton /></div>
+            <div style={{ marginTop: 22 }}>
+              <SectionTitleSkeleton width={116} />
+              <RecipeGridSkeleton />
+            </div>
           </>
         ) : (<>
         {recipes.length > 0 && (

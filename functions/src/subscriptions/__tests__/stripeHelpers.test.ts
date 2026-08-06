@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { isActiveStatus, uidFromMetadata, subscriptionDocFields, ACTIVE_STATUSES } from "./stripeHelpers.js";
+import type Stripe from "stripe";
+import { isActiveStatus, uidFromMetadata, subscriptionDocFields, ACTIVE_STATUSES } from "../stripeHelpers.js";
+
+/** Fabrique un abonnement Stripe partiel typé pour les tests (champs non pertinents ignorés). */
+const sub = (o: Record<string, unknown>) => o as unknown as Stripe.Subscription;
 
 describe("isActiveStatus", () => {
   it("active / trialing → true", () => {
@@ -12,7 +16,7 @@ describe("isActiveStatus", () => {
     }
   });
   it("reflète bien ACTIVE_STATUSES", () => {
-    expect(ACTIVE_STATUSES).toEqual(["active", "trialing"]);
+    expect([...ACTIVE_STATUSES]).toEqual(["active", "trialing"]);
   });
 });
 
@@ -29,30 +33,29 @@ describe("uidFromMetadata", () => {
 
 describe("subscriptionDocFields", () => {
   it("extrait statut, prix, dates et cancel_at_period_end", () => {
-    const sub = {
+    const d = subscriptionDocFields(sub({
       status: "active",
       cancel_at_period_end: true,
       current_period_end: 1893456000, // 2030
       created: 1700000000,
       items: { data: [{ price: { id: "price_abc" } }] },
-    };
-    const d = subscriptionDocFields(sub);
+    }));
     expect(d.status).toBe("active");
     expect(d.price).toBe("price_abc");
     expect(d.cancelAtPeriodEnd).toBe(true);
     expect(d.currentPeriodEnd).toBeInstanceOf(Date);
-    expect(d.currentPeriodEnd.getTime()).toBe(1893456000 * 1000);
+    expect(d.currentPeriodEnd!.getTime()).toBe(1893456000 * 1000);
     expect(d.created).toBeInstanceOf(Date);
   });
   it("tolère un abonnement sans items ni dates", () => {
-    const d = subscriptionDocFields({ status: "canceled" });
+    const d = subscriptionDocFields(sub({ status: "canceled" }));
     expect(d.price).toBeNull();
     expect(d.cancelAtPeriodEnd).toBe(false);
     expect(d.currentPeriodEnd).toBeNull();
     expect(d.created).toBeNull();
   });
   it("n'inclut jamais l'uid ni de secret (seulement des champs d'état)", () => {
-    const d = subscriptionDocFields({ status: "active", items: { data: [{ price: { id: "price_x" } }] } });
+    const d = subscriptionDocFields(sub({ status: "active", items: { data: [{ price: { id: "price_x" } }] } }));
     expect(Object.keys(d).sort()).toEqual(["cancelAtPeriodEnd", "created", "currentPeriodEnd", "price", "status"]);
   });
 });

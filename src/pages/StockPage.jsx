@@ -10,6 +10,23 @@ import { useElasticScroll } from "../hooks/useElasticScroll.js";
 // Gestion binaire du stock (placards / étagères) : j'en ai / j'en ai pas.
 // Chaque ingrédient de la base est listable ; le stock = tableau d'IDs.
 
+/**
+ * État vide centré et soigné (pastille d'icône + titre + texte + action),
+ * calqué sur l'état « aucune recette » de la bibliothèque pour l'homogénéité.
+ */
+function StockEmpty({ icon, title, body, action }) {
+  return (
+    <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
+      <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
+        <Icon name={icon} size={30} color="var(--accent)" />
+      </div>
+      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>{title}</h3>
+      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: action ? 22 : 0 }}>{body}</p>
+      {action}
+    </div>
+  );
+}
+
 export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("all"); // "all" = tout | "stock" = ce que j'ai | "low" = à racheter
@@ -127,22 +144,34 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
         {ingredientDB.length === 0 ? (
-          <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text3)", gap: 12, padding: "0 40px", textAlign: "center" }}>
-            <Icon name="box" size={44} />
-            <p style={{ fontSize: 15, fontWeight: 500 }}>Base d'ingrédients vide</p>
-            <p style={{ fontSize: 13 }}>Importe-la dans Config → Ingrédients.</p>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text3)", gap: 12, padding: "0 40px", textAlign: "center" }}>
-            <Icon name={!search && view === "low" ? "warning" : !search && view === "stock" ? "box" : "search"} size={44} />
-            <p style={{ fontSize: 15, fontWeight: 500 }}>
-              {!search && view === "low" ? "Rien à racheter" : !search && view === "stock" ? "Aucun article en stock" : "Aucun ingrédient trouvé"}
-            </p>
-            <p style={{ fontSize: 13 }}>
-              {!search && view === "low" ? "Marque un ingrédient « bientôt vide » en tapant deux fois dessus." : !search && view === "stock" ? "Ajoute des ingrédients depuis l'onglet « Tous »." : "Essaie un autre terme de recherche."}
-            </p>
-          </div>
-        ) : (
+          <StockEmpty icon="box" title="Base d'ingrédients vide"
+            body={<>Importe-la dans <strong style={{ color: "var(--text)", fontWeight: 600 }}>Config → Ingrédients</strong>.</>} />
+        ) : filtered.length === 0 ? (() => {
+          const q = search.trim();
+          const qShort = q.length > 22 ? q.slice(0, 22) + "…" : q;
+          if (q) {
+            return (
+              <StockEmpty icon="search" title="Aucun ingrédient trouvé"
+                body={<>Rien ne correspond à « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans ta base d'ingrédients.<br />Vérifie l'orthographe ou essaie un autre terme.</>}
+                action={
+                  <button onClick={() => setSearch("")} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
+                    <Icon name="eraser" size={15} color="var(--text3)" /> Effacer la recherche
+                  </button>
+                } />
+            );
+          }
+          const low = view === "low";
+          return (
+            <StockEmpty icon={low ? "warning" : "box"}
+              title={low ? "Rien à racheter" : "Aucun article en stock"}
+              body={low ? "Marque un ingrédient « bientôt vide » en tapant deux fois dessus." : "Ajoute des ingrédients depuis l'onglet « Tous »."}
+              action={
+                <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={() => setView("all")}>
+                  <Icon name="box" size={15} color="#fff" /> Voir tous les ingrédients
+                </button>
+              } />
+          );
+        })() : (
           grouped.map(([catKey, ings]) => {
             const cat = categories[catKey] || DEFAULT_CATEGORIES.other;
             const inStockInCat = ings.filter(i => stockSet.has(i.id)).length;

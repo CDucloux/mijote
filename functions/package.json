@@ -1,13 +1,17 @@
 {
   "name": "mijote-functions",
-  "description": "Cloud Functions pour Mijoté (import de recette depuis une URL)",
+  "description": "Cloud Functions pour Mijoté (import de recette, paiement Mijoté+)",
   "private": true,
   "engines": {
     "node": "22"
   },
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "serve": "firebase emulators:start --only functions",
+    "clean": "rm -rf lib",
+    "build": "npm run clean && tsc",
+    "build:watch": "tsc --watch",
+    "docs": "typedoc",
+    "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },
   "dependencies": {
@@ -15,5 +19,10 @@
     "firebase-admin": "^13.0.0",
     "firebase-functions": "^6.4.0",
     "stripe": "^17.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typedoc": "^0.27.0",
+    "typescript": "^5.7.0"
   }
 }

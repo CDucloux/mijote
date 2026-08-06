@@ -340,8 +340,17 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             <div ref={listContentRef} style={{ minHeight: "100%" }}>
 
             {activeList.items.length === 0 && activeList.type !== "free" && (
-              <div style={{ textAlign: "center", color: "var(--text3)", padding: "20px 0", fontSize: 13 }}>
-                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Icon name="shopping" size={14} color="var(--text3)" /> Aucun article dans cette liste.</span>
+              <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
+                <div style={{ width: 76, height: 76, borderRadius: 22, background: "rgba(76,175,125,0.14)", border: "1px solid rgba(76,175,125,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
+                  <Icon name="check" size={32} color="var(--green)" />
+                </div>
+                <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Tout est acheté&nbsp;!</h3>
+                <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
+                  Tous les ingrédients de « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{activeList.name}</strong> » ont été cochés. Tu peux supprimer cette liste, elle a fait son travail.
+                </p>
+                <button className="btn btn-pill" style={{ fontSize: 14, background: "rgba(224,82,82,0.10)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.28)" }} onClick={() => deleteList(activeList.id)}>
+                  <Icon name="trash" size={15} color="var(--red)" /> Supprimer la liste
+                </button>
               </div>
             )}
 

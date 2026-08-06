@@ -4,20 +4,30 @@
 // vérification est côté serveur (token d'auth + Firestore) — jamais le client.
 // Source de vérité abonnement : `customers/{uid}/subscriptions` (webhook Stripe).
 // Compteurs d'usage : `aiUsage/{uid}` (écrit ici, en transaction).
-const { HttpsError } = require("firebase-functions/v2/https");
-const { initializeApp, getApps } = require("firebase-admin/app");
-const { getFirestore, FieldValue } = require("firebase-admin/firestore");
-const { ACTIVE_STATUSES } = require("./stripeHelpers.js");
-const { periodKeys, currentCounts, quotaError } = require("./quota.js");
+import { HttpsError, type CallableRequest } from "firebase-functions/v2/https";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { ACTIVE_STATUSES } from "../subscriptions/stripeHelpers.js";
+import { periodKeys, currentCounts, quotaError, type ImportKind, type KindUsage } from "./quota.js";
 
 if (!getApps().length) initializeApp();
 const dbAdmin = getFirestore();
 
+/** Résultat d'un contrôle d'accès : indique si l'appelant est l'admin. */
+export interface AccessResult {
+  admin: boolean;
+}
+
 /**
  * Vérifie l'accès et renvoie `{ admin }`. Lève si ni admin ni abonné actif.
  * (Extrait pour être réutilisé par la garde avec quota.)
+ *
+ * @param request - La requête onCall.
+ * @param adminEmail - E-mail de l'admin (le créateur).
+ * @returns `{ admin: true }` pour l'admin, `{ admin: false }` pour un abonné actif.
+ * @throws HttpsError `unauthenticated` / `permission-denied` sinon.
  */
-async function requireAccess(request, adminEmail) {
+export async function requireAccess(request: CallableRequest, adminEmail: string): Promise<AccessResult> {
   if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
   const email = (request.auth.token && request.auth.token.email ? request.auth.token.email : "").toLowerCase();
   const admin = (adminEmail || "").toLowerCase();
@@ -26,15 +36,21 @@ async function requireAccess(request, adminEmail) {
   const uid = request.auth.uid;
   const snap = await dbAdmin
     .collection(`customers/${uid}/subscriptions`)
-    .where("status", "in", ACTIVE_STATUSES)
+    .where("status", "in", [...ACTIVE_STATUSES])
     .limit(1)
     .get();
   if (snap.empty) throw new HttpsError("permission-denied", "Fonctionnalité réservée à Mijoté+.");
   return { admin: false };
 }
 
-/** Autorise l'appel si admin OU abonné actif (sans quota). */
-async function assertPlusOrAdmin(request, adminEmail) {
+/**
+ * Autorise l'appel si admin OU abonné actif (sans quota).
+ *
+ * @param request - La requête onCall.
+ * @param adminEmail - E-mail de l'admin.
+ * @throws HttpsError si l'appelant n'a pas accès.
+ */
+export async function assertPlusOrAdmin(request: CallableRequest, adminEmail: string): Promise<void> {
   await requireAccess(request, adminEmail);
 }
 
@@ -47,17 +63,18 @@ async function assertPlusOrAdmin(request, adminEmail) {
  * @param request - La requête onCall.
  * @param adminEmail - E-mail de l'admin.
  * @param kind - Type d'import : `"url"` | `"photo"`.
+ * @throws HttpsError `resource-exhausted` si le quota est atteint.
  */
-async function assertImportAllowed(request, adminEmail, kind) {
+export async function assertImportAllowed(request: CallableRequest, adminEmail: string, kind: ImportKind): Promise<void> {
   const { admin } = await requireAccess(request, adminEmail);
   if (admin) return; // roi 👑 : pas de quota
 
-  const uid = request.auth.uid;
+  const uid = request.auth!.uid;
   const ref = dbAdmin.doc(`aiUsage/${uid}`);
   const { day, month } = periodKeys();
   await dbAdmin.runTransaction(async (tx) => {
     const s = await tx.get(ref);
-    const data = s.exists ? (s.data() || {}) : {};
+    const data = (s.exists ? (s.data() || {}) : {}) as Record<ImportKind, KindUsage | undefined>;
     const counts = currentCounts(data[kind], day, month);
     const err = quotaError(counts, kind);
     if (err) throw new HttpsError("resource-exhausted", err);
@@ -67,5 +84,3 @@ async function assertImportAllowed(request, adminEmail, kind) {
     }, { merge: true });
   });
 }
-
-module.exports = { assertPlusOrAdmin, assertImportAllowed };
