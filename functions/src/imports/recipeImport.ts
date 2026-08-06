@@ -1,10 +1,18 @@
-// ─── IMPORT DE RECETTE (Cloud Functions) ─────────────────────────────────────
-// `importRecipeFromUrl`   : importe une recette depuis une URL.
-// `importRecipeFromImages`: importe une recette depuis 1 ou 2 photos (livre).
-// L'accès est vérifié CÔTÉ SERVEUR (admin illimité, abonné avec quota) — jamais
-// en masquant seulement un bouton. Extraction par Claude Haiku 4.5 (URL) ou
-// Sonnet (photos), assemblée par assignIdsAndLink() (ids stables, _raw, liaisons
-// ingrédients/ustensiles ↔ étapes, images d'étape pour l'URL).
+/**
+ * Import de recette par IA (Cloud Functions).
+ *
+ * Deux points d'entrée `onCall`, tous deux réservés côté serveur (admin illimité,
+ * abonné Mijoté+ avec quota — cf. {@link assertImportAllowed}), jamais en masquant
+ * un simple bouton :
+ * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 4.5) ;
+ * - {@link importRecipeFromImages} : extraction depuis 1–2 photos de livre (Sonnet).
+ *
+ * Le résultat brut du modèle est mis en forme par le module `recipeExtract`
+ * ({@link assignIdsAndLink} : ids stables, `_raw` éditable, liaisons ingrédients/
+ * ustensiles ↔ étapes, images d'étape pour l'URL).
+ *
+ * @module imports/recipeImport
+ */
 import * as fs from "fs";
 import * as path from "path";
 import { onCall, HttpsError, type CallableRequest } from "firebase-functions/v2/https";
@@ -19,29 +27,49 @@ import {
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
 
+/** Clé API Anthropic (secret) — l'extraction IA est refusée si elle est absente. */
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
-const ADMIN_EMAIL = defineString("ADMIN_EMAIL"); // e-mail autorisé (le créateur)
+/** E-mail de l'admin autorisé (le créateur), paramètre non secret. */
+const ADMIN_EMAIL = defineString("ADMIN_EMAIL");
 
-const MAX_HTML_BYTES = 3_000_000; // garde-fou : on ne télécharge pas des pages énormes
+/** Garde-fou : on ne télécharge pas des pages HTML au-delà de cette taille. */
+const MAX_HTML_BYTES = 3_000_000;
+/** Délai maximal de récupération d'une page avant abandon. */
 const FETCH_TIMEOUT_MS = 15_000;
+/** Modèle d'extraction pour l'URL (texte déjà propre). */
 const MODEL = "claude-haiku-4-5";
-// L'extraction PHOTO (OCR d'une page de livre) demande une bien meilleure vision
-// que l'extraction URL (texte déjà propre) : on la confie à Sonnet, plus fiable
-// sur les quantités et la mise en page, et capable de haute résolution.
+/**
+ * Modèle d'extraction pour les PHOTOS. L'OCR d'une page de livre exige une bien
+ * meilleure vision que l'URL : on confie ce cas à Sonnet, plus fiable sur les
+ * quantités et la mise en page, et capable de haute résolution.
+ */
 const VISION_MODEL = "claude-sonnet-5";
 
-// Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md), qui
-// reste à la racine `functions/` (le code compilé vit dans `lib/imports/`, d'où les deux « .. »).
+/**
+ * Prompt système d'extraction, chargé depuis le Markdown éditable
+ * `prompts/recipeExtract.md`. Ce fichier reste à la racine `functions/` alors que
+ * le code compilé vit dans `lib/imports/`, d'où les deux « .. ». La liste des
+ * cuisines est injectée au démarrage ; les ustensiles connus le sont par appel.
+ */
 const PROMPT_TEMPLATE = fs
   .readFileSync(path.join(__dirname, "..", "..", "prompts", "recipeExtract.md"), "utf-8")
   .replace("{{CUISINE_LIST}}", CUISINE_LABELS.join(", "));
 
-// Addendum spécifique à l'import PHOTO (mise en page livre/magazine : colonne
-// d'ingrédients, deux pages, à ignorer, images d'étape toujours vides…). Ajouté
-// après le prompt de base, dont il complète et prime les règles.
+/**
+ * Addendum spécifique à l'import PHOTO (mise en page livre/magazine : colonne
+ * d'ingrédients, deux pages, encarts à ignorer, images d'étape toujours vides…).
+ * Concaténé après le prompt de base, dont il complète et prime les règles.
+ */
 const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "..", "..", "prompts", "recipeExtractImage.md"), "utf-8");
 
-/** Extrait un objet JSON d'une réponse LLM (tolère les fences ```json et le bruit). */
+/**
+ * Extrait un objet JSON d'une réponse LLM, en tolérant les fences ```json et le
+ * texte parasite autour de l'objet.
+ *
+ * @param s - La réponse texte brute du modèle.
+ * @returns L'objet analysé (typé `unknown` : payload externe non fiable).
+ * @throws SyntaxError si aucun JSON exploitable n'est trouvé.
+ */
 function parseJsonLoose(s: string): unknown {
   let t = (s || "").trim();
   const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -51,7 +79,16 @@ function parseJsonLoose(s: string): unknown {
   return JSON.parse(t);
 }
 
-/** Récupère le HTML d'une page (timeout, taille bornée, UA de navigateur). */
+/**
+ * Récupère le HTML d'une page côté serveur (pas de CORS), avec un UA de navigateur
+ * — beaucoup de sites renvoient une page vide aux bots —, un timeout et une taille
+ * bornée pour éviter les abus.
+ *
+ * @param url - L'URL de la page à récupérer.
+ * @returns Le HTML décodé en UTF-8.
+ * @throws HttpsError `unavailable` / `invalid-argument` / `deadline-exceeded`
+ *   selon l'échec (réseau, type de contenu, page trop lourde ou trop lente).
+ */
 async function fetchHtml(url: string): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -60,7 +97,6 @@ async function fetchHtml(url: string): Promise<string> {
       redirect: "follow",
       signal: controller.signal,
       headers: {
-        // UA de navigateur : beaucoup de sites renvoient une page vide aux bots.
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml",
         "Accept-Language": "fr,en;q=0.8",
@@ -89,18 +125,26 @@ async function fetchHtml(url: string): Promise<string> {
   }
 }
 
-/** Brouillon LLM brut (JSON externe non fiable). */
+/** Brouillon JSON brut renvoyé par le LLM (données externes non fiables). */
 type LlmDraft = Record<string, unknown> & {
   name?: string; prepTime?: number; cookTime?: number; servings?: number;
   cuisine?: string; category?: string;
   ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string }[];
   utensils?: { name?: string }[];
   steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[] }[];
+  /** Numéro (1-based) de l'image qui est la photo du plat, 0/absent si aucune. */
   coverPhoto?: unknown;
 };
 
-// Brouillon LLM brut → forme INTERMÉDIAIRE (avant ids/liaisons). Conserve `_raw`
-// (ligne d'origine, éditable) et les listes de noms ingrédients/ustensiles par étape.
+/**
+ * Normalise le brouillon LLM brut en forme INTERMÉDIAIRE (avant ids/liaisons) :
+ * champs tronqués et bornés, `_raw` (ligne d'origine éditable) conservé, listes de
+ * noms d'ingrédients/ustensiles par étape préservées pour la liaison ultérieure.
+ *
+ * @param d - Le brouillon brut du modèle.
+ * @param sourceUrl - L'URL source (vide pour un import photo).
+ * @returns Le brouillon intermédiaire prêt pour {@link assignIdsAndLink}.
+ */
 function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
   const num = (s: unknown): number | undefined => { const n = Number(String(s ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? n : undefined; };
   return {
@@ -132,12 +176,23 @@ interface InputImage {
   data: string;
 }
 
-// Extraction depuis une ou deux PHOTOS (recette d'un livre, éventuellement sur 2
-// pages). Même schéma de sortie que l'extraction web, mais sans images d'étape
-// (une photo de page n'expose pas d'URL d'illustration exploitable).
+/** Types MIME d'image acceptés pour l'import photo. */
 const IMG_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-const MAX_IMG_B64 = 6_000_000; // ~4,5 Mo par image décodée
+/** Taille maximale d'une image encodée en base64 (~4,5 Mo décodés). */
+const MAX_IMG_B64 = 6_000_000;
 
+/**
+ * Extrait une recette depuis une ou deux PHOTOS (pages d'un livre de cuisine).
+ * Même schéma de sortie que l'extraction web, mais sans images d'étape (une photo
+ * de page n'expose pas d'URL d'illustration exploitable).
+ *
+ * @param images - Les images (base64 + type MIME) déjà validées par l'appelant.
+ * @param knownUtensils - Noms d'ustensiles connus (base master) pour borner le modèle.
+ * @returns Le brouillon intermédiaire et `coverIndex` : l'index 0-based de l'image
+ *   qui est la photo du plat (couverture), ou `-1` si aucune.
+ * @throws HttpsError `failed-precondition` si la clé IA manque, `internal` si la
+ *   réponse du modèle est vide ou illisible.
+ */
 async function extractFromImages(images: InputImage[], knownUtensils: string[]): Promise<{ inter: Intermediate; coverIndex: number }> {
   const key = ANTHROPIC_API_KEY.value();
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
@@ -170,21 +225,31 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[]):
   let parsed: LlmDraft;
   try { parsed = parseJsonLoose(block.text) as LlmDraft; }
   catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
-  // `coverPhoto` : numéro (1-based) de l'image qui est la photo du plat, 0 si aucune.
-  // On le convertit en index 0-based validé (-1 = pas de couverture).
+  // Conversion du numéro 1-based du modèle en index 0-based validé (-1 = aucune).
   const cp = Number(parsed.coverPhoto);
   const coverIndex = Number.isInteger(cp) && cp >= 1 && cp <= images.length ? cp - 1 : -1;
   return { inter: llmToIntermediate(parsed, ""), coverIndex };
 }
 
+/**
+ * Extrait une recette depuis le TEXTE d'une page web via le LLM. Le chemin JSON-LD
+ * a été abandonné : à qualité de rendu, l'extraction Haiku est meilleure (étapes
+ * reformulées, quantités estimées, liaisons ingrédients/ustensiles).
+ *
+ * @param text - Le texte lisible de la page (issu de {@link htmlToText}).
+ * @param sourceUrl - L'URL source (reportée dans le brouillon).
+ * @param knownUtensils - Noms d'ustensiles connus pour borner le modèle.
+ * @returns Le brouillon intermédiaire.
+ * @throws HttpsError `failed-precondition` si la clé IA manque, `internal` si la
+ *   réponse est vide ou illisible.
+ */
 async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: string[]): Promise<Intermediate> {
   const key = ANTHROPIC_API_KEY.value();
-  // Clé absente ou factice (déploiement sans vraie clé) → message clair, pas d'appel.
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "Cette page n'a pas de données structurées et l'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
   const system = PROMPT_TEMPLATE.replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)");
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
-  const body = text.slice(0, 24_000); // borne le coût
+  const body = text.slice(0, 24_000); // borne le coût (entrée)
   let response: Anthropic.Message;
   try {
     response = await client.messages.create({
@@ -206,40 +271,51 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
   return llmToIntermediate(parsed, sourceUrl);
 }
 
-/** Extrait la liste de noms d'ustensiles connus fournie par le client (bornée). */
+/**
+ * Lit et borne la liste de noms d'ustensiles connus fournie par le client (base
+ * master) — elle sert à restreindre les propositions du modèle.
+ *
+ * @param request - La requête onCall.
+ * @returns Les noms d'ustensiles (chaînes non vides, plafonnés à 200).
+ */
 function knownUtensilsFrom(request: CallableRequest): string[] {
   const raw = (request.data as { knownUtensils?: unknown })?.knownUtensils;
   return Array.isArray(raw) ? raw.map((s) => String(s)).filter(Boolean).slice(0, 200) : [];
 }
 
-// NB : réactiver `enforceAppCheck: true` dans les options ci-dessous (ET pour
-// importRecipeFromImages) une fois le front déployé avec la clé reCAPTCHA v3
-// (VITE_FIREBASE_RECAPTCHA_SITE_KEY), sinon l'import serait rejeté.
+/**
+ * Importe une recette depuis une URL.
+ *
+ * Flux : garde d'accès + quota → récupération du HTML → texte → extraction Haiku →
+ * `og:image` comme image principale, filtrage des ustensiles à la base master, et
+ * images d'étape restreintes aux URLs réellement présentes dans la page
+ * (anti-hallucination). Le brouillon est renvoyé, jamais enregistré directement.
+ *
+ * NB : réactiver `enforceAppCheck: true` (ici et sur {@link importRecipeFromImages})
+ * une fois le front déployé avec la clé reCAPTCHA v3, sinon l'import serait rejeté.
+ *
+ * @returns `{ recipe, method: "llm" }`.
+ * @throws HttpsError selon l'échec (accès/quota, URL, page, extraction).
+ */
 export const importRecipeFromUrl = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
-    // ── Accès + quota (côté serveur) : admin illimité, abonné limité ──
     await assertImportAllowed(request, ADMIN_EMAIL.value(), "url");
 
     const url = String((request.data as { url?: unknown })?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
-    // Ustensiles connus (base master), fournis par le client → borne les propositions du LLM.
     const knownUtensils = knownUtensilsFrom(request);
 
     try {
       const html = await fetchHtml(url);
       const ogImage = extractOgImage(html); // image principale du plat
-
-      // Extraction par IA (Haiku) sur le texte de la page. Le chemin JSON-LD a été
-      // abandonné : à qualité de rendu, l'extraction Haiku est bien meilleure
-      // (étapes reformulées, quantités estimées, liaisons ingrédients/ustensiles).
       const text = htmlToText(html);
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
       const inter = await extractWithLlm(text, url, knownUtensils);
-      inter.image = ogImage; // le texte n'a pas d'image → on prend l'og:image de la page
+      inter.image = ogImage;
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
-      // Images d'étape : on ne garde que des URLs réellement présentes dans la page
-      // (anti-hallucination) et jamais l'image principale du plat.
+      // Anti-hallucination : on ne garde que des URLs présentes dans la page, et
+      // jamais l'image principale du plat.
       const pageImages = imageUrlsInText(text);
       for (const s of inter.steps) s.image = (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
       const recipe = assignIdsAndLink(inter);
@@ -253,12 +329,18 @@ export const importRecipeFromUrl = onCall(
   }
 );
 
-// Import depuis une ou deux photos (livre de cuisine). Garde serveur identique
-// (admin illimité, abonné avec quota). Vision Sonnet ; pas d'images d'étape.
+/**
+ * Importe une recette depuis une ou deux photos (livre de cuisine). Même garde
+ * serveur que l'URL (admin illimité, abonné avec quota) ; extraction par Sonnet,
+ * sans images d'étape.
+ *
+ * @returns `{ recipe, method: "image", coverIndex }`, où `coverIndex` désigne
+ *   l'image de couverture (photo du plat), ou `-1` si aucune.
+ * @throws HttpsError selon l'échec (accès/quota, images invalides, extraction).
+ */
 export const importRecipeFromImages = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
-    // ── Accès + quota (côté serveur) : admin illimité, abonné limité ──
     await assertImportAllowed(request, ADMIN_EMAIL.value(), "photo");
 
     const rawImages = (request.data as { images?: unknown })?.images;
@@ -281,8 +363,6 @@ export const importRecipeFromImages = onCall(
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");
-      // coverIndex : l'image (parmi celles fournies) qui est la photo du plat → le
-      // client s'en sert comme image de couverture. -1 si aucune.
       return { recipe, method: "image", coverIndex };
     } catch (e) {
       if (e instanceof HttpsError) throw e;
