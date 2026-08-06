@@ -2,7 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, mem
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 
 import { signInWithGoogle } from "@/lib/firebase/auth.js";
-import { subscribeHouseholdPointer, fetchUserDirectory } from "@/lib/firebase/firestore.js";
+import { subscribeHouseholdPointer, fetchUserDirectory, deletePublicRecipe, reportPublicRecipe } from "@/lib/firebase/firestore.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
@@ -450,6 +450,9 @@ function AppInner({ user, isDark, toggleTheme }) {
           onClone={() => cloneFromPublic(publicDocs.pub)}
           onBack={() => navigate("/home")}
           onExportPDF={exportPDF}
+          isAdmin={isAdmin}
+          onReport={(reason, note) => reportPublicRecipe({ pubId: publicDocs.pub.pubId, recipeName: publicDocs.pub.recipe?.name, authorUid: publicDocs.pub.authorUid, reason, note, reporterUid: user?.uid, reporterEmail: user?.email || null }).then(() => notify("Merci, ton signalement a été transmis.")).catch(() => notify("Signalement impossible pour le moment.", "error"))}
+          onAdminDelete={() => deletePublicRecipe(publicDocs.pub.pubId).then(() => { notify("Recette retirée de la communauté."); navigate("/home"); }).catch(() => notify("Suppression impossible.", "error"))}
           ingredientDB={ingredientDB} utensilDB={utensilDB} collections={[]} notify={notify}
         />
       </div>

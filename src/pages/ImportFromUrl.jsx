@@ -48,6 +48,7 @@ export function ImportFromUrl() {
   }, []);
 
   const go = async () => {
+    if (!navigator.onLine) { setError("Pas de connexion internet. L'import IA a besoin d'être en ligne pour lire la page."); return; }
     const u = url.trim();
     if (!URL_RE.test(u)) { setError("Colle une URL complète (https://…)."); return; }
     setError(""); setLoading(true);

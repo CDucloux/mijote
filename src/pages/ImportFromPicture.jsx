@@ -63,6 +63,7 @@ export function ImportFromPicture() {
   const removePhoto = (i) => setPhotos(p => { const c = p[i]; if (c) URL.revokeObjectURL(c.preview); return p.filter((_, k) => k !== i); });
 
   const go = async () => {
+    if (!navigator.onLine) { setError("Pas de connexion internet. L'import IA a besoin d'être en ligne pour analyser tes photos."); return; }
     if (!photos.length) { setError("Ajoute au moins une photo."); return; }
     const parts = photos.map(p => p.part);
     setError(""); setLoading(true);

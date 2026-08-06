@@ -35,8 +35,17 @@ import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 
+// Motifs de signalement d'une recette publique (modération).
+const REPORT_REASONS = [
+  { id: "copyright", label: "Droit d'auteur / plagiat" },
+  { id: "photo", label: "Photo inappropriée" },
+  { id: "offensive", label: "Contenu offensant ou dangereux" },
+  { id: "spam", label: "Spam ou hors-sujet" },
+  { id: "other", label: "Autre" },
+];
+
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid }) {
+export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid, isAdmin = false, onReport, onAdminDelete }) {
   const navigate = useNavigate();
   const location = useLocation();
   // `state.fromPath` = page d'origine (ex. "/home") → on y retourne tel quel.
@@ -82,6 +91,27 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const keepCta = owned
     ? <button className="btn btn-ghost" disabled style={{ width: "100%", borderRadius: 30, opacity: 0.85 }}><Icon name="check" size={15} color="var(--green)" /> Déjà dans tes recettes</button>
     : <button className="btn btn-primary" onClick={() => setConfirmClone(true)} style={{ width: "100%", borderRadius: 30 }}><Icon name="plus" size={15} /> Ajouter à mes recettes</button>;
+  // Modération (mode public) : signalement (tous) + suppression admin.
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState(null);
+  const [reportNote, setReportNote] = useState("");
+  const [confirmAdminDelete, setConfirmAdminDelete] = useState(false);
+  const publicActions = publicMode && (onReport || (isAdmin && onAdminDelete)) ? (
+    <div style={{ display: "flex", gap: 14, justifyContent: "center", alignItems: "center", marginTop: 12, flexWrap: "wrap" }}>
+      {onReport && (
+        <button onClick={() => { setReportReason(null); setReportNote(""); setReportOpen(true); }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "var(--text3)" }}>
+          <Icon name="warning" size={13} color="var(--text3)" /> Signaler
+        </button>
+      )}
+      {isAdmin && onAdminDelete && (
+        <button onClick={() => setConfirmAdminDelete(true)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "var(--red)" }}>
+          <Icon name="trash" size={13} color="var(--red)" /> Supprimer (admin)
+        </button>
+      )}
+    </div>
+  ) : null;
   // Attribution affichée dans le hero en mode public : pastille « Créé par : {auteur} »
   // suivie, hors pastille, du lien « d'après {source} » (source web d'origine).
   const sourceHref = recipe.source ? (recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source) : null;
@@ -516,7 +546,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
       {/* Desktop : « Garder » en mode public, sinon dock d'actions */}
       {isDesktop && publicMode && (
-        <div style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, width: 280 }}>{keepCta}</div>
+        <div style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, width: 280 }}>{keepCta}{publicActions}</div>
       )}
       {isDesktop && !publicMode && (
         <div ref={actionsRef} style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
@@ -653,7 +683,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               </button>
             </div>
             {publicMode ? (
-              <div>{keepCta}</div>
+              <div>{keepCta}{publicActions}</div>
             ) : (
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => { openShoppingModal(); }} className="tap" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid transparent", cursor: "pointer" }}>
@@ -1146,6 +1176,52 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           </div>
           </>)}
         </SwipeableSheet>
+      )}
+      {/* Signalement d'une recette publique (droit d'auteur, photo inappropriée…) */}
+      {reportOpen && (
+        <SwipeableSheet onClose={() => setReportOpen(false)}>
+          {(close) => (<>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+              <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: "rgba(224,82,82,0.14)", display: "grid", placeItems: "center" }}><Icon name="warning" size={19} color="var(--red)" /></span>
+              <div>
+                <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, margin: 0 }}>Signaler cette recette</h3>
+                <p style={{ fontSize: 12, color: "var(--text3)", margin: "2px 0 0" }}>Pourquoi ne respecte-t-elle pas les conditions ?</p>
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "14px 0" }}>
+              {REPORT_REASONS.map(r => {
+                const on = reportReason === r.id;
+                return (
+                  <button key={r.id} onClick={() => setReportReason(r.id)}
+                    style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", borderRadius: 13, cursor: "pointer", textAlign: "left",
+                      background: on ? "rgba(224,82,82,0.08)" : "var(--surface2)", border: `1px solid ${on ? "rgba(224,82,82,0.45)" : "var(--border)"}` }}>
+                    <span style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", border: `2px solid ${on ? "var(--red)" : "var(--border)"}`, background: on ? "var(--red)" : "transparent" }}>
+                      {on && <Icon name="check" size={11} color="#fff" />}
+                    </span>
+                    <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{r.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <textarea value={reportNote} onChange={e => setReportNote(e.target.value)} rows={2} maxLength={400}
+              placeholder="Précisions (optionnel)…" className="field-input" style={{ resize: "none", marginBottom: 14 }} />
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+              <button className="btn btn-danger btn-pill" style={{ flex: 1.3 }} disabled={!reportReason}
+                onClick={() => close(() => { onReport?.(reportReason, reportNote.trim()); })}>
+                <Icon name="warning" size={14} /> Envoyer le signalement
+              </button>
+            </div>
+          </>)}
+        </SwipeableSheet>
+      )}
+      {confirmAdminDelete && (
+        <ConfirmDialog title="Retirer cette recette publique ?"
+          icon="trash"
+          onCancel={() => setConfirmAdminDelete(false)}
+          onConfirm={() => { setConfirmAdminDelete(false); onAdminDelete?.(); }}>
+          Elle sera <strong style={{ color: "var(--text)" }}>retirée de la communauté</strong> (modération). La copie privée de son auteur·e n'est <strong style={{ color: "var(--text)" }}>pas</strong> supprimée.
+        </ConfirmDialog>
       )}
       {pendingPublish && (
         <SwipeableSheet onClose={() => setPendingPublish(false)}>
