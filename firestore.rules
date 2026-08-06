@@ -132,5 +132,14 @@ service cloud.firestore {
                     && request.resource.data.reporterUid == request.auth.uid;
       allow read, update, delete: if isAdmin();
     }
+
+    // ── Compteurs d'usage IA (quotas Mijoté+) ─────────────────────────────────
+    // Écriture RÉSERVÉE au serveur (Cloud Function via Admin SDK, en transaction) :
+    // les quotas d'import IA ne doivent JAMAIS être remis à zéro par le client. Le
+    // client lit seulement SES propres compteurs (affichage éventuel du reliquat).
+    match /aiUsage/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
   }
 }
