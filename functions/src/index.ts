@@ -1,26 +1,26 @@
 // ─── CLOUD FUNCTIONS MIJOTÉ ──────────────────────────────────────────────────
 // `importRecipeFromUrl`   : importe une recette depuis une URL.
 // `importRecipeFromImages`: importe une recette depuis 1 ou 2 photos (livre).
-// Les deux sont réservées à l'admin (le créateur) — la vérification se fait CÔTÉ
-// SERVEUR sur l'e-mail du token Auth, pas seulement en masquant un bouton.
-// Extraction par Claude Haiku 4.5 (prompt éditable dans prompts/recipeExtract.md),
-// assemblée par assignIdsAndLink() (ids stables, _raw, liaisons ingrédients/
-// ustensiles ↔ étapes, images d'étape pour l'URL).
-const fs = require("fs");
-const path = require("path");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { defineSecret, defineString } = require("firebase-functions/params");
-const {
+// L'accès est vérifié CÔTÉ SERVEUR (admin illimité, abonné avec quota) — jamais
+// en masquant seulement un bouton. Extraction par Claude Haiku 4.5 (URL) ou
+// Sonnet (photos), assemblée par assignIdsAndLink() (ids stables, _raw, liaisons
+// ingrédients/ustensiles ↔ étapes, images d'étape pour l'URL).
+import * as fs from "fs";
+import * as path from "path";
+import { onCall, HttpsError, type CallableRequest } from "firebase-functions/v2/https";
+import { defineSecret, defineString } from "firebase-functions/params";
+// Import de TYPE uniquement (effacé à la compilation) : le SDK reste chargé en
+// dynamique (`await import`) dans les fonctions, mais ses types sont disponibles.
+import type Anthropic from "@anthropic-ai/sdk";
+import {
   htmlToText, imageUrlsInText, extractOgImage,
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
-} = require("./recipeExtract.js");
+  type Intermediate,
+} from "./recipeExtract.js";
+import { assertImportAllowed } from "./access.js";
 
-// Paiement Mijoté+ (Stripe maison) : createStripeCheckout / createStripePortal /
-// stripeWebhook. Défini dans son propre module, ré-exporté ici pour le déploiement.
-Object.assign(exports, require("./stripe.js"));
-
-// Contrôle d'accès + quotas Mijoté+ (admin illimité) pour les imports IA.
-const { assertImportAllowed } = require("./access.js");
+// Paiement Mijoté+ (Stripe maison) : ré-exporté ici pour le déploiement.
+export { createStripeCheckout, createStripePortal, stripeWebhook } from "./stripe.js";
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 const ADMIN_EMAIL = defineString("ADMIN_EMAIL"); // e-mail autorisé (le créateur)
@@ -33,19 +33,19 @@ const MODEL = "claude-haiku-4-5";
 // sur les quantités et la mise en page, et capable de haute résolution.
 const VISION_MODEL = "claude-sonnet-5";
 
-// Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md). La
-// liste des cuisines est fixe (injectée au démarrage) ; la liste des ustensiles
-// autorisés est dynamique (fournie par le client à chaque appel).
+// Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md), qui
+// reste à la racine `functions/` (le code compilé vit dans `lib/`, d'où le « .. »).
 const PROMPT_TEMPLATE = fs
-  .readFileSync(path.join(__dirname, "prompts", "recipeExtract.md"), "utf-8")
+  .readFileSync(path.join(__dirname, "..", "prompts", "recipeExtract.md"), "utf-8")
   .replace("{{CUISINE_LIST}}", CUISINE_LABELS.join(", "));
 
 // Addendum spécifique à l'import PHOTO (mise en page livre/magazine : colonne
 // d'ingrédients, deux pages, à ignorer, images d'étape toujours vides…). Ajouté
 // après le prompt de base, dont il complète et prime les règles.
-const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "prompts", "recipeExtractImage.md"), "utf-8");
+const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "..", "prompts", "recipeExtractImage.md"), "utf-8");
 
-function parseJsonLoose(s) {
+/** Extrait un objet JSON d'une réponse LLM (tolère les fences ```json et le bruit). */
+function parseJsonLoose(s: string): unknown {
   let t = (s || "").trim();
   const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) t = fence[1].trim();
@@ -54,7 +54,8 @@ function parseJsonLoose(s) {
   return JSON.parse(t);
 }
 
-async function fetchHtml(url) {
+/** Récupère le HTML d'une page (timeout, taille bornée, UA de navigateur). */
+async function fetchHtml(url: string): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
@@ -71,8 +72,9 @@ async function fetchHtml(url) {
     if (!res.ok) throw new HttpsError("unavailable", `La page a répondu ${res.status}.`);
     const ct = res.headers.get("content-type") || "";
     if (!ct.includes("html") && !ct.includes("xml")) throw new HttpsError("invalid-argument", "L'URL ne pointe pas vers une page web.");
+    if (!res.body) throw new HttpsError("unavailable", "Réponse sans contenu.");
     const reader = res.body.getReader();
-    const chunks = []; let size = 0;
+    const chunks: Uint8Array[] = []; let size = 0;
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -83,38 +85,54 @@ async function fetchHtml(url) {
     return Buffer.concat(chunks).toString("utf-8");
   } catch (e) {
     if (e instanceof HttpsError) throw e;
-    if (e.name === "AbortError") throw new HttpsError("deadline-exceeded", "La page a mis trop de temps à répondre.");
+    if (e instanceof Error && e.name === "AbortError") throw new HttpsError("deadline-exceeded", "La page a mis trop de temps à répondre.");
     throw new HttpsError("unavailable", "Impossible de récupérer la page (réseau ou URL invalide).");
   } finally {
     clearTimeout(timer);
   }
 }
 
+/** Brouillon LLM brut (JSON externe non fiable). */
+type LlmDraft = Record<string, unknown> & {
+  name?: string; prepTime?: number; cookTime?: number; servings?: number;
+  cuisine?: string; category?: string;
+  ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string }[];
+  utensils?: { name?: string }[];
+  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[] }[];
+  coverPhoto?: unknown;
+};
+
 // Brouillon LLM brut → forme INTERMÉDIAIRE (avant ids/liaisons). Conserve `_raw`
 // (ligne d'origine, éditable) et les listes de noms ingrédients/ustensiles par étape.
-function llmToIntermediate(d, sourceUrl) {
-  const num = (s) => { const n = Number(String(s ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? n : undefined; };
+function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
+  const num = (s: unknown): number | undefined => { const n = Number(String(s ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? n : undefined; };
   return {
     name: (d.name || "").slice(0, 200),
     prepTime: d.prepTime, cookTime: d.cookTime, servings: d.servings,
     cuisine: d.cuisine || "",
     category: d.category || "",
     source: sourceUrl,
-    ingredients: (d.ingredients || []).map(i => {
-      const ing = { name: (i.name || "").slice(0, 120), _raw: (i.raw || "").slice(0, 160) };
+    ingredients: (d.ingredients || []).map((i) => {
+      const ing: Intermediate["ingredients"][number] = { name: (i.name || "").slice(0, 120), _raw: (i.raw || "").slice(0, 160) };
       const a = num(i.amount); if (a != null) ing.amount = a;
       if (i.unit) ing.unit = String(i.unit).slice(0, 30);
       return ing;
-    }).filter(i => i.name),
-    utensils: (d.utensils || []).map(u => ({ name: (u.name || "").slice(0, 60) })).filter(u => u.name),
-    steps: (d.steps || []).map(s => ({
+    }).filter((i) => i.name),
+    utensils: (d.utensils || []).map((u) => ({ name: (u.name || "").slice(0, 60) })).filter((u) => u.name),
+    steps: (d.steps || []).map((s) => ({
       text: (s.text || "").slice(0, 2000),
       tip: (s.tip && s.tip.trim()) ? s.tip.slice(0, 500) : "",
       image: (s.image || "").toString().slice(0, 500),
-      ingredients: Array.isArray(s.ingredients) ? s.ingredients.map(x => String(x)) : [],
-      utensils: Array.isArray(s.utensils) ? s.utensils.map(x => String(x)) : [],
-    })).filter(s => s.text),
+      ingredients: Array.isArray(s.ingredients) ? s.ingredients.map((x) => String(x)) : [],
+      utensils: Array.isArray(s.utensils) ? s.utensils.map((x) => String(x)) : [],
+    })).filter((s) => s.text),
   };
+}
+
+/** Une image fournie par le client (base64 + type MIME). */
+interface InputImage {
+  mediaType: string;
+  data: string;
 }
 
 // Extraction depuis une ou deux PHOTOS (recette d'un livre, éventuellement sur 2
@@ -123,7 +141,7 @@ function llmToIntermediate(d, sourceUrl) {
 const IMG_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const MAX_IMG_B64 = 6_000_000; // ~4,5 Mo par image décodée
 
-async function extractFromImages(images, knownUtensils) {
+async function extractFromImages(images: InputImage[], knownUtensils: string[]): Promise<{ inter: Intermediate; coverIndex: number }> {
   const key = ANTHROPIC_API_KEY.value();
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
   const system = PROMPT_TEMPLATE
@@ -132,27 +150,28 @@ async function extractFromImages(images, knownUtensils) {
     + "\n\n" + IMG_PROMPT_ADDENDUM;
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
-  const content = images.map(im => ({
-    type: "image",
-    source: { type: "base64", media_type: im.mediaType, data: im.data },
+  const content: Anthropic.ContentBlockParam[] = images.map((im) => ({
+    type: "image" as const,
+    source: { type: "base64" as const, media_type: im.mediaType as "image/jpeg", data: im.data },
   }));
   content.push({ type: "text", text: images.length > 1
     ? "Ces photos montrent une même recette (pages successives d'un livre). Extrait-la en un seul objet JSON."
     : "Cette photo montre une recette de livre de cuisine. Extrait-la en JSON. Laisse `image` vide pour chaque étape." });
-  let response;
+  let response: Anthropic.Message;
   try {
     response = await client.messages.create({
       model: VISION_MODEL, max_tokens: 4096, system,
       messages: [{ role: "user", content }],
     });
   } catch (e) {
-    console.error("Anthropic API error (images):", e?.status, e?.name, e?.message);
-    throw new HttpsError("internal", `Extraction IA échouée : ${e?.message || "erreur API"}`);
+    const err = e as { status?: number; name?: string; message?: string };
+    console.error("Anthropic API error (images):", err?.status, err?.name, err?.message);
+    throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  const block = (response.content || []).find(b => b.type === "text");
-  if (!block) throw new HttpsError("internal", "Réponse IA vide.");
-  let parsed;
-  try { parsed = parseJsonLoose(block.text); }
+  const block = (response.content || []).find((b) => b.type === "text");
+  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
+  let parsed: LlmDraft;
+  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
   catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
   // `coverPhoto` : numéro (1-based) de l'image qui est la photo du plat, 0 si aucune.
   // On le convertit en index 0-based validé (-1 = pas de couverture).
@@ -161,7 +180,7 @@ async function extractFromImages(images, knownUtensils) {
   return { inter: llmToIntermediate(parsed, ""), coverIndex };
 }
 
-async function extractWithLlm(text, sourceUrl, knownUtensils) {
+async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: string[]): Promise<Intermediate> {
   const key = ANTHROPIC_API_KEY.value();
   // Clé absente ou factice (déploiement sans vraie clé) → message clair, pas d'appel.
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "Cette page n'a pas de données structurées et l'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
@@ -169,7 +188,7 @@ async function extractWithLlm(text, sourceUrl, knownUtensils) {
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
   const body = text.slice(0, 24_000); // borne le coût
-  let response;
+  let response: Anthropic.Message;
   try {
     response = await client.messages.create({
       model: MODEL,
@@ -178,31 +197,37 @@ async function extractWithLlm(text, sourceUrl, knownUtensils) {
       messages: [{ role: "user", content: `Texte de la page (source : ${sourceUrl}) :\n\n${body}` }],
     });
   } catch (e) {
-    console.error("Anthropic API error:", e?.status, e?.name, e?.message);
-    throw new HttpsError("internal", `Extraction IA échouée : ${e?.message || "erreur API"}`);
+    const err = e as { status?: number; name?: string; message?: string };
+    console.error("Anthropic API error:", err?.status, err?.name, err?.message);
+    throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  const block = (response.content || []).find(b => b.type === "text");
-  if (!block) throw new HttpsError("internal", "Réponse IA vide.");
-  let parsed;
-  try { parsed = parseJsonLoose(block.text); }
+  const block = (response.content || []).find((b) => b.type === "text");
+  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
+  let parsed: LlmDraft;
+  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
   catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
   return llmToIntermediate(parsed, sourceUrl);
 }
 
+/** Extrait la liste de noms d'ustensiles connus fournie par le client (bornée). */
+function knownUtensilsFrom(request: CallableRequest): string[] {
+  const raw = (request.data as { knownUtensils?: unknown })?.knownUtensils;
+  return Array.isArray(raw) ? raw.map((s) => String(s)).filter(Boolean).slice(0, 200) : [];
+}
+
 // NB : réactiver `enforceAppCheck: true` dans les options ci-dessous (ET pour
 // importRecipeFromImages) une fois le front déployé avec la clé reCAPTCHA v3
-// (VITE_FIREBASE_RECAPTCHA_SITE_KEY), sinon l'import admin serait rejeté.
-exports.importRecipeFromUrl = onCall(
+// (VITE_FIREBASE_RECAPTCHA_SITE_KEY), sinon l'import serait rejeté.
+export const importRecipeFromUrl = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
     // ── Accès + quota (côté serveur) : admin illimité, abonné limité ──
     await assertImportAllowed(request, ADMIN_EMAIL.value(), "url");
 
-    const url = String(request.data?.url || "").trim();
+    const url = String((request.data as { url?: unknown })?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
     // Ustensiles connus (base master), fournis par le client → borne les propositions du LLM.
-    const knownUtensils = Array.isArray(request.data?.knownUtensils)
-      ? request.data.knownUtensils.map(s => String(s)).filter(Boolean).slice(0, 200) : [];
+    const knownUtensils = knownUtensilsFrom(request);
 
     try {
       const html = await fetchHtml(url);
@@ -226,31 +251,31 @@ exports.importRecipeFromUrl = onCall(
     } catch (e) {
       if (e instanceof HttpsError) throw e; // messages déjà lisibles
       console.error("importRecipeFromUrl — erreur inattendue:", e);
-      throw new HttpsError("internal", `Erreur inattendue : ${e?.message || e}`);
+      throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
     }
   }
 );
 
-// Import depuis une ou deux photos (livre de cuisine). Réservé à l'admin (garde
-// serveur identique). Vision Haiku 4.5 ; pas d'images d'étape.
-exports.importRecipeFromImages = onCall(
+// Import depuis une ou deux photos (livre de cuisine). Garde serveur identique
+// (admin illimité, abonné avec quota). Vision Sonnet ; pas d'images d'étape.
+export const importRecipeFromImages = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
     // ── Accès + quota (côté serveur) : admin illimité, abonné limité ──
     await assertImportAllowed(request, ADMIN_EMAIL.value(), "photo");
 
-    const raw = Array.isArray(request.data?.images) ? request.data.images : [];
-    const images = raw.slice(0, 2).map(im => ({
+    const rawImages = (request.data as { images?: unknown })?.images;
+    const raw = Array.isArray(rawImages) ? rawImages : [];
+    const images: InputImage[] = raw.slice(0, 2).map((im) => ({
       mediaType: String(im?.mediaType || ""),
       data: String(im?.data || ""),
-    })).filter(im => im.data);
+    })).filter((im) => im.data);
     if (!images.length) throw new HttpsError("invalid-argument", "Aucune image fournie.");
     for (const im of images) {
       if (!IMG_MEDIA_TYPES.has(im.mediaType)) throw new HttpsError("invalid-argument", "Format d'image non pris en charge (JPEG, PNG, WebP).");
       if (im.data.length > MAX_IMG_B64) throw new HttpsError("invalid-argument", "Image trop volumineuse (max ~4,5 Mo).");
     }
-    const knownUtensils = Array.isArray(request.data?.knownUtensils)
-      ? request.data.knownUtensils.map(s => String(s)).filter(Boolean).slice(0, 200) : [];
+    const knownUtensils = knownUtensilsFrom(request);
 
     try {
       const { inter, coverIndex } = await extractFromImages(images, knownUtensils);
@@ -265,7 +290,7 @@ exports.importRecipeFromImages = onCall(
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       console.error("importRecipeFromImages — erreur inattendue:", e);
-      throw new HttpsError("internal", `Erreur inattendue : ${e?.message || e}`);
+      throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
     }
   }
 );

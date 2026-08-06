@@ -3,22 +3,105 @@
 // HTML → texte (avec marqueurs d'images), rapprochement du style de cuisine,
 // filtrage des ustensiles à la base master, et assemblage final du brouillon
 // (ids stables + liaisons ingrédients/ustensiles ↔ étapes). L'extraction elle-même
-// est faite par le LLM (voir index.js) ; ce module met en forme son résultat.
+// est faite par le LLM (voir index.ts) ; ce module met en forme son résultat.
+
+// ── Types (les payloads LLM sont volontairement lâches : JSON externe non fiable)
+
+/** Ingrédient au fil de l'assemblage (nom + quantité/unité optionnelles). */
+export interface DraftIngredient {
+  name?: string;
+  amount?: number | string;
+  unit?: string;
+  raw?: string;
+  _raw?: string;
+}
+
+/** Ustensile (nom seul) — parfois une simple chaîne côté LLM. */
+export interface DraftUtensil {
+  name?: string;
+}
+
+/** Étape au fil de l'assemblage. */
+export interface DraftStep {
+  text?: string;
+  tip?: string;
+  image?: string;
+  ingredients?: string[];
+  utensils?: (string | DraftUtensil)[];
+}
+
+/** Brouillon INTERMÉDIAIRE (sortie de `llmToIntermediate`, entrée d'`assignIdsAndLink`). */
+export interface Intermediate {
+  name: string;
+  prepTime?: number;
+  cookTime?: number;
+  servings?: number;
+  cuisine: string;
+  category: string;
+  source: string;
+  image?: string;
+  ingredients: DraftIngredient[];
+  utensils: DraftUtensil[];
+  steps: DraftStep[];
+}
+
+/** Ingrédient au schéma final Mijoté (id stable + texte éditable `_raw`). */
+export interface RecipeIngredient {
+  id: string;
+  dbId: string;
+  name: string;
+  _raw: string;
+  amount?: number | string;
+  unit?: string;
+}
+
+/** Ustensile au schéma final. */
+export interface RecipeUtensil {
+  id: string;
+  dbId: string;
+  name: string;
+}
+
+/** Étape au schéma final (avec liaisons ingrédients/ustensiles par id). */
+export interface RecipeStep {
+  id: string;
+  title: string;
+  text: string;
+  tip: string;
+  image: string;
+  ingredients: string[];
+  utensils: string[];
+}
+
+/** Recette finale assemblée. */
+export interface Recipe {
+  name: string;
+  prepTime: number;
+  cookTime: number;
+  servings: number;
+  cuisine: string;
+  category: string;
+  source: string;
+  image: string;
+  ingredients: RecipeIngredient[];
+  utensils: RecipeUtensil[];
+  steps: RecipeStep[];
+}
 
 // Styles de cuisine reconnus (miroir de src/constants/cuisines.js — garder aligné).
-const CUISINE_LABELS = ["Française", "Italienne", "Espagnole", "Portugaise", "Grecque",
+export const CUISINE_LABELS: string[] = ["Française", "Italienne", "Espagnole", "Portugaise", "Grecque",
   "Marocaine", "Tunisienne", "Libanaise", "Turque", "Indienne", "Chinoise", "Japonaise",
   "Coréenne", "Thaïlandaise", "Vietnamienne", "Mexicaine", "Américaine", "Fusion"];
 
 // Catégories (rôle dans le repas) reconnues (miroir de src/constants/recipeCategories.js).
-const CATEGORY_IDS = ["aperitif", "entree", "soupe", "salade", "plat", "gratin", "pasta", "pizza",
+const CATEGORY_IDS: string[] = ["aperitif", "entree", "soupe", "salade", "plat", "gratin", "pasta", "pizza",
   "accompagnement", "dessert", "tarte", "petit-dej", "boisson", "sauce", "boulangerie"];
 
-const norm = (s) => (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+const norm = (s: unknown): string => (s ?? "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
 // Pluriel des unités comptables pour le texte éditable `_raw` (miroir de
 // src/lib/format.ts). Les abréviations (g, ml, c. à s.…) sont invariables.
-const PLURAL_UNITS = {
+const PLURAL_UNITS: Record<string, string> = {
   "cuillère à soupe": "cuillères à soupe", "cuillère à café": "cuillères à café",
   "pincée": "pincées", "gousse": "gousses", "sachet": "sachets", "tranche": "tranches",
   "botte": "bottes", "feuille": "feuilles", "branche": "branches", "poignée": "poignées",
@@ -29,8 +112,8 @@ const PLURAL_UNITS = {
 // et on ne les écrit pas dans `_raw`.
 const SILENT_UNITS = new Set(["piece", "pieces", "unite", "unites"]);
 
-// Unité accordée au pluriel selon la quantité (règle française : ≥ 2).
-function pluralUnit(amount, unit) {
+/** Unité accordée au pluriel selon la quantité (règle française : ≥ 2). */
+function pluralUnit(amount: number | string | undefined, unit: string | undefined): string {
   const u = (unit || "").toString().trim();
   if (!u) return "";
   const n = Number(amount);
@@ -41,13 +124,13 @@ function pluralUnit(amount, unit) {
 // d'ail » → « ail », « tranche de pain » → « pain »). Renvoie l'unité canonique
 // (singulier) détectée pour la promouvoir si le champ `unit` est vide — évite le
 // doublon « 2 gousses gousse d'ail » et rétablit le rapprochement à la base.
-function stripMeasurePrefix(name) {
+function stripMeasurePrefix(name: string | undefined): { name: string; measure: string } | null {
   const s = (name || "").toString().trim();
   if (!s) return null;
   // Orthographes acceptées (singulier + pluriel) → singulier canonique ; on teste
   // les plus longues d'abord (« cuillère à soupe » avant « cuillère »). « pièce »
   // est exclu (unité implicite : « pièce d'oignon » n'existe pas).
-  const forms = [];
+  const forms: [string, string][] = [];
   for (const sing of Object.keys(PLURAL_UNITS)) {
     if (sing === "pièce") continue;
     forms.push([sing, sing], [PLURAL_UNITS[sing], sing]);
@@ -68,7 +151,7 @@ const OU_PLURAL_X = new Set(["bijou", "caillou", "chou", "genou", "hibou", "jouj
 // Pluriel français du mot de tête d'un nom d'ingrédient COMPTABLE (sans unité) :
 // « 2 oignon » → « 2 oignons », « 4 œuf » → « 4 œufs ». Le champ `name` stocké
 // reste au singulier canonique ; seul le texte `_raw` est accordé.
-function pluralName(amount, name) {
+function pluralName(amount: number | string | undefined, name: string | undefined): string {
   const s = (name || "").toString();
   const n = Number(amount);
   if (!s || !Number.isFinite(n) || Math.abs(n) < 2) return s;
@@ -82,31 +165,33 @@ function pluralName(amount, name) {
   });
 }
 
-// Valide un id de catégorie renvoyé par le LLM (ou "").
-function matchCategory(v) {
+/** Valide un id de catégorie renvoyé par le LLM (ou ""). */
+export function matchCategory(v: unknown): string {
   const n = norm(Array.isArray(v) ? v[0] : v);
   return CATEGORY_IDS.includes(n) ? n : "";
 }
 
-// Rapproche une valeur libre du label canonique le plus proche (ou "").
-function matchCuisine(v) {
+/** Rapproche une valeur libre du label de cuisine canonique le plus proche (ou ""). */
+export function matchCuisine(v: unknown): string {
   const n = norm(Array.isArray(v) ? v[0] : v);
   if (!n) return "";
-  const hit = CUISINE_LABELS.find(l => norm(l) === n) || CUISINE_LABELS.find(l => n.includes(norm(l)) || norm(l).includes(n));
+  const hit = CUISINE_LABELS.find((l) => norm(l) === n) || CUISINE_LABELS.find((l) => n.includes(norm(l)) || norm(l).includes(n));
   return hit || "";
 }
 
-// og:image (ou twitter:image) depuis le <head> — image principale de la recette.
-function extractOgImage(html) {
+/** og:image (ou twitter:image) depuis le <head> — image principale de la recette. */
+export function extractOgImage(html: string): string {
   const m = html.match(/<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)(?::url)?["'][^>]*>/i);
   if (!m) return "";
   const c = m[0].match(/content=["']([^"']+)["']/i);
   return c ? c[1] : "";
 }
 
-// Détecte le nom `name` (normalisé) comme mot/segment dans un texte (évite les
-// faux positifs type « sel » dans « persil »).
-function mentions(text, name) {
+/**
+ * Détecte le nom `name` (normalisé) comme mot/segment dans un texte (évite les
+ * faux positifs type « sel » dans « persil »).
+ */
+export function mentions(text: string, name: string): boolean {
   const n = norm(name);
   if (n.length < 3) return false;
   const esc = n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -117,34 +202,34 @@ function mentions(text, name) {
 // ET ceux référencés au fil des étapes. Certains modèles ne remplissent que les
 // étapes (ou renvoient un tableau de tête vide) : sans ça, la recette ressortait
 // sans aucun ustensile. Dédupliqué par nom normalisé.
-function collectUtensils(d) {
-  const byNorm = new Map();
-  const add = (name) => {
-    const nm = (name || "").toString().trim();
+export function collectUtensils(d: Pick<Intermediate, "utensils" | "steps">): DraftUtensil[] {
+  const byNorm = new Map<string, DraftUtensil>();
+  const add = (name: unknown): void => {
+    const nm = (typeof name === "string" ? name : (name as DraftUtensil)?.name || "").toString().trim();
     const key = norm(nm);
     if (key && !byNorm.has(key)) byNorm.set(key, { name: nm });
   };
-  (d.utensils || []).forEach(u => add(u.name || u));
-  (d.steps || []).forEach(s => (s.utensils || []).forEach(add));
+  (d.utensils || []).forEach((u) => add((u as DraftUtensil).name || u));
+  (d.steps || []).forEach((s) => (s.utensils || []).forEach(add));
   return [...byNorm.values()];
 }
 
 // Ne garde que les ustensiles présents dans la base master (liste de noms connus).
 // Rapprochement tolérant (accents/casse, singulier grossier, mot commun ≥ 4). Si la
 // liste connue est vide (client ne l'a pas fournie), on ne filtre pas.
-function filterUtensilsToKnown(utensils, knownNames) {
+export function filterUtensilsToKnown(utensils: DraftUtensil[], knownNames: string[]): DraftUtensil[] {
   if (!knownNames || !knownNames.length) return utensils || [];
   const known = knownNames.map(norm);
-  const sing = (s) => s.replace(/s\b/g, "");
-  const words = (s) => s.split(" ").filter(w => w.length >= 4);
-  return (utensils || []).filter(u => {
+  const sing = (s: string): string => s.replace(/s\b/g, "");
+  const words = (s: string): string[] => s.split(" ").filter((w) => w.length >= 4);
+  return (utensils || []).filter((u) => {
     const n = norm(u.name || u);
     if (!n) return false;
-    return known.some(k => {
+    return known.some((k) => {
       if (k === n || sing(k) === sing(n) || k.includes(n) || n.includes(k)) return true;
       // mot significatif commun (« batteur électrique » ↔ « batteur », « moule à cake » ↔ « moule à manqué »)
       const kw = words(k), nw = words(n);
-      return kw.some(w => nw.includes(w));
+      return kw.some((w) => nw.includes(w));
     });
   });
 }
@@ -152,8 +237,8 @@ function filterUtensilsToKnown(utensils, knownNames) {
 // Assemble le brouillon FINAL au schéma Mijoté : ids stables sur ingrédients/
 // ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
 // fourni par le LLM, complété par détection dans le texte de l'étape).
-function assignIdsAndLink(d) {
-  const ingredients = (d.ingredients || []).map((i, k) => {
+export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
+  const ingredients: RecipeIngredient[] = (d.ingredients || []).map((i, k) => {
     // Unité implicite (pièce) : on la retire ; sinon on conserve le singulier
     // canonique dans `unit` mais on écrit le pluriel accordé dans `_raw`.
     // Le LLM laisse parfois le mot de mesure dans le nom : on le retire et, si
@@ -165,20 +250,20 @@ function assignIdsAndLink(d) {
     // _raw reconstruit à partir des champs normalisés (texte propre et éditable).
     // Sans unité, l'ingrédient est comptable : on accorde le nom au pluriel.
     const rawName = unit ? name : pluralName(i.amount, name);
-    const raw = [i.amount, pluralUnit(i.amount, unit), rawName].filter(v => v != null && v !== "").join(" ").trim() || name || "";
-    const ing = { id: `i${k}`, dbId: "", name, _raw: raw };
+    const raw = [i.amount, pluralUnit(i.amount, unit), rawName].filter((v) => v != null && v !== "").join(" ").trim() || name || "";
+    const ing: RecipeIngredient = { id: `i${k}`, dbId: "", name, _raw: raw };
     if (i.amount != null && i.amount !== "") ing.amount = i.amount;
     if (unit) ing.unit = unit;
     return ing;
   });
-  const utensils = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: (u.name || u).toString() }));
+  const utensils: RecipeUtensil[] = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: ((u as DraftUtensil).name || u).toString() }));
 
-  const steps = (d.steps || []).map((s, k) => {
+  const steps: RecipeStep[] = (d.steps || []).map((s, k) => {
     const text = norm(s.text);
     const explicitIng = new Set((s.ingredients || []).map(norm));
-    const explicitUt = new Set((s.utensils || []).map(norm));
-    const ingIds = ingredients.filter(i => i.name && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map(i => i.id);
-    const utIds = utensils.filter(u => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map(u => u.id);
+    const explicitUt = new Set((s.utensils || []).map((x) => norm(typeof x === "string" ? x : x?.name)));
+    const ingIds = ingredients.filter((i) => i.name && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map((i) => i.id);
+    const utIds = utensils.filter((u) => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map((u) => u.id);
     return { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
   });
 
@@ -198,8 +283,8 @@ function assignIdsAndLink(d) {
 // Images décoratives / techniques à ignorer (logo, avatar, icône, pixel, svg…).
 const JUNK_IMG = /(^data:|\.svg(\?|$)|sprite|logo|avatar|icon|emoji|pixel|1x1|placeholder|badge|banner|widget|gravatar|share|social|ads?[-_/])/i;
 
-// URL d'image « de contenu » depuis une balise <img> (préfère les attributs lazy).
-function imgUrlFromTag(tag) {
+/** URL d'image « de contenu » depuis une balise <img> (préfère les attributs lazy). */
+function imgUrlFromTag(tag: string): string {
   const m = tag.match(/(?:data-src|data-lazy-src|data-original|src)\s*=\s*["']([^"']+)["']/i);
   const url = m ? m[1].trim() : "";
   if (!url || JUNK_IMG.test(url)) return "";
@@ -209,7 +294,7 @@ function imgUrlFromTag(tag) {
 // HTML → texte lisible (pour le LLM). Retire scripts/styles, et convertit les <img>
 // de contenu en marqueurs ⟦IMG:url⟧ (plafonnés) pour que le LLM puisse rattacher
 // une photo pertinente à une étape.
-function htmlToText(html, { maxImages = 15 } = {}) {
+export function htmlToText(html: string, { maxImages = 15 }: { maxImages?: number } = {}): string {
   let count = 0;
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -229,14 +314,9 @@ function htmlToText(html, { maxImages = 15 } = {}) {
     .replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
 
-// Ensemble des URLs d'images présentes dans le texte (marqueurs ⟦IMG:…⟧).
-function imageUrlsInText(text) {
-  const set = new Set();
+/** Ensemble des URLs d'images présentes dans le texte (marqueurs ⟦IMG:…⟧). */
+export function imageUrlsInText(text: string): Set<string> {
+  const set = new Set<string>();
   for (const m of (text || "").matchAll(/⟦IMG:([^⟧]+)⟧/g)) set.add(m[1]);
   return set;
 }
-
-module.exports = {
-  CUISINE_LABELS, matchCuisine, matchCategory, extractOgImage, mentions,
-  collectUtensils, filterUtensilsToKnown, assignIdsAndLink, htmlToText, imageUrlsInText,
-};
