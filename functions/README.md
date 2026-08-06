@@ -28,7 +28,8 @@ racine (`npm test`) et sont exclus de la compilation.
 
 | Module | Rôle |
 | --- | --- |
-| `src/index.ts` | Points d'entrée (onCall) : import URL / photo |
+| `src/index.ts` | **Point d'entrée** : ré-exporte les fonctions déployées (aucune logique) |
+| `src/recipeImport.ts` | Handlers d'import (onCall) : URL / photo |
 | `src/recipeExtract.ts` | Mise en forme pure du brouillon (ids, `_raw`, liaisons) |
 | `src/access.ts` | Contrôle d'accès + consommation de quota (transaction) |
 | `src/quota.ts` | Limites & logique de quota (pure) |
