@@ -1,5 +1,19 @@
 # Changelog – Mijoté
 
+## v3.10.1 – Safran · Quotas & modération
+
+### Imports IA
+- **Quotas d'import** pour les abonnés Mijoté+ : lien **5/jour · 60/mois**, photo **3/jour · 30/mois**, décomptés côté serveur (l'admin reste illimité)
+- **Compteurs visibles** dans les écrans d'import : reliquat du jour et du mois, bouton bloqué et message clair quand la limite est atteinte
+- **Hors ligne** : l'import IA est bloqué avec un message explicite (la connexion est nécessaire à l'extraction)
+
+### Modération
+- L'**admin** peut retirer n'importe quelle recette **publique** (sans toucher à la copie privée de l'auteur)
+- Tout utilisateur peut **signaler** une recette publique
+
+### Détails
+- **Squelettes de chargement** sur les carnets et la grille de recettes (privées et publiques)
+
 ## v3.10.0 – Safran · Mijoté+ & Batch cooking
 
 ### Mijoté+ (abonnement)
