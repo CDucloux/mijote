@@ -13,7 +13,7 @@
  */
 import {
   doc, getDoc, collection, getDocs, writeBatch, query, orderBy, limit, where,
-  runTransaction, deleteDoc, setDoc, onSnapshot,
+  runTransaction, deleteDoc, setDoc, addDoc, serverTimestamp, onSnapshot,
   type DocumentData, type DocumentReference, type CollectionReference,
   type Query, type DocumentSnapshot, type Unsubscribe,
 } from "firebase/firestore";
@@ -112,6 +112,39 @@ export async function fetchUserDirectory(emails?: string[]): Promise<DocumentDat
 // connectés, écrite uniquement par l'auteur (cf. firestore.rules).
 export const publicRecipesCol = (): CollectionReference => collection(db, "publicRecipes");
 export const publicRecipeDoc = (pubId: string): DocumentReference => doc(db, "publicRecipes", pubId);
+
+/**
+ * Supprime UNE recette publique (modération admin). Ne retire QUE le document
+ * public `publicRecipes/{pubId}` — la copie privée de l'auteur n'est pas touchée
+ * (elle est dans son espace, inaccessible depuis ici). Autorisé par les règles
+ * pour l'auteur (dépublication) OU l'admin (modération).
+ *
+ * @param pubId - L'identifiant du document public.
+ */
+export async function deletePublicRecipe(pubId: string): Promise<void> {
+  await deleteDoc(publicRecipeDoc(pubId));
+}
+
+/** Détails d'un signalement de recette publique (modération). */
+export interface RecipeReport {
+  pubId: string;
+  recipeName?: string;
+  authorUid?: string;
+  reason: string;
+  note?: string;
+  reporterUid: string;
+  reporterEmail?: string | null;
+}
+
+/**
+ * Enregistre un signalement d'une recette publique (droit d'auteur, photo
+ * inappropriée…) dans `reports/{autoId}`. Lisible uniquement par l'admin.
+ *
+ * @param report - Les détails du signalement.
+ */
+export async function reportPublicRecipe(report: RecipeReport): Promise<void> {
+  await addDoc(collection(db, "reports"), { ...report, createdAt: serverTimestamp() });
+}
 
 /**
  * Publie un bundle (recette + ses composants) en une transaction batch.

@@ -117,8 +117,29 @@ service cloud.firestore {
       allow get: if hasVerifiedEmail();
       allow list: if hasVerifiedEmail() && request.query.limit <= 120;
       allow create, update: if ownsDoc();
-      allow delete: if hasVerifiedEmail()
-                    && request.auth.uid == resource.data.authorUid;
+      // Suppression : l'auteur (dépublication) OU l'admin (modération). L'admin
+      // peut retirer n'importe quelle recette publique ; la copie privée de
+      // l'auteur, dans son espace, n'est pas affectée.
+      allow delete: if isAdmin()
+                    || (hasVerifiedEmail() && request.auth.uid == resource.data.authorUid);
+    }
+
+    // ── Signalements de recettes publiques (modération) ───────────────────────
+    // Tout utilisateur (email vérifié) peut CRÉER un signalement pour lui-même ;
+    // seul l'admin peut les lire/traiter. Pas de modification/suppression client.
+    match /reports/{id} {
+      allow create: if hasVerifiedEmail()
+                    && request.resource.data.reporterUid == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── Compteurs d'usage IA (quotas Mijoté+) ─────────────────────────────────
+    // Écriture RÉSERVÉE au serveur (Cloud Function via Admin SDK, en transaction) :
+    // les quotas d'import IA ne doivent JAMAIS être remis à zéro par le client. Le
+    // client lit seulement SES propres compteurs (affichage éventuel du reliquat).
+    match /aiUsage/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
     }
   }
 }

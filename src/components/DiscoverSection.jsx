@@ -69,7 +69,10 @@ function SkeletonCard() {
 }
 
 // Rangée de squelettes (mime un carrousel) le temps que les recettes arrivent.
-function SkeletonRow({ titleWidth = 130, count = 4 }) {
+// `count` élevé + `overflow: hidden` : la rangée remplit toute la largeur du
+// viewport (les cartes en trop sont simplement rognées), au lieu de s'arrêter à
+// 4 cartes sur desktop.
+function SkeletonRow({ titleWidth = 130, count = 10 }) {
   return (
     <div style={{ marginBottom: 22 }}>
       <div className="skeleton" style={{ height: 15, width: titleWidth, borderRadius: 6, marginBottom: 12 }} />

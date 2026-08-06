@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
-import { LoadingOverlay, InlineError, HintCard, ImportHeader } from "../components/ImportUI.jsx";
+import { LoadingOverlay, InlineError, HintCard, ImportHeader, QuotaMeter } from "../components/ImportUI.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { useAiUsage } from "../hooks/useAiUsage.js";
 import { fileToImagePart } from "@/lib/recipes/recipeUrlImport.js";
 
 // ─── IMPORT IA DEPUIS DES PHOTOS (route /recipes/import-from-picture) ─────────
@@ -31,7 +32,9 @@ function AddPhoto({ label, hint, onClick, style }) {
 }
 
 export function ImportFromPicture() {
-  const { importFromImages, notify, isPlus } = useAppShell();
+  const { importFromImages, notify, isPlus, isAdmin, user } = useAppShell();
+  const { unlimited, remaining } = useAiUsage(user?.uid, isAdmin);
+  const rem = remaining("photo");
   const navigate = useNavigate();
   const [photos, setPhotos] = useState([]); // [{ file, preview, part }]
   const [error, setError] = useState("");
@@ -63,6 +66,8 @@ export function ImportFromPicture() {
   const removePhoto = (i) => setPhotos(p => { const c = p[i]; if (c) URL.revokeObjectURL(c.preview); return p.filter((_, k) => k !== i); });
 
   const go = async () => {
+    if (!navigator.onLine) { setError("Pas de connexion internet. L'import IA a besoin d'être en ligne pour analyser tes photos."); return; }
+    if (!unlimited && rem?.blocked) { setError(rem.dayLeft === 0 ? "Limite du jour atteinte pour les imports photo. Réessaie demain." : "Limite du mois atteinte pour les imports photo."); return; }
     if (!photos.length) { setError("Ajoute au moins une photo."); return; }
     const parts = photos.map(p => p.part);
     setError(""); setLoading(true);
@@ -94,6 +99,9 @@ export function ImportFromPicture() {
               </p>
             </div>
           </div>
+
+          {/* Quota (abonné) ou illimité (admin) */}
+          <QuotaMeter label="photo" rem={rem} unlimited={unlimited} />
 
           <input ref={fileRef} type="file" accept="image/*" multiple hidden
             onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
@@ -130,7 +138,7 @@ export function ImportFromPicture() {
         <button className="btn" style={{ flex: 1, borderRadius: 999, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }} onClick={() => navigate(-1)}>
           <Icon name="back" size={15} /> Retour
         </button>
-        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!photos.length} onClick={go}>
+        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!photos.length || (!unlimited && rem?.blocked)} onClick={go}>
           <Icon name="sparkle" size={15} /> Extraire
         </button>
       </div>

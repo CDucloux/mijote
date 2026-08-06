@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
-import { LoadingOverlay, InlineError, HintCard, ImportHeader } from "../components/ImportUI.jsx";
+import { LoadingOverlay, InlineError, HintCard, ImportHeader, QuotaMeter } from "../components/ImportUI.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { useAiUsage } from "../hooks/useAiUsage.js";
 
 // ─── IMPORT IA DEPUIS UN LIEN (route /recipes/import-from-url) ────────────────
 // L'IA lit la page et met la recette en forme ; le brouillon s'ouvre ensuite dans
@@ -12,7 +13,9 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 const URL_RE = /^https?:\/\/.+/i;
 
 export function ImportFromUrl() {
-  const { importFromUrl, notify, isPlus } = useAppShell();
+  const { importFromUrl, notify, isPlus, isAdmin, user } = useAppShell();
+  const { unlimited, remaining } = useAiUsage(user?.uid, isAdmin);
+  const rem = remaining("url");
   const navigate = useNavigate();
   const location = useLocation();
   const [url, setUrl] = useState("");
@@ -48,6 +51,8 @@ export function ImportFromUrl() {
   }, []);
 
   const go = async () => {
+    if (!navigator.onLine) { setError("Pas de connexion internet. L'import IA a besoin d'être en ligne pour lire la page."); return; }
+    if (!unlimited && rem?.blocked) { setError(rem.dayLeft === 0 ? "Limite du jour atteinte pour les imports depuis un lien. Réessaie demain." : "Limite du mois atteinte pour les imports depuis un lien."); return; }
     const u = url.trim();
     if (!URL_RE.test(u)) { setError("Colle une URL complète (https://…)."); return; }
     setError(""); setLoading(true);
@@ -99,6 +104,9 @@ export function ImportFromUrl() {
             </button>
           )}
 
+          {/* Quota (abonné) ou illimité (admin) */}
+          <QuotaMeter label="depuis un lien" rem={rem} unlimited={unlimited} />
+
           {/* Saisie */}
           <input className="field-input" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
             value={url} autoFocus
@@ -122,7 +130,7 @@ export function ImportFromUrl() {
         <button className="btn" style={{ flex: 1, borderRadius: 999, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }} onClick={() => navigate(-1)}>
           <Icon name="back" size={15} /> Retour
         </button>
-        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!url.trim()} onClick={go}>
+        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!url.trim() || (!unlimited && rem?.blocked)} onClick={go}>
           <Icon name="sparkle" size={15} /> Importer
         </button>
       </div>
