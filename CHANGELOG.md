@@ -1,5 +1,19 @@
 # Changelog – Mijoté
 
+## v3.10.2 – Safran · Finitions & robustesse
+
+### Corrections
+- **Barre d'onglets (mobile)** : elle ne disparaît plus en tirant / overscrollant la page (correction pérenne du dimensionnement du shell)
+
+### Finitions UI
+- **Squelettes de chargement** : les titres « Carnets » et « Recettes » ont aussi leur trame pendant le chargement
+- **États vides repensés** (icône, titre, action) et enfin centrés :
+  - **Stock** : recherche sans résultat → message clair + « Effacer la recherche »
+  - **Courses** : une liste-recette entièrement cochée affiche « Tout est acheté ! » + suppression de la liste
+
+### Interne
+- **Cloud Functions** migrées en **TypeScript** (typage strict, TSDoc), organisées par domaine (imports IA / abonnements / quotas)
+
 ## v3.10.1 – Safran · Quotas & modération
 
 ### Imports IA
