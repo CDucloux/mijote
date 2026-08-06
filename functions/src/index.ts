@@ -3,8 +3,9 @@
 // UNIQUE : rassembler et ré-exporter les fonctions déployées. Aucune logique
 // métier ici — chaque domaine vit dans son propre module.
 //
-//   • Import de recette (URL / photo) → recipeImport.ts
-//   • Paiement Mijoté+ (Stripe maison) → stripe.ts
+//   • Import de recette (URL / photo) → imports/
+//   • Paiement Mijoté+ (Stripe maison) → subscriptions/
+//   • Quotas d'import IA → quota/ (utilisé par imports/)
 
-export { importRecipeFromUrl, importRecipeFromImages } from "./recipeImport.js";
-export { createStripeCheckout, createStripePortal, stripeWebhook } from "./stripe.js";
+export { importRecipeFromUrl, importRecipeFromImages } from "./imports/recipeImport.js";
+export { createStripeCheckout, createStripePortal, stripeWebhook } from "./subscriptions/stripe.js";

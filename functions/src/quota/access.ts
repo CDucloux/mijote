@@ -7,7 +7,7 @@
 import { HttpsError, type CallableRequest } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { ACTIVE_STATUSES } from "./stripeHelpers.js";
+import { ACTIVE_STATUSES } from "../subscriptions/stripeHelpers.js";
 import { periodKeys, currentCounts, quotaError, type ImportKind, type KindUsage } from "./quota.js";
 
 if (!getApps().length) initializeApp();

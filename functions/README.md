@@ -26,15 +26,17 @@ Le déploiement recompile automatiquement via le hook `predeploy` de
 main avant `firebase deploy`. Les tests (`*.test.ts`) tournent avec Vitest à la
 racine (`npm test`) et sont exclus de la compilation.
 
+Le code est organisé par **domaine** :
+
 | Module | Rôle |
 | --- | --- |
 | `src/index.ts` | **Point d'entrée** : ré-exporte les fonctions déployées (aucune logique) |
-| `src/recipeImport.ts` | Handlers d'import (onCall) : URL / photo |
-| `src/recipeExtract.ts` | Mise en forme pure du brouillon (ids, `_raw`, liaisons) |
-| `src/access.ts` | Contrôle d'accès + consommation de quota (transaction) |
-| `src/quota.ts` | Limites & logique de quota (pure) |
-| `src/stripe.ts` | Checkout / portail / webhook Stripe |
-| `src/stripeHelpers.ts` | Helpers purs abonnement (sans I/O) |
+| `src/imports/recipeImport.ts` | Handlers d'import (onCall) : URL / photo |
+| `src/imports/recipeExtract.ts` | Mise en forme pure du brouillon (ids, `_raw`, liaisons) |
+| `src/subscriptions/stripe.ts` | Checkout / portail / webhook Stripe |
+| `src/subscriptions/stripeHelpers.ts` | Helpers purs abonnement (sans I/O) |
+| `src/quota/access.ts` | Contrôle d'accès + consommation de quota (transaction) |
+| `src/quota/quota.ts` | Limites & logique de quota (pure) |
 
 ## Fonctionnement
 

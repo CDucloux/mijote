@@ -17,7 +17,7 @@ import {
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
   type Intermediate,
 } from "./recipeExtract.js";
-import { assertImportAllowed } from "./access.js";
+import { assertImportAllowed } from "../quota/access.js";
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 const ADMIN_EMAIL = defineString("ADMIN_EMAIL"); // e-mail autorisé (le créateur)
@@ -31,15 +31,15 @@ const MODEL = "claude-haiku-4-5";
 const VISION_MODEL = "claude-sonnet-5";
 
 // Prompt d'extraction : fichier Markdown éditable (prompts/recipeExtract.md), qui
-// reste à la racine `functions/` (le code compilé vit dans `lib/`, d'où le « .. »).
+// reste à la racine `functions/` (le code compilé vit dans `lib/imports/`, d'où les deux « .. »).
 const PROMPT_TEMPLATE = fs
-  .readFileSync(path.join(__dirname, "..", "prompts", "recipeExtract.md"), "utf-8")
+  .readFileSync(path.join(__dirname, "..", "..", "prompts", "recipeExtract.md"), "utf-8")
   .replace("{{CUISINE_LIST}}", CUISINE_LABELS.join(", "));
 
 // Addendum spécifique à l'import PHOTO (mise en page livre/magazine : colonne
 // d'ingrédients, deux pages, à ignorer, images d'étape toujours vides…). Ajouté
 // après le prompt de base, dont il complète et prime les règles.
-const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "..", "prompts", "recipeExtractImage.md"), "utf-8");
+const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "..", "..", "prompts", "recipeExtractImage.md"), "utf-8");
 
 /** Extrait un objet JSON d'une réponse LLM (tolère les fences ```json et le bruit). */
 function parseJsonLoose(s: string): unknown {
