@@ -7,7 +7,7 @@
   },
   "main": "lib/index.js",
   "scripts": {
-    "clean": "rm -rf lib",
+    "clean": "node -e \"require('fs').rmSync('lib',{recursive:true,force:true})\"",
     "build": "npm run clean && tsc",
     "build:watch": "tsc --watch",
     "docs": "typedoc",
