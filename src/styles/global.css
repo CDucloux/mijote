@@ -796,28 +796,6 @@ select {
 /* Fondu doux de la grille de recettes à chaque nouveau jeu de résultats
    (recherche / tri / carnet). Volontairement discret (démarre à 0.45, léger
    glissé) pour rester agréable même si la clé change à chaque frappe. */
-.recipe-grid-fade {
-  animation: recipeGridFade 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-@keyframes recipeGridFade {
-  from {
-    opacity: 0.45;
-    transform: translateY(5px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .recipe-grid-fade {
-    animation: none;
-  }
-}
-
 /* Bulle de définition d'une technique (survol / tap). Portée dans <body> et
    positionnée en `fixed` par TechniqueText ; ici uniquement l'apparence + le
    fondu d'entrée. */

@@ -393,17 +393,16 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </h2>
         </div>
         {/* La clé change à chaque nouveau jeu de résultats (recherche, tri, carnet)
-            → la grille se remonte et rejoue un fondu doux : les résultats ne
-            « sautent » plus brutalement. Quand une recherche est active, on coupe
-            l'entrée décalée par carte (qui donnerait un effet stroboscopique à
-            chaque frappe) : seul le fondu global de la grille joue. */}
-        <div key={`${filterCol || "all"}|${normalizeStr(search)}|${sortBy}|${sortDir}`} className="recipe-grid recipe-grid-fade" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
+            → la grille se remonte et les cartes rejouent leur entrée décalée
+            (fondu + translation, cascade ~40 ms). Les résultats apparaissent
+            « un à un » plutôt que de surgir d'un bloc. */}
+        <div key={`${filterCol || "all"}|${normalizeStr(search)}|${sortBy}|${sortDir}`} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
           {filtered.map((r, idx) => {
             const sv = seasonVeganById.get(r.id);
             return (
               <RecipeGridItem key={r.id} recipe={r}
                 inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
-                animate={!search} animDelay={`${Math.min(idx * 0.045, MAX_STAGGER)}s`}
+                animate animDelay={`${Math.min(idx * 0.045, MAX_STAGGER)}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
                 startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} />
             );
