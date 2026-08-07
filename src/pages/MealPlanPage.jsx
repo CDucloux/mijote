@@ -535,11 +535,21 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                       {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
                     </div>
                   </div>
-                  {/* (+) qui se transforme en ✓ vert à la confirmation (bascule de fond + icône) */}
-                  <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center",
+                  {/* (+) → ✓ vert : cross-fade animé (le + tourne et disparaît, le ✓
+                      surgit en pivotant), pas un simple échange d'icône. */}
+                  <span className="complete-add" style={{ position: "relative", width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center",
                     background: added ? "var(--green)" : "rgba(232,112,58,0.12)", color: added ? "#fff" : "var(--accent)",
-                    transform: added ? "scale(1.08)" : "scale(1)", transition: "background-color 0.25s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>
-                    <Icon name={added ? "check" : "plus"} size={17} color="currentColor" />
+                    transform: added ? "scale(1.08)" : "scale(1)", transition: "background-color 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
+                    <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center",
+                      opacity: added ? 0 : 1, transform: added ? "scale(0.4) rotate(90deg)" : "scale(1) rotate(0deg)",
+                      transition: "opacity 0.24s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
+                      <Icon name="plus" size={17} color="currentColor" />
+                    </span>
+                    <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center",
+                      opacity: added ? 1 : 0, transform: added ? "scale(1) rotate(0deg)" : "scale(0.4) rotate(-90deg)",
+                      transition: "opacity 0.24s ease 0.06s, transform 0.34s cubic-bezier(0.34,1.56,0.64,1)" }}>
+                      <Icon name="check" size={17} color="currentColor" />
+                    </span>
                   </span>
                 </button>
               );
