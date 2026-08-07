@@ -462,7 +462,17 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             setAddedId(r.id);
             setTimeout(() => {
               close(() => {
-                setMealPlan(prev => { const e = [...(prev[addModal.date] || [])]; e.push({ recipeId: r.id, slot: activeSlot, portions: 1 }); return { ...prev, [addModal.date]: e }; });
+                setMealPlan(prev => {
+                  const e = [...(prev[addModal.date] || [])];
+                  // On rattache la recette à un repas (groupId) pour qu'elle soit
+                  // comptée comme un repas standard : barre verticale + rôle du plat,
+                  // et non le libellé « Midi »/« Soir ». (Le matin n'a pas de repas
+                  // composé : on garde une entrée simple.)
+                  const entry = { recipeId: r.id, slot: activeSlot, portions: 1 };
+                  if (activeSlot !== "matin") entry.groupId = newGroupId();
+                  e.push(entry);
+                  return { ...prev, [addModal.date]: e };
+                });
                 setAddModal(null); setSearchQ(""); setAddedId(null);
               });
             }, 620);
