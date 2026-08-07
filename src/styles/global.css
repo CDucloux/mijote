@@ -2447,7 +2447,7 @@ select {
   font-weight: 600;
   letter-spacing: -0.01em;
   font-family: var(--ff-body);
-  transition: max-width 0.42s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s ease 0.08s, margin-right 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: max-width 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.36s ease 0.14s, margin-right 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @media (hover:hover) {

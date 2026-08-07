@@ -475,7 +475,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 });
                 setAddModal(null); setSearchQ(""); setAddedId(null);
               });
-            }, 620);
+            }, 500);
           };
           return (<>
           {/* En-tête : puce calendrier + titre + date */}
