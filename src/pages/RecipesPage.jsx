@@ -89,8 +89,11 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   // apparaissent avec leur animation. Ne se rejoue pas aux changements d'onglet.
   const [booting, setBooting] = useState(() => !recipeSkeletonSeen && (recipes?.length || 0) > 0);
   useEffect(() => {
-    if (recipeSkeletonSeen) return;
     recipeSkeletonSeen = true;
+    // On (re)programme TOUJOURS le timer quand on est en booting : en dev, le
+    // double montage de StrictMode annule le 1er timer via le cleanup, donc gater
+    // sur `recipeSkeletonSeen` laisserait le squelette bloqué au 2ᵉ montage. En
+    // prod, l'effet ne tourne qu'une fois — même résultat.
     if (!booting) return;
     const t = setTimeout(() => setBooting(false), SKELETON_MS);
     return () => clearTimeout(t);
