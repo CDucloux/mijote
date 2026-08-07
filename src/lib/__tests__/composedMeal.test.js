@@ -4,6 +4,7 @@ import { roleForCategory, itemRole, groupSlotMeals, newGroupId, platNeedsSide } 
 describe("roleForCategory", () => {
   it("mappe le type vers un rôle", () => {
     expect(roleForCategory("entree")).toBe("entree");
+    expect(roleForCategory("aperitif")).toBe("entree"); // un apéritif compte comme une entrée
     expect(roleForCategory("accompagnement")).toBe("accompagnement");
     expect(roleForCategory("dessert")).toBe("dessert");
     expect(roleForCategory("gratin")).toBe("plat");
