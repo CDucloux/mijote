@@ -127,6 +127,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const [dropTarget, setDropTarget] = useState(null);
   const [addModal, setAddModal] = useState(null);
   const [searchQ, setSearchQ] = useState("");
+  const [addedId, setAddedId] = useState(null); // recette en cours de confirmation (+→✓)
 
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -278,11 +279,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     toArr.push(moved);
     return fromDate === toDate ? { ...prev, [fromDate]: toArr } : { ...prev, [fromDate]: from, [toDate]: toArr };
   }), [setMealPlan]);
-  const addMeal = useCallback((date, slots, recipeId) => {
-    setMealPlan(prev => { const e = [...(prev[date] || [])]; slots.forEach(slot => e.push({ recipeId, slot, portions: 1 })); return { ...prev, [date]: e }; });
-    setAddModal(null); setSearchQ("");
-  }, [setMealPlan]);
-
   const navigate = useCallback(dir => setCurrentDate(prev => {
     const d = new Date(prev);
     if (viewMode === "week") d.setDate(d.getDate() + dir * 7); else d.setMonth(d.getMonth() + dir);
@@ -453,7 +449,25 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
       {/* Add recipe modal */}
       {addModal && (
-        <SwipeableSheet onClose={() => { setAddModal(null); setSearchQ(""); }} style={{ maxHeight: "86dvh" }}>
+        <SwipeableSheet onClose={() => { setAddModal(null); setSearchQ(""); setAddedId(null); }} style={{ maxHeight: "86dvh" }}>
+          {(close) => {
+          // Créneau UNIQUE (sélecteur simple) : moins ambigu qu'une multi-sélection.
+          const activeSlot = addModal.slots[0];
+          const activeIdx = Math.max(0, MEAL_SLOTS.findIndex(s => s.id === activeSlot));
+          const pickSlot = (id) => setAddModal(p => ({ ...p, slots: [id] }));
+          // Clic sur (+) : le rond passe en ✓ vert (animation), puis la feuille se
+          // ferme avec sa sortie animée et le repas est ajouté au planning.
+          const confirmAdd = (r) => {
+            if (addedId) return; // une confirmation à la fois
+            setAddedId(r.id);
+            setTimeout(() => {
+              close(() => {
+                setMealPlan(prev => { const e = [...(prev[addModal.date] || [])]; e.push({ recipeId: r.id, slot: activeSlot, portions: 1 }); return { ...prev, [addModal.date]: e }; });
+                setAddModal(null); setSearchQ(""); setAddedId(null);
+              });
+            }, 480);
+          };
+          return (<>
           {/* En-tête : puce calendrier + titre + date */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
             <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
@@ -467,33 +481,28 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             </div>
           </div>
 
-          {/* Créneaux : contrôle segmenté sur rail (multi-sélection) */}
-          {(() => {
-            const slots = addModal.slots;
-            const toggle = (id) => setAddModal(p => {
-              const has = p.slots.includes(id);
-              const next = has ? p.slots.filter(s => s !== id) : [...p.slots, id];
-              return { ...p, slots: next.length ? next : p.slots }; // garde toujours ≥ 1
-            });
-            return (
-              <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
-                {MEAL_SLOTS.map(s => {
-                  const active = slots.includes(s.id);
-                  return (
-                    <button key={s.id} onClick={() => toggle(s.id)}
-                      style={{ flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
-                        background: active ? "var(--surface)" : "transparent",
-                        color: active ? s.text : "var(--text3)",
-                        boxShadow: active ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                        transition: "color 0.15s ease, background-color 0.15s ease" }}>
-                      <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })()}
+          {/* Créneau : contrôle segmenté avec pastille glissante (transition douce) */}
+          <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
+            {/* Pastille active : glisse d'un créneau à l'autre (translateX) */}
+            <div aria-hidden="true" style={{
+              position: "absolute", top: 4, bottom: 4, left: 4, width: `calc((100% - 8px) / ${MEAL_SLOTS.length})`,
+              background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+              transform: `translateX(calc(${activeIdx} * 100%))`,
+              transition: "transform 0.32s cubic-bezier(0.34, 1.4, 0.5, 1)",
+            }} />
+            {MEAL_SLOTS.map(s => {
+              const active = activeSlot === s.id;
+              return (
+                <button key={s.id} onClick={() => pickSlot(s.id)}
+                  style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
+                    background: "transparent", color: active ? s.text : "var(--text3)",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                    transition: "color 0.3s ease" }}>
+                  <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
+                </button>
+              );
+            })}
+          </div>
 
           {/* Recherche : champ blanc, coins doux */}
           <div style={{ position: "relative", marginBottom: 16 }}>
@@ -512,9 +521,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {filteredRecipes.map(r => {
               const total = (r.prepTime || 0) + (r.cookTime || 0);
               const nIng = r.ingredients?.length || 0;
+              const added = addedId === r.id;
               return (
-                <button key={r.id} onClick={() => addMeal(addModal.date, addModal.slots, r.id)} className="complete-row"
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                <button key={r.id} onClick={() => confirmAdd(r)} disabled={!!addedId} className="complete-row"
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(76,175,125,0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease", opacity: addedId && !added ? 0.55 : 1 }}>
                   <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
@@ -525,8 +535,11 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                       {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
                     </div>
                   </div>
-                  <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)", color: "var(--accent)" }}>
-                    <Icon name="plus" size={17} color="currentColor" />
+                  {/* (+) qui se transforme en ✓ vert à la confirmation (bascule de fond + icône) */}
+                  <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center",
+                    background: added ? "var(--green)" : "rgba(232,112,58,0.12)", color: added ? "#fff" : "var(--accent)",
+                    transform: added ? "scale(1.08)" : "scale(1)", transition: "background-color 0.25s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>
+                    <Icon name={added ? "check" : "plus"} size={17} color="currentColor" />
                   </span>
                 </button>
               );
@@ -538,6 +551,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               </div>
             )}
           </div>
+          </>);
+          }}
         </SwipeableSheet>
       )}
 
