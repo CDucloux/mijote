@@ -2421,15 +2421,20 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 26px;
-  padding: 0 7px;
-  border-radius: 13px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
   flex-shrink: 0;
   cursor: pointer;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  background: var(--accent-soft, rgba(232, 112, 58, 0.13));
+  border: none;
+  color: var(--accent);
+  transition: background 0.24s ease, color 0.24s ease, box-shadow 0.24s ease, transform 0.14s ease;
+}
+
+.mp-add-btn:active {
+  transform: scale(0.9);
 }
 
 .mp-add-btn .mp-add-label {
@@ -2438,23 +2443,24 @@ select {
   overflow: hidden;
   white-space: nowrap;
   margin-right: 0;
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   font-family: var(--ff-body);
-  transition: max-width 0.55s cubic-bezier(0.25, 0.46, 0.45, 1), opacity 0.5s ease 0.12s, margin-right 0.55s cubic-bezier(0.25, 0.46, 0.45, 1);
+  transition: max-width 0.42s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s ease 0.08s, margin-right 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @media (hover:hover) {
   .mp-add-btn:hover {
-    background: var(--surface3);
-    border-color: var(--text3);
-    color: var(--text);
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 8px 18px -7px rgba(232, 112, 58, 0.65);
   }
 
   .mp-add-btn:hover .mp-add-label {
     max-width: 240px;
     opacity: 1;
-    margin-right: 6px;
+    margin-right: 5px;
   }
 }
 

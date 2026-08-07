@@ -430,8 +430,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                       {isToday && <span style={{ fontSize: 10, background: "rgba(232,112,58,0.2)", color: "var(--accent)", padding: "2px 7px", borderRadius: 10 }}>Aujourd'hui</span>}
                     </div>
                     <button onClick={() => openAdd(date, ["midi"])} className="mp-add-btn" title="Ajouter une recette au planning">
-                      <span className="mp-add-label">Ajouter une recette au planning</span>
-                      <Icon name="plus" size={13} color="currentColor" />
+                      <span className="mp-add-label">Ajouter</span>
+                      <Icon name="plus" size={15} color="currentColor" />
                     </button>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
