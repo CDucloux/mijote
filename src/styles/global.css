@@ -793,6 +793,24 @@ select {
   animation: editorSlideIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
+/* Navigation « en avant » (on suit la flèche ›) : la page cible glisse depuis la
+   droite. Utilisée pour les écrans d'import ouverts depuis le sélecteur. */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(42px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.page-slide-in-right {
+  animation: slideInRight 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
 /* Entrée douce des pages d'onglet (Accueil, Recettes, Planning, Profil, Légal,
    Config…) : fondu + léger glissement, rejoué à chaque changement d'onglet
    (clé React = tab). Volontairement subtil pour ne pas alourdir la navigation. */
@@ -1193,6 +1211,7 @@ select {
   .nr-choice:hover .nr-chev {
     background: var(--accent);
     color: #fff;
+    transform: translateX(3px);
   }
 
   /* Fiche ingrédient : éléments interactifs (retour, détail, source). */
@@ -1205,6 +1224,12 @@ select {
 
 .ing-hover {
   transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+
+/* Chevron des choix « Nouvelle recette » : transition (couleur + petit décalage
+   vers la droite au survol, on suit la flèche ›). */
+.nr-chev {
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.24s cubic-bezier(0.34, 1.4, 0.5, 1);
 }
 
 /* Bouton « Ajouter » de l'éditeur : pastille pointillée, teinte accent. */
