@@ -119,9 +119,6 @@ export function ImportFromUrl() {
           <HintCard icon="share" iconColor="var(--blue)" tint="rgba(91,156,246,0.14)">
             Tu peux aussi <strong style={{ color: "var(--text)" }}>partager une page vers Mijoté</strong> depuis ton navigateur : la recette arrive directement ici.
           </HintCard>
-          <HintCard icon="lock" iconColor="#e8920a" tint="rgba(224,146,10,0.14)">
-            Le lien est envoyé à notre prestataire d'IA pour l'extraction. <strong style={{ color: "var(--text)" }}>Aucune donnée de ton compte</strong> n'est transmise.
-          </HintCard>
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
-import { LoadingOverlay, InlineError, HintCard, ImportHeader, QuotaMeter } from "../components/ImportUI.jsx";
+import { LoadingOverlay, InlineError, ImportHeader, QuotaMeter } from "../components/ImportUI.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
 import { fileToImagePart } from "@/lib/recipes/recipeUrlImport.js";
@@ -127,10 +127,6 @@ export function ImportFromPicture() {
             </div>
           )}
           {error && <InlineError>{error}</InlineError>}
-
-          <HintCard icon="lock" iconColor="#e8920a" tint="rgba(224,146,10,0.14)">
-            Les photos sont envoyées à notre prestataire d'IA pour l'extraction. <strong style={{ color: "var(--text)" }}>Aucune donnée de ton compte</strong> n'est transmise.
-          </HintCard>
         </div>
       </div>
 

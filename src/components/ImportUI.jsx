@@ -127,18 +127,22 @@ export function QuotaMeter({ label, rem, unlimited }) {
   }
   if (!rem) return null;
 
-  const Gauge = ({ tag, used, limit }) => {
-    const left = Math.max(0, limit - used);
-    const frac = limit ? Math.min(1, used / limit) : 0;
+  // La jauge représente ce qui RESTE (et non ce qui est consommé) : un quota
+  // quasi-intact affiche une barre quasi-pleine — cohérent avec « Imports restants »,
+  // et on évite l'effet « barre presque toute grise » qui semblait négatif.
+  const Gauge = ({ tag, left, limit }) => {
+    const frac = limit ? Math.max(0, Math.min(1, left / limit)) : 0;
     const out = left === 0;
+    const low = !out && frac <= 0.2;
+    const color = out ? "var(--red)" : low ? "#e8920a" : "var(--accent)";
     return (
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-          <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em" }}>{tag}</span>
-          <span style={{ fontSize: 12.5, fontWeight: 700, color: out ? "var(--red)" : "var(--text)" }}>{left}<span style={{ color: "var(--text3)", fontWeight: 500 }}> / {limit}</span></span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+          <span style={{ fontSize: 10.5, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{tag}</span>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color }}>{left}<span style={{ color: "var(--text3)", fontWeight: 500 }}> / {limit}</span></span>
         </div>
         <div style={{ height: 6, borderRadius: 999, background: "var(--surface3)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${frac * 100}%`, borderRadius: 999, background: out ? "var(--red)" : "var(--accent)", transition: "width 0.3s ease" }} />
+          <div style={{ height: "100%", width: `${frac * 100}%`, borderRadius: 999, background: color, transition: "width 0.3s ease" }} />
         </div>
       </div>
     );
@@ -146,15 +150,17 @@ export function QuotaMeter({ label, rem, unlimited }) {
 
   return (
     <div style={{ padding: "13px 15px", borderRadius: 16, background: "var(--surface)", border: `1px solid ${rem.blocked ? "rgba(224,82,82,0.35)" : "var(--border)"}`, boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 11 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
         <Icon name={rem.blocked ? "warning" : "sparkle"} size={13} color={rem.blocked ? "var(--red)" : "var(--accent)"} />
         <span style={{ fontSize: 11.5, fontWeight: 700, color: rem.blocked ? "var(--red)" : "var(--text2)" }}>
-          {rem.blocked ? "Limite atteinte" : "Imports restants"} · {label}
+          {rem.blocked ? "Limite atteinte" : "Imports restants"}
         </span>
+        {/* Type d'import en pastille (pas de séparateur « · ») */}
+        <span style={{ marginLeft: "auto", fontSize: 10.5, fontWeight: 600, color: "var(--text3)", background: "var(--surface2)", borderRadius: 20, padding: "2px 9px" }}>{label}</span>
       </div>
       <div style={{ display: "flex", gap: 16 }}>
-        <Gauge tag="Aujourd'hui" used={rem.dayUsed} limit={rem.dayLimit} />
-        <Gauge tag="Ce mois-ci" used={rem.monthUsed} limit={rem.monthLimit} />
+        <Gauge tag="Aujourd'hui" left={rem.dayLeft} limit={rem.dayLimit} />
+        <Gauge tag="Ce mois-ci" left={rem.monthLeft} limit={rem.monthLimit} />
       </div>
     </div>
   );
