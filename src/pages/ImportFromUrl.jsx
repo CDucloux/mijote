@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
@@ -23,9 +23,18 @@ export function ImportFromUrl() {
   const [error, setError] = useState("");        // hint de saisie (inline)
   const [importError, setImportError] = useState(null); // échec → popup
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef(null);
 
   // Accès direct à la route par un non-admin : on renvoie à la bibliothèque.
   useEffect(() => { if (!isPlus) navigate("/recipes", { replace: true }); }, [isPlus, navigate]);
+
+  // Focus DIFFÉRÉ (et non `autoFocus`) : la page entre en glissant depuis la droite.
+  // Sur mobile, un focus immédiat ouvre le clavier + scroll-into-view PENDANT la
+  // transformation → « wobble ». On attend la fin de l'animation d'entrée.
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 380);
+    return () => clearTimeout(t);
+  }, []);
 
   // Partage natif vers l'appli (share_target du manifest) : la page/le lien
   // partagé arrive en query (`url`, ou dans `text`/`title` selon la source). On
@@ -108,8 +117,8 @@ export function ImportFromUrl() {
           <QuotaMeter label="depuis un lien" rem={rem} unlimited={unlimited} />
 
           {/* Saisie */}
-          <input className="field-input" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
-            value={url} autoFocus
+          <input ref={inputRef} className="field-input" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
+            value={url}
             onChange={e => { setUrl(e.target.value); if (error) setError(""); }}
             onKeyDown={e => e.key === "Enter" && go()}
             style={{ background: "var(--surface)", padding: "13px 16px", borderRadius: 14 }} />

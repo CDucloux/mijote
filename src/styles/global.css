@@ -809,6 +809,8 @@ select {
 
 .page-slide-in-right {
   animation: slideInRight 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 /* Entrée douce des pages d'onglet (Accueil, Recettes, Planning, Profil, Légal,
