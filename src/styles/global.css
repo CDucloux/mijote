@@ -156,15 +156,12 @@ body {
 }
 
 #root {
-  /* Hauteur du shell mobile. On utilise `svh` (SMALL viewport height, mesuré
-     barre d'adresse/outils du navigateur AFFICHÉE) et NON `dvh` : un élément de
-     100svh tient TOUJOURS dans la zone visible, quel que soit l'état des barres
-     du navigateur. Avec `dvh` (dynamique), tirer/overscroller fait apparaître la
-     barre d'outils du navigateur, la hauteur mesurée dépasse alors la zone
-     visible et la barre d'onglets (dernier enfant de la colonne) se retrouve
-     poussée hors écran → elle « disparaît ». `svh` supprime ce cas à la racine
-     (fix pérenne). En PWA installée (standalone), svh == dvh : aucun effet de bord.
-     `vh` reste en repli pour les très vieux navigateurs sans unité `svh`. */
+  /* Hauteur du shell mobile. DANS LE NAVIGATEUR : `svh` (SMALL viewport height,
+     mesuré barres du navigateur AFFICHÉES) → un élément de 100svh tient toujours
+     dans la zone visible, donc la barre d'onglets ne « disparaît » pas quand on
+     tire/overscrolle (sinon, avec `dvh` dynamique, la hauteur dépasse la zone
+     visible et pousse la barre hors écran). `vh` en repli pour les vieux navigateurs.
+     EN PWA INSTALLÉE : override en `dvh` plus bas — cf. la règle standalone. */
   height: 100vh;
   height: 100svh;
   display: flex;
@@ -173,6 +170,18 @@ body {
   margin: 0 auto;
   position: relative;
   overflow: hidden;
+}
+
+/* PWA installée : `dvh` (== hauteur réelle du webview, sans barres de navigateur)
+   pour que le shell REMPLISSE tout l'écran jusqu'en bas. Sinon `svh` peut laisser
+   la zone système du bas (barre de navigation Android / home indicator) hors du
+   shell → la barre d'onglets n'y étend plus son fond `--surface` et cette zone
+   retombe sur la couleur système. En standalone il n'y a pas de barres de
+   navigateur dynamiques, donc `dvh` ne réintroduit pas le bug de la barre d'onglets. */
+@media (display-mode: standalone) {
+  #root {
+    height: 100dvh;
+  }
 }
 
 button {
