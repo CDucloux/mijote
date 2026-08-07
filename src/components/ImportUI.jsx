@@ -171,7 +171,7 @@ export function QuotaMeter({ label, rem, unlimited }) {
 export function ImportHeader({ title, onBack }) {
   return (
     <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-      <button onClick={onBack} aria-label="Retour" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
+      <button onClick={onBack} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
         <Icon name="back" size={17} />
       </button>
       <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
