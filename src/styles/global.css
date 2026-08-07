@@ -156,15 +156,12 @@ body {
 }
 
 #root {
-  /* Hauteur du shell mobile. On utilise `svh` (SMALL viewport height, mesuré
-     barre d'adresse/outils du navigateur AFFICHÉE) et NON `dvh` : un élément de
-     100svh tient TOUJOURS dans la zone visible, quel que soit l'état des barres
-     du navigateur. Avec `dvh` (dynamique), tirer/overscroller fait apparaître la
-     barre d'outils du navigateur, la hauteur mesurée dépasse alors la zone
-     visible et la barre d'onglets (dernier enfant de la colonne) se retrouve
-     poussée hors écran → elle « disparaît ». `svh` supprime ce cas à la racine
-     (fix pérenne). En PWA installée (standalone), svh == dvh : aucun effet de bord.
-     `vh` reste en repli pour les très vieux navigateurs sans unité `svh`. */
+  /* Hauteur du shell mobile. DANS LE NAVIGATEUR : `svh` (SMALL viewport height,
+     mesuré barres du navigateur AFFICHÉES) → un élément de 100svh tient toujours
+     dans la zone visible, donc la barre d'onglets ne « disparaît » pas quand on
+     tire/overscrolle (sinon, avec `dvh` dynamique, la hauteur dépasse la zone
+     visible et pousse la barre hors écran). `vh` en repli pour les vieux navigateurs.
+     EN PWA INSTALLÉE : override en `dvh` plus bas — cf. la règle standalone. */
   height: 100vh;
   height: 100svh;
   display: flex;
@@ -173,6 +170,18 @@ body {
   margin: 0 auto;
   position: relative;
   overflow: hidden;
+}
+
+/* PWA installée : `dvh` (== hauteur réelle du webview, sans barres de navigateur)
+   pour que le shell REMPLISSE tout l'écran jusqu'en bas. Sinon `svh` peut laisser
+   la zone système du bas (barre de navigation Android / home indicator) hors du
+   shell → la barre d'onglets n'y étend plus son fond `--surface` et cette zone
+   retombe sur la couleur système. En standalone il n'y a pas de barres de
+   navigateur dynamiques, donc `dvh` ne réintroduit pas le bug de la barre d'onglets. */
+@media (display-mode: standalone) {
+  #root {
+    height: 100dvh;
+  }
 }
 
 button {
@@ -465,6 +474,25 @@ select {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Confirmation d'ajout : le (+) sort en pivotant, le ✓ surgit (pop). Keyframes
+   (et non transitions) pour un jeu fiable, y compris juste avant un démontage. */
+@keyframes confirmPlusOut {
+  from { opacity: 1; transform: scale(1) rotate(0deg); }
+  to   { opacity: 0; transform: scale(0.3) rotate(90deg); }
+}
+
+@keyframes confirmCheckIn {
+  0%   { opacity: 0; transform: scale(0.2) rotate(-120deg); }
+  55%  { opacity: 1; transform: scale(1.18) rotate(6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes confirmBadgePop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.16); }
+  100% { transform: scale(1.08); }
 }
 
 /* Kebab "…" dropdown: jaillit depuis le coin haut-droit */
@@ -774,6 +802,26 @@ select {
   animation: editorSlideIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
+/* Navigation « en avant » (on suit la flèche ›) : la page cible glisse depuis la
+   droite. Utilisée pour les écrans d'import ouverts depuis le sélecteur. */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(42px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.page-slide-in-right {
+  animation: slideInRight 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
 /* Entrée douce des pages d'onglet (Accueil, Recettes, Planning, Profil, Légal,
    Config…) : fondu + léger glissement, rejoué à chaque changement d'onglet
    (clé React = tab). Volontairement subtil pour ne pas alourdir la navigation. */
@@ -796,28 +844,6 @@ select {
 /* Fondu doux de la grille de recettes à chaque nouveau jeu de résultats
    (recherche / tri / carnet). Volontairement discret (démarre à 0.45, léger
    glissé) pour rester agréable même si la clé change à chaque frappe. */
-.recipe-grid-fade {
-  animation: recipeGridFade 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-@keyframes recipeGridFade {
-  from {
-    opacity: 0.45;
-    transform: translateY(5px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .recipe-grid-fade {
-    animation: none;
-  }
-}
-
 /* Bulle de définition d'une technique (survol / tap). Portée dans <body> et
    positionnée en `fixed` par TechniqueText ; ici uniquement l'apparence + le
    fondu d'entrée. */
@@ -1198,6 +1224,26 @@ select {
     color: #fff;
   }
 
+  .nr-choice:hover .nr-chev svg {
+    transform: translateX(3px);
+  }
+
+  .nr-choice:active .nr-chev svg {
+    transform: translateX(5px);
+  }
+
+  .import-back:hover {
+    background: var(--surface3);
+  }
+
+  .import-back:hover svg {
+    transform: translateX(-3px);
+  }
+
+  .import-back:active svg {
+    transform: translateX(-5px);
+  }
+
   /* Fiche ingrédient : éléments interactifs (retour, détail, source). */
   .ing-hover:hover {
     border-color: var(--accent) !important;
@@ -1208,6 +1254,23 @@ select {
 
 .ing-hover {
   transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+
+/* Chevron des choix « Nouvelle recette » : le ROND reste fixe (couleur seule) ;
+   c'est la FLÈCHE (svg) qui glisse vers la droite au survol, façon flèche de
+   retour du détail recette. */
+.nr-chev {
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.nr-chev svg {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Flèche de retour des écrans d'import : glisse vers la GAUCHE au survol
+   (même ressort que le détail recette / les chevrons du sélecteur). */
+.import-back svg {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Bouton « Ajouter » de l'éditeur : pastille pointillée, teinte accent. */
@@ -2424,15 +2487,20 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 26px;
-  padding: 0 7px;
-  border-radius: 13px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
   flex-shrink: 0;
   cursor: pointer;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  background: var(--accent-soft, rgba(232, 112, 58, 0.13));
+  border: none;
+  color: var(--accent);
+  transition: background 0.24s ease, color 0.24s ease, box-shadow 0.24s ease, transform 0.14s ease;
+}
+
+.mp-add-btn:active {
+  transform: scale(0.9);
 }
 
 .mp-add-btn .mp-add-label {
@@ -2441,23 +2509,24 @@ select {
   overflow: hidden;
   white-space: nowrap;
   margin-right: 0;
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   font-family: var(--ff-body);
-  transition: max-width 0.55s cubic-bezier(0.25, 0.46, 0.45, 1), opacity 0.5s ease 0.12s, margin-right 0.55s cubic-bezier(0.25, 0.46, 0.45, 1);
+  transition: max-width 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.36s ease 0.14s, margin-right 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @media (hover:hover) {
   .mp-add-btn:hover {
-    background: var(--surface3);
-    border-color: var(--text3);
-    color: var(--text);
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 8px 18px -7px rgba(232, 112, 58, 0.65);
   }
 
   .mp-add-btn:hover .mp-add-label {
     max-width: 240px;
     opacity: 1;
-    margin-right: 6px;
+    margin-right: 5px;
   }
 }
 

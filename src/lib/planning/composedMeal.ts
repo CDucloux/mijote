@@ -43,14 +43,14 @@ export const roleOrder = (id: string | null | undefined): number => ROLE_BY_ID[i
 
 /**
  * Rôle « naturel » d'une recette d'après sa catégorie. Les formes de plat (gratin,
- * pasta, pizza, soupe, salade, tarte…) sont des plats ; entrée / accompagnement /
- * dessert gardent leur rôle.
+ * pasta, pizza, soupe, salade, tarte…) sont des plats ; l'apéritif compte comme une
+ * entrée ; accompagnement / dessert gardent leur rôle.
  *
  * @param cat - La catégorie de la recette.
  * @returns Le rôle correspondant (`plat` par défaut).
  */
 export function roleForCategory(cat: string | null | undefined): RoleId {
-  if (cat === "entree") return "entree";
+  if (cat === "entree" || cat === "aperitif") return "entree"; // un apéritif ouvre le repas → rôle d'entrée
   if (cat === "accompagnement") return "accompagnement";
   if (cat === "dessert") return "dessert";
   return "plat";

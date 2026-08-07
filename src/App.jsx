@@ -429,7 +429,7 @@ function AppInner({ user, isDark, toggleTheme }) {
         ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
     </div>
   ) : importRoute ? (
-    <div key={importRoute} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
+    <div key={importRoute} className={`page-slide-in-right${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
       {importRoute === "url" ? <ImportFromUrl /> : <ImportFromPicture />}
     </div>
   ) : plusRoute ? (

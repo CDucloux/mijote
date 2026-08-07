@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
@@ -23,9 +23,18 @@ export function ImportFromUrl() {
   const [error, setError] = useState("");        // hint de saisie (inline)
   const [importError, setImportError] = useState(null); // échec → popup
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef(null);
 
   // Accès direct à la route par un non-admin : on renvoie à la bibliothèque.
   useEffect(() => { if (!isPlus) navigate("/recipes", { replace: true }); }, [isPlus, navigate]);
+
+  // Focus DIFFÉRÉ (et non `autoFocus`) : la page entre en glissant depuis la droite.
+  // Sur mobile, un focus immédiat ouvre le clavier + scroll-into-view PENDANT la
+  // transformation → « wobble ». On attend la fin de l'animation d'entrée.
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 380);
+    return () => clearTimeout(t);
+  }, []);
 
   // Partage natif vers l'appli (share_target du manifest) : la page/le lien
   // partagé arrive en query (`url`, ou dans `text`/`title` selon la source). On
@@ -108,8 +117,8 @@ export function ImportFromUrl() {
           <QuotaMeter label="depuis un lien" rem={rem} unlimited={unlimited} />
 
           {/* Saisie */}
-          <input className="field-input" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
-            value={url} autoFocus
+          <input ref={inputRef} className="field-input" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
+            value={url}
             onChange={e => { setUrl(e.target.value); if (error) setError(""); }}
             onKeyDown={e => e.key === "Enter" && go()}
             style={{ background: "var(--surface)", padding: "13px 16px", borderRadius: 14 }} />
@@ -119,18 +128,12 @@ export function ImportFromUrl() {
           <HintCard icon="share" iconColor="var(--blue)" tint="rgba(91,156,246,0.14)">
             Tu peux aussi <strong style={{ color: "var(--text)" }}>partager une page vers Mijoté</strong> depuis ton navigateur : la recette arrive directement ici.
           </HintCard>
-          <HintCard icon="lock" iconColor="#e8920a" tint="rgba(224,146,10,0.14)">
-            Le lien est envoyé à notre prestataire d'IA pour l'extraction. <strong style={{ color: "var(--text)" }}>Aucune donnée de ton compte</strong> n'est transmise.
-          </HintCard>
         </div>
       </div>
 
       {/* Actions */}
-      <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", gap: 10, maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        <button className="btn" style={{ flex: 1, borderRadius: 999, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }} onClick={() => navigate(-1)}>
-          <Icon name="back" size={15} /> Retour
-        </button>
-        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!url.trim() || (!unlimited && rem?.blocked)} onClick={go}>
+      <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", justifyContent: "center", maxWidth: 560, margin: "0 auto", width: "100%" }}>
+        <button className="btn btn-primary btn-pill" style={{ width: "100%", maxWidth: 340 }} disabled={!url.trim() || (!unlimited && rem?.blocked)} onClick={go}>
           <Icon name="sparkle" size={15} /> Importer
         </button>
       </div>

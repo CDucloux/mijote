@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
-import { LoadingOverlay, InlineError, HintCard, ImportHeader, QuotaMeter } from "../components/ImportUI.jsx";
+import { LoadingOverlay, InlineError, ImportHeader, QuotaMeter } from "../components/ImportUI.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
 import { fileToImagePart } from "@/lib/recipes/recipeUrlImport.js";
@@ -127,18 +127,11 @@ export function ImportFromPicture() {
             </div>
           )}
           {error && <InlineError>{error}</InlineError>}
-
-          <HintCard icon="lock" iconColor="#e8920a" tint="rgba(224,146,10,0.14)">
-            Les photos sont envoyées à notre prestataire d'IA pour l'extraction. <strong style={{ color: "var(--text)" }}>Aucune donnée de ton compte</strong> n'est transmise.
-          </HintCard>
         </div>
       </div>
 
-      <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", gap: 10, maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        <button className="btn" style={{ flex: 1, borderRadius: 999, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }} onClick={() => navigate(-1)}>
-          <Icon name="back" size={15} /> Retour
-        </button>
-        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!photos.length || (!unlimited && rem?.blocked)} onClick={go}>
+      <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", justifyContent: "center", maxWidth: 560, margin: "0 auto", width: "100%" }}>
+        <button className="btn btn-primary btn-pill" style={{ width: "100%", maxWidth: 340 }} disabled={!photos.length || (!unlimited && rem?.blocked)} onClick={go}>
           <Icon name="sparkle" size={15} /> Extraire
         </button>
       </div>
