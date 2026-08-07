@@ -467,6 +467,25 @@ select {
   }
 }
 
+/* Confirmation d'ajout : le (+) sort en pivotant, le ✓ surgit (pop). Keyframes
+   (et non transitions) pour un jeu fiable, y compris juste avant un démontage. */
+@keyframes confirmPlusOut {
+  from { opacity: 1; transform: scale(1) rotate(0deg); }
+  to   { opacity: 0; transform: scale(0.3) rotate(90deg); }
+}
+
+@keyframes confirmCheckIn {
+  0%   { opacity: 0; transform: scale(0.2) rotate(-120deg); }
+  55%  { opacity: 1; transform: scale(1.18) rotate(6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes confirmBadgePop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.16); }
+  100% { transform: scale(1.08); }
+}
+
 /* Kebab "…" dropdown: jaillit depuis le coin haut-droit */
 .hero-menu-pop {
   transform-origin: top right;
