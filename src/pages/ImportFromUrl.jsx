@@ -123,11 +123,8 @@ export function ImportFromUrl() {
       </div>
 
       {/* Actions */}
-      <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", gap: 10, maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        <button className="btn" style={{ flex: 1, borderRadius: 999, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }} onClick={() => navigate(-1)}>
-          <Icon name="back" size={15} /> Retour
-        </button>
-        <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!url.trim() || (!unlimited && rem?.blocked)} onClick={go}>
+      <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", display: "flex", justifyContent: "center", maxWidth: 560, margin: "0 auto", width: "100%" }}>
+        <button className="btn btn-primary btn-pill" style={{ width: "100%", maxWidth: 340 }} disabled={!url.trim() || (!unlimited && rem?.blocked)} onClick={go}>
           <Icon name="sparkle" size={15} /> Importer
         </button>
       </div>
