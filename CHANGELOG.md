@@ -1,5 +1,25 @@
 # Changelog – Mijoté
 
+## v3.10.3 – Safran · Planning & imports peaufinés
+
+### Corrections
+- **PWA** : le bas de l'écran reprend la couleur de l'appli (fin de la bande aux couleurs système)
+- Écran d'import : plus de tremblement à l'entrée sur mobile
+
+### Planning
+- Une recette ajoutée compte comme un **repas standard** (barre verticale + rôle du plat) au lieu du libellé « Midi »/« Soir »
+- L'**apéritif** compte comme une **entrée**
+- Sheet « Ajouter » : créneau en **sélection simple**, bascule fluide, `+` qui se transforme en ✓ vert avant la fermeture
+- Bouton d'ajout du jour restylé (puce accent)
+
+### Imports IA
+- Jauge de quota repensée (barre = ce qu'il **reste**), écran épuré (retour unique, mention prestataire retirée)
+- Ouverture d'un import : la page **glisse depuis la droite** ; flèches animées au survol
+
+### Bibliothèque & listes
+- Résultats de recherche en **cascade** (fondu par carte)
+- États vides repensés (Stock, Courses)
+
 ## v3.10.2 – Safran · Finitions & robustesse
 
 ### Corrections
