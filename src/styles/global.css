@@ -278,6 +278,13 @@ select {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(232, 112, 58, 0.16);
 }
+/* `type="search"` : on masque la croix native (WebKit) — on a notre propre
+   bouton d'effacement. */
+.recipe-search::-webkit-search-cancel-button,
+.recipe-search::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
 
 /* Pilules de la barre d'outils recettes (Filtres / Tri) */
 .toolbar-pill {
