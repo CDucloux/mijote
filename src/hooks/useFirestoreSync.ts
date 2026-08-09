@@ -170,7 +170,13 @@ export function useFirestoreSync({
   // ── Bootstrap auth : charge perso + partagé SOLO, master, migration legacy ────
   useEffect(() => {
     getRedirectResult(auth).catch(() => { });
-    const unsub = onAuthStateChanged(auth, async u => {
+    // Anti double-démarrage : le repli hors-ligne (plus bas) et la 1re émission du
+    // listener peuvent viser le même utilisateur ; on ne bootstrape qu'une fois par
+    // uid (les émissions ultérieures pour le même uid — refresh de jeton — sont ignorées).
+    let bootstrappedUid: string | null | undefined = undefined;
+    const handle = async (u: User | null): Promise<void> => {
+      if (bootstrappedUid !== undefined && bootstrappedUid === (u?.uid ?? null)) return;
+      bootstrappedUid = u?.uid ?? null;
       cloudLoaded.current = false;
       setBootstrapped(false);
       recipeSyncMap.current = new Map();
@@ -258,8 +264,24 @@ export function useFirestoreSync({
 
         setTimeout(() => { cloudLoaded.current = true; setBootstrapped(true); setSyncStatus("synced"); }, 0);
       } catch { setSyncStatus("error"); }
-    });
-    return () => unsub();
+    };
+
+    const unsub = onAuthStateChanged(auth, handle);
+    // ── Démarrage hors-ligne (PWA installée) ──────────────────────────────────
+    // Sur un lancement à froid sans réseau, la 1re émission de `onAuthStateChanged`
+    // peut tarder très longtemps (jeton d'auth en attente d'un refresh réseau qui
+    // n'aboutira pas). Dès que l'utilisateur persisté est disponible (`auth.currentUser`,
+    // restauré depuis IndexedDB), on démarre nous-mêmes depuis le cache Firestore sans
+    // attendre le réseau. Court-circuité si le listener a déjà démarré (garde par uid).
+    let tries = 0;
+    let offlineTimer: ReturnType<typeof setTimeout>;
+    const tryOfflineBoot = (): void => {
+      if (bootstrappedUid !== undefined) return;                 // le listener a déjà démarré
+      if (auth.currentUser) { void handle(auth.currentUser); return; }
+      if (++tries < 10) offlineTimer = setTimeout(tryOfflineBoot, navigator.onLine ? 900 : 350);
+    };
+    offlineTimer = setTimeout(tryOfflineBoot, navigator.onLine ? 3500 : 400);
+    return () => { clearTimeout(offlineTimer); unsub(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Coordinateur de workspace : bascule solo↔foyer + migration unique ─────────
