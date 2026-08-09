@@ -1,5 +1,18 @@
 # Changelog – Mijoté
 
+## v3.10.13 – Safran · Fluidité & finitions
+
+### Performances
+- Scroll nettement plus fluide sur les pages chargées (ex. « Mes recettes » à 55 cartes) : la couche GPU n'est plus promue à chaque amorce de défilement
+
+### Feel natif
+- Effet d'étirement au défilement rendu plus subtil
+
+### Finitions
+- Listes de courses : plus d'espace mort en bas des listes issues de recettes
+- Mode pas à pas : titres « Ingrédients »/« Ustensiles » sans compteur à la mise en place
+- Slogan de la fenêtre « À propos » aligné sur la page d'accueil (tutoiement)
+
 ## v3.10.12 – Safran · Ton & modération
 
 ### Ton

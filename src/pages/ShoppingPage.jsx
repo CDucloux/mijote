@@ -333,7 +333,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           )}
 
           {/* Liste – pleine largeur, défilante */}
-          <div ref={listScrollRef} style={{ flex: 1, overflowY: "auto", padding: "12px 20px 80px" }}>
+          <div ref={listScrollRef} style={{ flex: 1, overflowY: "auto", padding: `12px 20px ${activeList.type === "free" ? 76 : 20}px` }}>
             <div ref={listContentRef} style={{ minHeight: "100%" }}>
 
             {activeList.items.length === 0 && activeList.type !== "free" && (

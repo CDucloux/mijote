@@ -369,7 +369,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     // l'image du hero).
     // Étirement (scaleY) ancré au bas : le contenu ne monte pas, il s'expanse dans le
     // sens du geste. Facteur subtil (≤ 5 %), aligné sur useElasticScroll.
-    const stretch = (px) => 1 + Math.min(0.05, Math.abs(px) / el.clientHeight);
+    const stretch = (px) => 1 + Math.min(0.025, Math.abs(px) / (el.clientHeight * 2));
     const applyElastic = (spring) => {
       const p = paneRef.current;
       if (!p) return;
