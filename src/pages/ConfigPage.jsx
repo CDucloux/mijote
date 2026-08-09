@@ -356,7 +356,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const exportTechniquesYaml = () => downloadText("techniques.yaml", formatTechniquesYaml(techniques), "text/yaml");
 
   return (
-    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
       {ingDetailId ? (
         <IngredientDetail
           ingredient={ingredientDB.find(d => d.id === ingDetailId)}
@@ -500,19 +500,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
         {section === "ustensiles" && (
           <div>
-            {isAdmin && (
-              <button className="pressable" onClick={() => setEditUt({ id: "", name: "", image: "" })}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, marginBottom: 14, padding: "12px 15px", borderRadius: 16, border: "none", cursor: "pointer", textAlign: "left", background: "linear-gradient(135deg, var(--accent), #f0a15f)", color: "#fff", boxShadow: "0 8px 20px -10px rgba(232,112,58,0.8)" }}>
-                <span style={{ width: 38, height: 38, borderRadius: 12, background: "rgba(255,255,255,0.22)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                  <Icon name="plus" size={20} color="#fff" />
-                </span>
-                <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, minWidth: 0 }}>
-                  <span style={{ fontSize: 14.5, fontWeight: 700 }}>Nouvel ustensile</span>
-                  <span style={{ fontSize: 11.5, fontWeight: 500, opacity: 0.85 }}>Ajouter un ustensile à la base master</span>
-                </span>
-                <Icon name="forward" size={16} color="#fff" style={{ marginLeft: "auto", flexShrink: 0, opacity: 0.9 }} />
-              </button>
-            )}
             <div className="config-ut-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {[...utensilDB].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr")).map((item, ui) => (
                 <div key={item.id} className="slide-up" style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, animationDelay: `${ui * 0.03}s` }}>
@@ -697,6 +684,13 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           );
         })()}
       </div>
+      {/* FAB « + » flottant pour ajouter un ustensile (comme les listes de courses libres) */}
+      {isAdmin && section === "ustensiles" && (
+        <button onClick={() => setEditUt({ id: "", name: "", image: "" })} title="Nouvel ustensile" className="pressable"
+          style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+          <Icon name="plus" size={22} color="#fff" />
+        </button>
+      )}
       </>
       )}
 
