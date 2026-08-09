@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.10.10 – Safran · Pas à pas & élastique
+
+### Corrections
+- **Mode pas à pas** rétabli sur les recettes de la communauté (le bouton restait sans effet)
+
+### Feel natif
+- **Rebond d'inertie** et rubber-band subtil ajoutés à la vue d'une recette et à l'éditeur (Infos, Ingrédients, Ustensiles, Étapes)
+
 ## v3.10.9 – Safran · Élastique partout
 
 ### Feel natif

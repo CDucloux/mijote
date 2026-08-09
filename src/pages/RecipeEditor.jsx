@@ -10,6 +10,7 @@ import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
@@ -89,6 +90,12 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
 
   const isDesktop = useIsDesktop();
+  // Élastique vertical (rubber-band + rebond d'inertie) pour chacun des 4 panneaux
+  // du pager (chaque slide a son propre `overflow-y`). Désactivé sur desktop.
+  const paneInfo = useElasticScroll({ disabled: isDesktop });
+  const paneIng = useElasticScroll({ disabled: isDesktop });
+  const paneUst = useElasticScroll({ disabled: isDesktop });
+  const paneStep = useElasticScroll({ disabled: isDesktop });
   const isProgrammaticScroll = useRef(false);
   const scrollTimer = useRef(null);
 
@@ -169,8 +176,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
         }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
 
         {/* Slide 1 – Infos */}
-        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
-          <div style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 22 }}>
+        <div ref={paneInfo.scrollRef} style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
+          <div ref={paneInfo.contentRef} style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 22 }}>
 
             {/* Photo + identité */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -277,8 +284,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
         </div>
 
         {/* Slide 2 – Ingrédients */}
-        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
-          <div style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div ref={paneIng.scrollRef} style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
+          <div ref={paneIng.contentRef} style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 12 }}>
             {head("leaf", "Ingrédients", form.ingredients.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, fontWeight: 600, color: "var(--text3)" }}>{form.ingredients.length}</span>)}
             {saveError && (
               <div className="shake" style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 13px", borderRadius: 12, background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.4)", color: "var(--red)", fontSize: 12.5, fontWeight: 600, lineHeight: 1.4 }}>
@@ -335,8 +342,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
         <UtensilPicker utensilDB={utensilDB} selected={form.utensils} onChange={v => up("utensils", v)} />
 
         {/* Slide 4 – Étapes */}
-        <div style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
-          <div style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div ref={paneStep.scrollRef} style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
+          <div ref={paneStep.contentRef} style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 12 }}>
             {head("list2", "Étapes", form.steps.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, fontWeight: 600, color: "var(--text3)" }}>{form.steps.length}</span>)}
             {!isDesktop && form.steps.length > 1 && (
               <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: "var(--text3)", background: "var(--surface)", border: "1px solid var(--border)", padding: "9px 12px", borderRadius: 12 }}>

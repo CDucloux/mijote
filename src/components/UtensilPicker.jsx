@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
 // Tri « simple » (défilement au clic), cohérent avec Recettes/Découvrir.
 const SORT_MODES = [
@@ -9,6 +11,8 @@ const SORT_MODES = [
 ];
 
 export function UtensilPicker({ utensilDB, selected, onChange }) {
+  const isDesktop = useIsDesktop();
+  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("default");
   const [replacing, setReplacing] = useState(null); // id de l'ustensile en cours de remplacement
@@ -110,7 +114,8 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
       </div>
 
       {/* Grid */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "4px 16px 20px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "4px 16px 20px" }}>
+        <div ref={contentRef} style={{ minHeight: "100%" }}>
         {sorted.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "32px 0" }}>Aucun ustensile trouvé</div>
         ) : (
@@ -142,6 +147,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
             })}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

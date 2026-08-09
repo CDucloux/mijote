@@ -186,8 +186,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     setShowShoppingModal(true);
   };
   // Le mode pas à pas est porté par l'URL (/recipes/:id/cookmode) → il survit à un
-  // remontage (dézoom desktop) et au bouton retour. Fallback local si non fourni.
-  const setCookMode = onSetCookMode || (() => {});
+  // remontage (dézoom desktop) et au bouton retour. En mode public (pas de route
+  // dédiée), on retombe sur un état LOCAL — sinon le bouton serait inerte.
+  const [localCookMode, setLocalCookMode] = useState(false);
+  const cookModeActive = onSetCookMode ? cookMode : localCookMode;
+  const setCookMode = onSetCookMode || setLocalCookMode;
   const [showNutrition, setShowNutrition] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [dockClosing, setDockClosing] = useState(false);
@@ -302,8 +305,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
     // Fenêtre de fondu : 0 avant `a`, 1 après `b`.
     const win = (p, a, b) => clamp((p - a) / (b - a));
-    // Résistance croissante : asymptote douce vers `max`, jamais de butée sèche.
-    const damp = (d, max) => max * (1 - Math.exp(-d / max));
+    // Rubber-band iOS/WebKit, volontairement subtil (aligné sur useElasticScroll) :
+    // suit ~32 % du doigt puis résiste, plafonné à 38 px.
+    const C = 0.32, MAXPULL = 38;
+    const rubber = (x, dim) => Math.min((C * x * dim) / (dim + C * x), MAXPULL);
 
     let raf = 0;
     let bottomPull = 0;  // sur-défilement en bas d'onglet (élastique)
@@ -378,14 +383,35 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     const applyElastic = (spring) => {
       const p = paneRef.current;
       if (!p) return;
-      p.style.transition = spring ? "transform 0.5s cubic-bezier(0.16,1,0.3,1)" : "none";
-      p.style.transform = `translateY(${(-bottomPull).toFixed(2)}px)`;
+      // Ressort de retour lent et « posé » (aligné sur useElasticScroll).
+      p.style.transition = spring ? "transform 0.95s cubic-bezier(0.16,0.82,0.24,1)" : "none";
+      p.style.transform = `translate3d(0,${(-bottomPull).toFixed(2)}px,0)`;
+    };
+
+    // Rebond joué par la seule inertie (fling) qui percute le bas : montée douce
+    // puis retour ressort (WAAPI), amplitude proportionnelle à la vitesse résiduelle.
+    let bounceAnim = null;
+    const playBounce = (amp) => {
+      const p = paneRef.current;
+      if (!p) return;
+      bounceAnim?.cancel();
+      p.style.transition = "none";
+      p.style.transform = "translate3d(0,0,0)";
+      bounceAnim = p.animate(
+        [
+          { transform: "translate3d(0,0,0)", easing: "cubic-bezier(0.17,0.84,0.44,1)" },
+          { transform: `translate3d(0,${(-amp).toFixed(1)}px,0)`, offset: 0.28, easing: "cubic-bezier(0.16,0.82,0.24,1)" },
+          { transform: "translate3d(0,0,0)" },
+        ],
+        { duration: 980 },
+      );
+      bounceAnim.onfinish = bounceAnim.oncancel = () => { p.style.transform = "translate3d(0,0,0)"; bounceAnim = null; };
     };
 
     let dragging = false, y0 = 0, mode = null;
     const atBottom = () => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
 
-    const onDown = (e) => { dragging = true; y0 = e.touches ? e.touches[0].clientY : e.clientY; mode = null; };
+    const onDown = (e) => { bounceAnim?.cancel(); dragging = true; y0 = e.touches ? e.touches[0].clientY : e.clientY; mode = null; };
     const onMove = (e) => {
       if (!dragging) return;
       // Le swipe horizontal de changement d'onglet est prioritaire.
@@ -397,7 +423,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         else if (Math.abs(dy) > 5) mode = "scroll";
       }
       if (reduce) return; // pas d'effet élastique en mouvement réduit
-      if (mode === "bottom") { bottomPull = damp(-dy, 48); applyElastic(false); if (e.cancelable) e.preventDefault(); }
+      // On n'étire QUE vers le haut ; inverser le geste relâche proprement (0) sans
+      // jamais nourrir `rubber` d'une valeur négative (pas d'emballement).
+      if (mode === "bottom") { bottomPull = dy < 0 ? rubber(-dy, el.clientHeight) : 0; applyElastic(false); if (bottomPull && e.cancelable) e.preventDefault(); }
     };
     const onUp = () => {
       if (!dragging) return;
@@ -406,7 +434,21 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       mode = null;
     };
 
-    el.addEventListener("scroll", schedule, { passive: true });
+    // Suivi de vélocité : à l'instant où un fling percute le bas (sans doigt), on
+    // rejoue un rebond proportionnel. Piggyback sur le listener scroll (qui pilote
+    // déjà le hero) ; filtres bon marché d'abord pour éviter tout reflow par frame.
+    let lastY = el.scrollTop, lastT = performance.now(), vy = 0;
+    const onScroll = () => {
+      schedule();
+      const now = performance.now(), y = el.scrollTop, dt = now - lastT;
+      if (dt > 0) vy = (y - lastY) / dt;
+      lastY = y; lastT = now;
+      if (reduce || dragging || bottomPull || bounceAnim || vy <= 0.35) return;
+      if (el.scrollHeight <= el.clientHeight + 1 || !atBottom()) return;
+      playBounce(Math.min(MAXPULL, vy * 13));
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
     // touchmove NON passif : indispensable pour preventDefault() pendant le rubber band.
     el.addEventListener("touchstart", onDown, { passive: true });
     el.addEventListener("touchmove", onMove, { passive: false });
@@ -416,12 +458,13 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     applyHeroFrame();
 
     return () => {
-      el.removeEventListener("scroll", schedule);
+      el.removeEventListener("scroll", onScroll);
       el.removeEventListener("touchstart", onDown);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onUp);
       el.removeEventListener("touchcancel", onUp);
       if (raf) cancelAnimationFrame(raf);
+      bounceAnim?.cancel();
     };
   }, [isDesktop, MOVE_END, BAR_START]);
 
@@ -1037,7 +1080,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       {showNutrition && (
         <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
       )}
-      {cookMode && recipe.steps?.length > 0 && (
+      {cookModeActive && recipe.steps?.length > 0 && (
         <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} recipes={recipes} stockSet={new Set(stock)} onUpdateRecipe={onUpdateRecipe} onCooked={onCooked} onClose={() => setCookMode(false)} />
       )}
 
