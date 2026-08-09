@@ -174,18 +174,19 @@ body {
 
 /* Zone système du bas (barre de navigation Android / home indicator) peinte à la
    couleur de la barre d'onglets (`--surface`). NÉCESSAIRE car #root est en `svh`
-   + `overflow:hidden` : le fond que la TabBar étend dans le safe-area par son
-   padding est CLIPPÉ par #root (il déborde de la boîte svh). Ce calque `fixed` est
-   positionné par rapport au viewport (donc DANS le safe-area, sous #root), n'est
-   pas clippé par #root, et ne bouge pas à l'overscroll — contrairement à un shell
-   en `dvh`. Hauteur nulle hors PWA (safe-area-inset-bottom = 0) : invisible. */
+   + `overflow:hidden` : le shell s'arrête à la ligne `100svh` et la zone en
+   dessous (jusqu'au bas PHYSIQUE de l'écran) n'est plus peinte par l'appli → elle
+   retombe sur la couleur système. On ne se base PAS sur `env(safe-area-inset-bottom)`
+   (souvent 0 sur Android) : on borne le calque exactement au trou, de la ligne
+   `top:100svh` (fin de #root) jusqu'au bas physique (`bottom:0`). `position:fixed`
+   → non clippé par #root, immobile à l'overscroll. Hauteur nulle si svh == écran. */
 body::after {
   content: "";
   position: fixed;
   left: 0;
   right: 0;
+  top: 100svh;
   bottom: 0;
-  height: env(safe-area-inset-bottom, 0px);
   background: var(--surface);
   z-index: 0;
   pointer-events: none;
