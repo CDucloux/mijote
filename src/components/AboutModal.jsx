@@ -54,13 +54,6 @@ export function AboutModal({ onClose }) {
 
         <div style={{ height: 1, background: "var(--border)" }} />
 
-        {/* Nouveautés */}
-        <Section icon="sparkle" title="Nouveautés">
-          <ChangelogSection />
-        </Section>
-
-        <div style={{ height: 1, background: "var(--border)" }} />
-
         {/* Auteur */}
         <Section icon="leaf" title="Conçu & développé par">
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer"
@@ -97,6 +90,13 @@ export function AboutModal({ onClose }) {
             source, le design et les contenus associés ne peuvent être copiés, distribués ou modifiés sans
             autorisation écrite.
           </div>
+        </Section>
+
+        <div style={{ height: 1, background: "var(--border)" }} />
+
+        {/* Nouveautés (en bas de la fenêtre) */}
+        <Section icon="sparkle" title="Nouveautés">
+          <ChangelogSection />
         </Section>
 
         <div style={{ height: 1, background: "var(--border)" }} />
