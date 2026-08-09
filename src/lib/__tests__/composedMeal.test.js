@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roleForCategory, itemRole, groupSlotMeals, newGroupId, platNeedsSide } from "@/lib/planning/composedMeal.js";
+import { roleForCategory, itemRole, groupSlotMeals, mealsForSlot, newGroupId, platNeedsSide } from "@/lib/planning/composedMeal.js";
 
 describe("roleForCategory", () => {
   it("mappe le type vers un rôle", () => {
@@ -57,5 +57,43 @@ describe("platNeedsSide", () => {
     for (const cat of ["soupe", "salade", "pasta", "pizza", "gratin", "tarte"]) {
       expect(platNeedsSide({ category: cat })).toBe(false);
     }
+  });
+});
+
+describe("mealsForSlot", () => {
+  const DB = new Map([
+    ["p1", { id: "p1", category: "pasta" }],   // plat
+    ["p2", { id: "p2", category: "gratin" }],  // plat
+    ["e1", { id: "e1", category: "entree" }],  // entrée
+    ["d1", { id: "d1", category: "dessert" }], // dessert
+  ]);
+  it("≤ 1 plat → un seul repas, même si les groupId diffèrent (fusion rétroactive)", () => {
+    const entries = [
+      { recipeId: "p1", slot: "midi", groupId: "gA" },
+      { recipeId: "e1", slot: "midi", groupId: "gB" }, // groupId différent
+    ];
+    const meals = mealsForSlot(entries, DB);
+    expect(meals.length).toBe(1);
+    expect(meals[0].items.map(x => x.item.recipeId).sort()).toEqual(["e1", "p1"]);
+    expect(meals[0].groupId).toBe("gA"); // représentatif = le plat
+  });
+  it("trie les items par rôle (entrée avant plat avant dessert)", () => {
+    const entries = [
+      { recipeId: "d1", slot: "midi", groupId: "g" },
+      { recipeId: "p1", slot: "midi", groupId: "g" },
+      { recipeId: "e1", slot: "midi", groupId: "g" },
+    ];
+    const meals = mealsForSlot(entries, DB);
+    expect(meals[0].items.map(x => x.item.recipeId)).toEqual(["e1", "p1", "d1"]);
+  });
+  it("2 plats → repas multiples (regroupement par groupId conservé)", () => {
+    const entries = [
+      { recipeId: "p1", slot: "midi", groupId: "gA" },
+      { recipeId: "p2", slot: "midi", groupId: "gB" },
+    ];
+    expect(mealsForSlot(entries, DB).length).toBe(2);
+  });
+  it("créneau vide → aucun repas", () => {
+    expect(mealsForSlot([], DB)).toEqual([]);
   });
 });

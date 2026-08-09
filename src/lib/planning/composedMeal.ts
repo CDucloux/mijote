@@ -117,6 +117,34 @@ export function groupSlotMeals(
 }
 
 /**
+ * Repas d'un créneau, DÉRIVÉS DES RÔLES (et non des `groupId` stockés) : un
+ * créneau = UN repas, sauf s'il contient PLUSIEURS plats (chaque plat au-delà du
+ * premier ouvre un nouveau repas). Robuste aux données existantes dont les items
+ * portent des groupId distincts (ils fusionnent visuellement en un seul repas).
+ *
+ * @param entries - Les items du créneau.
+ * @param recipesById - Index des recettes (rôle par catégorie).
+ * @returns Les repas (1 seul si ≤ 1 plat), items triés par rôle.
+ */
+export function mealsForSlot(
+  entries: MealItem[] = [],
+  recipesById: Map<string, CategorizedRecipe> = new Map(),
+): SlotGroup[] {
+  if (entries.length === 0) return [];
+  const roleOf = (item: MealItem) => itemRole(item, recipesById.get(item.recipeId || ""));
+  const plats = entries.filter((e) => roleOf(e) === "plat");
+  // Plusieurs plats → vrais repas multiples : on conserve le regroupement par groupId.
+  if (plats.length >= 2) return groupSlotMeals(entries, recipesById);
+  // Sinon, un seul repas rassemblant tout le créneau (groupId représentatif = le
+  // plat, sinon le 1er item porteur d'un groupId, pour que « Compléter » s'y rattache).
+  const rep = plats[0] || entries.find((e) => e.groupId) || entries[0];
+  const items = entries
+    .map((item, idx) => ({ item, idx }))
+    .sort((a, b) => roleOrder(roleOf(a.item)) - roleOrder(roleOf(b.item)));
+  return [{ groupId: rep.groupId || null, items }];
+}
+
+/**
  * Catégories jouant un rôle donné (pour les pickers manuels).
  *
  * @param role - Le rôle recherché.

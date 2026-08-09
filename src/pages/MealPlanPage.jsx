@@ -7,13 +7,14 @@ import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { SearchField } from "../components/SearchField.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "@/lib/household/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
 import { useLS } from "../hooks/useLS.js";
-import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
+import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
@@ -59,7 +60,13 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDragLeave={() => onSetDropTarget(null)}
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
       style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
-      {groupSlotMeals(meals, recipesById).map((g, gi) => {
+      {(() => {
+      const slotGroups = mealsForSlot(meals, recipesById);
+      // La barre verticale ne distingue les repas que s'il y en a PLUSIEURS dans le
+      // slot (ex. un 2ᵉ plat). Un repas unique (même composé plat+entrée+dessert) ne
+      // porte pas de barre : les rôles suffisent à le lire.
+      const multiMeal = slotGroups.length > 1;
+      return slotGroups.map((g, gi) => {
         // On ignore les items dont la recette n'existe plus (recette supprimée de
         // la bibliothèque → entrée orpheline). Un groupe entièrement orphelin ne
         // rend rien : sinon la bordure + le bouton « Compléter » restaient affichés
@@ -77,7 +84,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
         const required = needsSide ? MEAL_ROLE_IDS : MEAL_ROLE_IDS.filter(r => r !== "accompagnement");
         const full = required.every(r => roles.has(r));
         return (
-          <div key={g.groupId || `g${gi}`} style={composed ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7, display: "flex", flexDirection: "column", gap: 5 } : undefined}>
+          <div key={g.groupId || `g${gi}`} style={composed ? { ...(multiMeal ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7 } : {}), display: "flex", flexDirection: "column", gap: 5 } : undefined}>
             {items.map(({ item }) => {
               const r = recipesById.get(item.recipeId);
               if (!r) return null;
@@ -107,7 +114,8 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
             )}
           </div>
         );
-      })}
+      });
+      })()}
     </div>
   );
 });
@@ -463,15 +471,37 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             setTimeout(() => {
               close(() => {
                 setMealPlan(prev => {
-                  const e = [...(prev[addModal.date] || [])];
-                  // On rattache la recette à un repas (groupId) pour qu'elle soit
-                  // comptée comme un repas standard : barre verticale + rôle du plat,
-                  // et non le libellé « Midi »/« Soir ». (Le matin n'a pas de repas
-                  // composé : on garde une entrée simple.)
-                  const entry = { recipeId: r.id, slot: activeSlot, portions: 1 };
-                  if (activeSlot !== "matin") entry.groupId = newGroupId();
-                  e.push(entry);
-                  return { ...prev, [addModal.date]: e };
+                  const arr = [...(prev[addModal.date] || [])];
+                  // Matin : pas de repas composé → entrée simple.
+                  if (activeSlot === "matin") {
+                    arr.push({ recipeId: r.id, slot: activeSlot, portions: 1 });
+                    return { ...prev, [addModal.date]: arr };
+                  }
+                  // Ajouter = COMPLÉTER le repas déjà présent dans le slot (même groupId)
+                  // → pas de barre/repas séparé, juste un rôle en plus. Exception : un
+                  // 2ᵉ PLAT (le repas a déjà un plat) démarre un nouveau repas.
+                  const role = roleForCategory(r.category);
+                  const slotItems = arr.map((m, i) => ({ m, i })).filter(x => x.m.slot === activeSlot);
+                  const groupIds = [...new Set(slotItems.map(x => x.m.groupId).filter(Boolean))];
+                  const groupHasPlat = (gid) => slotItems.some(x => x.m.groupId === gid && itemRole(x.m, recipesById.get(x.m.recipeId)) === "plat");
+
+                  let gid;
+                  if (groupIds.length === 0) {
+                    // Slot sans repas structuré : démarre un repas et promeut d'éventuels items nus.
+                    gid = newGroupId();
+                    for (const x of slotItems) if (!arr[x.i].groupId) {
+                      const cur = arr[x.i];
+                      arr[x.i] = { ...cur, groupId: gid, role: cur.role || itemRole(cur, recipesById.get(cur.recipeId)) };
+                    }
+                  } else if (role === "plat" && groupIds.every(groupHasPlat)) {
+                    gid = newGroupId(); // 2ᵉ plat = nouveau repas (sa propre barre)
+                  } else if (role === "plat") {
+                    gid = groupIds.find(g => !groupHasPlat(g)) || newGroupId();
+                  } else {
+                    gid = groupIds[0]; // entrée/dessert/accompagnement → complète le 1er repas
+                  }
+                  arr.push({ recipeId: r.id, slot: activeSlot, portions: 1, role, groupId: gid });
+                  return { ...prev, [addModal.date]: arr };
                 });
                 setAddModal(null); setSearchQ(""); setAddedId(null);
               });
@@ -514,12 +544,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             })}
           </div>
 
-          {/* Recherche : champ blanc, coins doux */}
-          <div style={{ position: "relative", marginBottom: 16 }}>
-            <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
-            <input className="field-input" placeholder="Rechercher une recette…" value={searchQ} onChange={e => setSearchQ(e.target.value)}
-              style={{ paddingLeft: 40, background: "var(--surface)", borderRadius: 13, height: 46 }} />
-          </div>
+          {/* Recherche standard (loupe clavier mobile, effacement) */}
+          <SearchField value={searchQ} onChange={setSearchQ} placeholder="Rechercher une recette…" style={{ marginBottom: 16 }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
             <Icon name={searchQ.trim() ? "search" : "book"} size={13} color="var(--accent)" />
@@ -845,12 +871,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               })}
             </div>
 
-            {/* Recherche : champ blanc, coins doux */}
-            <div style={{ position: "relative", marginBottom: 16 }}>
-              <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", display: "flex", pointerEvents: "none" }}><Icon name="search" size={16} color="var(--text3)" /></span>
-              <input className="field-input" placeholder={`Rechercher ${roleLabel(completeRole).toLowerCase()}…`} value={completeSearch} onChange={e => setCompleteSearch(e.target.value)}
-                style={{ paddingLeft: 40, background: "var(--surface)", borderRadius: 13, height: 46 }} />
-            </div>
+            {/* Recherche standard (loupe clavier mobile, effacement) */}
+            <SearchField value={completeSearch} onChange={setCompleteSearch} placeholder={`Rechercher ${roleLabel(completeRole).toLowerCase()}…`} style={{ marginBottom: 16 }} />
 
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
               <Icon name={q ? "search" : "sun"} size={13} color="var(--accent)" />
