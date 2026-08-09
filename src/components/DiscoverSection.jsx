@@ -7,6 +7,7 @@ import { pickSpotlightIngredient, publicRecipesWithIngredient } from "@/lib/plan
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useDiscoverRecipes } from "../hooks/useDiscoverRecipes.js";
 import { RecipeCard } from "./RecipeCard.jsx";
+import { OverscrollRow } from "./OverscrollRow.jsx";
 import { OfficialAvatar } from "./OfficialAvatar.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { RecipeFilterSheet } from "./RecipeFilterSheet.jsx";
@@ -103,11 +104,11 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
       <h3 style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
         {iconNode || (icon && <Icon name={icon} size={15} color="var(--accent)" />)}{title}
       </h3>
-      <div className="discover-row" style={{ display: "flex", gap: 12, overflowX: "auto", paddingTop: 6, paddingBottom: 6, scrollSnapType: "x proximity" }}>
+      <OverscrollRow stretch className="discover-row" style={{ gap: 12, paddingTop: 6, paddingBottom: 6 }} outerStyle={{ scrollSnapType: "x proximity" }}>
         {items.map((it, i) => (
           <div key={it.pubId} id={`discover-card-${it.pubId}`} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
         ))}
-      </div>
+      </OverscrollRow>
     </div>
   );
 }
