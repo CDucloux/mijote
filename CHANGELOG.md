@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.5 – Safran · Overscroll affiné
+
+### Corrections
+- **Overscroll horizontal** : étirement plus doux et borné (5 % max), plus de flicker au relâcher, et fin de l'étirement « sans limite » quand on inverse le geste en cours de route
+
 ## v3.10.4 – Safran · Repas & feel natif
 
 ### Planning
