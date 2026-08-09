@@ -380,15 +380,19 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     // ── Rubber band : élastique en bas d'onglet UNIQUEMENT. En haut, on laisse
     // le geste au pull-to-refresh global (pas d'effet ici → plus de conflit avec
     // l'image du hero).
+    // Étirement (scaleY) ancré au bas : le contenu ne monte pas, il s'expanse dans le
+    // sens du geste. Facteur subtil (≤ 5 %), aligné sur useElasticScroll.
+    const stretch = (px) => 1 + Math.min(0.05, Math.abs(px) / el.clientHeight);
     const applyElastic = (spring) => {
       const p = paneRef.current;
       if (!p) return;
       // Ressort de retour lent et « posé » (aligné sur useElasticScroll).
-      p.style.transition = spring ? "transform 0.95s cubic-bezier(0.16,0.82,0.24,1)" : "none";
-      p.style.transform = `translate3d(0,${(-bottomPull).toFixed(2)}px,0)`;
+      p.style.transition = spring ? "transform 0.9s cubic-bezier(0.16,0.82,0.24,1)" : "none";
+      p.style.transformOrigin = "center bottom";
+      p.style.transform = bottomPull ? `scaleY(${stretch(bottomPull).toFixed(4)})` : "scaleY(1)";
     };
 
-    // Rebond joué par la seule inertie (fling) qui percute le bas : montée douce
+    // Rebond joué par la seule inertie (fling) qui percute le bas : brève expansion
     // puis retour ressort (WAAPI), amplitude proportionnelle à la vitesse résiduelle.
     let bounceAnim = null;
     const playBounce = (amp) => {
@@ -396,16 +400,17 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       if (!p) return;
       bounceAnim?.cancel();
       p.style.transition = "none";
-      p.style.transform = "translate3d(0,0,0)";
+      p.style.transformOrigin = "center bottom";
+      p.style.transform = "scaleY(1)";
       bounceAnim = p.animate(
         [
-          { transform: "translate3d(0,0,0)", easing: "cubic-bezier(0.17,0.84,0.44,1)" },
-          { transform: `translate3d(0,${(-amp).toFixed(1)}px,0)`, offset: 0.28, easing: "cubic-bezier(0.16,0.82,0.24,1)" },
-          { transform: "translate3d(0,0,0)" },
+          { transform: "scaleY(1)", easing: "cubic-bezier(0.17,0.84,0.44,1)" },
+          { transform: `scaleY(${stretch(amp).toFixed(4)})`, offset: 0.28, easing: "cubic-bezier(0.16,0.82,0.24,1)" },
+          { transform: "scaleY(1)" },
         ],
-        { duration: 980 },
+        { duration: 900 },
       );
-      bounceAnim.onfinish = bounceAnim.oncancel = () => { p.style.transform = "translate3d(0,0,0)"; bounceAnim = null; };
+      bounceAnim.onfinish = bounceAnim.oncancel = () => { p.style.transform = "scaleY(1)"; bounceAnim = null; };
     };
 
     let dragging = false, y0 = 0, mode = null;
@@ -472,7 +477,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   useEffect(() => {
     if (paneRef.current) {
       paneRef.current.style.transition = "none";
-      paneRef.current.style.transform = "translateY(0px)";
+      paneRef.current.style.transform = "scaleY(1)";
     }
   }, [activeTab]);
 
