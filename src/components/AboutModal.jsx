@@ -47,7 +47,7 @@ export function AboutModal({ onClose }) {
             {`v${__APP_VERSION__}${codename ? ` – ${codename}` : ""}`}
           </span>
           <div style={{ fontSize: 13, color: "var(--text2)", textAlign: "center", marginTop: 2 }}>
-            Cuisinez mieux, organisez moins.
+            Cuisine mieux, organise moins.
           </div>
         </div>
 
