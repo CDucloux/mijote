@@ -34,16 +34,19 @@ export function useHorizontalOverscroll({ max = 72, disabled = false, stretch = 
 
     let dragging = false, x0 = 0, y0 = 0, axis: "x" | "y" | null = null, edge: "start" | "end" | "scroll" | null = null, pull = 0;
     const apply = (spring: boolean): void => {
-      inner.style.transition = spring ? "transform 0.5s cubic-bezier(0.16,1,0.3,1)" : "none";
-      if (!pull) { inner.style.transform = ""; inner.style.transformOrigin = ""; return; }
+      inner.style.transition = spring ? "transform 0.44s cubic-bezier(0.22,1,0.36,1)" : "none";
       if (stretch) {
         // Étirement horizontal : origine au bord ANCRÉ (opposé au sens du tirage).
+        // Au repos, on revient à scaleX(1) en GARDANT l'origine → le ressort part de
+        // l'échelle courante sans re-ancrage instantané (plus de flicker au relâcher).
+        if (!pull) { inner.style.transform = inner.style.transform ? "scaleX(1)" : ""; return; }
         const w = inner.scrollWidth || el.clientWidth || 1;
-        const scale = 1 + Math.abs(pull) / w;
+        // Étirement DOUX et BORNÉ : plafonné à 5 % quelle que soit la largeur.
+        const scale = 1 + Math.min(0.05, Math.abs(pull) / (w * 2));
         inner.style.transformOrigin = pull > 0 ? "left center" : "right center";
         inner.style.transform = `scaleX(${scale.toFixed(4)})`;
       } else {
-        inner.style.transform = `translateX(${pull.toFixed(2)}px)`;
+        inner.style.transform = pull ? `translateX(${pull.toFixed(2)}px)` : "";
       }
     };
     const onDown = (e: TouchEvent): void => { dragging = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; edge = null; pull = 0; };
@@ -53,8 +56,11 @@ export function useHorizontalOverscroll({ max = 72, disabled = false, stretch = 
       if (!axis) { if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
       if (axis !== "x") return;
       if (!edge) edge = scrollable() && atStart() && dx > 0 ? "start" : scrollable() && atEnd() && dx < 0 ? "end" : "scroll";
-      if (edge === "start") { pull = damp(dx, max); apply(false); if (e.cancelable) e.preventDefault(); }
-      else if (edge === "end") { pull = -damp(-dx, max); apply(false); if (e.cancelable) e.preventDefault(); }
+      // Le bord est verrouillé au 1er mouvement ; on n'étire QUE dans son sens.
+      // Si le doigt repart dans l'autre sens, `pull` retombe à 0 (pas d'explosion :
+      // `damp` n'est jamais appelé avec une valeur négative → plus de stretch sans limite).
+      if (edge === "start") { pull = dx > 0 ? damp(dx, max) : 0; apply(false); if (e.cancelable) e.preventDefault(); }
+      else if (edge === "end") { pull = dx < 0 ? -damp(-dx, max) : 0; apply(false); if (e.cancelable) e.preventDefault(); }
     };
     const onUp = (): void => {
       if (!dragging) return;
