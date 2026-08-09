@@ -411,7 +411,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
                   </p>
                   {overviewIngs.length > 0 && (
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ingrédients · {overviewIngs.length}</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ingrédients</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {overviewIngs.map(renderIngLine)}
                       </div>
@@ -419,7 +419,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
                   )}
                   {overviewUts.length > 0 && (
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles · {overviewUts.length}</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles</div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {overviewUts.map(u => (
                           <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
