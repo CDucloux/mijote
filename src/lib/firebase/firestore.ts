@@ -146,6 +146,45 @@ export async function reportPublicRecipe(report: RecipeReport): Promise<void> {
   await addDoc(collection(db, "reports"), { ...report, createdAt: serverTimestamp() });
 }
 
+/** Un signalement tel que lu par la modération (id du doc + horodatage résolu). */
+export interface StoredReport extends RecipeReport {
+  id: string;
+  createdAtMs: number | null;
+}
+
+/**
+ * Charge tous les signalements (modération admin), du plus récent au plus ancien.
+ *
+ * @returns La liste des signalements stockés.
+ */
+export async function loadReports(): Promise<StoredReport[]> {
+  const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")));
+  return snap.docs.map(d => {
+    const data = d.data() as RecipeReport & { createdAt?: { toMillis?: () => number } };
+    return { ...data, id: d.id, createdAtMs: data.createdAt?.toMillis?.() ?? null };
+  });
+}
+
+/**
+ * Rejette (supprime) un signalement précis.
+ *
+ * @param id - L'identifiant du document `reports`.
+ */
+export async function resolveReport(id: string): Promise<void> {
+  await deleteDoc(doc(db, "reports", id));
+}
+
+/**
+ * Rejette tous les signalements visant une même recette publique (ex. après
+ * suppression de la recette).
+ *
+ * @param pubId - L'identifiant public de la recette.
+ */
+export async function resolveReportsForRecipe(pubId: string): Promise<void> {
+  const snap = await getDocs(query(collection(db, "reports"), where("pubId", "==", pubId)));
+  await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+}
+
 /**
  * Publie un bundle (recette + ses composants) en une transaction batch.
  *

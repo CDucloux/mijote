@@ -10,7 +10,7 @@ import { ConfirmDialog } from "./ConfirmDialog.jsx";
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
 export function UserAvatar() {
-  const { user, syncStatus, signOut: onSignOut, isDark, toggleTheme: onToggleTheme } = useAppShell();
+  const { user, syncStatus, signOut: onSignOut, isDark, toggleTheme: onToggleTheme, isAdmin } = useAppShell();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [about, setAbout] = useState(false);
@@ -66,12 +66,14 @@ export function UserAvatar() {
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
               <Icon name="user" size={13} color="currentColor" /> Profil
             </button>
-            <button onClick={() => { setOpen(false); navigate("/config/preferences"); }}
-              style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
-              onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
-              <Icon name="settings" size={13} color="currentColor" /> Paramètres
-            </button>
+            {isAdmin && (
+              <button onClick={() => { setOpen(false); navigate("/config/ingredients"); }}
+                style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+                onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
+                <Icon name="settings" size={13} color="currentColor" /> Console admin
+              </button>
+            )}
             {onToggleTheme && (
               <button onClick={onToggleTheme} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
                 onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
@@ -113,7 +115,7 @@ export function UserAvatar() {
         <ConfirmDialog title="Se déconnecter ?" icon="logout" confirmLabel="Déconnexion" zIndex={1400}
           onCancel={() => setConfirmSignOut(false)}
           onConfirm={() => { setConfirmSignOut(false); onSignOut(); }}>
-          Vos recettes restent synchronisées. Vous pourrez vous reconnecter à tout moment.
+          Tes recettes restent synchronisées. Tu pourras te reconnecter à tout moment.
         </ConfirmDialog>
       )}
       {about && <AboutModal onClose={() => setAbout(false)} />}

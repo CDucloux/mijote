@@ -7,7 +7,6 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { TagInput } from "../components/TagInput.jsx";
-import { ChangelogSection } from "../components/ChangelogSection.jsx";
 import { OverscrollRow } from "../components/OverscrollRow.jsx";
 import { ReadOnlyBanner, AdminBanner } from "../components/Banners.jsx";
 import { IngredientDetail } from "../components/IngredientDetail.jsx";
@@ -20,10 +19,11 @@ import {
   TECHNIQUE_CATEGORIES, slugifyId,
 } from "@/lib/household/dataYaml.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
-import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
 import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "@/lib/food/seasonality.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
+import { loadReports, resolveReport, resolveReportsForRecipe, deletePublicRecipe } from "@/lib/firebase/firestore.js";
+import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ function DifficultyPips({ level }) {
   );
 }
 
-export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, recipes, onExportAll, onImport, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, preferences = DEFAULT_PREFERENCES, setPreferences, techniques = [], setTechniques }) {
+export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, techniques = [], setTechniques }) {
   const navigate = useNavigate();
   const location = useLocation();
   const configSectionParam = location.pathname.startsWith("/config/")
@@ -106,11 +106,27 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const [confirmDel, setConfirmDel] = useState(null); // { type: "ing" | "ut", item }
   const [dragCat, setDragCat] = useState(null); // key being dragged
   const [overCat, setOverCat] = useState(null); // key currently hovered as drop target
-  const [jsonError, setJsonError] = useState("");
-  const [schemaOpen, setSchemaOpen] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
+
+  // ── Modération : signalements de recettes publiques ─────────────────────────
+  const [reports, setReports] = useState([]);
+  const [modBusy, setModBusy] = useState(null);          // id (rejet) ou pubId (suppression) en cours
+  const [confirmMod, setConfirmMod] = useState(null);    // { pubId, name } — confirmation de suppression
+  useEffect(() => {
+    if (!isAdmin) return;
+    let alive = true;
+    loadReports().then(r => { if (alive) setReports(r); }).catch(() => { });
+    return () => { alive = false; };
+  }, [isAdmin]);
+  const dismissReport = async (id) => {
+    setModBusy(id);
+    try { await resolveReport(id); setReports(rs => rs.filter(r => r.id !== id)); } finally { setModBusy(null); }
+  };
+  const deleteReportedRecipe = async (pubId) => {
+    setModBusy(pubId);
+    try { await deletePublicRecipe(pubId); await resolveReportsForRecipe(pubId); setReports(rs => rs.filter(r => r.pubId !== pubId)); }
+    finally { setModBusy(null); setConfirmMod(null); }
+  };
   const [openCats, setOpenCats] = useState({});
-  const fileRef = useRef();
   const [mdError, setMdError] = useState("");
   const [mdInfo, setMdInfo] = useState("");
   const toggleCat = k => setOpenCats(p => ({ ...p, [k]: !p[k] }));
@@ -326,16 +342,21 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       <>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Configuration</h1>
-            
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+              <Icon name="settings" size={16} color="var(--accent)" />
+            </span>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Console admin</h1>
           </div>
           <UserAvatar />
         </div>
         <OverscrollRow stretch style={{ gap: 6 }}>
-          {["préférences", "ingredients", "ustensiles", "techniques", "données", "nouveautés"].map(s => (
-            <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {s === "préférences" ? "Préférences" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "techniques" ? "Techniques" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
+          {[["ingredients", "Ingrédients"], ["ustensiles", "Ustensiles"], ["techniques", "Techniques"], ["modération", "Modération"]].map(([s, label]) => (
+            <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
+              {label}
+              {s === "modération" && reports.length > 0 && (
+                <span style={{ fontSize: 10, fontWeight: 700, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: section === s ? "rgba(255,255,255,0.28)" : "var(--red)", color: "#fff" }}>{reports.length}</span>
+              )}
             </button>
           ))}
         </OverscrollRow>
@@ -356,79 +377,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
-        {section === "préférences" && (() => {
-          const prefs = preferences || DEFAULT_PREFERENCES;
-          const setPref = (patch) => setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), ...patch }));
-          const toggleIn = (key, value) => setPref({
-            [key]: (prefs[key] || []).includes(value) ? prefs[key].filter(v => v !== value) : [...(prefs[key] || []), value],
-          });
-          return (
-            <div style={{ display: "flex", flexDirection: "column", gap: 22 }} className="slide-up">
-              <p style={{ fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5, margin: 0 }}>
-                Ces choix personnalisent ton expérience. Ils serviront bientôt à filtrer les recettes publiques selon ce que tu manges (régime, allergènes, ingrédients à éviter).
-              </p>
-
-              {/* Régime */}
-              <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Régime alimentaire</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {DIETS.map(d => {
-                    const active = prefs.diet === d.id;
-                    return (
-                      <button key={d.id} onClick={() => setPref({ diet: d.id })} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 500, background: active ? "var(--accent)" : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? "transparent" : "var(--border)"}`, transition: "all 0.15s" }}>
-                        <span style={{ fontSize: 15, lineHeight: 1 }}>{d.emoji}</span>{d.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Allergènes */}
-              <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Allergènes à éviter</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {COMMON_ALLERGENS.map(a => {
-                    const active = (prefs.allergens || []).includes(a);
-                    return (
-                      <button key={a} onClick={() => toggleIn("allergens", a)} style={{ padding: "7px 13px", borderRadius: 22, fontSize: 13, fontWeight: 500, background: active ? "rgba(224,82,82,0.16)" : "var(--surface2)", color: active ? "var(--red)" : "var(--text2)", border: `1px solid ${active ? "rgba(224,82,82,0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
-                        {active ? "✕ " : ""}{a}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Catégories exclues */}
-              <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Catégories à ne pas proposer</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {sortedCategoryEntries(categories).map(([key, cat]) => {
-                    const active = (prefs.excludedCategories || []).includes(key);
-                    return (
-                      <button key={key} onClick={() => toggleIn("excludedCategories", key)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, background: active ? cat.color + "26" : "var(--surface2)", color: active ? cat.color : "var(--text2)", border: `1px solid ${active ? cat.color + "88" : "var(--border)"}`, transition: "all 0.15s" }}>
-                        <span style={{ fontSize: 14, lineHeight: 1 }}>{cat.icon}</span>{cat.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Ingrédients non aimés */}
-              <div>
-                <TagInput
-                  label="Ingrédients que tu n'aimes pas"
-                  tags={prefs.dislikes || []}
-                  onChange={(tags) => setPref({ dislikes: tags })}
-                  allTags={ingredientDB.map(i => i.name).filter(Boolean)}
-                  placeholder="Coriandre, Olives…"
-                  inputId="pref-dislikes"
-                  commitOnBlur
-                  dedupeInsensitive
-                />
-              </div>
-            </div>
-          );
-        })()}
         {section === "ingredients" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {sortedCategoryEntries(categories).map(([catKey, cat], ci) => {
@@ -703,98 +651,78 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         })()}
 
 
-        {section === "données" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-            {/* Export */}
-            <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter des recettes</h3>
-                  <p style={{ fontSize: 12, color: "var(--text2)" }}>{recipes.length} recette{recipes.length > 1 ? "s" : ""} sauvegardée{recipes.length > 1 ? "s" : ""}</p>
-                </div>
-                <button className="btn btn-ghost btn-sm" onClick={onExportAll} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <Icon name="download" size={14} /> Exporter
-                </button>
-              </div>
-            </div>
-
-            {/* Import drag & drop */}
-            <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
-              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Importer des recettes</h3>
-              <input ref={fileRef} type="file" accept=".json" multiple
-                onChange={e => { Array.from(e.target.files).forEach(f => { const r = new FileReader(); r.onload = ev => { try { onImport(ev.target.result); } catch { setJsonError("Fichier invalide : " + f.name); } }; r.readAsText(f); }); e.target.value = ""; }}
-                style={{ display: "none" }} />
-              <div
-                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={e => { e.preventDefault(); setDragOver(false); Array.from(e.dataTransfer.files).filter(f => f.name.endsWith(".json")).forEach(f => { const r = new FileReader(); r.onload = ev => { try { onImport(ev.target.result); } catch { setJsonError("Fichier invalide : " + f.name); } }; r.readAsText(f); }); }}
-                onClick={() => fileRef.current.click()}
-                style={{
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px",
-                  borderRadius: 12, border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border)"}`,
-                  background: dragOver ? "rgba(232,112,58,0.06)" : "var(--surface2)",
-                  cursor: "pointer", transition: "all 0.15s"
-                }}>
-                <Icon name="import" size={28} color={dragOver ? "var(--accent)" : "var(--text3)"} />
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: dragOver ? "var(--accent)" : "var(--text)" }}>Dépose tes fichiers JSON ici</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>ou clique pour sélectionner – plusieurs fichiers acceptés</div>
-                </div>
-              </div>
-              {jsonError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8 }}>{jsonError}</p>}
-            </div>
-
-            {/* JSON schema expander */}
-            <div style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
-              <button onClick={() => setSchemaOpen(p => !p)}
-                style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", background: "none", color: "var(--text)", fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="book" size={15} color="var(--text3)" />
-                  Schéma JSON de référence
+        {section === "modération" && (() => {
+          // Regroupe les signalements par recette (pubId) pour agir d'un bloc.
+          const groups = Object.values(reports.reduce((acc, r) => {
+            (acc[r.pubId] ||= { pubId: r.pubId, name: r.recipeName || "Recette", items: [] }).items.push(r);
+            return acc;
+          }, {}));
+          const fmtDate = (ms) => ms ? new Date(ms).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "";
+          if (!groups.length) {
+            return (
+              <div className="slide-up" style={{ minHeight: "46vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", color: "var(--text3)", gap: 12 }}>
+                <span style={{ width: 60, height: 60, borderRadius: 20, background: "rgba(76,175,125,0.12)", display: "grid", placeItems: "center" }}>
+                  <Icon name="check" size={26} color="var(--green)" />
                 </span>
-                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", transition: "transform 0.25s ease, background 0.15s", transform: schemaOpen ? "rotate(-90deg)" : "rotate(90deg)" }}><Icon name="forward" size={12} color="var(--text3)" style={{ transform: "none" }} /></span>
-              </button>
-              {schemaOpen && (
-                <div style={{ padding: "0 16px 16px", borderTop: "1px solid var(--border)", animation: "expandDown 0.35s ease" }}>
-                  <div style={{ fontSize: 11, lineHeight: 1.8, overflow: "auto", background: "var(--surface2)", padding: 14, borderRadius: 10, marginTop: 12, fontFamily: "monospace", whiteSpace: "pre" }}
-                    dangerouslySetInnerHTML={{
-                      __html: [
-                        '<span style="color:#9a9490">{</span>',
-                        '  <span style="color:#5b9cf6">"name"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>  <span style="color:#5a5754;font-style:italic">← obligatoire, unique</span>',
-                        '  <span style="color:#5b9cf6">"image"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"url | base64"</span>',
-                        '  <span style="color:#5b9cf6">"prepTime"</span><span style="color:#9a9490">:</span> <span style="color:#f0c060">number</span>  <span style="color:#5a5754;font-style:italic">← minutes</span>',
-                        '  <span style="color:#5b9cf6">"cookTime"</span><span style="color:#9a9490">:</span> <span style="color:#f0c060">number</span>  <span style="color:#5a5754;font-style:italic">← minutes</span>',
-                        '  <span style="color:#5b9cf6">"servings"</span><span style="color:#9a9490">:</span> <span style="color:#f0c060">number</span>',
-                        '  <span style="color:#5b9cf6">"cuisine"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>  <span style="color:#5a5754;font-style:italic">← style de cuisine</span>',
-                        '  <span style="color:#5b9cf6">"source"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"url"</span>  <span style="color:#5a5754;font-style:italic">← lien de la recette originale</span>',
-                        '  <span style="color:#5b9cf6">"collections"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[</span><span style="color:#4caf7d">"collection_id"</span><span style="color:#9a9490">]</span>',
-                        '  <span style="color:#5b9cf6">"ingredients"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[{</span>',
-                        '    <span style="color:#5b9cf6">"name"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>',
-                        '    <span style="color:#5b9cf6">"amount"</span><span style="color:#9a9490">:</span> <span style="color:#f0c060">number</span>',
-                        '    <span style="color:#5b9cf6">"unit"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>  <span style="color:#5a5754;font-style:italic">← "g", "ml", "pièce"…</span>',
-                        '  <span style="color:#9a9490">}]</span>',
-                        '  <span style="color:#5b9cf6">"utensils"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[{</span>',
-                        '    <span style="color:#5b9cf6">"name"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>',
-                        '  <span style="color:#9a9490">}]</span>',
-                        '  <span style="color:#5b9cf6">"steps"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[{</span>',
-                        '    <span style="color:#5b9cf6">"text"</span><span style="color:#9a9490">:</span> <span style="color:#4caf7d">"string"</span>',
-                        '    <span style="color:#5b9cf6">"ingredients"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[</span><span style="color:#4caf7d">"ingredient_name"</span><span style="color:#9a9490">]</span>  <span style="color:#5a5754;font-style:italic">← optionnel</span>',
-                        '    <span style="color:#5b9cf6">"utensils"</span><span style="color:#9a9490">:</span> <span style="color:#9a9490">[</span><span style="color:#4caf7d">"utensil_name"</span><span style="color:#9a9490">]</span>  <span style="color:#5a5754;font-style:italic">← optionnel</span>',
-                        '  <span style="color:#9a9490">}]</span>',
-                        '<span style="color:#9a9490">}</span>',
-                      ].join('\n')
-                    }} />
-                  <p style={{ fontSize: 11, color: "var(--text3)", marginTop: 8, lineHeight: 1.6 }}>
-                    💡 Accepte un objet ou un tableau. Les IDs sont régénérés à l'import. Les images base64 sont supportées.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>Aucun signalement</div>
+                <div style={{ fontSize: 12.5, maxWidth: 260, lineHeight: 1.5 }}>Rien à modérer pour l'instant. Les recettes signalées par la communauté apparaîtront ici.</div>
+              </div>
+            );
+          }
+          return (
+            <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {groups.map(g => {
+                const busy = modBusy === g.pubId;
+                return (
+                <div key={g.pubId} style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
+                  {/* En-tête recette */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 15px", borderBottom: "1px solid var(--border)" }}>
+                    <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(224,82,82,0.12)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                      <Icon name="warning" size={15} color="var(--red)" />
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.name}</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>{g.items.length} signalement{g.items.length > 1 ? "s" : ""}</div>
+                    </div>
+                    <button onClick={() => navigate(`${DISCOVER_PREFIX}${encodeURIComponent(g.pubId)}`)} className="pressable"
+                      style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, height: 32, padding: "0 12px", borderRadius: 999, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)", cursor: "pointer" }}>
+                      <Icon name="forward" size={13} color="var(--text2)" /> Ouvrir
+                    </button>
+                  </div>
 
-        {section === "nouveautés" && <ChangelogSection />}
+                  {/* Détail des signalements */}
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    {g.items.map((r, i) => (
+                      <div key={r.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 15px", borderTop: i ? "1px solid var(--border)" : "none" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: r.note ? 5 : 0 }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--red)", background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.28)", borderRadius: 7, padding: "2px 8px" }}>{r.reason}</span>
+                            {r.createdAtMs && <span style={{ fontSize: 11, color: "var(--text3)" }}>{fmtDate(r.createdAtMs)}</span>}
+                          </div>
+                          {r.note && <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "0 0 4px", wordBreak: "break-word" }}>« {r.note} »</p>}
+                          {r.reporterEmail && <div style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Signalé par {r.reporterEmail}</div>}
+                        </div>
+                        <button onClick={() => dismissReport(r.id)} disabled={modBusy === r.id} title="Rejeter ce signalement" className="pressable"
+                          style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, height: 28, padding: "0 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 600, background: "var(--surface2)", color: "var(--text3)", border: "1px solid var(--border)", cursor: "pointer", opacity: modBusy === r.id ? 0.5 : 1 }}>
+                          <Icon name="close" size={12} color="var(--text3)" /> Rejeter
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Action destructive */}
+                  <div style={{ padding: "12px 15px", borderTop: "1px solid var(--border)", background: "rgba(224,82,82,0.03)" }}>
+                    <button onClick={() => setConfirmMod({ pubId: g.pubId, name: g.name })} disabled={busy} className="pressable"
+                      style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 700, background: "rgba(224,82,82,0.12)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.4)", cursor: "pointer", opacity: busy ? 0.6 : 1 }}>
+                      <Icon name="trash" size={14} color="var(--red)" /> Supprimer la recette de la communauté
+                    </button>
+                  </div>
+                </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
       </>
       )}
@@ -969,6 +897,14 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           onCancel={() => setConfirmDel(null)}
           onConfirm={() => { if (confirmDel.type === "ing") delIng(confirmDel.item.id); else if (confirmDel.type === "tech") delTech(confirmDel.item.id); else delUt(confirmDel.item.id); setConfirmDel(null); if (ingDetailId) navigate(-1); }}>
           <strong style={{ color: "var(--text)" }}>« {confirmDel.item.name} »</strong> sera retiré de la base Master partagée. Cette action est visible par tous les utilisateurs et irréversible.
+        </ConfirmDialog>
+      )}
+
+      {confirmMod && (
+        <ConfirmDialog title="Supprimer cette recette de la communauté ?" busy={modBusy === confirmMod.pubId}
+          onCancel={() => setConfirmMod(null)}
+          onConfirm={() => deleteReportedRecipe(confirmMod.pubId)}>
+          <strong style={{ color: "var(--text)" }}>« {confirmMod.name} »</strong> sera retirée de la communauté et ses signalements résolus. L'auteur en garde sa copie privée. Cette action est irréversible.
         </ConfirmDialog>
       )}
 

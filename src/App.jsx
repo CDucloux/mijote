@@ -367,6 +367,9 @@ function AppInner({ user, isDark, toggleTheme }) {
   const wasAtTabView = useRef(true);
   const [scrollHold, setScrollHold] = useState(false); // masque l'onglet le temps de se caler
   useEffect(() => { if (publicPubId) lastPublicPubId.current = publicPubId; }, [publicPubId]);
+  // La console admin (/config) est réservée aux admins ; tout autre utilisateur connecté
+  // est renvoyé vers son profil (qui héberge désormais préférences + données).
+  useEffect(() => { if (tab === "config" && user && !isAdmin) navigate("/profile", { replace: true }); }, [tab, user, isAdmin, navigate]);
   const atTabView = !isEditing && !publicPubId
     && !(selectedRecipe && currentRecipe)
     && !(selectedRecipe && !currentRecipe && workspaceReady);
@@ -408,8 +411,8 @@ function AppInner({ user, isDark, toggleTheme }) {
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
-      {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
-      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} />}
+      {tab === "config" && isAdmin && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} />}
+      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
       {tab === "legal" && <LegalPage />}
       </div>
       </Profiler>
