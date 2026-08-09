@@ -13,8 +13,12 @@ import { useEffect, useRef } from "react";
  * ~55 % du doigt au départ puis résiste de plus en plus (asymptote = hauteur du
  * conteneur), ce qui donne le vrai « poids » élastique natif. Borné à `max`.
  *
+ * Un **rebond par inertie** est aussi joué quand un lancer (fling) arrive au bas
+ * par sa seule vitesse résiduelle (sans doigt) : on suit la vélocité via l'événement
+ * `scroll` et on déclenche un rebond proportionnel à l'impact.
+ *
  * @param options - Réglages.
- * @param options.max - Décalage maximal en pixels (défaut 90).
+ * @param options.max - Décalage maximal en pixels (défaut 64 — discret).
  * @param options.disabled - Désactive l'effet (ex. desktop).
  * @returns `scrollRef` (conteneur `overflow-y`) et `contentRef` (enfant transformé,
  *   englobant tout le contenu défilable).
@@ -25,7 +29,7 @@ import { useEffect, useRef } from "react";
  * return <div ref={scrollRef} style={{ overflowY: "auto" }}><div ref={contentRef}>…</div></div>;
  * ```
  */
-export function useElasticScroll({ max = 90, disabled = false }: { max?: number; disabled?: boolean } = {}) {
+export function useElasticScroll({ max = 64, disabled = false }: { max?: number; disabled?: boolean } = {}) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
 
@@ -41,12 +45,30 @@ export function useElasticScroll({ max = 90, disabled = false }: { max?: number;
     const atBottom = (): boolean => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
 
     let dragging = false, y0 = 0, x0 = 0, axis: "x" | "y" | null = null, mode: "bottom" | "scroll" | null = null, pull = 0;
+    let bounce: Animation | null = null; // rebond d'inertie en cours (Web Animations API)
     const apply = (spring: boolean): void => {
-      // Ressort de retour légèrement plus long et « posé » (courbe iOS), gpu-composited.
-      inner.style.transition = spring ? "transform 0.55s cubic-bezier(0.22,1,0.36,1)" : "none";
+      // Ressort de retour lent et « posé » (décélération douce) pour éviter tout retour
+      // abrupt ; gpu-composited.
+      inner.style.transition = spring ? "transform 0.72s cubic-bezier(0.19,1,0.28,1)" : "none";
       inner.style.transform = pull ? `translate3d(0,${pull.toFixed(2)}px,0)` : "";
     };
-    const onDown = (e: TouchEvent): void => { dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0; };
+    // Rebond joué par la seule inertie (fling) : montée douce jusqu'au pic puis
+    // retour ressort encore plus lent → aucune cassure de rythme.
+    const playBounce = (amp: number): void => {
+      bounce?.cancel();
+      inner.style.transition = "none";
+      inner.style.transform = "";
+      bounce = inner.animate(
+        [
+          { transform: "translate3d(0,0,0)", easing: "cubic-bezier(0.17,0.84,0.44,1)" }, // impact → pic (décélère)
+          { transform: `translate3d(0,${(-amp).toFixed(1)}px,0)`, offset: 0.3, easing: "cubic-bezier(0.19,1,0.28,1)" }, // pic → repos (posé)
+          { transform: "translate3d(0,0,0)" },
+        ],
+        { duration: 720 },
+      );
+      bounce.onfinish = bounce.oncancel = (): void => { inner.style.transform = ""; bounce = null; };
+    };
+    const onDown = (e: TouchEvent): void => { bounce?.cancel(); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0; };
     const onMove = (e: TouchEvent): void => {
       if (!dragging) return;
       const dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
@@ -68,15 +90,33 @@ export function useElasticScroll({ max = 90, disabled = false }: { max?: number;
       axis = null; mode = null;
     };
 
+    // ── Suivi de vélocité pour le rebond d'inertie ───────────────────────────
+    // Le fling après le doigt est géré nativement par le navigateur (pas de
+    // touchmove) : on lit la vitesse via `scroll` et, à l'instant où l'inertie
+    // percute le bas, on rejoue un rebond proportionnel à cette vitesse.
+    let lastY = el.scrollTop, lastT = performance.now(), vy = 0;
+    const onScroll = (): void => {
+      const now = performance.now(), y = el.scrollTop, dt = now - lastT;
+      if (dt > 0) vy = (y - lastY) / dt; // px/ms, > 0 = vers le bas
+      lastY = y; lastT = now;
+      // Rebond seulement sur inertie pure (pas de doigt, pas d'anim en cours) et
+      // au moment où l'on vient de toucher le bas avec une vitesse résiduelle.
+      if (dragging || pull || bounce || !scrollable() || !atBottom() || vy <= 0.35) return;
+      playBounce(Math.min(max, vy * 22));
+    };
+
     el.addEventListener("touchstart", onDown, { passive: true });
     el.addEventListener("touchmove", onMove, { passive: false });
     el.addEventListener("touchend", onUp, { passive: true });
     el.addEventListener("touchcancel", onUp, { passive: true });
+    el.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       el.removeEventListener("touchstart", onDown);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onUp);
       el.removeEventListener("touchcancel", onUp);
+      el.removeEventListener("scroll", onScroll);
+      bounce?.cancel();
     };
   }, [max, disabled]);
 
