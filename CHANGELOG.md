@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.14 – Safran · Démarrage hors-ligne
+
+### Corrections
+- **Lancement hors-ligne** de la PWA : plus de blocage prolongé sur « Connexion en cours… » — l'app démarre désormais depuis le cache dès que la session est restaurée, sans attendre le réseau
+
 ## v3.10.13 – Safran · Fluidité & finitions
 
 ### Performances
