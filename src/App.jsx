@@ -64,7 +64,10 @@ function AppInner({ user, isDark, toggleTheme }) {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/config") ? "config" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : location.pathname.startsWith("/recipes") ? "recipes" : location.pathname.startsWith("/meal-plan") ? "meal-plan" : "home");
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : location.pathname.startsWith("/recipes") ? "recipes" : location.pathname.startsWith("/meal-plan") ? "meal-plan" : "home");
+  // Fiche ingrédient (/admin/ingredients/{id}) : page PUBLIQUE (lisible par tous, en
+  // lecture seule pour les non-admins) — on la laisse passer même hors console admin.
+  const adminFiche = /^\/admin\/ingredients\/.+/.test(location.pathname);
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/home"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
   // `undefined` = en cours de résolution (1er chargement), `null` = déconnecté.
@@ -330,7 +333,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Titre de l'onglet navigateur : nom de la recette quand on en consulte/édite une,
   // sinon l'onglet courant.
   useEffect(() => {
-    const TAB_TITLES = { home: "Accueil", recipes: "Recettes", "meal-plan": "Planning", shopping: "Courses", stock: "Mon Stock", config: "Configuration", profile: "Profil", legal: "Informations légales" };
+    const TAB_TITLES = { home: "Accueil", recipes: "Recettes", "meal-plan": "Planning", shopping: "Courses", stock: "Mon Stock", admin: "Console admin", profile: "Profil", legal: "Informations légales" };
     const recipeName = recipeBeingEdited
       ? (recipeBeingEdited.name?.trim() || "Nouvelle recette")
       : (publicDocs?.pub?.recipe?.name)
@@ -367,6 +370,9 @@ function AppInner({ user, isDark, toggleTheme }) {
   const wasAtTabView = useRef(true);
   const [scrollHold, setScrollHold] = useState(false); // masque l'onglet le temps de se caler
   useEffect(() => { if (publicPubId) lastPublicPubId.current = publicPubId; }, [publicPubId]);
+  // La console admin (/admin) est réservée aux admins ; tout autre utilisateur connecté
+  // est renvoyé vers son profil — SAUF la fiche ingrédient, qui reste publique.
+  useEffect(() => { if (tab === "admin" && user && !isAdmin && !adminFiche) navigate("/profile", { replace: true }); }, [tab, user, isAdmin, adminFiche, navigate]);
   const atTabView = !isEditing && !publicPubId
     && !(selectedRecipe && currentRecipe)
     && !(selectedRecipe && !currentRecipe && workspaceReady);
@@ -408,8 +414,8 @@ function AppInner({ user, isDark, toggleTheme }) {
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
-      {tab === "config" && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} isAdmin={isAdmin} categories={categories} setCategories={setCategories} preferences={preferences} setPreferences={setPreferences} techniques={techniques} setTechniques={setTechniques} />}
-      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} />}
+      {tab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} />}
+      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
       {tab === "legal" && <LegalPage />}
       </div>
       </Profiler>

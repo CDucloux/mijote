@@ -4,7 +4,6 @@ import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { ingredientMonths, currentMonth } from "@/lib/food/seasonality.js";
 import { fmtTime } from "../lib/format.js";
-import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { OverscrollRow } from "./OverscrollRow.jsx";
 
 // ─── L'INGRÉDIENT DU MOMENT ───────────────────────────────────────────────────
@@ -14,32 +13,51 @@ import { OverscrollRow } from "./OverscrollRow.jsx";
 const MONTHS_INI = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 const CAT_LABEL = { fruit: "Fruit", vegetable: "Légume" };
 
+// Frise de saison : barre continue « seasonality bar ». Les mois de saison forment
+// des segments arrondis remplis sur une piste, avec un nœud « vous êtes ici » (mois
+// courant) posé sur la timeline. Plus élégant et lisible que 12 cases isolées.
 function SeasonFrieze({ months }) {
   const on = new Set(months || []);
   const now = currentMonth();
-  const isDesktop = useIsDesktop();
+  const pct = (n) => `${(n / 12) * 100}%`;
+  // Regroupe les mois de saison en segments contigus (1–12, sans repli d'année).
+  const runs = [];
+  [...on].sort((a, b) => a - b).forEach(m => {
+    const last = runs[runs.length - 1];
+    if (last && m === last[1] + 1) last[1] = m;
+    else runs.push([m, m]);
+  });
   return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600, margin: "0 2px 6px" }}>Sa saison</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: isDesktop ? 12 : 6 }}>
+    <div style={{ marginTop: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "0 2px 9px" }}>
+        <span style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600 }}>Sa saison</span>
+        <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>{on.size} mois / an</span>
+      </div>
+      {/* Piste + segments + nœud « ce mois-ci » */}
+      <div style={{ position: "relative", height: 12, borderRadius: 999, background: "var(--surface2)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.06)" }}>
+        {runs.map(([s, e], i) => (
+          <div key={i} style={{
+            position: "absolute", top: 0, bottom: 0, left: pct(s - 1), width: pct(e - s + 1),
+            borderRadius: 999, background: "linear-gradient(90deg, var(--accent), #f2a25f)",
+            boxShadow: "0 2px 9px -2px rgba(232,112,58,0.65)",
+          }} />
+        ))}
+        {/* Nœud du mois courant : posé sur la timeline, quelle que soit la saison */}
+        <span aria-hidden="true" title="Ce mois-ci" style={{
+          position: "absolute", top: "50%", left: pct(now - 0.5), transform: "translate(-50%,-50%)",
+          width: 15, height: 15, borderRadius: "50%", background: "var(--surface)",
+          border: "2.5px solid var(--accent-deep, #b8461c)", boxShadow: "0 2px 7px rgba(120,50,20,0.35)", zIndex: 2,
+        }} />
+      </div>
+      {/* Libellés des mois, alignés sous la piste */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", marginTop: 8 }}>
         {MONTHS_INI.map((m, i) => {
           const month = i + 1, active = on.has(month), isNow = month === now;
           return (
-            <div key={i} title={isNow ? "Ce mois-ci" : undefined} style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <div style={{
-                width: "100%", height: isDesktop ? 28 : 24, borderRadius: 8, display: "grid", placeItems: "center",
-                fontSize: 10.5, fontWeight: 700,
-                background: active ? "var(--accent)" : "var(--surface2)",
-                color: active ? "#fff" : "var(--text3)",
-                // Mois courant : anneau interne foncé, affleurant (pas d'espace blanc),
-                // + lift plus marqué. Les autres mois de saison gardent une ombre douce.
-                boxShadow: isNow
-                  ? "inset 0 0 0 2px var(--accent-deep, #b8461c), 0 6px 14px -5px rgba(232,112,58,0.75)"
-                  : active ? "0 3px 8px -3px rgba(232,112,58,0.7)" : "none",
-              }}>{m}</div>
-              {/* Petit repère « ce mois-ci » sous la case, sans cerner la case */}
-              <span aria-hidden="true" style={{ width: 4, height: 4, borderRadius: "50%", background: isNow ? "var(--accent-deep, #b8461c)" : "transparent" }} />
-            </div>
+            <span key={i} style={{
+              textAlign: "center", fontSize: 10, fontWeight: active || isNow ? 700 : 500,
+              color: isNow ? "var(--accent-deep, #b8461c)" : active ? "var(--accent)" : "var(--text3)",
+            }}>{m}</span>
           );
         })}
       </div>
@@ -84,7 +102,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], onOpenIngredient
         <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>chaque semaine</span>
       </div>
 
-      <article style={{ position: "relative", overflow: "hidden", borderRadius: 20, border: "1px solid rgba(232,112,58,0.16)", background: "linear-gradient(158deg, color-mix(in srgb, var(--accent) 7%, var(--surface)), var(--surface) 62%)", padding: "16px 16px 14px", boxShadow: "0 10px 26px -14px rgba(120,70,30,0.28)" }}>
+      <article style={{ position: "relative", overflow: "hidden", borderRadius: 20, border: "1px solid var(--border)", background: "var(--surface)", padding: "16px 16px 14px", boxShadow: "0 10px 26px -16px rgba(120,70,30,0.22)" }}>
         <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: "linear-gradient(90deg, var(--accent), #f4a05f)" }} />
 
         {/* En-tête cliquable → fiche ingrédient */}
@@ -127,7 +145,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], onOpenIngredient
               <Icon name="plus" size={18} color="var(--accent)" />
             </span>
             <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "var(--text2)" }}>
-              Personne n'a encore partagé de recette {catLabel === "Fruit" ? "à la" : "au"} {ingredient.name.toLowerCase()}. <strong style={{ color: "var(--text)" }}>Ouvre le bal ?</strong>
+              Personne n'a encore partagé de recette contenant cet ingrédient. <strong style={{ color: "var(--text)" }}>Et si tu ouvrais le bal ?</strong>
             </span>
             <button className="btn btn-primary btn-sm" style={{ marginLeft: "auto", flexShrink: 0 }} onClick={onPublish}>Publier</button>
           </div>

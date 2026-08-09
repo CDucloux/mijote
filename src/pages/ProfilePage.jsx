@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { CookingHeatmap } from "../components/CookingHeatmap.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
+import { TagInput } from "../components/TagInput.jsx";
 import { buildHeatmap } from "@/lib/planning/cookingActivity.js";
 import { recipeQuotaCount, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
-import { DEFAULT_PREFERENCES } from "../constants/preferences.js";
+import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
+import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
@@ -29,13 +31,20 @@ function SectionTitle({ icon, children, color = "var(--accent)", tint = "rgba(23
   );
 }
 
-export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, recipes = [], onPurge, onDeleteAccount }) {
+export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, recipes = [], onPurge, onDeleteAccount, ingredientDB = [], categories = DEFAULT_CATEGORIES, onExportAll, onImport }) {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
   const { isPlus } = useAppShell();
   const recipeCount = recipeQuotaCount(recipes);
   const prefs = preferences || DEFAULT_PREFERENCES;
   const currentName = prefs.displayName || user?.displayName || "";
+  const importInputRef = useRef(null);
+  const [importError, setImportError] = useState(null);
+  // Préférences : setter mutateur + bascule d'appartenance à une liste (allergènes…).
+  const setPref = (patch) => setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), ...patch }));
+  const togglePref = (key, value) => setPref({
+    [key]: (prefs[key] || []).includes(value) ? prefs[key].filter(v => v !== value) : [...(prefs[key] || []), value],
+  });
   const [nameInput, setNameInput] = useState(null);
   const [purgeScope, setPurgeScope] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -149,6 +158,107 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
               <CookingHeatmap mealPlan={cookLog} weeks={26} />
             </div>
             <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>D'après les plats cuisinés en mode pas à pas sur les 6 derniers mois.</div>
+          </div>
+
+          {/* ── Préférences ── */}
+          <div>
+            <SectionTitle icon="leaf" color="#5bb17a" tint="rgba(91,177,122,0.14)">Préférences</SectionTitle>
+            <div style={{ ...CARD, padding: 18, display: "flex", flexDirection: "column", gap: 20 }}>
+              <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: 0 }}>
+                Ces choix personnalisent ton expérience et serviront à filtrer les recettes selon ce que tu manges.
+              </p>
+
+              {/* Régime */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 9 }}>Régime alimentaire</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {DIETS.map(d => {
+                    const active = prefs.diet === d.id;
+                    return (
+                      <button key={d.id} className="pressable" onClick={() => setPref({ diet: d.id })} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 500, cursor: "pointer", background: active ? "var(--accent)" : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? "transparent" : "var(--border)"}` }}>
+                        <span style={{ fontSize: 15, lineHeight: 1 }}>{d.emoji}</span>{d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Allergènes */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 9 }}>Allergènes à éviter</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {COMMON_ALLERGENS.map(a => {
+                    const active = (prefs.allergens || []).includes(a);
+                    return (
+                      <button key={a} className="pressable" onClick={() => togglePref("allergens", a)} style={{ padding: "7px 13px", borderRadius: 22, fontSize: 13, fontWeight: 500, cursor: "pointer", background: active ? "rgba(224,82,82,0.16)" : "var(--surface2)", color: active ? "var(--red)" : "var(--text2)", border: `1px solid ${active ? "rgba(224,82,82,0.5)" : "var(--border)"}` }}>
+                        {active ? "✕ " : ""}{a}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Catégories exclues */}
+              <div>
+                <div className="field-label" style={{ marginBottom: 9 }}>Catégories à ne pas proposer</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {sortedCategoryEntries(categories).map(([key, cat]) => {
+                    const active = (prefs.excludedCategories || []).includes(key);
+                    return (
+                      <button key={key} className="pressable" onClick={() => togglePref("excludedCategories", key)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: active ? cat.color + "26" : "var(--surface2)", color: active ? cat.color : "var(--text2)", border: `1px solid ${active ? cat.color + "88" : "var(--border)"}` }}>
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>{cat.icon}</span>{cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Ingrédients non aimés */}
+              <TagInput
+                label="Ingrédients que tu n'aimes pas"
+                tags={prefs.dislikes || []}
+                onChange={(tags) => setPref({ dislikes: tags })}
+                allTags={ingredientDB.map(i => i.name).filter(Boolean)}
+                placeholder="Coriandre, Olives…"
+                inputId="pref-dislikes"
+                commitOnBlur
+                dedupeInsensitive
+              />
+            </div>
+          </div>
+
+          {/* ── Mes données ── */}
+          <div>
+            <SectionTitle icon="download" color="#5b9cf6" tint="rgba(91,156,246,0.14)">Mes données</SectionTitle>
+            <div style={{ ...CARD, padding: 18 }}>
+              <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>
+                Exporte toutes tes recettes dans un fichier JSON, ou importe-en depuis un fichier.
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {onExportAll && (
+                  <button className="pressable" onClick={onExportAll} style={{ flex: isDesktop ? "0 1 auto" : "1 1 calc(50% - 4px)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "var(--accent)", color: "#fff", border: "none" }}>
+                    <Icon name="download" size={15} color="#fff" /> Exporter mes recettes
+                  </button>
+                )}
+                {onImport && (
+                  <>
+                    <button className="pressable" onClick={() => importInputRef.current?.click()} style={{ flex: isDesktop ? "0 1 auto" : "1 1 calc(50% - 4px)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
+                      <Icon name="forward" size={15} color="var(--text2)" /> Importer un JSON
+                    </button>
+                    <input ref={importInputRef} type="file" accept="application/json,.json" multiple style={{ display: "none" }}
+                      onChange={e => {
+                        Array.from(e.target.files).forEach(f => {
+                          const r = new FileReader();
+                          r.onload = ev => { try { onImport(ev.target.result); setImportError(null); } catch { setImportError("Fichier invalide : " + f.name); } };
+                          r.readAsText(f);
+                        });
+                        e.target.value = "";
+                      }} />
+                  </>
+                )}
+              </div>
+              {importError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 10 }}>{importError}</p>}
+            </div>
           </div>
 
           {/* ── Zone de danger ── */}

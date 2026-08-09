@@ -10,7 +10,7 @@ import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 import { TIP_TYPES, TIP_ORDER } from "../constants/tipTypes.js";
 
 // ─── INGREDIENT DETAIL (fiche aliment) ────────────────────────────────────────
-// Page publique /config/ingredients/{id} : tout utilisateur peut consulter la
+// Page publique /admin/ingredients/{id} : tout utilisateur peut consulter la
 // fiche ; seul l'admin dispose des actions Modifier / Supprimer.
 export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEGORIES, isAdmin, onBack, onEdit, onDelete }) {
   const [detailOpen, setDetailOpen] = useState(false);

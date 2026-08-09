@@ -1,5 +1,6 @@
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { Icon } from "./Icon.jsx";
+import { ChangelogSection } from "./ChangelogSection.jsx";
 import { codenameFor } from "../constants/changelog.js";
 
 // ─── À PROPOS (licence · crédits · copyright) ────────────────────────────────
@@ -50,6 +51,13 @@ export function AboutModal({ onClose }) {
             Cuisine mieux, organise moins.
           </div>
         </div>
+
+        <div style={{ height: 1, background: "var(--border)" }} />
+
+        {/* Nouveautés */}
+        <Section icon="sparkle" title="Nouveautés">
+          <ChangelogSection />
+        </Section>
 
         <div style={{ height: 1, background: "var(--border)" }} />
 

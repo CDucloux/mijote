@@ -1,5 +1,15 @@
 # Changelog – Mijoté
 
+## v3.10.15 – Safran · Console admin
+
+### Nouveautés
+- **Console admin** dédiée (accès en tête du menu, réservée aux admins) : gestion des bases Ingrédients / Ustensiles / Techniques et **modération** des recettes signalées
+- Les **préférences** et l'**export/import** de recettes rejoignent la page **Profil**
+- Le **changelog** est désormais dans la fenêtre « À propos »
+
+### Découvrir
+- « L'ingrédient du moment » : fond épuré et **nouvelle frise de saison** plus lisible
+
 ## v3.10.14 – Safran · Démarrage hors-ligne
 
 ### Corrections

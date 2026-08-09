@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { CHANGELOG } from "../constants/changelog.js";
 import { renderInline } from "./markdownInline.jsx";
@@ -7,7 +6,6 @@ import { renderInline } from "./markdownInline.jsx";
 const ANNOUNCE_SEEN_KEY = "rf_announce_seen";
 
 export function AnnouncementPopup() {
-  const navigate = useNavigate();
   const latest = CHANGELOG[0];
   const highlights = latest?.highlights || [];
   const [dismissed, setDismissed] = useState(() => {
@@ -62,7 +60,7 @@ export function AnnouncementPopup() {
         </ul>
         <div style={{ padding: "12px 20px 18px", display: "flex", gap: 10 }}>
           <button
-            onClick={() => { close(); navigate("/config/changelog"); }}
+            onClick={() => { close(); window.dispatchEvent(new Event("mijote:show-about")); }}
             style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
           >
             Voir les détails
