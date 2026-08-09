@@ -18,7 +18,7 @@ import { useEffect, useRef } from "react";
  * `scroll` et on déclenche un rebond proportionnel à l'impact.
  *
  * @param options - Réglages.
- * @param options.max - Décalage maximal en pixels (défaut 64 — discret).
+ * @param options.max - Décalage maximal en pixels (défaut 38 — volontairement subtil).
  * @param options.disabled - Désactive l'effet (ex. desktop).
  * @returns `scrollRef` (conteneur `overflow-y`) et `contentRef` (enfant transformé,
  *   englobant tout le contenu défilable).
@@ -29,7 +29,7 @@ import { useEffect, useRef } from "react";
  * return <div ref={scrollRef} style={{ overflowY: "auto" }}><div ref={contentRef}>…</div></div>;
  * ```
  */
-export function useElasticScroll({ max = 64, disabled = false }: { max?: number; disabled?: boolean } = {}) {
+export function useElasticScroll({ max = 38, disabled = false }: { max?: number; disabled?: boolean } = {}) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
 
@@ -38,7 +38,7 @@ export function useElasticScroll({ max = 64, disabled = false }: { max?: number;
     if (!el || !inner || disabled) return;
     if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const C = 0.55; // constante de rubber-band iOS/WebKit
+    const C = 0.32; // constante de rubber-band (suivi volontairement discret)
     // Résistance élastique authentique, bornée à `max` pour rester discret.
     const rubber = (x: number, dim: number): number => Math.min((C * x * dim) / (dim + C * x), max);
     const scrollable = (): boolean => el.scrollHeight > el.clientHeight + 1;
@@ -113,7 +113,7 @@ export function useElasticScroll({ max = 64, disabled = false }: { max?: number;
       // pour ne pas forcer un reflow à chaque frame de défilement (source de lag).
       if (dragging || pull || bounce || vy <= 0.35) return;
       if (!scrollable() || !atBottom()) return;
-      playBounce(Math.min(max, vy * 22));
+      playBounce(Math.min(max, vy * 13));
     };
 
     el.addEventListener("touchstart", onDown, { passive: true });

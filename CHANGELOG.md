@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.9 – Safran · Élastique partout
+
+### Feel natif
+- **Rubber-band vertical** rendu bien plus subtil : le contenu monte beaucoup moins haut
+- **Overscroll horizontal élastique** ajouté aux carrousels « Découvrir » et « À cuisiner » de l'accueil, ainsi qu'aux onglets de la page Configuration
+
 ## v3.10.8 – Safran · Appui natif
 
 ### Feel natif

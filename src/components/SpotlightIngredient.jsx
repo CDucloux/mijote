@@ -5,6 +5,7 @@ import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { ingredientMonths, currentMonth } from "@/lib/food/seasonality.js";
 import { fmtTime } from "../lib/format.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
+import { OverscrollRow } from "./OverscrollRow.jsx";
 
 // ─── L'INGRÉDIENT DU MOMENT ───────────────────────────────────────────────────
 // Carte éditoriale en tête de « Découvrir » : un fruit/légume de saison, sa frise
@@ -116,9 +117,9 @@ export function SpotlightIngredient({ ingredient, recipes = [], onOpenIngredient
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 2px 10px" }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text2)" }}>À cuisiner · {recipes.length} recette{recipes.length > 1 ? "s" : ""} de la communauté</span>
             </div>
-            <div className="discover-row" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4, margin: "0 -2px", scrollSnapType: "x proximity" }}>
+            <OverscrollRow stretch className="discover-row" style={{ gap: 10, paddingBottom: 4 }} outerStyle={{ margin: "0 -2px", scrollSnapType: "x proximity" }}>
               {recipes.map(p => <MiniRecipe key={p.pubId} pub={p} onOpen={onOpenPublic} />)}
-            </div>
+            </OverscrollRow>
           </>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(232,112,58,0.06)", border: "1px dashed rgba(232,112,58,0.35)", borderRadius: 14, padding: "12px 13px" }}>

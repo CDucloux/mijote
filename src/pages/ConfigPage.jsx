@@ -8,6 +8,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { TagInput } from "../components/TagInput.jsx";
 import { ChangelogSection } from "../components/ChangelogSection.jsx";
+import { OverscrollRow } from "../components/OverscrollRow.jsx";
 import { ReadOnlyBanner, AdminBanner } from "../components/Banners.jsx";
 import { IngredientDetail } from "../components/IngredientDetail.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
@@ -331,13 +332,13 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           </div>
           <UserAvatar />
         </div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 0, overflowX: "auto", paddingBottom: 0 }}>
+        <OverscrollRow stretch style={{ gap: 6 }}>
           {["préférences", "ingredients", "ustensiles", "techniques", "données", "nouveautés"].map(s => (
             <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
               {s === "préférences" ? "Préférences" : s === "ingredients" ? "Ingrédients" : s === "ustensiles" ? "Ustensiles" : s === "techniques" ? "Techniques" : s === "collections" ? "Carnets" : s === "données" ? "Données" : "Changelog"}
             </button>
           ))}
-        </div>
+        </OverscrollRow>
         {/* Compteur + bannière admin : figés avec l'en-tête (restent visibles au scroll), pour Ingrédients et Ustensiles */}
         {(section === "ingredients" || section === "ustensiles" || section === "techniques") && (() => {
           const n = section === "ingredients" ? ingredientDB.length : section === "ustensiles" ? utensilDB.length : techniques.length;
