@@ -72,7 +72,7 @@ export function UserAvatar() {
                 style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--accent)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "opacity 0.15s" }}
                 onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-                <Icon name="shield" size={13} color="currentColor" /> Console admin
+                <Icon name="terminal" size={13} color="currentColor" /> Console admin
               </button>
             )}
             <button onClick={() => { setOpen(false); navigate("/profile"); }}
