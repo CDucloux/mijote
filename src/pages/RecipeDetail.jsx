@@ -186,8 +186,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     setShowShoppingModal(true);
   };
   // Le mode pas à pas est porté par l'URL (/recipes/:id/cookmode) → il survit à un
-  // remontage (dézoom desktop) et au bouton retour. Fallback local si non fourni.
-  const setCookMode = onSetCookMode || (() => {});
+  // remontage (dézoom desktop) et au bouton retour. En mode public (pas de route
+  // dédiée), on retombe sur un état LOCAL — sinon le bouton serait inerte.
+  const [localCookMode, setLocalCookMode] = useState(false);
+  const cookModeActive = onSetCookMode ? cookMode : localCookMode;
+  const setCookMode = onSetCookMode || setLocalCookMode;
   const [showNutrition, setShowNutrition] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [dockClosing, setDockClosing] = useState(false);
@@ -1037,7 +1040,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       {showNutrition && (
         <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
       )}
-      {cookMode && recipe.steps?.length > 0 && (
+      {cookModeActive && recipe.steps?.length > 0 && (
         <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} recipes={recipes} stockSet={new Set(stock)} onUpdateRecipe={onUpdateRecipe} onCooked={onCooked} onClose={() => setCookMode(false)} />
       )}
 
