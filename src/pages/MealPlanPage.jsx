@@ -24,6 +24,7 @@ import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
+import { ElasticScroll } from "../components/ElasticScroll.jsx";
 
 // Rôles proposés pour compléter un repas (le plat existe déjà).
 const COMPLETE_ROLES = [
@@ -553,7 +554,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {filteredRecipes.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{filteredRecipes.length}</span>}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto", maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }}>
+          <ElasticScroll max={64} style={{ maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 9 }}>
             {filteredRecipes.map(r => {
               const total = (r.prepTime || 0) + (r.cookTime || 0);
               const nIng = r.ingredients?.length || 0;
@@ -597,7 +598,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette {searchQ.trim() ? "ne correspond à ta recherche" : "dans ta bibliothèque"}.</p>
               </div>
             )}
-          </div>
+          </ElasticScroll>
           </>);
           }}
         </SwipeableSheet>
@@ -880,7 +881,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {list.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{list.length}</span>}
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto", maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }}>
+            <ElasticScroll max={64} style={{ maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 9 }}>
               {list.map(r => {
                 const total = (r.prepTime || 0) + (r.cookTime || 0);
                 const nIng = r.ingredients?.length || 0;
@@ -909,7 +910,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette « {roleLabel(completeRole).toLowerCase()} » {q ? "ne correspond à ta recherche" : "disponible pour l'instant"}.</p>
                 </div>
               )}
-            </div>
+            </ElasticScroll>
           </SwipeableSheet>
         );
       })()}

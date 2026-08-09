@@ -7,6 +7,7 @@ import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, MAX_HOUSEHOLD } from "@/lib/household/household.js";
@@ -219,7 +220,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
       </div>
 
       {/* Corps défilant */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 24px" }}>
+      <ElasticScroll style={{ flex: 1, padding: "0 20px 24px" }}>
         {/* ── Mon foyer (en tête d'accueil) ───────────────────────────────── */}
         <FoyerSection />
 
@@ -309,7 +310,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
 
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
         <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
-      </div>
+      </ElasticScroll>
     </div>
   );
 }
