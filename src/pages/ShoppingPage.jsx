@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -27,6 +28,7 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // s'estompant avant de rejoindre la section).
 
 export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, setStock, setLowStock }) {
+  const navigate = useNavigate();
   const { notify } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
@@ -254,12 +256,25 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
         )}
       </div>
 
-      {/* Empty state */}
+      {/* Empty state (première visite) — même langage que la bibliothèque de recettes */}
       {shoppingLists.length === 0 && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text3)", gap: 12, padding: "0 40px", textAlign: "center" }}>
-          <Icon name="shopping" size={44} />
-          <p style={{ fontSize: 15, fontWeight: 500 }}>Aucune liste de courses</p>
-          <p style={{ fontSize: 13 }}>Crée une liste libre ou ajoute une recette depuis sa fiche.</p>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 420, margin: "0 auto" }}>
+          <div style={{ position: "relative", width: 88, height: 88, borderRadius: 24, background: "linear-gradient(150deg, rgba(232,112,58,0.18), rgba(240,192,96,0.14))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, boxShadow: "0 10px 30px -14px rgba(232,112,58,0.5)" }}>
+            <span style={{ fontSize: 40, lineHeight: 1 }}>🛒</span>
+            <span style={{ position: "absolute", top: -6, right: -6 }}><Icon name="sparkle" size={20} color="var(--accent)" /></span>
+          </div>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Prêt·e à faire les courses&nbsp;?</h3>
+          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
+            Crée une liste libre pour noter tes achats, ou envoie une recette aux courses depuis sa fiche&nbsp;: tout se regroupe et se coche ici.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+            <button className="btn btn-primary" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={() => setConfigList({ isNew: true, name: "", type: "free", hideClear: false })}>
+              <Icon name="plus" size={16} /> Créer ma première liste
+            </button>
+            <button className="btn btn-ghost" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={() => navigate("/recipes")}>
+              <Icon name="book" size={16} color="var(--accent)" /> Partir d'une recette
+            </button>
+          </div>
         </div>
       )}
 
