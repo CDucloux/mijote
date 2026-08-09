@@ -172,16 +172,23 @@ body {
   overflow: hidden;
 }
 
-/* PWA installée : `dvh` (== hauteur réelle du webview, sans barres de navigateur)
-   pour que le shell REMPLISSE tout l'écran jusqu'en bas. Sinon `svh` peut laisser
-   la zone système du bas (barre de navigation Android / home indicator) hors du
-   shell → la barre d'onglets n'y étend plus son fond `--surface` et cette zone
-   retombe sur la couleur système. En standalone il n'y a pas de barres de
-   navigateur dynamiques, donc `dvh` ne réintroduit pas le bug de la barre d'onglets. */
-@media (display-mode: standalone) {
-  #root {
-    height: 100dvh;
-  }
+/* Zone système du bas (barre de navigation Android / home indicator) peinte à la
+   couleur de la barre d'onglets (`--surface`). NÉCESSAIRE car #root est en `svh`
+   + `overflow:hidden` : le fond que la TabBar étend dans le safe-area par son
+   padding est CLIPPÉ par #root (il déborde de la boîte svh). Ce calque `fixed` est
+   positionné par rapport au viewport (donc DANS le safe-area, sous #root), n'est
+   pas clippé par #root, et ne bouge pas à l'overscroll — contrairement à un shell
+   en `dvh`. Hauteur nulle hors PWA (safe-area-inset-bottom = 0) : invisible. */
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background: var(--surface);
+  z-index: 0;
+  pointer-events: none;
 }
 
 button {
