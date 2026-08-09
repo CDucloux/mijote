@@ -54,7 +54,7 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
     // Conversion d'un tirage (px) en facteur d'ÉTIREMENT (scaleY), plafonné à ~5 %.
     // Le contenu ne « monte » pas : il s'étire, ancré au bas (le dernier élément reste
     // en place, ceux au-dessus s'espacent) → expansion élastique dans le sens du geste.
-    const stretch = (px: number): number => 1 + Math.min(0.05, Math.abs(px) / el.clientHeight);
+    const stretch = (px: number): number => 1 + Math.min(0.025, Math.abs(px) / (el.clientHeight * 2));
     const apply = (spring: boolean): void => {
       // Ressort de retour long et « posé » (décélération très douce). gpu-composited.
       inner.style.transition = spring ? "transform 0.9s cubic-bezier(0.16,0.82,0.24,1)" : "none";
@@ -83,14 +83,18 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
     // Relâche la couche GPU une fois le ressort de retour terminé.
     const onEnd = (): void => { if (!pull) lift(false); };
     inner.addEventListener("transitionend", onEnd);
-    const onDown = (e: TouchEvent): void => { bounce?.cancel(); lift(true); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0; };
+    // IMPORTANT : on ne promeut PAS la couche GPU dès le touchstart — sur une page à
+    // beaucoup d'éléments (ex. 55 cartes), `will-change` sur tout le contenu à chaque
+    // amorce de scroll rasterise une couche géante et provoque du jank. On ne « lift »
+    // qu'au moment où l'élastique s'arme réellement (mode === "bottom").
+    const onDown = (e: TouchEvent): void => { bounce?.cancel(); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0; };
     const onMove = (e: TouchEvent): void => {
       if (!dragging) return;
       const dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
       if (!axis) { if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
       if (axis !== "y") return;
       // On n'arme l'élastique que si on est déjà tout en bas et qu'on tire encore vers le haut.
-      if (!mode) mode = scrollable() && atBottom() && dy < -2 ? "bottom" : "scroll";
+      if (!mode) { mode = scrollable() && atBottom() && dy < -2 ? "bottom" : "scroll"; if (mode === "bottom") lift(true); }
       if (mode !== "bottom") return;
       // On n'étire QUE vers le haut ; inverser le geste relâche proprement (pull=0)
       // sans jamais nourrir `rubber` d'une valeur négative (pas d'emballement).
