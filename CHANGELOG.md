@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.7 – Safran · Rebond d'inertie
+
+### Feel natif
+- **Rebond par inertie** : un lancer (fling) qui arrive au bas de page par sa seule vitesse déclenche désormais un rebond, proportionnel à l'impact
+- Élastique qui remonte moins haut et redescend plus en douceur (retour moins abrupt)
+
 ## v3.10.6 – Safran · Rubber-band natif
 
 ### Feel natif
