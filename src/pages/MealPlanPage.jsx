@@ -14,7 +14,7 @@ import { peopleCount } from "@/lib/household/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useMealPlanner } from "../hooks/useMealPlanner.js";
 import { useLS } from "../hooks/useLS.js";
-import { groupSlotMeals, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
+import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
@@ -61,7 +61,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
       style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
       {(() => {
-      const slotGroups = groupSlotMeals(meals, recipesById);
+      const slotGroups = mealsForSlot(meals, recipesById);
       // La barre verticale ne distingue les repas que s'il y en a PLUSIEURS dans le
       // slot (ex. un 2ᵉ plat). Un repas unique (même composé plat+entrée+dessert) ne
       // porte pas de barre : les rôles suffisent à le lire.
