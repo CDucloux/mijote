@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.10.6 – Safran · Rubber-band natif
+
+### Feel natif
+- **Rubber-band vertical** refait avec la vraie physique iOS/WebKit : le contenu suit le doigt puis résiste de plus en plus, avec un ressort de retour posé
+- Déclenchement plus sensible en bas de page et relâche propre quand on inverse le geste
+- Effet câblé sur **Accueil**, **Recettes**, **Planning**, les feuilles **Ajouter une recette** et **Compléter le repas**, **Mon stock** et **Courses**
+
 ## v3.10.5 – Safran · Overscroll affiné
 
 ### Corrections
