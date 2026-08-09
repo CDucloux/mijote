@@ -10,16 +10,21 @@ import { useEffect, useRef } from "react";
  * @param options - Réglages.
  * @param options.max - Décalage maximal en pixels (défaut 72).
  * @param options.disabled - Désactive l'effet.
+ * @param options.stretch - `true` : étirement `scaleX` ancré au bord tiré (rubber-band
+ *   « à la iOS », plus les éléments sont loin du bord plus ils s'écartent) — idéal
+ *   pour des rangées de pills/texte. `false` (défaut) : simple `translateX` — idéal
+ *   pour des rangées d'images (pas de distorsion).
  * @returns `scrollRef` (conteneur `overflow-x`) et `contentRef` (enfant transformé,
  *   idéalement `min-width: 100%`).
  */
-export function useHorizontalOverscroll({ max = 72, disabled = false }: { max?: number; disabled?: boolean } = {}) {
+export function useHorizontalOverscroll({ max = 72, disabled = false, stretch = false }: { max?: number; disabled?: boolean; stretch?: boolean } = {}) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current, inner = contentRef.current;
     if (!el || !inner || disabled) return;
+    if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const damp = (d: number, m: number): number => m * (1 - Math.exp(-d / m)); // résistance croissante
     // Pas d'effet si la rangée tient sans déborder (rien à « sur-défiler »).
@@ -30,7 +35,16 @@ export function useHorizontalOverscroll({ max = 72, disabled = false }: { max?: 
     let dragging = false, x0 = 0, y0 = 0, axis: "x" | "y" | null = null, edge: "start" | "end" | "scroll" | null = null, pull = 0;
     const apply = (spring: boolean): void => {
       inner.style.transition = spring ? "transform 0.5s cubic-bezier(0.16,1,0.3,1)" : "none";
-      inner.style.transform = pull ? `translateX(${pull.toFixed(2)}px)` : "";
+      if (!pull) { inner.style.transform = ""; inner.style.transformOrigin = ""; return; }
+      if (stretch) {
+        // Étirement horizontal : origine au bord ANCRÉ (opposé au sens du tirage).
+        const w = inner.scrollWidth || el.clientWidth || 1;
+        const scale = 1 + Math.abs(pull) / w;
+        inner.style.transformOrigin = pull > 0 ? "left center" : "right center";
+        inner.style.transform = `scaleX(${scale.toFixed(4)})`;
+      } else {
+        inner.style.transform = `translateX(${pull.toFixed(2)}px)`;
+      }
     };
     const onDown = (e: TouchEvent): void => { dragging = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; edge = null; pull = 0; };
     const onMove = (e: TouchEvent): void => {
@@ -59,7 +73,7 @@ export function useHorizontalOverscroll({ max = 72, disabled = false }: { max?: 
       el.removeEventListener("touchend", onUp);
       el.removeEventListener("touchcancel", onUp);
     };
-  }, [max, disabled]);
+  }, [max, disabled, stretch]);
 
   return { scrollRef, contentRef };
 }

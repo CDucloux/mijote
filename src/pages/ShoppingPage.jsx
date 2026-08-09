@@ -9,7 +9,7 @@ import { useLongPress } from "../hooks/useLongPress.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
 import { aggregateShopping } from "@/lib/food/shoppingAggregate.js";
-import { useHorizontalOverscroll } from "../hooks/useHorizontalOverscroll.js";
+import { OverscrollRow } from "../components/OverscrollRow.jsx";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
@@ -42,7 +42,6 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   const [listMenu, setListMenu] = useState(null);      // liste dont le menu (⋯ / appui long) est ouvert
   const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
   // Overscroll « stretch » horizontal de la rangée de listes (comme WhatsApp/Maps).
-  const { scrollRef: tabsScrollRef, contentRef: tabsContentRef } = useHorizontalOverscroll({ max: 64 });
 
   // L'agrégat n'a de sens qu'à partir de 2 listes. Il devient la vue par défaut
   // (la « vraie » sortie supermarché), les onglets par recette restant accessibles.
@@ -196,8 +195,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
         {/* List selector tabs + menu ⋯ */}
         {shoppingLists.length > 0 && (
-          <div ref={tabsScrollRef} style={{ overflowX: "auto", paddingBottom: 8 }}>
-          <div ref={tabsContentRef} style={{ display: "flex", gap: 6, alignItems: "center", minWidth: "100%" }}>
+          <OverscrollRow stretch max={64} outerStyle={{ paddingBottom: 8 }} style={{ gap: 6, alignItems: "center" }}>
             {/* Onglet agrégé « Toutes les courses » (≥ 2 listes) */}
             {hasAgg && (() => {
               const aggChecked = aggregated.filter(a => a.checked).length;
@@ -252,8 +250,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 </div>
               );
             })}
-          </div>
-          </div>
+          </OverscrollRow>
         )}
       </div>
 
