@@ -2597,22 +2597,32 @@ select {
 }
 
 /* ─── Retour tactile « pressé » (appareils tactiles uniquement) ──────────────
-   Feel d'app mobile native : tout élément tappable s'assombrit brièvement sous
-   le doigt ; les cartes et boutons principaux se rétractent en plus (scale).
-   Ciblé via @media (hover:none) pour ne pas affecter la souris sur desktop, et
-   volontairement sans scale global (certains boutons utilisent transform pour
-   se positionner — on ne scale que des classes dont la racine ne l'utilise pas). */
+   Feel d'app mobile native FIDÈLE (iOS / React Native Pressable) : tout élément
+   tappable s'assombrit sous le doigt ; les cartes et boutons principaux se
+   rétractent en plus (scale). La clé du rendu natif est l'ASYMÉTRIE des timings :
+
+     • APPUI (press-in)  → réponse quasi immédiate mais adoucie (~0.1 s, ease-out).
+     • RELÂCHER (press-out) → retour LENT en ressort avec un léger dépassement
+       (« pop »), jamais un snap sec.
+
+   On obtient ces deux durées distinctes avec une seule paire de règles CSS : la
+   règle `:active` (plus spécifique) porte la transition RAPIDE d'appui ; la règle
+   de base porte la transition LENTE de retour (celle qui joue quand `:active`
+   disparaît). Ciblé via @media (hover:none) pour épargner la souris ; scale
+   réservé aux classes dont la racine n'utilise pas déjà `transform` pour se
+   positionner. */
 @media (hover: none) {
 
-  /* `!important` : indispensable pour les éléments animés à l'entrée (.slide-up,
+  /* ── État pressé ──────────────────────────────────────────────────────────
+     `!important` : indispensable pour les éléments animés à l'entrée (.slide-up,
      fill-mode both) — sinon la valeur finale de l'animation (transform/opacity)
-     l'emporte sur ces règles :active et le retour tactile ne se voit pas. */
+     l'emporte sur ces règles et le retour tactile ne se voit pas. */
   button:active,
   a:active,
   [role="button"]:active,
   label:active,
   .pressable:active {
-    opacity: 0.62 !important;
+    opacity: 0.7 !important;
   }
 
   .btn:active,
@@ -2620,19 +2630,32 @@ select {
   .notebook-card:active,
   .discover-card:active,
   .pressable:active {
-    transform: scale(0.97) !important;
+    transform: scale(0.96) !important;
   }
 
-  /* `!important` aussi sur la transition : certains éléments ont une transition
-     inline (border-color/box-shadow) qui, sinon, écrase celle-ci et fait snapper
-     le retour au relâchement. On garde donc le même retour progressif que la
-     carte « Mon foyer » (qui, elle, n'a pas de transition inline concurrente). */
+  /* ── PRESS-IN : rapide et posé (ease-out court). Restreint au jeu « curated »
+     (qui inclut `.pressable`) pour ne pas écraser les transitions inline des
+     autres boutons — un `<button>` nu garde son comportement d'origine. ─────── */
+  .btn:active,
+  .recipe-card:active,
+  .notebook-card:active,
+  .discover-card:active,
+  .pressable:active {
+    transition: transform 0.1s cubic-bezier(0.33, 0, 0.2, 1),
+                opacity 0.06s linear !important;
+  }
+
+  /* ── PRESS-OUT (retour) : ressort lent avec léger dépassement → « pop » natif.
+     `!important` : certains éléments ont une transition inline (border-color/
+     box-shadow) qui, sinon, l'écrase et fait snapper le retour. L'opacité revient
+     sans dépassement (une opacité > 1 n'aurait aucun effet). */
   .btn,
   .recipe-card,
   .notebook-card,
   .discover-card,
   .pressable {
-    transition: transform 0.14s ease, opacity 0.14s ease !important;
+    transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.5, 1),
+                opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1) !important;
   }
 
   /* La grille « Mes recettes » monte TOUTES les cartes d'un coup (jusqu'à 50).

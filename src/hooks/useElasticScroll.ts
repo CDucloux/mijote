@@ -46,29 +46,37 @@ export function useElasticScroll({ max = 64, disabled = false }: { max?: number;
 
     let dragging = false, y0 = 0, x0 = 0, axis: "x" | "y" | null = null, mode: "bottom" | "scroll" | null = null, pull = 0;
     let bounce: Animation | null = null; // rebond d'inertie en cours (Web Animations API)
+    // Promotion de couche GPU : on l'active pendant un geste/animation pour éviter le
+    // « lag » de première frame (le navigateur crée sa couche composite en amont), puis
+    // on la relâche au repos pour ne pas gaspiller de mémoire.
+    const lift = (on: boolean): void => { inner.style.willChange = on ? "transform" : ""; };
     const apply = (spring: boolean): void => {
-      // Ressort de retour lent et « posé » (décélération douce) pour éviter tout retour
-      // abrupt ; gpu-composited.
-      inner.style.transition = spring ? "transform 0.72s cubic-bezier(0.19,1,0.28,1)" : "none";
+      // Ressort de retour long et « posé » (décélération très douce) : plus aucun
+      // retour abrupt. gpu-composited.
+      inner.style.transition = spring ? "transform 0.95s cubic-bezier(0.16,0.82,0.24,1)" : "none";
       inner.style.transform = pull ? `translate3d(0,${pull.toFixed(2)}px,0)` : "";
     };
     // Rebond joué par la seule inertie (fling) : montée douce jusqu'au pic puis
     // retour ressort encore plus lent → aucune cassure de rythme.
     const playBounce = (amp: number): void => {
       bounce?.cancel();
+      lift(true);
       inner.style.transition = "none";
       inner.style.transform = "";
       bounce = inner.animate(
         [
           { transform: "translate3d(0,0,0)", easing: "cubic-bezier(0.17,0.84,0.44,1)" }, // impact → pic (décélère)
-          { transform: `translate3d(0,${(-amp).toFixed(1)}px,0)`, offset: 0.3, easing: "cubic-bezier(0.19,1,0.28,1)" }, // pic → repos (posé)
+          { transform: `translate3d(0,${(-amp).toFixed(1)}px,0)`, offset: 0.28, easing: "cubic-bezier(0.16,0.82,0.24,1)" }, // pic → repos (posé)
           { transform: "translate3d(0,0,0)" },
         ],
-        { duration: 720 },
+        { duration: 980 },
       );
-      bounce.onfinish = bounce.oncancel = (): void => { inner.style.transform = ""; bounce = null; };
+      bounce.onfinish = bounce.oncancel = (): void => { inner.style.transform = ""; lift(false); bounce = null; };
     };
-    const onDown = (e: TouchEvent): void => { bounce?.cancel(); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0; };
+    // Relâche la couche GPU une fois le ressort de retour terminé.
+    const onEnd = (): void => { if (!pull) lift(false); };
+    inner.addEventListener("transitionend", onEnd);
+    const onDown = (e: TouchEvent): void => { bounce?.cancel(); lift(true); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0; };
     const onMove = (e: TouchEvent): void => {
       if (!dragging) return;
       const dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
@@ -86,7 +94,8 @@ export function useElasticScroll({ max = 64, disabled = false }: { max?: number;
     const onUp = (): void => {
       if (!dragging) return;
       dragging = false;
-      if (mode === "bottom") { pull = 0; apply(true); }
+      if (mode === "bottom") { pull = 0; apply(true); } // le ressort → transitionend relâchera la couche
+      else lift(false);                                 // pas d'anim : on relâche tout de suite
       axis = null; mode = null;
     };
 
@@ -99,9 +108,11 @@ export function useElasticScroll({ max = 64, disabled = false }: { max?: number;
       const now = performance.now(), y = el.scrollTop, dt = now - lastT;
       if (dt > 0) vy = (y - lastY) / dt; // px/ms, > 0 = vers le bas
       lastY = y; lastT = now;
-      // Rebond seulement sur inertie pure (pas de doigt, pas d'anim en cours) et
-      // au moment où l'on vient de toucher le bas avec une vitesse résiduelle.
-      if (dragging || pull || bounce || !scrollable() || !atBottom() || vy <= 0.35) return;
+      // Filtres BON MARCHÉ d'abord (aucune lecture de layout) : ce n'est qu'une fois
+      // la vitesse résiduelle suffisante que l'on paie `scrollable()`/`atBottom()`,
+      // pour ne pas forcer un reflow à chaque frame de défilement (source de lag).
+      if (dragging || pull || bounce || vy <= 0.35) return;
+      if (!scrollable() || !atBottom()) return;
       playBounce(Math.min(max, vy * 22));
     };
 
@@ -116,6 +127,7 @@ export function useElasticScroll({ max = 64, disabled = false }: { max?: number;
       el.removeEventListener("touchend", onUp);
       el.removeEventListener("touchcancel", onUp);
       el.removeEventListener("scroll", onScroll);
+      inner.removeEventListener("transitionend", onEnd);
       bounce?.cancel();
     };
   }, [max, disabled]);

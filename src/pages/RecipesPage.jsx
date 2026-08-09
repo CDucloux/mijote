@@ -18,6 +18,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
+import { OverscrollRow } from "../components/OverscrollRow.jsx";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 // Toutes les cartes s'animent à l'entrée ; le décalage est plafonné pour que les
@@ -309,7 +310,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               {!hideCarnets && collections.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text3)" }}>Appui long pour gérer</span>}
             </div>
             {!hideCarnets && (
-            <div className="collections-row" style={{ display: "flex", gap: 14, overflowX: "auto", padding: "7px 3px 8px" }}>
+            <OverscrollRow stretch className="collections-row" style={{ gap: 14, padding: "7px 3px 8px" }}>
               {collections.map((col) => {
                 const active = carnetActive(col);
                 const count = countFor(col);
@@ -359,7 +360,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                   </div>
                 </div>
               </button>
-            </div>
+            </OverscrollRow>
             )}
           </div>
         )}
