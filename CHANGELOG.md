@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.8 – Safran · Appui natif
+
+### Feel natif
+- **Retour tactile** (cartes, boutons, éléments pressables) repensé façon app native : appui vif mais adouci, et relâchement en ressort avec un léger « pop » — fini le retour sec
+- **Overscroll horizontal élastique** ajouté sur la rangée des carnets dans « Mes Recettes »
+
 ## v3.10.7 – Safran · Rebond d'inertie
 
 ### Feel natif
