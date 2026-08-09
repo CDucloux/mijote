@@ -89,16 +89,16 @@ function DifficultyPips({ level }) {
 export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, techniques = [], setTechniques }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const configSectionParam = location.pathname.startsWith("/config/")
-    ? location.pathname.slice(8) || undefined
+  const configSectionParam = location.pathname.startsWith("/admin/")
+    ? location.pathname.slice(7) || undefined
     : undefined;
   const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "ingredients";
-  // Fiche ingrédient : /config/ingredients/{id}
-  const ingDetailMatch = location.pathname.match(/^\/config\/ingredients\/(.+)$/);
+  // Fiche ingrédient : /admin/ingredients/{id}
+  const ingDetailMatch = location.pathname.match(/^\/admin\/ingredients\/(.+)$/);
   const ingDetailId = ingDetailMatch ? decodeURIComponent(ingDetailMatch[1]) : null;
-  const setSection = (s) => navigate(`/config/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
+  const setSection = (s) => navigate(`/admin/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
   useEffect(() => {
-    if (!configSectionParam) navigate("/config/ingredients", { replace: true });
+    if (!configSectionParam) navigate("/admin/ingredients", { replace: true });
   }, [configSectionParam]);
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
@@ -436,7 +436,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                         </div>
                       )}
                       {catIngs.map((item, i) => (
-                        <button key={item.id} onClick={() => navigate(`/config/ingredients/${encodeURIComponent(item.id)}`)} title="Voir la fiche" className="ing-row-btn" style={{
+                        <button key={item.id} onClick={() => navigate(`/admin/ingredients/${encodeURIComponent(item.id)}`)} title="Voir la fiche" className="ing-row-btn" style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
                           borderTop: i > 0 ? "1px solid var(--border)" : "none",
                           background: "var(--surface)", textAlign: "left", cursor: "pointer", border: "none", transition: "background 0.15s",
