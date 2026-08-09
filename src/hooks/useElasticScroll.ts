@@ -1,21 +1,22 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Overscroll vertical « rubber band » au BAS d'un conteneur scrollable : arrivé en
- * bas, continuer à tirer décale le contenu vers le haut avec une résistance
- * croissante, puis revient en ressort au relâcher. Volontairement borné au bas — le
- * haut est réservé au pull-to-refresh global (sinon conflit). Écrit directement dans
- * le DOM (transform sur `contentRef`), listeners natifs (touchmove non passif pour
- * `preventDefault` au bord). Neutre en `prefers-reduced-motion`.
+ * Overscroll vertical « stretch » au BAS d'un conteneur scrollable : arrivé en bas,
+ * continuer à tirer ÉTIRE le contenu (scaleY ancré au bas — le dernier élément reste
+ * fixe, ceux au-dessus s'espacent), piloté au doigt, puis revient en ressort au
+ * relâcher. Le contenu ne « monte » pas : il s'expanse dans le sens du geste.
+ * Volontairement borné au bas — le haut est réservé au pull-to-refresh global (sinon
+ * conflit). Écrit directement dans le DOM (transform sur `contentRef`), listeners
+ * natifs (touchmove non passif pour `preventDefault` au bord). Neutre en
+ * `prefers-reduced-motion`.
  *
- * Physique fidèle au rubber-band iOS/WebKit : `b = (c·x·d) / (d + c·x)` où `x` est
- * la distance tirée, `d` la hauteur du conteneur et `c = 0.55`. Le contenu suit
- * ~55 % du doigt au départ puis résiste de plus en plus (asymptote = hauteur du
- * conteneur), ce qui donne le vrai « poids » élastique natif. Borné à `max`.
+ * La RÉSISTANCE du geste suit le rubber-band iOS/WebKit : `b = (c·x·d) / (d + c·x)`
+ * (x = distance tirée, d = hauteur du conteneur, c = 0.32), borné à `max` ; cette
+ * distance est ensuite convertie en un facteur d'étirement subtil (≤ 5 %).
  *
- * Un **rebond par inertie** est aussi joué quand un lancer (fling) arrive au bas
- * par sa seule vitesse résiduelle (sans doigt) : on suit la vélocité via l'événement
- * `scroll` et on déclenche un rebond proportionnel à l'impact.
+ * Un **rebond par inertie** est aussi joué quand un lancer (fling) arrive au bas par
+ * sa seule vitesse résiduelle (sans doigt) : on suit la vélocité via l'événement
+ * `scroll` et on déclenche une brève expansion proportionnelle à l'impact.
  *
  * @param options - Réglages.
  * @param options.max - Décalage maximal en pixels (défaut 38 — volontairement subtil).
@@ -50,28 +51,34 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
     // « lag » de première frame (le navigateur crée sa couche composite en amont), puis
     // on la relâche au repos pour ne pas gaspiller de mémoire.
     const lift = (on: boolean): void => { inner.style.willChange = on ? "transform" : ""; };
+    // Conversion d'un tirage (px) en facteur d'ÉTIREMENT (scaleY), plafonné à ~5 %.
+    // Le contenu ne « monte » pas : il s'étire, ancré au bas (le dernier élément reste
+    // en place, ceux au-dessus s'espacent) → expansion élastique dans le sens du geste.
+    const stretch = (px: number): number => 1 + Math.min(0.05, Math.abs(px) / el.clientHeight);
     const apply = (spring: boolean): void => {
-      // Ressort de retour long et « posé » (décélération très douce) : plus aucun
-      // retour abrupt. gpu-composited.
-      inner.style.transition = spring ? "transform 0.95s cubic-bezier(0.16,0.82,0.24,1)" : "none";
-      inner.style.transform = pull ? `translate3d(0,${pull.toFixed(2)}px,0)` : "";
+      // Ressort de retour long et « posé » (décélération très douce). gpu-composited.
+      inner.style.transition = spring ? "transform 0.9s cubic-bezier(0.16,0.82,0.24,1)" : "none";
+      if (!pull) { inner.style.transform = inner.style.transform ? "scaleY(1)" : ""; return; } // garde l'origine → ressort sans re-ancrage
+      inner.style.transformOrigin = "center bottom";
+      inner.style.transform = `scaleY(${stretch(pull).toFixed(4)})`;
     };
-    // Rebond joué par la seule inertie (fling) : montée douce jusqu'au pic puis
-    // retour ressort encore plus lent → aucune cassure de rythme.
+    // Rebond joué par la seule inertie (fling) : brève expansion (scaleY) ancrée au
+    // bas puis retour ressort posé — même langage que le geste au doigt.
     const playBounce = (amp: number): void => {
       bounce?.cancel();
       lift(true);
       inner.style.transition = "none";
-      inner.style.transform = "";
+      inner.style.transformOrigin = "center bottom";
+      inner.style.transform = "scaleY(1)";
       bounce = inner.animate(
         [
-          { transform: "translate3d(0,0,0)", easing: "cubic-bezier(0.17,0.84,0.44,1)" }, // impact → pic (décélère)
-          { transform: `translate3d(0,${(-amp).toFixed(1)}px,0)`, offset: 0.28, easing: "cubic-bezier(0.16,0.82,0.24,1)" }, // pic → repos (posé)
-          { transform: "translate3d(0,0,0)" },
+          { transform: "scaleY(1)", easing: "cubic-bezier(0.17,0.84,0.44,1)" }, // impact → pic (décélère)
+          { transform: `scaleY(${stretch(amp).toFixed(4)})`, offset: 0.28, easing: "cubic-bezier(0.16,0.82,0.24,1)" }, // pic → repos (posé)
+          { transform: "scaleY(1)" },
         ],
-        { duration: 980 },
+        { duration: 900 },
       );
-      bounce.onfinish = bounce.oncancel = (): void => { inner.style.transform = ""; lift(false); bounce = null; };
+      bounce.onfinish = bounce.oncancel = (): void => { inner.style.transform = "scaleY(1)"; lift(false); bounce = null; };
     };
     // Relâche la couche GPU une fois le ressort de retour terminé.
     const onEnd = (): void => { if (!pull) lift(false); };
