@@ -96,22 +96,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const [reportReason, setReportReason] = useState(null);
   const [reportNote, setReportNote] = useState("");
   const [confirmAdminDelete, setConfirmAdminDelete] = useState(false);
-  const publicActions = publicMode && (onReport || (isAdmin && onAdminDelete)) ? (
-    <div style={{ display: "flex", gap: 14, justifyContent: "center", alignItems: "center", marginTop: 12, flexWrap: "wrap" }}>
-      {onReport && (
-        <button onClick={() => { setReportReason(null); setReportNote(""); setReportOpen(true); }}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "var(--text3)" }}>
-          <Icon name="warning" size={13} color="var(--text3)" /> Signaler
-        </button>
-      )}
-      {isAdmin && onAdminDelete && (
-        <button onClick={() => setConfirmAdminDelete(true)}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "var(--red)" }}>
-          <Icon name="trash" size={13} color="var(--red)" /> Supprimer (admin)
-        </button>
-      )}
-    </div>
-  ) : null;
+  // Les actions publiques (Signaler / Supprimer admin) sont désormais des boutons
+  // ronds dans le cluster haut-droite du hero (à côté de l'export PDF), plus visibles
+  // et cohérents avec la « rendition PDF » — cf. hero desktop & mobile ci-dessous.
   // Attribution affichée dans le hero en mode public : pastille « Créé par : {auteur} »
   // suivie, hors pastille, du lien « d'après {source} » (source web d'origine).
   const sourceHref = recipe.source ? (recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source) : null;
@@ -492,9 +479,17 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={72} style={{ width: "100%", height: "100%" }} />} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
         <button onClick={handleBack} className="hero-back" style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} /></button>
-        {publicMode && onExportPDF && (
-        <div style={{ position: "absolute", top: 16, right: 16 }}>
-          <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} /></button>
+        {publicMode && (onExportPDF || onReport || (isAdmin && onAdminDelete)) && (
+        <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
+          {onReport && (
+            <button onClick={() => { setReportReason(null); setReportNote(""); setReportOpen(true); }} title="Signaler" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="warning" size={16} color="#fff" /></button>
+          )}
+          {isAdmin && onAdminDelete && (
+            <button onClick={() => setConfirmAdminDelete(true)} title="Supprimer (admin)" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="trash" size={16} color="#ff6b6b" /></button>
+          )}
+          {onExportPDF && (
+            <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} /></button>
+          )}
         </div>
         )}
         {!publicMode && (
@@ -594,7 +589,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
       {/* Desktop : « Garder » en mode public, sinon dock d'actions */}
       {isDesktop && publicMode && (
-        <div style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, width: 280 }}>{keepCta}{publicActions}</div>
+        <div style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, width: 280 }}>{keepCta}</div>
       )}
       {isDesktop && !publicMode && (
         <div ref={actionsRef} style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
@@ -637,9 +632,17 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             <div ref={ctrlLRef} style={{ position: "absolute", top: 16, left: 16 }}>
               <button onClick={handleBack} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
             </div>
-            {publicMode && onExportPDF && (
-            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16 }}>
-              <button onClick={() => onExportPDF(recipe)} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
+            {publicMode && (onExportPDF || onReport || (isAdmin && onAdminDelete)) && (
+            <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
+              {onReport && (
+                <button onClick={() => { setReportReason(null); setReportNote(""); setReportOpen(true); }} title="Signaler" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="warning" size={16} color="#fff" /></button>
+              )}
+              {isAdmin && onAdminDelete && (
+                <button onClick={() => setConfirmAdminDelete(true)} title="Supprimer (admin)" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="trash" size={16} color="#ff6b6b" /></button>
+              )}
+              {onExportPDF && (
+                <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
+              )}
             </div>
             )}
             {!publicMode && (
@@ -731,7 +734,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               </button>
             </div>
             {publicMode ? (
-              <div>{keepCta}{publicActions}</div>
+              <div>{keepCta}</div>
             ) : (
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => { openShoppingModal(); }} className="tap" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid transparent", cursor: "pointer" }}>

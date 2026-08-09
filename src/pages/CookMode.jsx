@@ -310,8 +310,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
           </h1>
           <p style={{ fontSize: 16, color: "var(--text2)", lineHeight: 1.6, marginBottom: 32, maxWidth: 300, animation: "popIn 0.5s 0.35s both ease" }}>
             {isNested
-              ? <>Votre <strong style={{ color: "var(--text)" }}>{recipe.name}</strong> est prêt·e. Revenez à la recette principale.</>
-              : <>Votre <strong style={{ color: "var(--text)" }}>{recipe.name}</strong> est prêt·e !</>}
+              ? <><strong style={{ color: "var(--text)" }}>{recipe.name}</strong> est prêt·e. Reviens à la recette principale.</>
+              : <><strong style={{ color: "var(--text)" }}>{recipe.name}</strong> est prêt·e !</>}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320, animation: "popIn 0.5s 0.5s both ease" }}>
             {canIterate && (
