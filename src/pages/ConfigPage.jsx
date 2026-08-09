@@ -74,6 +74,35 @@ function YamlImport({ onText, warn }) {
 }
 
 
+// Bloc réutilisable Export/Import YAML+Markdown d'une base master (ingrédients,
+// ustensiles, techniques) : rendu et espacement IDENTIQUES quelle que soit la
+// section. Autonome (gap interne) → plus de cartes « collées » selon le parent.
+function BaseImportExport({ count, noun, exportTitle = "Exporter la base", importTitle = "Importer dans la base", onExportYaml, onExportMarkdown, onImportYaml, mdError, mdInfo }) {
+  const card = { background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" };
+  return (
+    <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 6 }}>
+      <div style={card}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>{exportTitle}</h3>
+            <p style={{ fontSize: 12, color: "var(--text2)" }}>{count} {noun}{count > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <button className="btn btn-primary btn-sm" onClick={onExportYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="download" size={14} /> YAML</button>
+            <button className="btn btn-ghost btn-sm" onClick={onExportMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="download" size={14} /> Markdown</button>
+          </div>
+        </div>
+      </div>
+      <div style={card}>
+        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{importTitle}</h3>
+        <YamlImport warn onText={onImportYaml} />
+        {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
+        {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
+      </div>
+    </div>
+  );
+}
+
 // Niveau de difficulté d'un geste : 5 pastilles, colorées vert→ambre→rouge.
 const DIFFICULTY_COLOR = (lvl) => lvl <= 2 ? "var(--green)" : lvl === 3 ? "#e8920a" : "var(--red)";
 const DIFFICULTY_LABEL = { 1: "Très facile", 2: "Facile", 3: "Intermédiaire", 4: "Difficile", 5: "Expert" };
@@ -460,35 +489,11 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
               );
             })}
 
-            {/* ── Import / Export Markdown de la base master (admin) – en bas ── */}
+            {/* ── Import / Export de la base master (admin) – en bas ── */}
             {isAdmin && (
-              <>
-                <div style={{ height: 6 }} />
-                {/* Export */}
-                <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter la base</h3>
-                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{ingredientDB.length} ingrédient{ingredientDB.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                      <button className="btn btn-primary btn-sm" onClick={exportIngredientsYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <Icon name="download" size={14} /> YAML
-                      </button>
-                      <button className="btn btn-ghost btn-sm" onClick={exportIngredientsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <Icon name="download" size={14} /> Markdown
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                {/* Import YAML (l'export reste en Markdown) */}
-                <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Importer dans la base</h3>
-                  <YamlImport warn onText={importIngredientsYaml} />
-                  {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
-                  {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
-                </div>
-              </>
+              <BaseImportExport count={ingredientDB.length} noun="ingrédient"
+                onExportYaml={exportIngredientsYaml} onExportMarkdown={exportIngredientsMarkdown}
+                onImportYaml={importIngredientsYaml} mdError={mdError} mdInfo={mdInfo} />
             )}
           </div>
         )}
@@ -514,34 +519,11 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
               ))}
             </div>
 
-            {/* ── Export Markdown de la base ustensiles (admin) – en bas ── */}
+            {/* ── Import / Export de la base ustensiles (admin) – en bas ── */}
             {isAdmin && (
-              <>
-                <div style={{ height: 6 }} />
-                <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter la base</h3>
-                      <p style={{ fontSize: 12, color: "var(--text2)" }}>{utensilDB.length} ustensile{utensilDB.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                      <button className="btn btn-primary btn-sm" onClick={exportUtensilsYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <Icon name="download" size={14} /> YAML
-                      </button>
-                      <button className="btn btn-ghost btn-sm" onClick={exportUtensilsMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <Icon name="download" size={14} /> Markdown
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                {/* Import YAML */}
-                <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Importer dans la base</h3>
-                  <YamlImport warn onText={importUtensilsYaml} />
-                  {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
-                  {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
-                </div>
-              </>
+              <BaseImportExport count={utensilDB.length} noun="ustensile"
+                onExportYaml={exportUtensilsYaml} onExportMarkdown={exportUtensilsMarkdown}
+                onImportYaml={importUtensilsYaml} mdError={mdError} mdInfo={mdInfo} />
             )}
           </div>
         )}
@@ -620,31 +602,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
               {/* Import / Export (admin) */}
               {isAdmin && (
-                <>
-                  <div style={{ height: 2 }} />
-                  <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                      <div style={{ minWidth: 0 }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Exporter le glossaire</h3>
-                        <p style={{ fontSize: 12, color: "var(--text2)" }}>{techniques.length} technique{techniques.length > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
-                      </div>
-                      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                        <button className="btn btn-primary btn-sm" onClick={exportTechniquesYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <Icon name="download" size={14} /> YAML
-                        </button>
-                        <button className="btn btn-ghost btn-sm" onClick={exportTechniquesMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <Icon name="download" size={14} /> Markdown
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" }}>
-                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Importer le glossaire</h3>
-                    <YamlImport warn onText={importTechniquesYaml} />
-                    {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
-                    {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
-                  </div>
-                </>
+                <BaseImportExport count={techniques.length} noun="technique"
+                  exportTitle="Exporter le glossaire" importTitle="Importer le glossaire"
+                  onExportYaml={exportTechniquesYaml} onExportMarkdown={exportTechniquesMarkdown}
+                  onImportYaml={importTechniquesYaml} mdError={mdError} mdInfo={mdInfo} />
               )}
             </div>
           );
