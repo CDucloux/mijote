@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.10.12 – Safran · Ton & modération
+
+### Ton
+- Tutoiement complété : titre d'onglet et écran de fin du mode pas à pas
+
+### Recettes de la communauté
+- **Signaler** et **Supprimer (admin)** déplacés en haut à droite de la recette, à côté de l'export PDF
+
 ## v3.10.11 – Safran · Étirement & tutoiement
 
 ### Feel natif
