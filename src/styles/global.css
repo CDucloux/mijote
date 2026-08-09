@@ -173,13 +173,14 @@ body {
 }
 
 /* Zone système du bas (barre de navigation Android / home indicator) peinte à la
-   couleur de la barre d'onglets (`--surface`). NÉCESSAIRE car #root est en `svh`
-   + `overflow:hidden` : le shell s'arrête à la ligne `100svh` et la zone en
-   dessous (jusqu'au bas PHYSIQUE de l'écran) n'est plus peinte par l'appli → elle
-   retombe sur la couleur système. On ne se base PAS sur `env(safe-area-inset-bottom)`
-   (souvent 0 sur Android) : on borne le calque exactement au trou, de la ligne
-   `top:100svh` (fin de #root) jusqu'au bas physique (`bottom:0`). `position:fixed`
-   → non clippé par #root, immobile à l'overscroll. Hauteur nulle si svh == écran. */
+   couleur de PAGE de l'appli (`--bg`), pour qu'elle suive le thème et ne retombe
+   pas sur la couleur système. #root est en `svh` + `overflow:hidden` : le shell
+   s'arrête à la ligne `100svh` et la zone en dessous (jusqu'au bas PHYSIQUE) n'est
+   plus peinte par le contenu. On la comble avec un calque borné exactement au trou
+   (top:100svh → bottom:0), en `--bg`. La barre de nav Android étant échantillonnée
+   par Chrome sur le fond de page, tout converge vers `--bg` (fond body + meta
+   theme-color + ce calque). `position:fixed` → non clippé par #root, immobile à
+   l'overscroll. Hauteur nulle si svh == écran (aucun effet hors PWA). */
 body::after {
   content: "";
   position: fixed;
@@ -187,7 +188,7 @@ body::after {
   right: 0;
   top: 100svh;
   bottom: 0;
-  background: var(--surface);
+  background: var(--bg);
   z-index: 0;
   pointer-events: none;
 }
