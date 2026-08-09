@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.10.11 – Safran · Étirement & tutoiement
+
+### Feel natif
+- **Overscroll vertical** repensé en effet d'**étirement** élastique du contenu (au lieu de le faire monter), piloté au doigt avec retour en ressort
+
+### Ton
+- **Page d'accueil** passée au tutoiement pour rester cohérente avec le reste de l'app
+
 ## v3.10.10 – Safran · Pas à pas & élastique
 
 ### Corrections
