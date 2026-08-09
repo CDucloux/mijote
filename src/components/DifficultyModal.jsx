@@ -4,97 +4,118 @@ import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
 // ─── EXPLICATION DE LA DIFFICULTÉ ─────────────────────────────────────────────
 // Rend transparent le calcul du badge : d'où vient le niveau (geste dominant +
 // modificateurs). `data` provient de explainDifficulty().
+
+// Teintes douces dérivées de la couleur de difficulté (vert / ambre / rouge).
+function tints(color) {
+  if (color === "var(--green)") return { soft: "rgba(76,175,125,0.13)", line: "rgba(76,175,125,0.32)" };
+  if (color === "var(--red)") return { soft: "rgba(224,82,82,0.13)", line: "rgba(224,82,82,0.32)" };
+  return { soft: "rgba(232,146,10,0.13)", line: "rgba(232,146,10,0.32)" };
+}
+
+// Jauge segmentée pleine largeur (5 segments).
+function Gauge({ level, color, height = 7 }) {
+  return (
+    <div style={{ display: "flex", gap: 5 }}>
+      {[1, 2, 3, 4, 5].map(i => (
+        <span key={i} style={{ flex: 1, height, borderRadius: 999, background: i <= level ? color : "var(--surface3)", transition: "background 0.2s ease" }} />
+      ))}
+    </div>
+  );
+}
+
+// Libellé de section (petite étiquette accent).
+function SectionLabel({ children }) {
+  return <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 2px 11px" }}>{children}</div>;
+}
+
 export function DifficultyModal({ data, onClose }) {
   if (!data) return null;
   const color = difficultyColor(data.score);
   const label = DIFFICULTY_LABEL[data.score];
+  const t = tints(color);
 
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "90dvh" }}>
-      {/* Header – niveau + pastilles */}
-      <div style={{
-        margin: "-20px -20px 4px", padding: "26px 22px 22px",
-        background: `linear-gradient(135deg, ${color === "var(--green)" ? "rgba(76,175,125,0.16)" : color === "var(--red)" ? "rgba(224,82,82,0.16)" : "rgba(232,146,10,0.16)"}, transparent)`,
-        borderBottom: "1px solid var(--border)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-          <span style={{
-            width: 48, height: 48, borderRadius: 16, flexShrink: 0,
-            background: "var(--surface2)", border: `1px solid ${color}`,
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
-          }}>
-            <span style={{ display: "inline-flex", gap: 2 }}>
-              {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: i <= data.score ? color : "var(--surface3)" }} />)}
-            </span>
-            <span style={{ fontSize: 11, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>{data.score}/5</span>
-          </span>
-          <div>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>{label}</div>
-            <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>Comment ce niveau est calculé</div>
+      {/* ── HERO : niveau + score + jauge (dégagé du handle) ── */}
+      <div style={{ borderRadius: 20, padding: "17px 18px 19px", background: `linear-gradient(150deg, ${t.soft}, transparent 88%)`, border: `1px solid ${t.line}`, marginBottom: 22 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 700, color: "var(--text3)", marginBottom: 6 }}>Niveau de difficulté</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 27, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{label}</div>
           </div>
+          <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "baseline", gap: 1, padding: "7px 13px", borderRadius: 999, background: "var(--surface)", border: `1.5px solid ${color}`, color, fontWeight: 800, fontSize: 16, fontVariantNumeric: "tabular-nums" }}>
+            {data.score}<span style={{ fontSize: 11, fontWeight: 700, opacity: 0.65 }}>/5</span>
+          </span>
         </div>
+        <div style={{ marginTop: 16 }}><Gauge level={data.score} color={color} height={8} /></div>
       </div>
 
-      <div style={{ overflowY: "auto", maxHeight: "64vh", padding: "18px 2px 4px" }}>
-        {data.overridden ? (
-          <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.65, margin: 0 }}>
+      {data.overridden ? (
+        <div style={{ display: "flex", gap: 12, padding: "14px 15px", borderRadius: 16, background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 11, background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.32)", display: "grid", placeItems: "center", fontSize: 16 }}>✍️</span>
+          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>
             Cette difficulté a été <strong style={{ color: "var(--text)" }}>définie manuellement</strong> par l'auteur de la recette. Elle ne dépend donc pas du calcul automatique.
           </p>
-        ) : (
-          <>
-            <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 22px" }}>
-              Mijoté repère les <strong style={{ color: "var(--text)" }}>gestes techniques</strong> dans les étapes{data.inheritedFromBases ? " de la recette et de ses préparations de base" : ""} et retient le plus exigeant, puis ajoute des points selon la charge de travail.
-            </p>
+        </div>
+      ) : (
+        <>
+          <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 2px 24px" }}>
+            Mijoté repère les <strong style={{ color: "var(--text)" }}>gestes techniques</strong> dans les étapes{data.inheritedFromBases ? " de la recette et de ses préparations de base" : ""} et retient le plus exigeant, puis ajoute des points selon la charge de travail.
+          </p>
 
-            {/* Geste dominant */}
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Point de départ</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 14, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 22 }}>
-              <span style={{ display: "inline-flex", gap: 2, flexShrink: 0 }}>
-                {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= data.base ? difficultyColor(data.base) : "var(--surface3)" }} />)}
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Geste le plus difficile : niveau {data.base}</div>
-                <div style={{ fontSize: 13, color: "var(--text2)", marginTop: 2 }}>{data.drivers.join(", ")}</div>
-              </div>
+          {/* ── Geste dominant ── */}
+          <SectionLabel>Le geste le plus exigeant</SectionLabel>
+          <div style={{ padding: "14px 15px", borderRadius: 16, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 11 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{data.drivers.join(", ")}</div>
+              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, color: difficultyColor(data.base), fontVariantNumeric: "tabular-nums" }}>niveau {data.base}</span>
             </div>
+            <Gauge level={data.base} color={difficultyColor(data.base)} height={6} />
+          </div>
 
-            {/* Modificateurs */}
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Points supplémentaires</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: data.techniques.length ? 22 : 4 }}>
-              {data.mods.map((m, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", borderRadius: 12, background: m.applied ? "rgba(232,112,58,0.09)" : "var(--surface2)", border: `1px solid ${m.applied ? "rgba(232,112,58,0.28)" : "var(--border)"}`, opacity: m.applied ? 1 : 0.72 }}>
-                  <span style={{ width: 24, height: 24, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, background: m.applied ? "var(--accent)" : "var(--surface3)", color: m.applied ? "#fff" : "var(--text3)" }}>{m.applied ? "+1" : "–"}</span>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{m.label}</div>
-                    <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 1 }}>{m.detail}</div>
-                  </div>
+          {/* ── Modificateurs ── */}
+          <SectionLabel>Points supplémentaires</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {data.mods.map((m, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: m.applied ? "rgba(232,112,58,0.09)" : "var(--surface2)", border: `1px solid ${m.applied ? "rgba(232,112,58,0.28)" : "var(--border)"}`, opacity: m.applied ? 1 : 0.68 }}>
+                <span style={{ width: 26, height: 26, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 12.5, fontWeight: 800, background: m.applied ? "var(--accent)" : "var(--surface3)", color: m.applied ? "#fff" : "var(--text3)" }}>{m.applied ? "+1" : "—"}</span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{m.label}</div>
+                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 1 }}>{m.detail}</div>
                 </div>
-              ))}
-              <div style={{ fontSize: 12.5, color: "var(--text3)", padding: "2px 2px 0", lineHeight: 1.5 }}>
-                Niveau {data.base} + {data.modsApplied} point{data.modsApplied > 1 ? "s" : ""} = <strong style={{ color: "var(--text2)" }}>{data.score}/5</strong>{data.modsCapped ? " (bonus plafonné à +2)" : ""}.
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Gestes détectés */}
-            {data.techniques.length > 0 && (
-              <>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Gestes détectés ({data.techniques.length})</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                  {data.techniques.map(t => (
-                    <span key={t.id} title={t.inherited ? "Hérité d'une préparation de base" : undefined} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 11px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
-                      <span style={{ display: "inline-flex", gap: 2 }}>
-                        {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: i <= t.difficulty ? difficultyColor(t.difficulty) : "var(--surface3)" }} />)}
-                      </span>
-                      {t.name}
-                      {t.inherited && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>· base</span>}
+          {/* ── Récapitulatif du calcul ── */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8, margin: "16px 2px 4px", padding: "12px 14px", borderRadius: 14, background: t.soft, border: `1px solid ${t.line}` }}>
+            <span style={{ fontSize: 13, color: "var(--text2)", fontWeight: 500 }}>Niveau {data.base}</span>
+            <span style={{ fontSize: 13, color: "var(--text3)" }}>+</span>
+            <span style={{ fontSize: 13, color: "var(--text2)", fontWeight: 500 }}>{data.modsApplied} point{data.modsApplied > 1 ? "s" : ""}</span>
+            <span style={{ fontSize: 13, color: "var(--text3)" }}>=</span>
+            <span style={{ display: "inline-flex", alignItems: "baseline", gap: 1, padding: "3px 10px", borderRadius: 999, background: "var(--surface)", border: `1.5px solid ${color}`, color, fontWeight: 800, fontSize: 13.5, fontVariantNumeric: "tabular-nums" }}>{data.score}<span style={{ fontSize: 10, opacity: 0.65 }}>/5</span></span>
+            {data.modsCapped && <span style={{ width: "100%", textAlign: "center", fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>Bonus plafonné à +2.</span>}
+          </div>
+
+          {/* ── Gestes détectés ── */}
+          {data.techniques.length > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <SectionLabel>Gestes détectés · {data.techniques.length}</SectionLabel>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                {data.techniques.map(tech => (
+                  <span key={tech.id} title={tech.inherited ? "Hérité d'une préparation de base" : undefined} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 11px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
+                    <span style={{ display: "inline-flex", gap: 2 }}>
+                      {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: i <= tech.difficulty ? difficultyColor(tech.difficulty) : "var(--surface3)" }} />)}
                     </span>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        )}
-      </div>
+                    {tech.name}
+                    {tech.inherited && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>· base</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </SwipeableSheet>
   );
 }

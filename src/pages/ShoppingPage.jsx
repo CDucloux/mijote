@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -27,6 +28,7 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // s'estompant avant de rejoindre la section).
 
 export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, setStock, setLowStock }) {
+  const navigate = useNavigate();
   const { notify } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
@@ -254,12 +256,26 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
         )}
       </div>
 
-      {/* Empty state */}
+      {/* Empty state (première visite) — même base que « Aucune recette trouvée » */}
       {shoppingLists.length === 0 && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text3)", gap: 12, padding: "0 40px", textAlign: "center" }}>
-          <Icon name="shopping" size={44} />
-          <p style={{ fontSize: 15, fontWeight: 500 }}>Aucune liste de courses</p>
-          <p style={{ fontSize: 13 }}>Crée une liste libre ou ajoute une recette depuis sa fiche.</p>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
+          <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
+            <Icon name="shopping" size={30} color="var(--accent)" />
+          </div>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune liste de courses</h3>
+          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
+            Crée une liste libre pour noter tes achats,<br />ou envoie une recette aux courses depuis sa fiche.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+            <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={() => setConfigList({ isNew: true, name: "", type: "free", hideClear: false })}>
+              <Icon name="plus" size={16} color="#fff" /> Créer une liste
+            </button>
+            <button className="btn btn-pill" style={{ fontSize: 14, background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.15s ease" }} onClick={() => navigate("/recipes")}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "var(--text3)"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
+              <Icon name="book" size={16} color="currentColor" /> Partir d'une recette
+            </button>
+          </div>
         </div>
       )}
 
@@ -267,9 +283,9 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       {allMode && (
         <div key="__all__" className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <div ref={aggScrollRef} style={{ flex: 1, overflowY: "auto", padding: "12px 20px 32px" }}>
-            <div ref={aggContentRef} style={{ minHeight: "100%" }}>
+            <div ref={aggContentRef} style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
             {aggregated.length === 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: "60px 32px", textAlign: "center" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, textAlign: "center" }}>
                 <Icon name="grid" size={48} color="var(--text3)" />
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)" }}>Rien à acheter</div>
                 <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 260 }}>
@@ -334,10 +350,10 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
           {/* Liste – pleine largeur, défilante */}
           <div ref={listScrollRef} style={{ flex: 1, overflowY: "auto", padding: `12px 20px ${activeList.type === "free" ? 76 : 20}px` }}>
-            <div ref={listContentRef} style={{ minHeight: "100%" }}>
+            <div ref={listContentRef} style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
 
             {activeList.items.length === 0 && activeList.type !== "free" && (
-              <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
                 <div style={{ width: 76, height: 76, borderRadius: 22, background: "rgba(76,175,125,0.14)", border: "1px solid rgba(76,175,125,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
                   <Icon name="check" size={32} color="var(--green)" />
                 </div>
@@ -352,7 +368,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             )}
 
             {activeList.items.length === 0 && activeList.type === "free" && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: "60px 32px", textAlign: "center" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, textAlign: "center" }}>
                 <Icon name="shopping" size={48} color="var(--text3)" />
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)" }}>Liste vide</div>
                 <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 240 }}>

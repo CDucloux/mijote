@@ -1,5 +1,14 @@
 # Changelog – Mijoté
 
+## v3.10.16 – Safran · Fignolage
+
+### Interface
+- **États vides des Courses** repensés (centrés, plus accueillants) et empty state « aucune liste » aligné sur le style des recettes
+- **Fenêtre de difficulté** d'une recette entièrement modernisée (jauge, récap du calcul)
+- **Fenêtre « À propos »** : le changelog passe en bas
+- **Avatar** : l'anneau orange indique désormais l'abonnement Mijoté+
+- Bouton d'ajout d'ustensile dans la console admin, retouches diverses
+
 ## v3.10.15 – Safran · Console admin
 
 ### Nouveautés
