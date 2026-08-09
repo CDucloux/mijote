@@ -1,5 +1,17 @@
 # Changelog – Mijoté
 
+## v3.10.4 – Safran · Repas & feel natif
+
+### Planning
+- **Un créneau = un repas** : les recettes ajoutées se regroupent en un seul repas (rôles affichés), la barre verticale n'apparaît que pour un 2ᵉ plat — y compris rétroactivement sur les repas existants
+- Feuilles **Ajouter une recette** et **Compléter le repas** : barre de recherche standard (loupe du clavier mobile, effacement)
+
+### Feel natif
+- Overscroll horizontal **« stretch »** (scaleX élastique) sur les rangées de pills — effet rubber-band à la iOS
+
+### PWA
+- Nouvelle tentative de coloration de la zone système du bas (couleur de page)
+
 ## v3.10.3 – Safran · Planning & imports peaufinés
 
 ### Corrections
