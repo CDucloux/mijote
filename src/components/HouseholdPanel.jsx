@@ -74,7 +74,7 @@ export function HouseholdPanel({ onClose }) {
           <>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Créer un foyer</div>
             <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 14 }}>Tu en seras le propriétaire et pourras inviter {MAX_HOUSEHOLD - 1} personne{MAX_HOUSEHOLD - 1 > 1 ? "s" : ""}.</div>
-            <input className="field-input" placeholder="Nom du foyer (ex. Maison Ducloux)" value={name} maxLength={40} onChange={e => setName(e.target.value)} style={{ marginBottom: 12 }} />
+            <input className="field-input" placeholder="Nom du foyer (ex. Maison Dupont)" value={name} maxLength={40} onChange={e => setName(e.target.value)} style={{ marginBottom: 12 }} />
             <button className="btn btn-primary" onClick={async () => { if (await actions.create(name)) setName(""); }} style={{ width: "100%" }}>
               <Icon name="plus" size={16} /> Créer le foyer
             </button>
