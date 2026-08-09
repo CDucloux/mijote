@@ -71,7 +71,7 @@ export function UserAvatar() {
                 style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
                 onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
                 onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
-                <Icon name="settings" size={13} color="currentColor" /> Console admin
+                <Icon name="shield" size={13} color="currentColor" /> Console admin
               </button>
             )}
             {onToggleTheme && (
