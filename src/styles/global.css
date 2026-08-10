@@ -1875,9 +1875,9 @@ select {
 
   /* Notebook cards — subtle lift + icon pop on hover (desktop only) */
   .notebook-card {
-    /* Ease-out franc (sans dépassement) : le carnet se soulève et se pose sans
-       « gigoter » ni revenir en arrière avant de se recaler. */
-    transition: transform .26s cubic-bezier(0.22, 1, 0.36, 1);
+    /* RETOUR (fin du survol) : ease-out franc, sans dépassement → le carnet se
+       repose net, sans « gigoter » ni revenir en arrière avant de se recaler. */
+    transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .notebook-card .notebook-card-icon {
@@ -1886,7 +1886,9 @@ select {
   }
 
   .notebook-card:hover {
-    transform: translateY(-4px);
+    /* ALLER (survol) : ressort vif avec léger dépassement, l'animation qu'on aime. */
+    transform: translateY(-4px) rotate(-0.6deg);
+    transition: transform .22s cubic-bezier(0.34, 1.4, 0.64, 1);
   }
 
   .notebook-card:hover .notebook-card-icon {
