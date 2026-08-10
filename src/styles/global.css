@@ -741,14 +741,14 @@ select {
   color: var(--red);
 }
 
-/* Rangée d'action groupée (menu carnet) : posée sur --surface2, le survol/appui
-   remonte sur --surface pour un feedback net sans bord. */
-.carnet-action {
-  transition: background 0.15s ease;
+/* Menu carnet : liste d'actions homogène (mêmes rangées que « Modifier »),
+   séparées par un filet fin entre rangées consécutives. */
+.carnet-menu-list {
+  display: flex;
+  flex-direction: column;
 }
-.carnet-action:hover,
-.carnet-action:active {
-  background: var(--surface);
+.carnet-menu-list .menu-row + .menu-row {
+  border-top: 1px solid var(--border);
 }
 
 @keyframes spin {

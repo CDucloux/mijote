@@ -595,13 +595,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         const idx = collections.findIndex(c => c.id === cm.id);
         const total = collections.length;
         const n = countFor(cm);
-        // Styles de la liste d'actions groupée (facon iOS/2026 : pastilles teintées
-        // à la couleur du carnet, rangées séparées par un filet, chevron de navigation).
-        const chip = { width: 32, height: 32, borderRadius: 9, background: cm.color + "26", display: "grid", placeItems: "center", flexShrink: 0 };
-        const rowBase = { display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 14px", background: "none", border: "none", textAlign: "left" };
-        const rowLabel = { flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
-        const hair = <div style={{ height: 1, background: "var(--border)", marginLeft: 58 }} />;
-        const stepBtn = (disabled) => ({ width: 30, height: 28, display: "grid", placeItems: "center", background: "none", border: "none", borderRadius: 8, cursor: disabled ? "default" : "pointer", color: disabled ? "var(--text3)" : cm.color, opacity: disabled ? 0.4 : 1, transition: "background 0.12s ease" });
+        // Icône « réglages/curseurs » (même glyphe que la barre de filtres), pour
+        // distinguer « Ajuster les filtres » du simple « Modifier ».
+        const slidersIcon = <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="var(--text2)" strokeWidth="1.9" strokeLinecap="round" /></svg>;
+        const stepBtn = (disabled) => ({ width: 30, height: 28, display: "grid", placeItems: "center", background: "none", border: "none", borderRadius: 8, cursor: disabled ? "default" : "pointer", color: disabled ? "var(--text3)" : "var(--accent)", opacity: disabled ? 0.4 : 1 });
         return (
         <SwipeableSheet onClose={close}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
@@ -611,34 +608,28 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               <div style={{ fontSize: 13, color: "var(--text3)" }}>{smart ? "Carnet intelligent" : "Carnet"} · {n} recette{n > 1 ? "s" : ""}</div>
             </div>
           </div>
-          <div style={{ background: "var(--surface2)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden", marginBottom: 8 }}>
-            <button className="carnet-action" style={{ ...rowBase, cursor: "pointer" }} onClick={() => { openCarnet(cm); close(); }}>
-              <span style={chip}><Icon name="forward" size={17} color={cm.color} /></span>
-              <span style={rowLabel}>Ouvrir le carnet</span>
-              <Icon name="forward" size={15} color="var(--text3)" />
-            </button>
-            {smart && <>{hair}
-              <button className="carnet-action" style={{ ...rowBase, cursor: "pointer" }} onClick={() => { close(); openCarnetFilters(cm); }}>
-                <span style={chip}><Icon name="edit" size={16} color={cm.color} /></span>
-                <span style={rowLabel}>Modifier les filtres</span>
-                <Icon name="forward" size={15} color="var(--text3)" />
-              </button></>}
-            {total > 1 && <>{hair}
-              <div style={{ ...rowBase, cursor: "default" }}>
-                <span style={chip}><Icon name="updown" size={16} color={cm.color} /></span>
-                <span style={rowLabel}>Position</span>
-                <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)", padding: 2, flexShrink: 0 }}>
+          {/* Liste d'actions homogène (même style que « Modifier »), séparée par des filets. */}
+          <div className="carnet-menu-list">
+            {total > 1 && (
+              <div className="menu-row" style={{ cursor: "default" }}>
+                <Icon name="updown" size={19} color="var(--text2)" />
+                <span style={{ flex: 1 }}>Position</span>
+                <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 10, border: "1px solid var(--border)", padding: 2, flexShrink: 0 }}>
                   <button disabled={idx <= 0} onClick={() => moveCarnet(cm.id, -1)} style={stepBtn(idx <= 0)} aria-label="Reculer"><Icon name="back" size={15} color="currentColor" /></button>
                   <span style={{ fontSize: 13.5, fontWeight: 700, minWidth: 42, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{idx + 1} / {total}</span>
                   <button disabled={idx >= total - 1} onClick={() => moveCarnet(cm.id, 1)} style={stepBtn(idx >= total - 1)} aria-label="Avancer"><Icon name="forward" size={15} color="currentColor" /></button>
                 </div>
-              </div></>}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", marginTop: 6 }}>
+              </div>
+            )}
+            {smart && (
+              <button className="menu-row" onClick={() => { close(); openCarnetFilters(cm); }}>
+                {slidersIcon} Ajuster les filtres
+              </button>
+            )}
             <button className="menu-row" onClick={() => { setNewCarnet({ ...cm, editing: true }); close(); }}>
               <Icon name="edit" size={19} color="var(--text2)" /> Modifier
             </button>
-            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onClick={() => { setConfirmDelete({ kind: "carnet", item: cm }); close(); }}>
+            <button className="menu-row menu-row-danger" onClick={() => { setConfirmDelete({ kind: "carnet", item: cm }); close(); }}>
               <Icon name="trash" size={19} color="var(--red)" /> Supprimer le carnet
             </button>
           </div>
