@@ -1181,25 +1181,23 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
           <div style={{ marginBottom: 22 }}>
             <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Repas</span>
-            <div style={{ display: "flex", gap: 10 }}>
+            {/* Contrôle segmenté avec pastille glissante — identique à la sheet du planning */}
+            <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14 }}>
+              <div aria-hidden="true" style={{
+                position: "absolute", top: 4, bottom: 4, left: 4, width: `calc((100% - 8px) / ${MEAL_SLOTS.length})`,
+                background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+                transform: `translateX(calc(${Math.max(0, MEAL_SLOTS.findIndex(s => s.id === mealSlot))} * 100%))`,
+                transition: "transform 0.32s cubic-bezier(0.34, 1.4, 0.5, 1)",
+              }} />
               {MEAL_SLOTS.map(s => {
                 const active = mealSlot === s.id;
                 return (
-                  <button key={s.id} onClick={() => setMealSlot(s.id)} className="pressable" style={{
-                    position: "relative", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer",
-                    padding: "13px 4px", borderRadius: 14, fontSize: 13, fontWeight: 600,
-                    color: active ? "var(--accent)" : "var(--text3)",
-                    background: active ? "rgba(232,112,58,0.12)" : "var(--surface2)",
-                    border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
-                    transition: "color 0.15s, background 0.15s, border-color 0.15s",
-                  }}>
-                    {active && (
-                      <span style={{ position: "absolute", top: 6, right: 6, width: 16, height: 16, borderRadius: "50%", background: "var(--accent)", display: "grid", placeItems: "center" }}>
-                        <Icon name="check" size={10} color="#fff" />
-                      </span>
-                    )}
-                    <span style={{ fontSize: 22, lineHeight: 1 }}>{s.emoji}</span>
-                    {s.label}
+                  <button key={s.id} onClick={() => setMealSlot(s.id)}
+                    style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
+                      background: "transparent", color: active ? s.text : "var(--text3)",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                      transition: "color 0.3s ease" }}>
+                    <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
                   </button>
                 );
               })}
