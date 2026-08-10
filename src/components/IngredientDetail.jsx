@@ -107,7 +107,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
             <div className="slide-up" style={{ ...CARD, padding: "14px 16px", marginBottom: 14, animationDelay: "0.16s" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  <span style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="calendar" size={15} color="var(--green)" /></span>
+                  <span style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(232,146,10,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="calendar" size={15} color="#e8920a" /></span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Saisonnalité</span>
                 </div>
                 {inSeason
