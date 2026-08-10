@@ -64,7 +64,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const isDesktop = useIsDesktop();
   const [showMealModal, setShowMealModal] = useState(false);
   const [mealDate, setMealDate] = useState(new Date().toISOString().slice(0, 10));
-  const [mealSlots, setMealSlots] = useState(["midi"]);
+  const [mealSlot, setMealSlot] = useState("midi");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCollModal, setShowCollModal] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
@@ -1164,8 +1164,15 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
       {showMealModal && (
         <SwipeableSheet onClose={() => setShowMealModal(false)}>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Ajouter au planning</h3>
-          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 18px" }}>Choisis le jour et le ou les repas.</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)" }}>
+              <Icon name="calendar" size={22} color="var(--accent)" />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Ajouter au planning</h3>
+              <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Choisis le jour et le repas.</p>
+            </div>
+          </div>
 
           <div style={{ marginBottom: 18 }}>
             <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Date</span>
@@ -1176,13 +1183,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Repas</span>
             <div style={{ display: "flex", gap: 10 }}>
               {MEAL_SLOTS.map(s => {
-                const active = mealSlots.includes(s.id);
-                const toggle = () => setMealSlots(prev => {
-                  const next = active ? prev.filter(x => x !== s.id) : [...prev, s.id];
-                  return next.length ? next : prev;
-                });
+                const active = mealSlot === s.id;
                 return (
-                  <button key={s.id} onClick={toggle} className="pressable" style={{
+                  <button key={s.id} onClick={() => setMealSlot(s.id)} className="pressable" style={{
                     position: "relative", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer",
                     padding: "13px 4px", borderRadius: 14, fontSize: 13, fontWeight: 600,
                     color: active ? "var(--accent)" : "var(--text3)",
@@ -1204,7 +1207,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           </div>
 
           <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "13px 0" }} onClick={() => {
-            mealSlots.forEach(slot => onAddToMealPlan(recipe, mealDate, 1, slot));
+            onAddToMealPlan(recipe, mealDate, 1, mealSlot);
             setShowMealModal(false);
           }}><Icon name="check" size={16} /> Confirmer</button>
         </SwipeableSheet>
