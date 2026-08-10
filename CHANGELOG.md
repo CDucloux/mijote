@@ -1,5 +1,15 @@
 # Changelog – Mijoté
 
+## v3.10.26 – Safran · Sheets & Nutri-Score
+
+### Nutrition
+- **Nutri-Score cohérent partout** : la carte de « Mes recettes » et le tri « Nutri-Score » utilisent désormais le score recalculé en direct, comme la fiche — fini les écarts entre carte et détail
+
+### Interface
+- **Feuilles repensées** dans un style unifié et moderne : « Ajouter au planning » (sélecteur de repas unique en contrôle segmenté, sans étalement), « Ajouter aux courses » (en-tête, sélection en pills, rangées teintées) et menu d'un carnet (liste homogène, position en pill)
+- **Menu d'une recette** : actions rapides en rangées, comme le reste du menu
+- **Carnets** : animation de survol plus fluide, ombres retirées, création au rendu plus sleek
+
 ## v3.10.25 – Safran · Poids à la pièce
 
 ### Nutrition

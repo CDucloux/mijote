@@ -8,7 +8,9 @@ import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { VeganBadge, SeasonBadge } from "./Badges.jsx";
 import { fmtTime } from "../lib/format.js";
 
-export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = false, animate = true }) {
+// `nutriLetter` (optionnel) : lettre recalculée EN DIRECT par l'appelant, pour rester
+// alignée sur la fiche détail. Repli sur la valeur figée de la recette si absente.
+export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = false, animate = true, nutriLetter }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const [showBaseInfo, setShowBaseInfo] = useState(false);
   return (
@@ -40,7 +42,7 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
             <span style={{ width: 1, height: 10, background: "var(--border)", display: "inline-block", borderRadius: 1 }} />
             <span>{recipe.ingredients?.length || 0} ingr.</span>
           </span>
-          <NutriScoreBadge letter={recipe.nutriLetter} compact />
+          <NutriScoreBadge letter={nutriLetter ?? recipe.nutriLetter} compact />
         </div>
       </div>
     </div>

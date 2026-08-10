@@ -741,6 +741,38 @@ select {
   color: var(--red);
 }
 
+/* Menu carnet : liste d'actions homogène (mêmes rangées que « Modifier »),
+   sans filet entre les rangées — seul « Supprimer » est détaché par un filet. */
+.carnet-menu-list {
+  display: flex;
+  flex-direction: column;
+}
+/* Même espacement que le menu recette : rangées à l'espacement standard, seul
+   « Supprimer » détaché par un filet + un peu d'air au-dessus. */
+.carnet-menu-list .menu-row-danger {
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+
+/* « Enregistrer comme carnet » : action secondaire « ghost » teintée accent, sous
+   la CTA pleine. Fond dégradé très doux + liseré accent, avec relief au survol. */
+.save-carnet-btn {
+  background: linear-gradient(135deg, rgba(232, 112, 58, 0.09), rgba(240, 192, 96, 0.05));
+  border: 1px solid rgba(232, 112, 58, 0.24);
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.save-carnet-btn:hover {
+  background: linear-gradient(135deg, rgba(232, 112, 58, 0.14), rgba(240, 192, 96, 0.08));
+  border-color: rgba(232, 112, 58, 0.4);
+  box-shadow: 0 6px 18px -12px rgba(232, 112, 58, 0.7);
+}
+.save-carnet-btn .save-carnet-icon {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.save-carnet-btn:hover .save-carnet-icon {
+  transform: rotate(-6deg) scale(1.06);
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -1875,7 +1907,9 @@ select {
 
   /* Notebook cards — subtle lift + icon pop on hover (desktop only) */
   .notebook-card {
-    transition: transform .22s cubic-bezier(0.34, 1.4, 0.64, 1);
+    /* RETOUR (fin du survol) : ease-out franc, sans dépassement → le carnet se
+       repose net, sans « gigoter » ni revenir en arrière avant de se recaler. */
+    transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .notebook-card .notebook-card-icon {
@@ -1884,7 +1918,9 @@ select {
   }
 
   .notebook-card:hover {
+    /* ALLER (survol) : ressort vif avec léger dépassement, l'animation qu'on aime. */
     transform: translateY(-4px) rotate(-0.6deg);
+    transition: transform .22s cubic-bezier(0.34, 1.4, 0.64, 1);
   }
 
   .notebook-card:hover .notebook-card-icon {

@@ -14,6 +14,7 @@ import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
+import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
@@ -72,12 +73,12 @@ function RecipeGridSkeleton({ count = 12 }) {
 // Carte mémoïsée : ne re-rend que si SES props changent. Sans ça, chaque palier
 // de scroll infini (setVisibleCount) re-rendait toutes les cartes déjà visibles.
 // Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
-const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress, moveLongPress }) {
+const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, nutriLetter, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress, moveLongPress }) {
   return (
     <div
       onPointerDown={(e) => startLongPress(e, () => onMenu(recipe))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
       onContextMenu={(e) => { e.preventDefault(); onMenu(recipe); }}>
-      <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />
+      <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} nutriLetter={nutriLetter} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />
     </div>
   );
 });
@@ -154,13 +155,25 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
 
-  // Saison / vegan calculés UNE fois par recette (et non à chaque rendu de la grille) :
-  // isRecipeVegan peut remonter récursivement les préparations de base → coûteux au scroll.
+  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
+  // Saison / vegan / Nutri-Score calculés UNE fois par recette (et non à chaque rendu
+  // de la grille) : isRecipeVegan remonte récursivement les préparations de base →
+  // coûteux au scroll. Le Nutri-Score est recalculé EN DIRECT (score ET lettre) comme
+  // la fiche détail : la carte l'affiche et le tri « Nutri-Score » l'utilise, sinon le
+  // tri ordonnerait selon un score figé pendant que la carte montre l'autre → mélange.
   const seasonVeganById = useMemo(() => {
     const m = new Map();
-    for (const r of recipes) m.set(r.id, { inSeason: isRecipeInSeason(r, resolver), vegan: isRecipeVegan(r, resolver, { recipes }) });
+    for (const r of recipes) {
+      const nutri = computeNutriInfo(r.ingredients, ingredientDB || [], recipesById);
+      m.set(r.id, {
+        inSeason: isRecipeInSeason(r, resolver),
+        vegan: isRecipeVegan(r, resolver, { recipes }),
+        nutriLetter: nutri.letter ?? r.nutriLetter,
+        healthScore: nutri.letter ? nutri.score : r.healthScore,
+      });
+    }
     return m;
-  }, [recipes, resolver]);
+  }, [recipes, resolver, ingredientDB, recipesById]);
   // Callbacks stables → RecipeGridItem (mémoïsé) ne re-rend pas au scroll.
   const openRecipe = useCallback((r) => { if (wasLongPress()) return; onSelect(r.id); }, [onSelect, wasLongPress]);
   const openRecipeMenu = useCallback((r) => setRecipeMenu(r), []);
@@ -219,8 +232,15 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       if (filterCol && !r.collections?.includes(filterCol)) return false;
       return matchesFilters(r, filters, { resolver, techniques, techIndex, recipes });
     })
+    // Le comparateur lit `healthScore` : on lui présente le score recalculé EN DIRECT
+    // (même source que la lettre affichée) pour que le tri « Nutri-Score » colle aux
+    // badges des cartes, au lieu d'ordonner selon la valeur figée.
+    .map(r => {
+      const live = seasonVeganById.get(r.id)?.healthScore;
+      return (typeof live === "number" && live !== r.healthScore) ? { ...r, healthScore: live } : r;
+    })
     .sort(makeComparator({ sortBy, sortDir, techniques, techIndex, recipes })),
-  [recipes, search, filterCol, filters, sortBy, sortDir, resolver, techniques, techIndex]);
+  [recipes, search, filterCol, filters, sortBy, sortDir, resolver, techniques, techIndex, seasonVeganById]);
 
   // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
   useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
@@ -326,7 +346,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                   onDragEnd={() => setDragCarnetId(null)}
                   title="Glisser pour réordonner · appui long pour modifier"
                   style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "grab", borderRadius: 14, opacity: dragCarnetId === col.id ? 0.4 : 1 }}>
-                  <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 8px 22px -10px ${col.color}, 0 0 0 2px ${col.color}` : "0 6px 16px -10px rgba(0,0,0,0.35)" }}>
+                  <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 0 0 2px ${col.color}` : "none" }}>
                     {/* Page lignée + reliure colorée */}
                     <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${col.color}1f 0%, ${col.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${col.color}00 0 27px, ${col.color}22 27px 28px)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {/* Reliure */}
@@ -402,7 +422,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             const sv = seasonVeganById.get(r.id);
             return (
               <RecipeGridItem key={r.id} recipe={r}
-                inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
+                inSeason={sv?.inSeason || false} vegan={sv?.vegan || false} nutriLetter={sv?.nutriLetter}
                 animate animDelay={`${Math.min(idx * 0.045, MAX_STAGGER)}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
                 startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} />
@@ -512,15 +532,12 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               <div style={{ fontSize: 13, color: "var(--text3)" }}>{isComp ? "Préparation de base" : "Recette"}</div>
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${quick.length}, 1fr)`, gap: 8, marginBottom: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
             {quick.map(a => (
-              <button key={a.label} className="menu-tile" onClick={a.on}>
-                <Icon name={a.icon} size={20} color="var(--accent)" />
-                <span>{a.label}</span>
+              <button key={a.label} className="menu-row" onClick={a.on}>
+                <Icon name={a.icon} size={19} color="var(--text2)" /> {a.label}
               </button>
             ))}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
             {list.map(a => (
               <button key={a.label} className="menu-row" onClick={a.on}>
                 <Icon name={a.icon} size={19} color="var(--text2)" /> {a.label}
@@ -575,43 +592,41 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         const idx = collections.findIndex(c => c.id === cm.id);
         const total = collections.length;
         const n = countFor(cm);
-        const quick = [
-          { icon: "forward", label: "Ouvrir", on: () => { openCarnet(cm); close(); } },
-          ...(smart ? [{ icon: "edit", label: "Filtres", on: () => { close(); openCarnetFilters(cm); } }] : []),
-        ];
-        const stepBtn = (disabled) => ({ width: 32, height: 30, display: "grid", placeItems: "center", background: "none", border: "none", cursor: disabled ? "default" : "pointer", color: disabled ? "var(--text3)" : "var(--accent)", opacity: disabled ? 0.4 : 1 });
+        // Icône « réglages/curseurs » (même glyphe que la barre de filtres), pour
+        // distinguer « Ajuster les filtres » du simple « Modifier ».
+        const slidersIcon = <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="var(--text2)" strokeWidth="1.9" strokeLinecap="round" /></svg>;
+        const stepBtn = (disabled) => ({ width: 28, height: 28, display: "grid", placeItems: "center", background: "none", border: "none", borderRadius: "50%", cursor: disabled ? "default" : "pointer", color: disabled ? "var(--text3)" : "var(--accent)", opacity: disabled ? 0.4 : 1 });
         return (
         <SwipeableSheet onClose={close}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
             <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: cm.color + "33", display: "grid", placeItems: "center", fontSize: 26 }}>{cm.icon || "📓"}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cm.name}</div>
-              <div style={{ fontSize: 13, color: "var(--text3)" }}>{smart ? "Carnet intelligent" : "Carnet"} · {n} recette{n > 1 ? "s" : ""}</div>
+              <div style={{ fontSize: 13, color: "var(--text3)" }}>{smart ? "Carnet intelligent" : "Carnet"} - {n} recette{n > 1 ? "s" : ""}</div>
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${quick.length}, 1fr)`, gap: 8, marginBottom: 8 }}>
-            {quick.map(a => (
-              <button key={a.label} className="menu-tile" onClick={a.on}>
-                <Icon name={a.icon} size={20} color="var(--accent)" />
-                <span>{a.label}</span>
-              </button>
-            ))}
-          </div>
-          {total > 1 && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px 8px 14px", borderRadius: 12, background: "var(--surface2)", border: "1px solid var(--border)" }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>Position</span>
-              <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)", padding: 2 }}>
-                <button disabled={idx <= 0} onClick={() => moveCarnet(cm.id, -1)} style={stepBtn(idx <= 0)} aria-label="Reculer"><Icon name="back" size={16} color="currentColor" /></button>
-                <span style={{ fontSize: 14, fontWeight: 700, minWidth: 46, textAlign: "center" }}>{idx + 1} / {total}</span>
-                <button disabled={idx >= total - 1} onClick={() => moveCarnet(cm.id, 1)} style={stepBtn(idx >= total - 1)} aria-label="Avancer"><Icon name="forward" size={16} color="currentColor" /></button>
+          {/* Liste d'actions homogène (même style que « Modifier »), séparée par des filets. */}
+          <div className="carnet-menu-list">
+            {total > 1 && (
+              <div className="menu-row" style={{ cursor: "default", paddingTop: 6, paddingBottom: 6 }}>
+                <Icon name="updown" size={19} color="var(--text2)" />
+                <span style={{ flex: 1 }}>Position</span>
+                <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 999, border: "1px solid var(--border)", padding: "2px 4px", flexShrink: 0 }}>
+                  <button disabled={idx <= 0} onClick={() => moveCarnet(cm.id, -1)} style={stepBtn(idx <= 0)} aria-label="Reculer"><Icon name="back" size={15} color="currentColor" /></button>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, minWidth: 42, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{idx + 1} / {total}</span>
+                  <button disabled={idx >= total - 1} onClick={() => moveCarnet(cm.id, 1)} style={stepBtn(idx >= total - 1)} aria-label="Avancer"><Icon name="forward" size={15} color="currentColor" /></button>
+                </div>
               </div>
-            </div>
-          )}
-          <div style={{ display: "flex", flexDirection: "column", marginTop: 6 }}>
+            )}
+            {smart && (
+              <button className="menu-row" onClick={() => { close(); openCarnetFilters(cm); }}>
+                {slidersIcon} Ajuster les filtres
+              </button>
+            )}
             <button className="menu-row" onClick={() => { setNewCarnet({ ...cm, editing: true }); close(); }}>
               <Icon name="edit" size={19} color="var(--text2)" /> Modifier
             </button>
-            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onClick={() => { setConfirmDelete({ kind: "carnet", item: cm }); close(); }}>
+            <button className="menu-row menu-row-danger" onClick={() => { setConfirmDelete({ kind: "carnet", item: cm }); close(); }}>
               <Icon name="trash" size={19} color="var(--red)" /> Supprimer le carnet
             </button>
           </div>
@@ -627,7 +642,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
 
           {/* Aperçu live : le vrai visuel « livre » qui se met à jour en direct */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-            <div style={{ width: 122, position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: `0 12px 28px -14px ${newCarnet.color}aa, 0 0 0 1px var(--border)`, animation: "popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
+            <div style={{ width: 122, position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 0 0 1px var(--border)", animation: "popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
               <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${newCarnet.color}1f 0%, ${newCarnet.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${newCarnet.color}00 0 23px, ${newCarnet.color}22 23px 24px)`, display: "grid", placeItems: "center" }}>
                 <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 10, background: `linear-gradient(180deg, ${newCarnet.color} 0%, ${newCarnet.color}cc 100%)` }} />
                 <div style={{ position: "absolute", left: 2.5, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: 3 }}>
@@ -642,16 +657,26 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             </div>
           </div>
 
-          {newCarnet.smart && (
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 16, padding: "10px 12px", borderRadius: 12, background: "rgba(232,112,58,0.08)", border: "1px solid rgba(232,112,58,0.25)" }}>
-              <Icon name="thinking" size={16} color="var(--accent)" />
-              <div style={{ fontSize: 12, color: "var(--text2)", lineHeight: 1.45 }}>
-                <strong style={{ color: "var(--text)" }}>Carnet intelligent</strong> : il applique tes filtres actuels
-                {" "}({activeFilterCount(newCarnet.filters)} critère{activeFilterCount(newCarnet.filters) > 1 ? "s" : ""}{newCarnet.search?.trim() ? " + recherche" : ""})
-                {" "}et se remplit tout seul : {recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0)} recette(s) pour l'instant.
+          {newCarnet.smart && (() => {
+            const nCrit = activeFilterCount(newCarnet.filters) + (newCarnet.search?.trim() ? 1 : 0);
+            const nRec = recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0);
+            const pill = { display: "inline-flex", alignItems: "baseline", gap: 6, padding: "7px 14px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 12.5, fontWeight: 600, color: "var(--text3)" };
+            const val = { fontSize: 15, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" };
+            return (
+              <div style={{ marginTop: -6, marginBottom: 20 }}>
+                {/* Légende centrée, alignée sur le preview → composition équilibrée */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12, fontSize: 12.5, color: "var(--text3)" }}>
+                  <Icon name="sparkle" size={14} color="var(--accent)" />
+                  <span>Se remplit tout seul selon tes filtres</span>
+                </div>
+                {/* Deux stats-pills, le chiffre en héros */}
+                <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={pill}><span style={val}>{nCrit}</span> critère{nCrit > 1 ? "s" : ""}</span>
+                  <span style={pill}><span style={val}>{nRec}</span> recette{nRec > 1 ? "s" : ""}</span>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           <div style={{ marginBottom: 16 }}>
             <div className="field-label" style={{ marginBottom: 7 }}>Nom</div>
