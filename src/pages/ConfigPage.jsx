@@ -369,7 +369,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           categories={categories}
           isAdmin={isAdmin}
           onBack={() => navigate(-1)}
-          onEdit={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setEditIng({ ...it }); }}
+          onSave={saveIng}
           onDelete={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setConfirmDel({ type: "ing", item: it }); }}
         />
       ) : (
