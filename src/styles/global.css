@@ -742,12 +742,12 @@ select {
 }
 
 /* Menu carnet : liste d'actions homogène (mêmes rangées que « Modifier »),
-   séparées par un filet fin entre rangées consécutives. */
+   sans filet entre les rangées — seul « Supprimer » est détaché par un filet. */
 .carnet-menu-list {
   display: flex;
   flex-direction: column;
 }
-.carnet-menu-list .menu-row + .menu-row {
+.carnet-menu-list .menu-row-danger {
   border-top: 1px solid var(--border);
 }
 
