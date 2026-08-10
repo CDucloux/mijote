@@ -40,6 +40,15 @@ export const STOCK_CATEGORIES = new Set([
   "nuts_seeds", "sugar", "baking", "alcohol", "other",
 ]);
 
+// Catégories comptées comme « fruits & légumes » dans la composante POSITIVE du
+// Nutri-Score (fruits, légumes, légumineuses, fruits à coque — auxquels s'ajoutent
+// herbes et champignons). Inclure les FRUITS est essentiel : sans eux, un plat à
+// base d'avocat/tomate/agrumes (guacamole…) perd ses points positifs à tort.
+export const FRUIT_VEG_CATEGORIES = new Set([
+  "vegetable", "fruit", "legume", "herbs", "mushroom", "nuts_seeds",
+]);
+export const isFruitVeg = (category) => FRUIT_VEG_CATEGORIES.has(category);
+
 // ─── DEFAULT DATA ─────────────────────────────────────────────────────────────
 // New users start completely empty. Ingredient/utensil reference data now comes
 // from the shared read-only Master DB in Firestore (master/ingredients,

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
-import { computeNutritionDetail, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import { computeNutritionDetail, computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 
 // ─── NUTRITION ANALYSIS MODAL ─────────────────────────────────────────────────
@@ -18,7 +18,11 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   const [basis, setBasis] = useState("portion"); // "portion" | "100g"
   const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
   const detail = useMemo(() => computeNutritionDetail(recipe.ingredients, ingredientDB, servings, recipesById), [recipe.ingredients, ingredientDB, servings, recipesById]);
-  const letter = recipe.nutriLetter;
+  // Lettre recalculée EN DIRECT (comme le badge d'en-tête), pas la valeur figée à
+  // l'enregistrement : les ingrédients complétés après coup (nutrition, drapeau
+  // « légume ») doivent se refléter, sinon le badge diverge des chiffres affichés.
+  const liveLetter = useMemo(() => computeNutriInfo(recipe.ingredients, ingredientDB, recipesById).letter, [recipe.ingredients, ingredientDB, recipesById]);
+  const letter = liveLetter ?? recipe.nutriLetter;
   const data = basis === "portion" ? detail.perServing : detail.per100;
   const kcal = Math.round(data.calories);
   const kj = Math.round(data.calories * 4.184);

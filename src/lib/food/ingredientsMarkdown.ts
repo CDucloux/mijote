@@ -8,6 +8,7 @@
  */
 import { parseMonths } from "@/lib/food/seasonality.js";
 import { TIP_TYPES } from "@/constants/tipTypes.js";
+import { isFruitVeg } from "@/constants/categories.js";
 
 /** Conseil attaché à un ingrédient. */
 export interface IngredientTip { type: string; text: string }
@@ -169,7 +170,7 @@ export function parseIngredientsMarkdown(text: string | null | undefined): Recor
     });
     if (!row.name) continue;
     if (Object.keys(nutrition).length) {
-      nutrition.isVegetable = row.category === "vegetable" || row.category === "legume";
+      nutrition.isVegetable = isFruitVeg(row.category);
       row.nutrition = nutrition;
     }
     out.push(row);

@@ -13,6 +13,7 @@
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { ING_MD_BOUNDS } from "@/lib/food/ingredientsMarkdown.js";
 import { TIP_TYPES } from "@/constants/tipTypes.js";
+import { isFruitVeg } from "@/constants/categories.js";
 
 /** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
 export interface ParseResult<T = Record<string, unknown>> {
@@ -337,7 +338,7 @@ export function parseIngredientsYaml(text: string, { validCategories }: { validC
           else nut[k] = v;
         });
         if (Object.keys(nut).length) {
-          nut.isVegetable = row.category === "vegetable" || row.category === "legume";
+          nut.isVegetable = isFruitVeg(row.category);
           row.nutrition = nut;
         }
       }

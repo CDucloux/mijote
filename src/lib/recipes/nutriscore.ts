@@ -8,11 +8,19 @@
 
 import type { IngredientLine } from "@/lib/types.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { isFruitVeg } from "@/constants/categories.js";
 
 /** Nutriments pour 100 g (`isVegetable` est traité comme drapeau numérique). */
 type Nutrition = Record<string, number>;
 /** Entrée de base minimale exploitée pour le calcul. */
-interface DbItem { id: string; gramsPerPiece?: number; nutrition?: Nutrition }
+interface DbItem { id: string; category?: string; gramsPerPiece?: number; nutrition?: Nutrition }
+
+/**
+ * L'ingrédient compte-t-il dans la composante « fruits & légumes » du Nutri-Score ?
+ * On dérive de la CATÉGORIE (source de vérité, robuste aux fiches enregistrées avant
+ * l'inclusion des fruits) avec repli sur le drapeau figé `nutrition.isVegetable`.
+ */
+const countsAsFruitVeg = (di: DbItem): boolean => isFruitVeg(di.category) || !!di.nutrition?.isVegetable;
 /** Recette (utilisée comme composant : rendement + ingrédients bruts). */
 interface NutriRecipe { id?: string; ingredients?: IngredientLine[]; yield?: { amount?: number; unit?: string } }
 type RecipeIndex = Map<string, NutriRecipe> | null | undefined;
@@ -149,7 +157,7 @@ function aggregateRaw(ingredients: IngredientLine[] | undefined, ingredientDB: D
     if (di.nutrition) {
       for (const k of keys) tot[k] += (di.nutrition[k] || 0) * cm / 100;
       covered += cm;
-      if (wantVeg && di.nutrition.isVegetable) vegMass += cm;
+      if (wantVeg && countsAsFruitVeg(di)) vegMass += cm;
     }
   }
   return { tot, mass, covered, vegMass };
@@ -209,7 +217,7 @@ export function computeNutriInfo(ingredients: IngredientLine[] | null | undefine
     tot.salt += (n.salt || 0) * m / 100;
     tot.fiber += (n.fiber || 0) * m / 100;
     tot.protein += (n.protein || 0) * m / 100;
-    if (n.isVegetable) vegMass += m;
+    if (countsAsFruitVeg(dbItem)) vegMass += m;
     mass += m;
   }
   if (mass === 0) return { score: 50, letter: null };

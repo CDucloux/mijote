@@ -8,7 +8,7 @@ import { SeasonBar } from "./SeasonBar.jsx";
 import { SeasonBadge } from "./Badges.jsx";
 import { uploadImage, compressImage } from "@/lib/firebase/storage.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
-import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
+import { DEFAULT_CATEGORIES, sortedCategoryEntries, isFruitVeg } from "../constants/categories.js";
 import { ingredientMonths, isIngredientInSeason, SEASONAL_CATEGORIES, formatMonths } from "@/lib/food/seasonality.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 import { TIP_TYPES, TIP_ORDER } from "../constants/tipTypes.js";
@@ -85,7 +85,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
 
   const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
   const up = (patch) => setDraft(p => ({ ...p, ...patch }));
-  const setNut = (k, v) => up({ nutrition: { ...(draft.nutrition || {}), isVegetable: draft.category === "vegetable" || draft.category === "legume", [k]: v === "" ? undefined : +v } });
+  const setNut = (k, v) => up({ nutrition: { ...(draft.nutrition || {}), isVegetable: isFruitVeg(draft.category), [k]: v === "" ? undefined : +v } });
   const save = () => { onSave?.(draft); setEditing(false); setDraft(null); };
   const cancel = () => { onCancelNew?.(ingredient); setEditing(false); setDraft(null); };
 
