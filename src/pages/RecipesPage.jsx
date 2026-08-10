@@ -611,7 +611,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           {/* Liste d'actions homogène (même style que « Modifier »), séparée par des filets. */}
           <div className="carnet-menu-list">
             {total > 1 && (
-              <div className="menu-row" style={{ cursor: "default" }}>
+              <div className="menu-row" style={{ cursor: "default", paddingTop: 6, paddingBottom: 6 }}>
                 <Icon name="updown" size={19} color="var(--text2)" />
                 <span style={{ flex: 1 }}>Position</span>
                 <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 999, border: "1px solid var(--border)", padding: "2px 4px", flexShrink: 0 }}>
