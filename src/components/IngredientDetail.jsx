@@ -115,7 +115,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                   {inSeason ? "● De saison" : "○ Hors saison"}
                 </span>
               </div>
-              <SeasonBar months={months} from="var(--green)" to="#7ccf9f" node="#1a8a3c" />
+              <SeasonBar months={months} />
             </div>
           );
         })()}
