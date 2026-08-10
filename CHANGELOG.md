@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.28 – Safran · Repli fiable
+
+### Corrections
+- **Repli de l'en-tête recette** (mobile) fiabilisé : il fonctionne désormais à l'identique quel que soit l'onglet (Ingrédients / Ustensiles / Étapes), même après en avoir changé
+- La **bande compacte** en haut ne laisse plus transparaître le contenu qui défile dessous (fond opaque une fois replié)
+
 ## v3.10.27 – Safran · Feel natif & finitions
 
 ### Feel natif
