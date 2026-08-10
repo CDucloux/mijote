@@ -1,5 +1,16 @@
 # Changelog – Mijoté
 
+## v3.10.19 – Safran · Carnets & fondations
+
+### Carnets
+- **Création/édition de carnet** repensée : aperçu en direct du carnet, sélecteurs de couleur et d'icône modernisés
+
+### Filtres
+- Filtres avancés : toutes les catégories **repliées par défaut**
+
+### Sous le capot
+- **Observabilité** : fondation de suivi des erreurs (filets globaux, remontée depuis l'app et les fonctions) — invisible côté usage, essentielle pour la fiabilité
+
 ## v3.10.18 – Safran · Console pilotée
 
 ### Console admin
