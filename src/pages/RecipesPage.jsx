@@ -598,7 +598,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
         // Icône « réglages/curseurs » (même glyphe que la barre de filtres), pour
         // distinguer « Ajuster les filtres » du simple « Modifier ».
         const slidersIcon = <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="var(--text2)" strokeWidth="1.9" strokeLinecap="round" /></svg>;
-        const stepBtn = (disabled) => ({ width: 30, height: 28, display: "grid", placeItems: "center", background: "none", border: "none", borderRadius: 8, cursor: disabled ? "default" : "pointer", color: disabled ? "var(--text3)" : "var(--accent)", opacity: disabled ? 0.4 : 1 });
+        const stepBtn = (disabled) => ({ width: 28, height: 28, display: "grid", placeItems: "center", background: "none", border: "none", borderRadius: "50%", cursor: disabled ? "default" : "pointer", color: disabled ? "var(--text3)" : "var(--accent)", opacity: disabled ? 0.4 : 1 });
         return (
         <SwipeableSheet onClose={close}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
@@ -614,7 +614,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               <div className="menu-row" style={{ cursor: "default" }}>
                 <Icon name="updown" size={19} color="var(--text2)" />
                 <span style={{ flex: 1 }}>Position</span>
-                <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 10, border: "1px solid var(--border)", padding: 2, flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 999, border: "1px solid var(--border)", padding: "2px 4px", flexShrink: 0 }}>
                   <button disabled={idx <= 0} onClick={() => moveCarnet(cm.id, -1)} style={stepBtn(idx <= 0)} aria-label="Reculer"><Icon name="back" size={15} color="currentColor" /></button>
                   <span style={{ fontSize: 13.5, fontWeight: 700, minWidth: 42, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{idx + 1} / {total}</span>
                   <button disabled={idx >= total - 1} onClick={() => moveCarnet(cm.id, 1)} style={stepBtn(idx >= total - 1)} aria-label="Avancer"><Icon name="forward" size={15} color="currentColor" /></button>
