@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.10.17 – Safran · Fiche ingrédient
+
+### Fiche ingrédient
+- **Frise de saison** modernisée (même barre continue que « L'ingrédient du moment »)
+- Badge et pastille **« De saison »** alignés sur ceux des cartes recettes
+- Bandeau d'actions du haut épuré (boutons ronds, style 2026)
+- Titre d'onglet = nom de l'ingrédient consulté
+
 ## v3.10.16 – Safran · Fignolage
 
 ### Interface
