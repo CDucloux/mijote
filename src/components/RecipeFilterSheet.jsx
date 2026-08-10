@@ -243,15 +243,17 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
               <Icon name="check" size={15} color="var(--green)" /> Vue enregistrée comme carnet
             </div>
           ) : (
-            <button onClick={onSaveAsCarnet} className="pressable" style={{ width: "100%", display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 15, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", textAlign: "left" }}>
-              <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.14)" }}>
-                <Icon name={updatingCarnetName ? "check" : "book"} size={17} color="var(--accent)" />
+            <button onClick={onSaveAsCarnet} className="pressable save-carnet-btn" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 11px", borderRadius: 16, cursor: "pointer", textAlign: "left" }}>
+              <span className="save-carnet-icon" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--accent)", boxShadow: "0 4px 12px -4px rgba(232,112,58,0.6)" }}>
+                <Icon name={updatingCarnetName ? "check" : "book"} size={17} color="#fff" />
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
-                <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>{updatingCarnetName ? "Remplacer les filtres du carnet" : "Retrouve cette sélection en un tap"}</span>
+                <span style={{ display: "block", fontSize: 14, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
+                <span style={{ display: "block", fontSize: 11.5, color: "var(--text2)", marginTop: 1 }}>{updatingCarnetName ? "Remplacer les filtres du carnet" : "Retrouve cette sélection en un tap"}</span>
               </span>
-              <Icon name="forward" size={15} color="var(--text3)" />
+              <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.14)" }}>
+                <Icon name={updatingCarnetName ? "forward" : "plus"} size={15} color="var(--accent)" />
+              </span>
             </button>
           )
         )}
