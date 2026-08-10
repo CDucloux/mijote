@@ -195,7 +195,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const ppm = household ? peopleCount(household) : 2; // portions par repas = mangeurs
     const slots = genSlots.length ? genSlots : ["midi", "soir"];
     const slotsLabel = slots.map(s => SLOT_BY_ID[s]?.label || s).join(" et ").toLowerCase();
-    const { count } = generate(weekDays, slots, { compose: true, portionsPerMeal: ppm, style });
+    const { count } = generate(weekDays, slots, { compose: true, portionsPerMeal: ppm, style, batch });
     setGenOpen(false);
     if (count > 0) {
       setGenDone(true);

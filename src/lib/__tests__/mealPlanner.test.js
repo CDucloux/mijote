@@ -191,4 +191,35 @@ describe("generateWeek", () => {
     expect(gros.length).toBe(3);                 // 1 cuisson pour 6 = 3 repas
     expect(gros.every(a => a.portions === 3)).toBe(true);
   });
+
+  describe("mode batch cooking", () => {
+    // Deux plats équivalents (même saison, même effort) : l'un à gros rendement,
+    // l'autre non. En mode batch, le gros rendement doit être préféré à la 1re
+    // cuisson (le petit ne peut pas gagner via ses restes puisqu'il n'en a pas).
+    it("privilégie les plats à gros rendement (high yield)", () => {
+      // Mêmes ingrédients (donc même saison/effort) : seul le rendement diffère.
+      const lib = [
+        R("petit", { servings: 2, ingredients: [{ name: "Riz" }] }),
+        R("gros", { servings: 6, ingredients: [{ name: "Riz" }] }),
+      ];
+      const batched = generateWeek({ dates: ["2026-07-01"], slots: ["midi"], recipes: lib, ctx, batch: true });
+      // À qualité égale, le mode batch retient d'abord le plat à gros rendement.
+      expect(batched[0].recipeId).toBe("gros");
+    });
+
+    // Après avoir cuisiné un plat aux olives+feta, un second plat partageant ces
+    // bases doit passer devant un plat sans base commune (écouler les restes).
+    it("privilégie les recettes partageant des ingrédients bruts déjà engagés", () => {
+      const lib = [
+        R("mezze", { cuisine: "Grecque", ingredients: [{ name: "Olive" }, { name: "Feta" }, { name: "Courgette" }] }),
+        R("salade", { cuisine: "Grecque", category: "salade", ingredients: [{ name: "Olive" }, { name: "Feta" }, { name: "Riz" }] }),
+        R("autre", { cuisine: "Française", ingredients: [{ name: "Potiron" }] }),
+      ];
+      const out = generateWeek({ dates: ["2026-07-01"], slots: ["midi", "soir"], recipes: lib, ctx, batch: true });
+      const ids = out.map(a => a.recipeId);
+      // Les deux plats aux bases communes sont retenus avant le plat isolé.
+      expect(ids).toContain("mezze");
+      expect(ids).toContain("salade");
+    });
+  });
 });

@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.22 – Safran · Batch malin
+
+### Planning
+- **Batch cooking plus malin** : la génération privilégie les plats à gros rendement (une cuisson pour plusieurs repas) et les recettes partageant des ingrédients bruts déjà engagés dans la semaine (olives, feta, oignons, sauce tomate…), pour écouler les restes plutôt que les gaspiller
+
 ## v3.10.21 – Safran · Édition en place
 
 ### Console admin
