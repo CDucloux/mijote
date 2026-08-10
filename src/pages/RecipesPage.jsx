@@ -532,11 +532,11 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               <div style={{ fontSize: 13, color: "var(--text3)" }}>{isComp ? "Préparation de base" : "Recette"}</div>
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${quick.length}, 1fr)`, gap: 8, marginBottom: 6 }}>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${quick.length}, 1fr)`, gap: 6, marginBottom: 10 }}>
             {quick.map(a => (
-              <button key={a.label} className="menu-tile" onClick={a.on}>
-                <Icon name={a.icon} size={20} color="var(--accent)" />
-                <span>{a.label}</span>
+              <button key={a.label} className="quick-action" onClick={a.on}>
+                <span className="quick-action-chip"><Icon name={a.icon} size={21} color="var(--accent)" /></span>
+                <span className="quick-action-label">{a.label}</span>
               </button>
             ))}
           </div>
