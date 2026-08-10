@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { getRedirectResult, onAuthStateChanged, type User } from "firebase/auth";
 import { doc, setDoc, onSnapshot, type DocumentData, type Unsubscribe } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/firebase.js";
+import { reportError, setObservabilityUser } from "@/lib/observability/observability.js";
 import {
   metaDoc, recipesCol, upsertOwnDirectoryEntry,
   loadMasterDB, subscribeMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
@@ -182,6 +183,7 @@ export function useFirestoreSync({
       recipeSyncMap.current = new Map();
       activeHidRef.current = null;
       setUser(u);
+      setObservabilityUser(u ? { id: u.uid, email: u.email } : null); // corrèle les erreurs à l'utilisateur
       if (!u) return;
       setSyncStatus("syncing");
       try {
@@ -263,7 +265,7 @@ export function useFirestoreSync({
         }
 
         setTimeout(() => { cloudLoaded.current = true; setBootstrapped(true); setSyncStatus("synced"); }, 0);
-      } catch { setSyncStatus("error"); }
+      } catch (e) { setSyncStatus("error"); reportError(e, { where: "sync:bootstrap" }); }
     };
 
     const unsub = onAuthStateChanged(auth, handle);
@@ -347,7 +349,7 @@ export function useFirestoreSync({
           setLoadedHid(null);
         }
         setSyncStatus("synced");
-      } catch { setSyncStatus("error"); }
+      } catch (e) { setSyncStatus("error"); reportError(e, { where: "sync:coordinator", desiredHid }); }
       finally { migratingRef.current = false; transitionTargetRef.current = undefined; }
     })();
     return () => { cancelled = true; };

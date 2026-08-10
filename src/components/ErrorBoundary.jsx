@@ -1,4 +1,5 @@
 import React from "react";
+import { reportError } from "../lib/observability/observability.js";
 
 // ─── ERROR BOUNDARY ───────────────────────────────────────────────────────────
 // Filet de sécurité global : un throw au render ne doit pas laisser un écran
@@ -14,8 +15,8 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    // Garder une trace en console ; on évite tout report externe ici.
-    console.error("[Mijoté] Erreur non gérée :", error, info?.componentStack);
+    // Remonte via la couture d'observabilité (console en dev, Sentry en prod).
+    reportError(error, { where: "ErrorBoundary", componentStack: info?.componentStack });
   }
 
   render() {
