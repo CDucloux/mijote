@@ -1,5 +1,14 @@
 # Changelog – Mijoté
 
+## v3.10.23 – Safran · Nutrition juste
+
+### Nutrition
+- **Nutri-Score fiable** : la lettre est recalculée en direct (fini les recettes figées à un vieux score) et les **fruits** comptent enfin dans les points positifs — un guacamole n'est plus noté E
+- **Apport par portion** corrigé : il ne dépend plus du sélecteur de portions (une assiette reste une assiette)
+
+### Courses
+- **Décocher un article acheté** est désormais animé : le barré se retrace et la ligne se rallume avant de remonter
+
 ## v3.10.22 – Safran · Batch malin
 
 ### Planning
