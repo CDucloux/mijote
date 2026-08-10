@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.24 – Safran · Analyse honnête
+
+### Nutrition
+- **Analyse masquée quand les données manquent** : si la plupart des ingrédients n'ont pas encore de fiche nutritionnelle, l'app affiche « Analyse indisponible » au lieu de chiffres trompeurs (fini les « 3 kcal par portion » ou « 15 g de sel pour 100 g »)
+
 ## v3.10.23 – Safran · Nutrition juste
 
 ### Nutrition

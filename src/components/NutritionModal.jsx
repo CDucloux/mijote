@@ -22,7 +22,12 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   // l'enregistrement : les ingrédients complétés après coup (nutrition, drapeau
   // « légume ») doivent se refléter, sinon le badge diverge des chiffres affichés.
   const liveLetter = useMemo(() => computeNutriInfo(recipe.ingredients, ingredientDB, recipesById).letter, [recipe.ingredients, ingredientDB, recipesById]);
-  const letter = liveLetter ?? recipe.nutriLetter;
+  // En dessous de ce seuil de couverture, la quasi-totalité du plat n'a pas de
+  // données : normaliser sur cette petite fraction produit des valeurs absurdes
+  // (ex. « 3 kcal / portion », « 15 g de sel pour 100 g » quand seul le sel est
+  // renseigné). On refuse alors d'afficher des chiffres — et la lettre — trompeurs.
+  const reliable = detail.coverage >= 0.5;
+  const letter = reliable ? (liveLetter ?? recipe.nutriLetter) : null;
   const data = basis === "portion" ? detail.perServing : detail.per100;
   const kcal = Math.round(data.calories);
   const kj = Math.round(data.calories * 4.184);
@@ -66,6 +71,19 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
         </div>
       </div>
 
+      {/* Couverture trop faible → l'estimation n'aurait aucun sens : on l'explique. */}
+      {!reliable ? (
+        <div style={{ marginTop: 16, padding: "18px 16px", background: "var(--surface2)", borderRadius: 16, textAlign: "center" }}>
+          <div style={{ fontSize: 30, marginBottom: 8 }}>🥑</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6, color: "var(--text)" }}>Analyse indisponible</div>
+          <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.55 }}>
+            {detail.coverage > 0
+              ? <>Seulement <strong style={{ color: "var(--text)" }}>{Math.round(detail.coverage * 100)}%</strong> de la masse du plat a des données nutritionnelles. Les valeurs seraient trompeuses tant que la plupart des ingrédients n'ont pas de fiche renseignée.</>
+              : <>Aucun ingrédient de cette recette n'a encore de données nutritionnelles.</>}
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Bascule portion / 100 g */}
       <div style={{ display: "flex", gap: 4, background: "var(--surface2)", borderRadius: 10, padding: 3, margin: "14px 0 18px" }}>
         {[["portion", `Par portion`], ["100g", "Pour 100 g"]].map(([id, lbl]) => (
@@ -110,15 +128,19 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
         })}
       </div>
 
-      {/* Note de fiabilité */}
+      {/* Note de fiabilité (couverture partielle mais exploitable). */}
       {detail.coverage < 0.95 && (
         <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.5, marginTop: 12, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
           Estimation sur {Math.round(detail.coverage * 100)}% de la masse du plat – certains ingrédients n'ont pas encore de données nutritionnelles.
         </div>
       )}
-      <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 12 }}>
-        % AJR = apports journaliers recommandés (régime de référence 2000 kcal)
-      </div>
+        </>
+      )}
+      {reliable && (
+        <div style={{ fontSize: 10, color: "var(--text3)", textAlign: "center", marginTop: 12 }}>
+          % AJR = apports journaliers recommandés (régime de référence 2000 kcal)
+        </div>
+      )}
     </SwipeableSheet>
   );
 }
