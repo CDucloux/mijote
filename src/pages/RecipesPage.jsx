@@ -346,7 +346,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
                   onDragEnd={() => setDragCarnetId(null)}
                   title="Glisser pour réordonner · appui long pour modifier"
                   style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "grab", borderRadius: 14, opacity: dragCarnetId === col.id ? 0.4 : 1 }}>
-                  <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 10px 24px -14px ${col.color}, 0 0 0 2px ${col.color}` : "0 8px 20px -14px rgba(0,0,0,0.22)" }}>
+                  <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 0 0 2px ${col.color}` : "none" }}>
                     {/* Page lignée + reliure colorée */}
                     <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${col.color}1f 0%, ${col.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${col.color}00 0 27px, ${col.color}22 27px 28px)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {/* Reliure */}
