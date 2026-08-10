@@ -802,9 +802,13 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   const inStock = isInStock(ing);
                   const low = isLowStock(ing);
                   const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason(it) === true : false; })();
+                  // Statut : chaque état a son icône. « En stock » en BRUN (garde-manger)
+                  // pour ne pas le confondre avec le vert « de saison » (fraîcheur).
                   let badge = null;
-                  if (inStock) badge = { text: low ? "bientôt vide" : "en stock", color: low ? "var(--accent)" : "var(--green)" };
-                  else if (inSeason) badge = { text: "de saison", color: "var(--green)" };
+                  if (inStock) badge = low
+                    ? { text: "bientôt vide", color: "var(--accent)", icon: "warning" }
+                    : { text: "en stock", color: "#a0724e", icon: "box" };
+                  else if (inSeason) badge = { text: "de saison", color: "var(--green)", icon: "sun" };
 
                   const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;
                   // `dbId` figé à l'enregistrement peut être vide pour un ingrédient
@@ -826,7 +830,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(!isComp && !ing.unit ? pluralizeName(ing.amount * mult, name) : name)}</span>
                           {isComp && <span style={{ fontSize: 9.5, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
                         </div>
-                        {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 1 }}>{badge.text}</div>}
+                        {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name={badge.icon} size={12} color={badge.color} />{badge.text}</div>}
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
                         <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
