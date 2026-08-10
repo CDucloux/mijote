@@ -22,6 +22,7 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categori
 import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "@/lib/food/seasonality.js";
 import { TIP_TYPES } from "../constants/tipTypes.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
+import { AdminDashboard } from "../components/AdminDashboard.jsx";
 import { loadReports, resolveReport, resolveReportsForRecipe, deletePublicRecipe } from "@/lib/firebase/firestore.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 
@@ -121,14 +122,17 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const configSectionParam = location.pathname.startsWith("/admin/")
     ? location.pathname.slice(7) || undefined
     : undefined;
-  const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "ingredients";
+  const section = CONFIG_SECTION_BY_PATH[configSectionParam] || "dashboard";
   // Fiche ingrédient : /admin/ingredients/{id}
   const ingDetailMatch = location.pathname.match(/^\/admin\/ingredients\/(.+)$/);
   const ingDetailId = ingDetailMatch ? decodeURIComponent(ingDetailMatch[1]) : null;
   const setSection = (s) => navigate(`/admin/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
   useEffect(() => {
-    if (!configSectionParam) navigate("/admin/ingredients", { replace: true });
+    if (!configSectionParam) navigate("/admin/dashboard", { replace: true });
   }, [configSectionParam]);
+  // Filtre actif de la liste d'ingrédients (piloté par le dashboard).
+  const [ingFilter, setIngFilter] = useState(null); // null | validated | draft | no-image | no-nutrition
+  const gotoSection = (s, filter = null) => { setIngFilter(filter); setSection(s); };
   const [editIng, setEditIng] = useState(null);
   const [editUt, setEditUt] = useState(null);
   const [editTech, setEditTech] = useState(null);
@@ -170,6 +174,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     if ((item.description || "").trim()) item.description = item.description.trim(); else delete item.description;
     if (Array.isArray(item.months) && item.months.length) item.months = [...new Set(item.months)].sort((a, b) => a - b);
     else delete item.months;
+    if (item.status !== "validated") delete item.status; // absent = « en cours de rédaction »
     if (ingredientDB.find(d => d.id === item.id)) setIngredientDB(prev => prev.map(d => d.id === item.id ? item : d));
     else setIngredientDB(prev => [...prev, { ...item, id: "db_i" + Date.now() }]);
     setEditIng(null);
@@ -380,9 +385,9 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <UserAvatar />
         </div>
         <OverscrollRow stretch style={{ gap: 6 }}>
-          {[["ingredients", "Ingrédients"], ["ustensiles", "Ustensiles"], ["techniques", "Techniques"], ["modération", "Modération"]].map(([s, label]) => (
-            <button key={s} onClick={() => setSection(s)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
-              {label}
+          {[["dashboard", "Vue d'ensemble", "grid"], ["ingredients", "Ingrédients", "leaf"], ["ustensiles", "Ustensiles", "settings"], ["techniques", "Techniques", "list2"], ["modération", "Modération", "warning"]].map(([s, label, ic]) => (
+            <button key={s} onClick={() => gotoSection(s)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
+              <Icon name={ic} size={13} color="currentColor" /> {label}
               {s === "modération" && reports.length > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 700, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: section === s ? "rgba(255,255,255,0.28)" : "var(--red)", color: "#fff" }}>{reports.length}</span>
               )}
@@ -406,12 +411,35 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
-        {section === "ingredients" && (
+        {section === "dashboard" && (
+          <AdminDashboard ingredientDB={ingredientDB} utensilDB={utensilDB} techniques={techniques} onGoto={gotoSection} />
+        )}
+
+        {section === "ingredients" && (() => {
+          const matchFilter = (i) =>
+            !ingFilter ? true
+              : ingFilter === "validated" ? i.status === "validated"
+              : ingFilter === "draft" ? i.status !== "validated"
+              : ingFilter === "no-image" ? !i.image
+              : ingFilter === "no-nutrition" ? (!i.nutrition || i.nutrition.calories == null)
+              : true;
+          const FILTERS = [[null, "Tous"], ["draft", "En cours"], ["validated", "Validés"], ["no-image", "Sans photo"], ["no-nutrition", "Sans nutrition"]];
+          return (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Filtre de suivi (piloté aussi par le dashboard) */}
+            <OverscrollRow stretch style={{ gap: 6 }} outerStyle={{ marginBottom: 2 }}>
+              {FILTERS.map(([val, lbl]) => {
+                const on = ingFilter === val;
+                return (
+                  <button key={lbl} onClick={() => setIngFilter(val)} style={{ flexShrink: 0, padding: "6px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: on ? "var(--accent)" : "var(--surface2)", color: on ? "#fff" : "var(--text2)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{lbl}</button>
+                );
+              })}
+            </OverscrollRow>
             {sortedCategoryEntries(categories).map(([catKey, cat], ci) => {
-              const catIngs = ingredientDB.filter(d => d.category === catKey)
+              const catIngs = ingredientDB.filter(d => d.category === catKey && matchFilter(d))
                 .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" }));
-              const isOpen = openCats[catKey];
+              if (ingFilter && catIngs.length === 0) return null; // sous filtre : on masque les catégories vides
+              const isOpen = ingFilter ? true : openCats[catKey];
               return (
                 <div key={catKey} className="slide-up"
                   draggable={isAdmin}
@@ -474,7 +502,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                           onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; }}>
                           <IngImage src={item.image} alt={item.name} size={42} />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                              <span title={item.status === "validated" ? "Validé" : "En cours de rédaction"} style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0, background: item.status === "validated" ? "var(--green)" : "#e8920a" }} />
+                              <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
+                            </div>
                             <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--accent)", marginTop: 2, fontWeight: 600 }}>
                               <Icon name="fileText" size={10} color="var(--accent)" /> Découvrir la fiche
                             </div>
@@ -496,7 +527,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                 onImportYaml={importIngredientsYaml} mdError={mdError} mdInfo={mdInfo} />
             )}
           </div>
-        )}
+          );
+        })()}
 
         {section === "ustensiles" && (
           <div>
@@ -698,7 +730,23 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       {editIng && (
         <SwipeableSheet onClose={() => setEditIng(null)}>
           {(close) => (<>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 14 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
+          {/* Statut de rédaction : suivi de l'avancement (validé vs à compléter). */}
+          <div style={{ display: "flex", gap: 6, padding: 4, background: "var(--surface2)", borderRadius: 12, marginBottom: 16 }}>
+            {[["draft", "En cours", "edit"], ["validated", "Validé", "check"]].map(([val, lbl, ic]) => {
+              const active = (editIng.status === "validated" ? "validated" : "draft") === val;
+              const on = val === "validated";
+              return (
+                <button key={val} onClick={() => setEditIng(p => ({ ...p, status: on ? "validated" : undefined }))}
+                  style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0", borderRadius: 9, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700,
+                    background: active ? (on ? "var(--green)" : "var(--surface)") : "transparent",
+                    color: active ? (on ? "#fff" : "var(--text)") : "var(--text3)",
+                    boxShadow: active && !on ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
+                  <Icon name={ic} size={14} color="currentColor" /> {lbl}
+                </button>
+              );
+            })}
+          </div>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
           <div className="field-label">Description (accroche « ingrédient du moment »)</div>

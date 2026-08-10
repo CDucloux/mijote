@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.10.18 – Safran · Console pilotée
+
+### Console admin
+- Nouveau **dashboard** « Vue d'ensemble » : volumétrie des bases, avancement de la validation des ingrédients, et pistes « à compléter » (sans photo / sans nutrition)
+- **Statut de rédaction** des ingrédients (validé / en cours), visible dans la liste et filtrable
+- Navigation de la console avec icônes
+
 ## v3.10.17 – Safran · Fiche ingrédient
 
 ### Fiche ingrédient
