@@ -605,7 +605,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: cm.color + "33", display: "grid", placeItems: "center", fontSize: 26 }}>{cm.icon || "📓"}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cm.name}</div>
-              <div style={{ fontSize: 13, color: "var(--text3)" }}>{smart ? "Carnet intelligent" : "Carnet"} · {n} recette{n > 1 ? "s" : ""}</div>
+              <div style={{ fontSize: 13, color: "var(--text3)" }}>{smart ? "Carnet intelligent" : "Carnet"} - {n} recette{n > 1 ? "s" : ""}</div>
             </div>
           </div>
           {/* Liste d'actions homogène (même style que « Modifier »), séparée par des filets. */}
