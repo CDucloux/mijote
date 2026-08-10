@@ -1,5 +1,18 @@
 # Changelog – Mijoté
 
+## v3.10.27 – Safran · Feel natif & finitions
+
+### Feel natif
+- **Onde tactile** sur les lignes d'ingrédient (mobile) : au tap, la couleur se répand depuis le point de contact, façon app native
+- **Repli du hero** garanti même sur les recettes à peu de contenu (fini l'en-tête bloqué à mi-course)
+
+### Interface
+- **Statut d'ingrédient** : « en stock » (et « bientôt vide ») affiché en brun avec une icône garde-manger, distinct du vert « de saison »
+- Bouton **« Mode pas à pas »** (desktop) en pill
+
+### Sous le capot
+- Version de Node épinglée (`engines`) à la racine pour aligner local / Vercel / CI
+
 ## v3.10.26 – Safran · Sheets & Nutri-Score
 
 ### Nutrition
