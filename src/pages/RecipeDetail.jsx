@@ -800,14 +800,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   const last = idx === recipe.ingredients.length - 1;
                   // Sous-titre statut : stock prioritaire, sinon saison.
                   const inStock = isInStock(ing);
-                  const low = isLowStock(ing);
                   const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason(it) === true : false; })();
-                  // Statut : chaque état a son icône. « En stock » en BRUN (garde-manger)
-                  // pour ne pas le confondre avec le vert « de saison » (fraîcheur).
+                  // Statut : « en stock » (BRUN, garde-manger — inclut le bientôt vide,
+                  // qui reste théoriquement en stock) ou, à défaut, « de saison » (vert).
                   let badge = null;
-                  if (inStock) badge = low
-                    ? { text: "bientôt vide", color: "var(--accent)", icon: "warning" }
-                    : { text: "en stock", color: "#a0724e", icon: "box" };
+                  if (inStock) badge = { text: "en stock", color: "#a0724e", icon: "box" };
                   else if (inSeason) badge = { text: "de saison", color: "var(--green)", icon: "sun" };
 
                   const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;
