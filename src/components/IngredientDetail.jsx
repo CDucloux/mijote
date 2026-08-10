@@ -7,6 +7,7 @@ import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { ingredientMonths, isIngredientInSeason } from "@/lib/food/seasonality.js";
 import { SeasonBar } from "./SeasonBar.jsx";
+import { SeasonBadge } from "./Badges.jsx";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 import { TIP_TYPES, TIP_ORDER } from "../constants/tipTypes.js";
 
@@ -109,11 +110,9 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                   <span style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="calendar" size={15} color="var(--green)" /></span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Saisonnalité</span>
                 </div>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "4px 11px", borderRadius: 999,
-                  background: inSeason ? "rgba(76,175,125,0.14)" : "var(--surface2)", color: inSeason ? "var(--green)" : "var(--text3)",
-                  border: `1px solid ${inSeason ? "rgba(76,175,125,0.4)" : "var(--border)"}` }}>
-                  {inSeason ? "● De saison" : "○ Hors saison"}
-                </span>
+                {inSeason
+                  ? <SeasonBadge />
+                  : <span style={{ display: "inline-flex", alignItems: "center", gap: 4, borderRadius: 20, padding: "3px 11px", background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text3)" }}>Hors saison</span>}
               </div>
               <SeasonBar months={months} />
             </div>
