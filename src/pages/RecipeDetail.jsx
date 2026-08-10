@@ -1086,7 +1086,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
       {/* ── COOK MODE – fullscreen step-by-step ── */}
       {showNutrition && (
-        <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={servings} onClose={() => setShowNutrition(false)} />
+        // Base = portions D'ORIGINE de la recette (les quantités d'ingrédients y
+        // correspondent), pas le sélecteur de portions : l'apport PAR portion est
+        // invariant — cuisiner plus ou moins ne change pas ce qu'il y a dans une assiette.
+        <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={recipe.servings || 2} onClose={() => setShowNutrition(false)} />
       )}
       {cookModeActive && recipe.steps?.length > 0 && (
         <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} recipes={recipes} stockSet={new Set(stock)} onUpdateRecipe={onUpdateRecipe} onCooked={onCooked} onClose={() => setCookMode(false)} />

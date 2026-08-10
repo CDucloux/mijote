@@ -37,6 +37,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [confirmClearId, setConfirmClearId] = useState(null);
   const [pending, setPending] = useState(() => new Set()); // articles en cours d'animation → « Acheté »
+  const [unchecking, setUnchecking] = useState(() => new Set()); // articles décochés en cours d'animation → « À acheter »
   const [listMode, setListMode] = useState(false);     // false = article par article ; true = coller une liste
   const [pasteText, setPasteText] = useState("");       // contenu de la zone de collage
   const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
@@ -90,7 +91,15 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       : l));
     // Décocher est immédiat ; l'achat rejoue l'animation « strike + glisse » (comme
     // une liste normale), l'article étant identifié par sa clé d'agrégat.
-    if (!target) { apply(); return; }
+    if (!target) {
+      if (unchecking.has(agg.key)) return;
+      setUnchecking(prev => { const n = new Set(prev); n.add(agg.key); return n; });
+      setTimeout(() => {
+        apply();
+        setUnchecking(prev => { const n = new Set(prev); n.delete(agg.key); return n; });
+      }, 330);
+      return;
+    }
     if (pending.has(agg.key)) return;
     setPending(prev => { const n = new Set(prev); n.add(agg.key); return n; });
     setTimeout(() => {
@@ -160,7 +169,15 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   // Décocher un article déjà acheté est immédiat.
   const buyItem = item => {
     if (!activeList) return;
-    if (item.checked) { toggleItem(activeList.id, item.id); return; }
+    if (item.checked) {
+      if (unchecking.has(item.id)) return;
+      setUnchecking(prev => { const n = new Set(prev); n.add(item.id); return n; });
+      setTimeout(() => {
+        toggleItem(activeList.id, item.id);
+        setUnchecking(prev => { const n = new Set(prev); n.delete(item.id); return n; });
+      }, 330);
+      return;
+    }
     if (pending.has(item.id)) return;
     setPending(prev => { const n = new Set(prev); n.add(item.id); return n; });
     setTimeout(() => {
@@ -172,7 +189,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   // Ligne d'article : zone principale = achat ; swipe droite = achat, swipe gauche = supprime
   // (mobile) ; sur desktop la suppression passe par le bouton corbeille.
   const renderItem = item => (
-    <ShoppingItemRow key={item.id} item={item} striking={pending.has(item.id)}
+    <ShoppingItemRow key={item.id} item={item} striking={pending.has(item.id)} unstriking={unchecking.has(item.id)}
       imageSrc={item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""}
       onBuy={buyItem} onDelete={it => deleteItem(activeList.id, it.id)} />
   );
@@ -302,7 +319,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 .filter(([k]) => groups[k] && groups[k].length)
                 .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: groups[k].slice().sort(byName) }));
               const renderAgg = (agg) => (
-                <ShoppingItemRow key={agg.key} disableDelete striking={pending.has(agg.key)}
+                <ShoppingItemRow key={agg.key} disableDelete striking={pending.has(agg.key)} unstriking={unchecking.has(agg.key)}
                   item={{ id: agg.key, name: agg.name, amount: agg.qtyDisplay, unit: "", checked: agg.checked }}
                   imageSrc={agg.image} onBuy={() => buyAggregate(agg)} onDelete={() => {}}
                   subtitle={agg.sources.length ? `Pour ${agg.sources.join(" + ")}${agg.partial ? " · en partie acheté" : ""}` : (agg.partial ? "En partie acheté" : undefined)} />

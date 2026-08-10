@@ -6,13 +6,15 @@ import { capitalize, pluralizeUnit } from "../lib/format.js";
 
 const SWIPE_MAX = 130, SWIPE_TRIGGER = 64;
 
-export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc, subtitle, disableDelete = false }) {
+export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, imageSrc, subtitle, disableDelete = false }) {
   const isDesktop = useIsDesktop();
   const [dx, setDx] = React.useState(0);
   const [animating, setAnimating] = React.useState(false);
   const [exiting, setExiting] = React.useState(false);
   const startX = React.useRef(0), startY = React.useRef(0), axis = React.useRef(null);
-  const struck = item.checked || striking;
+  // `unstriking` : article coché qu'on décoche — on retrace le barré à l'envers
+  // (et on rallume la ligne) AVANT que la donnée bascule et le remonte dans « À acheter ».
+  const struck = (item.checked || striking) && !unstriking;
 
   const onTouchStart = e => { startX.current = e.touches[0].clientX; startY.current = e.touches[0].clientY; axis.current = null; setAnimating(false); };
   const onTouchMove = e => {
@@ -68,7 +70,7 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc, sub
         style={{
           position: "relative", display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px",
           background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
-          opacity: exiting ? 0 : (item.checked ? 0.55 : (striking ? 0 : 1)),
+          opacity: exiting ? 0 : (unstriking ? 1 : (item.checked ? 0.55 : (striking ? 0 : 1))),
           transform: exiting
             ? "translateX(-110%)"
             : `translateX(${dx}px) translateY(${striking ? 14 : 0}px)`,
@@ -78,9 +80,12 @@ export function ShoppingItemRow({ item, striking, onBuy, onDelete, imageSrc, sub
             // faire glisser la ligne vers le bas + l'estomper.
             : striking
               ? "transform 0.26s cubic-bezier(0.22,1,0.36,1) 0.28s, opacity 0.26s ease 0.28s"
-              : ((dx === 0 || animating)
-                ? "transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease"
-                : "none"),
+              // Décochage : la ligne se rallume pendant que le barré se retrace.
+              : unstriking
+                ? "opacity 0.3s ease"
+                : ((dx === 0 || animating)
+                  ? "transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease"
+                  : "none"),
         }}>
         <button onClick={() => onBuy(item)}
           style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
