@@ -660,16 +660,26 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             </div>
           </div>
 
-          {newCarnet.smart && (
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 16, padding: "10px 12px", borderRadius: 12, background: "rgba(232,112,58,0.08)", border: "1px solid rgba(232,112,58,0.25)" }}>
-              <Icon name="thinking" size={16} color="var(--accent)" />
-              <div style={{ fontSize: 12, color: "var(--text2)", lineHeight: 1.45 }}>
-                <strong style={{ color: "var(--text)" }}>Carnet intelligent</strong> : il applique tes filtres actuels
-                {" "}({activeFilterCount(newCarnet.filters)} critère{activeFilterCount(newCarnet.filters) > 1 ? "s" : ""}{newCarnet.search?.trim() ? " + recherche" : ""})
-                {" "}et se remplit tout seul : {recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0)} recette(s) pour l'instant.
+          {newCarnet.smart && (() => {
+            const nCrit = activeFilterCount(newCarnet.filters) + (newCarnet.search?.trim() ? 1 : 0);
+            const nRec = recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0);
+            const pill = { display: "inline-flex", alignItems: "baseline", gap: 6, padding: "7px 14px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 12.5, fontWeight: 600, color: "var(--text3)" };
+            const val = { fontSize: 15, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" };
+            return (
+              <div style={{ marginTop: -6, marginBottom: 20 }}>
+                {/* Légende centrée, alignée sur le preview → composition équilibrée */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12, fontSize: 12.5, color: "var(--text3)" }}>
+                  <Icon name="sparkle" size={14} color="var(--accent)" />
+                  <span>Se remplit tout seul selon tes filtres</span>
+                </div>
+                {/* Deux stats-pills, le chiffre en héros */}
+                <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={pill}><span style={val}>{nCrit}</span> critère{nCrit > 1 ? "s" : ""}</span>
+                  <span style={pill}><span style={val}>{nRec}</span> recette{nRec > 1 ? "s" : ""}</span>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           <div style={{ marginBottom: 16 }}>
             <div className="field-label" style={{ marginBottom: 7 }}>Nom</div>
