@@ -13,6 +13,7 @@
  *
  * @module imports/recipeImport
  */
+import * as logger from "firebase-functions/logger";
 import * as fs from "fs";
 import * as path from "path";
 import { onCall, HttpsError, type CallableRequest } from "firebase-functions/v2/https";
@@ -217,7 +218,7 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[]):
     });
   } catch (e) {
     const err = e as { status?: number; name?: string; message?: string };
-    console.error("Anthropic API error (images):", err?.status, err?.name, err?.message);
+    logger.error("Anthropic API error (images):", err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
   const block = (response.content || []).find((b) => b.type === "text");
@@ -260,7 +261,7 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
     });
   } catch (e) {
     const err = e as { status?: number; name?: string; message?: string };
-    console.error("Anthropic API error:", err?.status, err?.name, err?.message);
+    logger.error("Anthropic API error:", err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
   const block = (response.content || []).find((b) => b.type === "text");
@@ -323,7 +324,7 @@ export const importRecipeFromUrl = onCall(
       return { recipe, method: "llm" };
     } catch (e) {
       if (e instanceof HttpsError) throw e; // messages déjà lisibles
-      console.error("importRecipeFromUrl — erreur inattendue:", e);
+      logger.error("importRecipeFromUrl — erreur inattendue:", e);
       throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
     }
   }
@@ -366,7 +367,7 @@ export const importRecipeFromImages = onCall(
       return { recipe, method: "image", coverIndex };
     } catch (e) {
       if (e instanceof HttpsError) throw e;
-      console.error("importRecipeFromImages — erreur inattendue:", e);
+      logger.error("importRecipeFromImages — erreur inattendue:", e);
       throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
     }
   }

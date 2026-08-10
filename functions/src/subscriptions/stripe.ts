@@ -8,6 +8,7 @@
 // et dupliqué en métadonnée Stripe (`firebaseUID`) pour retrouver l'uid dans le
 // webhook. L'abonnement actif est écrit dans `customers/{uid}/subscriptions/{id}`
 // (statut `active`/`trialing`), ce que le front écoute pour débloquer Mijoté+.
+import * as logger from "firebase-functions/logger";
 import { onCall, onRequest, HttpsError, type CallableRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp, getApps } from "firebase-admin/app";
@@ -99,7 +100,7 @@ export const createStripeCheckout = onCall(
       return { url: session.url };
     } catch (e) {
       if (e instanceof HttpsError) throw e;
-      console.error("createStripeCheckout:", e);
+      logger.error("createStripeCheckout:", e);
       throw new HttpsError("internal", `Paiement impossible : ${(e instanceof Error && e.message) || "erreur Stripe"}`);
     }
   }
@@ -126,7 +127,7 @@ export const createStripePortal = onCall(
       const session = await stripe.billingPortal.sessions.create({ customer: stripeId, return_url: returnUrl });
       return { url: session.url };
     } catch (e) {
-      console.error("createStripePortal:", e);
+      logger.error("createStripePortal:", e);
       throw new HttpsError("internal", `Portail indisponible : ${(e instanceof Error && e.message) || "erreur Stripe"}`);
     }
   }
@@ -155,7 +156,7 @@ async function uidForSubscription(stripe: Stripe, sub: Stripe.Subscription): Pro
  */
 async function syncSubscription(stripe: Stripe, sub: Stripe.Subscription): Promise<void> {
   const uid = await uidForSubscription(stripe, sub);
-  if (!uid) { console.warn("stripeWebhook : aucun firebaseUID pour l'abonnement", sub.id); return; }
+  if (!uid) { logger.warn("stripeWebhook : aucun firebaseUID pour l'abonnement", sub.id); return; }
   await dbAdmin.doc(`customers/${uid}/subscriptions/${sub.id}`).set(
     { ...subscriptionDocFields(sub), updated: FieldValue.serverTimestamp() },
     { merge: true }
@@ -171,7 +172,7 @@ export const stripeWebhook = onRequest(
     try {
       event = stripe.webhooks.constructEvent(req.rawBody, req.headers["stripe-signature"] as string, STRIPE_WEBHOOK_SECRET.value());
     } catch (e) {
-      console.error("stripeWebhook : signature invalide", e instanceof Error && e.message);
+      logger.error("stripeWebhook : signature invalide", e instanceof Error && e.message);
       res.status(400).send(`Webhook signature verification failed: ${(e instanceof Error && e.message) || ""}`);
       return;
     }
@@ -187,7 +188,7 @@ export const stripeWebhook = onRequest(
       }
       res.json({ received: true });
     } catch (e) {
-      console.error("stripeWebhook : erreur de traitement", e);
+      logger.error("stripeWebhook : erreur de traitement", e);
       res.status(500).send("handler error");
     }
   }

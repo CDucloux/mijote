@@ -16,7 +16,7 @@ const NUTRI = { A: "#178a3a", B: "#7db52a", C: "#f2c230", D: "#ef8b26", E: "#e54
 const TIME_LABEL = { 20: "≤ 20 min", 30: "≤ 30 min", 60: "≤ 1 h" };
 
 // Section repliable : titre + résumé (quand fermée) + chevron.
-function Group({ title, summary, defaultOpen = true, first = false, children }) {
+function Group({ title, summary, defaultOpen = false, first = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ borderTop: first ? "none" : "1px solid var(--border)", padding: first ? "3px 0 15px" : "15px 0" }}>
