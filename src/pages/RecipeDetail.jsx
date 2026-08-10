@@ -33,7 +33,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "@/lib/recipes/recipeComponents.js";
 import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
-import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
+import { MEAL_SLOTS } from "../constants/mealSlots.js";
 
 // Motifs de signalement d'une recette publique (modération).
 const REPORT_REASONS = [
@@ -64,7 +64,6 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const isDesktop = useIsDesktop();
   const [showMealModal, setShowMealModal] = useState(false);
   const [mealDate, setMealDate] = useState(new Date().toISOString().slice(0, 10));
-  const [mealPortions, setMealPortions] = useState(1);
   const [mealSlots, setMealSlots] = useState(["midi"]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCollModal, setShowCollModal] = useState(false);
@@ -1165,39 +1164,47 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
       {showMealModal && (
         <SwipeableSheet onClose={() => setShowMealModal(false)}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Ajouter au planning</h3>
-          <div className="field-label">Date</div>
-          <input type="date" className="field-input" value={mealDate} onChange={e => setMealDate(e.target.value)} style={{ marginBottom: 12 }} />
-          <div className="field-label" style={{ marginBottom: 8 }}>Repas (multi-sélection)</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            {MEAL_SLOTS.map(s => {
-              const active = mealSlots.includes(s.id);
-              const toggle = () => setMealSlots(prev => {
-                const next = active ? prev.filter(x => x !== s.id) : [...prev, s.id];
-                return next.length ? next : prev;
-              });
-              return (
-                <button key={s.id} onClick={toggle} style={{ flex: 1, padding: "10px 6px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: active ? s.color : "var(--surface2)", color: active ? s.text : "var(--text3)", border: `1px solid ${active ? "transparent" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, transition: "all 0.15s" }}>
-                  {active && <Icon name="check" size={13} color={s.text} />}
-                  <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
-                </button>
-              );
-            })}
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Ajouter au planning</h3>
+          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 18px" }}>Choisis le jour et le ou les repas.</p>
+
+          <div style={{ marginBottom: 18 }}>
+            <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Date</span>
+            <input type="date" className="field-input" value={mealDate} onChange={e => setMealDate(e.target.value)} />
           </div>
-          {mealSlots.length > 1 && <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10, textAlign: "center" }}>Ajouté à {mealSlots.map(id => SLOT_BY_ID[id]?.label).join(", ")}</div>}
-          <div className="field-label">Étaler sur X jours consécutifs</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-            <button onClick={() => setMealPortions(p => Math.max(1, p - 1))} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>−</button>
-            <span style={{ fontSize: 18, fontWeight: 700, minWidth: 30, textAlign: "center" }}>{mealPortions}</span>
-            <button onClick={() => setMealPortions(p => p + 1)} className="btn btn-ghost btn-sm" style={{ width: 34, height: 34, borderRadius: "50%", padding: 0 }}>+</button>
-            <span style={{ fontSize: 12, color: "var(--text2)", flex: 1 }}>{mealPortions > 1 ? `${recipe.servings} portions ÷ ${mealPortions} jours = ${(recipe.servings / mealPortions).toFixed(1)} p/j` : "Toutes les portions ce jour"}</span>
+
+          <div style={{ marginBottom: 22 }}>
+            <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Repas</span>
+            <div style={{ display: "flex", gap: 10 }}>
+              {MEAL_SLOTS.map(s => {
+                const active = mealSlots.includes(s.id);
+                const toggle = () => setMealSlots(prev => {
+                  const next = active ? prev.filter(x => x !== s.id) : [...prev, s.id];
+                  return next.length ? next : prev;
+                });
+                return (
+                  <button key={s.id} onClick={toggle} className="pressable" style={{
+                    position: "relative", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer",
+                    padding: "13px 4px", borderRadius: 14, fontSize: 13, fontWeight: 600,
+                    color: active ? "var(--accent)" : "var(--text3)",
+                    background: active ? "rgba(232,112,58,0.12)" : "var(--surface2)",
+                    border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
+                    transition: "color 0.15s, background 0.15s, border-color 0.15s",
+                  }}>
+                    {active && (
+                      <span style={{ position: "absolute", top: 6, right: 6, width: 16, height: 16, borderRadius: "50%", background: "var(--accent)", display: "grid", placeItems: "center" }}>
+                        <Icon name="check" size={10} color="#fff" />
+                      </span>
+                    )}
+                    <span style={{ fontSize: 22, lineHeight: 1 }}>{s.emoji}</span>
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => {
-            for (let d = 0; d < mealPortions; d++) {
-              const dt = new Date(mealDate + "T12:00:00"); dt.setDate(dt.getDate() + d);
-              const dateStr = dt.toISOString().slice(0, 10);
-              mealSlots.forEach(slot => onAddToMealPlan(recipe, dateStr, mealPortions, slot));
-            }
+
+          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "13px 0" }} onClick={() => {
+            mealSlots.forEach(slot => onAddToMealPlan(recipe, mealDate, 1, slot));
             setShowMealModal(false);
           }}><Icon name="check" size={16} /> Confirmer</button>
         </SwipeableSheet>
