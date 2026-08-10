@@ -14,6 +14,7 @@ import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
+import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
@@ -72,12 +73,12 @@ function RecipeGridSkeleton({ count = 12 }) {
 // Carte mémoïsée : ne re-rend que si SES props changent. Sans ça, chaque palier
 // de scroll infini (setVisibleCount) re-rendait toutes les cartes déjà visibles.
 // Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
-const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress, moveLongPress }) {
+const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, nutriLetter, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress, moveLongPress }) {
   return (
     <div
       onPointerDown={(e) => startLongPress(e, () => onMenu(recipe))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
       onContextMenu={(e) => { e.preventDefault(); onMenu(recipe); }}>
-      <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />
+      <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} nutriLetter={nutriLetter} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />
     </div>
   );
 });
@@ -154,13 +155,20 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
 
-  // Saison / vegan calculés UNE fois par recette (et non à chaque rendu de la grille) :
-  // isRecipeVegan peut remonter récursivement les préparations de base → coûteux au scroll.
+  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
+  // Saison / vegan / Nutri-Score calculés UNE fois par recette (et non à chaque rendu
+  // de la grille) : isRecipeVegan remonte récursivement les préparations de base →
+  // coûteux au scroll. La lettre Nutri-Score est recalculée EN DIRECT (comme la fiche
+  // détail), sinon la carte affiche un score figé qui diverge de la fiche.
   const seasonVeganById = useMemo(() => {
     const m = new Map();
-    for (const r of recipes) m.set(r.id, { inSeason: isRecipeInSeason(r, resolver), vegan: isRecipeVegan(r, resolver, { recipes }) });
+    for (const r of recipes) m.set(r.id, {
+      inSeason: isRecipeInSeason(r, resolver),
+      vegan: isRecipeVegan(r, resolver, { recipes }),
+      nutriLetter: computeNutriInfo(r.ingredients, ingredientDB || [], recipesById).letter ?? r.nutriLetter,
+    });
     return m;
-  }, [recipes, resolver]);
+  }, [recipes, resolver, ingredientDB, recipesById]);
   // Callbacks stables → RecipeGridItem (mémoïsé) ne re-rend pas au scroll.
   const openRecipe = useCallback((r) => { if (wasLongPress()) return; onSelect(r.id); }, [onSelect, wasLongPress]);
   const openRecipeMenu = useCallback((r) => setRecipeMenu(r), []);
@@ -402,7 +410,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
             const sv = seasonVeganById.get(r.id);
             return (
               <RecipeGridItem key={r.id} recipe={r}
-                inSeason={sv?.inSeason || false} vegan={sv?.vegan || false}
+                inSeason={sv?.inSeason || false} vegan={sv?.vegan || false} nutriLetter={sv?.nutriLetter}
                 animate animDelay={`${Math.min(idx * 0.045, MAX_STAGGER)}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
                 startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} />
