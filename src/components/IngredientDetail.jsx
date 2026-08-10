@@ -5,7 +5,8 @@ import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { ingredientMonths, isIngredientInSeason, MONTHS_SHORT_FR, MONTHS_FR, currentMonth } from "@/lib/food/seasonality.js";
+import { ingredientMonths, isIngredientInSeason } from "@/lib/food/seasonality.js";
+import { SeasonBar } from "./SeasonBar.jsx";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 import { TIP_TYPES, TIP_ORDER } from "../constants/tipTypes.js";
 
@@ -55,18 +56,22 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
   return (
     <div key={ingredient.id} className="editor-enter" style={{ flex: 1, overflowY: "auto" }}>
       <div style={{ maxWidth: 580, margin: "0 auto", padding: "16px 20px 48px" }}>
-        {/* Barre haute : retour + actions admin */}
+        {/* Barre haute : retour (rond) + actions admin — épurée, style 2026 */}
         <div className="slide-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, animationDelay: "0.04s" }}>
-          <button onClick={onBack} className="ing-hover" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--text2)", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
-            <Icon name="back" size={14} color="currentColor" /> Retour
+          <button onClick={onBack} className="pressable" aria-label="Retour" style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", color: "var(--text2)" }}>
+            <Icon name="back" size={18} color="currentColor" />
           </button>
           {isAdmin ? (
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn-ghost btn-pill btn-sm" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={onEdit}><Icon name="edit" size={14} /> Modifier</button>
-              <button className="btn btn-ghost btn-pill btn-sm" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--red)" }} onClick={onDelete} aria-label="Supprimer"><Icon name="trash" size={14} color="var(--red)" /></button>
+            <div style={{ display: "flex", gap: 9 }}>
+              <button onClick={onEdit} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 17px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>
+                <Icon name="edit" size={15} color="currentColor" /> Modifier
+              </button>
+              <button onClick={onDelete} className="pressable" aria-label="Supprimer" style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", background: "rgba(224,82,82,0.08)", border: "1px solid rgba(224,82,82,0.3)", cursor: "pointer", color: "var(--red)" }}>
+                <Icon name="trash" size={16} color="var(--red)" />
+              </button>
             </div>
           ) : (
-            <span style={{ fontSize: 10.5, color: "rgba(155,135,245,1)", fontWeight: 700, padding: "4px 11px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 999 }}>Lecture seule</span>
+            <span style={{ display: "inline-flex", alignItems: "center", height: 40, fontSize: 10.5, color: "rgba(155,135,245,1)", fontWeight: 700, padding: "0 13px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 999 }}>Lecture seule</span>
           )}
         </div>
 
@@ -96,9 +101,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
         {(() => {
           const months = ingredientMonths(ingredient);
           if (!months) return null;
-          const set = new Set(months);
           const inSeason = isIngredientInSeason(ingredient);
-          const cm = currentMonth();
           return (
             <div className="slide-up" style={{ ...CARD, padding: "14px 16px", marginBottom: 14, animationDelay: "0.16s" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -112,17 +115,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                   {inSeason ? "● De saison" : "○ Hors saison"}
                 </span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: 4 }}>
-                {MONTHS_SHORT_FR.map((lbl, i) => {
-                  const m = i + 1, on = set.has(m), now = m === cm;
-                  return (
-                    <div key={m} title={MONTHS_FR[i]} style={{ textAlign: "center", padding: "6px 0", borderRadius: 8, fontSize: 11, fontWeight: now ? 800 : 600,
-                      background: on ? "var(--green)" : "var(--surface2)", color: on ? "#fff" : "var(--text3)",
-                      boxShadow: now ? "0 0 0 2px var(--surface), 0 0 0 3.5px var(--accent)" : "none",
-                      transition: "background 0.2s ease" }}>{lbl}</div>
-                  );
-                })}
-              </div>
+              <SeasonBar months={months} from="var(--green)" to="#7ccf9f" node="#1a8a3c" />
             </div>
           );
         })()}

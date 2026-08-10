@@ -2,65 +2,28 @@ import { Icon } from "./Icon.jsx";
 import { Img, IngImage } from "./Img.jsx";
 import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
-import { ingredientMonths, currentMonth } from "@/lib/food/seasonality.js";
+import { ingredientMonths } from "@/lib/food/seasonality.js";
 import { fmtTime } from "../lib/format.js";
 import { OverscrollRow } from "./OverscrollRow.jsx";
+import { SeasonBar } from "./SeasonBar.jsx";
 
 // ─── L'INGRÉDIENT DU MOMENT ───────────────────────────────────────────────────
 // Carte éditoriale en tête de « Découvrir » : un fruit/légume de saison, sa frise
 // de saison (donnée réelle `months`), une accroche (description), et les recettes
 // publiques qui l'utilisent — ou une invitation à publier si la communauté est vide.
-const MONTHS_INI = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 const CAT_LABEL = { fruit: "Fruit", vegetable: "Légume" };
 
-// Frise de saison : barre continue « seasonality bar ». Les mois de saison forment
-// des segments arrondis remplis sur une piste, avec un nœud « vous êtes ici » (mois
-// courant) posé sur la timeline. Plus élégant et lisible que 12 cases isolées.
+// Frise de saison (accent) : réutilise la barre partagée <SeasonBar/> et ajoute
+// l'en-tête « Sa saison · N mois ».
 function SeasonFrieze({ months }) {
-  const on = new Set(months || []);
-  const now = currentMonth();
-  const pct = (n) => `${(n / 12) * 100}%`;
-  // Regroupe les mois de saison en segments contigus (1–12, sans repli d'année).
-  const runs = [];
-  [...on].sort((a, b) => a - b).forEach(m => {
-    const last = runs[runs.length - 1];
-    if (last && m === last[1] + 1) last[1] = m;
-    else runs.push([m, m]);
-  });
+  const count = new Set(months || []).size;
   return (
     <div style={{ marginTop: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "0 2px 9px" }}>
         <span style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600 }}>Sa saison</span>
-        <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>{on.size} mois / an</span>
+        <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>{count} mois / an</span>
       </div>
-      {/* Piste + segments + nœud « ce mois-ci » */}
-      <div style={{ position: "relative", height: 12, borderRadius: 999, background: "var(--surface2)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.06)" }}>
-        {runs.map(([s, e], i) => (
-          <div key={i} style={{
-            position: "absolute", top: 0, bottom: 0, left: pct(s - 1), width: pct(e - s + 1),
-            borderRadius: 999, background: "linear-gradient(90deg, var(--accent), #f2a25f)",
-            boxShadow: "0 2px 9px -2px rgba(232,112,58,0.65)",
-          }} />
-        ))}
-        {/* Nœud du mois courant : posé sur la timeline, quelle que soit la saison */}
-        <span aria-hidden="true" title="Ce mois-ci" style={{
-          position: "absolute", top: "50%", left: pct(now - 0.5), transform: "translate(-50%,-50%)",
-          width: 15, height: 15, borderRadius: "50%", background: "var(--surface)",
-          border: "2.5px solid var(--accent-deep, #b8461c)", boxShadow: "0 2px 7px rgba(120,50,20,0.35)", zIndex: 2,
-        }} />
-      </div>
-      {/* Libellés des mois, alignés sous la piste */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", marginTop: 8 }}>
-        {MONTHS_INI.map((m, i) => {
-          const month = i + 1, active = on.has(month), isNow = month === now;
-          return (
-            <span key={i} style={{
-              textAlign: "center", fontSize: 10, fontWeight: active || isNow ? 700 : 500,
-              color: isNow ? "var(--accent-deep, #b8461c)" : active ? "var(--accent)" : "var(--text3)",
-            }}>{m}</span>
-          );
-        })}
-      </div>
+      <SeasonBar months={months} />
     </div>
   );
 }
