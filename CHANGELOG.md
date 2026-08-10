@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.20 – Safran · Fiche éditable
+
+### Console admin
+- **Édition d'un ingrédient in-place** : la fiche elle-même devient le formulaire (identité, saisonnalité, nutrition, tips) — plus élégant et cohérent que l'ancienne feuille
+
 ## v3.10.19 – Safran · Carnets & fondations
 
 ### Carnets
