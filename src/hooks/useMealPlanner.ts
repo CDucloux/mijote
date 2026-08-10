@@ -20,6 +20,7 @@ export interface GenerateOptions {
   compose?: boolean;
   portionsPerMeal?: number;
   style?: string;
+  batch?: boolean;
 }
 
 /**
@@ -35,11 +36,11 @@ export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = 
   const undoRef = useRef<MealPlan | null>(null);
   const [canUndo, setCanUndo] = useState(false);
 
-  const generate = useCallback((dates: string[] = [], slots: string[] = ["midi", "soir"], { replace = false, compose = false, portionsPerMeal = 2, style = "equilibre" }: GenerateOptions = {}) => {
+  const generate = useCallback((dates: string[] = [], slots: string[] = ["midi", "soir"], { replace = false, compose = false, portionsPerMeal = 2, style = "equilibre", batch = false }: GenerateOptions = {}) => {
     const byId = new Map(recipes.map(r => [r.id as string, r]));
     const weights = GEN_STYLES[style] || GEN_STYLES.equilibre;
     const ctx: PlannerContext = { resolver, byId, month: currentMonth(), stockSet: new Set(stock || []), preferences: preferences || {}, weights };
-    const assignments = generateWeek({ dates, slots, recipes, ctx, existing: mealPlan, replace, compose, portionsPerMeal });
+    const assignments = generateWeek({ dates, slots, recipes, ctx, existing: mealPlan, replace, compose, portionsPerMeal, batch });
     if (!assignments.length) return { count: 0 };
 
     undoRef.current = mealPlan; // snapshot avant modification

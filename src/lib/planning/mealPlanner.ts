@@ -230,8 +230,39 @@ function componentsOf(recipe: PlannerRecipe): Set<string> {
   return new Set((recipe.ingredients || []).filter(i => i.recipeId).map(i => i.recipeId as string));
 }
 
+/**
+ * Ensemble des ingrédients BRUTS d'une recette, identifiés par leur id de base (via
+ * résolveur) ou, à défaut, par leur nom normalisé. Les préparations de base
+ * (`recipeId`) sont exclues — elles relèvent de l'affinité batch par composant.
+ * Sert au bonus batch « bases communes » : partager des olives, de la feta, des
+ * oignons ou de la sauce tomate entre recettes évite de gaspiller les restes.
+ *
+ * @param recipe - La recette évaluée.
+ * @param ctx - Contexte (`resolver` pour identifier les ingrédients).
+ * @returns Le set des identifiants d'ingrédients bruts.
+ */
+function rawIngredientsOf(recipe: PlannerRecipe, ctx: PlannerContext): Set<string> {
+  const out = new Set<string>();
+  for (const ing of recipe.ingredients || []) {
+    if (ing.recipeId) continue;
+    const item = ctx.resolver ? ctx.resolver(ing.name) : null;
+    const key = item?.id || (ing.name ? normalizeStr(ing.name) : "");
+    if (key) out.add(key);
+  }
+  return out;
+}
+
 /** Pénalités de niveau semaine (variété + étalement de l'effort + bonus batch). */
 const WEEK = { repeat: 0.6, category: 0.09, cuisine: 0.05, dayEffort: 0.12, batchBonus: 0.12 };
+/**
+ * Bonus spécifiques au mode Batch cooking (n'entrent en jeu qu'avec `batch: true`) :
+ * - `yield` : récompense les plats à gros rendement (une seule cuisson couvre
+ *   plusieurs repas), par repas couvert au-delà du premier.
+ * - `overlap` : récompense les recettes réutilisant des ingrédients bruts déjà
+ *   engagés dans la semaine (olives, feta, oignons, sauce tomate…), pour écouler
+ *   les restes plutôt que de les gaspiller. Plafonné pour ne pas dominer le score.
+ */
+const BATCH = { yield: 0.14, overlap: 0.09, overlapCap: 4 };
 /** Rôles d'un repas composé complet, dans l'ordre de service. */
 const COMPOSE_ROLES: RoleId[] = ["entree", "plat", "accompagnement", "dessert"];
 
@@ -257,6 +288,7 @@ interface GenerateArgs {
   replace?: boolean;
   compose?: boolean;
   portionsPerMeal?: number;
+  batch?: boolean;
 }
 
 interface RolePick { recipe: PlannerRecipe; portions: number; leftover: boolean }
@@ -276,14 +308,17 @@ interface RolePick { recipe: PlannerRecipe; portions: number; leftover: boolean 
  * @param args.replace - Remplacer aussi les créneaux déjà occupés.
  * @param args.compose - Composer des repas complets (entrée/plat/accompagnement/dessert).
  * @param args.portionsPerMeal - Portions par repas (pilote la réutilisation des restes).
+ * @param args.batch - Mode Batch cooking : privilégie les plats à gros rendement et
+ *   les recettes partageant des ingrédients bruts (pour écouler les restes).
  * @returns Les cellules de planning générées pour les créneaux remplis.
  */
-export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, existing = {}, replace = false, compose = false, portionsPerMeal = 2 }: GenerateArgs): GeneratedCell[] {
+export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, existing = {}, replace = false, compose = false, portionsPerMeal = 2, batch = false }: GenerateArgs): GeneratedCell[] {
   const byId = ctx.byId || new Map(recipes.map(r => [r.id as string, r]));
   const c: PlannerContext = { ...ctx, byId };
   const pool = recipes.filter(r => !r.isComponent && isEligible(r, ctx.preferences || {}, c));
   const baseScore = new Map(pool.map(r => [r.id, scoreRecipe(r, c)]));
   const comps = new Map(pool.map(r => [r.id, componentsOf(r)]));
+  const rawIng = new Map(pool.map(r => [r.id, rawIngredientsOf(r, c)]));
   const byRole: Record<RoleId, PlannerRecipe[]> = { entree: [], plat: [], accompagnement: [], dessert: [] };
   for (const r of pool) { const role = roleForCategory(r.category || ""); if (byRole[role]) byRole[role].push(r); }
 
@@ -292,6 +327,7 @@ export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, e
   const cuiCount = new Map<string, number>();   // cuisine → nb
   const dayEffort = new Map<string, number>();  // date → effort cuisiné cumulé (les restes ne comptent pas)
   const usedComps = new Set<string>();          // préparations de base déjà mobilisées
+  const usedRawIng = new Set<string>();         // ingrédients bruts déjà engagés (batch : bases communes)
   const leftovers: Record<RoleId, { id: string; portions: number }[]> = { entree: [], plat: [], accompagnement: [], dessert: [] };
   const out: GeneratedCell[] = [];
 
@@ -301,6 +337,7 @@ export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, e
     catCount.set(r.category || "?", (catCount.get(r.category || "?") || 0) + 1);
     cuiCount.set(r.cuisine || "?", (cuiCount.get(r.cuisine || "?") || 0) + 1);
     for (const id of comps.get(r.id) || []) usedComps.add(id);
+    if (batch && cooked) for (const id of rawIng.get(r.id) || []) usedRawIng.add(id);
     if (cooked) dayEffort.set(date, (dayEffort.get(date) || 0) + (1 - effortScore(r)));
   };
 
@@ -318,6 +355,13 @@ export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, e
       if (role === "plat") v -= WEEK.dayEffort * (dayEffort.get(date) || 0);
       const rc = comps.get(r.id);
       if (rc && [...rc].some(id => usedComps.has(id))) v += WEEK.batchBonus;
+      if (batch) {
+        // Gros rendement : une cuisson couvre plusieurs repas → moins de sessions.
+        v += BATCH.yield * (batchMeals(r, portionsPerMeal) - 1);
+        // Bases communes : réutiliser des ingrédients bruts déjà engagés cette semaine.
+        const ri = rawIng.get(r.id);
+        if (ri) { let shared = 0; for (const id of ri) if (usedRawIng.has(id)) shared++; v += BATCH.overlap * Math.min(BATCH.overlapCap, shared); }
+      }
       if (v > bestVal) { bestVal = v; best = r; }
     }
     if (!best) return null;
