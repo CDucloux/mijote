@@ -158,15 +158,20 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
   // Saison / vegan / Nutri-Score calculés UNE fois par recette (et non à chaque rendu
   // de la grille) : isRecipeVegan remonte récursivement les préparations de base →
-  // coûteux au scroll. La lettre Nutri-Score est recalculée EN DIRECT (comme la fiche
-  // détail), sinon la carte affiche un score figé qui diverge de la fiche.
+  // coûteux au scroll. Le Nutri-Score est recalculé EN DIRECT (score ET lettre) comme
+  // la fiche détail : la carte l'affiche et le tri « Nutri-Score » l'utilise, sinon le
+  // tri ordonnerait selon un score figé pendant que la carte montre l'autre → mélange.
   const seasonVeganById = useMemo(() => {
     const m = new Map();
-    for (const r of recipes) m.set(r.id, {
-      inSeason: isRecipeInSeason(r, resolver),
-      vegan: isRecipeVegan(r, resolver, { recipes }),
-      nutriLetter: computeNutriInfo(r.ingredients, ingredientDB || [], recipesById).letter ?? r.nutriLetter,
-    });
+    for (const r of recipes) {
+      const nutri = computeNutriInfo(r.ingredients, ingredientDB || [], recipesById);
+      m.set(r.id, {
+        inSeason: isRecipeInSeason(r, resolver),
+        vegan: isRecipeVegan(r, resolver, { recipes }),
+        nutriLetter: nutri.letter ?? r.nutriLetter,
+        healthScore: nutri.letter ? nutri.score : r.healthScore,
+      });
+    }
     return m;
   }, [recipes, resolver, ingredientDB, recipesById]);
   // Callbacks stables → RecipeGridItem (mémoïsé) ne re-rend pas au scroll.
@@ -227,8 +232,15 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       if (filterCol && !r.collections?.includes(filterCol)) return false;
       return matchesFilters(r, filters, { resolver, techniques, techIndex, recipes });
     })
+    // Le comparateur lit `healthScore` : on lui présente le score recalculé EN DIRECT
+    // (même source que la lettre affichée) pour que le tri « Nutri-Score » colle aux
+    // badges des cartes, au lieu d'ordonner selon la valeur figée.
+    .map(r => {
+      const live = seasonVeganById.get(r.id)?.healthScore;
+      return (typeof live === "number" && live !== r.healthScore) ? { ...r, healthScore: live } : r;
+    })
     .sort(makeComparator({ sortBy, sortDir, techniques, techIndex, recipes })),
-  [recipes, search, filterCol, filters, sortBy, sortDir, resolver, techniques, techIndex]);
+  [recipes, search, filterCol, filters, sortBy, sortDir, resolver, techniques, techIndex, seasonVeganById]);
 
   // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
   useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
