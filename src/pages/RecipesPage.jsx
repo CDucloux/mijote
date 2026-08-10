@@ -623,7 +623,25 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       {newCarnet && (
         <SwipeableSheet onClose={() => setNewCarnet(null)}>
           {(close) => (<>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{newCarnet.editing ? "Modifier le carnet" : newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 16 }}>{newCarnet.editing ? "Modifier le carnet" : newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
+
+          {/* Aperçu live : le vrai visuel « livre » qui se met à jour en direct */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+            <div style={{ width: 122, position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: `0 12px 28px -14px ${newCarnet.color}aa, 0 0 0 1px var(--border)`, animation: "popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
+              <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${newCarnet.color}1f 0%, ${newCarnet.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${newCarnet.color}00 0 23px, ${newCarnet.color}22 23px 24px)`, display: "grid", placeItems: "center" }}>
+                <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 10, background: `linear-gradient(180deg, ${newCarnet.color} 0%, ${newCarnet.color}cc 100%)` }} />
+                <div style={{ position: "absolute", left: 2.5, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: 3 }}>
+                  {[0, 1, 2].map(d => <span key={d} style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.85)" }} />)}
+                </div>
+                <span style={{ fontSize: 40, lineHeight: 1, filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.18))" }}>{newCarnet.icon}</span>
+              </div>
+              <div style={{ padding: "8px 10px 10px", background: "var(--surface)", borderTop: `1px solid ${newCarnet.color}22` }}>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: newCarnet.name.trim() ? "var(--text)" : "var(--text3)" }}>{newCarnet.name.trim() || "Mon carnet"}</div>
+                <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>{(newCarnet.smart || newCarnet.kind === "smart") ? "Intelligent" : "Manuel"}</div>
+              </div>
+            </div>
+          </div>
+
           {newCarnet.smart && (
             <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 16, padding: "10px 12px", borderRadius: 12, background: "rgba(232,112,58,0.08)", border: "1px solid rgba(232,112,58,0.25)" }}>
               <Icon name="thinking" size={16} color="var(--accent)" />
@@ -634,21 +652,39 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               </div>
             </div>
           )}
-          <div style={{ marginBottom: 12 }}>
-            <div className="field-label">Nom</div>
+
+          <div style={{ marginBottom: 16 }}>
+            <div className="field-label" style={{ marginBottom: 7 }}>Nom</div>
             <input className="field-input" placeholder={newCarnet.smart ? "ex: Desserts rapides" : "ex: Recettes de Mamie"} value={newCarnet.name} ref={focusNoScroll} onChange={e => setNewCarnet(p => ({ ...p, name: e.target.value }))} />
           </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Couleur</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => (
-              <button key={c} onClick={() => setNewCarnet(p => ({ ...p, color: c }))} style={{ width: 32, height: 32, borderRadius: "50%", background: c, border: `3px solid ${newCarnet.color === c ? "#fff" : "transparent"}`, boxShadow: newCarnet.color === c ? "0 0 0 2px " + c : "none", transition: "all 0.15s" }} />
-            ))}
+
+          <div className="field-label" style={{ marginBottom: 9 }}>Couleur</div>
+          <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+            {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => {
+              const on = newCarnet.color === c;
+              return (
+                <button key={c} onClick={() => setNewCarnet(p => ({ ...p, color: c }))} aria-label={`Couleur ${c}`} className="pressable"
+                  style={{ width: 34, height: 34, borderRadius: "50%", background: c, border: "none", cursor: "pointer", display: "grid", placeItems: "center",
+                    boxShadow: on ? `0 0 0 2px var(--surface), 0 0 0 4px ${c}` : "none", transition: "box-shadow 0.15s ease" }}>
+                  {on && <Icon name="check" size={16} color="#fff" />}
+                </button>
+              );
+            })}
           </div>
-          <div className="field-label" style={{ marginBottom: 8 }}>Icône</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-            {["🍽️", "🥗", "🍝", "🍰", "🥩", "🥦", "🥐", "🍜", "🍛", "🫕", "🥘", "🧁", "🍣", "🫙", "🥚", "🧀", "🫒", "🌮", "🍲"].map(ico => (
-              <button key={ico} onClick={() => setNewCarnet(p => ({ ...p, icon: ico }))} style={{ width: 38, height: 38, borderRadius: 10, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", background: newCarnet.icon === ico ? newCarnet.color + "33" : "var(--surface2)", border: `2px solid ${newCarnet.icon === ico ? newCarnet.color : "var(--border)"}`, transition: "all 0.15s" }}>{ico}</button>
-            ))}
+
+          <div className="field-label" style={{ marginBottom: 9 }}>Icône</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(44px, 1fr))", gap: 8, marginBottom: 18 }}>
+            {["🍽️", "🥗", "🍝", "🍰", "🥩", "🥦", "🥐", "🍜", "🍛", "🫕", "🥘", "🧁", "🍣", "🫙", "🥚", "🧀", "🫒", "🌮", "🍲"].map(ico => {
+              const on = newCarnet.icon === ico;
+              return (
+                <button key={ico} onClick={() => setNewCarnet(p => ({ ...p, icon: ico }))} className="pressable"
+                  style={{ aspectRatio: "1/1", borderRadius: 12, fontSize: 21, display: "grid", placeItems: "center", cursor: "pointer",
+                    background: on ? newCarnet.color + "22" : "var(--surface2)",
+                    border: `2px solid ${on ? newCarnet.color : "transparent"}`,
+                    boxShadow: on ? `0 4px 12px -4px ${newCarnet.color}88` : "none",
+                    transition: "background 0.15s ease, border-color 0.15s ease" }}>{ico}</button>
+              );
+            })}
           </div>
           {/* Vue de filtres d'un carnet intelligent : consultable et modifiable */}
           {newCarnet.editing && newCarnet.kind === "smart" && (() => {
