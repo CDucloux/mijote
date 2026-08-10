@@ -246,6 +246,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const ctrlLRef = useRef(null);
   const ctrlRRef = useRef(null);
   const barRef = useRef(null);
+  const spacerRef = useRef(null); // cale de bas : garantit assez de défilement pour replier le hero
   const barInnerRef = useRef(null);
   const paneRef = useRef(null);
   const swipeStart = useRef(null);
@@ -458,6 +459,24 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       bounceAnim?.cancel();
     };
   }, [isDesktop, MOVE_END, BAR_START]);
+
+  // Cale de bas : garantit qu'on peut TOUJOURS défiler d'au moins MOVE_END, pour que
+  // le hero se replie entièrement même sur une recette à peu de contenu (sinon le
+  // collapse reste bloqué à mi-course, en état intermédiaire disgracieux).
+  useEffect(() => {
+    const el = scrollRef.current, sp = spacerRef.current, pane = paneRef.current;
+    if (!el || !sp || isDesktop) return;
+    const fit = () => {
+      const contentNoSpacer = el.scrollHeight - sp.offsetHeight;   // hauteur réelle hors cale
+      const target = el.clientHeight + MOVE_END + 8;               // +8 : petite marge pour reposer replié
+      sp.style.height = `${Math.max(0, target - contentNoSpacer)}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    if (pane) ro.observe(pane);   // recalcule au changement de contenu (onglet, images)
+    return () => ro.disconnect();
+  }, [isDesktop, MOVE_END, activeTab, recipe.id]);
 
   // Reset de l'élastique bas au changement d'onglet (évite un panneau décalé).
   useEffect(() => {
@@ -935,6 +954,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
           )}
           </div>{/* end swipe wrapper */}
+          {/* Cale : hauteur ajustée pour qu'un contenu court laisse quand même replier
+              le hero entièrement (voir l'effet fitCollapse). */}
+          <div ref={spacerRef} aria-hidden="true" style={{ flexShrink: 0 }} />
         </div>
 
 
