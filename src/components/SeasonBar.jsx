@@ -13,8 +13,10 @@ const MONTHS_INI = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
  * @param to - Couleur de fin du dégradé des segments.
  * @param node - Couleur de l'anneau du nœud « ce mois-ci ».
  * @param trackHeight - Épaisseur de la piste (px).
+ * @param onToggle - Si fourni, la frise devient ÉDITABLE : chaque mois est un bouton
+ *   qui appelle `onToggle(mois)` ; la piste reflète la sélection en direct.
  */
-export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node = "var(--accent-deep, #b8461c)", trackHeight = 12 }) {
+export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node = "var(--accent-deep, #b8461c)", trackHeight = 12, onToggle }) {
   const on = new Set(months || []);
   const now = currentMonth();
   const pct = (n) => `${(n / 12) * 100}%`;
@@ -33,12 +35,19 @@ export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node
         ))}
         <span aria-hidden="true" title="Ce mois-ci" style={{ position: "absolute", top: "50%", left: pct(now - 0.5), transform: "translate(-50%,-50%)", width: trackHeight + 3, height: trackHeight + 3, borderRadius: "50%", background: "var(--surface)", border: `2.5px solid ${node}`, boxShadow: "0 2px 7px rgba(60,50,30,0.3)", zIndex: 2 }} />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", marginTop: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", marginTop: onToggle ? 6 : 8, gap: onToggle ? 3 : 0 }}>
         {MONTHS_INI.map((m, i) => {
           const month = i + 1, active = on.has(month), isNow = month === now;
-          return (
-            <span key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: active || isNow ? 700 : 500, color: isNow ? node : active ? from : "var(--text3)" }}>{m}</span>
-          );
+          const color = isNow && !onToggle ? node : active ? from : "var(--text3)";
+          if (onToggle) {
+            return (
+              <button key={i} onClick={() => onToggle(month)} title="Marquer / retirer ce mois"
+                style={{ padding: "6px 0", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  background: active ? from : "var(--surface2)", color: active ? "#fff" : "var(--text3)",
+                  border: `1px solid ${active ? "transparent" : "var(--border)"}`, transition: "background 0.12s, color 0.12s" }}>{m}</button>
+            );
+          }
+          return <span key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: active || isNow ? 700 : 500, color }}>{m}</span>;
         })}
       </div>
     </div>

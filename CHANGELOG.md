@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.21 – Safran · Édition en place
+
+### Console admin
+- **Édition WYSIWYG** de la fiche ingrédient : chaque élément (photo, titre, catégorie, frise de saison, valeurs nutritionnelles, poids, tips) s'édite directement à sa place, l'ancienne feuille de saisie disparaît
+- Création d'un ingrédient : ouvre directement sa fiche en édition
+
 ## v3.10.20 – Safran · Fiche éditable
 
 ### Console admin
