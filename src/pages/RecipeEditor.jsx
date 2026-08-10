@@ -90,11 +90,11 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
 
   const isDesktop = useIsDesktop();
-  // Élastique vertical (rubber-band + rebond d'inertie) pour chacun des 4 panneaux
-  // du pager (chaque slide a son propre `overflow-y`). Désactivé sur desktop.
+  // Élastique vertical (rubber-band + rebond d'inertie) pour les panneaux du pager
+  // (chacun a son propre `overflow-y`). Le panneau Ustensiles est un composant à part
+  // (UtensilPicker) qui gère son propre élastique. Désactivé sur desktop.
   const paneInfo = useElasticScroll({ disabled: isDesktop });
   const paneIng = useElasticScroll({ disabled: isDesktop });
-  const paneUst = useElasticScroll({ disabled: isDesktop });
   const paneStep = useElasticScroll({ disabled: isDesktop });
   const isProgrammaticScroll = useRef(false);
   const scrollTimer = useRef(null);
