@@ -25,6 +25,7 @@ import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
+import { spawnRipple } from "@/lib/ui/ripple.js";
 import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
@@ -43,24 +44,6 @@ const REPORT_REASONS = [
   { id: "spam", label: "Spam ou hors-sujet" },
   { id: "other", label: "Autre" },
 ];
-
-// Onde tactile « ripple » : pose un disque au point de contact, qui s'étend sur
-// toute la ligne et s'estompe (feel natif Android). Inséré en 1er enfant pour
-// passer SOUS le contenu de la ligne (image, texte). Auto-nettoyé en fin d'anim.
-function spawnRipple(e) {
-  const el = e.currentTarget;
-  const rect = el.getBoundingClientRect();
-  const size = Math.max(rect.width, rect.height) * 2;
-  const x = (e.clientX ?? rect.left + rect.width / 2) - rect.left;
-  const y = (e.clientY ?? rect.top + rect.height / 2) - rect.top;
-  const ink = document.createElement("span");
-  ink.className = "ripple-ink";
-  ink.style.width = ink.style.height = `${size}px`;
-  ink.style.left = `${x - size / 2}px`;
-  ink.style.top = `${y - size / 2}px`;
-  ink.addEventListener("animationend", () => ink.remove(), { once: true });
-  el.insertBefore(ink, el.firstChild);
-}
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
 export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid, isAdmin = false, onReport, onAdminDelete }) {
@@ -365,7 +348,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       // Barre : fond/flou tardifs (pBar), contenu juste après la sortie du titre.
       if (barRef.current) {
         const b = barRef.current.style;
-        b.background = `rgba(var(--bg-rgb),${(0.86 * pBar).toFixed(3)})`;
+        // Fond OPAQUE une fois replié (pas 0.86) : la bande ne doit jamais laisser
+        // transparaître le contenu qui défile dessous.
+        b.background = `rgba(var(--bg-rgb),${pBar.toFixed(3)})`;
         b.backdropFilter = b.webkitBackdropFilter = `blur(${(18 * pBar).toFixed(2)}px)`;
         b.boxShadow = `0 1px 0 rgba(0,0,0,${(0.07 * pBar).toFixed(3)})`;
       }
@@ -485,7 +470,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     const el = scrollRef.current, sp = spacerRef.current, pane = paneRef.current;
     if (!el || !sp || isDesktop) return;
     const fit = () => {
-      const contentNoSpacer = el.scrollHeight - sp.offsetHeight;   // hauteur réelle hors cale
+      // Mesure fiable : on remet la cale à 0 AVANT de lire scrollHeight (sinon la
+      // hauteur de la cale précédente fausse le calcul au changement d'onglet).
+      sp.style.height = "0px";
+      const contentNoSpacer = el.scrollHeight;                     // hauteur réelle hors cale
       const target = el.clientHeight + MOVE_END + 8;               // +8 : petite marge pour reposer replié
       sp.style.height = `${Math.max(0, target - contentNoSpacer)}px`;
     };
@@ -750,7 +738,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           </div>
 
           {/* Infos + actions – remontés juste sous le hero, au-dessus des onglets */}
-          <div style={{ padding: "16px 16px 14px" }}>
+          <div style={{ padding: "16px 16px 14px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 16, padding: "14px 8px", marginBottom: 12, border: "1px solid var(--border)" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                 <Icon name="clock" size={13} color="var(--text3)" />
@@ -808,7 +796,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           </div>
 
           {/* Contenu selon onglet actif – swipe horizontal pour changer d'onglet */}
-          <div ref={paneRef} {...swipeHandlers} style={{ willChange: "transform" }}>
+          <div ref={paneRef} {...swipeHandlers} style={{ willChange: "transform", flexShrink: 0 }}>
           {activeTab === "Ingrédients" && (
             <div style={{ padding: "16px 16px 32px" }}>
               {/* Portions – pilote les quantités de la liste */}
