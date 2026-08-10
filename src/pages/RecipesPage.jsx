@@ -645,7 +645,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
 
           {/* Aperçu live : le vrai visuel « livre » qui se met à jour en direct */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-            <div style={{ width: 122, position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: `0 12px 28px -14px ${newCarnet.color}aa, 0 0 0 1px var(--border)`, animation: "popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
+            <div style={{ width: 122, position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 0 0 1px var(--border)", animation: "popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
               <div style={{ position: "relative", aspectRatio: "1/1", background: `linear-gradient(180deg, ${newCarnet.color}1f 0%, ${newCarnet.color}12 100%)`, backgroundImage: `repeating-linear-gradient(${newCarnet.color}00 0 23px, ${newCarnet.color}22 23px 24px)`, display: "grid", placeItems: "center" }}>
                 <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 10, background: `linear-gradient(180deg, ${newCarnet.color} 0%, ${newCarnet.color}cc 100%)` }} />
                 <div style={{ position: "absolute", left: 2.5, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: 3 }}>
