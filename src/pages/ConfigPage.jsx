@@ -19,8 +19,7 @@ import {
   TECHNIQUE_CATEGORIES, slugifyId,
 } from "@/lib/household/dataYaml.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
-import { SEASONAL_CATEGORIES, MONTHS_FR, MONTHS_SHORT_FR, formatMonths } from "@/lib/food/seasonality.js";
-import { TIP_TYPES } from "../constants/tipTypes.js";
+import { formatMonths } from "@/lib/food/seasonality.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
 import { AdminDashboard } from "../components/AdminDashboard.jsx";
 import { loadReports, resolveReport, resolveReportsForRecipe, deletePublicRecipe } from "@/lib/firebase/firestore.js";
@@ -133,7 +132,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   // Filtre actif de la liste d'ingrédients (piloté par le dashboard).
   const [ingFilter, setIngFilter] = useState(null); // null | validated | draft | no-image | no-nutrition
   const gotoSection = (s, filter = null) => { setIngFilter(filter); setSection(s); };
-  const [editIng, setEditIng] = useState(null);
+  const [newIngId, setNewIngId] = useState(null); // brouillon d'ingrédient à ouvrir en édition
   const [editUt, setEditUt] = useState(null);
   const [editTech, setEditTech] = useState(null);
   const [confirmDel, setConfirmDel] = useState(null); // { type: "ing" | "ut", item }
@@ -175,9 +174,18 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     if (Array.isArray(item.months) && item.months.length) item.months = [...new Set(item.months)].sort((a, b) => a - b);
     else delete item.months;
     if (item.status !== "validated") delete item.status; // absent = « en cours de rédaction »
+    item.name = (item.name || "").trim();
     if (ingredientDB.find(d => d.id === item.id)) setIngredientDB(prev => prev.map(d => d.id === item.id ? item : d));
     else setIngredientDB(prev => [...prev, { ...item, id: "db_i" + Date.now() }]);
-    setEditIng(null);
+    setNewIngId(null);
+  };
+  // Création : on crée un brouillon vide en base et on ouvre SA fiche en édition.
+  // (Annuler un brouillon jamais nommé le supprime — cf. onCancelNew côté fiche.)
+  const createIngredient = (catKey) => {
+    const id = "db_i" + Date.now();
+    setIngredientDB(prev => [...prev, { id, name: "", category: catKey, image: "", nutrition: null }]);
+    setNewIngId(id);
+    navigate(`/admin/ingredients/${encodeURIComponent(id)}`);
   };
   const delIng = id => {
     const item = ingredientDB.find(d => d.id === id);
@@ -368,8 +376,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           ingredientDB={ingredientDB}
           categories={categories}
           isAdmin={isAdmin}
+          autoEdit={ingDetailId != null && ingDetailId === newIngId}
           onBack={() => navigate(-1)}
           onSave={saveIng}
+          onCancelNew={(ing) => { if (!ing?.name?.trim()) { delIng(ing.id); setNewIngId(null); navigate(-1); } }}
           onDelete={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setConfirmDel({ type: "ing", item: it }); }}
         />
       ) : (
@@ -479,7 +489,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                     </button>
                     {isAdmin && (
                       <button className="btn btn-primary btn-sm" style={{ flexShrink: 0, padding: "4px 10px", fontSize: 11 }}
-                        onClick={() => setEditIng({ id: "", name: "", category: catKey, image: "", nutrition: null })}>
+                        onClick={() => createIngredient(catKey)}>
                         <Icon name="plus" size={12} /> Ajouter
                       </button>
                     )}
@@ -726,144 +736,6 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       </>
       )}
 
-      {/* Ingredient editor modal */}
-      {editIng && (
-        <SwipeableSheet onClose={() => setEditIng(null)}>
-          {(close) => (<>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 14 }}>{editIng.id ? "Modifier" : "Nouvel"} ingrédient</h3>
-          {/* Statut de rédaction : suivi de l'avancement (validé vs à compléter). */}
-          <div style={{ display: "flex", gap: 6, padding: 4, background: "var(--surface2)", borderRadius: 12, marginBottom: 16 }}>
-            {[["draft", "En cours", "edit"], ["validated", "Validé", "check"]].map(([val, lbl, ic]) => {
-              const active = (editIng.status === "validated" ? "validated" : "draft") === val;
-              const on = val === "validated";
-              return (
-                <button key={val} onClick={() => setEditIng(p => ({ ...p, status: on ? "validated" : undefined }))}
-                  style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0", borderRadius: 9, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700,
-                    background: active ? (on ? "var(--green)" : "var(--surface)") : "transparent",
-                    color: active ? (on ? "#fff" : "var(--text)") : "var(--text3)",
-                    boxShadow: active && !on ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
-                  <Icon name={ic} size={14} color="currentColor" /> {lbl}
-                </button>
-              );
-            })}
-          </div>
-          <div className="field-label">Nom</div>
-          <input className="field-input" placeholder="ex: Tomate" value={editIng.name} onChange={e => setEditIng(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
-          <div className="field-label">Description (accroche « ingrédient du moment »)</div>
-          <textarea className="field-input" rows={2} maxLength={280} placeholder="ex: Fragile. À déguster sous 2 jours, ou pochée au miel pour la garder plus longtemps."
-            value={editIng.description || ""} onChange={e => setEditIng(p => ({ ...p, description: e.target.value }))}
-            style={{ marginBottom: 12, resize: "vertical", minHeight: 48 }} />
-          <div className="field-label">Alias / synonymes</div>
-          <p style={{ fontSize: 11, color: "var(--text3)", marginBottom: 6, lineHeight: 1.4 }}>
-            Autres noms qui doivent pointer vers cet ingrédient (ex : ciboule, cébette, oignon nouveau).
-          </p>
-          <div style={{ marginBottom: 12 }}>
-            <TagInput
-              tags={editIng.aliases || []}
-              onChange={v => setEditIng(p => ({ ...p, aliases: v }))}
-              allTags={[]}
-              label=""
-              placeholder="ciboule, cébette…"
-              inputId="alias-input-field"
-              commitOnBlur
-              dedupeInsensitive />
-          </div>
-          <div className="field-label">Catégorie nutritionnelle</div>
-          <select className="field-input" value={editIng.category || "other"} onChange={e => setEditIng(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
-            {sortedCategoryEntries(categories).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
-          </select>
-          <div className="field-label">Photo</div>
-          <ImageUpload value={editIng.image} onChange={v => setEditIng(p => ({ ...p, image: v }))} style={{ marginBottom: 12, height: 100 }} pathPrefix={isAdmin ? "master/ingredients" : "ingredients"} />
-          <div className="field-label">Poids moyen d'une pièce (g)</div>
-          <div style={{ position: "relative", marginBottom: 4 }}>
-            <input className="field-input" type="number" min="0" step="1" placeholder="ex. 125 pour une tomate – optionnel"
-              value={editIng.gramsPerPiece ?? ""}
-              onChange={e => setEditIng(p => ({ ...p, gramsPerPiece: e.target.value === "" ? undefined : +e.target.value }))}
-              style={{ paddingRight: 32 }} />
-            <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "var(--text3)", pointerEvents: "none" }}>g</span>
-          </div>
-          <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 12 }}>Utilisé pour le score quand la quantité est en pièces, tranches, gousses…</div>
-          {SEASONAL_CATEGORIES.has(editIng.category) && (() => {
-            const sel = new Set(editIng.months || []);
-            const toggle = m => setEditIng(p => {
-              const s = new Set(p.months || []);
-              s.has(m) ? s.delete(m) : s.add(m);
-              const arr = [...s].sort((a, b) => a - b);
-              return { ...p, months: arr.length ? arr : undefined };
-            });
-            return (
-              <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)" }}>Mois de saison</div>
-                  {sel.size > 0 && <button className="btn btn-ghost btn-sm" style={{ padding: "2px 8px", fontSize: 11 }} onClick={() => setEditIng(p => ({ ...p, months: undefined }))}>Effacer</button>}
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 6 }}>
-                  {MONTHS_SHORT_FR.map((lbl, i) => {
-                    const m = i + 1, on = sel.has(m);
-                    return (
-                      <button key={m} title={MONTHS_FR[i]} onClick={() => toggle(m)} style={{
-                        padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer",
-                        background: on ? "var(--green)" : "var(--surface)", color: on ? "#fff" : "var(--text3)",
-                        border: `1px solid ${on ? "var(--green)" : "var(--border)"}`, transition: "background 0.12s, color 0.12s",
-                      }}>{lbl}</button>
-                    );
-                  })}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>
-                  {sel.size === 0 ? "Aucun mois : ignoré pour la saisonnalité (produit disponible toute l'année)."
-                    : `De saison : ${formatMonths([...sel])}.`}
-                </div>
-              </div>
-            );
-          })()}
-          <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 10 }}>Valeurs nutritionnelles précises (optionnel – pour 100g)</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {[["calories", "Énergie (kcal)", 1], ["protein", "Protéines (g)", 0.1], ["carbs", "Glucides (g)", 0.1], ["sugar", "Sucres (g)", 0.1], ["fat", "Lipides (g)", 0.1], ["saturatedFat", "G. saturées (g)", 0.1], ["omega3", "Oméga-3 (g)", 0.01], ["fiber", "Fibres (g)", 0.1], ["salt", "Sel (g)", 0.01]].map(([k, l, step]) => (
-                <div key={k}>
-                  <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 3 }}>{l}</div>
-                  <input className="field-input" type="number" min="0" step={step} placeholder="0"
-                    value={editIng.nutrition?.[k] || ""}
-                    onChange={e => setEditIng(p => ({ ...p, nutrition: { ...(p.nutrition || {}), isVegetable: p.category === "vegetable" || p.category === "legume", [k]: +e.target.value } }))}
-                    style={{ padding: "6px 10px", fontSize: 12 }} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Conseils (préparation / utilisation / bienfaits) */}
-          <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)" }}>Conseils (optionnel)</div>
-              <button className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 9px", fontSize: 11 }}
-                onClick={() => setEditIng(p => ({ ...p, tips: [...(p.tips || []), { type: "prep", text: "" }] }))}>
-                <Icon name="plus" size={12} /> Ajouter
-              </button>
-            </div>
-            {(editIng.tips || []).length === 0 && <div style={{ fontSize: 11, color: "var(--text3)", fontStyle: "italic" }}>Aucun conseil. Astuces de préparation, d'utilisation ou bienfaits.</div>}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {(editIng.tips || []).map((tip, idx) => (
-                <div key={idx} style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
-                  <select className="field-input" value={tip.type} style={{ width: 120, flexShrink: 0, padding: "6px 8px", fontSize: 12 }}
-                    onChange={e => setEditIng(p => ({ ...p, tips: p.tips.map((t, i) => i === idx ? { ...t, type: e.target.value } : t) }))}>
-                    {Object.entries(TIP_TYPES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
-                  </select>
-                  <textarea className="field-input" rows={2} placeholder="Conseil utile…" value={tip.text}
-                    onChange={e => setEditIng(p => ({ ...p, tips: p.tips.map((t, i) => i === idx ? { ...t, text: e.target.value } : t) }))}
-                    style={{ flex: 1, padding: "6px 10px", fontSize: 12, resize: "vertical", minHeight: 38 }} />
-                  <button onClick={() => setEditIng(p => ({ ...p, tips: p.tips.filter((_, i) => i !== idx) }))} style={{ color: "var(--red)", flexShrink: 0, marginTop: 6 }}><Icon name="trash" size={14} color="var(--red)" /></button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveIng(editIng)}>Sauvegarder</button>
-          </div>
-          </>)}
-        </SwipeableSheet>
-      )}
 
       {/* Éditeur de geste technique (admin) */}
       {editTech && (
