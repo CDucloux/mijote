@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeNutriInfo, computeHealthScore } from "@/lib/recipes/nutriscore.js";
+import { computeNutriInfo, computeHealthScore, ingredientGrams } from "@/lib/recipes/nutriscore.js";
 
 const DB = [
   { id: "beurre", name: "Beurre", nutrition: { calories: 745, fat: 82, saturatedFat: 51, salt: 0.02, sugar: 0.6, protein: 0.7, fiber: 0 } },
@@ -9,6 +9,24 @@ const DB = [
   { id: "citron_vert", category: "fruit", gramsPerPiece: 70, nutrition: { calories: 30, sugar: 1.7, saturatedFat: 0, salt: 0, fiber: 2.8, protein: 0.7 } },
   { id: "sel", category: "condiment", nutrition: { calories: 0, sugar: 0, saturatedFat: 0, salt: 100, fiber: 0, protein: 0 } },
 ];
+
+describe("ingredientGrams (résolution du poids)", () => {
+  const avocat = { id: "avocat", gramsPerPiece: 150 };
+  it("un nombre nu sans unité compte des PIÈCES si un poids à la pièce existe", () => {
+    // « 2 avocats » (unité vide) → 2 × 150 g, pas 2 g.
+    expect(ingredientGrams({ amount: 2, unit: "" }, avocat)).toBe(300);
+    expect(ingredientGrams({ amount: 0.5, unit: "" }, avocat)).toBe(75);
+  });
+  it("respecte l'unité « pièce » explicite via gramsPerPiece", () => {
+    expect(ingredientGrams({ amount: 1, unit: "pièce" }, avocat)).toBe(150);
+  });
+  it("les grammes explicites priment sur le poids à la pièce", () => {
+    expect(ingredientGrams({ amount: 50, unit: "g" }, avocat)).toBe(50);
+  });
+  it("sans poids à la pièce, un nombre nu retombe sur des grammes", () => {
+    expect(ingredientGrams({ amount: 20, unit: "" }, { id: "x" })).toBe(20);
+  });
+});
 
 describe("computeNutriInfo return shape", () => {
   it("always returns { score, letter } – even with no resolvable nutrition", () => {

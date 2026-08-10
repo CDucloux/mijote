@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.25 – Safran · Poids à la pièce
+
+### Nutrition
+- **Nutri-Score corrigé sur les recettes « à la pièce »** : un ingrédient en quantité nue (« 2 avocats », « 1 citron vert ») est enfin pesé selon son poids à la pièce, et non plus à 1 g — la masse du plat, la couverture et le Nutri-Score redeviennent justes
+
 ## v3.10.24 – Safran · Analyse honnête
 
 ### Nutrition

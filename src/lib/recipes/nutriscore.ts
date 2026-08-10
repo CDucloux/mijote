@@ -90,14 +90,17 @@ export const UNIT_GRAMS: Record<string, UnitEntry> = {
  *
  * @param recipeIng - La ligne d'ingrédient (quantité + unité).
  * @param dbItem - L'ingrédient de la base (pour `gramsPerPiece` des unités « à la pièce »).
- * @returns La masse en grammes (au moins 1 ; unité inconnue/vide → grammes).
+ * @returns La masse en grammes (au moins 1).
  */
 export function ingredientGrams(recipeIng: IngredientLine, dbItem?: DbItem): number {
   const amount = parseFloat(String(recipeIng.amount).replace(",", ".")) || 1;
   const unit = (recipeIng.unit || "").trim().toLowerCase();
   const entry = UNIT_GRAMS[unit];
   let perUnit: number;
-  if (entry == null) perUnit = 1;                                          // unité inconnue → grammes
+  // Unité vide/inconnue (« 2 avocats », « 1 citron vert ») : un nombre nu dénombre
+  // des PIÈCES dès que l'ingrédient a un poids à la pièce — sinon on retombe sur des
+  // grammes. Sans ce repli, « 2 avocats » valait 2 g et faussait tout le calcul.
+  if (entry == null) perUnit = dbItem?.gramsPerPiece || 1;
   else if (typeof entry === "object") perUnit = dbItem?.gramsPerPiece || entry.g; // pièce : poids spécifique sinon défaut
   else perUnit = entry;
   return Math.max(amount * perUnit, 1);
