@@ -44,6 +44,24 @@ const REPORT_REASONS = [
   { id: "other", label: "Autre" },
 ];
 
+// Onde tactile « ripple » : pose un disque au point de contact, qui s'étend sur
+// toute la ligne et s'estompe (feel natif Android). Inséré en 1er enfant pour
+// passer SOUS le contenu de la ligne (image, texte). Auto-nettoyé en fin d'anim.
+function spawnRipple(e) {
+  const el = e.currentTarget;
+  const rect = el.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 2;
+  const x = (e.clientX ?? rect.left + rect.width / 2) - rect.left;
+  const y = (e.clientY ?? rect.top + rect.height / 2) - rect.top;
+  const ink = document.createElement("span");
+  ink.className = "ripple-ink";
+  ink.style.width = ink.style.height = `${size}px`;
+  ink.style.left = `${x - size / 2}px`;
+  ink.style.top = `${y - size / 2}px`;
+  ink.addEventListener("animationend", () => ink.remove(), { once: true });
+  el.insertBefore(ink, el.firstChild);
+}
+
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
 export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid, isAdmin = false, onReport, onAdminDelete }) {
   const navigate = useNavigate();
@@ -246,6 +264,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const ctrlLRef = useRef(null);
   const ctrlRRef = useRef(null);
   const barRef = useRef(null);
+  const spacerRef = useRef(null); // cale de bas : garantit assez de défilement pour replier le hero
   const barInnerRef = useRef(null);
   const paneRef = useRef(null);
   const swipeStart = useRef(null);
@@ -458,6 +477,24 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       bounceAnim?.cancel();
     };
   }, [isDesktop, MOVE_END, BAR_START]);
+
+  // Cale de bas : garantit qu'on peut TOUJOURS défiler d'au moins MOVE_END, pour que
+  // le hero se replie entièrement même sur une recette à peu de contenu (sinon le
+  // collapse reste bloqué à mi-course, en état intermédiaire disgracieux).
+  useEffect(() => {
+    const el = scrollRef.current, sp = spacerRef.current, pane = paneRef.current;
+    if (!el || !sp || isDesktop) return;
+    const fit = () => {
+      const contentNoSpacer = el.scrollHeight - sp.offsetHeight;   // hauteur réelle hors cale
+      const target = el.clientHeight + MOVE_END + 8;               // +8 : petite marge pour reposer replié
+      sp.style.height = `${Math.max(0, target - contentNoSpacer)}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    if (pane) ro.observe(pane);   // recalcule au changement de contenu (onglet, images)
+    return () => ro.disconnect();
+  }, [isDesktop, MOVE_END, activeTab, recipe.id]);
 
   // Reset de l'élastique bas au changement d'onglet (évite un panneau décalé).
   useEffect(() => {
@@ -800,11 +837,12 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   const last = idx === recipe.ingredients.length - 1;
                   // Sous-titre statut : stock prioritaire, sinon saison.
                   const inStock = isInStock(ing);
-                  const low = isLowStock(ing);
                   const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason(it) === true : false; })();
+                  // Statut : « en stock » (BRUN, garde-manger — inclut le bientôt vide,
+                  // qui reste théoriquement en stock) ou, à défaut, « de saison » (vert).
                   let badge = null;
-                  if (inStock) badge = { text: low ? "bientôt vide" : "en stock", color: low ? "var(--accent)" : "var(--green)" };
-                  else if (inSeason) badge = { text: "de saison", color: "var(--green)" };
+                  if (inStock) badge = { text: "en stock", color: "#a0724e", icon: "box" };
+                  else if (inSeason) badge = { text: "de saison", color: "var(--green)", icon: "sun" };
 
                   const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;
                   // `dbId` figé à l'enregistrement peut être vide pour un ingrédient
@@ -817,7 +855,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                     else if (!isComp && effDbId) navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`);
                   };
                   return (
-                    <div key={ing.id} onClick={onClick} className={clickable ? "tap-row" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
+                    <div key={ing.id} onClick={onClick} onPointerDown={clickable ? spawnRipple : undefined} className={clickable ? "tap-row" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
                       {isComp && !rc.comp?.image
                         ? <span style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
                         : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
@@ -826,7 +864,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(!isComp && !ing.unit ? pluralizeName(ing.amount * mult, name) : name)}</span>
                           {isComp && <span style={{ fontSize: 9.5, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
                         </div>
-                        {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 1 }}>{badge.text}</div>}
+                        {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name={badge.icon} size={12} color={badge.color} />{badge.text}</div>}
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
                         <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult)}</span>
@@ -934,6 +972,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
           )}
           </div>{/* end swipe wrapper */}
+          {/* Cale : hauteur ajustée pour qu'un contenu court laisse quand même replier
+              le hero entièrement (voir l'effet fitCollapse). */}
+          <div ref={spacerRef} aria-hidden="true" style={{ flexShrink: 0 }} />
         </div>
 
 
@@ -996,7 +1037,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 34, marginBottom: 16 }}>
               <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
               {recipe.steps && recipe.steps.length > 0 && (
-                <button className="btn btn-primary btn-sm" style={{ gap: 7, borderRadius: 10 }} onClick={() => setCookMode(true)}>
+                <button className="btn btn-primary btn-sm" style={{ gap: 7, borderRadius: 999, padding: "8px 18px" }} onClick={() => setCookMode(true)}>
                   <Icon name="fire" size={13} /> Mode pas à pas
                 </button>
               )}

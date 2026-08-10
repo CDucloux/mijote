@@ -2755,19 +2755,39 @@ select {
 /* Ligne d'ingrédient : le fond s'allume immédiatement et le chevron avance.
    C'est le déplacement du chevron qui donne la sensation de « réponse ». */
 .tap-row {
+  /* Position/overflow : accueille l'onde tactile (.ripple-ink) et la borne à la ligne. */
+  position: relative;
+  overflow: hidden;
   transition:
     transform 0.38s cubic-bezier(0.33, 1, 0.68, 1),
-    background-color 0.38s cubic-bezier(0.33, 1, 0.68, 1);
+    background-color 0.5s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .tap-row:active {
   opacity: 1 !important;
-  /* Pas de scale ici : une ligne pleine largeur qui rétrécit laisse des bords
-     non surlignés (le fond gris ne couvre plus toute la ligne) → inesthétique.
-     Le retour vient du fond qui s'allume + le chevron qui avance. */
+  /* Léger fond de maintien ; la vraie « couleur qui se répand depuis le doigt »
+     vient de l'onde .ripple-ink posée en JS au point de contact. */
   background-color: var(--surface2);
-  transition-duration: 0.09s;
+  transition-duration: 0.06s;
   transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Onde tactile façon « ripple » Material : un disque qui naît au point de contact,
+   s'étend sur toute la ligne et s'estompe. Posée en 1er enfant → sous le contenu. */
+.ripple-ink {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba(120, 110, 100, 0.18);
+  transform: scale(0);
+  opacity: 0.85;
+  animation: rippleInk 0.58s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes rippleInk {
+  to { transform: scale(1); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ripple-ink { animation: none; display: none; }
 }
 
 .tap-row .tap-chevron {
