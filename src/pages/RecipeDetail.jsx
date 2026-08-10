@@ -25,6 +25,7 @@ import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isRecipeInSeason, isIngredientInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
+import { spawnRipple } from "@/lib/ui/ripple.js";
 import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
@@ -43,24 +44,6 @@ const REPORT_REASONS = [
   { id: "spam", label: "Spam ou hors-sujet" },
   { id: "other", label: "Autre" },
 ];
-
-// Onde tactile « ripple » : pose un disque au point de contact, qui s'étend sur
-// toute la ligne et s'estompe (feel natif Android). Inséré en 1er enfant pour
-// passer SOUS le contenu de la ligne (image, texte). Auto-nettoyé en fin d'anim.
-function spawnRipple(e) {
-  const el = e.currentTarget;
-  const rect = el.getBoundingClientRect();
-  const size = Math.max(rect.width, rect.height) * 2;
-  const x = (e.clientX ?? rect.left + rect.width / 2) - rect.left;
-  const y = (e.clientY ?? rect.top + rect.height / 2) - rect.top;
-  const ink = document.createElement("span");
-  ink.className = "ripple-ink";
-  ink.style.width = ink.style.height = `${size}px`;
-  ink.style.left = `${x - size / 2}px`;
-  ink.style.top = `${y - size / 2}px`;
-  ink.addEventListener("animationend", () => ink.remove(), { once: true });
-  el.insertBefore(ink, el.firstChild);
-}
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
 export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid, isAdmin = false, onReport, onAdminDelete }) {
