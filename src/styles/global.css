@@ -719,46 +719,6 @@ select {
   transform: scale(0.96);
 }
 
-/* Actions rapides (menu recette) : pastilles « squircle » teintées accent + label
-   dessous, façon lanceur d'app 2026 — plus légères que les grosses tuiles beiges. */
-.quick-action {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 2px;
-}
-.quick-action-chip {
-  width: 54px;
-  height: 54px;
-  border-radius: 17px;
-  display: grid;
-  place-items: center;
-  background: rgba(232, 112, 58, 0.10);
-  transition: background 0.16s ease, transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.18s ease;
-}
-.quick-action-label {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text2);
-  transition: color 0.15s ease;
-}
-.quick-action:hover .quick-action-chip {
-  background: rgba(232, 112, 58, 0.17);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px -10px rgba(232, 112, 58, 0.55);
-}
-.quick-action:hover .quick-action-label {
-  color: var(--text);
-}
-.quick-action:active .quick-action-chip {
-  transform: scale(0.92);
-  transition: transform 0.1s ease;
-}
-
 .menu-row {
   display: flex;
   align-items: center;
