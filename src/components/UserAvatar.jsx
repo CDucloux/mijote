@@ -59,7 +59,7 @@ export function UserAvatar() {
             {syncLabel && <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: syncColor, marginBottom: 4 }}>{offline && <Icon name="wifiOff" size={12} color={syncColor} />}{syncLabel}</div>}
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
             {isAdmin && (
-              <button onClick={() => { setOpen(false); navigate("/admin/ingredients"); }}
+              <button onClick={() => { setOpen(false); navigate("/admin/dashboard"); }}
                 style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--accent)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "opacity 0.15s" }}
                 onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "1"}>

@@ -14,6 +14,7 @@ export const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t.path]));
 
 // Console admin : sous-sections mappées sur l'URL.
 export const CONFIG_SECTION_BY_PATH = {
+  "dashboard": "dashboard",
   "ingredients": "ingredients",
   "ustensils": "ustensiles",
   "techniques": "techniques",
