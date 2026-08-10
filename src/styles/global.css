@@ -741,6 +741,16 @@ select {
   color: var(--red);
 }
 
+/* Rangée d'action groupée (menu carnet) : posée sur --surface2, le survol/appui
+   remonte sur --surface pour un feedback net sans bord. */
+.carnet-action {
+  transition: background 0.15s ease;
+}
+.carnet-action:hover,
+.carnet-action:active {
+  background: var(--surface);
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
