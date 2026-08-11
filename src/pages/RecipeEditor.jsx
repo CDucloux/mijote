@@ -459,17 +459,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="drag" size={14} color="var(--text3)" /> Glisse les étapes pour les réorganiser.
               </div>
             )}
-            {/* Section principale (étapes sans groupe) */}
-            {stepsOf("").map((step, li) => (
-              <DraggableStep key={step.id} step={step} index={li} total={stepsOf("").length}
-                ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
-                draggable={!isDesktop}
-                sectionKey="" groups={allSections} onSetGroup={setStepGroup}
-                onUpdate={updStep} onRemove={remStep} onMove={moveStepIn("")} />
-            ))}
-            <button className="editor-add" onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>
-
-            {/* Sections nommées d'étapes (partagées avec les ingrédients) */}
+            {/* Sections nommées d'étapes (partagées avec les ingrédients) d'abord */}
             {allSections.map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 {stepsOf(name).map((step, li) => (
@@ -483,6 +473,21 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               </SectionCard>
             ))}
             <NewSectionButton onAdd={addSection} />
+
+            {/* Étapes hors section : en bas dès qu'une section existe (« Hors section »). */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {allSections.length > 0 && stepsOf("").length > 0 && (
+                <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>Hors section</div>
+              )}
+              {stepsOf("").map((step, li) => (
+                <DraggableStep key={step.id} step={step} index={li} total={stepsOf("").length}
+                  ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
+                  draggable={!isDesktop}
+                  sectionKey="" groups={allSections} onSetGroup={setStepGroup}
+                  onUpdate={updStep} onRemove={remStep} onMove={moveStepIn("")} />
+              ))}
+              <button className="editor-add" onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>
+            </div>
           </div>
         </div>
 
