@@ -1,5 +1,15 @@
 # Changelog – Mijoté
 
+## v3.10.30 – Safran · Statut ingrédient
+
+### Console admin
+- **Pastille de statut** sur l'image de l'ingrédient (coche verte si validé, crayon ambre si en cours), dans la liste ET sur la fiche
+- En édition, le statut se change en **cliquant la pastille sur l'image** (avec confirmation) — le sélecteur du haut disparaît
+
+### Interface
+- Badges **Admin / Mijoté+** de hauteur égale ; badge Admin en police de corps
+- En-tête de la fiche ingrédient : bord des boutons au survol + flèche de retour animée
+
 ## v3.10.29 – Safran · Badge Admin & finitions
 
 ### Admin
