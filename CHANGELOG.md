@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.44 – Safran · Partage
+
+### Partage
+- Aperçu de lien (réseaux, messageries) : **logo affiché** et textes au tutoiement (les balises pointaient sur une image inexistante)
+
 ## v3.10.43 – Safran · Bouton section
 
 ### Recettes
