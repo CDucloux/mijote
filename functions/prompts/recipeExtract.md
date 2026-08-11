@@ -8,9 +8,9 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
   "cuisine": string,
   "category": string,
   "prepTime": number, "cookTime": number, "servings": number,
-  "ingredients": [{ "name": string, "amount": string, "unit": string }],
+  "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string }],
   "utensils": [{ "name": string }],
-  "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string] }]
+  "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "group": string }]
 }
 ```
 
@@ -54,6 +54,14 @@ USTENSILES
 - `ingredients` / `utensils` : les noms (repris EXACTEMENT de tes listes ci-dessus) utilisés dans l'étape ; `[]` sinon.
 - `tip` : seulement une **vraie** astuce technique non évidente (température, repère de cuisson, erreur classique). La PLUPART des étapes → `""`. Jamais à chaque étape, jamais inventée.
 - `image` : si une photo `⟦IMG:url⟧` figurant à proximité illustre le **geste ou le résultat** de CETTE étape et apporte une vraie valeur, mets son url exacte ; sinon `""`. Jamais une image décorative, un logo, une photo d'ambiance, ni l'image principale du plat. La plupart des étapes n'ont pas d'image.
+
+GROUPEMENTS (sections)
+- Le champ `group` regroupe ingrédients et étapes en **sous-préparations nommées** (« La pâte », « La crème », « Le sirop »…). Il figure sur CHAQUE ingrédient ET CHAQUE étape.
+- **Par défaut `group` vaut `""`.** La GRANDE MAJORITÉ des recettes n'ont AUCUN groupement : une seule liste d'ingrédients, une seule suite d'étapes → **tous les `group` doivent alors être `""`**. N'invente JAMAIS de sections.
+- Ne remplis `group` **QUE** si la source structure EXPLICITEMENT la recette en sous-parties, signalées par des **intertitres** du type « Pour la pâte », « Pour la garniture », « For the sauce », « Génoise », « Crème au beurre »… (souvent en gras, chacun suivi de sa propre liste d'ingrédients et/ou de ses étapes).
+- Le libellé `group` : **court groupe nominal français**, SANS le « Pour la/le/les » (« Pour la pâte » → `group: "La pâte"` ou `"Pâte"`). Garde le **MÊME libellé exact** pour les ingrédients et les étapes d'une même sous-préparation, afin qu'ils se rejoignent.
+- Un ingrédient ou une étape hors de toute sous-partie nommée (assemblage/montage final, dressage) garde `group: ""`.
+- Dans le doute, ou si le découpage n'est pas net → `""`. Mieux vaut aucune section qu'une section erronée.
 
 RÈGLES
 - N'invente rien d'absent de la page. Si ce n'est pas une recette, renvoie `"name": ""` et des tableaux vides.

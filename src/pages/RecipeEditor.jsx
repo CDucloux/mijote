@@ -20,6 +20,7 @@ import { useElasticScroll } from "../hooks/useElasticScroll.js";
 function SectionCard({ name, onRename, onDelete, children }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
+  const [eraseHover, setEraseHover] = useState(false);
   const inputRef = useRef(null);
   useEffect(() => { setDraft(name); }, [name]);
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
@@ -35,8 +36,9 @@ function SectionCard({ name, onRename, onDelete, children }) {
         ) : (
           <button type="button" onClick={() => setEditing(true)} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
         )}
-        <button type="button" onClick={onDelete} title="Dissoudre la section" style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "grid", placeItems: "center", cursor: "pointer" }}>
-          <Icon name="eraser" size={13} color="var(--text3)" />
+        <button type="button" onClick={onDelete} title="Dissoudre la section" onMouseEnter={() => setEraseHover(true)} onMouseLeave={() => setEraseHover(false)}
+          style={{ flexShrink: 0, width: 32, height: 32, borderRadius: "50%", background: eraseHover ? "var(--surface2)" : "transparent", border: "none", display: "grid", placeItems: "center", cursor: "pointer", transition: "background 0.15s" }}>
+          <Icon name="eraser" size={14} color="var(--text3)" />
         </button>
       </div>
       {children}

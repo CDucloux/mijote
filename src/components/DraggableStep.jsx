@@ -56,7 +56,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {onSetGroup && <GroupSelect value={step.group || ""} groups={groups} onChange={g => onSetGroup(step.id, g)} />}
           <button onClick={() => onRemove(step.id)} onMouseEnter={() => setTrashHover(true)} onMouseLeave={() => setTrashHover(false)}
-            style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, display: "grid", placeItems: "center", cursor: "pointer", border: "1px solid transparent", background: trashHover ? "rgba(224,82,82,0.12)" : "transparent", borderColor: trashHover ? "rgba(224,82,82,0.3)" : "transparent", transition: "background 0.15s, border-color 0.15s" }}>
+            style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", cursor: "pointer", border: "none", background: trashHover ? "rgba(224,82,82,0.14)" : "transparent", transition: "background 0.15s" }}>
             <Icon name="trash" size={15} color="var(--red)" />
           </button>
         </div>

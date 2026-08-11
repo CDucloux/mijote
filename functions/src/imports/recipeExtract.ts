@@ -14,6 +14,8 @@ export interface DraftIngredient {
   unit?: string;
   raw?: string;
   _raw?: string;
+  /** Section/sous-préparation (« La pâte »…). Vide/absent = pas de groupement. */
+  group?: string;
 }
 
 /** Ustensile (nom seul) — parfois une simple chaîne côté LLM. */
@@ -28,6 +30,8 @@ export interface DraftStep {
   image?: string;
   ingredients?: string[];
   utensils?: (string | DraftUtensil)[];
+  /** Section/sous-préparation (« La pâte »…). Vide/absent = pas de groupement. */
+  group?: string;
 }
 
 /** Brouillon INTERMÉDIAIRE (sortie de `llmToIntermediate`, entrée d'`assignIdsAndLink`). */
@@ -53,6 +57,7 @@ export interface RecipeIngredient {
   _raw: string;
   amount?: number | string;
   unit?: string;
+  group?: string;
 }
 
 /** Ustensile au schéma final. */
@@ -71,6 +76,7 @@ export interface RecipeStep {
   image: string;
   ingredients: string[];
   utensils: string[];
+  group?: string;
 }
 
 /** Recette finale assemblée. */
@@ -254,6 +260,8 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     const ing: RecipeIngredient = { id: `i${k}`, dbId: "", name, _raw: raw };
     if (i.amount != null && i.amount !== "") ing.amount = i.amount;
     if (unit) ing.unit = unit;
+    const group = (i.group || "").toString().trim();
+    if (group) ing.group = group;
     return ing;
   });
   const utensils: RecipeUtensil[] = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: ((u as DraftUtensil).name || u).toString() }));
@@ -264,7 +272,10 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     const explicitUt = new Set((s.utensils || []).map((x) => norm(typeof x === "string" ? x : x?.name)));
     const ingIds = ingredients.filter((i) => i.name && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map((i) => i.id);
     const utIds = utensils.filter((u) => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map((u) => u.id);
-    return { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
+    const rs: RecipeStep = { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
+    const group = (s.group || "").toString().trim();
+    if (group) rs.group = group;
+    return rs;
   });
 
   return {

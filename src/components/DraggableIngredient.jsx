@@ -13,6 +13,7 @@ export function DraggableIngredient({
 }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
+  const [trashHover, setTrashHover] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => { if (autoFocus) inputRef.current?.focus(); }, [autoFocus]);
@@ -39,8 +40,9 @@ export function DraggableIngredient({
   );
 
   const trashBtn = (
-    <button onClick={() => onRemove(ing.id)} style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 8, background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-      <Icon name="trash" size={14} color="var(--red)" />
+    <button onClick={() => onRemove(ing.id)} onMouseEnter={() => setTrashHover(true)} onMouseLeave={() => setTrashHover(false)}
+      style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", background: trashHover ? "rgba(224,82,82,0.14)" : "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "background 0.15s" }}>
+      <Icon name="trash" size={15} color="var(--red)" />
     </button>
   );
 
