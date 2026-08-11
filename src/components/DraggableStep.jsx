@@ -4,6 +4,7 @@ import { fmtQtyUnit } from "../lib/format.js";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
 import { ImageUpload } from "./ImageUpload.jsx";
 import { GroupSelect } from "./GroupSelect.jsx";
+import { MoveArrows } from "./MoveArrows.jsx";
 import { IngImage } from "./Img.jsx";
 import { UtImage } from "./StepPills.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
@@ -46,12 +47,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           {isDraggable && <span style={{ display: "flex", color: "var(--text3)", cursor: "grab", touchAction: "none" }}><Icon name="drag" size={16} color="var(--text3)" /></span>}
           <span style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #f0894e)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", boxShadow: "0 2px 6px -1px rgba(232,112,58,0.5)", flexShrink: 0 }}>{index + 1}</span>
-          {!isDraggable && (
-            <div style={{ display: "flex", gap: 4 }}>
-              <button onClick={() => index > 0 && onMove(index, index - 1)} disabled={index === 0} style={{ width: 24, height: 24, borderRadius: 7, background: "var(--surface2)", fontSize: 12, border: "1px solid var(--border)", cursor: index > 0 ? "pointer" : "default", opacity: index === 0 ? 0.35 : 1 }}>↑</button>
-              <button onClick={() => index < total - 1 && onMove(index, index + 1)} disabled={index === total - 1} style={{ width: 24, height: 24, borderRadius: 7, background: "var(--surface2)", fontSize: 12, border: "1px solid var(--border)", cursor: index < total - 1 ? "pointer" : "default", opacity: index === total - 1 ? 0.35 : 1 }}>↓</button>
-            </div>
-          )}
+          {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} vertical={false} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {onSetGroup && <GroupSelect value={step.group || ""} groups={groups} onChange={g => onSetGroup(step.id, g)} />}
