@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, Fragment } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { StepTip } from "../components/StepTip.jsx";
@@ -959,8 +959,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
                 const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
                 return (
-                <div key={run.start} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} style={{ marginTop: 4 }} />}
+                <Fragment key={run.start}>
+                {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} />}
                 {run.items.map((step, j) => {
                   const num = run.start + j + 1;
                   const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
@@ -995,7 +995,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                     </div>
                   );
                 })}
-                </div>
+                </Fragment>
                 );
                 });
                 })()}
@@ -1126,7 +1126,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
               const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
               return (
-              <div key={run.start} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+              <Fragment key={run.start}>
               {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} />}
               {run.items.map((step, j) => {
                 const num = run.start + j + 1;
@@ -1161,7 +1161,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   </div>
                 );
               })}
-              </div>
+              </Fragment>
               );
               });
               })()}
