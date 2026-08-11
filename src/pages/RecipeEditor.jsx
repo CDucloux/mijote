@@ -51,24 +51,52 @@ function SectionCard({ name, onRename, onDelete, onZoneDrop, children }) {
   );
 }
 
-// Bouton « + Nouvelle section » avec saisie inline du nom.
+// Bouton « Nouvelle section » — volontairement DISTINCT des ajouts d'ingrédient/étape
+// (fond teinté accent + icône layers), pour ne pas les confondre. Au clic, il se
+// déplie en une petite carte de nommage soignée.
 function NewSectionButton({ onAdd }) {
   const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(false);
   const [draft, setDraft] = useState("");
   const inputRef = useRef(null);
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
-  const submit = () => { const t = draft.trim(); if (t) { onAdd(t); setDraft(""); setOpen(false); } };
+  const close = () => { setDraft(""); setOpen(false); };
+  const submit = () => { const t = draft.trim(); if (t) { onAdd(t); close(); } };
+  const chip = (
+    <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.16)" }}>
+      <Icon name="layers" size={17} color="var(--accent)" />
+    </span>
+  );
   if (!open) return (
-    <button type="button" className="editor-add" onClick={() => setOpen(true)} style={{ borderStyle: "dashed" }}>
-      <Icon name="plus" size={16} /> Nouvelle section
+    <button type="button" onClick={() => setOpen(true)} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "11px 14px", borderRadius: 16, cursor: "pointer", textAlign: "left",
+        border: "1px solid rgba(232,112,58,0.4)", background: hover ? "rgba(232,112,58,0.12)" : "rgba(232,112,58,0.07)",
+        boxShadow: hover ? "0 6px 18px -10px rgba(232,112,58,0.6)" : "none", transition: "background 0.15s, box-shadow 0.2s" }}>
+      {chip}
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nouvelle section</span>
+        <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>Regrouper en sous-préparation</span>
+      </span>
+      <Icon name="plus" size={17} color="var(--accent)" />
     </button>
   );
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <input ref={inputRef} className="field-input" value={draft} onChange={e => setDraft(e.target.value)}
-        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit(); } if (e.key === "Escape") { setDraft(""); setOpen(false); } }}
-        placeholder="Nom de la section (ex. La pâte)" style={{ marginBottom: 0, flex: 1, minWidth: 0 }} />
-      <button type="button" onClick={submit} disabled={!draft.trim()} style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", cursor: draft.trim() ? "pointer" : "default", opacity: draft.trim() ? 1 : 0.5, display: "grid", placeItems: "center" }}><Icon name="check" size={16} color="#fff" /></button>
+    <div style={{ padding: 12, borderRadius: 16, border: "1px solid rgba(232,112,58,0.45)", background: "rgba(232,112,58,0.07)", display: "flex", flexDirection: "column", gap: 11 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {chip}
+        <span style={{ flex: 1, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nommer la section</span>
+        <button type="button" onClick={close} aria-label="Annuler" style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: "transparent", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text3)" /></button>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit(); } if (e.key === "Escape") close(); }}
+          placeholder="ex. La pâte, La crème, Le sirop…"
+          style={{ flex: 1, minWidth: 0, height: 42, padding: "0 15px", borderRadius: 12, border: "1px solid transparent", background: "var(--surface)", color: "var(--text)", fontSize: 14, fontWeight: 500, outline: "none" }} />
+        <button type="button" onClick={submit} disabled={!draft.trim()}
+          style={{ flexShrink: 0, height: 42, padding: "0 16px", borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: draft.trim() ? "pointer" : "default", opacity: draft.trim() ? 1 : 0.45, display: "inline-flex", alignItems: "center", gap: 6, transition: "opacity 0.15s" }}>
+          <Icon name="check" size={15} color="#fff" /> Créer
+        </button>
+      </div>
     </div>
   );
 }
