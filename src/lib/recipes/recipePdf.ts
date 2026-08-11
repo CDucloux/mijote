@@ -163,7 +163,9 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   const layersIco = `<svg class="step-group-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`;
   // Runs contigus (ordre du tableau préservé) → numérotation CONTINUE d'un bout à
   // l'autre (comme le mode pas à pas), avec en-tête par sous-préparation.
-  const stepLines = sectionRuns(recipe.steps || []).map(run => {
+  const stepRuns = sectionRuns(recipe.steps || []);
+  const stepsHaveSections = stepRuns.some(r => r.group);
+  const stepLines = stepRuns.map((run, ri) => {
     const inner = run.items.map((s, j) => {
       const num = run.start + j + 1;
       const linkedIngs = (recipe.ingredients || []).filter(x => s.ingredients?.includes(x.id!)).map(ingPill).join("");
@@ -181,9 +183,12 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
       </div>`;
     }).join("");
     // Sous-préparation nommée : encadrée dans un bloc distinct, avec en-tête fort.
-    // Section principale (assemblage/montage) : étapes à plat, sans encadré.
-    if (!run.group) return inner;
-    return `<section class="step-group"><div class="step-group-title">${layersIco}<span>${run.group}</span></div>${inner}</section>`;
+    if (run.group) return `<section class="step-group"><div class="step-group-title">${layersIco}<span>${run.group}</span></div>${inner}</section>`;
+    // Étapes hors section : à plat, mais avec un intitulé neutre (« Préparation » /
+    // « Montage ») dès que la recette a des sections, pour marquer la transition.
+    if (!stepsHaveSections) return inner;
+    const looseTitle = ri === stepRuns.length - 1 ? "Montage" : "Préparation";
+    return `<div class="step-loose-title">${looseTitle}</div>${inner}`;
   }).join("");
 
   const utPills = (recipe.utensils || []).map(u => pill(utImg(u.dbId), u.name, "")).join("");
@@ -296,6 +301,8 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(232, 112, 58, 0.25); }
     .step-group-ico { flex-shrink: 0; }
     .step-group .step:last-child { margin-bottom: 16px; }
+    /* Intitulé neutre des étapes hors section (« Préparation », « Montage ») */
+    .step-loose-title { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--text3); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     /* Pills */
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
     .pill-comp { border-color: rgba(232,112,58,0.4); background: rgba(232,112,58,0.06); }
@@ -337,6 +344,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
       .section-title { break-after: avoid; page-break-after: avoid; }
       .group-title { break-after: avoid; page-break-after: avoid; }
       .step-group-title { break-after: avoid; page-break-after: avoid; }
+      .step-loose-title { break-after: avoid; page-break-after: avoid; }
       .step-header { break-after: avoid; page-break-after: avoid; }
       /* Une étape ne doit jamais être coupée entre deux pages (texte + astuce +
          pastilles restent solidaires). Si elle ne tient pas, elle bascule en entier

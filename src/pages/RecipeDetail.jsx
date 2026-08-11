@@ -32,7 +32,7 @@ import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { computeDifficulty, explainDifficulty } from "@/lib/recipes/difficulty.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "@/lib/recipes/recipeComponents.js";
-import { groupBy, sectionRuns } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, sectionRuns, hasGroups } from "@/lib/recipes/recipeGroups.js";
 import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { MEAL_SLOTS } from "../constants/mealSlots.js";
@@ -48,13 +48,26 @@ const REPORT_REASONS = [
 
 // En-tête d'une section (groupe « Pour la pâte »…). Rendu uniquement pour les groupes
 // nommés ; la section principale (sans groupe) reste sans en-tête (iso-rendu).
-function GroupHeader({ label, style }) {
+// En-tête de section. `tone="accent"` pour une sous-préparation nommée ; `"muted"`
+// (gris) pour les étapes hors section (« Préparation », « Montage »), afin de bien
+// distinguer les deux tout en marquant clairement le passage de l'un à l'autre.
+function GroupHeader({ label, tone = "accent", style }) {
+  const color = tone === "muted" ? "var(--text3)" : "var(--accent)";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>
-      <span style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", flexShrink: 0 }}>{label}</span>
+      <span style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color, flexShrink: 0 }}>{label}</span>
       <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
     </div>
   );
+}
+
+// Libellé d'un run hors-section (group null) quand la recette a des sections :
+// « Montage » si c'est le dernier bloc (assemblage final), « Préparation » sinon.
+// `null` si la recette n'a aucune section (aucun en-tête à afficher).
+function looseRunLabel(run, isLast, hasSections) {
+  if (run.group) return run.group;
+  if (!hasSections) return null;
+  return isLast ? "Montage" : "Préparation";
 }
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
@@ -943,9 +956,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 {baseSteps.length > 0 && recipe.steps?.length > 0 && (
                   <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
                 )}
-                {sectionRuns(recipe.steps || []).map(run => (
+                {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
+                const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
+                return (
                 <div key={run.start} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {run.group && <GroupHeader label={run.group} style={{ marginTop: 4 }} />}
+                {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} style={{ marginTop: 4 }} />}
                 {run.items.map((step, j) => {
                   const num = run.start + j + 1;
                   const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
@@ -981,7 +996,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   );
                 })}
                 </div>
-                ))}
+                );
+                });
+                })()}
               </div>
             </div>
           )}
@@ -1106,9 +1123,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               {baseSteps.length > 0 && recipe.steps?.length > 0 && (
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
               )}
-              {sectionRuns(recipe.steps || []).map(run => (
+              {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
+              const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
+              return (
               <div key={run.start} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
-              {run.group && <GroupHeader label={run.group} />}
+              {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} />}
               {run.items.map((step, j) => {
                 const num = run.start + j + 1;
                 const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
@@ -1143,7 +1162,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 );
               })}
               </div>
-              ))}
+              );
+              });
+              })()}
             </div>
           </div>
         </div>
