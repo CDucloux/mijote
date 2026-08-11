@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.43 – Safran · Bouton section
+
+### Recettes
+- Éditeur : bouton **« Nouvelle section »** redessiné (icône dédiée, style distinct des ajouts d'ingrédient/étape) et saisie du nom modernisée
+
 ## v3.10.42 – Safran · Sections glissées
 
 ### Recettes
