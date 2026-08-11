@@ -26,6 +26,8 @@ export interface IngredientLine {
   dbId?: string;
   recipeId?: string;
   image?: string;
+  /** Libellé de la section/groupe (« Pour la pâte »). Vide/absent = section principale. */
+  group?: string;
 }
 
 /** Ustensile lié à une recette (résolu à la base par `dbId`). */
@@ -42,6 +44,8 @@ export interface Step {
   tip?: string;
   ingredients?: string[];
   utensils?: string[];
+  /** Libellé de la section/groupe (« Pour la pâte »). Vide/absent = section principale. */
+  group?: string;
 }
 
 /**

@@ -1,5 +1,16 @@
 # Changelog – Mijoté
 
+## v3.10.35 – Safran · Sections de recette
+
+### Recettes
+- **Groupements d'ingrédients et d'étapes** : organise une recette en sous-préparations nommées (« Pour la pâte », « Pour la crème »…). Chaque ingrédient et chaque étape peut être rattaché à une section, affichée avec son en-tête dans la fiche, le PDF et le mode pas à pas
+- Filtres : nouvelle section **« Type de préparation de base »** (fond, sauce, appareil, liaison, pâte, sirop, marinade)
+
+### Interface
+- Recettes publiques : boutons du haut réordonnés (impression → signalement → suppression) et **icône drapeau** pour le signalement
+- Déconnexion : petit **spinner** pendant la révocation de la session
+- Le panneau « Tous les filtres » joue son **animation de sortie** sur toutes les fermetures (croix, Appliquer…)
+
 ## v3.10.34 – Safran · Comptes & finitions
 
 ### Connexion

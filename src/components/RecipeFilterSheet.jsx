@@ -3,7 +3,7 @@ import { Icon } from "./Icon.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { IngImage } from "./Img.jsx";
 import { cuisineEmoji } from "../constants/cuisines.js";
-import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
+import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../constants/recipeCategories.js";
 import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
 import { DEFAULT_FILTERS, activeFilterCount } from "@/lib/recipes/recipeFilters.js";
 import { COOKING_METHODS } from "@/lib/recipes/cooking.js";
@@ -108,6 +108,8 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
   const reset = () => setFilters({ ...DEFAULT_FILTERS });
   const nActive = activeFilterCount(filters);
   const typeSummary = filters.type === "dish" ? "Plats" : filters.type === "base" ? "Préparations de base" : null;
+  const baseCatCount = (filters.categories || []).filter(id => BASE_CATEGORY_IDS.has(id)).length;
+  const recipeCatCount = (filters.categories || []).length - baseCatCount;
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -121,9 +123,21 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
 
       {/* Type de recette (rôle dans le repas) — le tri vit désormais hors du
           panneau (barre d'outils dédiée), côté /recipes comme Découvrir. */}
-      <Group title="Type de recette" first defaultOpen={false} summary={filters.categories?.length ? `${filters.categories.length} sélectionné${filters.categories.length > 1 ? "s" : ""}` : null}>
+      <Group title="Type de recette" first defaultOpen={false} summary={recipeCatCount ? `${recipeCatCount} sélectionné${recipeCatCount > 1 ? "s" : ""}` : null}>
         <Row>
           {RECIPE_CATEGORIES.map(c => (
+            <Chip key={c.id} on={(filters.categories || []).includes(c.id)} onClick={() => toggleCategory(c.id)}>
+              <span style={{ fontSize: 13, lineHeight: 1 }}>{c.emoji}</span> {c.label}
+            </Chip>
+          ))}
+        </Row>
+      </Group>
+
+      {/* Type de préparation de base (fond, sauce, appareil…) — même champ de
+          filtre `categories`, mais familles propres aux composants. */}
+      <Group title="Type de préparation de base" defaultOpen={false} summary={baseCatCount ? `${baseCatCount} sélectionné${baseCatCount > 1 ? "s" : ""}` : null}>
+        <Row>
+          {BASE_CATEGORIES.map(c => (
             <Chip key={c.id} on={(filters.categories || []).includes(c.id)} onClick={() => toggleCategory(c.id)}>
               <span style={{ fontSize: 13, lineHeight: 1 }}>{c.emoji}</span> {c.label}
             </Chip>

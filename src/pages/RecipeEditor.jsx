@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, Fragment } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { CUISINES } from "../constants/cuisines.js";
@@ -8,11 +8,16 @@ import { DraggableStep } from "../components/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
+import { groupOrder } from "@/lib/recipes/recipeGroups.js";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
+
+// Séparateur de section (« Pour la pâte »…) intercalé dans la liste de l'éditeur au
+// changement de groupe. Purement visuel : n'affecte pas l'ordre/le drag des lignes.
+const editorGroupSep = { fontFamily: "var(--ff-display)", fontSize: 14.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", margin: "6px 2px 0", paddingBottom: 4, borderBottom: "1px solid var(--border)" };
 
 export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, recipes }) {
   const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", category: recipe.category || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
@@ -57,8 +62,11 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const addIng = () => {
     const id = "i" + Date.now();
     lastAddedIdRef.current = id;
-    up("ingredients", [...form.ingredients, { id, dbId: "", name: "", amount: "", unit: "", _raw: "" }]);
+    // Hérite du groupe de la dernière ligne (confort de saisie dans une section).
+    const group = form.ingredients[form.ingredients.length - 1]?.group || "";
+    up("ingredients", [...form.ingredients, { id, dbId: "", name: "", amount: "", unit: "", _raw: "", group }]);
   };
+  const setIngGroup = (id, g) => up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, group: g } : i));
   const moveIng = (fromIdx, toIdx) => {
     const arr = [...form.ingredients];
     const [removed] = arr.splice(fromIdx, 1);
@@ -87,8 +95,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
 
   // Steps with drag reorder
-  const addStep = () => up("steps", [...form.steps, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [] }]);
+  const addStep = () => up("steps", [...form.steps, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [], group: form.steps[form.steps.length - 1]?.group || "" }]);
   const updStep = (id, f, v) => up("steps", form.steps.map(s => s.id === id ? { ...s, [f]: v } : s));
+  const setStepGroup = (id, g) => up("steps", form.steps.map(s => s.id === id ? { ...s, group: g } : s));
   const remStep = id => up("steps", form.steps.filter(s => s.id !== id));
   const moveStep = (fromIdx, toIdx) => {
     const arr = [...form.steps];
@@ -96,6 +105,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
     arr.splice(toIdx, 0, removed);
     up("steps", arr);
   };
+
+  // Sections existantes (« Pour la pâte »…) proposées dans le sélecteur de groupe.
+  const recipeGroups = groupOrder(form);
 
   const isDesktop = useIsDesktop();
   // Élastique vertical (rubber-band + rebond d'inertie) pour les panneaux du pager
@@ -300,14 +312,22 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="warning" size={16} color="var(--red)" /> {saveError}
               </div>
             )}
-            {form.ingredients.map((ing, i) => (
-              <DraggableIngredient key={ing.id} ing={ing} index={i} total={form.ingredients.length}
-                draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
-                autoFocus={ing.id === lastAddedIdRef.current}
-                onRawChange={handleRawChange}
-                onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-                onRemove={remIng} onMove={moveIng} onEnter={addIng} />
-            ))}
+            {form.ingredients.map((ing, i) => {
+              const g = ing.group || "";
+              const showSep = g && g !== (form.ingredients[i - 1]?.group || "");
+              return (
+              <Fragment key={ing.id}>
+                {showSep && <div style={editorGroupSep}>{g}</div>}
+                <DraggableIngredient ing={ing} index={i} total={form.ingredients.length}
+                  draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
+                  autoFocus={ing.id === lastAddedIdRef.current}
+                  groups={recipeGroups} onSetGroup={setIngGroup}
+                  onRawChange={handleRawChange}
+                  onUpdateAmount={(id, v) => updIng(id, "amount", v)}
+                  onRemove={remIng} onMove={moveIng} onEnter={addIng} />
+              </Fragment>
+              );
+            })}
             {/* Zone d'ajout : bascule ingrédient brut / composant (préparation de base).
                 Onglet Composants masqué quand on édite soi-même un composant (mono-niveau v1). */}
             {!form.isComponent ? (
@@ -358,12 +378,20 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="drag" size={14} color="var(--text3)" /> Glisse les étapes pour les réorganiser.
               </div>
             )}
-            {form.steps.map((step, i) => (
-              <DraggableStep key={step.id} step={step} index={i} total={form.steps.length}
-                ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
-                draggable={!isDesktop}
-                onUpdate={updStep} onRemove={remStep} onMove={moveStep} />
-            ))}
+            {form.steps.map((step, i) => {
+              const g = step.group || "";
+              const showSep = g && g !== (form.steps[i - 1]?.group || "");
+              return (
+              <Fragment key={step.id}>
+                {showSep && <div style={editorGroupSep}>{g}</div>}
+                <DraggableStep step={step} index={i} total={form.steps.length}
+                  ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
+                  draggable={!isDesktop}
+                  groups={recipeGroups} onSetGroup={setStepGroup}
+                  onUpdate={updStep} onRemove={remStep} onMove={moveStep} />
+              </Fragment>
+              );
+            })}
             <button className="editor-add" onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>
           </div>
         </div>

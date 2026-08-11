@@ -32,6 +32,7 @@ import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { computeDifficulty, explainDifficulty } from "@/lib/recipes/difficulty.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "@/lib/recipes/recipeComponents.js";
+import { groupBy } from "@/lib/recipes/recipeGroups.js";
 import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { MEAL_SLOTS } from "../constants/mealSlots.js";
@@ -44,6 +45,17 @@ const REPORT_REASONS = [
   { id: "spam", label: "Spam ou hors-sujet" },
   { id: "other", label: "Autre" },
 ];
+
+// En-tête d'une section (groupe « Pour la pâte »…). Rendu uniquement pour les groupes
+// nommés ; la section principale (sans groupe) reste sans en-tête (iso-rendu).
+function GroupHeader({ label, style }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>
+      <span style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", flexShrink: 0 }}>{label}</span>
+      <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
+    </div>
+  );
+}
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
 export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid, isAdmin = false, onReport, onAdminDelete }) {
@@ -505,14 +517,14 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <button onClick={handleBack} className="hero-back" style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} /></button>
         {publicMode && (onExportPDF || onReport || (isAdmin && onAdminDelete)) && (
         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
+          {onExportPDF && (
+            <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} /></button>
+          )}
           {onReport && (
-            <button onClick={() => { setReportReason(null); setReportNote(""); setReportOpen(true); }} title="Signaler" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="warning" size={16} color="#fff" /></button>
+            <button onClick={() => { setReportReason(null); setReportNote(""); setReportOpen(true); }} title="Signaler" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="flag" size={16} color="#fff" /></button>
           )}
           {isAdmin && onAdminDelete && (
             <button onClick={() => setConfirmAdminDelete(true)} title="Supprimer (admin)" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="trash" size={16} color="#ff6b6b" /></button>
-          )}
-          {onExportPDF && (
-            <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} /></button>
           )}
         </div>
         )}
@@ -658,14 +670,14 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
             {publicMode && (onExportPDF || onReport || (isAdmin && onAdminDelete)) && (
             <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
+              {onExportPDF && (
+                <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
+              )}
               {onReport && (
-                <button onClick={() => { setReportReason(null); setReportNote(""); setReportOpen(true); }} title="Signaler" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="warning" size={16} color="#fff" /></button>
+                <button onClick={() => { setReportReason(null); setReportNote(""); setReportOpen(true); }} title="Signaler" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="flag" size={16} color="#fff" /></button>
               )}
               {isAdmin && onAdminDelete && (
                 <button onClick={() => setConfirmAdminDelete(true)} title="Supprimer (admin)" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="trash" size={16} color="#ff6b6b" /></button>
-              )}
-              {onExportPDF && (
-                <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
               )}
             </div>
             )}
@@ -817,12 +829,17 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   </button>
                 </div>
               </div>
-              {/* Liste ingrédients – carte unique, lignes séparées par un filet */}
-              <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
-                {recipe.ingredients.map((ing, idx) => {
+              {/* Liste ingrédients – une carte par section (« Pour la pâte »…), lignes
+                  séparées par un filet. Sans groupe : une seule carte, aucun en-tête. */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {groupBy(recipe.ingredients).map(section => (
+              <div key={section.group ?? "__main"}>
+                {section.group && <GroupHeader label={section.group} style={{ marginBottom: 10 }} />}
+                <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
+                {section.items.map((ing, idx) => {
                   const rc = resolveComp(ing);
                   const isComp = !!rc;
-                  const last = idx === recipe.ingredients.length - 1;
+                  const last = idx === section.items.length - 1;
                   // Sous-titre statut : stock prioritaire, sinon saison.
                   const inStock = isInStock(ing);
                   const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason(it) === true : false; })();
@@ -862,6 +879,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                     </div>
                   );
                 })}
+                </div>
+              </div>
+              ))}
               </div>
             </div>
           )}
@@ -923,7 +943,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 {baseSteps.length > 0 && recipe.steps?.length > 0 && (
                   <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
                 )}
-                {(recipe.steps || []).map((step, i) => {
+                {groupBy(recipe.steps || []).map(section => (
+                <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {section.group && <GroupHeader label={section.group} style={{ marginTop: 4 }} />}
+                {section.items.map((step, i) => {
                   const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                   const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
                   const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
@@ -956,6 +979,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                     </div>
                   );
                 })}
+                </div>
+                ))}
               </div>
             </div>
           )}
@@ -975,7 +1000,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {recipe.ingredients.map(ing => {
+                {groupBy(recipe.ingredients).map(section => (
+                <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {section.group && <GroupHeader label={section.group} />}
+                {section.items.map(ing => {
                   const rc = resolveComp(ing);
                   if (rc) return (
                     <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (rc.comp) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
@@ -1003,6 +1031,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   </div>
                   );
                 })}
+                </div>
+                ))}
               </div>
             </div>
             {recipe.utensils && recipe.utensils.length > 0 && (
@@ -1075,7 +1105,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               {baseSteps.length > 0 && recipe.steps?.length > 0 && (
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
               )}
-              {(recipe.steps || []).map((step, i) => {
+              {groupBy(recipe.steps || []).map(section => (
+              <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+              {section.group && <GroupHeader label={section.group} />}
+              {section.items.map((step, i) => {
                 const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                 const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
                 return (
@@ -1107,6 +1140,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   </div>
                 );
               })}
+              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1285,7 +1320,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <SwipeableSheet onClose={() => setReportOpen(false)}>
           {(close) => (<>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-              <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: "rgba(224,82,82,0.14)", display: "grid", placeItems: "center" }}><Icon name="warning" size={19} color="var(--red)" /></span>
+              <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: "rgba(224,82,82,0.14)", display: "grid", placeItems: "center" }}><Icon name="flag" size={19} color="var(--red)" /></span>
               <div>
                 <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, margin: 0 }}>Signaler cette recette</h3>
                 <p style={{ fontSize: 12, color: "var(--text3)", margin: "2px 0 0" }}>Pourquoi ne respecte-t-elle pas les conditions ?</p>
@@ -1312,7 +1347,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
               <button className="btn btn-danger btn-pill" style={{ flex: 1.3 }} disabled={!reportReason}
                 onClick={() => close(() => { onReport?.(reportReason, reportNote.trim()); })}>
-                <Icon name="warning" size={14} /> Envoyer le signalement
+                <Icon name="flag" size={14} /> Envoyer le signalement
               </button>
             </div>
           </>)}
