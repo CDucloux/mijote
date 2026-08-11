@@ -23,14 +23,14 @@ export function ReadOnlyBanner({ style }) {
 // spacing without duplicating the whole markup (e.g. marginBottom per section).
 export function AdminBanner({ style }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(91,156,246,0.20), rgba(91,156,246,0.06))", border: "1px solid rgba(91,156,246,0.38)", boxShadow: "0 2px 12px rgba(91,156,246,0.12)", ...style }}>
-      <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(91,156,246,0.45)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(139,111,240,0.20), rgba(139,111,240,0.06))", border: "1px solid rgba(139,111,240,0.38)", boxShadow: "0 2px 12px rgba(139,111,240,0.12)", ...style }}>
+      <div style={{ width: 30, height: 30, borderRadius: 9, background: "#8b6ff0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(139,111,240,0.45)" }}>
         <Icon name="settings" size={16} color="#fff" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)", letterSpacing: "0.02em" }}>MODE ADMIN</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--blue)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>MASTER</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#8b6ff0", letterSpacing: "0.02em" }}>MODE ADMIN</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "#8b6ff0", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>MASTER</span>
         </div>
         <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>Tes modifications sont publiées dans la base partagée</div>
       </div>
