@@ -10,7 +10,7 @@ import { MoveArrows } from "./MoveArrows.jsx";
 export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
   ingredientDB, recipes, autoFocus, groups, onSetGroup, sectionKey = "",
-  onRawChange, onUpdateAmount, onRemove, onMove, onEnter,
+  onRawChange, onUpdateAmount, onRemove, onMove, onEnter, onBackspaceEmpty,
 }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
@@ -87,7 +87,11 @@ export function DraggableIngredient({
           enterKeyHint="enter"
           value={ing._raw !== undefined ? ing._raw : ""}
           onChange={e => onRawChange(ing.id, e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); onEnter(); } }}
+          onKeyDown={e => {
+            if (e.key === "Enter") { e.preventDefault(); onEnter(); }
+            // Retour arrière sur une ligne VIDE → supprime la ligne (miroir d'Entrée).
+            else if (e.key === "Backspace" && !(ing._raw || "") && onBackspaceEmpty) { e.preventDefault(); onBackspaceEmpty(ing.id); }
+          }}
           style={{ marginBottom: 0, flex: 1, minWidth: 0 }} />
         {groupSel}
         {trashBtn}
