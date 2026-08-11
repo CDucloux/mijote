@@ -6,6 +6,7 @@ import { Donut } from "./Donut.jsx";
 import { TagInput } from "./TagInput.jsx";
 import { SeasonBar } from "./SeasonBar.jsx";
 import { SeasonBadge } from "./Badges.jsx";
+import { IngredientStatusBadge } from "./IngredientStatusBadge.jsx";
 import { uploadImage, compressImage } from "@/lib/firebase/storage.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, isFruitVeg } from "../constants/categories.js";
@@ -172,7 +173,10 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             {editing
               ? <RoundImageUpload value={draft.image} onChange={v => up({ image: v })} size={82} />
-              : <div style={{ flexShrink: 0, borderRadius: "50%", boxShadow: "0 4px 14px -6px rgba(0,0,0,0.25)" }}><IngImage src={ingredient.image} alt={ingredient.name} size={82} /></div>}
+              : <div style={{ position: "relative", flexShrink: 0, borderRadius: "50%", boxShadow: "0 4px 14px -6px rgba(0,0,0,0.25)" }}>
+                  <IngImage src={ingredient.image} alt={ingredient.name} size={82} />
+                  {ingredient.status === "validated" && <IngredientStatusBadge status="validated" size={24} />}
+                </div>}
             <div style={{ flex: 1, minWidth: 0 }}>
               {editing ? (
                 <input value={draft.name} onChange={e => up({ name: e.target.value })} placeholder="Nom de l'ingrédient" autoFocus={!draft.name}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
+import { IngredientStatusBadge } from "../components/IngredientStatusBadge.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
@@ -510,12 +511,12 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = "var(--surface2)"; }}
                           onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; }}>
-                          <IngImage src={item.image} alt={item.name} size={42} />
+                          <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
+                            <IngImage src={item.image} alt={item.name} size={42} />
+                            <IngredientStatusBadge status={item.status} />
+                          </span>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                              <span title={item.status === "validated" ? "Validé" : "En cours de rédaction"} style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0, background: item.status === "validated" ? "var(--green)" : "#e8920a" }} />
-                              <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
-                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
                             <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--accent)", marginTop: 2, fontWeight: 600 }}>
                               <Icon name="fileText" size={10} color="var(--accent)" /> Découvrir la fiche
                             </div>
