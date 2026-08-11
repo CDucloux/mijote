@@ -218,7 +218,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           onUpdateAmount={(id, v) => updIng(id, "amount", v)}
           onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} />
       ))}
-      <SectionAddBar onAddIngredient={() => addIngTo("")} components={compsFor("")} canBase={!form.isComponent} />
+      <SectionAddBar onAddIngredient={() => addIngTo("")} components={compsFor("")} canBase={false} />
     </div>
   );
 
@@ -438,7 +438,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     onUpdateAmount={(id, v) => updIng(id, "amount", v)}
                     onRemove={remIng} onMove={moveIngIn(name)} onEnter={() => addIngTo(name)} />
                 ))}
-                <SectionAddBar onAddIngredient={() => addIngTo(name)} components={compsFor(name)} canBase={!form.isComponent} />
+                <SectionAddBar onAddIngredient={() => addIngTo(name)} components={compsFor(name)} canBase={!form.isComponent && !ingsOf(name).some(i => !i.recipeId)} />
               </SectionCard>
             ))}
             <NewSectionButton onAdd={addSection} />
