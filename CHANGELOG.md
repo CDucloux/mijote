@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.40 – Safran · Import & finitions
+
+### Recettes
+- **Import IA** : reconnaît désormais les recettes structurées en sous-préparations (« Pour la pâte », « Pour la crème »…) et les restitue en **sections** — sans jamais en inventer sur une recette à liste simple
+- Éditeur : boutons « dissoudre » et corbeille arrondis, au fond apparaissant seulement au survol
+
 ## v3.10.39 – Safran · Éditeur d'étape
 
 ### Recettes
