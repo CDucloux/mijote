@@ -499,6 +499,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
               <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => close(() => {
+                setConfirmClearId(null); // sinon le sheet reste monté (close(cb) shunte onClose)
                 if (isAll) clearAllChecked(); else clearChecked(confirmClearId);
                 // Un toast de succès par produit ajouté au stock, en cascade (dédupliqués).
                 const seen = new Set();
