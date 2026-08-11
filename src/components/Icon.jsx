@@ -36,7 +36,7 @@ export const Icon = ({ name, size = 20, color = "currentColor" }) => {
     warning: <svg {...p} strokeWidth="2"><path d="M12 4 21 20 3 20Z"/><line x1="12" y1="10" x2="12" y2="14.5"/><line x1="12" y1="17.5" x2="12.01" y2="17.5"/></svg>,
     flag: <svg {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>,
     layers: <svg {...p}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
-    utensils: <svg {...p}><rect x="5.5" y="9" width="13" height="6" rx="3"/><path d="M5.5 12H2.5"/><path d="M2.5 10.2v3.6"/><path d="M18.5 12h3"/><path d="M21.5 10.2v3.6"/></svg>,
+    utensils: <svg {...p}><path d="M10.09 17.17 17.17 10.09a2.3 2.3 0 0 0-3.26-3.26L6.83 13.91a2.3 2.3 0 0 0 3.26 3.26Z"/><path d="M7.9 17.5 5.2 20.2a1 1 0 0 1-1.4-1.4L6.5 16.1a1 1 0 0 1 1.4 1.4Z"/><path d="M17.5 7.9 20.2 5.2a1 1 0 0 0-1.4-1.4L16.1 6.5a1 1 0 0 0 1.4 1.4Z"/></svg>,
     shield: <svg {...p}><path d="M12 3 5 6v5c0 4.4 3 7.6 7 9 4-1.4 7-4.6 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>,
     terminal: <svg {...p}><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>,
     sparkle: <svg {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>,
