@@ -234,6 +234,7 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[]):
   // Conversion du numéro 1-based du modèle en index 0-based validé (-1 = aucune).
   const cp = Number(parsed.coverPhoto);
   const coverIndex = Number.isInteger(cp) && cp >= 1 && cp <= images.length ? cp - 1 : -1;
+  logRawModelJson("images", block.text);
   logDetectedGroups("images", parsed);
   return { inter: llmToIntermediate(parsed, ""), coverIndex };
 }
@@ -275,6 +276,7 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
   let parsed: LlmDraft;
   try { parsed = parseJsonLoose(block.text) as LlmDraft; }
   catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
+  logRawModelJson("url", block.text);
   logDetectedGroups("url", parsed);
   return llmToIntermediate(parsed, sourceUrl);
 }
@@ -285,6 +287,12 @@ function logDetectedGroups(kind: string, d: LlmDraft): void {
   const ig = [...new Set((d.ingredients || []).map((i) => (typeof i.group === "string" ? i.group.trim() : "")).filter(Boolean))];
   const sg = [...new Set((d.steps || []).map((s) => (typeof s.group === "string" ? s.group.trim() : "")).filter(Boolean))];
   logger.info(`import[${kind}] sections détectées`, { ingredientGroups: ig, stepGroups: sg });
+}
+
+/** Trace le JSON BRUT renvoyé par le modèle (diagnostic). Tronqué à 12000 caractères
+ *  pour rester lisible dans Cloud Logging. À retirer une fois l'import validé. */
+function logRawModelJson(kind: string, raw: string): void {
+  logger.debug(`import[${kind}] réponse brute du modèle`, { raw: (raw || "").slice(0, 12000) });
 }
 
 /**
