@@ -79,6 +79,32 @@ export function relabelGroup<T extends { group?: string }>(items: readonly T[], 
  * (`""` = section principale) ; `fromLocal`/`toLocal` sont les index DANS la section.
  * Utilisé par l'éditeur pour un glisser/déposer ou des flèches ↑/↓ scopés à la section.
  */
+/**
+ * Déplace un item d'UNE section vers une AUTRE (change son `group`) et l'insère à la
+ * position `toLocal` de la section cible. `toLocal` hors bornes (ex. `Infinity`) →
+ * ajout en fin de section cible. Utilisé par le glisser/déposer inter-sections de
+ * l'éditeur (y compris vers/depuis le « hors section », `group === ""`).
+ */
+export function moveAcrossGroups<T extends { group?: string }>(items: readonly T[], fromGroup: string, fromLocal: number, toGroup: string, toLocal: number): T[] {
+  const fg = label(fromGroup);
+  const tg = label(toGroup);
+  const arr = items.slice();
+  const srcPositions: number[] = [];
+  arr.forEach((it, i) => { if (label(it.group) === fg) srcPositions.push(i); });
+  if (fromLocal < 0 || fromLocal >= srcPositions.length) return items.slice();
+  const [moved] = arr.splice(srcPositions[fromLocal], 1);
+  const movedNew = { ...moved, group: tg } as T;
+  const tgtPositions: number[] = [];
+  arr.forEach((it, i) => { if (label(it.group) === tg) tgtPositions.push(i); });
+  let insertAt: number;
+  if (tgtPositions.length === 0) insertAt = arr.length;
+  else if (toLocal <= 0) insertAt = tgtPositions[0];
+  else if (toLocal >= tgtPositions.length) insertAt = tgtPositions[tgtPositions.length - 1] + 1;
+  else insertAt = tgtPositions[toLocal];
+  arr.splice(insertAt, 0, movedNew);
+  return arr;
+}
+
 export function moveWithinGroup<T extends { group?: string }>(items: readonly T[], group: string, fromLocal: number, toLocal: number): T[] {
   const g = label(group);
   const positions: number[] = [];

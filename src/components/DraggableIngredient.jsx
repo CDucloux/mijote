@@ -10,7 +10,7 @@ import { MoveArrows } from "./MoveArrows.jsx";
 export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
   ingredientDB, recipes, autoFocus, groups, onSetGroup, sectionKey = "",
-  onRawChange, onUpdateAmount, onRemove, onMove, onEnter, onBackspaceEmpty,
+  onRawChange, onUpdateAmount, onRemove, onMove, onEnter, onBackspaceEmpty, onDropItem,
 }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
@@ -25,8 +25,9 @@ export function DraggableIngredient({
     onDragEnd: () => setDragging(false),
     onDragOver: e => { e.preventDefault(); setOver(true); },
     onDragLeave: () => setOver(false),
-    // Réordonnancement scopé à la section : on ignore un drop venu d'une autre section.
-    onDrop: e => { e.preventDefault(); setOver(false); if (e.dataTransfer.getData("ingSection") !== sectionKey) return; const from = +e.dataTransfer.getData("ingIdx"); if (Number.isInteger(from) && from !== index) onMove(from, index); },
+    // Drop sur une ligne : réordonne (même section) OU déplace vers cette section
+    // (inter-sections). `stopPropagation` évite un double-traitement par la zone parente.
+    onDrop: e => { e.preventDefault(); e.stopPropagation(); setOver(false); const raw = e.dataTransfer.getData("ingIdx"); if (raw === "") return; onDropItem?.(e.dataTransfer.getData("ingSection"), +raw, index); },
   } : {};
 
   const handle = isDraggable ? (

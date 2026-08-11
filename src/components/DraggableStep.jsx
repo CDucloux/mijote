@@ -19,7 +19,7 @@ function BlockLabel({ icon, color, children }) {
   );
 }
 
-export function DraggableStep({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, groups, onSetGroup, sectionKey = "", onUpdate, onRemove, onMove }) {
+export function DraggableStep({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, groups, onSetGroup, sectionKey = "", onUpdate, onRemove, onMove, onDropItem }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
   const [trashHover, setTrashHover] = useState(false);
@@ -39,7 +39,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
       onDragEnd={isDraggable ? () => setDragging(false) : undefined}
       onDragOver={isDraggable ? e => { e.preventDefault(); setOver(true); } : undefined}
       onDragLeave={isDraggable ? () => setOver(false) : undefined}
-      onDrop={isDraggable ? e => { e.preventDefault(); setOver(false); if (e.dataTransfer.getData("stepSection") !== sectionKey) return; const from = +e.dataTransfer.getData("stepIdx"); if (from !== index) onMove(from, index); } : undefined}
+      onDrop={isDraggable ? e => { e.preventDefault(); e.stopPropagation(); setOver(false); const raw = e.dataTransfer.getData("stepIdx"); if (raw === "") return; onDropItem?.(e.dataTransfer.getData("stepSection"), +raw, index); } : undefined}
       style={{ background: "var(--surface)", borderRadius: 18, padding: 16, border: `1px solid ${over ? "var(--accent)" : "var(--border)"}`, opacity: dragging ? 0.5 : 1, boxShadow: over ? "0 8px 24px -12px rgba(232,112,58,0.5)" : "0 1px 2px rgba(0,0,0,0.04)", transition: "opacity 0.15s, border-color 0.15s, box-shadow 0.2s", cursor: isDraggable ? "grab" : "default" }}
     >
       {/* En-tête : poignée + numéro (badge dégradé) · section + supprimer */}
