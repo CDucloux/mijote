@@ -70,3 +70,24 @@ export function relabelGroup<T extends { group?: string }>(items: readonly T[], 
   const t = label(to);
   return items.map(it => (label(it.group) === f ? { ...it, group: t } : it));
 }
+
+/**
+ * Réordonne UN item À L'INTÉRIEUR de sa section (les autres items — et les autres
+ * sections — gardent leur position dans le tableau). `group` cible la section
+ * (`""` = section principale) ; `fromLocal`/`toLocal` sont les index DANS la section.
+ * Utilisé par l'éditeur pour un glisser/déposer ou des flèches ↑/↓ scopés à la section.
+ */
+export function moveWithinGroup<T extends { group?: string }>(items: readonly T[], group: string, fromLocal: number, toLocal: number): T[] {
+  const g = label(group);
+  const positions: number[] = [];
+  items.forEach((it, idx) => { if (label(it.group) === g) positions.push(idx); });
+  if (fromLocal < 0 || fromLocal >= positions.length || toLocal < 0 || toLocal >= positions.length || fromLocal === toLocal) {
+    return items.slice();
+  }
+  const arr = items.slice();
+  const subset = positions.map(p => arr[p]);
+  const [moved] = subset.splice(fromLocal, 1);
+  subset.splice(toLocal, 0, moved);
+  positions.forEach((p, k) => { arr[p] = subset[k]; });
+  return arr;
+}

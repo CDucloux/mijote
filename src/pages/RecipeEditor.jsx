@@ -1,4 +1,4 @@
-import { useState, useRef, Fragment } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { CUISINES } from "../constants/cuisines.js";
@@ -8,16 +8,63 @@ import { DraggableStep } from "../components/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
-import { groupOrder } from "@/lib/recipes/recipeGroups.js";
+import { groupOrder, relabelGroup, moveWithinGroup } from "@/lib/recipes/recipeGroups.js";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
-// Séparateur de section (« Pour la pâte »…) intercalé dans la liste de l'éditeur au
-// changement de groupe. Purement visuel : n'affecte pas l'ordre/le drag des lignes.
-const editorGroupSep = { fontFamily: "var(--ff-display)", fontSize: 14.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", margin: "6px 2px 0", paddingBottom: 4, borderBottom: "1px solid var(--border)" };
+// Carte de section (« Pour la pâte »…) dans l'éditeur : en-tête avec nom renommable
+// (clic → champ) et bouton de dissolution, puis le contenu (items + bouton d'ajout).
+function SectionCard({ name, onRename, onDelete, children }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const inputRef = useRef(null);
+  useEffect(() => { setDraft(name); }, [name]);
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+  const commit = () => { setEditing(false); onRename(draft); };
+  return (
+    <div style={{ background: "rgba(232,112,58,0.04)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 16, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <Icon name="book" size={15} color="var(--accent)" />
+        {editing ? (
+          <input ref={inputRef} className="field-input" value={draft} onChange={e => setDraft(e.target.value)}
+            onBlur={commit} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
+            style={{ marginBottom: 0, flex: 1, minWidth: 0, height: 32, fontSize: 13.5, fontWeight: 600 }} />
+        ) : (
+          <button type="button" onClick={() => setEditing(true)} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
+        )}
+        <button type="button" onClick={onDelete} title="Dissoudre la section" style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", display: "grid", placeItems: "center", cursor: "pointer" }}>
+          <Icon name="eraser" size={13} color="var(--text3)" />
+        </button>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// Bouton « + Nouvelle section » avec saisie inline du nom.
+function NewSectionButton({ onAdd }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef(null);
+  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
+  const submit = () => { const t = draft.trim(); if (t) { onAdd(t); setDraft(""); setOpen(false); } };
+  if (!open) return (
+    <button type="button" className="editor-add" onClick={() => setOpen(true)} style={{ borderStyle: "dashed" }}>
+      <Icon name="plus" size={16} /> Nouvelle section
+    </button>
+  );
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <input ref={inputRef} className="field-input" value={draft} onChange={e => setDraft(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit(); } if (e.key === "Escape") { setDraft(""); setOpen(false); } }}
+        placeholder="Nom de la section (ex. La pâte)" style={{ marginBottom: 0, flex: 1, minWidth: 0 }} />
+      <button type="button" onClick={submit} disabled={!draft.trim()} style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, border: "none", background: "var(--accent)", color: "#fff", cursor: draft.trim() ? "pointer" : "default", opacity: draft.trim() ? 1 : 0.5, display: "grid", placeItems: "center" }}><Icon name="check" size={16} color="#fff" /></button>
+    </div>
+  );
+}
 
 export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, recipes }) {
   const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", category: recipe.category || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
@@ -59,20 +106,15 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   // Ingredients
   const [addMode, setAddMode] = useState("ing"); // "ing" = ingrédient brut | "comp" = composant
   const lastAddedIdRef = useRef(null);
-  const addIng = () => {
+  // Ajoute un ingrédient dans une section donnée (`""` = section principale).
+  const addIngTo = (group) => {
     const id = "i" + Date.now();
     lastAddedIdRef.current = id;
-    // Hérite du groupe de la dernière ligne (confort de saisie dans une section).
-    const group = form.ingredients[form.ingredients.length - 1]?.group || "";
     up("ingredients", [...form.ingredients, { id, dbId: "", name: "", amount: "", unit: "", _raw: "", group }]);
   };
+  const addIng = () => addIngTo("");
   const setIngGroup = (id, g) => up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, group: g } : i));
-  const moveIng = (fromIdx, toIdx) => {
-    const arr = [...form.ingredients];
-    const [removed] = arr.splice(fromIdx, 1);
-    arr.splice(toIdx, 0, removed);
-    up("ingredients", arr);
-  };
+  const moveIngIn = (group) => (fromLocal, toLocal) => up("ingredients", moveWithinGroup(form.ingredients, group, fromLocal, toLocal));
   const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
   const remIng = id => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.filter(i => i.id !== id)); };
   // Parse + rapprochement base d'ingrédients à chaque frappe dans le champ « raw ».
@@ -95,19 +137,35 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
 
   // Steps with drag reorder
-  const addStep = () => up("steps", [...form.steps, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [], group: form.steps[form.steps.length - 1]?.group || "" }]);
+  const addStepTo = (group) => up("steps", [...form.steps, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [], group }]);
+  const addStep = () => addStepTo("");
   const updStep = (id, f, v) => up("steps", form.steps.map(s => s.id === id ? { ...s, [f]: v } : s));
   const setStepGroup = (id, g) => up("steps", form.steps.map(s => s.id === id ? { ...s, group: g } : s));
   const remStep = id => up("steps", form.steps.filter(s => s.id !== id));
-  const moveStep = (fromIdx, toIdx) => {
-    const arr = [...form.steps];
-    const [removed] = arr.splice(fromIdx, 1);
-    arr.splice(toIdx, 0, removed);
-    up("steps", arr);
-  };
+  const moveStepIn = (group) => (fromLocal, toLocal) => up("steps", moveWithinGroup(form.steps, group, fromLocal, toLocal));
 
-  // Sections existantes (« Pour la pâte »…) proposées dans le sélecteur de groupe.
-  const recipeGroups = groupOrder(form);
+  // ── Sections partagées (ingrédients + étapes) ───────────────────────────────
+  // `sectionNames` porte l'ORDRE des sections et permet les sections VIDES (créées
+  // avant d'y ajouter le moindre item — le modèle « libellé » ne peut pas les stocker).
+  const [sectionNames, setSectionNames] = useState(() => groupOrder(form));
+  // Union ordonnée : sections déclarées + toute section présente dans les données.
+  const allSections = [...new Set([...sectionNames, ...groupOrder(form)])];
+  const addSection = (name) => { const t = (name || "").trim(); if (t && !allSections.includes(t)) setSectionNames(s => [...s, t]); };
+  const renameSection = (from, to) => {
+    const t = (to || "").trim();
+    if (!t || t === from) return;
+    up("ingredients", relabelGroup(form.ingredients, from, t));
+    up("steps", relabelGroup(form.steps, from, t));
+    setSectionNames(s => s.map(x => (x === from ? t : x)));
+  };
+  const deleteSection = (name) => {
+    // Dissout la section : ses items repassent en principale (aucune suppression).
+    up("ingredients", relabelGroup(form.ingredients, name, ""));
+    up("steps", relabelGroup(form.steps, name, ""));
+    setSectionNames(s => s.filter(x => x !== name));
+  };
+  const ingsOf = (g) => form.ingredients.filter(i => (i.group || "") === g);
+  const stepsOf = (g) => form.steps.filter(s => (s.group || "") === g);
 
   const isDesktop = useIsDesktop();
   // Élastique vertical (rubber-band + rebond d'inertie) pour les panneaux du pager
@@ -312,22 +370,16 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="warning" size={16} color="var(--red)" /> {saveError}
               </div>
             )}
-            {form.ingredients.map((ing, i) => {
-              const g = ing.group || "";
-              const showSep = g && g !== (form.ingredients[i - 1]?.group || "");
-              return (
-              <Fragment key={ing.id}>
-                {showSep && <div style={editorGroupSep}>{g}</div>}
-                <DraggableIngredient ing={ing} index={i} total={form.ingredients.length}
-                  draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
-                  autoFocus={ing.id === lastAddedIdRef.current}
-                  groups={recipeGroups} onSetGroup={setIngGroup}
-                  onRawChange={handleRawChange}
-                  onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-                  onRemove={remIng} onMove={moveIng} onEnter={addIng} />
-              </Fragment>
-              );
-            })}
+            {/* Section principale (ingrédients sans groupe) */}
+            {ingsOf("").map((ing, li) => (
+              <DraggableIngredient key={ing.id} ing={ing} index={li} total={ingsOf("").length}
+                draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
+                autoFocus={ing.id === lastAddedIdRef.current}
+                sectionKey="" groups={allSections} onSetGroup={setIngGroup}
+                onRawChange={handleRawChange}
+                onUpdateAmount={(id, v) => updIng(id, "amount", v)}
+                onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} />
+            ))}
             {/* Zone d'ajout : bascule ingrédient brut / composant (préparation de base).
                 Onglet Composants masqué quand on édite soi-même un composant (mono-niveau v1). */}
             {!form.isComponent ? (
@@ -363,6 +415,24 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             ) : (
               <button className="editor-add" onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
             )}
+
+            {/* Sections nommées : les ingrédients y sont toujours regroupés (même si
+                ajoutés dans le désordre), et on ajoute directement DANS la section. */}
+            {allSections.map(name => (
+              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
+                {ingsOf(name).map((ing, li) => (
+                  <DraggableIngredient key={ing.id} ing={ing} index={li} total={ingsOf(name).length}
+                    draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
+                    autoFocus={ing.id === lastAddedIdRef.current}
+                    sectionKey={name} groups={allSections} onSetGroup={setIngGroup}
+                    onRawChange={handleRawChange}
+                    onUpdateAmount={(id, v) => updIng(id, "amount", v)}
+                    onRemove={remIng} onMove={moveIngIn(name)} onEnter={() => addIngTo(name)} />
+                ))}
+                <button className="editor-add" onClick={() => addIngTo(name)}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
+              </SectionCard>
+            ))}
+            <NewSectionButton onAdd={addSection} />
           </div>
         </div>
 
@@ -378,21 +448,30 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="drag" size={14} color="var(--text3)" /> Glisse les étapes pour les réorganiser.
               </div>
             )}
-            {form.steps.map((step, i) => {
-              const g = step.group || "";
-              const showSep = g && g !== (form.steps[i - 1]?.group || "");
-              return (
-              <Fragment key={step.id}>
-                {showSep && <div style={editorGroupSep}>{g}</div>}
-                <DraggableStep step={step} index={i} total={form.steps.length}
-                  ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
-                  draggable={!isDesktop}
-                  groups={recipeGroups} onSetGroup={setStepGroup}
-                  onUpdate={updStep} onRemove={remStep} onMove={moveStep} />
-              </Fragment>
-              );
-            })}
+            {/* Section principale (étapes sans groupe) */}
+            {stepsOf("").map((step, li) => (
+              <DraggableStep key={step.id} step={step} index={li} total={stepsOf("").length}
+                ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
+                draggable={!isDesktop}
+                sectionKey="" groups={allSections} onSetGroup={setStepGroup}
+                onUpdate={updStep} onRemove={remStep} onMove={moveStepIn("")} />
+            ))}
             <button className="editor-add" onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>
+
+            {/* Sections nommées d'étapes (partagées avec les ingrédients) */}
+            {allSections.map(name => (
+              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
+                {stepsOf(name).map((step, li) => (
+                  <DraggableStep key={step.id} step={step} index={li} total={stepsOf(name).length}
+                    ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
+                    draggable={!isDesktop}
+                    sectionKey={name} groups={allSections} onSetGroup={setStepGroup}
+                    onUpdate={updStep} onRemove={remStep} onMove={moveStepIn(name)} />
+                ))}
+                <button className="editor-add" onClick={() => addStepTo(name)}><Icon name="plus" size={16} /> Ajouter une étape</button>
+              </SectionCard>
+            ))}
+            <NewSectionButton onAdd={addSection} />
           </div>
         </div>
 
