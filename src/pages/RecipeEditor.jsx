@@ -464,7 +464,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 {stepsOf(name).map((step, li) => (
                   <DraggableStep key={step.id} step={step} index={li} total={stepsOf(name).length}
-                    ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
+                    ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
                     draggable={!isDesktop}
                     sectionKey={name} groups={allSections} onSetGroup={setStepGroup}
                     onUpdate={updStep} onRemove={remStep} onMove={moveStepIn(name)} />
@@ -481,7 +481,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               )}
               {stepsOf("").map((step, li) => (
                 <DraggableStep key={step.id} step={step} index={li} total={stepsOf("").length}
-                  ingredients={form.ingredients} utensils={form.utensils} recipes={recipes}
+                  ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
                   draggable={!isDesktop}
                   sectionKey="" groups={allSections} onSetGroup={setStepGroup}
                   onUpdate={updStep} onRemove={remStep} onMove={moveStepIn("")} />
