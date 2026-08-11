@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.42 – Safran · Sections glissées
+
+### Recettes
+- Éditeur (mobile) : on peut désormais **glisser un ingrédient ou une étape d'une section à une autre** (ou vers/depuis le hors-section), pas seulement au sein d'une même section
+
 ## v3.10.41 – Safran · Édition fluide
 
 ### Recettes
