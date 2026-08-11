@@ -6,6 +6,8 @@ import { Donut } from "./Donut.jsx";
 import { TagInput } from "./TagInput.jsx";
 import { SeasonBar } from "./SeasonBar.jsx";
 import { SeasonBadge } from "./Badges.jsx";
+import { IngredientStatusBadge } from "./IngredientStatusBadge.jsx";
+import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { uploadImage, compressImage } from "@/lib/firebase/storage.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, isFruitVeg } from "../constants/categories.js";
@@ -34,7 +36,6 @@ function RoundImageUpload({ value, onChange, size = 82 }) {
           ? <span style={{ width: 20, height: 20, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
           : <Icon name="photo" size={20} color="#fff" />}
       </span>
-      <span style={{ position: "absolute", bottom: -2, right: -2, width: 24, height: 24, borderRadius: "50%", background: "var(--accent)", border: "2px solid var(--surface)", display: "grid", placeItems: "center" }}><Icon name="edit" size={11} color="#fff" /></span>
       <input id={inputId} type="file" accept="image/*" onChange={handleFile} disabled={uploading} style={{ position: "absolute", opacity: 0, width: 0, height: 0 }} />
     </label>
   );
@@ -60,6 +61,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
   const [detailOpen, setDetailOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
+  const [confirmStatus, setConfirmStatus] = useState(false); // modale de bascule du statut (édition)
 
   const startEdit = () => {
     setDraft({
@@ -129,19 +131,19 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
         <div className="slide-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, animationDelay: "0.04s" }}>
           {editing ? (
             <>
-              <button onClick={cancel} className="pressable" style={{ display: "inline-flex", alignItems: "center", height: 40, padding: "0 16px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>Annuler</button>
+              <button onClick={cancel} className="pressable fiche-hdr-btn" style={{ display: "inline-flex", alignItems: "center", height: 40, padding: "0 16px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>Annuler</button>
               <button onClick={save} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 20px", borderRadius: 999, background: "var(--accent)", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 700, color: "#fff", boxShadow: "0 6px 16px -8px rgba(232,112,58,0.8)" }}>
                 <Icon name="check" size={16} color="#fff" /> Enregistrer
               </button>
             </>
           ) : (
             <>
-              <button onClick={onBack} className="pressable" aria-label="Retour" style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", color: "var(--text2)" }}>
+              <button onClick={onBack} className="pressable fiche-hdr-btn fiche-hdr-back" aria-label="Retour" style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", color: "var(--text2)" }}>
                 <Icon name="back" size={18} color="currentColor" />
               </button>
               {isAdmin ? (
                 <div style={{ display: "flex", gap: 9 }}>
-                  <button onClick={startEdit} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 17px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>
+                  <button onClick={startEdit} className="pressable fiche-hdr-btn" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 17px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>
                     <Icon name="edit" size={15} color="currentColor" /> Modifier
                   </button>
                   <button onClick={onDelete} className="pressable" aria-label="Supprimer" style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", background: "rgba(224,82,82,0.08)", border: "1px solid rgba(224,82,82,0.3)", cursor: "pointer", color: "var(--red)" }}>
@@ -157,22 +159,18 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
 
         {/* ── Carte identité (même layout en consultation et édition) ── */}
         <div className="slide-up" style={{ ...CARD, padding: 18, marginBottom: 14, animationDelay: "0.1s" }}>
-          {editing && (
-            <div style={{ display: "flex", gap: 6, padding: 4, background: "var(--surface2)", borderRadius: 12, marginBottom: 16 }}>
-              {[["draft", "En cours", "edit"], ["validated", "Validé", "check"]].map(([val, lbl, ic]) => {
-                const on = val === "validated"; const active = (draft.status === "validated" ? "validated" : "draft") === val;
-                return (
-                  <button key={val} onClick={() => up({ status: on ? "validated" : undefined })} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "7px 0", borderRadius: 9, border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 700, background: active ? (on ? "var(--green)" : "var(--surface)") : "transparent", color: active ? (on ? "#fff" : "var(--text)") : "var(--text3)", boxShadow: active && !on ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
-                    <Icon name={ic} size={13} color="currentColor" /> {lbl}
-                  </button>
-                );
-              })}
-            </div>
-          )}
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             {editing
-              ? <RoundImageUpload value={draft.image} onChange={v => up({ image: v })} size={82} />
-              : <div style={{ flexShrink: 0, borderRadius: "50%", boxShadow: "0 4px 14px -6px rgba(0,0,0,0.25)" }}><IngImage src={ingredient.image} alt={ingredient.name} size={82} /></div>}
+              // En édition : la pastille de statut sur l'image sert d'interrupteur
+              // (clic → confirmation), le camaïeu sombre de l'image reste pour la photo.
+              ? <div style={{ position: "relative", flexShrink: 0 }}>
+                  <RoundImageUpload value={draft.image} onChange={v => up({ image: v })} size={82} />
+                  <IngredientStatusBadge status={draft.status} size={24} onClick={() => setConfirmStatus(true)} />
+                </div>
+              : <div style={{ position: "relative", flexShrink: 0, borderRadius: "50%", boxShadow: "0 4px 14px -6px rgba(0,0,0,0.25)" }}>
+                  <IngImage src={ingredient.image} alt={ingredient.name} size={82} />
+                  {ingredient.status === "validated" && <IngredientStatusBadge status="validated" size={24} />}
+                </div>}
             <div style={{ flex: 1, minWidth: 0 }}>
               {editing ? (
                 <input value={draft.name} onChange={e => up({ name: e.target.value })} placeholder="Nom de l'ingrédient" autoFocus={!draft.name}
@@ -372,6 +370,24 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           </a>
         )}
       </div>
+
+      {/* Confirmation du changement de statut (édition) */}
+      {confirmStatus && draft && (() => {
+        const willValidate = draft.status !== "validated";
+        return (
+          <ConfirmDialog
+            title={willValidate ? "Marquer comme validé ?" : "Repasser en cours ?"}
+            icon={willValidate ? "check" : "edit"}
+            tone="accent"
+            confirmLabel={willValidate ? "Valider" : "En cours"}
+            onCancel={() => setConfirmStatus(false)}
+            onConfirm={() => { up({ status: willValidate ? "validated" : undefined }); setConfirmStatus(false); }}>
+            {willValidate
+              ? <>« {draft.name || "Cet ingrédient"} » sera marqué comme <strong style={{ color: "var(--text)" }}>validé</strong> (fiche relue et complète).</>
+              : <>« {draft.name || "Cet ingrédient"} » repassera <strong style={{ color: "var(--text)" }}>en cours de rédaction</strong>.</>}
+          </ConfirmDialog>
+        );
+      })()}
     </div>
   );
 }
