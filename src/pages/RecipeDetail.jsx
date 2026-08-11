@@ -1126,42 +1126,50 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
               const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
               return (
-              <Fragment key={run.start}>
-              {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} />}
+              <div key={run.start}>
+              {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} style={{ marginBottom: 18 }} />}
               {run.items.map((step, j) => {
                 const num = run.start + j + 1;
+                const lastInRun = j === run.items.length - 1;
                 const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                 const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
+                const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
                 return (
-                  <div key={step.id}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>Étape {num}</div>
-                    {step.text && <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 12, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
-                    {step.tip && <StepTip tip={step.tip} style={{ marginBottom: 12 }} />}
-                    {(linkedIngs.length > 0 || linkedUts.length > 0) && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: step.image ? 12 : 0 }}>
-                        {linkedIngs.map(ing => {
-                          const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
-                          return (
-                          <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} cover={!!ing.recipeId} />
-                            {displayName}
-                            <span style={{ color: "var(--text3)", fontWeight: 500 }}>{fmtQtyUnit(ing.amount * mult, ing.unit)}</span>
-                          </span>
-                          );
-                        })}
-                        {linkedUts.map(u => (
-                          <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
-                            {u.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {step.image && <Img src={step.image} alt={`Étape ${num}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} />}
+                  // Timeline : nœud numéroté (dégradé) relié par un rail vertical, contenu à droite.
+                  <div key={step.id} style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+                      <span style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #f0894e)", color: "#fff", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 700, boxShadow: "0 3px 8px -2px rgba(232,112,58,0.5)", flexShrink: 0 }}>{num}</span>
+                      {!lastInRun && <span style={{ flex: 1, width: 2, background: "var(--border)", borderRadius: 1, marginTop: 6, minHeight: 10 }} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, paddingTop: 5, paddingBottom: lastInRun ? 2 : 28 }}>
+                      {step.text && <p style={{ fontSize: 15, color: "var(--text)", lineHeight: 1.7, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
+                      {step.tip && <StepTip tip={step.tip} style={{ marginTop: 12 }} />}
+                      {hasPills && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                          {linkedIngs.map(ing => {
+                            const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
+                            return (
+                            <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                              <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} cover={!!ing.recipeId} />
+                              {displayName}
+                              <span style={{ color: "var(--text3)", fontWeight: 500 }}>{fmtQtyUnit(ing.amount * mult, ing.unit)}</span>
+                            </span>
+                            );
+                          })}
+                          {linkedUts.map(u => (
+                            <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                              <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
+                              {u.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {step.image && <Img src={step.image} alt={`Étape ${num}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12, marginTop: 12 }} />}
+                    </div>
                   </div>
                 );
               })}
-              </Fragment>
+              </div>
               );
               });
               })()}
