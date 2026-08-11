@@ -11,6 +11,7 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
   const [dx, setDx] = React.useState(0);
   const [animating, setAnimating] = React.useState(false);
   const [exiting, setExiting] = React.useState(false);
+  const [trashHover, setTrashHover] = React.useState(false);
   const startX = React.useRef(0), startY = React.useRef(0), axis = React.useRef(null);
   // `unstriking` : article coché qu'on décoche — on retrace le barré à l'envers
   // (et on rallume la ligne) AVANT que la donnée bascule et le remonte dans « À acheter ».
@@ -103,9 +104,9 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
           </div>
         </button>
         {isDesktop && !disableDelete && (
-          <button onClick={() => onDelete(item)} title="Supprimer"
-            style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}>
-            <Icon name="trash" size={13} color="var(--red)" />
+          <button onClick={() => onDelete(item)} title="Supprimer" onMouseEnter={() => setTrashHover(true)} onMouseLeave={() => setTrashHover(false)}
+            style={{ flexShrink: 0, width: 32, height: 32, borderRadius: "50%", background: trashHover ? "rgba(224,82,82,0.14)" : "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)", cursor: "pointer", transition: "background 0.15s" }}>
+            <Icon name="trash" size={14} color="var(--red)" />
           </button>
         )}
       </div>

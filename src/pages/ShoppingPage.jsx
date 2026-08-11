@@ -339,7 +339,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                         <span>Acheté</span>
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                        <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(ALL_ID)} title="Confirme l'achat sur toutes les listes – les produits de placard rejoignent ton stock">
+                        <button style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.35)", cursor: "pointer" }} onClick={() => setConfirmClearId(ALL_ID)} title="Confirme l'achat sur toutes les listes – les produits de placard rejoignent ton stock">
                           <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
                         </button>
                       </div>
@@ -421,7 +421,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
                         {!activeList.hideClear && (
-                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat – les produits de placard rejoignent ton stock">
+                          <button style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.35)", cursor: "pointer" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat – les produits de placard rejoignent ton stock">
                             <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
                           </button>
                         )}
