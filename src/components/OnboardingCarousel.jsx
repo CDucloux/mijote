@@ -198,8 +198,8 @@ const SLIDES = [
   },
   {
     illustration: HouseIllustration, color: "#e8703a",
-    title: "Cuisinez à plusieurs",
-    text: <>Crée un <strong>foyer</strong> et partagez recettes, planning, courses et stock <em>en temps réel</em>. À vous de jouer !</>,
+    title: "La cuisine à plusieurs",
+    text: <>Crée un <strong>foyer</strong> et partage recettes, planning, courses et stock <em>en temps réel</em>. À toi de jouer !</>,
   },
 ];
 

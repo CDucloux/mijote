@@ -14,6 +14,7 @@ export function UserAvatar() {
   const [open, setOpen] = useState(false);
   const [about, setAbout] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [dropPos, setDropPos] = useState({ top: 0, right: 0 });
   const btnRef = useRef(null);
   const online = useOnline();
@@ -110,9 +111,9 @@ export function UserAvatar() {
         document.body
       )}
       {confirmSignOut && (
-        <ConfirmDialog title="Se déconnecter ?" icon="logout" confirmLabel="Déconnexion" zIndex={1400}
+        <ConfirmDialog title="Se déconnecter ?" icon="logout" confirmLabel="Déconnexion" busyLabel="Déconnexion…" busy={signingOut} zIndex={1400}
           onCancel={() => setConfirmSignOut(false)}
-          onConfirm={() => { setConfirmSignOut(false); onSignOut(); }}>
+          onConfirm={async () => { setSigningOut(true); try { await onSignOut(); } catch { setSigningOut(false); } }}>
           Tes recettes restent synchronisées. Tu pourras te reconnecter à tout moment.
         </ConfirmDialog>
       )}

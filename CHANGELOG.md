@@ -1,5 +1,14 @@
 # Changelog – Mijoté
 
+## v3.10.34 – Safran · Comptes & finitions
+
+### Connexion
+- La déconnexion affiche un **spinner** pendant la révocation de la session
+- Google propose désormais le **sélecteur de compte** à chaque connexion — plus besoin de purger les cookies pour changer de compte
+
+### Onboarding
+- Dernière slide : « La cuisine à plusieurs » et formulation au tutoiement (« À toi de jouer ! »)
+
 ## v3.10.33 – Safran · Préparations de base
 
 ### Éditeur de recette

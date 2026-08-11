@@ -63,6 +63,10 @@ export const auth = initializeAuth(firebaseApp, {
   popupRedirectResolver: browserPopupRedirectResolver,
 });
 export const provider = new GoogleAuthProvider();
+// `prompt: "select_account"` force Google à afficher le sélecteur de compte à
+// CHAQUE connexion, au lieu de ré-authentifier silencieusement le dernier compte.
+// Permet de basculer d'un compte Google à un autre sans purger les cookies.
+provider.setCustomParameters({ prompt: "select_account" });
 // Cache persistant (IndexedDB) : lectures hors-ligne + file d'écritures durable qui
 // survit aux rechargements et se resynchronise automatiquement à la reconnexion.
 // persistentMultipleTabManager gère plusieurs onglets ouverts. À appeler avant tout
