@@ -113,7 +113,13 @@ export function UserAvatar() {
       {confirmSignOut && (
         <ConfirmDialog title="Se déconnecter ?" icon="logout" confirmLabel="Déconnexion" busyLabel="Déconnexion…" busy={signingOut} zIndex={1400}
           onCancel={() => setConfirmSignOut(false)}
-          onConfirm={async () => { setSigningOut(true); try { await onSignOut(); } catch { setSigningOut(false); } }}>
+          onConfirm={async () => {
+            setSigningOut(true);
+            // La révocation Firebase est quasi-instantanée : on garde le spinner
+            // affiché au moins ~650 ms pour qu'il soit perceptible (sinon on le voit à peine).
+            try { await Promise.all([onSignOut(), new Promise(r => setTimeout(r, 650))]); }
+            catch { setSigningOut(false); }
+          }}>
           Tes recettes restent synchronisées. Tu pourras te reconnecter à tout moment.
         </ConfirmDialog>
       )}
