@@ -131,7 +131,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
       {/* Ustensiles liés */}
       {utensils.length > 0 && (
         <>
-          <BlockLabel icon="settings" color="var(--text3)">Ustensiles de l'étape</BlockLabel>
+          <BlockLabel icon="utensils" color="var(--text3)">Ustensiles de l'étape</BlockLabel>
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
             {utensils.map(u => {
               const linked = step.utensils?.includes(u.id);

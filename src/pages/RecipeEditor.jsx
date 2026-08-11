@@ -291,7 +291,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const TABS = [
     { id: "info", label: "Infos", icon: "info" },
     { id: "ingrédients", label: "Ingrédients", icon: "leaf" },
-    { id: "ustensiles", label: "Ustensiles", icon: "settings" },
+    { id: "ustensiles", label: "Ustensiles", icon: "utensils" },
     { id: "étapes", label: "Étapes", icon: "list2" },
   ];
   const goSection = (id, i) => {
