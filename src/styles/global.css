@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap');
+/* Polices Fraunces + Hanken Grotesk : chargées via <link> dans index.html (plus
+   fiable que @import, notamment sur mobile/iOS). Ne pas remettre d'@import ici. */
 
 *,
 *::before,
