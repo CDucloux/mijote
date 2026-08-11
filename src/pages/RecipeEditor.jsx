@@ -150,6 +150,13 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const moveIngIn = (group) => (fromLocal, toLocal) => up("ingredients", moveWithinGroup(form.ingredients, group, fromLocal, toLocal));
   const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
   const remIng = id => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.filter(i => i.id !== id)); };
+  // Retour arrière sur une ligne vide : supprime la ligne et refocalise la précédente.
+  const removeIngBackspace = (id) => {
+    const idx = form.ingredients.findIndex(i => i.id === id);
+    const prev = form.ingredients[idx - 1];
+    lastAddedIdRef.current = prev ? prev.id : null;
+    remIng(id);
+  };
   // Parse + rapprochement base d'ingrédients à chaque frappe dans le champ « raw ».
   const handleRawChange = (id, raw) => {
     if (saveError) setSaveError("");
@@ -218,7 +225,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           sectionKey="" groups={allSections} onSetGroup={setIngGroup}
           onRawChange={handleRawChange}
           onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-          onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} />
+          onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} onBackspaceEmpty={removeIngBackspace} />
       ))}
       <SectionAddBar onAddIngredient={() => addIngTo("")} components={compsFor("")} canBase={false} />
     </div>
@@ -438,7 +445,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     sectionKey={name} groups={allSections} onSetGroup={setIngGroup}
                     onRawChange={handleRawChange}
                     onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-                    onRemove={remIng} onMove={moveIngIn(name)} onEnter={() => addIngTo(name)} />
+                    onRemove={remIng} onMove={moveIngIn(name)} onEnter={() => addIngTo(name)} onBackspaceEmpty={removeIngBackspace} />
                 ))}
                 <SectionAddBar onAddIngredient={() => addIngTo(name)} components={compsFor(name)} canBase={!form.isComponent && !ingsOf(name).some(i => !i.recipeId)} />
               </SectionCard>

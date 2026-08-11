@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.41 – Safran · Édition fluide
+
+### Recettes
+- Éditeur : flèches monter/descendre redessinées (rondes, fond au survol) pour les ingrédients et les étapes
+- Ligne d'ingrédient : **Retour arrière** sur une ligne vide la supprime et revient à la précédente (miroir d'Entrée qui en crée une)
+
 ## v3.10.40 – Safran · Import & finitions
 
 ### Recettes

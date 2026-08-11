@@ -3,13 +3,14 @@ import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { GroupSelect } from "./GroupSelect.jsx";
+import { MoveArrows } from "./MoveArrows.jsx";
 
 // Ligne d'ingrédient réorganisable. Drag tactile sur mobile (draggable=true),
 // boutons ↑/↓ sur desktop (draggable=false, le drag HTML5 y est pénible).
 export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
   ingredientDB, recipes, autoFocus, groups, onSetGroup, sectionKey = "",
-  onRawChange, onUpdateAmount, onRemove, onMove, onEnter,
+  onRawChange, onUpdateAmount, onRemove, onMove, onEnter, onBackspaceEmpty,
 }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
@@ -33,10 +34,7 @@ export function DraggableIngredient({
       <Icon name="drag" size={16} color="var(--text3)" />
     </span>
   ) : (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2, flexShrink: 0 }}>
-      <button onClick={() => index > 0 && onMove(index, index - 1)} disabled={index === 0} style={{ width: 22, height: 20, borderRadius: 5, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: index > 0 ? "pointer" : "default", opacity: index === 0 ? 0.3 : 1, fontSize: 11 }}>↑</button>
-      <button onClick={() => index < total - 1 && onMove(index, index + 1)} disabled={index === total - 1} style={{ width: 22, height: 20, borderRadius: 5, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: index < total - 1 ? "pointer" : "default", opacity: index === total - 1 ? 0.3 : 1, fontSize: 11 }}>↓</button>
-    </div>
+    <MoveArrows index={index} total={total} onMove={onMove} />
   );
 
   const trashBtn = (
@@ -86,9 +84,14 @@ export function DraggableIngredient({
           : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: "var(--surface2)", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="leaf" size={15} color="var(--text3)" /></span>}
         <input className="field-input" placeholder="ex: 500g pois chiches, 2 oeufs…"
           ref={inputRef}
+          enterKeyHint="enter"
           value={ing._raw !== undefined ? ing._raw : ""}
           onChange={e => onRawChange(ing.id, e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); onEnter(); } }}
+          onKeyDown={e => {
+            if (e.key === "Enter") { e.preventDefault(); onEnter(); }
+            // Retour arrière sur une ligne VIDE → supprime la ligne (miroir d'Entrée).
+            else if (e.key === "Backspace" && !(ing._raw || "") && onBackspaceEmpty) { e.preventDefault(); onBackspaceEmpty(ing.id); }
+          }}
           style={{ marginBottom: 0, flex: 1, minWidth: 0 }} />
         {groupSel}
         {trashBtn}
