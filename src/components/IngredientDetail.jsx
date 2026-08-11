@@ -196,7 +196,8 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                 <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8 }}>Aussi : {aliases.join(", ")}</div>
               )}
             </div>
-            <div style={{ flexShrink: 0 }}><NutriScoreBadge letter={letter} /></div>
+            {/* Nutri-Score : masqué en édition (auto-calculé, il encombre et casse le rendu mobile). */}
+            {!editing && <div style={{ flexShrink: 0 }}><NutriScoreBadge letter={letter} /></div>}
           </div>
 
           {/* Poids d'une pièce — éditable en place */}
