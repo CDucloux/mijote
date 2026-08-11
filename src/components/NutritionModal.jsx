@@ -1,10 +1,14 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
-import { computeNutritionDetail, computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import { Icon } from "./Icon.jsx";
+import { PlusBadge } from "./PlusBadge.jsx";
+import { computeNutritionDetail, computeNutriInfo, computeNutriBreakdown, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
 import { Row, Col } from "./ui/primitives.jsx";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── NUTRITION ANALYSIS MODAL ─────────────────────────────────────────────────
 const NUTRI_LETTER_DESC = {
@@ -15,10 +19,101 @@ const NUTRI_LETTER_DESC = {
   E: "Qualité nutritionnelle très faible",
 };
 
+const N_COLOR = "#e0724e";  // pénalités (rouge-orangé)
+const P_COLOR = "#4caf7d";  // apports positifs (vert)
+const fmtVal = (v) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
+
+// Une ligne de composante du calcul : libellé + valeur/100 g, points, jauge.
+function CalcRow({ c, color }) {
+  const dim = c.counted === false;
+  return (
+    <div style={{ opacity: dim ? 0.5 : 1 }}>
+      <Row justify="space-between" align="baseline" style={{ marginBottom: 5 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
+          {c.label} <span style={{ fontSize: 11.5, fontWeight: 500, color: "var(--text3)" }}>{fmtVal(c.value)} {c.unit}{c.key === "fruitveg" ? "" : "/100 g"}</span>
+        </span>
+        <span style={{ fontSize: 12.5, fontWeight: 700, color, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+          {dim ? "non compté" : `${c.pts} pt${c.pts > 1 ? "s" : ""}`}
+        </span>
+      </Row>
+      <div style={{ height: 6, borderRadius: 999, background: "var(--surface2)", overflow: "hidden" }}>
+        <div style={{ width: `${Math.min(100, (c.pts / c.max) * 100)}%`, height: "100%", borderRadius: 999, background: dim ? "var(--text3)" : color, transition: "width 0.4s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+// Vue « Détail du calcul » (traçabilité Nutri-Score) — abonnés Mijoté+.
+function NutriCalcView({ breakdown }) {
+  const { negatives, N, positives, P, ns, letter } = breakdown;
+  const stat = (val, label, color) => (
+    <Col align="center" gap={1} style={{ minWidth: 0 }}>
+      <span style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, color, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{val}</span>
+      <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{label}</span>
+    </Col>
+  );
+  const op = (s) => <span style={{ fontSize: 16, fontWeight: 400, color: "var(--text3)" }}>{s}</span>;
+  const sectionLabel = (txt, total, color) => (
+    <Row justify="space-between" style={{ margin: "18px 2px 11px" }}>
+      <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{txt}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: color, borderRadius: 999, padding: "2px 9px", fontVariantNumeric: "tabular-nums" }}>{total} pt{total > 1 ? "s" : ""}</span>
+    </Row>
+  );
+  return (
+    <div>
+      {/* Récap de l'équation : N − P = score → lettre */}
+      <Row justify="space-around" style={{ padding: "16px 12px", background: "var(--surface2)", borderRadius: 16, marginBottom: 4 }}>
+        {stat(N, "Négatifs", N_COLOR)}
+        {op("−")}
+        {stat(P, "Positifs", P_COLOR)}
+        {op("=")}
+        {stat(ns, "Score", "var(--text)")}
+        {op("→")}
+        <NutriScoreBadge letter={letter} compact />
+      </Row>
+
+      {sectionLabel("Ce qui pénalise", N, N_COLOR)}
+      <Col gap={12}>
+        {negatives.map(c => <CalcRow key={c.key} c={c} color={N_COLOR} />)}
+      </Col>
+
+      {sectionLabel("Ce qui valorise", P, P_COLOR)}
+      <Col gap={12}>
+        {positives.map(c => <CalcRow key={c.key} c={c} color={P_COLOR} />)}
+      </Col>
+
+      <div style={{ fontSize: 10.5, color: "var(--text3)", lineHeight: 1.5, marginTop: 16, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
+        Calcul officiel Nutri-Score 2023, pour 100 g de plat fini. Score = points négatifs − points positifs, puis mappé sur la lettre (A ≤ −1 … E &gt; 18).
+      </div>
+    </div>
+  );
+}
+
+// Aperçu verrouillé (non-abonnés) : pitch + CTA vers Mijoté+.
+function CalcLocked({ onUpgrade }) {
+  return (
+    <div style={{ marginTop: 4, padding: "26px 20px", background: "linear-gradient(160deg, rgba(232,112,58,0.08), rgba(240,192,96,0.05))", border: "1px solid rgba(232,112,58,0.22)", borderRadius: 18, textAlign: "center" }}>
+      <span style={{ width: 46, height: 46, borderRadius: 14, background: "var(--accent)", display: "inline-grid", placeItems: "center", boxShadow: "0 6px 16px -6px rgba(232,112,58,0.6)", marginBottom: 12 }}>
+        <Icon name="shield" size={22} color="#fff" />
+      </span>
+      <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Le détail du calcul</div>
+      <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.55, maxWidth: 300, margin: "0 auto 16px" }}>
+        Vois exactement d'où vient la note — points négatifs, points positifs et l'équation qui aboutit à la lettre. Réservé à <PlusBadge />.
+      </div>
+      <button onClick={onUpgrade} className="btn btn-primary btn-pill" style={{ padding: "10px 20px" }}>
+        <Icon name="sparkle" size={15} color="#fff" /> Passer à Mijoté+
+      </button>
+    </div>
+  );
+}
+
 export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, onClose }) {
-  const [basis, setBasis] = useState("portion"); // "portion" | "100g"
+  const [basis, setBasis] = useState("portion"); // "portion" | "100g" | "calc"
+  const navigate = useNavigate();
+  const { isPlus } = useAppShell();
   const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
   const detail = useMemo(() => computeNutritionDetail(recipe.ingredients, ingredientDB, servings, recipesById), [recipe.ingredients, ingredientDB, servings, recipesById]);
+  const breakdown = useMemo(() => computeNutriBreakdown(recipe.ingredients, ingredientDB, recipesById), [recipe.ingredients, ingredientDB, recipesById]);
   // Lettre recalculée EN DIRECT (comme le badge d'en-tête), pas la valeur figée à
   // l'enregistrement : les ingrédients complétés après coup (nutrition, drapeau
   // « légume ») doivent se refléter, sinon le badge diverge des chiffres affichés.
@@ -85,13 +180,21 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
         </div>
       ) : (
         <>
-      {/* Bascule portion / 100 g */}
+      {/* Bascule portion / 100 g / Calcul (Calcul = traçabilité, réservé à Mijoté+) */}
       <Row gap={4} style={{ background: "var(--surface2)", borderRadius: 10, padding: 3, margin: "14px 0 18px" }}>
-        {[["portion", `Par portion`], ["100g", "Pour 100 g"]].map(([id, lbl]) => (
-          <button key={id} onClick={() => setBasis(id)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: basis === id ? "var(--surface)" : "transparent", color: basis === id ? "var(--text)" : "var(--text3)", boxShadow: basis === id ? "0 1px 3px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>{lbl}</button>
+        {[["portion", "Par portion"], ["100g", "Pour 100 g"], ["calc", "Calcul"]].map(([id, lbl]) => (
+          <button key={id} onClick={() => setBasis(id)} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: basis === id ? "var(--surface)" : "transparent", color: basis === id ? "var(--text)" : "var(--text3)", boxShadow: basis === id ? "0 1px 3px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>
+            {id === "calc" && !isPlus && <Icon name="lock" size={11} color="currentColor" />}{lbl}
+          </button>
         ))}
       </Row>
 
+      {basis === "calc" ? (
+        isPlus && breakdown
+          ? <NutriCalcView breakdown={breakdown} />
+          : <CalcLocked onUpgrade={() => { onClose?.(); navigate("/plus"); }} />
+      ) : (
+      <>
       {/* Énergie + donut macros */}
       <Row gap={18} style={{ padding: "16px 18px", background: "var(--surface2)", borderRadius: 16, marginBottom: 16 }}>
         <Donut size={128} stroke={17} segments={macroSegs} centerLabel={kcal} centerSub="kcal" />
@@ -128,9 +231,11 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
           );
         })}
       </Col>
+      </>
+      )}
 
       {/* Note de fiabilité (couverture partielle mais exploitable). */}
-      {detail.coverage < 0.95 && (
+      {basis !== "calc" && detail.coverage < 0.95 && (
         <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.5, marginTop: 12, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
           Estimation sur {Math.round(detail.coverage * 100)}% de la masse du plat – certains ingrédients n'ont pas encore de données nutritionnelles.
         </div>
