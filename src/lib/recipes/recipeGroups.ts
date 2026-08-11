@@ -126,6 +126,23 @@ export function moveAcrossGroups<T extends { group?: string }>(items: readonly T
   return arr;
 }
 
+/**
+ * Déplacement LIBRE dans la liste complète (index globaux). L'item déplacé **adopte
+ * la section du bloc où il atterrit** = le `group` de son nouveau prédécesseur (ou
+ * `""` s'il devient premier). Base du réordonnancement positionnel de l'éditeur :
+ * monter une ligne au-dessus de l'en-tête d'une section la fait sortir de la section,
+ * la descendre dans un autre bloc l'y intègre.
+ */
+export function moveWithAdopt<T extends { group?: string }>(items: readonly T[], fromIdx: number, toIdx: number): T[] {
+  if (fromIdx < 0 || fromIdx >= items.length) return items.slice();
+  const arr = items.slice();
+  const [moved] = arr.splice(fromIdx, 1);
+  const dest = Math.max(0, Math.min(toIdx, arr.length));
+  arr.splice(dest, 0, moved);
+  arr[dest] = { ...moved, group: dest > 0 ? label(arr[dest - 1].group) : "" } as T;
+  return arr;
+}
+
 export function moveWithinGroup<T extends { group?: string }>(items: readonly T[], group: string, fromLocal: number, toLocal: number): T[] {
   const g = label(group);
   const positions: number[] = [];

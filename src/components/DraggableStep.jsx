@@ -3,7 +3,6 @@ import { Icon } from "./Icon.jsx";
 import { fmtQtyUnit } from "../lib/format.js";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
 import { ImageUpload } from "./ImageUpload.jsx";
-import { GroupSelect } from "./GroupSelect.jsx";
 import { MoveArrows } from "./MoveArrows.jsx";
 import { IngImage } from "./Img.jsx";
 import { UtImage } from "./StepPills.jsx";
@@ -19,7 +18,7 @@ function BlockLabel({ icon, color, children }) {
   );
 }
 
-export function DraggableStep({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, groups, onSetGroup, sectionKey = "", onUpdate, onRemove, onMove, onDropItem }) {
+export function DraggableStep({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, onUpdate, onRemove, onMove }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
   const [trashHover, setTrashHover] = useState(false);
@@ -35,11 +34,11 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
   return (
     <div
       draggable={isDraggable}
-      onDragStart={isDraggable ? e => { e.dataTransfer.setData("stepIdx", String(index)); e.dataTransfer.setData("stepSection", sectionKey); setDragging(true); } : undefined}
+      onDragStart={isDraggable ? e => { e.dataTransfer.setData("stepIdx", String(index)); setDragging(true); } : undefined}
       onDragEnd={isDraggable ? () => setDragging(false) : undefined}
       onDragOver={isDraggable ? e => { e.preventDefault(); setOver(true); } : undefined}
       onDragLeave={isDraggable ? () => setOver(false) : undefined}
-      onDrop={isDraggable ? e => { e.preventDefault(); e.stopPropagation(); setOver(false); const raw = e.dataTransfer.getData("stepIdx"); if (raw === "") return; onDropItem?.(e.dataTransfer.getData("stepSection"), +raw, index); } : undefined}
+      onDrop={isDraggable ? e => { e.preventDefault(); setOver(false); const raw = e.dataTransfer.getData("stepIdx"); if (raw === "") return; const from = +raw; if (from !== index) onMove(from, index); } : undefined}
       style={{ background: "var(--surface)", borderRadius: 18, padding: 16, border: `1px solid ${over ? "var(--accent)" : "var(--border)"}`, opacity: dragging ? 0.5 : 1, boxShadow: over ? "0 8px 24px -12px rgba(232,112,58,0.5)" : "0 1px 2px rgba(0,0,0,0.04)", transition: "opacity 0.15s, border-color 0.15s, box-shadow 0.2s", cursor: isDraggable ? "grab" : "default" }}
     >
       {/* En-tête : poignée + numéro (badge dégradé) · section + supprimer */}
@@ -50,7 +49,6 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
           {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {onSetGroup && <GroupSelect value={step.group || ""} groups={groups} onChange={g => onSetGroup(step.id, g)} />}
           <button onClick={() => onRemove(step.id)} onMouseEnter={() => setTrashHover(true)} onMouseLeave={() => setTrashHover(false)}
             style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", cursor: "pointer", border: "none", background: trashHover ? "rgba(224,82,82,0.14)" : "transparent", transition: "background 0.15s" }}>
             <Icon name="trash" size={15} color="var(--red)" />

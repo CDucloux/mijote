@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupBy, hasGroups, groupOrder, relabelGroup, moveWithinGroup, moveAcrossGroups, sectionRuns } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, hasGroups, groupOrder, relabelGroup, moveWithinGroup, moveAcrossGroups, sectionRuns, moveWithAdopt } from "@/lib/recipes/recipeGroups.js";
 
 describe("recipeGroups", () => {
   it("returns a single main section (group null) when nothing is grouped", () => {
@@ -92,6 +92,21 @@ describe("recipeGroups", () => {
   it("sectionRuns does NOT merge non-adjacent same-group runs (unlike groupBy)", () => {
     const runs = sectionRuns([{ group: "A" }, { group: "B" }, { group: "A" }]);
     expect(runs.map(r => r.group)).toEqual(["A", "B", "A"]);
+  });
+
+  it("moveWithAdopt: an item adopts the section of its new predecessor", () => {
+    const items = [
+      { id: "a" },                    // hors section
+      { id: "b", group: "Caramel" },
+      { id: "c", group: "Pâte" },
+    ];
+    // Move a (idx 0) down to idx 1 → predecessor becomes b (Caramel) → a adopts Caramel.
+    let out = moveWithAdopt(items, 0, 1);
+    expect(out.find(i => i.id === "a").group).toBe("Caramel");
+    // Move c (idx 2) up to the very top (idx 0) → no predecessor → hors section ("").
+    out = moveWithAdopt(items, 2, 0);
+    expect(out[0].id).toBe("c");
+    expect(out[0].group || "").toBe("");
   });
 
   it("moveAcrossGroups appends when toLocal is out of range (drop on empty zone)", () => {
