@@ -143,8 +143,8 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
                     color: linked ? "var(--green)" : "var(--text2)",
                     border: `1px solid ${linked ? "rgba(76,175,125,0.5)" : "var(--border)"}`, transition: "background 0.15s, border-color 0.15s, color 0.15s" }}>
                   {img
-                    ? <UtImage src={img} alt={u.name} size={26} radius={9} border />
-                    : <span style={{ width: 26, height: 26, borderRadius: 9, flexShrink: 0, background: "#fff", border: "1px solid rgba(0,0,0,0.08)", display: "grid", placeItems: "center" }}><Icon name="utensils" size={12} color="var(--text3)" /></span>}
+                    ? <UtImage src={img} alt={u.name} size={26} border />
+                    : <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, background: "#fff", border: "1px solid rgba(0,0,0,0.08)", display: "grid", placeItems: "center" }}><Icon name="utensils" size={12} color="var(--text3)" /></span>}
                   {u.name || "sans nom"}
                 </button>
               );
