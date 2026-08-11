@@ -31,6 +31,8 @@ export const BASE_CATEGORIES = [
   { id: "appareil", label: "Appareil", emoji: "🥚" },
   { id: "liaison",  label: "Liaison",  emoji: "🧈" },
   { id: "pate",     label: "Pâte",     emoji: "🥟" },
+  { id: "sirop",    label: "Sirop",    emoji: "🍯" },
+  { id: "marinade", label: "Marinade", emoji: "🧄" },
 ];
 
 /** Ids de catégories réservés aux préparations de base. */
