@@ -9,7 +9,7 @@ export function AdminBadge({ size = "sm" }) {
   const s = BADGE_SIZES[size] || BADGE_SIZES.sm;
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 4, height: s.h, padding: `0 ${s.padX}px`, boxSizing: "border-box", lineHeight: 1, borderRadius: 999, background: "var(--admin)", color: "#fff", fontFamily: "var(--ff-body)", fontSize: s.fs, fontWeight: 700, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
-      <Icon name="shield" size={s.icon} color="#fff" /> <span>ADMIN</span>
+      <Icon name="shield" size={s.icon + 3} color="#fff" /> <span>ADMIN</span>
     </span>
   );
 }

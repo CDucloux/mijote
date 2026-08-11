@@ -130,9 +130,9 @@ async function fetchHtml(url: string): Promise<string> {
 type LlmDraft = Record<string, unknown> & {
   name?: string; prepTime?: number; cookTime?: number; servings?: number;
   cuisine?: string; category?: string;
-  ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string }[];
+  ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown }[];
   utensils?: { name?: string }[];
-  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[] }[];
+  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; group?: unknown }[];
   /** Numéro (1-based) de l'image qui est la photo du plat, 0/absent si aucune. */
   coverPhoto?: unknown;
 };
@@ -158,16 +158,21 @@ function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
       const ing: Intermediate["ingredients"][number] = { name: (i.name || "").slice(0, 120), _raw: (i.raw || "").slice(0, 160) };
       const a = num(i.amount); if (a != null) ing.amount = a;
       if (i.unit) ing.unit = String(i.unit).slice(0, 30);
+      const group = (typeof i.group === "string" ? i.group : "").trim(); if (group) ing.group = group.slice(0, 80);
       return ing;
     }).filter((i) => i.name),
     utensils: (d.utensils || []).map((u) => ({ name: (u.name || "").slice(0, 60) })).filter((u) => u.name),
-    steps: (d.steps || []).map((s) => ({
-      text: (s.text || "").slice(0, 2000),
-      tip: (s.tip && s.tip.trim()) ? s.tip.slice(0, 500) : "",
-      image: (s.image || "").toString().slice(0, 500),
-      ingredients: Array.isArray(s.ingredients) ? s.ingredients.map((x) => String(x)) : [],
-      utensils: Array.isArray(s.utensils) ? s.utensils.map((x) => String(x)) : [],
-    })).filter((s) => s.text),
+    steps: (d.steps || []).map((s) => {
+      const step: Intermediate["steps"][number] = {
+        text: (s.text || "").slice(0, 2000),
+        tip: (s.tip && s.tip.trim()) ? s.tip.slice(0, 500) : "",
+        image: (s.image || "").toString().slice(0, 500),
+        ingredients: Array.isArray(s.ingredients) ? s.ingredients.map((x) => String(x)) : [],
+        utensils: Array.isArray(s.utensils) ? s.utensils.map((x) => String(x)) : [],
+      };
+      const group = (typeof s.group === "string" ? s.group : "").trim(); if (group) step.group = group.slice(0, 80);
+      return step;
+    }).filter((s) => s.text),
   };
 }
 
@@ -229,6 +234,8 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[]):
   // Conversion du numéro 1-based du modèle en index 0-based validé (-1 = aucune).
   const cp = Number(parsed.coverPhoto);
   const coverIndex = Number.isInteger(cp) && cp >= 1 && cp <= images.length ? cp - 1 : -1;
+  logRawModelJson("images", block.text);
+  logDetectedGroups("images", parsed);
   return { inter: llmToIntermediate(parsed, ""), coverIndex };
 }
 
@@ -269,7 +276,23 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
   let parsed: LlmDraft;
   try { parsed = parseJsonLoose(block.text) as LlmDraft; }
   catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
+  logRawModelJson("url", block.text);
+  logDetectedGroups("url", parsed);
   return llmToIntermediate(parsed, sourceUrl);
+}
+
+/** Trace dans Cloud Logging les sections (`group`) renvoyées par le modèle, pour
+ *  diagnostiquer un import (voir si la segmentation vient du modèle ou du pipeline). */
+function logDetectedGroups(kind: string, d: LlmDraft): void {
+  const ig = [...new Set((d.ingredients || []).map((i) => (typeof i.group === "string" ? i.group.trim() : "")).filter(Boolean))];
+  const sg = [...new Set((d.steps || []).map((s) => (typeof s.group === "string" ? s.group.trim() : "")).filter(Boolean))];
+  logger.info(`import[${kind}] sections détectées`, { ingredientGroups: ig, stepGroups: sg });
+}
+
+/** Trace le JSON BRUT renvoyé par le modèle (diagnostic). Tronqué à 12000 caractères
+ *  pour rester lisible dans Cloud Logging. À retirer une fois l'import validé. */
+function logRawModelJson(kind: string, raw: string): void {
+  logger.debug(`import[${kind}] réponse brute du modèle`, { raw: (raw || "").slice(0, 12000) });
 }
 
 /**

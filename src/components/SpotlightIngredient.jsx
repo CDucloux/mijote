@@ -46,7 +46,7 @@ function MiniRecipe({ pub, onOpen }) {
   );
 }
 
-export function SpotlightIngredient({ ingredient, recipes = [], onOpenIngredient, onOpenPublic, onPublish }) {
+export function SpotlightIngredient({ ingredient, recipes = [], loading = false, onOpenIngredient, onOpenPublic, onPublish }) {
   if (!ingredient) return null;
   const months = ingredientMonths(ingredient);
   const catLabel = CAT_LABEL[ingredient.category] || "Ingrédient";
@@ -102,6 +102,14 @@ export function SpotlightIngredient({ ingredient, recipes = [], onOpenIngredient
               {recipes.map(p => <MiniRecipe key={p.pubId} pub={p} onOpen={onOpenPublic} />)}
             </OverscrollRow>
           </>
+        ) : loading ? (
+          // Chargement initial des recettes communautaires : squelette discret, pour
+          // ne pas faire clignoter l'état « personne n'a publié » avant l'arrivée des données.
+          <div style={{ display: "flex", gap: 10 }}>
+            {[0, 1].map(i => (
+              <div key={i} className="skeleton" style={{ width: 132, height: 150, borderRadius: 14, flexShrink: 0 }} />
+            ))}
+          </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(232,112,58,0.06)", border: "1px dashed rgba(232,112,58,0.35)", borderRadius: 14, padding: "12px 13px" }}>
             <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: "rgba(232,112,58,0.15)", color: "var(--accent)", display: "grid", placeItems: "center" }}>

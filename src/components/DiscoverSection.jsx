@@ -249,6 +249,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         <SpotlightIngredient
           ingredient={spotlight}
           recipes={spotlightRecipes}
+          loading={loading && !loadedOnce}
           onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)}
           onOpenPublic={(p) => onOpenPublic?.(p, componentsFor(p))}
           onPublish={() => navigate("/recipes")}

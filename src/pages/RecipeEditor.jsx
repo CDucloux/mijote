@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { CUISINES } from "../constants/cuisines.js";
@@ -8,7 +8,7 @@ import { DraggableStep } from "../components/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
-import { groupOrder, relabelGroup, moveWithinGroup, moveAcrossGroups } from "@/lib/recipes/recipeGroups.js";
+import { groupOrder, relabelGroup, moveWithAdopt, sectionRuns } from "@/lib/recipes/recipeGroups.js";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
@@ -47,6 +47,35 @@ function SectionCard({ name, onRename, onDelete, onZoneDrop, children }) {
         </button>
       </div>
       {children}
+    </div>
+  );
+}
+
+// En-tête de section EN LIGNE (liste à plat) : nom renommable (clic) + dissolution.
+// Les items suivent directement dessous dans le flux (pas de carte englobante).
+function EditorSectionHeader({ name, onRename, onDelete }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const [eraseHover, setEraseHover] = useState(false);
+  const inputRef = useRef(null);
+  useEffect(() => { setDraft(name); }, [name]);
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+  const commit = () => { setEditing(false); onRename(draft); };
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+      <Icon name="layers" size={15} color="var(--accent)" />
+      {editing ? (
+        <input ref={inputRef} className="field-input" value={draft} onChange={e => setDraft(e.target.value)}
+          onBlur={commit} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
+          style={{ marginBottom: 0, flex: 1, minWidth: 0, height: 32, fontSize: 14, fontWeight: 600 }} />
+      ) : (
+        <button type="button" onClick={() => setEditing(true)} style={{ minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
+      )}
+      <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
+      <button type="button" onClick={onDelete} title="Dissoudre la section" onMouseEnter={() => setEraseHover(true)} onMouseLeave={() => setEraseHover(false)}
+        style={{ flexShrink: 0, width: 30, height: 30, borderRadius: "50%", background: eraseHover ? "var(--surface2)" : "transparent", border: "none", display: "grid", placeItems: "center", cursor: "pointer", transition: "background 0.15s" }}>
+        <Icon name="eraser" size={13} color="var(--text3)" />
+      </button>
     </div>
   );
 }
@@ -173,27 +202,17 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
 
   // Ingredients
   const lastAddedIdRef = useRef(null);
-  // Ajoute un ingrédient dans une section donnée (`""` = section principale).
-  const addIngTo = (group) => {
+  // Insère un ingrédient à la position `index` (dans la liste globale) avec la section
+  // `group`. Le réordonnancement libre se fait ensuite via `moveIngGlobal`.
+  const addIngAt = (index, group) => {
     const id = "i" + Date.now();
     lastAddedIdRef.current = id;
-    up("ingredients", [...form.ingredients, { id, dbId: "", name: "", amount: "", unit: "", _raw: "", group }]);
+    const arr = form.ingredients.slice();
+    arr.splice(index, 0, { id, dbId: "", name: "", amount: "", unit: "", _raw: "", group });
+    up("ingredients", arr);
   };
-  const setIngGroup = (id, g) => up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, group: g } : i));
-  const moveIngIn = (group) => (fromLocal, toLocal) => up("ingredients", moveWithinGroup(form.ingredients, group, fromLocal, toLocal));
-  // Drop d'un ingrédient (drag) : réordonne dans la même section, ou le déplace vers
-  // une autre section (`toGroup`), y compris hors section (`""`).
-  const dropIngInto = (toGroup) => (fromGroup, fromLocal, toLocal) =>
-    up("ingredients", fromGroup === toGroup
-      ? moveWithinGroup(form.ingredients, toGroup, fromLocal, toLocal)
-      : moveAcrossGroups(form.ingredients, fromGroup, fromLocal, toGroup, toLocal));
-  // Drop sur la ZONE d'une section (hors d'une ligne) → ajout en fin de section.
-  const dropIngZone = (toGroup) => (e) => {
-    const raw = e.dataTransfer.getData("ingIdx");
-    if (raw === "") return;
-    e.preventDefault();
-    up("ingredients", moveAcrossGroups(form.ingredients, e.dataTransfer.getData("ingSection"), +raw, toGroup, Infinity));
-  };
+  // Déplacement LIBRE (index globaux) : l'item adopte la section du bloc d'arrivée.
+  const moveIngGlobal = (from, to) => up("ingredients", moveWithAdopt(form.ingredients, from, to));
   const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
   const remIng = id => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.filter(i => i.id !== id)); };
   // Retour arrière sur une ligne vide : supprime la ligne et refocalise la précédente.
@@ -218,27 +237,21 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   // celles déjà référencées. Indisponible si on édite soi-même un composant (mono-niveau v1).
   const usedRecipeIds = new Set(form.ingredients.filter(i => i.recipeId).map(i => i.recipeId));
   const availableComponents = (recipes || []).filter(r => r.isComponent && r.id !== form.id && !usedRecipeIds.has(r.id));
-  const addComponentTo = (comp, group = "") => {
-    up("ingredients", [...form.ingredients, { id: "i" + Date.now(), recipeId: comp.id, name: comp.name, amount: "", unit: comp.yield?.unit || "g", group }]);
+  const addComponentAt = (index, comp, group = "") => {
+    const arr = form.ingredients.slice();
+    arr.splice(index, 0, { id: "i" + Date.now(), recipeId: comp.id, name: comp.name, amount: "", unit: comp.yield?.unit || "g", group });
+    up("ingredients", arr);
   };
 
-  // Steps with drag reorder
-  const addStepTo = (group) => up("steps", [...form.steps, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [], group }]);
-  const addStep = () => addStepTo("");
-  const updStep = (id, f, v) => up("steps", form.steps.map(s => s.id === id ? { ...s, [f]: v } : s));
-  const setStepGroup = (id, g) => up("steps", form.steps.map(s => s.id === id ? { ...s, group: g } : s));
-  const remStep = id => up("steps", form.steps.filter(s => s.id !== id));
-  const moveStepIn = (group) => (fromLocal, toLocal) => up("steps", moveWithinGroup(form.steps, group, fromLocal, toLocal));
-  const dropStepInto = (toGroup) => (fromGroup, fromLocal, toLocal) =>
-    up("steps", fromGroup === toGroup
-      ? moveWithinGroup(form.steps, toGroup, fromLocal, toLocal)
-      : moveAcrossGroups(form.steps, fromGroup, fromLocal, toGroup, toLocal));
-  const dropStepZone = (toGroup) => (e) => {
-    const raw = e.dataTransfer.getData("stepIdx");
-    if (raw === "") return;
-    e.preventDefault();
-    up("steps", moveAcrossGroups(form.steps, e.dataTransfer.getData("stepSection"), +raw, toGroup, Infinity));
+  // Étapes — mêmes primitives : insertion positionnelle + déplacement libre.
+  const addStepAt = (index, group) => {
+    const arr = form.steps.slice();
+    arr.splice(index, 0, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [], group });
+    up("steps", arr);
   };
+  const updStep = (id, f, v) => up("steps", form.steps.map(s => s.id === id ? { ...s, [f]: v } : s));
+  const remStep = id => up("steps", form.steps.filter(s => s.id !== id));
+  const moveStepGlobal = (from, to) => up("steps", moveWithAdopt(form.steps, from, to));
 
   // ── Sections partagées (ingrédients + étapes) ───────────────────────────────
   // `sectionNames` porte l'ORDRE des sections et permet les sections VIDES (créées
@@ -261,33 +274,10 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
     setSectionNames(s => s.filter(x => x !== name));
   };
   const ingsOf = (g) => form.ingredients.filter(i => (i.group || "") === g);
-  const stepsOf = (g) => form.steps.filter(s => (s.group || "") === g);
-  // Bases disponibles proposées dans une zone d'ajout, l'ajout étant lié au groupe.
-  const compsFor = (group) => (form.isComponent ? [] : availableComponents.map(c => ({ id: c.id, name: c.name, yield: c.yield, onPick: () => addComponentTo(c, group) })));
+  // Bases disponibles pour une zone d'ajout : insérées à `index` avec la section `group`.
+  const compsAt = (group, index) => (form.isComponent ? [] : availableComponents.map(c => ({ id: c.id, name: c.name, yield: c.yield, onPick: () => addComponentAt(index, c, group) })));
 
   const isDesktop = useIsDesktop();
-
-  // Ingrédients « hors section ». `withHeader` affiche un titre « Hors section » quand
-  // le bloc est relégué en bas (au moins une section existe).
-  const renderIngLoose = (withHeader) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}
-      onDragOver={!isDesktop ? (e => e.preventDefault()) : undefined}
-      onDrop={!isDesktop ? dropIngZone("") : undefined}>
-      {withHeader && ingsOf("").length > 0 && (
-        <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>Hors section</div>
-      )}
-      {ingsOf("").map((ing, li) => (
-        <DraggableIngredient key={ing.id} ing={ing} index={li} total={ingsOf("").length}
-          draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
-          autoFocus={ing.id === lastAddedIdRef.current}
-          sectionKey="" groups={allSections} onSetGroup={setIngGroup}
-          onRawChange={handleRawChange}
-          onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-          onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} onBackspaceEmpty={removeIngBackspace} onDropItem={dropIngInto("")} />
-      ))}
-      <SectionAddBar onAddIngredient={() => addIngTo("")} components={compsFor("")} canBase={false} />
-    </div>
-  );
 
   // Élastique vertical (rubber-band + rebond d'inertie) pour les panneaux du pager
   // (chacun a son propre `overflow-y`). Le panneau Ustensiles est un composant à part
@@ -301,7 +291,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const TABS = [
     { id: "info", label: "Infos", icon: "info" },
     { id: "ingrédients", label: "Ingrédients", icon: "leaf" },
-    { id: "ustensiles", label: "Ustensiles", icon: "settings" },
+    { id: "ustensiles", label: "Ustensiles", icon: "utensils" },
     { id: "étapes", label: "Étapes", icon: "list2" },
   ];
   const goSection = (id, i) => {
@@ -491,26 +481,38 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="warning" size={16} color="var(--red)" /> {saveError}
               </div>
             )}
-            {/* Section principale (ingrédients sans groupe) */}
-            {/* Sections (sous-préparations, prioritaires) d'abord, puis la création de
-                section, puis les ingrédients hors section en bas. */}
-            {allSections.map(name => (
-              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)} onZoneDrop={!isDesktop ? dropIngZone(name) : undefined}>
-                {ingsOf(name).map((ing, li) => (
-                  <DraggableIngredient key={ing.id} ing={ing} index={li} total={ingsOf(name).length}
-                    draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
-                    autoFocus={ing.id === lastAddedIdRef.current}
-                    sectionKey={name} groups={allSections} onSetGroup={setIngGroup}
-                    onRawChange={handleRawChange}
-                    onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-                    onRemove={remIng} onMove={moveIngIn(name)} onEnter={() => addIngTo(name)} onBackspaceEmpty={removeIngBackspace} onDropItem={dropIngInto(name)} />
-                ))}
-                <SectionAddBar onAddIngredient={() => addIngTo(name)} components={compsFor(name)} canBase={!form.isComponent && !ingsOf(name).some(i => !i.recipeId)} />
+            {/* Liste À PLAT dans l'ordre réel : en-têtes de section en ligne, chaque
+                bloc a son bouton d'ajout (ingrédient / base). Réordonnancement libre. */}
+            {sectionRuns(form.ingredients).map(run => {
+              const g = run.group; // null = hors section
+              const endIdx = run.start + run.items.length; // insertion en fin de bloc
+              const rawInSection = g != null && ingsOf(g).some(i => !i.recipeId);
+              return (
+                <Fragment key={run.start}>
+                  {g != null && <EditorSectionHeader name={g} onRename={t => renameSection(g, t)} onDelete={() => deleteSection(g)} />}
+                  {run.items.map((ing, j) => {
+                    const gi = run.start + j;
+                    return (
+                      <DraggableIngredient key={ing.id} ing={ing} index={gi} total={form.ingredients.length}
+                        draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
+                        autoFocus={ing.id === lastAddedIdRef.current}
+                        onRawChange={handleRawChange}
+                        onUpdateAmount={(id, v) => updIng(id, "amount", v)}
+                        onRemove={remIng} onMove={moveIngGlobal} onEnter={() => addIngAt(gi + 1, g || "")} onBackspaceEmpty={removeIngBackspace} />
+                    );
+                  })}
+                  {g != null && <SectionAddBar onAddIngredient={() => addIngAt(endIdx, g)} components={compsAt(g, endIdx)} canBase={!form.isComponent && !rawInSection} />}
+                </Fragment>
+              );
+            })}
+            {/* Ajout hors section (ingrédient seul) + création de section + sections vides */}
+            <SectionAddBar onAddIngredient={() => addIngAt(form.ingredients.length, "")} components={[]} canBase={false} />
+            <NewSectionButton onAdd={addSection} />
+            {allSections.filter(n => !form.ingredients.some(i => (i.group || "") === n)).map(name => (
+              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
+                <SectionAddBar onAddIngredient={() => addIngAt(form.ingredients.length, name)} components={compsAt(name, form.ingredients.length)} canBase={!form.isComponent} />
               </SectionCard>
             ))}
-            <NewSectionButton onAdd={addSection} />
-
-            {renderIngLoose(allSections.length > 0)}
           </div>
         </div>
 
@@ -526,37 +528,34 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="drag" size={14} color="var(--text3)" /> Glisse les étapes pour les réorganiser.
               </div>
             )}
-            {/* Sections nommées d'étapes (partagées avec les ingrédients) d'abord */}
-            {allSections.map(name => (
-              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)} onZoneDrop={!isDesktop ? dropStepZone(name) : undefined}>
-                {stepsOf(name).map((step, li) => (
-                  <DraggableStep key={step.id} step={step} index={li} total={stepsOf(name).length}
-                    ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
-                    draggable={!isDesktop}
-                    sectionKey={name} groups={allSections} onSetGroup={setStepGroup}
-                    onUpdate={updStep} onRemove={remStep} onMove={moveStepIn(name)} onDropItem={dropStepInto(name)} />
-                ))}
-                <button className="editor-add" onClick={() => addStepTo(name)}><Icon name="plus" size={16} /> Ajouter une étape</button>
+            {/* Liste À PLAT dans l'ordre réel : en-têtes de section en ligne, ajout par
+                bloc, réordonnancement libre (l'étape adopte la section du bloc d'arrivée). */}
+            {sectionRuns(form.steps).map(run => {
+              const g = run.group;
+              const endIdx = run.start + run.items.length;
+              return (
+                <Fragment key={run.start}>
+                  {g != null && <EditorSectionHeader name={g} onRename={t => renameSection(g, t)} onDelete={() => deleteSection(g)} />}
+                  {run.items.map((step, j) => {
+                    const gi = run.start + j;
+                    return (
+                      <DraggableStep key={step.id} step={step} index={gi} total={form.steps.length}
+                        ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
+                        draggable={!isDesktop}
+                        onUpdate={updStep} onRemove={remStep} onMove={moveStepGlobal} />
+                    );
+                  })}
+                  {g != null && <button className="editor-add" onClick={() => addStepAt(endIdx, g)}><Icon name="plus" size={16} /> Ajouter une étape</button>}
+                </Fragment>
+              );
+            })}
+            <button className="editor-add" onClick={() => addStepAt(form.steps.length, "")}><Icon name="plus" size={16} /> Ajouter une étape</button>
+            <NewSectionButton onAdd={addSection} />
+            {allSections.filter(n => !form.steps.some(s => (s.group || "") === n)).map(name => (
+              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
+                <button className="editor-add" onClick={() => addStepAt(form.steps.length, name)}><Icon name="plus" size={16} /> Ajouter une étape</button>
               </SectionCard>
             ))}
-            <NewSectionButton onAdd={addSection} />
-
-            {/* Étapes hors section : en bas dès qu'une section existe (« Hors section »). */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}
-              onDragOver={!isDesktop ? (e => e.preventDefault()) : undefined}
-              onDrop={!isDesktop ? dropStepZone("") : undefined}>
-              {allSections.length > 0 && stepsOf("").length > 0 && (
-                <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>Hors section</div>
-              )}
-              {stepsOf("").map((step, li) => (
-                <DraggableStep key={step.id} step={step} index={li} total={stepsOf("").length}
-                  ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
-                  draggable={!isDesktop}
-                  sectionKey="" groups={allSections} onSetGroup={setStepGroup}
-                  onUpdate={updStep} onRemove={remStep} onMove={moveStepIn("")} onDropItem={dropStepInto("")} />
-              ))}
-              <button className="editor-add" onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>
-            </div>
           </div>
         </div>
 

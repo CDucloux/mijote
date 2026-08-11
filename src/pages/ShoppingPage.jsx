@@ -339,7 +339,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                         <span>Acheté</span>
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                        <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(ALL_ID)} title="Confirme l'achat sur toutes les listes – les produits de placard rejoignent ton stock">
+                        <button style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.35)", cursor: "pointer" }} onClick={() => setConfirmClearId(ALL_ID)} title="Confirme l'achat sur toutes les listes – les produits de placard rejoignent ton stock">
                           <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
                         </button>
                       </div>
@@ -378,7 +378,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
                   Tous les ingrédients de « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{activeList.name}</strong> » ont été cochés. Tu peux supprimer cette liste, elle a fait son travail.
                 </p>
-                <button className="btn btn-pill" style={{ fontSize: 14, background: "rgba(224,82,82,0.10)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.28)" }} onClick={() => deleteList(activeList.id)}>
+                <button style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 20px", fontSize: 14, fontWeight: 600, borderRadius: 999, cursor: "pointer", background: "rgba(224,82,82,0.10)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.28)", boxShadow: "none" }} onClick={() => deleteList(activeList.id)}>
                   <Icon name="trash" size={15} color="var(--red)" /> Supprimer la liste
                 </button>
               </div>
@@ -421,7 +421,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
                         {!activeList.hideClear && (
-                          <button className="btn btn-sm" style={{ padding: "4px 12px", fontSize: 11, flexShrink: 0, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.3)" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat – les produits de placard rejoignent ton stock">
+                          <button style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(76,175,125,0.14)", color: "var(--green)", border: "1px solid rgba(76,175,125,0.35)", cursor: "pointer" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat – les produits de placard rejoignent ton stock">
                             <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
                           </button>
                         )}
@@ -499,6 +499,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
               <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => close(() => {
+                setConfirmClearId(null); // sinon le sheet reste monté (close(cb) shunte onClose)
                 if (isAll) clearAllChecked(); else clearChecked(confirmClearId);
                 // Un toast de succès par produit ajouté au stock, en cascade (dédupliqués).
                 const seen = new Set();

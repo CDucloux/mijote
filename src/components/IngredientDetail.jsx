@@ -141,7 +141,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
               <button onClick={onBack} className="pressable fiche-hdr-btn fiche-hdr-back" aria-label="Retour" style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", color: "var(--text2)" }}>
                 <Icon name="back" size={18} color="currentColor" />
               </button>
-              {isAdmin ? (
+              {isAdmin && (
                 <div style={{ display: "flex", gap: 9 }}>
                   <button onClick={startEdit} className="pressable fiche-hdr-btn" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 17px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>
                     <Icon name="edit" size={15} color="currentColor" /> Modifier
@@ -150,8 +150,6 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                     <Icon name="trash" size={16} color="var(--red)" />
                   </button>
                 </div>
-              ) : (
-                <span style={{ display: "inline-flex", alignItems: "center", height: 40, fontSize: 10.5, color: "rgba(155,135,245,1)", fontWeight: 700, padding: "0 13px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 999 }}>Lecture seule</span>
               )}
             </>
           )}

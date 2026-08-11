@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Polices chargées tôt via <link> (plus fiable que @import CSS, surtout iOS/mobile). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap" />
     <!-- En PWA installée (standalone), on désactive le zoom pour un feel natif ;
          dans le navigateur classique, le zoom reste disponible (accessibilité). -->
     <script>
@@ -32,7 +36,7 @@
          suit le thème in-app, pas celui du système. Valeur par défaut = thème sombre
          (défaut de l'appli), ajustée très tôt par le script ci-dessus puis en direct. -->
     <meta name="theme-color" content="#0e0e0f" />
-    <link rel="canonical" href="https://VOTRE-DOMAINE/" />
+    <link rel="canonical" href="https://mijote-sand.vercel.app/" />
 
     <!-- Icônes -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

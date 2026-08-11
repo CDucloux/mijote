@@ -396,8 +396,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <UserAvatar />
         </div>
         <OverscrollRow stretch style={{ gap: 6 }}>
-          {[["dashboard", "Vue d'ensemble", "grid"], ["ingredients", "Ingrédients", "leaf"], ["ustensiles", "Ustensiles", "settings"], ["techniques", "Techniques", "list2"], ["modération", "Modération", "warning"]].map(([s, label, ic]) => (
-            <button key={s} onClick={() => gotoSection(s)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: section === s ? "var(--accent)" : "var(--surface2)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
+          {[["dashboard", "Vue d'ensemble", "grid"], ["ingredients", "Ingrédients", "leaf"], ["ustensiles", "Ustensiles", "utensils"], ["techniques", "Techniques", "list2"], ["modération", "Modération", "warning"]].map(([s, label, ic]) => (
+            <button key={s} onClick={() => gotoSection(s)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: section === s ? "var(--accent)" : "var(--surface)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
               <Icon name={ic} size={13} color="currentColor" /> {label}
               {s === "modération" && reports.length > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 700, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: section === s ? "rgba(255,255,255,0.28)" : "var(--red)", color: "#fff" }}>{reports.length}</span>

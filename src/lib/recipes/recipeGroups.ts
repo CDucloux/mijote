@@ -47,6 +47,27 @@ export function groupBy<T extends { group?: string }>(items: readonly T[]): Sect
   return out;
 }
 
+/**
+ * Découpe une liste en « runs » CONTIGUS de même section, **sans réordonner** ni
+ * fusionner les runs non adjacents. Contrairement à {@link groupBy}, l'ordre du
+ * tableau est strictement préservé — indispensable pour les ÉTAPES, dont la
+ * numérotation doit rester continue et suivre le fil de la recette (comme le mode
+ * pas à pas). `start` = index global (0-based) du premier item du run → la n-ième
+ * étape d'un run porte le numéro `start + n` (1-based).
+ */
+export function sectionRuns<T extends { group?: string }>(items: readonly T[]): { group: string | null; items: T[]; start: number }[] {
+  const runs: { group: string | null; items: T[]; start: number }[] = [];
+  let idx = 0;
+  for (const it of items) {
+    const g = label(it.group) || null;
+    const last = runs[runs.length - 1];
+    if (last && last.group === g) last.items.push(it);
+    else runs.push({ group: g, items: [it], start: idx });
+    idx++;
+  }
+  return runs;
+}
+
 /** `true` si au moins une ligne porte un groupe non vide (⇒ affichage sectionné). */
 export function hasGroups(items: readonly { group?: string }[] | undefined): boolean {
   return !!items?.some(i => label(i.group) !== "");
@@ -102,6 +123,23 @@ export function moveAcrossGroups<T extends { group?: string }>(items: readonly T
   else if (toLocal >= tgtPositions.length) insertAt = tgtPositions[tgtPositions.length - 1] + 1;
   else insertAt = tgtPositions[toLocal];
   arr.splice(insertAt, 0, movedNew);
+  return arr;
+}
+
+/**
+ * Déplacement LIBRE dans la liste complète (index globaux). L'item déplacé **adopte
+ * la section du bloc où il atterrit** = le `group` de son nouveau prédécesseur (ou
+ * `""` s'il devient premier). Base du réordonnancement positionnel de l'éditeur :
+ * monter une ligne au-dessus de l'en-tête d'une section la fait sortir de la section,
+ * la descendre dans un autre bloc l'y intègre.
+ */
+export function moveWithAdopt<T extends { group?: string }>(items: readonly T[], fromIdx: number, toIdx: number): T[] {
+  if (fromIdx < 0 || fromIdx >= items.length) return items.slice();
+  const arr = items.slice();
+  const [moved] = arr.splice(fromIdx, 1);
+  const dest = Math.max(0, Math.min(toIdx, arr.length));
+  arr.splice(dest, 0, moved);
+  arr[dest] = { ...moved, group: dest > 0 ? label(arr[dest - 1].group) : "" } as T;
   return arr;
 }
 

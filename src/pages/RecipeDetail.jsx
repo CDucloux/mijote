@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, Fragment } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { StepTip } from "../components/StepTip.jsx";
@@ -32,7 +32,7 @@ import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { computeDifficulty, explainDifficulty } from "@/lib/recipes/difficulty.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "@/lib/recipes/recipeComponents.js";
-import { groupBy } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, sectionRuns, hasGroups } from "@/lib/recipes/recipeGroups.js";
 import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { MEAL_SLOTS } from "../constants/mealSlots.js";
@@ -48,13 +48,27 @@ const REPORT_REASONS = [
 
 // En-tête d'une section (groupe « Pour la pâte »…). Rendu uniquement pour les groupes
 // nommés ; la section principale (sans groupe) reste sans en-tête (iso-rendu).
-function GroupHeader({ label, style }) {
+// En-tête de section (toujours en accent, pour une palette cohérente). Une vraie
+// sous-préparation nommée porte l'icône « layers » ; les blocs hors section
+// (« Préparation », « Montage ») n'en ont pas — la distinction se fait par l'icône et
+// le libellé, pas par la couleur.
+function GroupHeader({ label, showIcon = false, style }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>
+      {showIcon && <Icon name="layers" size={15} color="var(--accent)" />}
       <span style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", flexShrink: 0 }}>{label}</span>
       <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
     </div>
   );
+}
+
+// Libellé d'un run hors-section (group null) quand la recette a des sections :
+// « Montage » si c'est le dernier bloc (assemblage final), « Préparation » sinon.
+// `null` si la recette n'a aucune section (aucun en-tête à afficher).
+function looseRunLabel(run, isLast, hasSections) {
+  if (run.group) return run.group;
+  if (!hasSections) return null;
+  return isLast ? "Montage" : "Préparation";
 }
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
@@ -834,7 +848,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {groupBy(recipe.ingredients).map(section => (
               <div key={section.group ?? "__main"}>
-                {section.group && <GroupHeader label={section.group} style={{ marginBottom: 10 }} />}
+                {section.group && <GroupHeader label={section.group} showIcon style={{ marginBottom: 10 }} />}
                 <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
                 {section.items.map((ing, idx) => {
                   const rc = resolveComp(ing);
@@ -943,18 +957,21 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 {baseSteps.length > 0 && recipe.steps?.length > 0 && (
                   <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
                 )}
-                {groupBy(recipe.steps || []).map(section => (
-                <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {section.group && <GroupHeader label={section.group} style={{ marginTop: 4 }} />}
-                {section.items.map((step, i) => {
+                {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
+                const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
+                return (
+                <Fragment key={run.start}>
+                {hdr && <GroupHeader label={hdr} showIcon={!!run.group} />}
+                {run.items.map((step, j) => {
+                  const num = run.start + j + 1;
                   const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                   const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
                   const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
                   return (
                     <div key={step.id} className="tap tap-soft" style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: (step.text || step.image || step.tip || hasPills) ? 8 : 0 }}>
-                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {i + 1}</span>
+                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{num}</div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {num}</span>
                       </div>
                       {step.text && (
                         <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: (step.tip || hasPills || step.image) ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>
@@ -974,13 +991,15 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         </div>
                       )}
                       {step.image && (
-                        <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12 }} />
+                        <Img src={step.image} alt={`Étape ${num}`} style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12 }} />
                       )}
                     </div>
                   );
                 })}
-                </div>
-                ))}
+                </Fragment>
+                );
+                });
+                })()}
               </div>
             </div>
           )}
@@ -1002,7 +1021,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {groupBy(recipe.ingredients).map(section => (
                 <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {section.group && <GroupHeader label={section.group} />}
+                {section.group && <GroupHeader label={section.group} showIcon />}
                 {section.items.map(ing => {
                   const rc = resolveComp(ing);
                   if (rc) return (
@@ -1105,43 +1124,56 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               {baseSteps.length > 0 && recipe.steps?.length > 0 && (
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
               )}
-              {groupBy(recipe.steps || []).map(section => (
-              <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
-              {section.group && <GroupHeader label={section.group} />}
-              {section.items.map((step, i) => {
+              {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
+              const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
+              return (
+              <div key={run.start}>
+              {hdr && <GroupHeader label={hdr} showIcon={!!run.group} style={{ marginBottom: 18 }} />}
+              {run.items.map((step, j) => {
+                const num = run.start + j + 1;
+                const lastInRun = j === run.items.length - 1;
                 const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                 const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
+                const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
                 return (
-                  <div key={step.id}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>Étape {i + 1}</div>
-                    {step.text && <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 12, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
-                    {step.tip && <StepTip tip={step.tip} style={{ marginBottom: 12 }} />}
-                    {(linkedIngs.length > 0 || linkedUts.length > 0) && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: step.image ? 12 : 0 }}>
-                        {linkedIngs.map(ing => {
-                          const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
-                          return (
-                          <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} cover={!!ing.recipeId} />
-                            {displayName}
-                            <span style={{ color: "var(--text3)", fontWeight: 500 }}>{fmtQtyUnit(ing.amount * mult, ing.unit)}</span>
-                          </span>
-                          );
-                        })}
-                        {linkedUts.map(u => (
-                          <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
-                            {u.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {step.image && <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} />}
+                  // Timeline : nœud numéroté (dégradé) relié par un rail vertical, contenu à droite.
+                  <div key={step.id} style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+                      <span style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #f0894e)", color: "#fff", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 700, boxShadow: "0 3px 8px -2px rgba(232,112,58,0.5)", flexShrink: 0 }}>{num}</span>
+                      {!lastInRun && <span style={{ flex: 1, width: 2, background: "var(--border)", borderRadius: 1, marginTop: 6, minHeight: 10 }} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, paddingTop: 5, paddingBottom: lastInRun ? 2 : 28 }}>
+                      {step.text && <p style={{ fontSize: 15, color: "var(--text)", lineHeight: 1.7, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
+                      {step.tip && <StepTip tip={step.tip} style={{ marginTop: 12 }} />}
+                      {hasPills && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                          {linkedIngs.map(ing => {
+                            const displayName = ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name;
+                            return (
+                            <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                              <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} cover={!!ing.recipeId} />
+                              {displayName}
+                              <span style={{ color: "var(--text3)", fontWeight: 500 }}>{fmtQtyUnit(ing.amount * mult, ing.unit)}</span>
+                            </span>
+                            );
+                          })}
+                          {linkedUts.map(u => (
+                            <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                              <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
+                              {u.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {step.image && <Img src={step.image} alt={`Étape ${num}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12, marginTop: 12 }} />}
+                    </div>
                   </div>
                 );
               })}
               </div>
-              ))}
+              );
+              });
+              })()}
             </div>
           </div>
         </div>

@@ -2,15 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
-import { GroupSelect } from "./GroupSelect.jsx";
 import { MoveArrows } from "./MoveArrows.jsx";
 
-// Ligne d'ingrédient réorganisable. Drag tactile sur mobile (draggable=true),
-// boutons ↑/↓ sur desktop (draggable=false, le drag HTML5 y est pénible).
+// Ligne d'ingrédient réorganisable LIBREMENT dans la liste complète (index global).
+// Drag tactile sur mobile (draggable=true), flèches ↑/↓ sur desktop. La section est
+// déterminée par la POSITION (pas de pastille) : voir `moveWithAdopt`.
 export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
-  ingredientDB, recipes, autoFocus, groups, onSetGroup, sectionKey = "",
-  onRawChange, onUpdateAmount, onRemove, onMove, onEnter, onBackspaceEmpty, onDropItem,
+  ingredientDB, recipes, autoFocus,
+  onRawChange, onUpdateAmount, onRemove, onMove, onEnter, onBackspaceEmpty,
 }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
@@ -21,13 +21,12 @@ export function DraggableIngredient({
 
   const dragProps = isDraggable ? {
     draggable: true,
-    onDragStart: e => { e.dataTransfer.setData("ingIdx", String(index)); e.dataTransfer.setData("ingSection", sectionKey); setDragging(true); },
+    onDragStart: e => { e.dataTransfer.setData("ingIdx", String(index)); setDragging(true); },
     onDragEnd: () => setDragging(false),
     onDragOver: e => { e.preventDefault(); setOver(true); },
     onDragLeave: () => setOver(false),
-    // Drop sur une ligne : réordonne (même section) OU déplace vers cette section
-    // (inter-sections). `stopPropagation` évite un double-traitement par la zone parente.
-    onDrop: e => { e.preventDefault(); e.stopPropagation(); setOver(false); const raw = e.dataTransfer.getData("ingIdx"); if (raw === "") return; onDropItem?.(e.dataTransfer.getData("ingSection"), +raw, index); },
+    // Drop sur une ligne : déplacement libre (l'item adopte la section d'arrivée).
+    onDrop: e => { e.preventDefault(); setOver(false); const raw = e.dataTransfer.getData("ingIdx"); if (raw === "") return; const from = +raw; if (from !== index) onMove(from, index); },
   } : {};
 
   const handle = isDraggable ? (
@@ -44,10 +43,6 @@ export function DraggableIngredient({
       <Icon name="trash" size={15} color="var(--red)" />
     </button>
   );
-
-  const groupSel = onSetGroup ? (
-    <GroupSelect value={ing.group || ""} groups={groups} onChange={g => onSetGroup(ing.id, g)} />
-  ) : null;
 
   // ── Ligne composant (préparation de base référencée) ──
   if (ing.recipeId) {
@@ -68,7 +63,6 @@ export function DraggableIngredient({
               : comp.yield?.amount ? <span style={{ fontSize: 11, color: "var(--text3)" }}>/ {comp.yield.amount} {comp.yield.unit} produits</span> : null}
           </div>
         </div>
-        {groupSel}
         {trashBtn}
       </div>
     );
@@ -94,7 +88,6 @@ export function DraggableIngredient({
             else if (e.key === "Backspace" && !(ing._raw || "") && onBackspaceEmpty) { e.preventDefault(); onBackspaceEmpty(ing.id); }
           }}
           style={{ marginBottom: 0, flex: 1, minWidth: 0 }} />
-        {groupSel}
         {trashBtn}
       </div>
       {(ing.name || ing.amount) && (
