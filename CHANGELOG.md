@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.10.38 – Safran · Sections (finitions)
+
+### Recettes
+- Éditeur : le choix **Ingrédient / Base** est toujours proposé dans chaque section (assigner une préparation de base à la section), et « **Nouvelle section** » passe avant les ingrédients/étapes hors section
+- Onglet Étapes aligné sur les Ingrédients (sections d'abord, hors-section en bas)
+- Nouvelle **icône** plus parlante pour les sections
+
 ## v3.10.37 – Safran · Sections & bases
 
 ### Recettes
