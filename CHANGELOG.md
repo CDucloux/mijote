@@ -1,5 +1,15 @@
 # Changelog – Mijoté
 
+## v3.10.33 – Safran · Préparations de base
+
+### Éditeur de recette
+- Pour une **préparation de base**, l'éditeur propose désormais les grandes familles culinaires (fond, sauce, appareil, liaison, pâte, sirop, marinade) au lieu des rôles-repas (apéritif, plat, dessert…) qui n'avaient aucun sens dans ce contexte
+- **« Sauce »** retiré des types de recette classiques — réservé aux préparations de base
+
+### Interface
+- Badge **« ADMIN »** en majuscules
+- Page de connexion : petit **spinner de chargement** pendant la connexion Google
+
 ## v3.10.32 – Safran · Traçabilité Nutri-Score
 
 ### Nutrition
