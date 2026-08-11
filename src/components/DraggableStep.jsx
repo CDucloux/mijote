@@ -3,8 +3,9 @@ import { Icon } from "./Icon.jsx";
 import { fmtQtyUnit } from "../lib/format.js";
 import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
 import { ImageUpload } from "./ImageUpload.jsx";
+import { GroupSelect } from "./GroupSelect.jsx";
 
-export function DraggableStep({ step, index, total, ingredients, utensils, recipes, draggable: isDraggable = true, onUpdate, onRemove, onMove }) {
+export function DraggableStep({ step, index, total, ingredients, utensils, recipes, draggable: isDraggable = true, groups, onSetGroup, onUpdate, onRemove, onMove }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
   // Champs optionnels repliés par défaut pour garder une carte d'étape compacte.
@@ -32,7 +33,10 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
             </div>
           )}
         </div>
-        <button onClick={() => onRemove(step.id)}><Icon name="trash" size={14} color="var(--red)" /></button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {onSetGroup && <GroupSelect value={step.group || ""} groups={groups} onChange={g => onSetGroup(step.id, g)} />}
+          <button onClick={() => onRemove(step.id)}><Icon name="trash" size={14} color="var(--red)" /></button>
+        </div>
       </div>
       <AutoResizeTextarea className="field-input" placeholder="Instructions…" value={step.text} onChange={e => onUpdate(step.id, "text", e.target.value)} style={{ marginBottom: 10 }} />
 

@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
+import { GroupSelect } from "./GroupSelect.jsx";
 
 // Ligne d'ingrédient réorganisable. Drag tactile sur mobile (draggable=true),
 // boutons ↑/↓ sur desktop (draggable=false, le drag HTML5 y est pénible).
 export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
-  ingredientDB, recipes, autoFocus,
+  ingredientDB, recipes, autoFocus, groups, onSetGroup,
   onRawChange, onUpdateAmount, onRemove, onMove, onEnter,
 }) {
   const [dragging, setDragging] = useState(false);
@@ -42,6 +43,10 @@ export function DraggableIngredient({
     </button>
   );
 
+  const groupSel = onSetGroup ? (
+    <GroupSelect value={ing.group || ""} groups={groups} onChange={g => onSetGroup(ing.id, g)} />
+  ) : null;
+
   // ── Ligne composant (préparation de base référencée) ──
   if (ing.recipeId) {
     const comp = (recipes || []).find(r => r.id === ing.recipeId);
@@ -61,6 +66,7 @@ export function DraggableIngredient({
               : comp.yield?.amount ? <span style={{ fontSize: 11, color: "var(--text3)" }}>/ {comp.yield.amount} {comp.yield.unit} produits</span> : null}
           </div>
         </div>
+        {groupSel}
         {trashBtn}
       </div>
     );
@@ -81,6 +87,7 @@ export function DraggableIngredient({
           onChange={e => onRawChange(ing.id, e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); onEnter(); } }}
           style={{ marginBottom: 0, flex: 1, minWidth: 0 }} />
+        {groupSel}
         {trashBtn}
       </div>
       {(ing.name || ing.amount) && (

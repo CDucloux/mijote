@@ -475,6 +475,11 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
               ) : (
                 /* ── Étape normale ── */
                 <>
+                  {step.group && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8, fontFamily: "var(--ff-display)", fontSize: 14.5, fontWeight: 500, color: "var(--accent)" }}>
+                      <Icon name="book" size={14} color="var(--accent)" /> {step.group}
+                    </div>
+                  )}
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                     <div key="head-step" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
                     <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 500 }}>Étape {realIdx + 1}</h2>

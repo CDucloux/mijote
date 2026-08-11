@@ -7,6 +7,7 @@
  *
  * @module recipePdf
  */
+import { groupBy } from "@/lib/recipes/recipeGroups.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { categoryLabel, categoryEmoji } from "@/constants/recipeCategories.js";
@@ -141,7 +142,12 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     return pill(ingImg(ing.dbId), ing.name, fmtQtyUnit(ing.amount, ing.unit));
   };
 
-  const ingPills = (recipe.ingredients || []).map(ingPill).join("");
+  // Ingrédients groupés par section (« Pour la pâte »…) ; sans groupe = une seule
+  // rangée de pastilles, sans sous-titre (rendu identique à avant).
+  const ingredientsHtml = groupBy(recipe.ingredients || []).map(sec =>
+    (sec.group ? `<div class="group-title">${sec.group}</div>` : "") +
+    `<div class="ing-pills">${sec.items.map(ingPill).join("")}</div>`
+  ).join("");
 
   const nutriBadge = (letter: string | null | undefined): string => {
     if (!letter) return "";
@@ -153,7 +159,9 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     </div>`;
   };
 
-  const stepLines = (recipe.steps || []).map((s, i) => {
+  const stepLines = groupBy(recipe.steps || []).map(sec =>
+    (sec.group ? `<div class="group-title">${sec.group}</div>` : "") +
+    sec.items.map((s, i) => {
     const linkedIngs = (recipe.ingredients || []).filter(x => s.ingredients?.includes(x.id!)).map(ingPill).join("");
     const linkedUts = (recipe.utensils || []).filter(u => s.utensils?.includes(u.id!)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
     const pills = linkedIngs + linkedUts;
@@ -167,7 +175,8 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
         ${s.tip ? `<div class="step-tip"><span class="step-tip-ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.5.4.9 1 1 1.7l.1.5h5l.1-.5c.1-.7.5-1.3 1-1.7A6 6 0 0 0 12 3Z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="step-tip-body">${s.tip}</span></div>` : ""}
         ${pills ? `<div class="step-pills">${pills}</div>` : ""}
       </div>`;
-  }).join("");
+    }).join("")
+  ).join("");
 
   const utPills = (recipe.utensils || []).map(u => pill(utImg(u.dbId), u.name, "")).join("");
 
@@ -273,6 +282,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .dd { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .nl { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; line-height: 1; }
     .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .group-title { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; color: var(--accent); margin: 4px 0 10px; }
     /* Pills */
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
     .pill-comp { border-color: rgba(232,112,58,0.4); background: rgba(232,112,58,0.06); }
@@ -312,6 +322,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
       body { max-width: none; margin: 0; padding: 0; font-size: 12px; }
       .hero { height: 200px; }
       .section-title { break-after: avoid; page-break-after: avoid; }
+      .group-title { break-after: avoid; page-break-after: avoid; }
       .step-header { break-after: avoid; page-break-after: avoid; }
       /* Une étape ne doit jamais être coupée entre deux pages (texte + astuce +
          pastilles restent solidaires). Si elle ne tient pas, elle bascule en entier
@@ -340,7 +351,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
 
   ${(recipe.ingredients || []).length ? `
   <div class="section-title">Ingrédients</div>
-  <div class="ing-pills">${ingPills}</div>` : ""}
+  ${ingredientsHtml}` : ""}
 
   ${utPills ? `
   <div class="section-title">Ustensiles</div>
