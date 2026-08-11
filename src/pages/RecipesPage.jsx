@@ -294,18 +294,19 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       </div>
       {filterOpen && (
         <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => { setFilterOpen(false); setEditingSmartId(null); }}
+          {(close) => (
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => close()}
             alreadySaved={!editingSmartId && collections.some(c => isSmart(c) && smartActive(c))}
             updatingCarnetName={editingSmartId ? collections.find(c => c.id === editingSmartId)?.name : null}
             onSaveAsCarnet={() => {
               if (editingSmartId) {
                 setCollections(prev => prev.map(c => c.id === editingSmartId ? { ...c, filters: { ...DEFAULT_FILTERS, ...filters }, search: search.trim() } : c));
-                setEditingSmartId(null); setFilterOpen(false);
+                close(() => { setFilterOpen(false); setEditingSmartId(null); });
               } else {
-                setFilterOpen(false);
-                setNewCarnet({ name: "", color: "#e8703a", icon: "📓", smart: true, filters: { ...filters }, search });
+                close(() => { setFilterOpen(false); setEditingSmartId(null); setNewCarnet({ name: "", color: "#e8703a", icon: "📓", smart: true, filters: { ...filters }, search }); });
               }
             }} />
+          )}
         </SwipeableSheet>
       )}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
