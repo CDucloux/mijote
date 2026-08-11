@@ -378,7 +378,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
                   Tous les ingrédients de « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{activeList.name}</strong> » ont été cochés. Tu peux supprimer cette liste, elle a fait son travail.
                 </p>
-                <button className="btn btn-pill" style={{ fontSize: 14, background: "rgba(224,82,82,0.10)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.28)" }} onClick={() => deleteList(activeList.id)}>
+                <button style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 20px", fontSize: 14, fontWeight: 600, borderRadius: 999, cursor: "pointer", background: "rgba(224,82,82,0.10)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.28)", boxShadow: "none" }} onClick={() => deleteList(activeList.id)}>
                   <Icon name="trash" size={15} color="var(--red)" /> Supprimer la liste
                 </button>
               </div>
