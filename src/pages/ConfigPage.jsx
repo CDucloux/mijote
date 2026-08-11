@@ -388,8 +388,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-            <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-              <Icon name="terminal" size={16} color="var(--accent)" />
+            <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(var(--admin-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+              <Icon name="terminal" size={16} color="var(--admin)" />
             </span>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Console admin</h1>
           </div>

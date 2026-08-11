@@ -120,9 +120,9 @@ export function HintCard({ icon, iconColor = "var(--text2)", tint = "var(--surfa
 export function QuotaMeter({ label, rem, unlimited }) {
   if (unlimited) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 14, background: "rgba(139,111,240,0.09)", border: "1px solid rgba(139,111,240,0.28)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 14, background: "rgba(var(--admin-rgb),0.09)", border: "1px solid rgba(var(--admin-rgb),0.28)" }}>
         <AdminBadge />
-        <span style={{ fontSize: 12.5, color: "var(--text2)", fontWeight: 600 }}>Imports {label} <strong style={{ color: "#8b6ff0" }}>illimités</strong> — les quotas ne s'appliquent pas.</span>
+        <span style={{ fontSize: 12.5, color: "var(--text2)", fontWeight: 600 }}>Imports {label} <strong style={{ color: "var(--admin)" }}>illimités</strong> — les quotas ne s'appliquent pas.</span>
       </div>
     );
   }

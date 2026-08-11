@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.31 – Safran · Cohérence admin
+
+### Console admin
+- **Bandeau « MODE ADMIN »** et **icône de la console** passés au violet, en cohérence avec le badge Admin
+- Fiche ingrédient : le Nutri-Score (auto-calculé) est masqué en mode édition — plus aéré sur mobile
+
 ## v3.10.30 – Safran · Statut ingrédient
 
 ### Console admin

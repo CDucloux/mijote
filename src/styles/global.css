@@ -25,6 +25,8 @@
   --yellow: #f0c060;
   --blue: #5b9cf6;
   --orange: #f0992a;
+  --admin: #8b6ff0;         /* violet « admin » (badge, bandeau, console) */
+  --admin-rgb: 139, 111, 240;
   --radius: 16px;
   --radius-sm: 10px;
   --ff-display: 'Fraunces', serif;
