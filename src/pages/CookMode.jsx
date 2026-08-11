@@ -477,7 +477,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
                 <>
                   {step.group && (
                     <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8, fontFamily: "var(--ff-display)", fontSize: 14.5, fontWeight: 500, color: "var(--accent)" }}>
-                      <Icon name="book" size={14} color="var(--accent)" /> {step.group}
+                      <Icon name="layers" size={14} color="var(--accent)" /> {step.group}
                     </div>
                   )}
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
