@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.10.37 – Safran · Sections & bases
+
+### Recettes
+- Éditeur : les **sections** (sous-préparations) passent en premier, les ingrédients **hors section** sont regroupés en bas
+- Chaque section peut désormais porter ses propres ingrédients **ou** une **préparation de base** — le sélecteur Ingrédient/Base est remplacé par deux actions claires dans chaque zone
+- Affichage cohérent partout (fiche, PDF, mode pas à pas) : les sous-préparations d'abord, l'assemblage ensuite
+
 ## v3.10.36 – Safran · Sections (éditeur)
 
 ### Recettes
