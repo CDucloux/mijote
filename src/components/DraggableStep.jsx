@@ -5,7 +5,7 @@ import { AutoResizeTextarea } from "./AutoResizeTextarea.jsx";
 import { ImageUpload } from "./ImageUpload.jsx";
 import { GroupSelect } from "./GroupSelect.jsx";
 
-export function DraggableStep({ step, index, total, ingredients, utensils, recipes, draggable: isDraggable = true, groups, onSetGroup, onUpdate, onRemove, onMove }) {
+export function DraggableStep({ step, index, total, ingredients, utensils, recipes, draggable: isDraggable = true, groups, onSetGroup, sectionKey = "", onUpdate, onRemove, onMove }) {
   const [dragging, setDragging] = useState(false);
   const [over, setOver] = useState(false);
   // Champs optionnels repliés par défaut pour garder une carte d'étape compacte.
@@ -15,11 +15,11 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
   return (
     <div
       draggable={isDraggable}
-      onDragStart={isDraggable ? e => { e.dataTransfer.setData("stepIdx", String(index)); setDragging(true); } : undefined}
+      onDragStart={isDraggable ? e => { e.dataTransfer.setData("stepIdx", String(index)); e.dataTransfer.setData("stepSection", sectionKey); setDragging(true); } : undefined}
       onDragEnd={isDraggable ? () => setDragging(false) : undefined}
       onDragOver={isDraggable ? e => { e.preventDefault(); setOver(true); } : undefined}
       onDragLeave={isDraggable ? () => setOver(false) : undefined}
-      onDrop={isDraggable ? e => { e.preventDefault(); setOver(false); const from = +e.dataTransfer.getData("stepIdx"); if (from !== index) onMove(from, index); } : undefined}
+      onDrop={isDraggable ? e => { e.preventDefault(); setOver(false); if (e.dataTransfer.getData("stepSection") !== sectionKey) return; const from = +e.dataTransfer.getData("stepIdx"); if (from !== index) onMove(from, index); } : undefined}
       style={{ background: "var(--surface)", borderRadius: 12, padding: 14, border: `1px solid ${over ? "var(--accent)" : "var(--border)"}`, opacity: dragging ? 0.5 : 1, transition: "opacity 0.15s, border-color 0.15s", cursor: isDraggable ? "grab" : "default" }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>

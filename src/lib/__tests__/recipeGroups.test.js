@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupBy, hasGroups, groupOrder, relabelGroup } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, hasGroups, groupOrder, relabelGroup, moveWithinGroup } from "@/lib/recipes/recipeGroups.js";
 
 describe("recipeGroups", () => {
   it("returns a single main section (group null) when nothing is grouped", () => {
@@ -41,5 +41,20 @@ describe("recipeGroups", () => {
     const items = [{ id: "a", group: "Pâte" }, { id: "b", group: "Crème" }];
     expect(relabelGroup(items, "Pâte", "Base").map(i => i.group)).toEqual(["Base", "Crème"]);
     expect(relabelGroup(items, "Pâte", "").map(i => i.group)).toEqual(["", "Crème"]);
+  });
+
+  it("moveWithinGroup reorders only inside the section, leaving other items in place", () => {
+    // Section "P" is scattered (indices 0, 2, 3) among a "C" item at index 1.
+    const items = [
+      { id: "p1", group: "P" },
+      { id: "c1", group: "C" },
+      { id: "p2", group: "P" },
+      { id: "p3", group: "P" },
+    ];
+    // Move p1 (local 0) to local 2 within "P" → order p2, p3, p1 in their original slots.
+    const out = moveWithinGroup(items, "P", 0, 2);
+    expect(out.map(i => i.id)).toEqual(["p2", "c1", "p3", "p1"]);
+    // "C" untouched, out-of-range is a no-op (returns a copy).
+    expect(moveWithinGroup(items, "P", 0, 9).map(i => i.id)).toEqual(items.map(i => i.id));
   });
 });

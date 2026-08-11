@@ -8,7 +8,7 @@ import { GroupSelect } from "./GroupSelect.jsx";
 // boutons ↑/↓ sur desktop (draggable=false, le drag HTML5 y est pénible).
 export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
-  ingredientDB, recipes, autoFocus, groups, onSetGroup,
+  ingredientDB, recipes, autoFocus, groups, onSetGroup, sectionKey = "",
   onRawChange, onUpdateAmount, onRemove, onMove, onEnter,
 }) {
   const [dragging, setDragging] = useState(false);
@@ -19,11 +19,12 @@ export function DraggableIngredient({
 
   const dragProps = isDraggable ? {
     draggable: true,
-    onDragStart: e => { e.dataTransfer.setData("ingIdx", String(index)); setDragging(true); },
+    onDragStart: e => { e.dataTransfer.setData("ingIdx", String(index)); e.dataTransfer.setData("ingSection", sectionKey); setDragging(true); },
     onDragEnd: () => setDragging(false),
     onDragOver: e => { e.preventDefault(); setOver(true); },
     onDragLeave: () => setOver(false),
-    onDrop: e => { e.preventDefault(); setOver(false); const from = +e.dataTransfer.getData("ingIdx"); if (Number.isInteger(from) && from !== index) onMove(from, index); },
+    // Réordonnancement scopé à la section : on ignore un drop venu d'une autre section.
+    onDrop: e => { e.preventDefault(); setOver(false); if (e.dataTransfer.getData("ingSection") !== sectionKey) return; const from = +e.dataTransfer.getData("ingIdx"); if (Number.isInteger(from) && from !== index) onMove(from, index); },
   } : {};
 
   const handle = isDraggable ? (
