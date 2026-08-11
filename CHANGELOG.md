@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.36 – Safran · Sections (éditeur)
+
+### Recettes
+- L'éditeur d'ingrédients et d'étapes s'organise désormais **par sections** : on crée une section (« La pâte », « La crème »…) puis on y ajoute directement ses ingrédients et ses étapes. En-tête renommable, dissolution, et réordonnancement à l'intérieur de chaque section
+
 ## v3.10.35 – Safran · Sections de recette
 
 ### Recettes
