@@ -198,7 +198,38 @@ const NS_KEYS = ["calories", "sugar", "saturatedFat", "salt", "fiber", "protein"
  * @returns `{ score, letter }` (score 50 / lettre `null` si aucun ingrédient).
  */
 export function computeNutriInfo(ingredients: IngredientLine[] | null | undefined, ingredientDB: DbItem[], recipesById?: RecipeIndex): NutriInfo {
-  if (!ingredients || ingredients.length === 0) return { score: 50, letter: null };
+  const raw = nutriRaw(ingredients, ingredientDB, recipesById);
+  return raw ? { score: raw.score, letter: raw.letter } : { score: 50, letter: null };
+}
+
+/** Une composante du calcul (une ligne : valeur pour 100 g → points). */
+export interface NutriComponent {
+  key: string;
+  label: string;
+  value: number;   // valeur pour 100 g (ou % pour « fruits & légumes »)
+  unit: string;
+  pts: number;
+  max: number;     // points max de la composante (pour dimensionner une jauge)
+  counted?: boolean; // faux quand la composante est neutralisée (protéines exclues)
+}
+
+/** Détail complet du calcul Nutri-Score (traçabilité, réservé aux abonnés). */
+export interface NutriBreakdown {
+  negatives: NutriComponent[];
+  N: number;
+  positives: NutriComponent[];
+  P: number;
+  ns: number;
+  score: number;
+  letter: NonNullable<NutriInfo["letter"]>;
+}
+
+/**
+ * Calcul BRUT et détaillé du Nutri-Score (accumulation partagée avec
+ * {@link computeNutriInfo}). Renvoie `null` si aucune donnée exploitable.
+ */
+function nutriRaw(ingredients: IngredientLine[] | null | undefined, ingredientDB: DbItem[], recipesById?: RecipeIndex): NutriBreakdown | null {
+  if (!ingredients || ingredients.length === 0) return null;
   let mass = 0, vegMass = 0;
   const tot: Record<string, number> = { calories: 0, sugar: 0, saturatedFat: 0, salt: 0, fiber: 0, protein: 0 };
   for (const recipeIng of ingredients) {
@@ -223,23 +254,55 @@ export function computeNutriInfo(ingredients: IngredientLine[] | null | undefine
     if (countsAsFruitVeg(dbItem)) vegMass += m;
     mass += m;
   }
-  if (mass === 0) return { score: 50, letter: null };
+  if (mass === 0) return null;
   const per100 = (k: string): number => tot[k] / mass * 100;
   // Points négatifs (énergie en kJ, sucres, AG saturés, sel).
-  const N = nsPoints(per100("calories") * 4.184, NS_ENERGY)
-    + nsPoints(per100("sugar"), NS_SUGAR)
-    + nsPoints(per100("saturatedFat"), NS_SATFAT)
-    + nsPoints(per100("salt"), NS_SALT);
+  const energyKJ = per100("calories") * 4.184;
+  const nEnergy = nsPoints(energyKJ, NS_ENERGY);
+  const nSugar = nsPoints(per100("sugar"), NS_SUGAR);
+  const nSat = nsPoints(per100("saturatedFat"), NS_SATFAT);
+  const nSalt = nsPoints(per100("salt"), NS_SALT);
+  const N = nEnergy + nSugar + nSat + nSalt;
   // Points positifs (part de végétaux, fibres, protéines).
   const vegFrac = vegMass / mass * 100;
   const vegPts = vegFrac > 80 ? 5 : vegFrac > 60 ? 2 : vegFrac > 40 ? 1 : 0;
   const fiberPts = nsPoints(per100("fiber"), NS_FIBER);
   const proteinPts = nsPoints(per100("protein"), NS_PROT);
   // Règle Nutri-Score : si N≥11 et part de végétaux < 5 pts, les protéines ne comptent pas.
-  const P = vegPts + fiberPts + (N >= 11 && vegPts < 5 ? 0 : proteinPts);
+  const proteinCounted = !(N >= 11 && vegPts < 5);
+  const P = vegPts + fiberPts + (proteinCounted ? proteinPts : 0);
   const ns = N - P;
-  const letter: NutriInfo["letter"] = ns <= -1 ? "A" : ns <= 2 ? "B" : ns <= 10 ? "C" : ns <= 18 ? "D" : "E";
-  return { score: nutriToScore100(ns), letter };
+  const letter: NutriBreakdown["letter"] = ns <= -1 ? "A" : ns <= 2 ? "B" : ns <= 10 ? "C" : ns <= 18 ? "D" : "E";
+  return {
+    negatives: [
+      { key: "energy", label: "Énergie", value: Math.round(energyKJ), unit: "kJ", pts: nEnergy, max: 10 },
+      { key: "sugar", label: "Sucres", value: per100("sugar"), unit: "g", pts: nSugar, max: 15 },
+      { key: "satfat", label: "Acides gras saturés", value: per100("saturatedFat"), unit: "g", pts: nSat, max: 10 },
+      { key: "salt", label: "Sel", value: per100("salt"), unit: "g", pts: nSalt, max: 20 },
+    ],
+    N,
+    positives: [
+      { key: "fruitveg", label: "Fruits & légumes", value: Math.round(vegFrac), unit: "%", pts: vegPts, max: 5 },
+      { key: "fiber", label: "Fibres", value: per100("fiber"), unit: "g", pts: fiberPts, max: 5 },
+      { key: "protein", label: "Protéines", value: per100("protein"), unit: "g", pts: proteinPts, max: 7, counted: proteinCounted },
+    ],
+    P,
+    ns,
+    score: nutriToScore100(ns),
+    letter,
+  };
+}
+
+/**
+ * Détail complet du calcul Nutri-Score d'une recette (pour la traçabilité).
+ *
+ * @param ingredients - Les lignes d'ingrédients (brutes + composants).
+ * @param ingredientDB - La base d'ingrédients.
+ * @param recipesById - Index des recettes (composants).
+ * @returns Le détail ({@link NutriBreakdown}) ou `null` si aucune donnée.
+ */
+export function computeNutriBreakdown(ingredients: IngredientLine[] | null | undefined, ingredientDB: DbItem[], recipesById?: RecipeIndex): NutriBreakdown | null {
+  return nutriRaw(ingredients, ingredientDB, recipesById);
 }
 
 /**

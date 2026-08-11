@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeNutriInfo, computeHealthScore, ingredientGrams } from "@/lib/recipes/nutriscore.js";
+import { computeNutriInfo, computeHealthScore, ingredientGrams, computeNutriBreakdown } from "@/lib/recipes/nutriscore.js";
 
 const DB = [
   { id: "beurre", name: "Beurre", nutrition: { calories: 745, fat: 82, saturatedFat: 51, salt: 0.02, sugar: 0.6, protein: 0.7, fiber: 0 } },
@@ -25,6 +25,24 @@ describe("ingredientGrams (résolution du poids)", () => {
   });
   it("sans poids à la pièce, un nombre nu retombe sur des grammes", () => {
     expect(ingredientGrams({ amount: 20, unit: "" }, { id: "x" })).toBe(20);
+  });
+});
+
+describe("computeNutriBreakdown", () => {
+  it("null si aucune donnée exploitable", () => {
+    expect(computeNutriBreakdown([{ name: "Inconnu", amount: 100, unit: "g" }], DB, new Map())).toBe(null);
+    expect(computeNutriBreakdown([], DB, new Map())).toBe(null);
+  });
+  it("détaille négatifs/positifs et l'équation N − P = ns", () => {
+    const b = computeNutriBreakdown([{ dbId: "carotte", name: "Carotte", amount: 200, unit: "g" }], DB, new Map());
+    expect(b).toBeTruthy();
+    expect(b.negatives.map(c => c.key)).toEqual(["energy", "sugar", "satfat", "salt"]);
+    expect(b.positives.map(c => c.key)).toEqual(["fruitveg", "fiber", "protein"]);
+    expect(b.N).toBe(b.negatives.reduce((s, c) => s + c.pts, 0));
+    expect(b.ns).toBe(b.N - b.P);
+    expect(["A", "B", "C", "D", "E"]).toContain(b.letter);
+    // Cohérence avec computeNutriInfo.
+    expect(computeNutriInfo([{ dbId: "carotte", name: "Carotte", amount: 200, unit: "g" }], DB, new Map()).letter).toBe(b.letter);
   });
 });
 
