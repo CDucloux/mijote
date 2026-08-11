@@ -47,7 +47,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           {isDraggable && <span style={{ display: "flex", color: "var(--text3)", cursor: "grab", touchAction: "none" }}><Icon name="drag" size={16} color="var(--text3)" /></span>}
           <span style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #f0894e)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", boxShadow: "0 2px 6px -1px rgba(232,112,58,0.5)", flexShrink: 0 }}>{index + 1}</span>
-          {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} vertical={false} />}
+          {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {onSetGroup && <GroupSelect value={step.group || ""} groups={groups} onChange={g => onSetGroup(step.id, g)} />}
