@@ -4,6 +4,7 @@ import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
 import { Donut } from "./Donut.jsx";
 import { computeNutritionDetail, computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { NUTRI_RI, MACRO_COLORS } from "../constants/nutritionDisplay.js";
+import { Row, Col } from "./ui/primitives.jsx";
 
 // ─── NUTRITION ANALYSIS MODAL ─────────────────────────────────────────────────
 const NUTRI_LETTER_DESC = {
@@ -63,13 +64,13 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   return (
     <SwipeableSheet onClose={onClose} style={{ maxWidth: 460 }}>
       {/* En-tête : Nutri-Score */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 4 }}>
+      <Row gap={14} style={{ marginBottom: 4 }}>
         <NutriScoreBadge letter={letter} />
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500 }}>Analyse nutritionnelle</div>
           {letter && <div style={{ fontSize: 12, color: "var(--text3)" }}>{NUTRI_LETTER_DESC[letter]}</div>}
         </div>
-      </div>
+      </Row>
 
       {/* Couverture trop faible → l'estimation n'aurait aucun sens : on l'explique. */}
       {!reliable ? (
@@ -85,48 +86,48 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
       ) : (
         <>
       {/* Bascule portion / 100 g */}
-      <div style={{ display: "flex", gap: 4, background: "var(--surface2)", borderRadius: 10, padding: 3, margin: "14px 0 18px" }}>
+      <Row gap={4} style={{ background: "var(--surface2)", borderRadius: 10, padding: 3, margin: "14px 0 18px" }}>
         {[["portion", `Par portion`], ["100g", "Pour 100 g"]].map(([id, lbl]) => (
           <button key={id} onClick={() => setBasis(id)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: basis === id ? "var(--surface)" : "transparent", color: basis === id ? "var(--text)" : "var(--text3)", boxShadow: basis === id ? "0 1px 3px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>{lbl}</button>
         ))}
-      </div>
+      </Row>
 
       {/* Énergie + donut macros */}
-      <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "16px 18px", background: "var(--surface2)", borderRadius: 16, marginBottom: 16 }}>
+      <Row gap={18} style={{ padding: "16px 18px", background: "var(--surface2)", borderRadius: 16, marginBottom: 16 }}>
         <Donut size={128} stroke={17} segments={macroSegs} centerLabel={kcal} centerSub="kcal" />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+        <Col gap={10} style={{ flex: 1 }}>
           <div style={{ fontSize: 11, color: "var(--text3)" }}>{kj.toLocaleString("fr-FR")} kJ · {basis === "portion" ? "par portion" : "pour 100 g"}</div>
           {macroSegs.map(seg => (
-            <div key={seg.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Row key={seg.key} gap={8}>
               <span style={{ width: 10, height: 10, borderRadius: 3, background: seg.color, flexShrink: 0 }} />
               <span style={{ fontSize: 12, flex: 1 }}>{seg.label}</span>
               <span style={{ fontSize: 12, fontWeight: 600 }}>{fmt(seg.grams)}</span>
               <span style={{ fontSize: 11, color: "var(--text3)", width: 34, textAlign: "right" }}>{Math.round(seg.value / macroTot * 100)}%</span>
-            </div>
+            </Row>
           ))}
-        </div>
-      </div>
+        </Col>
+      </Row>
 
       {/* Détail avec barres % AJR */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 8 }}>
+      <Col gap={11} style={{ marginBottom: 8 }}>
         {rows.map(row => {
           const pct = riPct(row.key, row.value);
           return (
             <div key={row.key} style={{ paddingLeft: row.sub ? 14 : 0 }}>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
+              <Row align="baseline" justify="space-between" style={{ marginBottom: 4 }}>
                 <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: row.sub ? 400 : 600, color: row.sub ? "var(--text2)" : "var(--text)" }}>{row.label}</span>
-                <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <Row as="span" align="baseline" gap={8}>
                   <span style={{ fontSize: row.sub ? 12 : 13, fontWeight: 600 }}>{fmt(row.value, row.key === "salt" ? "g" : "g")}</span>
                   {pct != null && <span style={{ fontSize: 10, color: "var(--text3)", minWidth: 46, flexShrink: 0, whiteSpace: "nowrap", textAlign: "right" }}>{pct}% AJR</span>}
-                </span>
-              </div>
+                </Row>
+              </Row>
               <div style={{ height: 6, borderRadius: 3, background: "var(--surface2)", overflow: "hidden" }}>
                 <div style={{ width: `${Math.min(100, pct || 0)}%`, height: "100%", borderRadius: 3, background: row.color, transition: "width 0.4s ease" }} />
               </div>
             </div>
           );
         })}
-      </div>
+      </Col>
 
       {/* Note de fiabilité (couverture partielle mais exploitable). */}
       {detail.coverage < 0.95 && (

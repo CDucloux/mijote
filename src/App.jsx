@@ -341,8 +341,10 @@ function AppInner({ user, isDark, toggleTheme }) {
     // Fiche ingrédient (/admin/ingredients/{id}) : on affiche le nom de l'ingrédient.
     const ingFicheId = adminFiche ? decodeURIComponent(location.pathname.replace(/^\/admin\/ingredients\//, "")) : null;
     const ingName = ingFicheId ? ingredientDB.find(d => d.id === ingFicheId)?.name : null;
-    document.title = `Mijoté | ${recipeName || ingName || TAB_TITLES[tab] || "Accueil"}`;
-  }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB]);
+    // Écrans hors onglets (dérivés de l'URL) : leur propre titre plutôt que le repli « Accueil ».
+    const routeName = plusRoute ? "Abonnement" : null;
+    document.title = `Mijoté | ${recipeName || ingName || routeName || TAB_TITLES[tab] || "Accueil"}`;
+  }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB, plusRoute]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
   // Navigate with guard: if editing, show confirm dialog first

@@ -4,6 +4,7 @@ import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, isOwner, MAX_HOUSEHOLD } from "@/lib/household/household.js";
+import { Row, Col, IconChip } from "./ui/primitives.jsx";
 
 // Avatar rond : photo si disponible, sinon initiale colorée.
 function Avatar({ photo, label, size = 34, dim = false }) {
@@ -24,9 +25,9 @@ export function HouseholdPanel({ onClose }) {
   useEffect(() => { loadDirectory?.(); }, [loadDirectory]);
 
   if (loading) {
-    return <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
+    return <Row justify="center" style={{ padding: "32px 0" }}>
       <div style={{ width: 22, height: 22, border: "2.5px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
-    </div>;
+    </Row>;
   }
 
   const myEmail = (user?.email || "").toLowerCase();
@@ -45,26 +46,26 @@ export function HouseholdPanel({ onClose }) {
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <Col gap={14}>
       {/* Bandeau info */}
-      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "linear-gradient(135deg, rgba(232,112,58,0.10), rgba(232,112,58,0.04))", border: "1px solid rgba(232,112,58,0.25)", borderRadius: 14, padding: "14px 16px" }}>
-        <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: "rgba(232,112,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Row align="flex-start" gap={12} style={{ background: "linear-gradient(135deg, rgba(232,112,58,0.10), rgba(232,112,58,0.04))", border: "1px solid rgba(232,112,58,0.25)", borderRadius: 14, padding: "14px 16px" }}>
+        <IconChip size={34} radius={10} tint="rgba(232,112,58,0.15)">
           <Icon name="info" size={18} color="var(--accent)" />
-        </span>
+        </IconChip>
         <span style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55 }}>
           Jusqu'à <strong style={{ color: "var(--text)" }}>{MAX_HOUSEHOLD} personnes</strong> partagent recettes, stock, listes de courses et planning. En rejoignant un foyer, tes recettes y sont <strong style={{ color: "var(--text)" }}>ajoutées</strong> ; planning, stock et courses du foyer sont adoptés (ta version perso reste sauvegardée).
         </span>
-      </div>
+      </Row>
 
       {/* Invitations reçues */}
       {invites.map(inv => (
         <div key={inv.id} style={{ background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.35)", borderRadius: 16, padding: 16 }}>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Invitation à rejoindre « {inv.name} »</div>
           <div style={{ fontSize: 12, color: "var(--text3)", marginBottom: 12 }}>{(inv.memberEmails || []).length} membre(s)</div>
-          <div style={{ display: "flex", gap: 10 }}>
+          <Row align="stretch" gap={10}>
             <button className="btn btn-primary btn-sm" onClick={() => actions.accept(inv.id)}><Icon name="check" size={14} /> Rejoindre</button>
             <button className="btn btn-ghost btn-sm" onClick={() => actions.decline(inv.id)}>Refuser</button>
-          </div>
+          </Row>
         </div>
       ))}
 
@@ -85,34 +86,34 @@ export function HouseholdPanel({ onClose }) {
         <>
           {card(
             <>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <Row justify="space-between" style={{ marginBottom: 14 }}>
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600 }}>{household.name}</div>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>{peopleCount(household)}/{MAX_HOUSEHOLD}</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              </Row>
+              <Col gap={10}>
                 {(household.memberEmails || []).map(e => {
                   const mine = e === myEmail;
                   const nm = nameFor(e);
                   return (
-                    <div key={e} style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                    <Row key={e} gap={11}>
                       <Avatar photo={photoFor(e)} label={nm || e} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nm || e}{mine ? " (toi)" : ""}</div>
                         {nm && <div style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>}
                       </div>
                       {household.ownerUid && ((mine && owner) || (!mine && nm && false)) && <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
-                    </div>
+                    </Row>
                   );
                 })}
                 {(household.invitedEmails || []).map(e => (
-                  <div key={e} style={{ display: "flex", alignItems: "center", gap: 11, opacity: 0.75 }}>
+                  <Row key={e} gap={11} style={{ opacity: 0.75 }}>
                     <Avatar photo={photoFor(e)} label={e} dim />
                     <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>
                     <span style={{ fontSize: 10, color: "var(--text3)" }}>en attente</span>
                     {owner && <button onClick={() => actions.cancelInvite(e)} title="Annuler l'invitation" style={{ color: "var(--text3)", display: "inline-flex" }}><Icon name="close" size={13} color="var(--text3)" /></button>}
-                  </div>
+                  </Row>
                 ))}
-              </div>
+              </Col>
             </>
           )}
 
@@ -125,10 +126,10 @@ export function HouseholdPanel({ onClose }) {
                 {candidates.length === 0 ? (
                   <div style={{ fontSize: 12.5, color: "var(--text3)", textAlign: "center", padding: "10px 0" }}>Aucun autre utilisateur disponible pour l'instant.</div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 240, overflowY: "auto", margin: "0 -6px" }}>
+                  <Col gap={4} style={{ maxHeight: 240, overflowY: "auto", margin: "0 -6px" }}>
                     {candidates.map(d => (
-                      <button key={d.uid || d.email} onClick={() => actions.invite(d.email)}
-                        style={{ display: "flex", alignItems: "center", gap: 11, padding: "8px 6px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left", width: "100%" }}
+                      <Row as="button" key={d.uid || d.email} gap={11} onClick={() => actions.invite(d.email)}
+                        style={{ padding: "8px 6px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left", width: "100%" }}
                         onMouseEnter={e => e.currentTarget.style.background = "var(--surface2)"}
                         onMouseLeave={e => e.currentTarget.style.background = "none"}>
                         <Avatar photo={d.photoURL} label={d.displayName || d.email} />
@@ -137,9 +138,9 @@ export function HouseholdPanel({ onClose }) {
                           {d.displayName && <div style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.email}</div>}
                         </div>
                         <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: "var(--accent)" }}><Icon name="plus" size={13} color="var(--accent)" /> Inviter</span>
-                      </button>
+                      </Row>
                     ))}
-                  </div>
+                  </Col>
                 )}
               </>
             )
@@ -167,6 +168,6 @@ export function HouseholdPanel({ onClose }) {
             : <>Tu n'auras plus accès aux données partagées de « {household.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
         </ConfirmDialog>
       )}
-    </div>
+    </Col>
   );
 }

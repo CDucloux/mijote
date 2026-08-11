@@ -1,5 +1,17 @@
 # Changelog – Mijoté
 
+## v3.10.29 – Safran · Badge Admin & finitions
+
+### Admin
+- Nouveau **badge Admin** (violet) affiché dans le Profil, avant le badge Mijoté+ — c'est lui qui indique que les quotas (imports, limite de recettes) ne s'appliquent pas ; l'ancien encadré « 👑 » des imports est remplacé
+
+### Interface
+- **Bouton retour** de la page Profil et de la page Mijoté+ : flèche animée au survol (comme les écrans d'import)
+- Titre d'onglet **« Abonnement »** sur la page Mijoté+ (au lieu de « Accueil »)
+
+### Sous le capot
+- Début d'une **couche de primitives d'UI** (Row/Col/Card…) pour dégraisser et fiabiliser les styles — refactor interne, sans changement visuel
+
 ## v3.10.28 – Safran · Repli fiable
 
 ### Corrections

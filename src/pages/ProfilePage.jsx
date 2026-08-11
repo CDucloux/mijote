@@ -5,6 +5,8 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { CookingHeatmap } from "../components/CookingHeatmap.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
+import { AdminBadge } from "../components/AdminBadge.jsx";
+import { Row } from "../components/ui/primitives.jsx";
 import { TagInput } from "../components/TagInput.jsx";
 import { buildHeatmap } from "@/lib/planning/cookingActivity.js";
 import { recipeQuotaCount, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
@@ -34,7 +36,7 @@ function SectionTitle({ icon, children, color = "var(--accent)", tint = "rgba(23
 export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, recipes = [], onPurge, onDeleteAccount, ingredientDB = [], categories = DEFAULT_CATEGORIES, onExportAll, onImport }) {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
-  const { isPlus } = useAppShell();
+  const { isPlus, isAdmin } = useAppShell();
   const recipeCount = recipeQuotaCount(recipes);
   const prefs = preferences || DEFAULT_PREFERENCES;
   const currentName = prefs.displayName || user?.displayName || "";
@@ -70,7 +72,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* En-tête */}
       <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={() => navigate(-1)} className="cook-close-btn" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}><Icon name="back" size={17} /></button>
+        <button onClick={() => navigate(-1)} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}><Icon name="back" size={17} /></button>
         <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Profil</h1>
       </div>
 
@@ -88,11 +90,12 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentName || "Sans nom"}</div>
                 {user?.email && <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{user.email}</div>}
-                <div style={{ marginTop: 8 }}>
+                <Row wrap gap={6} style={{ marginTop: 8 }}>
+                  {isAdmin && <AdminBadge />}
                   {isPlus
                     ? <PlusBadge />
                     : <span style={{ display: "inline-flex", alignItems: "center", fontSize: 11, fontWeight: 700, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 999, padding: "3px 10px" }}>Plan gratuit</span>}
-                </div>
+                </Row>
               </div>
             </div>
 

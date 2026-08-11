@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
+import { AdminBadge } from "./AdminBadge.jsx";
 
 // ─── UI PARTAGÉE DES IMPORTS IA (lien / photo) ───────────────────────────────
 // L'import IA consomme un crédit : l'écran d'attente est VOLONTAIREMENT
@@ -119,9 +120,9 @@ export function HintCard({ icon, iconColor = "var(--text2)", tint = "var(--surfa
 export function QuotaMeter({ label, rem, unlimited }) {
   if (unlimited) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 14px", borderRadius: 14, background: "rgba(232,112,58,0.08)", border: "1px solid rgba(232,112,58,0.22)" }}>
-        <span style={{ fontSize: 16 }}>👑</span>
-        <span style={{ fontSize: 12.5, color: "var(--text2)", fontWeight: 600 }}>Imports {label} <strong style={{ color: "var(--accent)" }}>illimités</strong> (admin).</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 14, background: "rgba(139,111,240,0.09)", border: "1px solid rgba(139,111,240,0.28)" }}>
+        <AdminBadge />
+        <span style={{ fontSize: 12.5, color: "var(--text2)", fontWeight: 600 }}>Imports {label} <strong style={{ color: "#8b6ff0" }}>illimités</strong> — les quotas ne s'appliquent pas.</span>
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
+import { Row, Col, IconChip } from "./ui/primitives.jsx";
 
 const INTRO = "Une préparation de base est un élément élaboré à l'avance, indépendamment d'un plat précis, qui sert de brique de construction pour plusieurs recettes.";
 
@@ -19,20 +20,15 @@ export function BaseInfoModal({ onClose }) {
         background: "linear-gradient(135deg, rgba(232,112,58,0.16), rgba(232,112,58,0.04))",
         borderBottom: "1px solid var(--border)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-          <span style={{
-            width: 48, height: 48, borderRadius: 16, flexShrink: 0,
-            background: "linear-gradient(135deg, var(--accent), #d4622e)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 8px 20px -6px rgba(232,112,58,0.6)",
-          }}>
+        <Row gap={13}>
+          <IconChip size={48} radius={16} tint="linear-gradient(135deg, var(--accent), #d4622e)" style={{ boxShadow: "0 8px 20px -6px rgba(232,112,58,0.6)" }}>
             <BaseIcon size={24} color="#fff" />
-          </span>
+          </IconChip>
           <div>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>Préparation de base</div>
             <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>Principes de composition</div>
           </div>
-        </div>
+        </Row>
       </div>
 
       <div style={{ overflowY: "auto", maxHeight: "64vh", padding: "18px 2px 4px" }}>
@@ -41,25 +37,17 @@ export function BaseInfoModal({ onClose }) {
 
         {/* Les grandes familles – liste épurée numérotée */}
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Les grandes familles</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Col gap={2}>
           {FAMILIES.map((it, j) => (
-            <div key={j} style={{
-              display: "flex", gap: 14, alignItems: "flex-start", padding: "14px 0",
-              borderTop: j === 0 ? "none" : "1px solid var(--border)",
-            }}>
-              <span style={{
-                width: 28, height: 28, borderRadius: 9, flexShrink: 0, marginTop: 1,
-                background: "rgba(232,112,58,0.1)", color: "var(--accent)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums",
-              }}>{j + 1}</span>
+            <Row key={j} align="flex-start" gap={14} style={{ padding: "14px 0", borderTop: j === 0 ? "none" : "1px solid var(--border)" }}>
+              <IconChip size={28} radius={9} tint="rgba(232,112,58,0.1)" style={{ marginTop: 1, color: "var(--accent)", fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{j + 1}</IconChip>
               <div>
                 <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em", marginBottom: 3 }}>{it.label}</div>
                 <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0 }}>{it.desc}</p>
               </div>
-            </div>
+            </Row>
           ))}
-        </div>
+        </Col>
 
         {/* Dans Mijoté – carte accent */}
         <div style={{
@@ -67,10 +55,10 @@ export function BaseInfoModal({ onClose }) {
           background: "linear-gradient(135deg, rgba(232,112,58,0.13), rgba(232,112,58,0.05))",
           border: "1px solid rgba(232,112,58,0.25)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7 }}>
+          <Row gap={7} style={{ marginBottom: 7 }}>
             <BaseIcon size={15} color="var(--accent)" />
             <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--accent)", letterSpacing: "-0.01em" }}>Dans Mijoté</span>
-          </div>
+          </Row>
           <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>
             Une recette marquée « Base » peut être liée à une autre recette en tant qu'ingrédient. Quand tu cuisines la recette parente, Mijoté te propose de réaliser d'abord toutes ses bases avant de passer aux étapes principales.
           </p>
