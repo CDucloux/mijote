@@ -31,7 +31,7 @@ export function GroupSelect({ value, groups = [], onChange }) {
           border: value ? "1px solid rgba(232,112,58,0.4)" : "1px dashed var(--border)",
           background: value ? "rgba(232,112,58,0.1)" : "var(--surface2)",
           color: value ? "var(--accent)" : "var(--text3)", fontSize: 11.5, fontWeight: 600 }}>
-        <Icon name={value ? "book" : "plus"} size={12} color={value ? "var(--accent)" : "var(--text3)"} />
+        <Icon name={value ? "layers" : "plus"} size={12} color={value ? "var(--accent)" : "var(--text3)"} />
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value || "Section"}</span>
       </button>
       {open && (
@@ -43,7 +43,7 @@ export function GroupSelect({ value, groups = [], onChange }) {
           )}
           {others.map(g => (
             <button type="button" key={g} onClick={() => pick(g)} style={rowStyle("var(--text)")}>
-              <Icon name="book" size={13} color="var(--accent)" /> <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g}</span>
+              <Icon name="layers" size={13} color="var(--accent)" /> <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g}</span>
             </button>
           ))}
           {creating ? (

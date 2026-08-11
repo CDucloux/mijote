@@ -27,7 +27,7 @@ function SectionCard({ name, onRename, onDelete, children }) {
   return (
     <div style={{ background: "rgba(232,112,58,0.04)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 16, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Icon name="book" size={15} color="var(--accent)" />
+        <Icon name="layers" size={15} color="var(--accent)" />
         {editing ? (
           <input ref={inputRef} className="field-input" value={draft} onChange={e => setDraft(e.target.value)}
             onBlur={commit} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
