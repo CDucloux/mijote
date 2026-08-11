@@ -7,7 +7,7 @@
  *
  * @module recipePdf
  */
-import { groupBy } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, sectionRuns } from "@/lib/recipes/recipeGroups.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { categoryLabel, categoryEmoji } from "@/constants/recipeCategories.js";
@@ -161,16 +161,19 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
 
   // Icône « layers » (sous-préparation) pour l'en-tête de section d'étapes.
   const layersIco = `<svg class="step-group-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`;
-  const stepLines = groupBy(recipe.steps || []).map(sec => {
-    const inner = sec.items.map((s, i) => {
+  // Runs contigus (ordre du tableau préservé) → numérotation CONTINUE d'un bout à
+  // l'autre (comme le mode pas à pas), avec en-tête par sous-préparation.
+  const stepLines = sectionRuns(recipe.steps || []).map(run => {
+    const inner = run.items.map((s, j) => {
+      const num = run.start + j + 1;
       const linkedIngs = (recipe.ingredients || []).filter(x => s.ingredients?.includes(x.id!)).map(ingPill).join("");
       const linkedUts = (recipe.utensils || []).filter(u => s.utensils?.includes(u.id!)).map(u => pill(utImg(u.dbId), u.name, "")).join("");
       const pills = linkedIngs + linkedUts;
       return `
       <div class="step">
         <div class="step-header">
-          <div class="step-num">${i + 1}</div>
-          <div class="step-title">Étape ${i + 1}</div>
+          <div class="step-num">${num}</div>
+          <div class="step-title">Étape ${num}</div>
         </div>
         ${s.text ? `<p class="step-text">${s.text}</p>` : ""}
         ${s.tip ? `<div class="step-tip"><span class="step-tip-ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.5.4.9 1 1 1.7l.1.5h5l.1-.5c.1-.7.5-1.3 1-1.7A6 6 0 0 0 12 3Z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="step-tip-body">${s.tip}</span></div>` : ""}
@@ -179,8 +182,8 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     }).join("");
     // Sous-préparation nommée : encadrée dans un bloc distinct, avec en-tête fort.
     // Section principale (assemblage/montage) : étapes à plat, sans encadré.
-    if (!sec.group) return inner;
-    return `<section class="step-group"><div class="step-group-title">${layersIco}<span>${sec.group}</span></div>${inner}</section>`;
+    if (!run.group) return inner;
+    return `<section class="step-group"><div class="step-group-title">${layersIco}<span>${run.group}</span></div>${inner}</section>`;
   }).join("");
 
   const utPills = (recipe.utensils || []).map(u => pill(utImg(u.dbId), u.name, "")).join("");

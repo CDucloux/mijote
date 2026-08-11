@@ -47,6 +47,27 @@ export function groupBy<T extends { group?: string }>(items: readonly T[]): Sect
   return out;
 }
 
+/**
+ * Découpe une liste en « runs » CONTIGUS de même section, **sans réordonner** ni
+ * fusionner les runs non adjacents. Contrairement à {@link groupBy}, l'ordre du
+ * tableau est strictement préservé — indispensable pour les ÉTAPES, dont la
+ * numérotation doit rester continue et suivre le fil de la recette (comme le mode
+ * pas à pas). `start` = index global (0-based) du premier item du run → la n-ième
+ * étape d'un run porte le numéro `start + n` (1-based).
+ */
+export function sectionRuns<T extends { group?: string }>(items: readonly T[]): { group: string | null; items: T[]; start: number }[] {
+  const runs: { group: string | null; items: T[]; start: number }[] = [];
+  let idx = 0;
+  for (const it of items) {
+    const g = label(it.group) || null;
+    const last = runs[runs.length - 1];
+    if (last && last.group === g) last.items.push(it);
+    else runs.push({ group: g, items: [it], start: idx });
+    idx++;
+  }
+  return runs;
+}
+
 /** `true` si au moins une ligne porte un groupe non vide (⇒ affichage sectionné). */
 export function hasGroups(items: readonly { group?: string }[] | undefined): boolean {
   return !!items?.some(i => label(i.group) !== "");

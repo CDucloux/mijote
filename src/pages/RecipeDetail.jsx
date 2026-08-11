@@ -32,7 +32,7 @@ import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
 import { computeDifficulty, explainDifficulty } from "@/lib/recipes/difficulty.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "@/lib/recipes/recipeComponents.js";
-import { groupBy } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, sectionRuns } from "@/lib/recipes/recipeGroups.js";
 import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { MEAL_SLOTS } from "../constants/mealSlots.js";
@@ -943,18 +943,19 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 {baseSteps.length > 0 && recipe.steps?.length > 0 && (
                   <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
                 )}
-                {groupBy(recipe.steps || []).map(section => (
-                <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {section.group && <GroupHeader label={section.group} style={{ marginTop: 4 }} />}
-                {section.items.map((step, i) => {
+                {sectionRuns(recipe.steps || []).map(run => (
+                <div key={run.start} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {run.group && <GroupHeader label={run.group} style={{ marginTop: 4 }} />}
+                {run.items.map((step, j) => {
+                  const num = run.start + j + 1;
                   const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                   const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
                   const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
                   return (
                     <div key={step.id} className="tap tap-soft" style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: (step.text || step.image || step.tip || hasPills) ? 8 : 0 }}>
-                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {i + 1}</span>
+                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{num}</div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {num}</span>
                       </div>
                       {step.text && (
                         <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: (step.tip || hasPills || step.image) ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>
@@ -974,7 +975,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         </div>
                       )}
                       {step.image && (
-                        <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12 }} />
+                        <Img src={step.image} alt={`Étape ${num}`} style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12 }} />
                       )}
                     </div>
                   );
@@ -1105,15 +1106,16 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               {baseSteps.length > 0 && recipe.steps?.length > 0 && (
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
               )}
-              {groupBy(recipe.steps || []).map(section => (
-              <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
-              {section.group && <GroupHeader label={section.group} />}
-              {section.items.map((step, i) => {
+              {sectionRuns(recipe.steps || []).map(run => (
+              <div key={run.start} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+              {run.group && <GroupHeader label={run.group} />}
+              {run.items.map((step, j) => {
+                const num = run.start + j + 1;
                 const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
                 const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
                 return (
                   <div key={step.id}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>Étape {i + 1}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginBottom: 6 }}>Étape {num}</div>
                     {step.text && <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 12, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>}
                     {step.tip && <StepTip tip={step.tip} style={{ marginBottom: 12 }} />}
                     {(linkedIngs.length > 0 || linkedUts.length > 0) && (
@@ -1136,7 +1138,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         ))}
                       </div>
                     )}
-                    {step.image && <Img src={step.image} alt={`Étape ${i + 1}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} />}
+                    {step.image && <Img src={step.image} alt={`Étape ${num}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12 }} />}
                   </div>
                 );
               })}
