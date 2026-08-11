@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupBy, hasGroups, groupOrder, relabelGroup, moveWithinGroup } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, hasGroups, groupOrder, relabelGroup, moveWithinGroup, moveAcrossGroups } from "@/lib/recipes/recipeGroups.js";
 
 describe("recipeGroups", () => {
   it("returns a single main section (group null) when nothing is grouped", () => {
@@ -56,5 +56,27 @@ describe("recipeGroups", () => {
     expect(out.map(i => i.id)).toEqual(["p2", "c1", "p3", "p1"]);
     // "C" untouched, out-of-range is a no-op (returns a copy).
     expect(moveWithinGroup(items, "P", 0, 9).map(i => i.id)).toEqual(items.map(i => i.id));
+  });
+
+  it("moveAcrossGroups moves an item into another section, changing its group", () => {
+    const items = [
+      { id: "a", group: "Pâte" },
+      { id: "b", group: "Pâte" },
+      { id: "c", group: "Crème" },
+    ];
+    // Move b (local 1 of Pâte) to the start of Crème (local 0).
+    const out = moveAcrossGroups(items, "Pâte", 1, "Crème", 0);
+    const b = out.find(i => i.id === "b");
+    expect(b.group).toBe("Crème");
+    // Inserted before c.
+    const order = out.filter(i => i.group === "Crème").map(i => i.id);
+    expect(order).toEqual(["b", "c"]);
+  });
+
+  it("moveAcrossGroups appends when toLocal is out of range (drop on empty zone)", () => {
+    const items = [{ id: "a", group: "Pâte" }, { id: "b" }];
+    // Move a into the ungrouped section (group "") at the end.
+    const out = moveAcrossGroups(items, "Pâte", 0, "", Infinity);
+    expect(out.map(i => `${i.id}:${i.group || ""}`)).toEqual(["b:", "a:"]);
   });
 });

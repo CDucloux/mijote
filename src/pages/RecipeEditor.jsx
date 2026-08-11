@@ -8,7 +8,7 @@ import { DraggableStep } from "../components/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
-import { groupOrder, relabelGroup, moveWithinGroup } from "@/lib/recipes/recipeGroups.js";
+import { groupOrder, relabelGroup, moveWithinGroup, moveAcrossGroups } from "@/lib/recipes/recipeGroups.js";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
@@ -17,16 +17,21 @@ import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // Carte de section (« Pour la pâte »…) dans l'éditeur : en-tête avec nom renommable
 // (clic → champ) et bouton de dissolution, puis le contenu (items + bouton d'ajout).
-function SectionCard({ name, onRename, onDelete, children }) {
+function SectionCard({ name, onRename, onDelete, onZoneDrop, children }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
   const [eraseHover, setEraseHover] = useState(false);
+  const [zoneOver, setZoneOver] = useState(false);
   const inputRef = useRef(null);
   useEffect(() => { setDraft(name); }, [name]);
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
   const commit = () => { setEditing(false); onRename(draft); };
   return (
-    <div style={{ background: "rgba(232,112,58,0.04)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 16, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+    <div
+      onDragOver={onZoneDrop ? (e => { e.preventDefault(); setZoneOver(true); }) : undefined}
+      onDragLeave={onZoneDrop ? (() => setZoneOver(false)) : undefined}
+      onDrop={onZoneDrop ? (e => { setZoneOver(false); onZoneDrop(e); }) : undefined}
+      style={{ background: zoneOver ? "rgba(232,112,58,0.1)" : "rgba(232,112,58,0.04)", border: `1px solid ${zoneOver ? "var(--accent)" : "rgba(232,112,58,0.3)"}`, borderRadius: 16, padding: 12, display: "flex", flexDirection: "column", gap: 10, transition: "background 0.15s, border-color 0.15s" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <Icon name="layers" size={15} color="var(--accent)" />
         {editing ? (
@@ -148,6 +153,19 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
   const setIngGroup = (id, g) => up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, group: g } : i));
   const moveIngIn = (group) => (fromLocal, toLocal) => up("ingredients", moveWithinGroup(form.ingredients, group, fromLocal, toLocal));
+  // Drop d'un ingrédient (drag) : réordonne dans la même section, ou le déplace vers
+  // une autre section (`toGroup`), y compris hors section (`""`).
+  const dropIngInto = (toGroup) => (fromGroup, fromLocal, toLocal) =>
+    up("ingredients", fromGroup === toGroup
+      ? moveWithinGroup(form.ingredients, toGroup, fromLocal, toLocal)
+      : moveAcrossGroups(form.ingredients, fromGroup, fromLocal, toGroup, toLocal));
+  // Drop sur la ZONE d'une section (hors d'une ligne) → ajout en fin de section.
+  const dropIngZone = (toGroup) => (e) => {
+    const raw = e.dataTransfer.getData("ingIdx");
+    if (raw === "") return;
+    e.preventDefault();
+    up("ingredients", moveAcrossGroups(form.ingredients, e.dataTransfer.getData("ingSection"), +raw, toGroup, Infinity));
+  };
   const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
   const remIng = id => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.filter(i => i.id !== id)); };
   // Retour arrière sur une ligne vide : supprime la ligne et refocalise la précédente.
@@ -183,6 +201,16 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const setStepGroup = (id, g) => up("steps", form.steps.map(s => s.id === id ? { ...s, group: g } : s));
   const remStep = id => up("steps", form.steps.filter(s => s.id !== id));
   const moveStepIn = (group) => (fromLocal, toLocal) => up("steps", moveWithinGroup(form.steps, group, fromLocal, toLocal));
+  const dropStepInto = (toGroup) => (fromGroup, fromLocal, toLocal) =>
+    up("steps", fromGroup === toGroup
+      ? moveWithinGroup(form.steps, toGroup, fromLocal, toLocal)
+      : moveAcrossGroups(form.steps, fromGroup, fromLocal, toGroup, toLocal));
+  const dropStepZone = (toGroup) => (e) => {
+    const raw = e.dataTransfer.getData("stepIdx");
+    if (raw === "") return;
+    e.preventDefault();
+    up("steps", moveAcrossGroups(form.steps, e.dataTransfer.getData("stepSection"), +raw, toGroup, Infinity));
+  };
 
   // ── Sections partagées (ingrédients + étapes) ───────────────────────────────
   // `sectionNames` porte l'ORDRE des sections et permet les sections VIDES (créées
@@ -214,7 +242,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   // Ingrédients « hors section ». `withHeader` affiche un titre « Hors section » quand
   // le bloc est relégué en bas (au moins une section existe).
   const renderIngLoose = (withHeader) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}
+      onDragOver={!isDesktop ? (e => e.preventDefault()) : undefined}
+      onDrop={!isDesktop ? dropIngZone("") : undefined}>
       {withHeader && ingsOf("").length > 0 && (
         <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>Hors section</div>
       )}
@@ -225,7 +255,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           sectionKey="" groups={allSections} onSetGroup={setIngGroup}
           onRawChange={handleRawChange}
           onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-          onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} onBackspaceEmpty={removeIngBackspace} />
+          onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} onBackspaceEmpty={removeIngBackspace} onDropItem={dropIngInto("")} />
       ))}
       <SectionAddBar onAddIngredient={() => addIngTo("")} components={compsFor("")} canBase={false} />
     </div>
@@ -437,7 +467,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             {/* Sections (sous-préparations, prioritaires) d'abord, puis la création de
                 section, puis les ingrédients hors section en bas. */}
             {allSections.map(name => (
-              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
+              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)} onZoneDrop={!isDesktop ? dropIngZone(name) : undefined}>
                 {ingsOf(name).map((ing, li) => (
                   <DraggableIngredient key={ing.id} ing={ing} index={li} total={ingsOf(name).length}
                     draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
@@ -445,7 +475,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     sectionKey={name} groups={allSections} onSetGroup={setIngGroup}
                     onRawChange={handleRawChange}
                     onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-                    onRemove={remIng} onMove={moveIngIn(name)} onEnter={() => addIngTo(name)} onBackspaceEmpty={removeIngBackspace} />
+                    onRemove={remIng} onMove={moveIngIn(name)} onEnter={() => addIngTo(name)} onBackspaceEmpty={removeIngBackspace} onDropItem={dropIngInto(name)} />
                 ))}
                 <SectionAddBar onAddIngredient={() => addIngTo(name)} components={compsFor(name)} canBase={!form.isComponent && !ingsOf(name).some(i => !i.recipeId)} />
               </SectionCard>
@@ -470,13 +500,13 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             )}
             {/* Sections nommées d'étapes (partagées avec les ingrédients) d'abord */}
             {allSections.map(name => (
-              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
+              <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)} onZoneDrop={!isDesktop ? dropStepZone(name) : undefined}>
                 {stepsOf(name).map((step, li) => (
                   <DraggableStep key={step.id} step={step} index={li} total={stepsOf(name).length}
                     ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
                     draggable={!isDesktop}
                     sectionKey={name} groups={allSections} onSetGroup={setStepGroup}
-                    onUpdate={updStep} onRemove={remStep} onMove={moveStepIn(name)} />
+                    onUpdate={updStep} onRemove={remStep} onMove={moveStepIn(name)} onDropItem={dropStepInto(name)} />
                 ))}
                 <button className="editor-add" onClick={() => addStepTo(name)}><Icon name="plus" size={16} /> Ajouter une étape</button>
               </SectionCard>
@@ -484,7 +514,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             <NewSectionButton onAdd={addSection} />
 
             {/* Étapes hors section : en bas dès qu'une section existe (« Hors section »). */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              onDragOver={!isDesktop ? (e => e.preventDefault()) : undefined}
+              onDrop={!isDesktop ? dropStepZone("") : undefined}>
               {allSections.length > 0 && stepsOf("").length > 0 && (
                 <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>Hors section</div>
               )}
@@ -493,7 +525,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                   ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
                   draggable={!isDesktop}
                   sectionKey="" groups={allSections} onSetGroup={setStepGroup}
-                  onUpdate={updStep} onRemove={remStep} onMove={moveStepIn("")} />
+                  onUpdate={updStep} onRemove={remStep} onMove={moveStepIn("")} onDropItem={dropStepInto("")} />
               ))}
               <button className="editor-add" onClick={addStep}><Icon name="plus" size={16} /> Ajouter une étape</button>
             </div>
