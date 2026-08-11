@@ -1,5 +1,21 @@
 # Changelog – Mijoté
 
+## v3.10.45 – Safran · Sections libres & finitions
+
+### Recettes
+- **Éditeur repensé** : ingrédients et étapes s'affichent dans l'ordre réel, réordonnancement **libre** (une ligne rejoint la section du bloc où on la place), en-têtes de section en ligne — la pastille de section disparaît
+- **Étapes (fiche desktop)** : nouvelle **timeline** (nœuds numérotés reliés), numérotation **continue** et ordre réel alignés sur le mode pas à pas ; blocs de section clairement délimités
+- **PDF** : sous-préparations encadrées, numérotation continue
+- **Import IA** : les sections (« Pour la pâte »…) sont désormais reconnues et restituées
+
+### Interface
+- Fiche ingrédient : badge « Lecture seule » retiré
+- Accueil : fin du clignotement de l'ingrédient du moment au chargement
+- Courses : poubelle ronde au survol, « Valider l'achat » en pill, correctif du modal qui réapparaissait
+- Console admin : onglets inactifs en blanc, nouvelle icône **ustensiles** (rouleau)
+- Badge Admin : icône agrandie
+- Polices chargées plus tôt (fiabilité mobile)
+
 ## v3.10.44 – Safran · Partage
 
 ### Partage
