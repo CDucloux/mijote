@@ -25,9 +25,9 @@ export function IngredientPill({ image, name, amount, unit, cover = false, size 
 // Image d'ustensile : détourée (contain) sur pastille blanche. Réutilisée partout
 // où un ustensile s'affiche (pastilles d'étapes, listes) — remplace le motif
 // `<div cercle blanc><Img contain/></div>` dupliqué.
-export function UtImage({ src, alt, size = 22, radius = "50%" }) {
+export function UtImage({ src, alt, size = 22, radius = "50%", border = false }) {
   return (
-    <span style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", background: "#fff", flexShrink: 0, display: "inline-flex" }}>
+    <span style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", background: "#fff", flexShrink: 0, display: "inline-flex", border: border ? "1px solid rgba(0,0,0,0.08)" : undefined, boxSizing: "border-box" }}>
       <Img src={src} alt={alt} style={utImgStyle} />
     </span>
   );
