@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { ImageUpload } from "../components/ImageUpload.jsx";
 import { CUISINES } from "../constants/cuisines.js";
-import { RECIPE_CATEGORIES } from "../constants/recipeCategories.js";
+import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../constants/recipeCategories.js";
 import { UtensilPicker } from "../components/UtensilPicker.jsx";
 import { DraggableStep } from "../components/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
@@ -18,6 +18,14 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", category: recipe.category || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
   const [section, setSection] = useState("info");
   const up = (f, v) => setForm(p => ({ ...p, [f]: v }));
+  // Bascule « préparation de base » : les types de recette diffèrent (rôle repas vs
+  // familles de base), on nettoie donc la catégorie si elle n'a plus de sens.
+  const RECIPE_CATEGORY_IDS = new Set(RECIPE_CATEGORIES.map(c => c.id));
+  const toggleComponent = () => setForm(p => {
+    const isComp = !p.isComponent;
+    const valid = isComp ? BASE_CATEGORY_IDS : RECIPE_CATEGORY_IDS;
+    return { ...p, isComponent: isComp, category: valid.has(p.category) ? p.category : "" };
+  });
   const upYield = (f, v) => setForm(p => ({ ...p, yield: { ...(p.yield || { amount: "", unit: "g" }), [f]: v } }));
 
   const [saveError, setSaveError] = useState("");
@@ -222,11 +230,11 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             <div style={{ background: form.isComponent ? "rgba(232,112,58,0.05)" : "var(--surface)", border: `1px solid ${form.isComponent ? "rgba(232,112,58,0.4)" : "var(--border)"}`, borderRadius: 16, padding: 15, transition: "border-color 0.2s, background-color 0.2s" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
                 <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: form.isComponent ? "rgba(232,112,58,0.16)" : "var(--surface2)" }}><BaseIcon size={20} color={form.isComponent ? "var(--accent)" : "var(--text2)"} /></span>
-                <div style={{ flex: 1, minWidth: 0 }} onClick={() => up("isComponent", !form.isComponent)}>
+                <div style={{ flex: 1, minWidth: 0 }} onClick={() => toggleComponent()}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>Préparation de base</div>
                   <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2, lineHeight: 1.4 }}>Réutilisable comme ingrédient (béchamel, sauce, pâte…)</div>
                 </div>
-                <button type="button" onClick={() => up("isComponent", !form.isComponent)}
+                <button type="button" onClick={() => toggleComponent()}
                   style={{ width: 44, height: 25, borderRadius: 13, flexShrink: 0, border: "none", cursor: "pointer", background: form.isComponent ? "var(--accent)" : "var(--surface3)", position: "relative", transition: "background 0.2s" }}>
                   <span style={{ position: "absolute", top: 2, left: form.isComponent ? 21 : 2, width: 21, height: 21, borderRadius: "50%", background: "#fff", transition: "left 0.18s cubic-bezier(0.4,0,0.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
                 </button>
@@ -251,9 +259,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {head("grid", "Classement")}
               <div>
-                <div className="field-label" style={{ marginBottom: 8 }}>Type de recette</div>
+                <div className="field-label" style={{ marginBottom: 8 }}>{form.isComponent ? "Type de préparation" : "Type de recette"}</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {RECIPE_CATEGORIES.map(c => {
+                  {(form.isComponent ? BASE_CATEGORIES : RECIPE_CATEGORIES).map(c => {
                     const active = form.category === c.id;
                     return (
                       <button key={c.id} type="button" onClick={() => up("category", active ? "" : c.id)}
