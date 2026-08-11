@@ -21,9 +21,11 @@ export interface Section<T> {
 const label = (g: unknown): string => (typeof g === "string" ? g.trim() : "");
 
 /**
- * Regroupe une liste (ingrédients ou étapes) par `group`, section principale d'abord.
- * L'ordre des sections nommées suit leur première apparition ; l'ordre interne des
- * items reste celui du tableau source.
+ * Regroupe une liste (ingrédients ou étapes) par `group`. Les sections NOMMÉES
+ * viennent d'abord (ordre de première apparition) car ce sont des sous-préparations
+ * prioritaires ; la section principale (`group: null`, items sans groupe) est reléguée
+ * EN DERNIER — l'assemblage/hors-section se fait après les sous-préparations. L'ordre
+ * interne des items reste celui du tableau source.
  *
  * @param items - Lignes à regrouper (chaque item peut porter un `group?: string`).
  * @returns Sections ordonnées ; la section principale (`group: null`) n'est présente
@@ -40,8 +42,8 @@ export function groupBy<T extends { group?: string }>(items: readonly T[]): Sect
     else named.set(g, [it]);
   }
   const out: Section<T>[] = [];
-  if (main.length) out.push({ group: null, items: main });
   for (const [group, groupItems] of named) out.push({ group, items: groupItems });
+  if (main.length) out.push({ group: null, items: main });
   return out;
 }
 

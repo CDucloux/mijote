@@ -66,6 +66,38 @@ function NewSectionButton({ onAdd }) {
   );
 }
 
+// Barre d'ajout d'une zone d'ingrédients (principale ou section) : ajoute un
+// ingrédient brut, ou révèle la liste des préparations de base disponibles. Remplace
+// l'ancien sélecteur segmenté Ingrédient/Base (choix désormais par action explicite).
+function SectionAddBar({ onAddIngredient, components }) {
+  const [picking, setPicking] = useState(false);
+  const hasBases = components && components.length > 0;
+  if (picking) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 2px 2px" }}>
+          <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)" }}>Choisir une base</span>
+          <button type="button" onClick={() => setPicking(false)} style={{ fontSize: 11.5, color: "var(--text3)", background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="close" size={11} color="var(--text3)" /> Annuler</button>
+        </div>
+        {components.map(comp => (
+          <button key={comp.id} onClick={() => { comp.onPick(); setPicking(false); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", textAlign: "left", cursor: "pointer" }}>
+            <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.1)" }}><BaseIcon size={16} /></span>
+            <span style={{ flex: 1, fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{comp.name}</span>
+            <span style={{ fontSize: 11, color: "var(--text3)" }}>{comp.yield?.amount} {comp.yield?.unit}</span>
+            <span className="complete-add" style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)", color: "var(--accent)" }}><Icon name="plus" size={15} color="currentColor" /></span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: "flex", gap: 8 }}>
+      <button className="editor-add" onClick={onAddIngredient} style={{ flex: 1 }}><Icon name="plus" size={16} /> Ingrédient</button>
+      {hasBases && <button className="editor-add" onClick={() => setPicking(true)} style={{ flex: 1 }}><BaseIcon size={14} /> Base</button>}
+    </div>
+  );
+}
+
 export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, recipes }) {
   const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", category: recipe.category || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
   const [section, setSection] = useState("info");
@@ -104,7 +136,6 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
 
   // Ingredients
-  const [addMode, setAddMode] = useState("ing"); // "ing" = ingrédient brut | "comp" = composant
   const lastAddedIdRef = useRef(null);
   // Ajoute un ingrédient dans une section donnée (`""` = section principale).
   const addIngTo = (group) => {
@@ -112,7 +143,6 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
     lastAddedIdRef.current = id;
     up("ingredients", [...form.ingredients, { id, dbId: "", name: "", amount: "", unit: "", _raw: "", group }]);
   };
-  const addIng = () => addIngTo("");
   const setIngGroup = (id, g) => up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, group: g } : i));
   const moveIngIn = (group) => (fromLocal, toLocal) => up("ingredients", moveWithinGroup(form.ingredients, group, fromLocal, toLocal));
   const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
@@ -132,8 +162,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   // celles déjà référencées. Indisponible si on édite soi-même un composant (mono-niveau v1).
   const usedRecipeIds = new Set(form.ingredients.filter(i => i.recipeId).map(i => i.recipeId));
   const availableComponents = (recipes || []).filter(r => r.isComponent && r.id !== form.id && !usedRecipeIds.has(r.id));
-  const addComponent = (comp) => {
-    up("ingredients", [...form.ingredients, { id: "i" + Date.now(), recipeId: comp.id, name: comp.name, amount: "", unit: comp.yield?.unit || "g" }]);
+  const addComponentTo = (comp, group = "") => {
+    up("ingredients", [...form.ingredients, { id: "i" + Date.now(), recipeId: comp.id, name: comp.name, amount: "", unit: comp.yield?.unit || "g", group }]);
   };
 
   // Steps with drag reorder
@@ -166,8 +196,31 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
   const ingsOf = (g) => form.ingredients.filter(i => (i.group || "") === g);
   const stepsOf = (g) => form.steps.filter(s => (s.group || "") === g);
+  // Bases disponibles proposées dans une zone d'ajout, l'ajout étant lié au groupe.
+  const compsFor = (group) => (form.isComponent ? [] : availableComponents.map(c => ({ id: c.id, name: c.name, yield: c.yield, onPick: () => addComponentTo(c, group) })));
 
   const isDesktop = useIsDesktop();
+
+  // Ingrédients « hors section ». `withHeader` affiche un titre « Hors section » quand
+  // le bloc est relégué en bas (au moins une section existe).
+  const renderIngLoose = (withHeader) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {withHeader && ingsOf("").length > 0 && (
+        <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>Hors section</div>
+      )}
+      {ingsOf("").map((ing, li) => (
+        <DraggableIngredient key={ing.id} ing={ing} index={li} total={ingsOf("").length}
+          draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
+          autoFocus={ing.id === lastAddedIdRef.current}
+          sectionKey="" groups={allSections} onSetGroup={setIngGroup}
+          onRawChange={handleRawChange}
+          onUpdateAmount={(id, v) => updIng(id, "amount", v)}
+          onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} />
+      ))}
+      <SectionAddBar onAddIngredient={() => addIngTo("")} components={compsFor("")} />
+    </div>
+  );
+
   // Élastique vertical (rubber-band + rebond d'inertie) pour les panneaux du pager
   // (chacun a son propre `overflow-y`). Le panneau Ustensiles est un composant à part
   // (UtensilPicker) qui gère son propre élastique. Désactivé sur desktop.
@@ -371,53 +424,10 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               </div>
             )}
             {/* Section principale (ingrédients sans groupe) */}
-            {ingsOf("").map((ing, li) => (
-              <DraggableIngredient key={ing.id} ing={ing} index={li} total={ingsOf("").length}
-                draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
-                autoFocus={ing.id === lastAddedIdRef.current}
-                sectionKey="" groups={allSections} onSetGroup={setIngGroup}
-                onRawChange={handleRawChange}
-                onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-                onRemove={remIng} onMove={moveIngIn("")} onEnter={() => addIngTo("")} />
-            ))}
-            {/* Zone d'ajout : bascule ingrédient brut / composant (préparation de base).
-                Onglet Composants masqué quand on édite soi-même un composant (mono-niveau v1). */}
-            {!form.isComponent ? (
-              <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: 12, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 12, marginBottom: 12 }}>
-                  {[["ing", "Ingrédient", "leaf"], ["comp", "Base", "base"]].map(([k, label, icon]) => {
-                    const on = addMode === k;
-                    return (
-                      <button key={k} onClick={() => setAddMode(k)} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "7px 4px", borderRadius: 9, border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 600, background: on ? "var(--surface)" : "transparent", color: on ? "var(--accent)" : "var(--text3)", boxShadow: on ? "0 1px 3px rgba(0,0,0,0.1)" : "none", transition: "color 0.15s, background-color 0.15s" }}>
-                        {icon === "base" ? <BaseIcon size={13} color={on ? "var(--accent)" : "var(--text3)"} /> : <Icon name="leaf" size={12} color={on ? "var(--accent)" : "var(--text3)"} />}
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {addMode === "ing" ? (
-                  <button className="editor-add" onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
-                ) : availableComponents.length === 0 ? (
-                  <p style={{ fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "10px 0", lineHeight: 1.5 }}>Aucune base disponible.<br />Crée d'abord une recette en « préparation de base ».</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {availableComponents.map(comp => (
-                      <button key={comp.id} onClick={() => addComponent(comp)} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", textAlign: "left", cursor: "pointer" }}>
-                        <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.1)" }}><BaseIcon size={16} /></span>
-                        <span style={{ flex: 1, fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{comp.name}</span>
-                        <span style={{ fontSize: 11, color: "var(--text3)" }}>{comp.yield?.amount} {comp.yield?.unit}</span>
-                        <span className="complete-add" style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)", color: "var(--accent)" }}><Icon name="plus" size={15} color="currentColor" /></span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button className="editor-add" onClick={addIng}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
-            )}
+            {/* Sans section : liste normale en haut. Avec sections : les sections
+                (sous-préparations, prioritaires) d'abord, le hors-section relégué en bas. */}
+            {allSections.length === 0 && renderIngLoose(false)}
 
-            {/* Sections nommées : les ingrédients y sont toujours regroupés (même si
-                ajoutés dans le désordre), et on ajoute directement DANS la section. */}
             {allSections.map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 {ingsOf(name).map((ing, li) => (
@@ -429,10 +439,12 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     onUpdateAmount={(id, v) => updIng(id, "amount", v)}
                     onRemove={remIng} onMove={moveIngIn(name)} onEnter={() => addIngTo(name)} />
                 ))}
-                <button className="editor-add" onClick={() => addIngTo(name)}><Icon name="plus" size={16} /> Ajouter un ingrédient</button>
+                <SectionAddBar onAddIngredient={() => addIngTo(name)} components={compsFor(name)} />
               </SectionCard>
             ))}
             <NewSectionButton onAdd={addSection} />
+
+            {allSections.length > 0 && renderIngLoose(true)}
           </div>
         </div>
 
