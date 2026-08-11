@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.10.32 – Safran · Traçabilité Nutri-Score
+
+### Nutrition
+- Nouvel onglet **« Calcul »** dans l'analyse nutritionnelle : le détail du Nutri-Score (points négatifs vs positifs, valeurs pour 100 g, et l'équation qui aboutit à la lettre) — réservé aux abonnés **Mijoté+**
+
 ## v3.10.31 – Safran · Cohérence admin
 
 ### Console admin
