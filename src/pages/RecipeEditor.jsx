@@ -425,10 +425,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               </div>
             )}
             {/* Section principale (ingrédients sans groupe) */}
-            {/* Sans section : liste normale en haut. Avec sections : les sections
-                (sous-préparations, prioritaires) d'abord, le hors-section relégué en bas. */}
-            {allSections.length === 0 && renderIngLoose(false)}
-
+            {/* Sections (sous-préparations, prioritaires) d'abord, puis la création de
+                section, puis les ingrédients hors section en bas. */}
             {allSections.map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 {ingsOf(name).map((ing, li) => (
@@ -445,7 +443,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             ))}
             <NewSectionButton onAdd={addSection} />
 
-            {allSections.length > 0 && renderIngLoose(true)}
+            {renderIngLoose(allSections.length > 0)}
           </div>
         </div>
 
