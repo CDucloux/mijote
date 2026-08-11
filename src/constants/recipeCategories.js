@@ -17,11 +17,27 @@ export const RECIPE_CATEGORIES = [
   { id: "tarte",        label: "Tarte",           emoji: "🥧" },
   { id: "petit-dej",    label: "Petit-déjeuner",  emoji: "🥐" },
   { id: "boisson",      label: "Boisson",         emoji: "🥤" },
-  { id: "sauce",        label: "Sauce",           emoji: "🫙" },
   { id: "boulangerie",  label: "Boulangerie",     emoji: "🍞" },
 ];
 
-const BY_ID = new Map(RECIPE_CATEGORIES.map(c => [c.id, c]));
+// Types propres aux PRÉPARATIONS DE BASE (composants). Les catégories « rôle dans
+// le repas » (apéritif, plat, dessert…) n'ont aucun sens pour une base : on
+// propose plutôt les grandes familles classiques (fond, sauce mère, appareil,
+// liaison, pâte). `sauce` est partagé avec la liste principale.
+export const BASE_CATEGORIES = [
+  { id: "fond",     label: "Fond",     emoji: "🥣" },
+  { id: "sauce",    label: "Sauce",    emoji: "🫙" },
+  { id: "appareil", label: "Appareil", emoji: "🥚" },
+  { id: "liaison",  label: "Liaison",  emoji: "🧈" },
+  { id: "pate",     label: "Pâte",     emoji: "🥟" },
+  { id: "sirop",    label: "Sirop",    emoji: "🍯" },
+  { id: "marinade", label: "Marinade", emoji: "🧄" },
+];
+
+/** Ids de catégories réservés aux préparations de base. */
+export const BASE_CATEGORY_IDS = new Set(BASE_CATEGORIES.map(c => c.id));
+
+const BY_ID = new Map([...RECIPE_CATEGORIES, ...BASE_CATEGORIES].map(c => [c.id, c]));
 export function categoryLabel(id) { return BY_ID.get(id)?.label || ""; }
 export function categoryEmoji(id) { return BY_ID.get(id)?.emoji || "🍴"; }
 export function isRecipeCategory(id) { return BY_ID.has(id); }
