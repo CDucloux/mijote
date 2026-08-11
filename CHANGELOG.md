@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.10.39 – Safran · Éditeur d'étape
+
+### Recettes
+- **Refonte moderne de l'éditeur d'étape** : carte plus aérée, badge en dégradé, zone d'instructions adoucie, et surtout les **ingrédients/ustensiles liés en puces avec vignette** (image) et état sélectionné plein accent
+- Une **préparation de base** ne peut s'assigner qu'à une section (jamais hors section, ni si la section contient déjà des ingrédients)
+
 ## v3.10.38 – Safran · Sections (finitions)
 
 ### Recettes
