@@ -10,7 +10,7 @@ describe("recipeGroups", () => {
     expect(sections[0].items).toHaveLength(2);
   });
 
-  it("puts the ungrouped section first, then named groups in first-appearance order", () => {
+  it("puts named groups first (first-appearance order), ungrouped section last", () => {
     const items = [
       { id: "a", group: "Crème" },
       { id: "b" },
@@ -18,9 +18,9 @@ describe("recipeGroups", () => {
       { id: "d", group: "Crème" },
     ];
     const sections = groupBy(items);
-    expect(sections.map(s => s.group)).toEqual([null, "Crème", "Pâte"]);
-    expect(sections[1].items.map(i => i.id)).toEqual(["a", "d"]);
-    expect(sections[0].items.map(i => i.id)).toEqual(["b"]);
+    expect(sections.map(s => s.group)).toEqual(["Crème", "Pâte", null]);
+    expect(sections[0].items.map(i => i.id)).toEqual(["a", "d"]);
+    expect(sections[2].items.map(i => i.id)).toEqual(["b"]);
   });
 
   it("treats blank/whitespace groups as ungrouped", () => {
