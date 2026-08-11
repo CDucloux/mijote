@@ -301,8 +301,9 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(232, 112, 58, 0.25); }
     .step-group-ico { flex-shrink: 0; }
     .step-group .step:last-child { margin-bottom: 16px; }
-    /* Intitulé neutre des étapes hors section (« Préparation », « Montage ») */
-    .step-loose-title { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--text3); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    /* Intitulé des étapes hors section (« Préparation », « Montage ») — même accent que
+       les sections (l'encadré distingue déjà les vraies sous-préparations) */
+    .step-loose-title { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--accent); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     /* Pills */
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
     .pill-comp { border-color: rgba(232,112,58,0.4); background: rgba(232,112,58,0.06); }

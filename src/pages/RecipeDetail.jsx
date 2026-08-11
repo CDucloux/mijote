@@ -48,14 +48,15 @@ const REPORT_REASONS = [
 
 // En-tête d'une section (groupe « Pour la pâte »…). Rendu uniquement pour les groupes
 // nommés ; la section principale (sans groupe) reste sans en-tête (iso-rendu).
-// En-tête de section. `tone="accent"` pour une sous-préparation nommée ; `"muted"`
-// (gris) pour les étapes hors section (« Préparation », « Montage »), afin de bien
-// distinguer les deux tout en marquant clairement le passage de l'un à l'autre.
-function GroupHeader({ label, tone = "accent", style }) {
-  const color = tone === "muted" ? "var(--text3)" : "var(--accent)";
+// En-tête de section (toujours en accent, pour une palette cohérente). Une vraie
+// sous-préparation nommée porte l'icône « layers » ; les blocs hors section
+// (« Préparation », « Montage ») n'en ont pas — la distinction se fait par l'icône et
+// le libellé, pas par la couleur.
+function GroupHeader({ label, showIcon = false, style }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>
-      <span style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color, flexShrink: 0 }}>{label}</span>
+      {showIcon && <Icon name="layers" size={15} color="var(--accent)" />}
+      <span style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", flexShrink: 0 }}>{label}</span>
       <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
     </div>
   );
@@ -847,7 +848,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {groupBy(recipe.ingredients).map(section => (
               <div key={section.group ?? "__main"}>
-                {section.group && <GroupHeader label={section.group} style={{ marginBottom: 10 }} />}
+                {section.group && <GroupHeader label={section.group} showIcon style={{ marginBottom: 10 }} />}
                 <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
                 {section.items.map((ing, idx) => {
                   const rc = resolveComp(ing);
@@ -960,7 +961,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
                 return (
                 <Fragment key={run.start}>
-                {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} />}
+                {hdr && <GroupHeader label={hdr} showIcon={!!run.group} />}
                 {run.items.map((step, j) => {
                   const num = run.start + j + 1;
                   const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
@@ -1020,7 +1021,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {groupBy(recipe.ingredients).map(section => (
                 <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {section.group && <GroupHeader label={section.group} />}
+                {section.group && <GroupHeader label={section.group} showIcon />}
                 {section.items.map(ing => {
                   const rc = resolveComp(ing);
                   if (rc) return (
@@ -1127,7 +1128,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
               return (
               <div key={run.start}>
-              {hdr && <GroupHeader label={hdr} tone={run.group ? "accent" : "muted"} style={{ marginBottom: 18 }} />}
+              {hdr && <GroupHeader label={hdr} showIcon={!!run.group} style={{ marginBottom: 18 }} />}
               {run.items.map((step, j) => {
                 const num = run.start + j + 1;
                 const lastInRun = j === run.items.length - 1;
