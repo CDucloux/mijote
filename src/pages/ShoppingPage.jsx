@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
@@ -274,15 +275,9 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
         )}
       </div>
 
-      {/* Hydratation des données partagées : squelette plutôt que l'empty state,
+      {/* Hydratation des données partagées : spinner plutôt que l'empty state,
           qui flasherait avant l'arrivée des listes (bootstrap / cache temps réel). */}
-      {shoppingLists.length === 0 && loading && (
-        <div style={{ flex: 1, padding: "8px 20px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-          <div className="skeleton" style={{ height: 48, borderRadius: 14 }} />
-          <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
-          <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
-        </div>
-      )}
+      {shoppingLists.length === 0 && loading && <LoadingSpinner />}
 
       {/* Empty state (première visite) — même base que « Aucune recette trouvée » */}
       {shoppingLists.length === 0 && !loading && (

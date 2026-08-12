@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
+import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
@@ -144,10 +145,8 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
         {ingredientDB.length === 0 && loading ? (
-          // Base pas encore hydratée : squelette plutôt que « Base d'ingrédients vide ».
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 8 }}>
-            {[0, 1, 2, 3, 4].map(i => <div key={i} className="skeleton" style={{ height: 56, borderRadius: 14 }} />)}
-          </div>
+          // Base pas encore hydratée : spinner plutôt que « Base d'ingrédients vide ».
+          <LoadingSpinner />
         ) : ingredientDB.length === 0 ? (
           <StockEmpty icon="box" title="Base d'ingrédients vide"
             body={<>Importe-la dans <strong style={{ color: "var(--text)", fontWeight: 600 }}>Config → Ingrédients</strong>.</>} />
