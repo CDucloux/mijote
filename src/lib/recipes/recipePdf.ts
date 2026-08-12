@@ -144,8 +144,10 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
 
   // Ingrédients groupés par section (« Pour la pâte »…) ; sans groupe = une seule
   // rangée de pastilles, sans sous-titre (rendu identique à avant).
-  const ingredientsHtml = groupBy(recipe.ingredients || []).map(sec =>
-    (sec.group ? `<div class="group-title">${sec.group}</div>` : "") +
+  const ingSections = groupBy(recipe.ingredients || []);
+  const ingHasGroups = ingSections.some(s => s.group);
+  const ingredientsHtml = ingSections.map(sec =>
+    (sec.group ? `<div class="group-title">${sec.group}</div>` : (ingHasGroups ? `<div class="group-title">Autres</div>` : "")) +
     `<div class="ing-pills">${sec.items.map(ingPill).join("")}</div>`
   ).join("");
 
