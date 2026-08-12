@@ -44,14 +44,15 @@ export function UserAvatar() {
   const showDot = offline || syncStatus !== "idle";
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
-      <button ref={btnRef} onClick={() => { if (open) { setOpen(false); setConfirmSignOut(false); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="Mon compte">
+      <button ref={btnRef} className="ripple ripple-light" onClick={() => { if (open) { setOpen(false); setConfirmSignOut(false); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }} aria-label="Mon compte">
         {/* Anneau orange = abonné Mijoté+ (sinon bordure neutre). */}
         {user.photoURL
           ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: `2px solid ${isPlus ? "var(--accent)" : "var(--border)"}` }} />
           : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", border: `2px solid ${isPlus ? "var(--accent)" : "transparent"}` }}>{(user.displayName || "?")[0].toUpperCase()}</div>
         }
-        <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none" }} />
       </button>
+      {/* Pastille de sync HORS du bouton (sinon le clip circulaire du ripple la masque). */}
+      <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none", pointerEvents: "none" }} />
       {open && createPortal(
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 1299 }} onClick={() => { setOpen(false); setConfirmSignOut(false); }} />
