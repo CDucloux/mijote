@@ -182,6 +182,24 @@ export function useFirestoreSync({
       setBootstrapped(false);
       recipeSyncMap.current = new Map();
       activeHidRef.current = null;
+      // Purge immédiate des slices du compte précédent. Les données partagées
+      // (recettes, carnets, planning, listes, stock) + perso (userDB) ne sont
+      // PAS en cache localStorage : elles ne vivent qu'en état React, qui survit
+      // à la transition `onAuthStateChanged`. Sans ce reset, au changement de
+      // compte on voit le contenu de l'ancien compte le temps que le nouveau se
+      // charge (bleed inter-comptes) → on repart d'un état vide (écran de
+      // chargement) plutôt que d'afficher les données d'un autre utilisateur.
+      // Le guard par uid ci-dessus garantit qu'on ne purge pas sur un simple
+      // refresh de jeton (même uid) : uniquement bascule de compte / déconnexion.
+      setRecipes([]);
+      setCollections([]);
+      setMealPlan({});
+      setShoppingLists([]);
+      setStock([]);
+      setLowStock([]);
+      setUserDB({ ingredients: [], utensils: [] });
+      recipesSigRef.current = null;
+      metaSigRef.current = {};
       setUser(u);
       setObservabilityUser(u ? { id: u.uid, email: u.email } : null); // corrèle les erreurs à l'utilisateur
       if (!u) return;
@@ -241,9 +259,18 @@ export function useFirestoreSync({
         }
         setUserDB(data.userDB || { ingredients: [], utensils: [] });               // perso : toujours solo
         const freshMaster = await masterPromise;
-        setMasterDB(freshMaster);
-        masterSigRef.current = masterSig(freshMaster); // seed anti-écho : le 1er snapshot (identique) ne re-déclenche rien
-        try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ }
+        // Ne PAS écraser une Master valide (état + cache) par un résultat vide :
+        // `loadMasterDB` retombe sur des tableaux vides en cas d'échec de lecture
+        // (droits refusés sur `master/*` si la session mobile est dégradée). Un tel
+        // vide clobberait le cache localStorage et rendrait l'appli sans ingrédients/
+        // ustensiles de façon persistante. On applique le nouveau Master uniquement
+        // s'il n'est pas vide, ou si on n'a rien en mémoire (1er chargement légitime).
+        const freshHasData = freshMaster.ingredients.length > 0 || freshMaster.utensils.length > 0;
+        if (freshHasData || (!masterDB.ingredients.length && !masterDB.utensils.length)) {
+          setMasterDB(freshMaster);
+          masterSigRef.current = masterSig(freshMaster); // seed anti-écho : le 1er snapshot (identique) ne re-déclenche rien
+          if (freshHasData) { try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ } }
+        }
 
         recipeSyncMap.current = mapOf(shared.recipes);
         recipesSigRef.current = JSON.stringify(shared.recipes || []);

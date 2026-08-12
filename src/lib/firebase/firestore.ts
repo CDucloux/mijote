@@ -18,6 +18,7 @@ import {
   type Query, type DocumentSnapshot, type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase.js";
+import { reportError } from "@/lib/observability/observability.js";
 import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
 import {
   newHouseholdDoc, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved,
@@ -466,7 +467,12 @@ export async function loadMasterDB(): Promise<MasterDB> {
       techniques: tech.exists() ? (tech.data().items || []) : [],
       categories: cat.exists() ? normCategories(cat.data()) : DEFAULT_CATEGORIES,
     };
-  } catch {
+  } catch (e) {
+    // Échec de lecture de la Master (souvent droits refusés sur `master/*` si la
+    // session est dégradée). On loggue au lieu d'avaler silencieusement : c'est un
+    // signal fort (l'appli se retrouverait sans ingrédients/ustensiles). L'appelant
+    // (bootstrap) protège désormais le cache d'un écrasement par ce repli vide.
+    reportError(e, { where: "loadMasterDB" });
     return { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
   }
 }
