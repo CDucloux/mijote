@@ -10,6 +10,7 @@ import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
 import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "@/lib/recipes/recipeSort.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "@/lib/recipes/recipeFilters.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { spawnRipple } from "@/lib/ui/ripple.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
@@ -535,16 +536,16 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {quick.map(a => (
-              <button key={a.label} className="menu-row" onClick={a.on}>
+              <button key={a.label} className="menu-row" onPointerDown={spawnRipple} onClick={a.on}>
                 <Icon name={a.icon} size={19} color="var(--text2)" /> {a.label}
               </button>
             ))}
             {list.map(a => (
-              <button key={a.label} className="menu-row" onClick={a.on}>
+              <button key={a.label} className="menu-row" onPointerDown={spawnRipple} onClick={a.on}>
                 <Icon name={a.icon} size={19} color="var(--text2)" /> {a.label}
               </button>
             ))}
-            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onClick={() => { setConfirmDelete({ kind: "recipe", item: rm }); close(); }}>
+            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onPointerDown={spawnRipple} onClick={() => { setConfirmDelete({ kind: "recipe", item: rm }); close(); }}>
               <Icon name="trash" size={19} color="var(--red)" /> Supprimer
             </button>
           </div>
@@ -620,14 +621,14 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               </div>
             )}
             {smart && (
-              <button className="menu-row" onClick={() => { close(); openCarnetFilters(cm); }}>
+              <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { close(); openCarnetFilters(cm); }}>
                 {slidersIcon} Ajuster les filtres
               </button>
             )}
-            <button className="menu-row" onClick={() => { setNewCarnet({ ...cm, editing: true }); close(); }}>
+            <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { setNewCarnet({ ...cm, editing: true }); close(); }}>
               <Icon name="edit" size={19} color="var(--text2)" /> Modifier
             </button>
-            <button className="menu-row menu-row-danger" onClick={() => { setConfirmDelete({ kind: "carnet", item: cm }); close(); }}>
+            <button className="menu-row menu-row-danger" onPointerDown={spawnRipple} onClick={() => { setConfirmDelete({ kind: "carnet", item: cm }); close(); }}>
               <Icon name="trash" size={19} color="var(--red)" /> Supprimer le carnet
             </button>
           </div>

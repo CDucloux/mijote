@@ -1,5 +1,17 @@
 # Changelog – Mijoté
 
+## v3.10.46 – Safran · Comptes & finitions
+
+### Synchronisation
+- **Changement de compte** : plus de « fuite » des données de l'autre compte (recettes, carnets…) le temps du chargement — l'écran repart à vide au switch
+- **Base commune** protégée : un échec de lecture (session dégradée) n'écrase plus le cache local par du vide
+
+### Interface
+- Fiche : bloc d'ingrédients hors-section désormais titré **« Autres »** — la frontière avec une sous-préparation est enfin nette (fiche + PDF)
+- Menu avatar : « Console admin » en gris foncé, badge violet identique à l'en-tête
+- Menus mobiles (recette, carnet, liste) : **onde tactile** au toucher, comme les ingrédients
+- « À propos » : changelog limité aux **5 dernières versions**
+
 ## v3.10.45 – Safran · Sections libres & finitions
 
 ### Recettes

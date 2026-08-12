@@ -61,10 +61,12 @@ export function UserAvatar() {
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
             {isAdmin && (
               <button onClick={() => { setOpen(false); navigate("/admin/dashboard"); }}
-                style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--accent)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "opacity 0.15s" }}
+                style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "opacity 0.15s" }}
                 onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-                <Icon name="terminal" size={13} color="currentColor" /> Console admin
+                <span style={{ width: 22, height: 22, borderRadius: 7, background: "rgba(var(--admin-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <Icon name="terminal" size={13} color="var(--admin)" />
+                </span> Console admin
               </button>
             )}
             <button onClick={() => { setOpen(false); navigate("/profile"); }}

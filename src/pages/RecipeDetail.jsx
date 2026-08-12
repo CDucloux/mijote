@@ -848,7 +848,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {groupBy(recipe.ingredients).map(section => (
               <div key={section.group ?? "__main"}>
-                {section.group && <GroupHeader label={section.group} showIcon style={{ marginBottom: 10 }} />}
+                {section.group ? <GroupHeader label={section.group} showIcon style={{ marginBottom: 10 }} /> : (hasGroups(recipe.ingredients) && <GroupHeader label="Autres" style={{ marginBottom: 10 }} />)}
                 <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
                 {section.items.map((ing, idx) => {
                   const rc = resolveComp(ing);
@@ -1021,7 +1021,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {groupBy(recipe.ingredients).map(section => (
                 <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {section.group && <GroupHeader label={section.group} showIcon />}
+                {section.group ? <GroupHeader label={section.group} showIcon /> : (hasGroups(recipe.ingredients) && <GroupHeader label="Autres" />)}
                 {section.items.map(ing => {
                   const rc = resolveComp(ing);
                   if (rc) return (
