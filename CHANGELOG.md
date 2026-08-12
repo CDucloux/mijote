@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.10.48 – Safran · Onde tactile
+
+### Interface & tactile
+- **Onde tactile** (ripple) aussi sur l'avatar
+- Menus (feuilles carnet / liste / recette) : le fond reste teinté tant que le doigt est posé, avec un relâchement en douceur — fini le retour instantané
+- Onde ripple plus posée (moins « sèche »)
+
 ## v3.10.47 – Safran · Hors-ligne & fluidité
 
 ### Synchronisation & hors-ligne
