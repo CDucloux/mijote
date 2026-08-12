@@ -129,6 +129,8 @@ export function useFirestoreSync({
   const [loadedHid, setLoadedHid] = useState<string | null>(null); // foyer chargé → déclenche les abonnements temps réel
   const [bootstrapped, setBootstrapped] = useState(false); // miroir d'état de cloudLoaded → ré-exécute le coordinateur quand le bootstrap finit
   const [workspaceReady, setWorkspaceReady] = useState(false); // true quand le namespace chargé == le namespace voulu (évite le flash 404 pendant la bascule solo→foyer)
+  const [sharedHydrating, setSharedHydrating] = useState(false); // vrai quand on attend la 1re livraison du foyer (lecture initiale échouée → cache temps réel) : évite le flash « bibliothèque vide » avant l'arrivée des recettes
+  const hydrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null); // filet de sécurité : ne pas rester bloqué en hydratation si aucun snapshot n'arrive
 
   // Mémorise les signatures des méta partagées chargées (un snapshot identique ne ré-applique rien).
   const seedSigs = useCallback((d: SharedSlices) => {
@@ -237,7 +239,16 @@ export function useFirestoreSync({
         if (bootHid) {
           loadedFromHousehold = true;
           try { shared = await loadSharedData(householdWorkspace(bootHid)); }
-          catch (e) { shared = { recipes: [] }; sharedLoadFailed = true; reportError(e, { where: "sync:bootstrap:loadShared", bootHid }); }
+          catch (e) {
+            shared = { recipes: [] }; sharedLoadFailed = true;
+            reportError(e, { where: "sync:bootstrap:loadShared", bootHid });
+            // On attend la 1re livraison de l'abonnement temps réel (cache Firestore)
+            // avant de conclure « bibliothèque vide » → pas de flash. Filet de sécurité
+            // à 6 s au cas où aucun snapshot n'arriverait (foyer réellement vide/injoignable).
+            setSharedHydrating(true);
+            if (hydrationTimer.current) clearTimeout(hydrationTimer.current);
+            hydrationTimer.current = setTimeout(() => setSharedHydrating(false), 6000);
+          }
         }
 
         // Sur échec de lecture du foyer, on n'ÉCRASE PAS l'état courant (potentiellement
@@ -482,6 +493,10 @@ export function useFirestoreSync({
     const unsubs: Unsubscribe[] = [];
     unsubs.push(onSnapshot(recipesCol(ws), snap => {
       if (snap.metadata.hasPendingWrites) return;
+      // Fin de l'hydratation dès qu'un snapshot du foyer arrive (même vide) : on sait
+      // désormais si le foyer a des recettes ou non → on peut lever le skeleton.
+      if (hydrationTimer.current) { clearTimeout(hydrationTimer.current); hydrationTimer.current = null; }
+      setSharedHydrating(false);
       if (snap.metadata.fromCache && snap.empty) return; // ne pas écraser des données valides avec un cache vide
       const remote = snap.docs.map(d => d.data());
       recipeSyncMap.current = mapOf(remote);
@@ -541,5 +556,7 @@ export function useFirestoreSync({
     return () => unsub();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { cloudLoaded, workspaceReady };
+  useEffect(() => () => { if (hydrationTimer.current) clearTimeout(hydrationTimer.current); }, []);
+
+  return { cloudLoaded, workspaceReady, sharedHydrating };
 }

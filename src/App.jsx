@@ -180,7 +180,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
-  const { workspaceReady } = useFirestoreSync({
+  const { workspaceReady, sharedHydrating } = useFirestoreSync({
     user, setUser, isAdmin, setSyncStatus, householdPointer,
     recipes, setRecipes,
     collections, setCollections,
@@ -422,7 +422,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           jusqu'ici sans transition. */}
       <div key={tab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
-      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} loading={!workspaceReady} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
+      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} components={recipes.filter(r => r.isComponent)} />}
