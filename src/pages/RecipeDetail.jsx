@@ -1342,7 +1342,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           )}
           <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 6 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => onClone?.())}>Ajouter</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => { setConfirmClone(false); onClone?.(); })}>Ajouter</button>
           </div>
           </>)}
         </SwipeableSheet>
@@ -1378,7 +1378,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
               <button className="btn btn-danger btn-pill" style={{ flex: 1.3 }} disabled={!reportReason}
-                onClick={() => close(() => { onReport?.(reportReason, reportNote.trim()); })}>
+                onClick={() => close(() => { setReportOpen(false); onReport?.(reportReason, reportNote.trim()); })}>
                 <Icon name="flag" size={14} /> Envoyer le signalement
               </button>
             </div>
@@ -1432,7 +1432,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           )}
           <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 8 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => onPublish?.(recipe))}>Publier</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => { setPendingPublish(false); onPublish?.(recipe); })}>Publier</button>
           </div>
           </>)}
         </SwipeableSheet>
