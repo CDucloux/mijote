@@ -176,7 +176,7 @@ function FoyerSection() {
   );
 }
 
-export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, onSelectRecipe, setTab, onOpenPublic, onClonePublic, discoverSeed = "", onDiscoverSeedConsumed }) {
+export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, loading = false, onSelectRecipe, setTab, onOpenPublic, onClonePublic, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
 
@@ -232,7 +232,16 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             </h2>
           )}
 
-          {isCalm ? (
+          {loading ? (
+            // Données partagées pas encore hydratées (bootstrap / cache temps réel) :
+            // squelette plutôt que « Tout est à jour » (qui flasherait avant l'arrivée
+            // du planning, des courses et du stock).
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className="skeleton" style={{ height: 74, borderRadius: 18 }} />
+              <div className="skeleton" style={{ height: 62, borderRadius: 14 }} />
+              <div className="skeleton" style={{ height: 62, borderRadius: 14 }} />
+            </div>
+          ) : isCalm ? (
             <button className="slide-up pressable" onClick={() => setTab?.("meal-plan")}
               style={{ animationDelay: "0.04s", display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
               <span style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "rgba(76,175,125,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>

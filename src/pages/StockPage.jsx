@@ -27,7 +27,7 @@ function StockEmpty({ icon, title, body, action }) {
   );
 }
 
-export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES }) {
+export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, loading = false }) {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("all"); // "all" = tout | "stock" = ce que j'ai | "low" = à racheter
 
@@ -143,7 +143,12 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       {/* Corps scrollable */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
-        {ingredientDB.length === 0 ? (
+        {ingredientDB.length === 0 && loading ? (
+          // Base pas encore hydratée : squelette plutôt que « Base d'ingrédients vide ».
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 8 }}>
+            {[0, 1, 2, 3, 4].map(i => <div key={i} className="skeleton" style={{ height: 56, borderRadius: 14 }} />)}
+          </div>
+        ) : ingredientDB.length === 0 ? (
           <StockEmpty icon="box" title="Base d'ingrédients vide"
             body={<>Importe-la dans <strong style={{ color: "var(--text)", fontWeight: 600 }}>Config → Ingrédients</strong>.</>} />
         ) : filtered.length === 0 ? (() => {

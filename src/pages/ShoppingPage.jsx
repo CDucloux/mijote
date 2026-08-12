@@ -28,7 +28,7 @@ const MAX_LIST_CHARS = MAX_LIST_ITEMS * 50;  // ≈ 50 articles de ~50 caractèr
 // l'animation de passage dans « Acheté » (l'article glisse vers le bas en
 // s'estompant avant de rejoindre la section).
 
-export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, setStock, setLowStock }) {
+export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }) {
   const navigate = useNavigate();
   const { notify } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
@@ -274,8 +274,18 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
         )}
       </div>
 
+      {/* Hydratation des données partagées : squelette plutôt que l'empty state,
+          qui flasherait avant l'arrivée des listes (bootstrap / cache temps réel). */}
+      {shoppingLists.length === 0 && loading && (
+        <div style={{ flex: 1, padding: "8px 20px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="skeleton" style={{ height: 48, borderRadius: 14 }} />
+          <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
+          <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
+        </div>
+      )}
+
       {/* Empty state (première visite) — même base que « Aucune recette trouvée » */}
-      {shoppingLists.length === 0 && (
+      {shoppingLists.length === 0 && !loading && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
           <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
             <Icon name="shopping" size={30} color="var(--accent)" />
