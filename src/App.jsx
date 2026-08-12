@@ -10,6 +10,7 @@ import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
 import { useFirestoreSync, readCachedHid } from "./hooks/useFirestoreSync.js";
+import { useRecipeDerived } from "./hooks/useRecipeDerived.js";
 import { installGlobalRipple } from "@/lib/ui/ripple.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
@@ -111,6 +112,11 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Onde tactile (ripple) globale : toute surface `.ripple` la reçoit au toucher
   // (mobile). Installée une seule fois pour toute l'app.
   useEffect(() => installGlobalRipple(), []);
+
+  // Données dérivées par recette (saison/vegan/Nutri-Score) mémoïsées ICI (composant
+  // persistant) → la bascule vers l'onglet « Recettes » ne recalcule plus tout à
+  // chaque fois. Cf. useRecipeDerived.
+  const recipeDerived = useRecipeDerived(recipes, ingredientDB);
 
   const [householdPointer, setHouseholdPointer] = useState(null);
   useEffect(() => {
@@ -427,7 +433,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           jusqu'ici sans transition. */}
       <div key={tab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
       {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} loading={!workspaceReady || sharedHydrating} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
-      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
+      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} components={recipes.filter(r => r.isComponent)} />}

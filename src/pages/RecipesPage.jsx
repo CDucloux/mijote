@@ -11,11 +11,7 @@ import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, ma
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "@/lib/recipes/recipeFilters.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
-import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
-import { isRecipeInSeason } from "@/lib/food/seasonality.js";
-import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
-import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
@@ -84,7 +80,7 @@ const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, n
   );
 });
 
-export function RecipesPage({ recipes, collections, ingredientDB, loading = false, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, onDuplicate, onAddToShopping, onToggleCollection, onPlanRecipe, onShareRecipe, setCollections, setTab }) {
+export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived, loading = false, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, onDuplicate, onAddToShopping, onToggleCollection, onPlanRecipe, onShareRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
   // Squelette de chargement au 1er affichage de l'onglet dans la session (si des
@@ -152,29 +148,12 @@ export function RecipesPage({ recipes, collections, ingredientDB, loading = fals
   });
   const toggleCarnets = () => setHideCarnets(v => { const n = !v; try { localStorage.setItem("mijote_hideCarnets", n ? "1" : "0"); } catch { /* ignore */ } return n; });
 
-  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  // Dérivés coûteux (résolveur, index, saison/vegan/Nutri-Score par recette) calculés
+  // en amont dans App (composant persistant) et transmis ici → plus de recalcul
+  // intégral à chaque bascule d'onglet. Cf. useRecipeDerived.
+  const { resolver, seasonVeganById } = recipeDerived;
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
-
-  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
-  // Saison / vegan / Nutri-Score calculés UNE fois par recette (et non à chaque rendu
-  // de la grille) : isRecipeVegan remonte récursivement les préparations de base →
-  // coûteux au scroll. Le Nutri-Score est recalculé EN DIRECT (score ET lettre) comme
-  // la fiche détail : la carte l'affiche et le tri « Nutri-Score » l'utilise, sinon le
-  // tri ordonnerait selon un score figé pendant que la carte montre l'autre → mélange.
-  const seasonVeganById = useMemo(() => {
-    const m = new Map();
-    for (const r of recipes) {
-      const nutri = computeNutriInfo(r.ingredients, ingredientDB || [], recipesById);
-      m.set(r.id, {
-        inSeason: isRecipeInSeason(r, resolver),
-        vegan: isRecipeVegan(r, resolver, { recipes }),
-        nutriLetter: nutri.letter ?? r.nutriLetter,
-        healthScore: nutri.letter ? nutri.score : r.healthScore,
-      });
-    }
-    return m;
-  }, [recipes, resolver, ingredientDB, recipesById]);
   // Callbacks stables → RecipeGridItem (mémoïsé) ne re-rend pas au scroll.
   const openRecipe = useCallback((r) => { if (wasLongPress()) return; onSelect(r.id); }, [onSelect, wasLongPress]);
   const openRecipeMenu = useCallback((r) => setRecipeMenu(r), []);
