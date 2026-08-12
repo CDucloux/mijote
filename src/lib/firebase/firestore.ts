@@ -445,7 +445,13 @@ export async function deleteAllUserData(uid: string): Promise<void> {
  * @returns La fonction de désabonnement.
  */
 export function subscribeHouseholdPointer(uid: string, cb: (data: DocumentData | null) => void): Unsubscribe {
-  return onSnapshot(householdPointerDoc(uid), s => cb(s.exists() ? s.data() : null), () => cb(null));
+  // Sur ERREUR d'écoute (perte réseau, jeton en cours de rafraîchissement, blip de
+  // permission), on n'émet PAS `null` : signaler « aucun foyer » ferait basculer
+  // l'app vers l'espace solo (perso) et donc afficher un tout autre jeu de données
+  // (ex. 10 recettes / 0 carnet au lieu du foyer). On IGNORE l'erreur et on garde le
+  // dernier pointeur connu ; le cache Firestore continue de servir les données du
+  // foyer, et la reconnexion réémettra un snapshot frais.
+  return onSnapshot(householdPointerDoc(uid), s => cb(s.exists() ? s.data() : null), () => { /* garder le dernier pointeur connu */ });
 }
 
 /**
