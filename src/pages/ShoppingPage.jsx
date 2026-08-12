@@ -8,6 +8,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { ShoppingItemRow } from "../components/ShoppingItemRow.jsx";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { spawnRipple } from "@/lib/ui/ripple.js";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
 import { aggregateShopping } from "@/lib/food/shoppingAggregate.js";
 import { OverscrollRow } from "../components/OverscrollRow.jsx";
@@ -453,10 +454,11 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <button className="menu-row" onClick={() => { setConfigList({ ...lm }); close(); }}>
+            <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { setConfigList({ ...lm }); close(); }}>
               <Icon name="settings" size={19} color="var(--text2)" /> Paramètres de la liste
             </button>
             <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }}
+              onPointerDown={spawnRipple}
               onClick={() => { close(); lm.type === "free" ? setConfirmDeleteId(lm.id) : deleteList(lm.id); }}>
               <Icon name="trash" size={19} color="var(--red)" /> Supprimer la liste
             </button>

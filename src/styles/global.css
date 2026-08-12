@@ -755,9 +755,20 @@ select {
   color: var(--text);
   cursor: pointer;
   transition: background 0.15s ease;
+  /* Accueille l'onde tactile (.ripple-ink) posée en JS au point de contact,
+     bornée à la rangée. Léger arrondi pour que l'onde ne déborde pas des coins. */
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
 }
+/* L'onde tactile remplace le flash :active sur les rangées de menu (feel Android). */
 .menu-row:active {
-  background: var(--surface2);
+  background: none;
+}
+@media (hover: hover) {
+  .menu-row:hover {
+    background: var(--surface2);
+  }
 }
 .menu-row-danger {
   color: var(--red);
