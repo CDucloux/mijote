@@ -312,7 +312,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, loading = fals
       )}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
-        {booting ? (
+        {(booting || loading) ? (
+          // Squelette pendant le boot de l'onglet OU tant que le workspace n'est pas
+          // prêt (bootstrap / resync) : évite le flash « bibliothèque vide » avant que
+          // les recettes n'arrivent (démarrage, pull-to-refresh).
           <>
             <SectionTitleSkeleton width={96} />
             <CarnetsSkeleton />
@@ -386,15 +389,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, loading = fals
             )}
           </div>
         )}
-        {recipes.length === 0 && loading ? (
-          // ── Chargement (bootstrap / resync) : NE PAS afficher « bibliothèque vide »
-          // tant que les données ne sont pas chargées, sinon un flash « Elle est encore
-          // vide » apparaît au démarrage ou au pull-to-refresh avant l'arrivée des recettes. ──
-          <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
-            <span style={{ width: 30, height: 30, borderRadius: "50%", border: "3px solid var(--border)", borderTopColor: "var(--accent)", display: "inline-block", animation: "spin 0.8s linear infinite" }} />
-            <span style={{ fontSize: 13.5, color: "var(--text3)" }}>Chargement de ta bibliothèque…</span>
-          </div>
-        ) : recipes.length === 0 ? (
+        {recipes.length === 0 ? (
           // ── Première connexion : 0 recette, c'est normal → on invite, sans afficher « Carnets » ni « Recettes (0) » ──
           <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 420, margin: "0 auto" }}>
             <div style={{ position: "relative", width: 88, height: 88, borderRadius: 24, background: "linear-gradient(150deg, rgba(232,112,58,0.18), rgba(240,192,96,0.14))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, boxShadow: "0 10px 30px -14px rgba(232,112,58,0.5)" }}>
