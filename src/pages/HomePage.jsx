@@ -26,7 +26,7 @@ function greeting(date = new Date()) {
 // Carte de notification compacte (courses, stock bas) – icône + libellé + chevron.
 function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }) {
   return (
-    <button onClick={onClick} className="slide-up pressable"
+    <button onClick={onClick} className="slide-up pressable ripple"
       style={{
         animationDelay,
         display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
@@ -124,7 +124,7 @@ function FoyerSection() {
     <section style={{ marginBottom: 26 }}>
       {/* Carte foyer : surface neutre + liseré accent à gauche (inset box-shadow,
           épouse les coins) + perforation pointillée comme séparateur distinctif. */}
-      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable"
+      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable ripple"
         style={{
           position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
           display: "flex", alignItems: "stretch", gap: 0, padding: 0,
@@ -242,7 +242,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
               <div className="skeleton" style={{ height: 62, borderRadius: 14 }} />
             </div>
           ) : isCalm ? (
-            <button className="slide-up pressable" onClick={() => setTab?.("meal-plan")}
+            <button className="slide-up pressable ripple" onClick={() => setTab?.("meal-plan")}
               style={{ animationDelay: "0.04s", display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
               <span style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "rgba(76,175,125,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Icon name="check" size={15} color="var(--green)" />
@@ -256,7 +256,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {/* Repas du jour (un repas composé = une carte, plat en tête) */}
               {mealCards.map((card, i) => { const m = card.primary; return (
-                <button key={i} onClick={() => onSelectRecipe?.(m.recipe.id)} className="slide-up pressable"
+                <button key={i} onClick={() => onSelectRecipe?.(m.recipe.id)} className="slide-up pressable ripple"
                   style={{
                     animationDelay: `${i * 0.06}s`,
                     display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",

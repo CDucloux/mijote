@@ -76,7 +76,7 @@ function RecipeGridSkeleton({ count = 12 }) {
 // Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
 const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, nutriLetter, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress, moveLongPress }) {
   return (
-    <div
+    <div className="discover-card"
       onPointerDown={(e) => startLongPress(e, () => onMenu(recipe))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
       onContextMenu={(e) => { e.preventDefault(); onMenu(recipe); }}>
       <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} nutriLetter={nutriLetter} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />

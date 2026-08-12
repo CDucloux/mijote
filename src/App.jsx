@@ -10,6 +10,7 @@ import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
 import { useFirestoreSync, readCachedHid } from "./hooks/useFirestoreSync.js";
+import { installGlobalRipple } from "@/lib/ui/ripple.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -107,6 +108,10 @@ function AppInner({ user, isDark, toggleTheme }) {
   const [lowStock, setLowStock] = useLS("rf_lowStock", []);
   const [preferences, setPreferences] = useLS("rf_preferences", DEFAULT_PREFERENCES);
   // Pointeur du foyer actif ({ id, migrated } | null) – pilote le namespace partagé.
+  // Onde tactile (ripple) globale : toute surface `.ripple` la reçoit au toucher
+  // (mobile). Installée une seule fois pour toute l'app.
+  useEffect(() => installGlobalRipple(), []);
+
   const [householdPointer, setHouseholdPointer] = useState(null);
   useEffect(() => {
     if (!user?.uid) { setHouseholdPointer(null); return; }
