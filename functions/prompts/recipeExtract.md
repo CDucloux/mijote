@@ -51,7 +51,7 @@ USTENSILES
 ÉTAPES
 - **Regroupe** les actions d'une même phase en UNE étape (ex. « laver puis couper tous les légumes »). Vise un déroulé **synthétique** — en général **3 à 8 étapes** pour une recette simple. Ne crée jamais d'étape pour une action triviale, ne coupe pas une phrase en deux, et n'éclate pas une recette de salade en 15 étapes.
 - `text` : l'instruction, rédigée à l'**INFINITIF** (« Préparer », « Mélanger », « Enfourner »), **jamais** à l'impératif en « -ez » (« Préparez », « Mélangez »). Peut regrouper plusieurs gestes liés. **Ne répète PAS les quantités chiffrées** dans le texte : elles sont déjà affichées sous l'étape via les ingrédients liés (et sont ajustables). Écris « ajouter la farine et le beurre » plutôt que « ajouter 250 g de farine et 100 g de beurre ». Une indication *relative* reste permise si utile (« la moitié du beurre », « le reste du sucre »).
-- `ingredients` / `utensils` : les noms (repris EXACTEMENT de tes listes ci-dessus) utilisés dans l'étape ; `[]` sinon.
+- `ingredients` / `utensils` : les noms (repris EXACTEMENT de tes listes ci-dessus) utilisés dans l'étape ; `[]` sinon. **Ne relie QUE des ingrédients réellement mentionnés/utilisés dans le texte de CETTE étape** — ne « complète » jamais avec des ingrédients d'une autre phase parce qu'ils portent le même nom.
 - `tip` : seulement une **vraie** astuce technique non évidente (température, repère de cuisson, erreur classique). La PLUPART des étapes → `""`. Jamais à chaque étape, jamais inventée.
 - `image` : si une photo `⟦IMG:url⟧` figurant à proximité illustre le **geste ou le résultat** de CETTE étape et apporte une vraie valeur, mets son url exacte ; sinon `""`. Jamais une image décorative, un logo, une photo d'ambiance, ni l'image principale du plat. La plupart des étapes n'ont pas d'image.
 
@@ -61,6 +61,7 @@ GROUPEMENTS (sections)
 - Ne remplis `group` **QUE** si la source structure EXPLICITEMENT la recette en sous-parties, signalées par des **intertitres** du type « Pour la pâte », « Pour la garniture », « For the sauce », « Génoise », « Crème au beurre »… (souvent en gras, chacun suivi de sa propre liste d'ingrédients et/ou de ses étapes).
 - Le libellé `group` : **court groupe nominal français**, SANS le « Pour la/le/les » (« Pour la pâte » → `group: "La pâte"` ou `"Pâte"`). Garde le **MÊME libellé exact** pour les ingrédients et les étapes d'une même sous-préparation, afin qu'ils se rejoignent.
 - Un ingrédient ou une étape hors de toute sous-partie nommée (assemblage/montage final, dressage) garde `group: ""`.
+- **Cloisonnement des sections** : une étape d'une sous-préparation ne peut relier dans ses `ingredients`/`utensils` QUE des ingrédients de la MÊME sous-préparation (même `group`) ou, à défaut, des ingrédients hors-section (`group: ""`). Elle ne DOIT JAMAIS aller chercher un ingrédient appartenant à un AUTRE `group`, même homonyme. Exemple : si « huile d'olive » et « sel » existent à la fois dans la vinaigrette et dans la section « Croûtons », une étape du groupe « Croûtons » relie l'huile d'olive et le sel **de la section Croûtons uniquement**, pas ceux de la vinaigrette. Chaque ligne d'ingrédient (avec sa quantité propre) n'est reliée qu'aux étapes de son propre groupe.
 - Dans le doute, ou si le découpage n'est pas net → `""`. Mieux vaut aucune section qu'une section erronée.
 
 RÈGLES
