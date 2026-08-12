@@ -135,6 +135,23 @@ describe("useFirestoreSync", () => {
     expect(JSON.parse(localStorage.getItem("rf_masterDB_cache")).ingredients.length).toBe(1);
   });
 
+  it("foyer hors-ligne : si la lecture partagée échoue, on NE retombe PAS sur le solo", async () => {
+    // Foyer connu (cache local) + lecture du foyer qui échoue (hors-ligne) : on reste
+    // sur le foyer (l'abonnement temps réel repeuplera depuis le cache Firestore), on
+    // n'écrase pas l'état avec les données solo (ex. 10 recettes).
+    localStorage.setItem("rf_active_hid_me", "h1");
+    fs.loadMasterDB.mockResolvedValue(MASTER);
+    fs.loadUserData.mockResolvedValue({ recipes: [{ id: "solo1" }], userDB: { ingredients: [], utensils: [] } });
+    fs.loadSharedData.mockRejectedValue(new Error("offline"));
+    const props = makeProps();
+    const { rerender } = renderHook(p => useFirestoreSync(p), { initialProps: props });
+    await act(async () => { await authCb({ uid: "me" }); });
+    rerender({ ...props, user: { uid: "me" } });
+    await waitFor(() => expect(props.setSyncStatus).toHaveBeenCalledWith("synced"));
+    // Jamais les recettes du solo appliquées par-dessus le foyer.
+    expect(props.setRecipes).not.toHaveBeenCalledWith([{ id: "solo1" }]);
+  });
+
   it("expose les drapeaux cloudLoaded et workspaceReady", () => {
     const props = makeProps();
     const { result } = renderHook(p => useFirestoreSync(p), { initialProps: props });

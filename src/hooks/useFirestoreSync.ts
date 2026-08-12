@@ -90,7 +90,7 @@ const masterSig = (m: MasterLike): string => JSON.stringify({ i: m.ingredients |
 // namespace (foyer) au lieu d'afficher le solo une fraction de seconde avant la
 // bascule du coordinateur (anti-flicker solo→foyer au rechargement).
 const hidCacheKey = (uid: string): string => "rf_active_hid_" + uid;
-const readCachedHid = (uid: string): string | null => { try { return localStorage.getItem(hidCacheKey(uid)) || null; } catch { return null; } };
+export const readCachedHid = (uid: string): string | null => { try { return localStorage.getItem(hidCacheKey(uid)) || null; } catch { return null; } };
 const writeCachedHid = (uid: string, hid: string | null): void => { try { if (hid) localStorage.setItem(hidCacheKey(uid), hid); else localStorage.removeItem(hidCacheKey(uid)); } catch { /* quota */ } };
 
 /**
@@ -228,20 +228,28 @@ export function useFirestoreSync({
         }
 
         // Slices PARTAGÉS : depuis le foyer si connu, sinon depuis le solo (`data`).
-        // Si le cache est périmé (foyer quitté/dissous ailleurs), le chargement échoue
-        // → on retombe sur le solo, le coordinateur rebasculera proprement.
-        let shared: BootData = data, loadedFromHousehold = false;
+        // IMPORTANT (hors-ligne) : si un foyer est connu (bootHid en cache), on RESTE
+        // sur le foyer quoi qu'il arrive. Basculer sur le solo afficherait un tout autre
+        // jeu de données (ex. 10 recettes / 0 carnet). En cas d'échec de lecture (réseau,
+        // jeton), on part d'un partagé VIDE et on laisse l'abonnement temps réel — servi
+        // par le cache Firestore — repeupler ; on ne retombe JAMAIS sur le solo.
+        let shared: BootData = data, loadedFromHousehold = false, sharedLoadFailed = false;
         if (bootHid) {
-          try { shared = await loadSharedData(householdWorkspace(bootHid)); loadedFromHousehold = true; }
-          catch { shared = data; }
+          loadedFromHousehold = true;
+          try { shared = await loadSharedData(householdWorkspace(bootHid)); }
+          catch (e) { shared = { recipes: [] }; sharedLoadFailed = true; reportError(e, { where: "sync:bootstrap:loadShared", bootHid }); }
         }
 
-        setRecipes(shared.recipes || []);
-        if (shared.collections) setCollections(shared.collections);
-        if (shared.mealPlan) setMealPlan(shared.mealPlan);
-        if (shared.shoppingLists) setShoppingLists(shared.shoppingLists);
-        if (shared.stock) setStock(shared.stock);
-        if (shared.lowStock) setLowStock(shared.lowStock);
+        // Sur échec de lecture du foyer, on n'ÉCRASE PAS l'état courant (potentiellement
+        // déjà peuplé par le cache) avec du vide : on laisse l'abonnement temps réel remplir.
+        if (!sharedLoadFailed) {
+          setRecipes(shared.recipes || []);
+          if (shared.collections) setCollections(shared.collections);
+          if (shared.mealPlan) setMealPlan(shared.mealPlan);
+          if (shared.shoppingLists) setShoppingLists(shared.shoppingLists);
+          if (shared.stock) setStock(shared.stock);
+          if (shared.lowStock) setLowStock(shared.lowStock);
+        }
         // Préférences (perso, toujours solo). On préserve un displayName saisi
         // localement mais non encore synchronisé : si le cloud ne l'a pas (vide),
         // on garde le local ET on le repousse pour qu'il se propage aux autres

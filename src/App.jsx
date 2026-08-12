@@ -9,7 +9,7 @@ import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
 import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
-import { useFirestoreSync } from "./hooks/useFirestoreSync.js";
+import { useFirestoreSync, readCachedHid } from "./hooks/useFirestoreSync.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -110,6 +110,13 @@ function AppInner({ user, isDark, toggleTheme }) {
   const [householdPointer, setHouseholdPointer] = useState(null);
   useEffect(() => {
     if (!user?.uid) { setHouseholdPointer(null); return; }
+    // Amorce optimiste depuis le cache local du foyer actif : hors-ligne, l'écoute
+    // Firestore peut tarder ou échouer à confirmer le pointeur ; sans cette amorce,
+    // `desiredHid` resterait null et l'app basculerait sur le solo (10 recettes) le
+    // temps que le snapshot arrive. On aligne d'emblée le namespace voulu sur le
+    // dernier foyer connu ; l'écoute confirmera (ou corrigera si départ/dissolution).
+    const cachedHid = readCachedHid(user.uid);
+    if (cachedHid) setHouseholdPointer(prev => prev || { id: cachedHid, migrated: true });
     return subscribeHouseholdPointer(user.uid, setHouseholdPointer);
   }, [user]);
   // Dérivé du pathname (et non de useParams) pour qu'AppInner reste une instance
