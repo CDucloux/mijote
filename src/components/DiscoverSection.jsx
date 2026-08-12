@@ -15,6 +15,7 @@ import { filterPublicRecipes, publicId, isOfficialAuthor } from "@/lib/household
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
+import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters } from "@/lib/recipes/recipeFilters.js";
 import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "@/lib/recipes/recipeSort.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
@@ -30,10 +31,10 @@ const TINT = "rgba(232,112,58,0.2)";
 const CARD_W = "clamp(150px, calc(50% - 6px), 200px)";
 
 // Carte d'une recette publique : visuel (hover-lift) + crédit créateur & date dessous.
-function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, vegan, style }) {
+function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, vegan, nutriLetter, style }) {
   return (
     <div>
-      <div className="discover-card"><RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} vegan={vegan} style={style} /></div>
+      <div className="discover-card"><RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} vegan={vegan} nutriLetter={nutriLetter} style={style} /></div>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "0 2px" }}>
         <button onClick={onAuthor} title="Filtrer par ce créateur"
           style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
@@ -171,6 +172,12 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const isOwned = (p) => ownedIds.has(p.pubId) || p.authorUid === user?.uid;
   const isInSeason = (payload) => isRecipeInSeason(payload, resolver);
   const isVegan = (payload) => isRecipeVegan(payload, resolver);
+  // Nutri-Score recalculé EN DIRECT côté client (comme la grille privée et la fiche),
+  // à partir de la base d'ingrédients du lecteur : la valeur `nutriLetter` figée dans
+  // le doc public peut être périmée/erronée. L'index couvre les prépas de base publiées
+  // (dans `pubs`) pour résoudre les lignes composant.
+  const pubRecipesById = useMemo(() => buildRecipeIndex(pubs.map(x => x.recipe)), [pubs]);
+  const liveNutri = (recipe) => computeNutriInfo(recipe.ingredients, ingredientDB || [], pubRecipesById).letter ?? recipe.nutriLetter;
 
   // Payloads des bases référencées, retrouvées parmi les docs déjà chargés.
   const componentsFor = (p) => (p.componentRefs || [])
@@ -228,7 +235,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
   const card = (p, idx) => (
     <PublicRecipeCard
-      p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)} vegan={isVegan(p.recipe)}
+      p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)} vegan={isVegan(p.recipe)} nutriLetter={liveNutri(p.recipe)}
       onOpen={() => onOpenPublic?.(p, componentsFor(p))}
       onAdd={onClonePublic ? () => onClonePublic(p) : undefined}
       onAuthor={() => setAuthorUid(authorUid === p.authorUid ? null : p.authorUid)}
@@ -249,6 +256,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         <SpotlightIngredient
           ingredient={spotlight}
           recipes={spotlightRecipes}
+          nutriFor={liveNutri}
           loading={loading && !loadedOnce}
           onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)}
           onOpenPublic={(p) => onOpenPublic?.(p, componentsFor(p))}
