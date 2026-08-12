@@ -2835,6 +2835,9 @@ select {
 @media (hover: none) {
   .ripple:active { opacity: 1 !important; }
 }
+/* Variante claire : sur une surface sombre (boutons ronds translucides sur photo),
+   l'onde grise ne se voit pas → encre blanche. L'ink est inséré comme enfant direct. */
+.ripple-light > .ripple-ink { background: rgba(255, 255, 255, 0.4); }
 
 .tap-row .tap-chevron {
   transition: transform 0.38s cubic-bezier(0.33, 1, 0.68, 1);
