@@ -268,13 +268,19 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
 
   const steps: RecipeStep[] = (d.steps || []).map((s, k) => {
     const text = norm(s.text);
+    const stepGroup = (s.group || "").toString().trim();
     const explicitIng = new Set((s.ingredients || []).map(norm));
     const explicitUt = new Set((s.utensils || []).map((x) => norm(typeof x === "string" ? x : x?.name)));
-    const ingIds = ingredients.filter((i) => i.name && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map((i) => i.id);
+    // Cloisonnement des sections : une étape appartenant à une sous-préparation ne
+    // peut se lier qu'aux ingrédients du MÊME groupe (ou hors-section) — jamais à un
+    // ingrédient homonyme d'un AUTRE groupe (sinon l'« huile d'olive » de la
+    // vinaigrette se relie à tort à une étape du groupe « Croûtons »). Une étape
+    // hors-section (montage/dressage) reste libre de tout lier (comportement inchangé).
+    const inScope = (g: string | undefined): boolean => { if (!stepGroup) return true; const ig = (g || "").trim(); return ig === "" || ig === stepGroup; };
+    const ingIds = ingredients.filter((i) => i.name && inScope(i.group) && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map((i) => i.id);
     const utIds = utensils.filter((u) => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map((u) => u.id);
     const rs: RecipeStep = { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
-    const group = (s.group || "").toString().trim();
-    if (group) rs.group = group;
+    if (stepGroup) rs.group = stepGroup;
     return rs;
   });
 

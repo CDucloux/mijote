@@ -11,11 +11,7 @@ import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, ma
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "@/lib/recipes/recipeFilters.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
-import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
-import { isRecipeInSeason } from "@/lib/food/seasonality.js";
-import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
-import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
@@ -76,7 +72,7 @@ function RecipeGridSkeleton({ count = 12 }) {
 // Les callbacks reçus sont stables (useCallback) et prennent la recette en argument.
 const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, nutriLetter, animate, animDelay, onOpen, onMenu, startLongPress, cancelLongPress, moveLongPress }) {
   return (
-    <div
+    <div className="discover-card"
       onPointerDown={(e) => startLongPress(e, () => onMenu(recipe))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
       onContextMenu={(e) => { e.preventDefault(); onMenu(recipe); }}>
       <RecipeCard recipe={recipe} onClick={() => onOpen(recipe)} inSeason={inSeason} vegan={vegan} nutriLetter={nutriLetter} animate={animate} style={animate ? { animationDelay: animDelay } : undefined} />
@@ -84,7 +80,7 @@ const RecipeGridItem = memo(function RecipeGridItem({ recipe, inSeason, vegan, n
   );
 });
 
-export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, onDuplicate, onAddToShopping, onToggleCollection, onPlanRecipe, onShareRecipe, setCollections, setTab }) {
+export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived, loading = false, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, onDuplicate, onAddToShopping, onToggleCollection, onPlanRecipe, onShareRecipe, setCollections, setTab }) {
   const { techniques } = useAppShell();
   const [search, setSearch] = useState("");
   // Squelette de chargement au 1er affichage de l'onglet dans la session (si des
@@ -152,29 +148,12 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
   });
   const toggleCarnets = () => setHideCarnets(v => { const n = !v; try { localStorage.setItem("mijote_hideCarnets", n ? "1" : "0"); } catch { /* ignore */ } return n; });
 
-  const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  // Dérivés coûteux (résolveur, index, saison/vegan/Nutri-Score par recette) calculés
+  // en amont dans App (composant persistant) et transmis ici → plus de recalcul
+  // intégral à chaque bascule d'onglet. Cf. useRecipeDerived.
+  const { resolver, seasonVeganById } = recipeDerived;
   // Focus sans scroll : évite que la page « saute » quand le bottom-sheet s'ouvre.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
-
-  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
-  // Saison / vegan / Nutri-Score calculés UNE fois par recette (et non à chaque rendu
-  // de la grille) : isRecipeVegan remonte récursivement les préparations de base →
-  // coûteux au scroll. Le Nutri-Score est recalculé EN DIRECT (score ET lettre) comme
-  // la fiche détail : la carte l'affiche et le tri « Nutri-Score » l'utilise, sinon le
-  // tri ordonnerait selon un score figé pendant que la carte montre l'autre → mélange.
-  const seasonVeganById = useMemo(() => {
-    const m = new Map();
-    for (const r of recipes) {
-      const nutri = computeNutriInfo(r.ingredients, ingredientDB || [], recipesById);
-      m.set(r.id, {
-        inSeason: isRecipeInSeason(r, resolver),
-        vegan: isRecipeVegan(r, resolver, { recipes }),
-        nutriLetter: nutri.letter ?? r.nutriLetter,
-        healthScore: nutri.letter ? nutri.score : r.healthScore,
-      });
-    }
-    return m;
-  }, [recipes, resolver, ingredientDB, recipesById]);
   // Callbacks stables → RecipeGridItem (mémoïsé) ne re-rend pas au scroll.
   const openRecipe = useCallback((r) => { if (wasLongPress()) return; onSelect(r.id); }, [onSelect, wasLongPress]);
   const openRecipeMenu = useCallback((r) => setRecipeMenu(r), []);
@@ -312,7 +291,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
       )}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "4px 20px 20px" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
-        {booting ? (
+        {(booting || loading) ? (
+          // Squelette pendant le boot de l'onglet OU tant que le workspace n'est pas
+          // prêt (bootstrap / resync) : évite le flash « bibliothèque vide » avant que
+          // les recettes n'arrivent (démarrage, pull-to-refresh).
           <>
             <SectionTitleSkeleton width={96} />
             <CarnetsSkeleton />
@@ -398,11 +380,11 @@ export function RecipesPage({ recipes, collections, ingredientDB, onSelect, onNe
               Elle est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
-              <button className="btn btn-primary" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={onNewRecipe}>
-                <Icon name="plus" size={16} /> Créer ma première recette
+              <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={onNewRecipe}>
+                <Icon name="plus" size={16} color="#fff" /> Créer ma première recette
               </button>
               {setTab && (
-                <button className="btn btn-ghost" style={{ padding: "11px 20px", borderRadius: 14, fontSize: 14 }} onClick={() => setTab("home")}>
+                <button className="btn btn-pill" style={{ fontSize: 14, background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }} onClick={() => setTab("home")}>
                   <Icon name="sparkle" size={16} color="var(--accent)" /> Explorer les recettes publiques
                 </button>
               )}

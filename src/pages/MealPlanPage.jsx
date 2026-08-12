@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -122,7 +123,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [] }) {
+export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false }) {
   const { notify, user, isPlus } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
   // vers l'offre Mijoté+ quand une fonctionnalité premium est verrouillée.
@@ -404,7 +405,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
-        {viewMode === "week" && (
+        {loading ? <LoadingSpinner /> : viewMode === "week" && (
           <div key={`week-${weekDays[0]}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {/* Accès à la session batch : bannière contextuelle (ré-ouvrable), affichée
                 seulement quand la semaine contient au moins un plat. Sortie du header

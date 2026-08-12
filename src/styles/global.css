@@ -2823,6 +2823,22 @@ select {
   .ripple-ink { animation: none; display: none; }
 }
 
+/* Opt-in générique de l'onde tactile (délégation globale, cf. installGlobalRipple) :
+   il suffit d'ajouter la classe `.ripple` sur une surface tappable pour qu'elle
+   reçoive l'onde au toucher (mobile). `position/overflow` bornent l'onde à la surface.
+   On neutralise en même temps le flash blanchâtre `:active` (opacité) hérité du jeu
+   « pressable » : sur ces surfaces, c'est l'onde qui fait le retour tactile. */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+@media (hover: none) {
+  .ripple:active { opacity: 1 !important; }
+}
+/* Variante claire : sur une surface sombre (boutons ronds translucides sur photo),
+   l'onde grise ne se voit pas → encre blanche. L'ink est inséré comme enfant direct. */
+.ripple-light > .ripple-ink { background: rgba(255, 255, 255, 0.4); }
+
 .tap-row .tap-chevron {
   transition: transform 0.38s cubic-bezier(0.33, 1, 0.68, 1);
 }

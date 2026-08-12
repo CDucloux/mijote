@@ -70,6 +70,41 @@ describe("assignIdsAndLink", () => {
     expect(r.steps[1].utensils).toContain("u0");    // saladier (texte)
     expect(r.cuisine).toBe("Grecque");
   });
+  it("cloisonne le linkage par section : une étape d'un groupe ne lie pas l'homonyme d'un autre groupe", () => {
+    // « huile d'olive » et « sel » existent dans DEUX sous-préparations. Une étape du
+    // groupe « Croûtons » ne doit relier QUE l'huile/sel de sa propre section.
+    const inter = {
+      ingredients: [
+        { name: "huile d'olive", amount: 50, unit: "g", group: "Vinaigrette" }, // i0
+        { name: "sel", amount: 3, unit: "g", group: "Vinaigrette" },            // i1
+        { name: "pain", amount: 75, unit: "g", group: "Croûtons" },             // i2
+        { name: "huile d'olive", amount: 15, unit: "g", group: "Croûtons" },    // i3
+        { name: "sel", amount: 2, unit: "g", group: "Croûtons" },               // i4
+      ],
+      utensils: [],
+      steps: [
+        { text: "Verser le vinaigre, ajouter le sel puis l'huile d'olive.", group: "Vinaigrette", ingredients: ["sel", "huile d'olive"], utensils: [] },
+        { text: "Arroser le pain d'huile d'olive et de sel, enfourner.", group: "Croûtons", ingredients: ["pain", "huile d'olive", "sel"], utensils: [] },
+      ],
+    };
+    const r = assignIdsAndLink(inter);
+    // Étape Vinaigrette : sel + huile de la vinaigrette uniquement.
+    expect([...r.steps[0].ingredients].sort()).toEqual(["i0", "i1"]);
+    // Étape Croûtons : pain + huile + sel de la section Croûtons uniquement (jamais i0/i1).
+    expect([...r.steps[1].ingredients].sort()).toEqual(["i2", "i3", "i4"]);
+  });
+  it("une étape hors-section peut lier des ingrédients de n'importe quel groupe (montage)", () => {
+    const inter = {
+      ingredients: [
+        { name: "pâte", amount: 1, group: "La pâte" },      // i0
+        { name: "crème", amount: 1, group: "La crème" },    // i1
+      ],
+      utensils: [],
+      steps: [{ text: "Garnir la pâte de crème et servir.", group: "", ingredients: ["pâte", "crème"], utensils: [] }],
+    };
+    const r = assignIdsAndLink(inter);
+    expect([...r.steps[0].ingredients].sort()).toEqual(["i0", "i1"]);
+  });
   it("porte l'image d'étape et ne lie pas par faux positif de sous-chaîne", () => {
     const inter = { ingredients: [{ name: "sel" }], utensils: [], steps: [{ text: "Ciseler le persil.", image: "https://x/s.jpg" }] };
     const r = assignIdsAndLink(inter);

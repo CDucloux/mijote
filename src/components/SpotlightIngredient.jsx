@@ -28,8 +28,9 @@ function SeasonFrieze({ months }) {
   );
 }
 
-function MiniRecipe({ pub, onOpen }) {
+function MiniRecipe({ pub, onOpen, nutriFor }) {
   const r = pub.recipe;
+  const nutriLetter = nutriFor ? nutriFor(r) : r.nutriLetter;
   return (
     <button onClick={() => onOpen?.(pub)} className="pressable" style={{ flex: "0 0 132px", scrollSnapAlign: "start", background: "var(--surface)", borderRadius: 14, overflow: "hidden", border: "1px solid var(--border)", boxShadow: "0 4px 12px -8px rgba(80,50,20,0.3)", textAlign: "left", cursor: "pointer", padding: 0 }}>
       <div style={{ height: 76, position: "relative" }}>
@@ -39,14 +40,14 @@ function MiniRecipe({ pub, onOpen }) {
         <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: 30 }}>{r.name}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 10.5, color: "var(--text3)", fontWeight: 500 }}>
           <Icon name="clock" size={11} color="var(--text3)" /> {fmtTime((r.prepTime || 0) + (r.cookTime || 0))}
-          <span style={{ marginLeft: "auto" }}><NutriScoreBadge letter={r.nutriLetter} compact /></span>
+          <span style={{ marginLeft: "auto" }}><NutriScoreBadge letter={nutriLetter} compact /></span>
         </div>
       </div>
     </button>
   );
 }
 
-export function SpotlightIngredient({ ingredient, recipes = [], loading = false, onOpenIngredient, onOpenPublic, onPublish }) {
+export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loading = false, onOpenIngredient, onOpenPublic, onPublish }) {
   if (!ingredient) return null;
   const months = ingredientMonths(ingredient);
   const catLabel = CAT_LABEL[ingredient.category] || "Ingrédient";
@@ -99,7 +100,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], loading = false,
               <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text2)" }}>À cuisiner · {recipes.length} recette{recipes.length > 1 ? "s" : ""} de la communauté</span>
             </div>
             <OverscrollRow stretch className="discover-row" style={{ gap: 10, paddingBottom: 4 }} outerStyle={{ margin: "0 -2px", scrollSnapType: "x proximity" }}>
-              {recipes.map(p => <MiniRecipe key={p.pubId} pub={p} onOpen={onOpenPublic} />)}
+              {recipes.map(p => <MiniRecipe key={p.pubId} pub={p} onOpen={onOpenPublic} nutriFor={nutriFor} />)}
             </OverscrollRow>
           </>
         ) : loading ? (

@@ -90,7 +90,7 @@ const masterSig = (m: MasterLike): string => JSON.stringify({ i: m.ingredients |
 // namespace (foyer) au lieu d'afficher le solo une fraction de seconde avant la
 // bascule du coordinateur (anti-flicker solo→foyer au rechargement).
 const hidCacheKey = (uid: string): string => "rf_active_hid_" + uid;
-const readCachedHid = (uid: string): string | null => { try { return localStorage.getItem(hidCacheKey(uid)) || null; } catch { return null; } };
+export const readCachedHid = (uid: string): string | null => { try { return localStorage.getItem(hidCacheKey(uid)) || null; } catch { return null; } };
 const writeCachedHid = (uid: string, hid: string | null): void => { try { if (hid) localStorage.setItem(hidCacheKey(uid), hid); else localStorage.removeItem(hidCacheKey(uid)); } catch { /* quota */ } };
 
 /**
@@ -129,6 +129,8 @@ export function useFirestoreSync({
   const [loadedHid, setLoadedHid] = useState<string | null>(null); // foyer chargé → déclenche les abonnements temps réel
   const [bootstrapped, setBootstrapped] = useState(false); // miroir d'état de cloudLoaded → ré-exécute le coordinateur quand le bootstrap finit
   const [workspaceReady, setWorkspaceReady] = useState(false); // true quand le namespace chargé == le namespace voulu (évite le flash 404 pendant la bascule solo→foyer)
+  const [sharedHydrating, setSharedHydrating] = useState(false); // vrai quand on attend la 1re livraison du foyer (lecture initiale échouée → cache temps réel) : évite le flash « bibliothèque vide » avant l'arrivée des recettes
+  const hydrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null); // filet de sécurité : ne pas rester bloqué en hydratation si aucun snapshot n'arrive
 
   // Mémorise les signatures des méta partagées chargées (un snapshot identique ne ré-applique rien).
   const seedSigs = useCallback((d: SharedSlices) => {
@@ -228,20 +230,37 @@ export function useFirestoreSync({
         }
 
         // Slices PARTAGÉS : depuis le foyer si connu, sinon depuis le solo (`data`).
-        // Si le cache est périmé (foyer quitté/dissous ailleurs), le chargement échoue
-        // → on retombe sur le solo, le coordinateur rebasculera proprement.
-        let shared: BootData = data, loadedFromHousehold = false;
+        // IMPORTANT (hors-ligne) : si un foyer est connu (bootHid en cache), on RESTE
+        // sur le foyer quoi qu'il arrive. Basculer sur le solo afficherait un tout autre
+        // jeu de données (ex. 10 recettes / 0 carnet). En cas d'échec de lecture (réseau,
+        // jeton), on part d'un partagé VIDE et on laisse l'abonnement temps réel — servi
+        // par le cache Firestore — repeupler ; on ne retombe JAMAIS sur le solo.
+        let shared: BootData = data, loadedFromHousehold = false, sharedLoadFailed = false;
         if (bootHid) {
-          try { shared = await loadSharedData(householdWorkspace(bootHid)); loadedFromHousehold = true; }
-          catch { shared = data; }
+          loadedFromHousehold = true;
+          try { shared = await loadSharedData(householdWorkspace(bootHid)); }
+          catch (e) {
+            shared = { recipes: [] }; sharedLoadFailed = true;
+            reportError(e, { where: "sync:bootstrap:loadShared", bootHid });
+            // On attend la 1re livraison de l'abonnement temps réel (cache Firestore)
+            // avant de conclure « bibliothèque vide » → pas de flash. Filet de sécurité
+            // à 6 s au cas où aucun snapshot n'arriverait (foyer réellement vide/injoignable).
+            setSharedHydrating(true);
+            if (hydrationTimer.current) clearTimeout(hydrationTimer.current);
+            hydrationTimer.current = setTimeout(() => setSharedHydrating(false), 6000);
+          }
         }
 
-        setRecipes(shared.recipes || []);
-        if (shared.collections) setCollections(shared.collections);
-        if (shared.mealPlan) setMealPlan(shared.mealPlan);
-        if (shared.shoppingLists) setShoppingLists(shared.shoppingLists);
-        if (shared.stock) setStock(shared.stock);
-        if (shared.lowStock) setLowStock(shared.lowStock);
+        // Sur échec de lecture du foyer, on n'ÉCRASE PAS l'état courant (potentiellement
+        // déjà peuplé par le cache) avec du vide : on laisse l'abonnement temps réel remplir.
+        if (!sharedLoadFailed) {
+          setRecipes(shared.recipes || []);
+          if (shared.collections) setCollections(shared.collections);
+          if (shared.mealPlan) setMealPlan(shared.mealPlan);
+          if (shared.shoppingLists) setShoppingLists(shared.shoppingLists);
+          if (shared.stock) setStock(shared.stock);
+          if (shared.lowStock) setLowStock(shared.lowStock);
+        }
         // Préférences (perso, toujours solo). On préserve un displayName saisi
         // localement mais non encore synchronisé : si le cloud ne l'a pas (vide),
         // on garde le local ET on le repousse pour qu'il se propage aux autres
@@ -474,6 +493,10 @@ export function useFirestoreSync({
     const unsubs: Unsubscribe[] = [];
     unsubs.push(onSnapshot(recipesCol(ws), snap => {
       if (snap.metadata.hasPendingWrites) return;
+      // Fin de l'hydratation dès qu'un snapshot du foyer arrive (même vide) : on sait
+      // désormais si le foyer a des recettes ou non → on peut lever le skeleton.
+      if (hydrationTimer.current) { clearTimeout(hydrationTimer.current); hydrationTimer.current = null; }
+      setSharedHydrating(false);
       if (snap.metadata.fromCache && snap.empty) return; // ne pas écraser des données valides avec un cache vide
       const remote = snap.docs.map(d => d.data());
       recipeSyncMap.current = mapOf(remote);
@@ -533,5 +556,7 @@ export function useFirestoreSync({
     return () => unsub();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { cloudLoaded, workspaceReady };
+  useEffect(() => () => { if (hydrationTimer.current) clearTimeout(hydrationTimer.current); }, []);
+
+  return { cloudLoaded, workspaceReady, sharedHydrating };
 }

@@ -1,5 +1,24 @@
 # Changelog – Mijoté
 
+## v3.10.47 – Safran · Hors-ligne & fluidité
+
+### Synchronisation & hors-ligne
+- **Fini la bascule vers le solo hors-ligne** : on reste sur le foyer (plus de « 10 recettes / 0 carnet » quand le réseau saute), et le skeleton ne tourne plus indéfiniment
+- Chargement : squelette / spinner pendant l'hydratation (accueil, recettes, planning, courses, stock) au lieu d'un flash « vide » trompeur
+
+### Performance
+- Bascule vers **« Recettes » nettement plus rapide** : saison, vegan et Nutri-Score ne sont plus recalculés à chaque passage sur l'onglet
+
+### Recettes & communauté
+- **Nutri-Score des recettes publiques** (Découvrir) recalculé en direct — fini les lettres erronées sur les cartes
+- Import IA : dans une recette à sous-sections, une étape ne récupère plus par erreur un ingrédient homonyme d'une autre section
+- Fiche : les feuilles « Publier », « Ajouter à mes recettes » et « Signaler » ne se rouvrent plus après validation
+
+### Interface & tactile
+- Cartes de recettes (privées) : même effet de pression franc que sur Découvrir
+- **Onde tactile (ripple)** façon Android sur les boutons ronds de la fiche recette et les rangées d'accueil
+- Console admin : bonne icône (rouleau) sur la tuile Ustensiles
+
 ## v3.10.46 – Safran · Comptes & finitions
 
 ### Synchronisation
