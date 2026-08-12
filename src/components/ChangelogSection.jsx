@@ -6,9 +6,12 @@ import { renderInline } from "./markdownInline.jsx";
 export function ChangelogSection() {
   const [open, setOpen] = React.useState({});
   const toggle = v => setOpen(p => ({ ...p, [v]: !p[v] }));
+  // On n'affiche que les 5 dernières versions : au-delà, la sheet « À propos »
+  // devient trop lourde (l'historique complet reste dans CHANGELOG.md).
+  const entries = CHANGELOG.slice(0, 5);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-      {CHANGELOG.map((entry, i) => {
+      {entries.map((entry, i) => {
         const isLatest = i === 0;
         const isExpanded = isLatest || !!open[entry.version];
         return (
@@ -16,7 +19,7 @@ export function ChangelogSection() {
             {/* Timeline rail */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 36, flexShrink: 0 }}>
               <div style={{ width: isLatest ? 13 : 9, height: isLatest ? 13 : 9, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--border)", border: isLatest ? "3px solid var(--accent)" : "2px solid var(--border)", boxShadow: isLatest ? "0 0 0 4px rgba(232,112,58,0.18)" : "none", marginTop: isLatest ? 14 : 16, zIndex: 1, flexShrink: 0 }} />
-              {i < CHANGELOG.length - 1 && <div style={{ flex: 1, width: 2, background: "var(--border)", marginTop: 4, marginBottom: 0 }} />}
+              {i < entries.length - 1 && <div style={{ flex: 1, width: 2, background: "var(--border)", marginTop: 4, marginBottom: 0 }} />}
             </div>
             {/* Card */}
             <div style={{ flex: 1, marginBottom: 16, marginLeft: 10 }}>
