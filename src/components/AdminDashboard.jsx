@@ -83,7 +83,7 @@ export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques =
         <Label>Bases master</Label>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
           <StatTile icon="leaf" tint="rgba(76,175,125,0.14)" color="var(--green)" value={ing} label="Ingrédients" onClick={() => onGoto?.("ingredients")} />
-          <StatTile icon="settings" tint="rgba(91,156,246,0.14)" color="#5b9cf6" value={ust} label="Ustensiles" onClick={() => onGoto?.("ustensiles")} />
+          <StatTile icon="utensils" tint="rgba(91,156,246,0.14)" color="#5b9cf6" value={ust} label="Ustensiles" onClick={() => onGoto?.("ustensiles")} />
           <StatTile icon="list2" tint="rgba(232,112,58,0.14)" color="var(--accent)" value={tech} label="Techniques" onClick={() => onGoto?.("techniques")} />
         </div>
       </div>
