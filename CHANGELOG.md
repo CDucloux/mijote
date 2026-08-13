@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.11.1 – Safran · Éditeur au cordeau
+
+### Éditeur de recette
+- **Glisser-déposer réparé sur mobile** : réordonner un ingrédient ou une étape au doigt fonctionne de nouveau (la ligne suit le doigt, la destination s'illumine), avec défilement automatique quand on atteint le bord de l'écran
+- **Onglets sans clignotement** : passer d'Infos à Étapes n'allume plus au vol les onglets traversés (l'effet s'aggravait avec la distance)
+- **Tout est aligné** : barre d'action, onglets et contenu partagent la même colonne, l'onglet Ustensiles compris
+
 ## v3.11.0 – Safran · Mise en place cochable
 
 ### Mode pas à pas
