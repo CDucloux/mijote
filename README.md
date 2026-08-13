@@ -4,12 +4,12 @@
 
 **Cuisinez mieux, organisez moins.**
 
-Toutes vos recettes, votre planning repas et vos courses — au même endroit,
+Toutes vos recettes, votre planning repas et vos courses, au même endroit,
 toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-3.8.1-e8703a?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.10.49-e8703a?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -43,53 +43,57 @@ toujours avec vous.
 
 ## ✨ Fonctionnalités
 
-- 📖 **Recettes** — éditeur complet (ingrédients, ustensiles, étapes liées),
+- 📖 **Recettes** : éditeur complet (ingrédients, ustensiles, étapes liées),
   recherche, filtres et tri (par défaut : les plus récentes d'abord). Chaque
   étape peut porter une photo et une astuce, reprises dans la fiche et le mode
   pas-à-pas.
-- 🧩 **Préparations de base** — une recette peut consommer une « base »
+- 🧩 **Préparations de base** : une recette peut consommer une « base »
   réutilisable (sauce, pâte, appareil) avec un rendement ; les courses éclatent
   automatiquement la base en ingrédients bruts.
-- 🤖 **Import par IA** — importez une recette depuis une **URL** ou **1 à 2
+- 🤖 **Import par IA** : importez une recette depuis une **URL** ou **1 à 2
   photos** d'un livre : extraction, structuration et liaison des ingrédients /
-  ustensiles par Claude (Cloud Function réservée à l'administrateur).
-- 📓 **Carnets** — rangez vos recettes dans des carnets colorés (manuels ou
+  ustensiles par Claude (réservé aux abonnés **Mijoté+**, quotas jour/mois ;
+  illimité pour l'administrateur).
+- 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
   « intelligents », dérivés d'un filtre).
-- 🌍 **Style de cuisine** — un champ unique parmi une liste prédéfinie
+- 🌍 **Style de cuisine** : un champ unique parmi une liste prédéfinie
   (Française, Italienne, Marocaine, Japonaise…) qui sert aussi de filtre.
-- 📝 **Journal d'itérations** — chaque modification de recette est versionnée
+- 📝 **Journal d'itérations** : chaque modification de recette est versionnée
   avec un diff visuel, un commentaire et l'avatar de l'auteur.
-- 🥗 **Nutri-Score & score santé** — calculés automatiquement à partir des
+- 🥗 **Nutri-Score & score santé** : calculés automatiquement à partir des
   ingrédients et de la base nutritionnelle (données Ciqual), avec difficulté
   estimée.
-- 🌿 **Saisonnalité** — déduite des ingrédients ; badge « De saison » et filtre
+- 🌿 **Saisonnalité** : déduite des ingrédients ; badge « De saison » et filtre
   dédié.
-- 📅 **Planning repas** — semainier glisser-déposer, **générateur de semaine**
+- 📅 **Planning repas** : semainier glisser-déposer, **générateur de semaine**
   (styles facile / équilibré / aventureux, repas composés, affinité de saison),
   **session batch** (préparations à cuisiner d'avance) et export `.ics`.
-- 🛒 **Listes de courses** — ajout par collage, tri par rayon, gestes de swipe
+- 🛒 **Listes de courses** : ajout par collage, tri par rayon, gestes de swipe
   (→ j'achète, ← je supprime).
-- 📦 **Stock** — inventaire « en stock / bientôt vide » ; les achats non
+- 📦 **Stock** : inventaire « en stock / bientôt vide » ; les achats non
   périssables rejoignent automatiquement le stock, et la fiche recette signale
   ce que vous avez déjà.
-- 🏡 **Foyer** — partage temps réel des recettes, du planning et des courses
+- 🏡 **Foyer** : partage temps réel des recettes, du planning et des courses
   entre les membres d'un même foyer (invitation par e-mail).
-- 🧭 **Découvrir** — recettes publiées par la communauté, filtrables et
+- 🧭 **Découvrir** : recettes publiées par la communauté, filtrables et
   clonables en un geste ; publication depuis vos propres recettes.
-- 👨‍🍳 **Mode cuisine** — guidage pas-à-pas plein écran, photos et astuces
+- 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, photos et astuces
   d'étape incluses.
-- 🖨️ **Export** — impression PDF propre (texte sélectionnable, étapes non
+- 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
   coupées, badges vegan / cuisine / difficulté) et JSON (import / export).
-- 👤 **Profil** — nom d'affichage, heatmap d'activité cuisine façon GitHub, et
+- 👤 **Profil** : nom d'affichage, heatmap d'activité cuisine façon GitHub, et
   zone de danger (purge ciblée, **suppression de compte** RGPD).
-- 📜 **Informations légales** — mentions légales, confidentialité, CGU et
+- 📜 **Informations légales** : mentions légales, confidentialité, CGU et
   cookies (Markdown), consultables même déconnecté.
-- ☁️ **Synchro cloud** — persistance Firestore hors-ligne (IndexedDB), base de
+- ☁️ **Synchro cloud** : persistance Firestore hors-ligne (IndexedDB), base de
   référence partagée synchronisée **en temps réel**, connexion Google.
-- 🔒 **Anti-abus** — attestation d'origine (Firebase App Check) et règles
+- 🔒 **Anti-abus** : attestation d'origine (Firebase App Check) et règles
   Firestore durcies contre l'aspiration des données.
 - 🌗 **Thème clair / sombre** et interface responsive mobile + desktop (PWA
   installable), avec onboarding illustré.
+- 💳 **Mijoté+** : abonnement (mensuel ou annuel, paiement Stripe) qui débloque
+  l'import IA, le générateur de semaine, la session batch, le foyer partagé, le
+  détail du calcul Nutri-Score et les recettes illimitées (50 en plan gratuit).
 
 ## 🛠️ Stack technique
 
@@ -100,7 +104,7 @@ toujours avec vous.
 | Backend | Firebase 12 (Auth, Firestore, Storage) |
 | Serveur | Cloud Functions v2 (Node 22, `europe-west1`) |
 | IA | Claude (Anthropic) pour l'import de recettes (vision + texte) |
-| Tests | Vitest 4 (303 tests unitaires sur les libs et hooks critiques) |
+| Tests | Vitest 4 (413 tests unitaires sur les libs et hooks critiques) |
 | CI | GitHub Actions (test + build sur chaque push) |
 | Qualité | ESLint 10 |
 
@@ -135,14 +139,18 @@ VITE_FIREBASE_APP_ID=...
 VITE_ALLOWED_EMAIL=...   # restreint la connexion à cet e-mail
 VITE_ADMIN_EMAIL=...     # e-mail admin (édition de la base de référence, import IA)
 
-# App Check / anti-scraping (optionnel — voir Déploiement)
+# App Check / anti-scraping (optionnel : voir Déploiement)
 VITE_FIREBASE_RECAPTCHA_SITE_KEY=...   # active App Check (reCAPTCHA v3) si renseignée
 VITE_APPCHECK_DEBUG_TOKEN=...          # jeton de debug, en développement uniquement
+
+# Mijoté+ / Stripe (optionnel : voir docs/stripe-mijote-plus.md)
+VITE_STRIPE_PRICE_MONTHLY=...   # id du tarif mensuel (price_…)
+VITE_STRIPE_PRICE_YEARLY=...    # id du tarif annuel (price_…)
 ```
 
 > [!IMPORTANT]
 > Sans les variables `VITE_FIREBASE_*`, Firebase ne s'initialise pas et la
-> connexion échoue. Le fichier `.env` ne doit **jamais** être commité — il est
+> connexion échoue. Le fichier `.env` ne doit **jamais** être commité, il est
 > ignoré par git.
 
 > [!NOTE]
@@ -150,6 +158,10 @@ VITE_APPCHECK_DEBUG_TOKEN=...          # jeton de debug, en développement uniqu
 > Laissez la variable vide pour autoriser n'importe quel compte Google.
 > L'import IA (Cloud Functions) requiert en plus le secret serveur
 > `ANTHROPIC_API_KEY` et le paramètre `ADMIN_EMAIL` (voir `functions/README.md`).
+> Tant que `VITE_STRIPE_PRICE_*` est absent, le CTA « Passer à Mijoté+ »
+> affiche « arrive bientôt » (voir `docs/stripe-mijote-plus.md` pour la mise
+> en place complète, y compris les secrets `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`
+> côté fonctions).
 
 ### Lancer en développement
 
@@ -202,12 +214,12 @@ npm version patch   # correction de bug                (1.0.7 → 1.0.8)
 
 > [!NOTE]
 > Le nom de code de version (ex. « Safran ») et l'historique affichés dans
-> l'app sont dérivés automatiquement de [`CHANGELOG.md`](./CHANGELOG.md) — une
+> l'app sont dérivés automatiquement de [`CHANGELOG.md`](./CHANGELOG.md), une
 > seule source de vérité à maintenir.
 
 ## 🏗️ Architecture
 
-Le code est organisé en couches, du plus pur au plus visuel — les dépendances
+Le code est organisé en couches, du plus pur au plus visuel, les dépendances
 ne vont jamais en sens inverse :
 
 ```
@@ -224,7 +236,7 @@ src/
 ├── pages/           # Écrans (Home, MealPlan, Shopping, Recipes, Profile…)
 └── styles/          # global.css
 
-functions/           # Cloud Functions (import IA) — extraction pure testée à part
+functions/           # Cloud Functions (import IA, paiement Stripe), extraction pure testée à part
 data/                # Base d'ingrédients (YAML, source Ciqual)
 scripts/             # Outils (seed de la base de référence)
 ```
@@ -236,7 +248,7 @@ de React et de tout I/O, donc testable en isolation.
 ## 📄 Licence
 
 > [!WARNING]
-> Logiciel **propriétaire** — tous droits réservés. Le code source, le design
+> Logiciel **propriétaire** : tous droits réservés. Le code source, le design
 > et les contenus associés ne peuvent être copiés, distribués ou modifiés sans
 > autorisation écrite. Voir [`LICENSE`](./LICENSE).
 

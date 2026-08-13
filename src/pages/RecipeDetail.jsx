@@ -50,7 +50,7 @@ const REPORT_REASONS = [
 // nommés ; la section principale (sans groupe) reste sans en-tête (iso-rendu).
 // En-tête de section (toujours en accent, pour une palette cohérente). Une vraie
 // sous-préparation nommée porte l'icône « layers » ; les blocs hors section
-// (« Préparation », « Montage ») n'en ont pas — la distinction se fait par l'icône et
+// (« Préparation », « Montage ») n'en ont pas, la distinction se fait par l'icône et
 // le libellé, pas par la couleur.
 function GroupHeader({ label, showIcon = false, style }) {
   return (
@@ -124,7 +124,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const [confirmAdminDelete, setConfirmAdminDelete] = useState(false);
   // Les actions publiques (Signaler / Supprimer admin) sont désormais des boutons
   // ronds dans le cluster haut-droite du hero (à côté de l'export PDF), plus visibles
-  // et cohérents avec la « rendition PDF » — cf. hero desktop & mobile ci-dessous.
+  // et cohérents avec la « rendition PDF », cf. hero desktop & mobile ci-dessous.
   // Attribution affichée dans le hero en mode public : pastille « Créé par : {auteur} »
   // suivie, hors pastille, du lien « d'après {source} » (source web d'origine).
   const sourceHref = recipe.source ? (recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source) : null;
@@ -200,7 +200,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   };
   // Le mode pas à pas est porté par l'URL (/recipes/:id/cookmode) → il survit à un
   // remontage (dézoom desktop) et au bouton retour. En mode public (pas de route
-  // dédiée), on retombe sur un état LOCAL — sinon le bouton serait inerte.
+  // dédiée), on retombe sur un état LOCAL, sinon le bouton serait inerte.
   const [localCookMode, setLocalCookMode] = useState(false);
   const cookModeActive = onSetCookMode ? cookMode : localCookMode;
   const setCookMode = onSetCookMode || setLocalCookMode;
@@ -712,7 +712,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                 ]} />
             </div>
             )}
-            {/* Titre + source + tags — départ étagé piloté par applyHeroFrame (refs). */}
+            {/* Titre + source + tags, départ étagé piloté par applyHeroFrame (refs). */}
             <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
               <h1 ref={titleRef} style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff", transformOrigin: "left bottom", willChange: "transform, opacity" }}>{recipe.name}</h1>
               {attribution && <div ref={attribRef} style={{ willChange: "transform, opacity" }}>{attribution}</div>}
@@ -799,7 +799,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             )}
           </div>
 
-          {/* Onglets sticky sous la barre — switch segmenté avec indicateur glissant */}
+          {/* Onglets sticky sous la barre, switch segmenté avec indicateur glissant */}
           <div style={{ position: "sticky", top: 52, zIndex: 29, background: "var(--bg)", padding: "8px 16px 10px", flexShrink: 0 }}>
             <div style={{ position: "relative", display: "flex", background: "var(--surface2)", borderRadius: 12, padding: 4 }}>
               {/* Pastille active qui glisse d'un segment à l'autre */}
@@ -859,7 +859,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   // Sous-titre statut : stock prioritaire, sinon saison.
                   const inStock = isInStock(ing);
                   const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason(it) === true : false; })();
-                  // Statut : « en stock » (BRUN, garde-manger — inclut le bientôt vide,
+                  // Statut : « en stock » (BRUN, garde-manger, inclut le bientôt vide,
                   // qui reste théoriquement en stock) ou, à défaut, « de saison » (vert).
                   let badge = null;
                   if (inStock) badge = { text: "en stock", color: "#a0724e", icon: "box" };
@@ -1185,7 +1185,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       {showNutrition && (
         // Base = portions D'ORIGINE de la recette (les quantités d'ingrédients y
         // correspondent), pas le sélecteur de portions : l'apport PAR portion est
-        // invariant — cuisiner plus ou moins ne change pas ce qu'il y a dans une assiette.
+        // invariant, cuisiner plus ou moins ne change pas ce qu'il y a dans une assiette.
         <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={recipe.servings || 2} onClose={() => setShowNutrition(false)} />
       )}
       {cookModeActive && recipe.steps?.length > 0 && (
@@ -1291,7 +1291,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
           <div style={{ marginBottom: 22 }}>
             <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Repas</span>
-            {/* Contrôle segmenté avec pastille glissante — identique à la sheet du planning */}
+            {/* Contrôle segmenté avec pastille glissante, identique à la sheet du planning */}
             <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14 }}>
               <div aria-hidden="true" style={{
                 position: "absolute", top: 4, bottom: 4, left: 4, width: `calc((100% - 8px) / ${MEAL_SLOTS.length})`,

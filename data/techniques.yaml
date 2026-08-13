@@ -12,7 +12,7 @@
 #   difficulty  entier 1–5 (1 Très facile … 5 Expert). Alimente le score de
 #               difficulté d'une recette (max des gestes + modificateurs).
 #   definition  1–2 phrases, rédaction originale (le texte d'Escoffier est
-#               adapté, jamais recopié — l'OCR du Guide est bruité).
+#               adapté, jamais recopié : l'OCR du Guide est bruité).
 #   source      attribution / inspiration (facultatif).
 #
 # Le Guide Culinaire d'A. Escoffier (1903) est dans le domaine public.
@@ -23,7 +23,7 @@
   category: cuisson
   difficulty: 1
   definition: >
-    Cuire doucement un aliment — souvent des légumes — dans un peu de corps gras,
+    Cuire doucement un aliment, souvent des légumes, dans un peu de corps gras,
     à feu doux et sans coloration, pour lui faire rendre son eau et concentrer
     ses arômes avant la suite de la cuisson.
   source: "Escoffier, Le Guide Culinaire (1903)"
@@ -94,7 +94,7 @@
   difficulty: 2
   definition: >
     Cuire lentement à couvert, avec peu de liquide aromatique, un aliment d'abord
-    rissolé — méthode douce et longue qui attendrit les pièces fermes.
+    rissolé, méthode douce et longue qui attendrit les pièces fermes.
 
 - id: tech_pocher
   name: Pocher
@@ -444,7 +444,7 @@
   aliases: [réaliser un roux, faire un roux, un roux, roux blond, roux brun]
   category: liaison
   difficulty: 3
-  definition: "Cuire à parts égales du beurre et de la farine — plus ou moins longtemps selon la couleur voulue — pour obtenir la base liante des sauces blanches et brunes."
+  definition: "Cuire à parts égales du beurre et de la farine, plus ou moins longtemps selon la couleur voulue, pour obtenir la base liante des sauces blanches et brunes."
 
 - id: tech_foisonner
   name: Foisonner
@@ -472,7 +472,7 @@
   aliases: [tourer, touré, tourée, donner un tour, donner les tours, tourage]
   category: preparation
   difficulty: 5
-  definition: "Donner ses tours à une pâte feuilletée en pliant et abaissant successivement la détrempe et le beurre, pour créer les couches — geste long et minutieux."
+  definition: "Donner ses tours à une pâte feuilletée en pliant et abaissant successivement la détrempe et le beurre, pour créer les couches, geste long et minutieux."
 
 - id: tech_desosser
   name: Désosser

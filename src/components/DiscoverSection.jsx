@@ -303,7 +303,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
 
-        {/* Barre d'outils — filtres + tri (mêmes options que /recipes) */}
+        {/* Barre d'outils, filtres + tri (mêmes options que /recipes) */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 4, flexWrap: "wrap" }}>
           <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>

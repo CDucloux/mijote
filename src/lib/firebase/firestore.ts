@@ -1,9 +1,9 @@
 /**
  * Couche d'accès Firestore (documents éclatés). Structure :
- * - `users/{uid}/recipes/{recipeId}` — un doc par recette (budget 1 Mo chacun)
+ * - `users/{uid}/recipes/{recipeId}`, un doc par recette (budget 1 Mo chacun)
  * - `users/{uid}/meta/{collections|mealPlan|shoppingLists|stock|userDB|preferences}`
- * - `master/{ingredients|utensils|categories|techniques}` — partagé, lecture seule
- * - `households/{hid}` — appartenance au foyer ; `publicRecipes/{pubId}` — communauté
+ * - `master/{ingredients|utensils|categories|techniques}`, partagé, lecture seule
+ * - `households/{hid}`, appartenance au foyer ; `publicRecipes/{pubId}`, communauté
  *
  * Les helpers de chemin sont résolus depuis un `workspace` (`ws.segments` = préfixe
  * du namespace actif : `users/{uid}` en solo, `households/{hid}` en foyer). Un uid
@@ -89,7 +89,7 @@ export function upsertOwnDirectoryEntry(user: DirectoryUser): Promise<void> {
 /**
  * Charge l'annuaire des utilisateurs. À la DEMANDE uniquement (invitations, partage
  * de liste, avatars de foyer) : ne JAMAIS l'appeler au chargement pour tout le monde
- * — l'immense majorité (utilisateurs solo) n'en a aucun besoin, et un `getDocs`
+ *, l'immense majorité (utilisateurs solo) n'en a aucun besoin, et un `getDocs`
  * global à chaque session fait exploser les lectures Firestore.
  *
  * @param emails - Ciblage optionnel par email (chunks de 10 pour l'opérateur `in`).
@@ -116,7 +116,7 @@ export const publicRecipeDoc = (pubId: string): DocumentReference => doc(db, "pu
 
 /**
  * Supprime UNE recette publique (modération admin). Ne retire QUE le document
- * public `publicRecipes/{pubId}` — la copie privée de l'auteur n'est pas touchée
+ * public `publicRecipes/{pubId}`, la copie privée de l'auteur n'est pas touchée
  * (elle est dans son espace, inaccessible depuis ici). Autorisé par les règles
  * pour l'auteur (dépublication) OU l'admin (modération).
  *

@@ -233,7 +233,7 @@ function componentsOf(recipe: PlannerRecipe): Set<string> {
 /**
  * Ensemble des ingrédients BRUTS d'une recette, identifiés par leur id de base (via
  * résolveur) ou, à défaut, par leur nom normalisé. Les préparations de base
- * (`recipeId`) sont exclues — elles relèvent de l'affinité batch par composant.
+ * (`recipeId`) sont exclues, elles relèvent de l'affinité batch par composant.
  * Sert au bonus batch « bases communes » : partager des olives, de la feta, des
  * oignons ou de la sauce tomate entre recettes évite de gaspiller les restes.
  *
@@ -342,7 +342,7 @@ export function generateWeek({ dates = [], slots = [], recipes = [], ctx = {}, e
   };
 
   // Choisit une recette d'un rôle : d'abord un RESTE (portion déjà cuisinée), sinon
-  // la meilleure fraîche (score + pénalités variété), qu'on cuisine — ses portions
+  // la meilleure fraîche (score + pénalités variété), qu'on cuisine, ses portions
   // en trop rejoignent la file de restes du rôle.
   const takeForRole = (role: RoleId, cands: PlannerRecipe[], date: string): RolePick | null => {
     if (leftovers[role].length) { const lo = leftovers[role].shift()!; const r = byId.get(lo.id); if (r) { mark(r, date, false); return { recipe: r, portions: lo.portions, leftover: true }; } }

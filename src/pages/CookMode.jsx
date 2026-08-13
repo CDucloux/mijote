@@ -157,7 +157,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
             setTimeout(() => ctx.close?.(), 1200);
           }
         } catch { /* audio indisponible */ }
-        notify?.(`Minuteur terminé — ${t.label}`);
+        notify?.(`Minuteur terminé, ${t.label}`);
       }
     }
   }, [timers, notify]);
@@ -531,7 +531,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
           </div>
         </div>
 
-        {/* Minuteurs actifs — pile flottante au-dessus de la barre de navigation */}
+        {/* Minuteurs actifs, pile flottante au-dessus de la barre de navigation */}
         {timers.length > 0 && (
           <div style={{ position: "absolute", right: 14, bottom: 78, display: "flex", flexDirection: "column", gap: 8, zIndex: 5, width: 218, maxWidth: "calc(100% - 28px)" }}>
             {timers.map(t => {

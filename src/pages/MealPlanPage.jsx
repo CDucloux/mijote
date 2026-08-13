@@ -212,9 +212,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
   // Calculée UNIQUEMENT quand le panneau batch est ouvert : sinon on la recalculait
-  // à chaque changement de semaine (dép. weekDays) pour un panneau fermé — pur gaspi.
+  // à chaque changement de semaine (dép. weekDays) pour un panneau fermé, pur gaspi.
   // Session batch : VUE LIVE dérivée du planning de la semaine visible. Recalculée
-  // à chaque changement du planning (ajout / retrait) pour rester toujours à jour —
+  // à chaque changement du planning (ajout / retrait) pour rester toujours à jour,
   // c'est une vue pure et peu coûteuse (une semaine de repas).
   const batch = useMemo(
     () => buildBatchSession(weekEntries(mealPlan, weekDays), recipes),
@@ -237,7 +237,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const ids = new Set(recipes.filter(r => !r.isComponent).map(r => r.id));
     return weekEntries(mealPlan, weekDays).some(e => ids.has(e.recipeId));
   }, [mealPlan, weekDays, recipes]);
-  // Repas couverts = occasions distinctes (date × créneau) occupées par un plat —
+  // Repas couverts = occasions distinctes (date × créneau) occupées par un plat,
   // un repas composé (entrée + plat + dessert sur le même créneau) compte pour 1.
   const mealOccasions = useMemo(() => {
     const ids = new Set(recipes.filter(r => !r.isComponent).map(r => r.id));

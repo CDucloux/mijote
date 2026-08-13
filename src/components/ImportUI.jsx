@@ -24,8 +24,8 @@ const RING_R = 34; // rayon de l'anneau (le tracé raisonne en % via pathLength)
  *
  * L'API Claude ne renvoie pas d'avancement en continu : la barre est donc
  * « calée » sur une durée ESTIMÉE (`estimateMs`, fonction du type d'import et du
- * nombre de photos). Elle progresse selon une courbe asymptotique — vite au
- * début, puis de plus en plus lentement — qui atteint ~90 % vers la fin estimée
+ * nombre de photos). Elle progresse selon une courbe asymptotique, vite au
+ * début, puis de plus en plus lentement, qui atteint ~90 % vers la fin estimée
  * sans jamais toucher 100 % tant que l'extraction n'est pas revenue. Quand la
  * promesse se résout, le composant est démonté : la disparition fait office de
  * « terminé ». Honnête (jamais bloqué à 100 %) et sans à-coups.
@@ -36,7 +36,7 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
   const dur = Math.max(2000, estimateMs);
   // L'ANNEAU est animé en CSS (voir `ringFill`), donc fluide même si React ne
   // re-rend pas pendant l'extraction. Le compteur textuel, lui, suit la MÊME
-  // courbe (easeOutCubic) via un timer — secondaire : s'il saute, ce n'est que
+  // courbe (easeOutCubic) via un timer, secondaire : s'il saute, ce n'est que
   // le chiffre, pas le cercle.
   const [progress, setProgress] = useState(0);
   useEffect(() => {
@@ -59,7 +59,7 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
           {/* `pathLength="100"` → dash/offset raisonnent en POURCENTAGE, indépendamment
               du rayon (aucun calcul de circonférence à faire, aucun décalage possible).
               Rotation de -90° portée par un attribut SVG (origine explicite 46,46) pour
-              démarrer l'arc en haut — la version CSS `transform` sur le <svg> souffrait
+              démarrer l'arc en haut, la version CSS `transform` sur le <svg> souffrait
               d'une origine de transformation ambiguë selon le navigateur. */}
           <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true">
             <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--surface3)" strokeWidth="5" />
@@ -122,14 +122,14 @@ export function QuotaMeter({ label, rem, unlimited }) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 14, background: "rgba(var(--admin-rgb),0.09)", border: "1px solid rgba(var(--admin-rgb),0.28)" }}>
         <AdminBadge />
-        <span style={{ fontSize: 12.5, color: "var(--text2)", fontWeight: 600 }}>Imports {label} <strong style={{ color: "var(--admin)" }}>illimités</strong> — les quotas ne s'appliquent pas.</span>
+        <span style={{ fontSize: 12.5, color: "var(--text2)", fontWeight: 600 }}>Imports {label} <strong style={{ color: "var(--admin)" }}>illimités</strong>, les quotas ne s'appliquent pas.</span>
       </div>
     );
   }
   if (!rem) return null;
 
   // La jauge représente ce qui RESTE (et non ce qui est consommé) : un quota
-  // quasi-intact affiche une barre quasi-pleine — cohérent avec « Imports restants »,
+  // quasi-intact affiche une barre quasi-pleine, cohérent avec « Imports restants »,
   // et on évite l'effet « barre presque toute grise » qui semblait négatif.
   const Gauge = ({ tag, left, limit }) => {
     const frac = limit ? Math.max(0, Math.min(1, left / limit)) : 0;
@@ -168,7 +168,7 @@ export function QuotaMeter({ label, rem, unlimited }) {
 }
 
 /** En-tête de page d'import : bouton retour + titre. L'icône identitaire vit dans
- * le bloc d'intro (une seule occurrence) — pas de répétition ici. */
+ * le bloc d'intro (une seule occurrence), pas de répétition ici. */
 export function ImportHeader({ title, onBack }) {
   return (
     <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>

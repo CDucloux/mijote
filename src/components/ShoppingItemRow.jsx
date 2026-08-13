@@ -13,7 +13,7 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
   const [exiting, setExiting] = React.useState(false);
   const [trashHover, setTrashHover] = React.useState(false);
   const startX = React.useRef(0), startY = React.useRef(0), axis = React.useRef(null);
-  // `unstriking` : article coché qu'on décoche — on retrace le barré à l'envers
+  // `unstriking` : article coché qu'on décoche, on retrace le barré à l'envers
   // (et on rallume la ligne) AVANT que la donnée bascule et le remonte dans « À acheter ».
   const struck = (item.checked || striking) && !unstriking;
 

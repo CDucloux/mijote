@@ -1,10 +1,17 @@
 # Changelog – Mijoté
 
+## v3.10.49 – Safran · Toilettage éditorial
+
+### Sous le capot
+- **Suppression de tous les tirets cadratins** du dépôt (code, commentaires, docs, prompts IA, README, CHANGELOG) : nouvelle règle CLAUDE.md qui les bannit définitivement, remplacés par des virgules, deux-points ou parenthèses selon le contexte
+- **README remis à jour** (badge de version, nombre de tests, accès Mijoté+ à l'import IA, variables Stripe) : la checklist de MEP impose désormais explicitement sa mise à jour à chaque version
+- Tests unitaires ajoutés pour `stripAiDashes` (jusqu'ici non testée)
+
 ## v3.10.48 – Safran · Onde tactile
 
 ### Interface & tactile
 - **Onde tactile** (ripple) aussi sur l'avatar
-- Menus (feuilles carnet / liste / recette) : le fond reste teinté tant que le doigt est posé, avec un relâchement en douceur — fini le retour instantané
+- Menus (feuilles carnet / liste / recette) : le fond reste teinté tant que le doigt est posé, avec un relâchement en douceur, fini le retour instantané
 - Onde ripple plus posée (moins « sèche »)
 
 ## v3.10.47 – Safran · Hors-ligne & fluidité
@@ -17,7 +24,7 @@
 - Bascule vers **« Recettes » nettement plus rapide** : saison, vegan et Nutri-Score ne sont plus recalculés à chaque passage sur l'onglet
 
 ### Recettes & communauté
-- **Nutri-Score des recettes publiques** (Découvrir) recalculé en direct — fini les lettres erronées sur les cartes
+- **Nutri-Score des recettes publiques** (Découvrir) recalculé en direct, fini les lettres erronées sur les cartes
 - Import IA : dans une recette à sous-sections, une étape ne récupère plus par erreur un ingrédient homonyme d'une autre section
 - Fiche : les feuilles « Publier », « Ajouter à mes recettes » et « Signaler » ne se rouvrent plus après validation
 
@@ -29,11 +36,11 @@
 ## v3.10.46 – Safran · Comptes & finitions
 
 ### Synchronisation
-- **Changement de compte** : plus de « fuite » des données de l'autre compte (recettes, carnets…) le temps du chargement — l'écran repart à vide au switch
+- **Changement de compte** : plus de « fuite » des données de l'autre compte (recettes, carnets…) le temps du chargement, l'écran repart à vide au switch
 - **Base commune** protégée : un échec de lecture (session dégradée) n'écrase plus le cache local par du vide
 
 ### Interface
-- Fiche : bloc d'ingrédients hors-section désormais titré **« Autres »** — la frontière avec une sous-préparation est enfin nette (fiche + PDF)
+- Fiche : bloc d'ingrédients hors-section désormais titré **« Autres »** : la frontière avec une sous-préparation est enfin nette (fiche + PDF)
 - Menu avatar : « Console admin » en gris foncé, badge violet identique à l'en-tête
 - Menus mobiles (recette, carnet, liste) : **onde tactile** au toucher, comme les ingrédients
 - « À propos » : changelog limité aux **5 dernières versions**
@@ -41,7 +48,7 @@
 ## v3.10.45 – Safran · Sections libres & finitions
 
 ### Recettes
-- **Éditeur repensé** : ingrédients et étapes s'affichent dans l'ordre réel, réordonnancement **libre** (une ligne rejoint la section du bloc où on la place), en-têtes de section en ligne — la pastille de section disparaît
+- **Éditeur repensé** : ingrédients et étapes s'affichent dans l'ordre réel, réordonnancement **libre** (une ligne rejoint la section du bloc où on la place), en-têtes de section en ligne, la pastille de section disparaît
 - **Étapes (fiche desktop)** : nouvelle **timeline** (nœuds numérotés reliés), numérotation **continue** et ordre réel alignés sur le mode pas à pas ; blocs de section clairement délimités
 - **PDF** : sous-préparations encadrées, numérotation continue
 - **Import IA** : les sections (« Pour la pâte »…) sont désormais reconnues et restituées
@@ -78,7 +85,7 @@
 ## v3.10.40 – Safran · Import & finitions
 
 ### Recettes
-- **Import IA** : reconnaît désormais les recettes structurées en sous-préparations (« Pour la pâte », « Pour la crème »…) et les restitue en **sections** — sans jamais en inventer sur une recette à liste simple
+- **Import IA** : reconnaît désormais les recettes structurées en sous-préparations (« Pour la pâte », « Pour la crème »…) et les restitue en **sections** : sans jamais en inventer sur une recette à liste simple
 - Éditeur : boutons « dissoudre » et corbeille arrondis, au fond apparaissant seulement au survol
 
 ## v3.10.39 – Safran · Éditeur d'étape
@@ -98,7 +105,7 @@
 
 ### Recettes
 - Éditeur : les **sections** (sous-préparations) passent en premier, les ingrédients **hors section** sont regroupés en bas
-- Chaque section peut désormais porter ses propres ingrédients **ou** une **préparation de base** — le sélecteur Ingrédient/Base est remplacé par deux actions claires dans chaque zone
+- Chaque section peut désormais porter ses propres ingrédients **ou** une **préparation de base** : le sélecteur Ingrédient/Base est remplacé par deux actions claires dans chaque zone
 - Affichage cohérent partout (fiche, PDF, mode pas à pas) : les sous-préparations d'abord, l'assemblage ensuite
 
 ## v3.10.36 – Safran · Sections (éditeur)
@@ -121,7 +128,7 @@
 
 ### Connexion
 - La déconnexion affiche un **spinner** pendant la révocation de la session
-- Google propose désormais le **sélecteur de compte** à chaque connexion — plus besoin de purger les cookies pour changer de compte
+- Google propose désormais le **sélecteur de compte** à chaque connexion, plus besoin de purger les cookies pour changer de compte
 
 ### Onboarding
 - Dernière slide : « La cuisine à plusieurs » et formulation au tutoiement (« À toi de jouer ! »)
@@ -130,7 +137,7 @@
 
 ### Éditeur de recette
 - Pour une **préparation de base**, l'éditeur propose désormais les grandes familles culinaires (fond, sauce, appareil, liaison, pâte, sirop, marinade) au lieu des rôles-repas (apéritif, plat, dessert…) qui n'avaient aucun sens dans ce contexte
-- **« Sauce »** retiré des types de recette classiques — réservé aux préparations de base
+- **« Sauce »** retiré des types de recette classiques, réservé aux préparations de base
 
 ### Interface
 - Badge **« ADMIN »** en majuscules
@@ -139,19 +146,19 @@
 ## v3.10.32 – Safran · Traçabilité Nutri-Score
 
 ### Nutrition
-- Nouvel onglet **« Calcul »** dans l'analyse nutritionnelle : le détail du Nutri-Score (points négatifs vs positifs, valeurs pour 100 g, et l'équation qui aboutit à la lettre) — réservé aux abonnés **Mijoté+**
+- Nouvel onglet **« Calcul »** dans l'analyse nutritionnelle : le détail du Nutri-Score (points négatifs vs positifs, valeurs pour 100 g, et l'équation qui aboutit à la lettre), réservé aux abonnés **Mijoté+**
 
 ## v3.10.31 – Safran · Cohérence admin
 
 ### Console admin
 - **Bandeau « MODE ADMIN »** et **icône de la console** passés au violet, en cohérence avec le badge Admin
-- Fiche ingrédient : le Nutri-Score (auto-calculé) est masqué en mode édition — plus aéré sur mobile
+- Fiche ingrédient : le Nutri-Score (auto-calculé) est masqué en mode édition, plus aéré sur mobile
 
 ## v3.10.30 – Safran · Statut ingrédient
 
 ### Console admin
 - **Pastille de statut** sur l'image de l'ingrédient (coche verte si validé, crayon ambre si en cours), dans la liste ET sur la fiche
-- En édition, le statut se change en **cliquant la pastille sur l'image** (avec confirmation) — le sélecteur du haut disparaît
+- En édition, le statut se change en **cliquant la pastille sur l'image** (avec confirmation), le sélecteur du haut disparaît
 
 ### Interface
 - Badges **Admin / Mijoté+** de hauteur égale ; badge Admin en police de corps
@@ -160,14 +167,14 @@
 ## v3.10.29 – Safran · Badge Admin & finitions
 
 ### Admin
-- Nouveau **badge Admin** (violet) affiché dans le Profil, avant le badge Mijoté+ — c'est lui qui indique que les quotas (imports, limite de recettes) ne s'appliquent pas ; l'ancien encadré « 👑 » des imports est remplacé
+- Nouveau **badge Admin** (violet) affiché dans le Profil, avant le badge Mijoté+, c'est lui qui indique que les quotas (imports, limite de recettes) ne s'appliquent pas ; l'ancien encadré « 👑 » des imports est remplacé
 
 ### Interface
 - **Bouton retour** de la page Profil et de la page Mijoté+ : flèche animée au survol (comme les écrans d'import)
 - Titre d'onglet **« Abonnement »** sur la page Mijoté+ (au lieu de « Accueil »)
 
 ### Sous le capot
-- Début d'une **couche de primitives d'UI** (Row/Col/Card…) pour dégraisser et fiabiliser les styles — refactor interne, sans changement visuel
+- Début d'une **couche de primitives d'UI** (Row/Col/Card…) pour dégraisser et fiabiliser les styles, refactor interne, sans changement visuel
 
 ## v3.10.28 – Safran · Repli fiable
 
@@ -191,7 +198,7 @@
 ## v3.10.26 – Safran · Sheets & Nutri-Score
 
 ### Nutrition
-- **Nutri-Score cohérent partout** : la carte de « Mes recettes » et le tri « Nutri-Score » utilisent désormais le score recalculé en direct, comme la fiche — fini les écarts entre carte et détail
+- **Nutri-Score cohérent partout** : la carte de « Mes recettes » et le tri « Nutri-Score » utilisent désormais le score recalculé en direct, comme la fiche, fini les écarts entre carte et détail
 
 ### Interface
 - **Feuilles repensées** dans un style unifié et moderne : « Ajouter au planning » (sélecteur de repas unique en contrôle segmenté, sans étalement), « Ajouter aux courses » (en-tête, sélection en pills, rangées teintées) et menu d'un carnet (liste homogène, position en pill)
@@ -201,7 +208,7 @@
 ## v3.10.25 – Safran · Poids à la pièce
 
 ### Nutrition
-- **Nutri-Score corrigé sur les recettes « à la pièce »** : un ingrédient en quantité nue (« 2 avocats », « 1 citron vert ») est enfin pesé selon son poids à la pièce, et non plus à 1 g — la masse du plat, la couverture et le Nutri-Score redeviennent justes
+- **Nutri-Score corrigé sur les recettes « à la pièce »** : un ingrédient en quantité nue (« 2 avocats », « 1 citron vert ») est enfin pesé selon son poids à la pièce, et non plus à 1 g, la masse du plat, la couverture et le Nutri-Score redeviennent justes
 
 ## v3.10.24 – Safran · Analyse honnête
 
@@ -211,7 +218,7 @@
 ## v3.10.23 – Safran · Nutrition juste
 
 ### Nutrition
-- **Nutri-Score fiable** : la lettre est recalculée en direct (fini les recettes figées à un vieux score) et les **fruits** comptent enfin dans les points positifs — un guacamole n'est plus noté E
+- **Nutri-Score fiable** : la lettre est recalculée en direct (fini les recettes figées à un vieux score) et les **fruits** comptent enfin dans les points positifs, un guacamole n'est plus noté E
 - **Apport par portion** corrigé : il ne dépend plus du sélecteur de portions (une assiette reste une assiette)
 
 ### Courses
@@ -231,7 +238,7 @@
 ## v3.10.20 – Safran · Fiche éditable
 
 ### Console admin
-- **Édition d'un ingrédient in-place** : la fiche elle-même devient le formulaire (identité, saisonnalité, nutrition, tips) — plus élégant et cohérent que l'ancienne feuille
+- **Édition d'un ingrédient in-place** : la fiche elle-même devient le formulaire (identité, saisonnalité, nutrition, tips), plus élégant et cohérent que l'ancienne feuille
 
 ## v3.10.19 – Safran · Carnets & fondations
 
@@ -242,7 +249,7 @@
 - Filtres avancés : toutes les catégories **repliées par défaut**
 
 ### Sous le capot
-- **Observabilité** : fondation de suivi des erreurs (filets globaux, remontée depuis l'app et les fonctions) — invisible côté usage, essentielle pour la fiabilité
+- **Observabilité** : fondation de suivi des erreurs (filets globaux, remontée depuis l'app et les fonctions), invisible côté usage, essentielle pour la fiabilité
 
 ## v3.10.18 – Safran · Console pilotée
 
@@ -281,7 +288,7 @@
 ## v3.10.14 – Safran · Démarrage hors-ligne
 
 ### Corrections
-- **Lancement hors-ligne** de la PWA : plus de blocage prolongé sur « Connexion en cours… » — l'app démarre désormais depuis le cache dès que la session est restaurée, sans attendre le réseau
+- **Lancement hors-ligne** de la PWA : plus de blocage prolongé sur « Connexion en cours… », l'app démarre désormais depuis le cache dès que la session est restaurée, sans attendre le réseau
 
 ## v3.10.13 – Safran · Fluidité & finitions
 
@@ -329,7 +336,7 @@
 ## v3.10.8 – Safran · Appui natif
 
 ### Feel natif
-- **Retour tactile** (cartes, boutons, éléments pressables) repensé façon app native : appui vif mais adouci, et relâchement en ressort avec un léger « pop » — fini le retour sec
+- **Retour tactile** (cartes, boutons, éléments pressables) repensé façon app native : appui vif mais adouci, et relâchement en ressort avec un léger « pop », fini le retour sec
 - **Overscroll horizontal élastique** ajouté sur la rangée des carnets dans « Mes Recettes »
 
 ## v3.10.7 – Safran · Rebond d'inertie
@@ -353,11 +360,11 @@
 ## v3.10.4 – Safran · Repas & feel natif
 
 ### Planning
-- **Un créneau = un repas** : les recettes ajoutées se regroupent en un seul repas (rôles affichés), la barre verticale n'apparaît que pour un 2ᵉ plat — y compris rétroactivement sur les repas existants
+- **Un créneau = un repas** : les recettes ajoutées se regroupent en un seul repas (rôles affichés), la barre verticale n'apparaît que pour un 2ᵉ plat, y compris rétroactivement sur les repas existants
 - Feuilles **Ajouter une recette** et **Compléter le repas** : barre de recherche standard (loupe du clavier mobile, effacement)
 
 ### Feel natif
-- Overscroll horizontal **« stretch »** (scaleX élastique) sur les rangées de pills — effet rubber-band à la iOS
+- Overscroll horizontal **« stretch »** (scaleX élastique) sur les rangées de pills, effet rubber-band à la iOS
 
 ### PWA
 - Nouvelle tentative de coloration de la zone système du bas (couleur de page)
@@ -493,12 +500,12 @@
 - **Anneau de progression** enfin fluide : remplissage régulier calé sur la durée d'extraction (animation CSS, indépendante des rendus)
 
 ### Rédaction
-- Suppression des **tirets cadratins « — »** (marqueur IA) dans les textes d'étape, à l'affichage comme à l'extraction
+- Suppression des **tirets cadratins** (marqueur IA) dans les textes d'étape, à l'affichage comme à l'extraction
 
 ## v3.9.15 – Safran · Mode cuisine & finitions
 
 ### Mode pas à pas
-- **Mise en place** : une première page liste tous les ingrédients et ustensiles — on peut cuisiner du début à la fin sans revenir à la fiche
+- **Mise en place** : une première page liste tous les ingrédients et ustensiles, on peut cuisiner du début à la fin sans revenir à la fiche
 - **Chrono** : le temps écoulé depuis le lancement de la recette s'affiche en continu dans l'en-tête
 
 ### Profil
@@ -514,7 +521,7 @@
 ### Import IA
 - **Barre de progression** pendant l'extraction : un anneau qui se remplit, calé sur la durée estimée (lien / photo(s)), au lieu du simple cercle qui tourne
 - **Marmite figée** au centre de l'anneau (fin de l'animation de pulsation)
-- **Brouillon préservé** : l'éditeur d'une nouvelle recette a désormais une URL dédiée (`/recipes/new`) et un cache — le contenu extrait n'est plus perdu par un rafraîchissement ou un retour arrière accidentel
+- **Brouillon préservé** : l'éditeur d'une nouvelle recette a désormais une URL dédiée (`/recipes/new`) et un cache, le contenu extrait n'est plus perdu par un rafraîchissement ou un retour arrière accidentel
 
 ### Performance
 - **Page « Mes Recettes »** nettement plus fluide au scroll sur mobile : suppression du flou d'arrière-plan des badges (Vegan, De saison, Base) et rendu différé des cartes hors écran
@@ -522,7 +529,7 @@
 ## v3.9.13 – Safran · Mijoté+ (abonnement & finitions)
 
 ### Mijoté+
-- **Abonnement en ligne** : le paiement est branché (Stripe) — l'accès Mijoté+ s'active automatiquement, avec gestion de l'abonnement
+- **Abonnement en ligne** : le paiement est branché (Stripe), l'accès Mijoté+ s'active automatiquement, avec gestion de l'abonnement
 - **Limite du plan gratuit** : au-delà de 50 recettes, la création renvoie vers l'offre Mijoté+
 - **Ton plan dans le Profil** : plan actuel, décompte de recettes et lien vers l'offre
 
@@ -561,7 +568,7 @@
 - **Transitions de page** : les écrans (Profil, Configuration, Informations légales et les onglets) apparaissent désormais avec une animation d'entrée douce, au lieu de surgir d'un coup
 
 ### Import de recettes
-- **Pages d'import redessinées** : boutons en pastilles, champ et cartes d'aide en blanc, et cartes « partage » / « confidentialité » avec pastille d'icône colorée — plus lisibles et plus nettes
+- **Pages d'import redessinées** : boutons en pastilles, champ et cartes d'aide en blanc, et cartes « partage » / « confidentialité » avec pastille d'icône colorée, plus lisibles et plus nettes
 
 ## v3.9.8 – Safran · Gestes & finitions
 
@@ -569,11 +576,11 @@
 - **Accès à la session batch repensé** : l'ancien bouton d'en-tête (qui repoussait le titre sur deux lignes) laisse place à une bannière contextuelle claire en tête de semaine, affichée seulement quand il y a des plats à cuisiner
 
 ### Import de recettes
-- **Quantités d'épices en grammes** : l'import IA n'emploie plus l'unité imprécise « pincée » — les épices, le sel et le poivre (même « au goût ») sont estimés en grammes *(effectif après mise à jour du serveur)*
+- **Quantités d'épices en grammes** : l'import IA n'emploie plus l'unité imprécise « pincée », les épices, le sel et le poivre (même « au goût ») sont estimés en grammes *(effectif après mise à jour du serveur)*
 
 ### Gestes & mobile
 - **Fermeture au doigt fluide** : glisser une fenêtre vers le bas la fait maintenant filer proprement jusqu'en bas, sans le petit sursaut où elle remontait avant de redescendre
-- **Effet élastique généralisé** : le rebond discret en bas de liste (déjà présent sur les recettes) s'applique désormais au Planning, aux Courses, au Stock et à Mes recettes — et il est plus subtil sur la fiche recette
+- **Effet élastique généralisé** : le rebond discret en bas de liste (déjà présent sur les recettes) s'applique désormais au Planning, aux Courses, au Stock et à Mes recettes, et il est plus subtil sur la fiche recette
 
 ## v3.9.7 – Safran · Documentation & barre du bas
 
@@ -581,14 +588,14 @@
 - **Documentation technique publiée** : la bibliothèque métier (`src/lib`, 40 modules / 187 fonctions) est désormais générée en site statique via TypeDoc et publiée sur GitHub Pages à chaque mise à jour
 
 ### Interface mobile & PWA
-- **Barre de navigation système au thème** : en PWA installée, la barre du bas (gestes Android / indicateur iOS) prend la couleur de l'appli au lieu de la couleur système — la barre d'onglets peint désormais la zone système sous elle
+- **Barre de navigation système au thème** : en PWA installée, la barre du bas (gestes Android / indicateur iOS) prend la couleur de l'appli au lieu de la couleur système, la barre d'onglets peint désormais la zone système sous elle
 
 ## v3.9.6 – Safran · Import & finitions mobiles
 
 ### Import de recettes
 - **Pages d'import repensées** : l'import par lien et par photo passent en pages plein écran dédiées (adresses propres `/recipes/import-from-url` et `/recipes/import-from-picture`), navigables et partageables
 - **Coller le lien copié** : si un lien de recette est dans le presse-papiers, un bouton le propose en un tap
-- **Partage vers Mijoté** : partage une page depuis ton navigateur (feuille de partage du système) et la recette arrive directement dans l'import, le lien pré-rempli — il ne reste qu'à confirmer *(PWA installée)*
+- **Partage vers Mijoté** : partage une page depuis ton navigateur (feuille de partage du système) et la recette arrive directement dans l'import, le lien pré-rempli, il ne reste qu'à confirmer *(PWA installée)*
 
 ### Interface mobile & PWA
 - **Onglet actif en surbrillance** : la barre du bas met en évidence l'onglet sélectionné par une pastille derrière l'icône
@@ -597,7 +604,7 @@
 ## v3.9.5 – Safran · Détails soignés
 
 ### Connexion
-- **Écran « Connexion en cours… » toujours visible** : après une connexion, l'écran de chargement s'affiche désormais au moins une seconde — fini le flash imperceptible quand la session est déjà en cache. Sans effet quand on rouvre l'app déjà connecté (aucun délai inutile)
+- **Écran « Connexion en cours… » toujours visible** : après une connexion, l'écran de chargement s'affiche désormais au moins une seconde, fini le flash imperceptible quand la session est déjà en cache. Sans effet quand on rouvre l'app déjà connecté (aucun délai inutile)
 
 ### Fenêtres modales
 - **Animation de sortie sur « Annuler »** : les boutons « Annuler » des fenêtres jouent maintenant la même animation de fermeture que le glissé ou le clic sur le fond, au lieu de disparaître d'un coup (planning, courses, carnets, profil, fiche recette, configuration…)
@@ -606,34 +613,34 @@
 ## v3.9.4 – Safran · Connexion isolée
 
 ### Corrections
-- **Récap de session batch honnête** : le récap comptait des items là où il fallait compter des créneaux — il affiche désormais le vrai nombre de **repas couverts** (créneaux date × midi/soir distincts) et de **cuissons** (seuls les plats qui cuisent réellement)
+- **Récap de session batch honnête** : le récap comptait des items là où il fallait compter des créneaux, il affiche désormais le vrai nombre de **repas couverts** (créneaux date × midi/soir distincts) et de **cuissons** (seuls les plats qui cuisent réellement)
 - **Glissement du toggle de thème** : sur la page d'accueil, la bascule clair / sombre passe désormais **progressivement** d'un état à l'autre au lieu de sauter
 
 ### Sous le capot
-- **Module d'authentification dédié** : toute la logique de connexion Google (allowlist, repli sur redirection, déconnexion) est sortie d'`App.jsx` vers `lib/firebase/auth.ts` (découplé de React) et un hook `useAuthUser` — `App.jsx` ne manipule plus le SDK Firebase Auth directement
+- **Module d'authentification dédié** : toute la logique de connexion Google (allowlist, repli sur redirection, déconnexion) est sortie d'`App.jsx` vers `lib/firebase/auth.ts` (découplé de React) et un hook `useAuthUser`, `App.jsx` ne manipule plus le SDK Firebase Auth directement
 - **Route `/login` dédiée** : l'écran de connexion a désormais sa propre route publique, séparée des routes protégées ; à la déconnexion, la page précédente n'est plus laissée montée derrière, et à la reconnexion on revient à la dernière page consultée
 - Aucun changement fonctionnel visible : réorganisation interne pour la maintenabilité
 
 ## v3.9.3 – Safran · Correctifs
 
-- **Bascule clair / sombre réparée** : le changement de thème ne fonctionnait plus (ni sur la page d'accueil, ni dans l'app) — corrigé
+- **Bascule clair / sombre réparée** : le changement de thème ne fonctionnait plus (ni sur la page d'accueil, ni dans l'app), corrigé
 - **Session batch ré-ouvrable** : un bouton dédié dans l'en-tête du planning permet de rouvrir la session batch à tout moment (plus seulement juste après une génération)
 - **Mise en place ciblée** : la préparation mutualisée ne liste plus que les **légumes et herbes aromatiques** (les seuls produits frais dont la découpe se mutualise vraiment)
 
 ## v3.9.2 – Safran · Batch cooking mutualisé
 
 ### Planning
-- **Choix des créneaux à générer** (Midi / Soir) dans l'auto-génération de la semaine — décoche « Midi » quand tu manges à la cantine, l'appli ne remplit alors que le soir. Choix mémorisé d'une semaine à l'autre
+- **Choix des créneaux à générer** (Midi / Soir) dans l'auto-génération de la semaine, décoche « Midi » quand tu manges à la cantine, l'appli ne remplit alors que le soir. Choix mémorisé d'une semaine à l'autre
 
 ### Batch cooking repensé
-- **Mise en place mutualisée** : tous les ingrédients de la semaine, toutes recettes confondues, **regroupés et sommés par ingrédient** (« prépare tous les oignons d'un coup ») — classés par catégorie, avec le **geste de préparation**, l'**estimation en pièces** (« 500 g d'oignons · ~5 ») et une **checklist cochable**
-- **Cuissons à mutualiser** : les plats qui partagent le même appareil (four, plaques…) sont regroupés — on n'allume le four qu'une fois
+- **Mise en place mutualisée** : tous les ingrédients de la semaine, toutes recettes confondues, **regroupés et sommés par ingrédient** (« prépare tous les oignons d'un coup »), classés par catégorie, avec le **geste de préparation**, l'**estimation en pièces** (« 500 g d'oignons · ~5 ») et une **checklist cochable**
+- **Cuissons à mutualiser** : les plats qui partagent le même appareil (four, plaques…) sont regroupés, on n'allume le four qu'une fois
 - **Récap de session** : nombre d'ingrédients à préparer, de cuissons et de repas couverts
 
 ## v3.9.1 – Safran · TypeScript de bout en bout
 
 ### Sous le capot
-- **Fin de la migration TypeScript** : tout `src/lib` (37 modules) et tous les hooks (21) sont désormais typés — y compris `firebase`/`firestore` et la couche de synchronisation
+- **Fin de la migration TypeScript** : tout `src/lib` (37 modules) et tous les hooks (21) sont désormais typés, y compris `firebase`/`firestore` et la couche de synchronisation
 - **Réorganisation de `src/lib`** en 5 sous-dossiers (`firebase/`, `recipes/`, `food/`, `planning/`, `household/`) + alias de chemin `@/` (imports stables et lisibles)
 - **Types de domaine partagés** (`lib/types.ts`) : fin des variantes redondantes de « recette » et de « ligne d'ingrédient »
 - Documentation TSDoc homogène (`@param`/`@returns`) sur les fonctions exposées
@@ -647,7 +654,7 @@
 
 ### Courses
 - **Options de liste intégrées à la pastille active** (le « ⋯ » n'apparaît que sur la liste sélectionnée) et **appui long** pour modifier ou supprimer une liste
-- **Hauteur des pastilles uniformisée** — fini les pastilles de tailles inégales
+- **Hauteur des pastilles uniformisée** : fini les pastilles de tailles inégales
 
 ### Import photo
 - **Extraction sur Sonnet 5** en **haute résolution** : lecture bien plus fidèle des pages de livre (moins d'oublis, moins d'erreurs de lecture)
@@ -659,12 +666,12 @@
 - **Éditeur** : les unités des ingrédients liés ne collent plus à la quantité et le **pluriel** est appliqué correctement
 
 ### Sous le capot
-- **Migration TypeScript** de `src/lib` quasi terminée (planificateur, courses batch, foyer, import/export, PDF, recettes publiques, stockage…) — il ne reste que `firebase` et `firestore`
+- **Migration TypeScript** de `src/lib` quasi terminée (planificateur, courses batch, foyer, import/export, PDF, recettes publiques, stockage…), il ne reste que `firebase` et `firestore`
 
 ## v3.8.6 – Safran · Imports fiables & finitions
 
 ### Import IA (lien & photo)
-- **Import photo réparé** : les photos sont redimensionnées avant l'envoi — fini l'erreur « deadline-exceeded » sur les grandes images
+- **Import photo réparé** : les photos sont redimensionnées avant l'envoi, fini l'erreur « deadline-exceeded » sur les grandes images
 - **Recettes en anglais traduites** automatiquement, avec **conversions impériales** (oz, lb, cup, °F, pouces) vers le métrique et un jeu d'**unités normalisé**
 - **Extraction plus fidèle** : aucun ingrédient oublié, noms au singulier **sans le mot de mesure** (« gousse d'ail » → nom « ail », unité « gousse »), et l'unité implicite « pièce » n'encombre plus (« 1 oignon », pas « 1 pièce oignon »)
 - **Erreurs claires** : les échecs d'import s'affichent en **popup** (message + origine) et les hints de saisie (URL invalide…) dans un **bandeau soigné**, plus de texte rouge brut
@@ -762,7 +769,7 @@
 
 ## v3.8.1 – Safran · Correctifs
 
-- **Mes recettes** : tri par défaut sur les **plus récentes** (au lieu de A → Z) — plus simple pour retrouver ce qu'on vient d'ajouter. Le dernier ajout apparaît bien en tête, même parmi les recettes du même jour. Les tris A → Z et Santé restent disponibles.
+- **Mes recettes** : tri par défaut sur les **plus récentes** (au lieu de A → Z), plus simple pour retrouver ce qu'on vient d'ajouter. Le dernier ajout apparaît bien en tête, même parmi les recettes du même jour. Les tris A → Z et Santé restent disponibles.
 
 ## v3.8.0 – Safran · Sécurité & synchronisation
 
@@ -842,7 +849,7 @@
 ## v3.4.0 – Safran · Import IA & calculatrices
 
 ### Nouvelle recette
-- **Import depuis un lien** : colle l'URL d'une recette, l'IA (Claude Haiku) l'extrait et la met en forme (ingrédients, étapes à l'infinitif, liaisons ingrédients/ustensiles) — à relire avant d'enregistrer. Réservé au créateur, garde vérifiée **côté serveur**
+- **Import depuis un lien** : colle l'URL d'une recette, l'IA (Claude Haiku) l'extrait et la met en forme (ingrédients, étapes à l'infinitif, liaisons ingrédients/ustensiles), à relire avant d'enregistrer. Réservé au créateur, garde vérifiée **côté serveur**
 - **Import depuis une photo** : photographie une recette de livre (jusqu'à **2 pages**), l'IA la reconstruit
 - Sélecteur **« Nouvelle recette »** repensé : import par lien / photo (marqués IA) ou saisie manuelle
 - Écran d'attente **volontairement non-annulable** pendant l'extraction (pour ne pas gâcher un crédit)
@@ -862,7 +869,7 @@
 - **Carrousel de bienvenue** à la première connexion : cartes défilables (peek gauche/droite) qui présentent les fonctionnalités clés
 
 ### Découvrir
-- **« L'ingrédient du moment »** en tête de Découvrir : un fruit/légume de saison (rotation hebdomadaire), sa frise de saison, une accroche et les recettes publiques qui l'utilisent — ou une invitation à publier
+- **« L'ingrédient du moment »** en tête de Découvrir : un fruit/légume de saison (rotation hebdomadaire), sa frise de saison, une accroche et les recettes publiques qui l'utilisent, ou une invitation à publier
 - **Filtres unifiés avec Mes Recettes** : mêmes options exactement, via la même feuille de filtres
 
 ### Filtres avancés (Mes Recettes & Découvrir)
@@ -874,7 +881,7 @@
 - Nouveau badge **Vegan** (ni viande, ni poisson, ni produits laitiers) ; le badge **De saison** est relooké (icône soleil / ambre)
 
 ### Foyer
-- **Départ / dissolution** d'un foyer : les recettes créées dans le foyer ne disparaissent plus (fusion additive dans l'espace perso) et l'état vécu est conservé — plus de vieille liste de courses qui « ressuscite »
+- **Départ / dissolution** d'un foyer : les recettes créées dans le foyer ne disparaissent plus (fusion additive dans l'espace perso) et l'état vécu est conservé, plus de vieille liste de courses qui « ressuscite »
 - **Retrait du partage de listes de courses** individuel : le mode foyer couvre déjà ce besoin, de façon plus cohérente
 
 ### PWA
@@ -882,7 +889,7 @@
 - Zoom et sélection de texte désactivés en mode **standalone** uniquement (feel natif sans gêner le navigateur)
 
 ### Sous le capot
-- **Coûts Firestore** : l'annuaire des utilisateurs (avatars) n'est plus chargé pour tout le monde à chaque session — chargement **à la demande** (foyer, invitations), les utilisateurs solo ne le lisent jamais
+- **Coûts Firestore** : l'annuaire des utilisateurs (avatars) n'est plus chargé pour tout le monde à chaque session, chargement **à la demande** (foyer, invitations), les utilisateurs solo ne le lisent jamais
 
 ## v3.2.1 – Poivre · Correctifs & améliorations
 

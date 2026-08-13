@@ -116,7 +116,7 @@ select {
   outline: none;
 }
 
-/* Selection highlight — Mijoté sage green, distinct from the orange accent and the default blue */
+/* Selection highlight, Mijoté sage green, distinct from the orange accent and the default blue */
 ::selection {
   background: rgba(76, 175, 125, 0.35);
 }
@@ -164,7 +164,7 @@ body {
      dans la zone visible, donc la barre d'onglets ne « disparaît » pas quand on
      tire/overscrolle (sinon, avec `dvh` dynamique, la hauteur dépasse la zone
      visible et pousse la barre hors écran). `vh` en repli pour les vieux navigateurs.
-     EN PWA INSTALLÉE : override en `dvh` plus bas — cf. la règle standalone. */
+     EN PWA INSTALLÉE : override en `dvh` plus bas, cf. la règle standalone. */
   height: 100vh;
   height: 100svh;
   display: flex;
@@ -281,7 +281,7 @@ select {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(232, 112, 58, 0.16);
 }
-/* `type="search"` : on masque la croix native (WebKit) — on a notre propre
+/* `type="search"` : on masque la croix native (WebKit), on a notre propre
    bouton d'effacement. */
 .recipe-search::-webkit-search-cancel-button,
 .recipe-search::-webkit-search-decoration {
@@ -450,7 +450,7 @@ select {
 
 /* Boutons DANS les modals (bottom sheets `.modal-sheet` + dialogues centrés
    `.alert-dialog`) en pilules : plus net / moderne. `!important` sur le seul rayon
-   pour primer d'éventuels `borderRadius` inline — les couleurs et surtout les
+   pour primer d'éventuels `borderRadius` inline, les couleurs et surtout les
    états :hover (desktop) restent inchangés. */
 .modal-sheet .btn,
 .alert-dialog .btn {
@@ -473,7 +473,7 @@ select {
   transform: scale(0.96);
 }
 
-/* Pastille « fantôme » (ex. Précédent en mode cuisine) : pas d'ombre accent —
+/* Pastille « fantôme » (ex. Précédent en mode cuisine) : pas d'ombre accent,
    celle-ci est réservée aux pastilles pleines (primaires). */
 .btn-ghost.btn-pill,
 .btn-ghost.btn-pill:hover {
@@ -681,7 +681,7 @@ select {
   margin: 0 auto 20px;
 }
 
-/* Dialogue d'alerte centré (confirmations destructives) — jamais un tiroir
+/* Dialogue d'alerte centré (confirmations destructives), jamais un tiroir
    swipeable : on veut une décision, pas un balayage. Centré sur tous les écrans. */
 .alert-backdrop {
   position: fixed;
@@ -779,7 +779,7 @@ select {
 }
 
 /* Menu carnet : liste d'actions homogène (mêmes rangées que « Modifier »),
-   sans filet entre les rangées — seul « Supprimer » est détaché par un filet. */
+   sans filet entre les rangées, seul « Supprimer » est détaché par un filet. */
 .carnet-menu-list {
   display: flex;
   flex-direction: column;
@@ -846,7 +846,7 @@ select {
 }
 
 /* Remplissage de l'anneau d'import : de 0 % (offset 100) à ~92 % (offset 8).
-   Piloté en CSS — INDÉPENDANT des rendus React — pour rester fluide même quand
+   Piloté en CSS, INDÉPENDANT des rendus React, pour rester fluide même quand
    le thread principal est occupé par l'extraction. `pathLength=100` sur le cercle
    fait que l'offset s'exprime en pourcentage. */
 @keyframes ringFill {
@@ -1825,7 +1825,7 @@ select {
   }
 
   /* Carnets : une SEULE ligne, scroll horizontal quand ça déborde (comme sur
-     mobile) — plus de passage à la ligne / grille multi-lignes sur desktop. */
+     mobile), plus de passage à la ligne / grille multi-lignes sur desktop. */
   .desktop-content .collections-row {
     display: flex !important;
     flex-wrap: nowrap !important;
@@ -1837,7 +1837,7 @@ select {
     grid-template-columns: repeat(4, 1fr) !important;
   }
 
-  /* Detail panel — two-column on large screens */
+  /* Detail panel, two-column on large screens */
   .detail-layout {
     display: flex;
     height: 100%;
@@ -1889,7 +1889,7 @@ select {
     width: 100%;
   }
 
-  /* Recipe card hover zoom — desktop only */
+  /* Recipe card hover zoom, desktop only */
   .recipe-card-thumb {
     overflow: hidden;
   }
@@ -1917,7 +1917,7 @@ select {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   }
 
-  /* Button hover / press feedback — desktop only (no motion) */
+  /* Button hover / press feedback, desktop only (no motion) */
   .btn {
     transition: background-color .18s ease, border-color .18s ease, box-shadow .2s ease, filter .18s ease;
   }
@@ -1942,7 +1942,7 @@ select {
     filter: brightness(0.95);
   }
 
-  /* Notebook cards — subtle lift + icon pop on hover (desktop only) */
+  /* Notebook cards, subtle lift + icon pop on hover (desktop only) */
   .notebook-card {
     /* RETOUR (fin du survol) : ease-out franc, sans dépassement → le carnet se
        repose net, sans « gigoter » ni revenir en arrière avant de se recaler. */
@@ -1972,7 +1972,7 @@ select {
     transform: translateY(-3px);
   }
 
-  /* Discover cards — subtle lift on hover (desktop only), no image zoom */
+  /* Discover cards, subtle lift on hover (desktop only), no image zoom */
   .discover-card {
     transition: transform .16s ease;
   }
@@ -1982,7 +1982,7 @@ select {
   }
 
   .discover-card .recipe-card:hover .recipe-card-thumb img {
-    /* Pas de zoom sur les cartes « découvrir » (elles se soulèvent) — on reste sur
+    /* Pas de zoom sur les cartes « découvrir » (elles se soulèvent), on reste sur
        l'identité GPU (translateZ), jamais `none`, pour éviter tout saut de rendu. */
     transform: translateZ(0);
   }
@@ -2619,7 +2619,7 @@ select {
   }
 }
 
-/* Bouton « Filtres » (/recipes & Découvrir) — surbrillance élégante au survol
+/* Bouton « Filtres » (/recipes & Découvrir), surbrillance élégante au survol
    sur desktop. Les styles de base sont inline ; on force donc via !important pour
    passer par-dessus le fond/bordure inline, uniquement sur périphérique à survol. */
 .filter-btn {
@@ -2642,7 +2642,7 @@ select {
   transform: scale(0.97);
 }
 
-/* Bouton « retirer du planning » — pastille discrète qui rougit au survol */
+/* Bouton « retirer du planning », pastille discrète qui rougit au survol */
 .mp-remove-btn {
   display: inline-flex;
   align-items: center;
@@ -2688,7 +2688,7 @@ select {
 
   /* ── État pressé ──────────────────────────────────────────────────────────
      `!important` : indispensable pour les éléments animés à l'entrée (.slide-up,
-     fill-mode both) — sinon la valeur finale de l'animation (transform/opacity)
+     fill-mode both), sinon la valeur finale de l'animation (transform/opacity)
      l'emporte sur ces règles et le retour tactile ne se voit pas. */
   button:active,
   a:active,
@@ -2708,7 +2708,7 @@ select {
 
   /* ── PRESS-IN : rapide et posé (ease-out court). Restreint au jeu « curated »
      (qui inclut `.pressable`) pour ne pas écraser les transitions inline des
-     autres boutons — un `<button>` nu garde son comportement d'origine. ─────── */
+     autres boutons, un `<button>` nu garde son comportement d'origine. ─────── */
   .btn:active,
   .recipe-card:active,
   .notebook-card:active,

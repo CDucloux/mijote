@@ -21,7 +21,7 @@ import { OverscrollRow } from "../components/OverscrollRow.jsx";
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 // Toutes les cartes s'animent à l'entrée ; le décalage est plafonné pour que les
 // dernières n'attendent pas indéfiniment (cf. animDelay dans la grille).
-const MAX_STAGGER = 0.6; // s — plafond du délai d'animation d'entrée
+const MAX_STAGGER = 0.6; // s, plafond du délai d'animation d'entrée
 
 // Squelette de chargement (une seule fois par session) : laisse aux images le
 // temps d'arriver avant de révéler les cartes avec leur animation d'entrée.
@@ -92,13 +92,13 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
     // On (re)programme TOUJOURS le timer quand on est en booting : en dev, le
     // double montage de StrictMode annule le 1er timer via le cleanup, donc gater
     // sur `recipeSkeletonSeen` laisserait le squelette bloqué au 2ᵉ montage. En
-    // prod, l'effet ne tourne qu'une fois — même résultat.
+    // prod, l'effet ne tourne qu'une fois, même résultat.
     if (!booting) return;
     const t = setTimeout(() => setBooting(false), SKELETON_MS);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Persistés (localStorage, mobile + web) : carnet sélectionné, tri et filtres
-  // survivent au rechargement de la page — plus simple pour retrouver son contexte.
+  // survivent au rechargement de la page, plus simple pour retrouver son contexte.
   const [filterCol, setFilterCol] = useLS("rf_recipes_filterCol", null);
   const [sortBy, setSortBy] = useLS("rf_recipes_sortBy", DEFAULT_SORT_KEY); // défaut : plus récentes d'abord
   const [sortDir, setSortDir] = useLS("rf_recipes_sortDir", defaultDirFor(DEFAULT_SORT_KEY));
@@ -118,7 +118,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   const [carnetMenu, setCarnetMenu] = useState(null); // carnet visé par l'appui long (modifier/supprimer)
   const [recipeMenu, setRecipeMenu] = useState(null); // recette visée par l'appui long / clic droit (modifier/supprimer)
   const [carnetPickFor, setCarnetPickFor] = useState(null); // recette dont on choisit les carnets (action « Carnet »)
-  const [confirmDelete, setConfirmDelete] = useState(null); // { kind: "carnet" | "recipe", item } — confirmation avant suppression
+  const [confirmDelete, setConfirmDelete] = useState(null); // { kind: "carnet" | "recipe", item }, confirmation avant suppression
   const [editingSmartId, setEditingSmartId] = useState(null); // carnet smart dont on ré-édite la vue de filtres
   const [dragCarnetId, setDragCarnetId] = useState(null); // carnet en cours de glisser-déposer (réordonnancement)
 
@@ -536,7 +536,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
       })()}
 
       {/* Choix des carnets (action « Carnet » du menu recette) : carnets manuels
-          uniquement — les carnets intelligents se remplissent par leurs filtres. */}
+          uniquement, les carnets intelligents se remplissent par leurs filtres. */}
       {carnetPickFor && (() => {
         const rec = recipes.find(r => r.id === carnetPickFor.id) || carnetPickFor;
         const manual = collections.filter(c => !isSmart(c));

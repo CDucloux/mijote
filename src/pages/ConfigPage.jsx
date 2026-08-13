@@ -143,7 +143,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   // ── Modération : signalements de recettes publiques ─────────────────────────
   const [reports, setReports] = useState([]);
   const [modBusy, setModBusy] = useState(null);          // id (rejet) ou pubId (suppression) en cours
-  const [confirmMod, setConfirmMod] = useState(null);    // { pubId, name } — confirmation de suppression
+  const [confirmMod, setConfirmMod] = useState(null);    // { pubId, name }, confirmation de suppression
   useEffect(() => {
     if (!isAdmin) return;
     let alive = true;
@@ -181,7 +181,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     setNewIngId(null);
   };
   // Création : on crée un brouillon vide en base et on ouvre SA fiche en édition.
-  // (Annuler un brouillon jamais nommé le supprime — cf. onCancelNew côté fiche.)
+  // (Annuler un brouillon jamais nommé le supprime, cf. onCancelNew côté fiche.)
   const createIngredient = (catKey) => {
     const id = "db_i" + Date.now();
     setIngredientDB(prev => [...prev, { id, name: "", category: catKey, image: "", nutrition: null }]);

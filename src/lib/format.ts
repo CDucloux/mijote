@@ -170,7 +170,7 @@ export function relativeDate(ts: number | null | undefined, now: number = Date.n
 }
 
 /**
- * Retire les tirets cadratins « — » (typiques des textes générés par IA) d'un
+ * Retire les tirets cadratins (U+2014, typiques des textes générés par IA) d'un
  * texte d'affichage : la parenthèse en incise devient une virgule, plus naturelle
  * en français. Les traits d'union « - » et les demi-cadratins « – » (plages de
  * valeurs, ex. « 10–12 min ») sont préservés.
@@ -180,5 +180,5 @@ export function relativeDate(ts: number | null | undefined, now: number = Date.n
  */
 export function stripAiDashes(s: string | null | undefined): string {
   if (typeof s !== "string") return s ?? "";
-  return s.replace(/\s*—\s*/g, ", ").replace(/\s+,/g, ",").replace(/ {2,}/g, " ").trim();
+  return s.replace(/\s*\u2014\s*/g, ", ").replace(/\s+,/g, ",").replace(/ {2,}/g, " ").trim();
 }

@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { fmtTime, relativeDate, fmtQty, fmtQtyUnit, pluralizeName } from "../format.js";
+import { fmtTime, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes } from "../format.js";
+
+const EM_DASH = "\u2014";
+const EN_DASH = "\u2013";
 
 describe("fmtQty", () => {
   it("garde les entiers", () => { expect(fmtQty(1)).toBe("1"); expect(fmtQty(3)).toBe("3"); });
@@ -123,5 +126,26 @@ describe("relativeDate", () => {
   it("counts years with plural agreement", () => {
     expect(relativeDate(ago(365), now)).toBe("il y a 1 an");
     expect(relativeDate(ago(365 * 3), now)).toBe("il y a 3 ans");
+  });
+});
+
+describe("stripAiDashes", () => {
+  it("replaces an em dash aside with a comma", () => {
+    expect(stripAiDashes(`Faire revenir l'oignon ${EM_DASH} feu doux ${EM_DASH} puis ajouter l'ail`))
+      .toBe("Faire revenir l'oignon, feu doux, puis ajouter l'ail");
+  });
+  it("collapses the double space and space-before-comma left by the removed dash", () => {
+    expect(stripAiDashes(`Laisser mijoter ${EM_DASH} à couvert.`)).toBe("Laisser mijoter, à couvert.");
+  });
+  it("leaves text without an em dash untouched", () => {
+    expect(stripAiDashes("Émincer les oignons, puis les faire suer.")).toBe("Émincer les oignons, puis les faire suer.");
+  });
+  it("preserves simple hyphens and en dashes (ranges, compound words)", () => {
+    expect(stripAiDashes(`Cuire 10${EN_DASH}12 min en sous-vide.`)).toBe(`Cuire 10${EN_DASH}12 min en sous-vide.`);
+  });
+  it("handles empty/null/undefined", () => {
+    expect(stripAiDashes("")).toBe("");
+    expect(stripAiDashes(null)).toBe("");
+    expect(stripAiDashes(undefined)).toBe("");
   });
 });

@@ -16,7 +16,7 @@ export interface CompressedImage { blob: Blob; ext: string; contentType: string 
  * Compresse un `File` image côté client : redimensionne au bord max, puis conserve
  * le PNG si l'image a un canal alpha, sinon aplatit en JPEG.
  *
- * @param file - Le fichier image d'origine (`File`, ou tout `Blob` — ex. photo importée).
+ * @param file - Le fichier image d'origine (`File`, ou tout `Blob`, ex. photo importée).
  * @param options - Paramètres de compression.
  * @param options.maxEdge - Bord le plus long en pixels (défaut 800).
  * @param options.quality - Qualité JPEG entre 0 et 1 (défaut 0.75).
@@ -94,7 +94,7 @@ export async function uploadImage(file: Blob, pathPrefix: string): Promise<strin
 
 /**
  * Supprime une image uploadée par son URL de download (best-effort : les échecs
- * — objet déjà absent, ou n'appartenant pas à l'utilisateur — sont ignorés).
+ *, objet déjà absent, ou n'appartenant pas à l'utilisateur, sont ignorés).
  *
  * @param url - L'URL de download Firebase Storage (les autres URLs sont ignorées).
  * @returns Une promesse résolue une fois la tentative de suppression faite.

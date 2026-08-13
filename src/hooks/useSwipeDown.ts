@@ -69,7 +69,7 @@ export function useSwipeDown(onClose: () => void, threshold = 140) {
     const sheet = sheetRef.current;
     const shouldClose = armed.current && dragging.current && dy > threshold && dy > dx;
     if (shouldClose && sheet) {
-      // Poursuit le glissement vers le bas jusqu'à disparition, PUIS ferme — sans
+      // Poursuit le glissement vers le bas jusqu'à disparition, PUIS ferme, sans
       // remettre `transform` à zéro ni rejouer l'animation de sortie (qui ferait
       // « remonter » la feuille avant de la faire redescendre : effet de collision).
       let done = false;

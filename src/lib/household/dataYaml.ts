@@ -28,7 +28,7 @@ const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat"
  * Sérialise des lignes en YAML précédé d'un en-tête. `stringify` sans repli de
  * ligne : les définitions/tips restent sur une ligne, plus lisibles dans une revue
  * de diff Git. On aère ensuite le rendu (ligne vide après l'en-tête et entre chaque
- * entrée de 1er niveau) — sans incidence au ré-import, YAML ignorant les lignes vides.
+ * entrée de 1er niveau), sans incidence au ré-import, YAML ignorant les lignes vides.
  *
  * @param rows - Données à sérialiser (liste d'objets).
  * @param header - En-tête (commentaire `#`) placé en tête du document.
@@ -94,7 +94,7 @@ const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
  *
  * @param text - Source YAML brute.
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide
- *   (import à annuler en entier — jamais d'écrasement partiel).
+ *   (import à annuler en entier, jamais d'écrasement partiel).
  */
 export function parseTechniquesYaml(text: string): ParseResult {
   const { list, error } = loadYamlList(text);

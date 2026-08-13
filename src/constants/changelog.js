@@ -9,7 +9,7 @@
 //
 import raw from "../../CHANGELOG.md?raw";
 
-const HEADER = /^##\s+v([\d.]+)\s*[—––-]?\s*(.*)$/;
+const HEADER = /^##\s+v([\d.]+)\s*[\u2014\u2013-]?\s*(.*)$/;
 const BULLET = /^[-*]\s+(.+)$/;
 
 function parseChangelog(md) {

@@ -42,7 +42,7 @@ export function spawnRipple(e: RippleEvent): void {
 /**
  * Installe une délégation GLOBALE de l'onde tactile : tout élément portant la classe
  * `.ripple` (lui-même ou un ancêtre du point de contact) reçoit une onde au toucher.
- * Permet de généraliser le feel natif Android sans câbler `onPointerDown` partout —
+ * Permet de généraliser le feel natif Android sans câbler `onPointerDown` partout,
  * il suffit d'ajouter la classe `.ripple` (qui pose aussi `position:relative;
  * overflow:hidden` côté CSS). Réservé aux pointeurs grossiers (mobile/tactile) : sur
  * souris, on garde les états `:hover`/`:active` classiques. Idempotent.

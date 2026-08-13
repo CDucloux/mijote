@@ -33,7 +33,7 @@ export function resizeDimensions(w: number, h: number, maxEdge: number = MAX_EDG
 /**
  * File image → JPEG redimensionné. Décode en respectant l'EXIF (une photo portrait
  * ne doit pas arriver couchée : ça dégrade l'OCR), redimensionne sur canvas,
- * ré-encode en JPEG. Repli sur le fichier d'origine si l'API canvas manque — mais
+ * ré-encode en JPEG. Repli sur le fichier d'origine si l'API canvas manque, mais
  * seulement pour un type déjà supporté par l'API vision.
  *
  * @param file - Le fichier image d'origine.

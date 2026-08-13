@@ -2,7 +2,7 @@
  * Éligibilité d'une recette selon les contraintes DURES (logique pure). Prédicat
  * binaire partagé par le générateur de planning et le « selon mes préférences » de
  * Découvrir : régime, catégories d'ingrédients exclues, allergènes filtrent le
- * vivier — jamais un score. Les préférences douces (aversions, saison, variété…)
+ * vivier, jamais un score. Les préférences douces (aversions, saison, variété…)
  * relèvent du scoring (voir mealPlanner), pas d'ici.
  *
  * Limite assumée : la base ingrédients ne porte pas (encore) de tags allergènes.

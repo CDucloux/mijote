@@ -1,4 +1,4 @@
-// ─── QUOTAS D'IMPORT IA — côté client (affichage) ────────────────────────────
+// ─── QUOTAS D'IMPORT IA, côté client (affichage) ────────────────────────────
 // Miroir LECTURE SEULE de la logique serveur (functions/quota.js). L'autorité
 // reste la Cloud Function (consommation atomique) ; ici on ne fait qu'AFFICHER
 // le reliquat à partir de `aiUsage/{uid}` (lisible par l'utilisateur, écrit par
@@ -16,7 +16,7 @@ export interface KindUsage {
   monthCount?: number;
 }
 
-/** Document `aiUsage/{uid}` (partiel — un champ par type d'import). */
+/** Document `aiUsage/{uid}` (partiel, un champ par type d'import). */
 export type UsageDoc = Partial<Record<ImportKind, KindUsage>> & Record<string, unknown>;
 
 /** Reliquat calculé pour un type d'import. */
@@ -37,7 +37,7 @@ export const LIMITS: Record<ImportKind, { day: number; month: number }> = {
 };
 
 /**
- * Clés de période (jour `YYYY-MM-DD`, mois `YYYY-MM`) en fuseau Europe/Paris —
+ * Clés de période (jour `YYYY-MM-DD`, mois `YYYY-MM`) en fuseau Europe/Paris,
  * identique au serveur pour que le reliquat affiché corresponde au décompte réel.
  *
  * @param now - Instant de référence (défaut : maintenant).

@@ -46,7 +46,7 @@ export async function signInWithGoogle(onError?: (msg: string) => void): Promise
 
 /**
  * Déconnexion. La bascule d'UI (retour à /login) est pilotée par l'écouteur d'auth
- * du routeur racine — ici on ne fait que révoquer la session Firebase.
+ * du routeur racine, ici on ne fait que révoquer la session Firebase.
  *
  * @returns Une promesse résolue une fois la session révoquée.
  */

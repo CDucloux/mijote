@@ -11,8 +11,8 @@ import { useEffect, useRef } from "react";
  * @param options.max - Décalage maximal en pixels (défaut 72).
  * @param options.disabled - Désactive l'effet.
  * @param options.stretch - `true` : étirement `scaleX` ancré au bord tiré (rubber-band
- *   « à la iOS », plus les éléments sont loin du bord plus ils s'écartent) — idéal
- *   pour des rangées de pills/texte. `false` (défaut) : simple `translateX` — idéal
+ *   « à la iOS », plus les éléments sont loin du bord plus ils s'écartent), idéal
+ *   pour des rangées de pills/texte. `false` (défaut) : simple `translateX`, idéal
  *   pour des rangées d'images (pas de distorsion).
  * @returns `scrollRef` (conteneur `overflow-x`) et `contentRef` (enfant transformé,
  *   idéalement `min-width: 100%`).

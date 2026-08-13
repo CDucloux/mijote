@@ -56,7 +56,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
   const saveName = () => { setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), displayName: nameInput.trim() })); setNameInput(null); };
 
   // Activité cuisine = plats RÉELLEMENT cuisinés (mode pas à pas mené au bout),
-  // consignés dans le journal de cuisine — et non les repas simplement planifiés.
+  // consignés dans le journal de cuisine, et non les repas simplement planifiés.
   const cookLog = prefs.cookLog || {};
   const stats = buildHeatmap(cookLog, { weeks: 26 });
   const STAT = [

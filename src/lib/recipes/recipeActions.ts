@@ -18,7 +18,7 @@ export type ActionRecipe = Recipe;
 /** Ingrédient de la base (forme minimale). */
 export interface ActionDbItem { id: string; image?: string }
 
-/** Carnet (manuel ou intelligent — alias du type de domaine). */
+/** Carnet (manuel ou intelligent, alias du type de domaine). */
 export type ActionCollection = Collection;
 
 const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();

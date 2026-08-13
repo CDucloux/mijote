@@ -2,7 +2,7 @@
  * Régime alimentaire (pur). Détection « vegan » d'une recette à partir des
  * catégories de ses ingrédients : viande, poisson/fruits de mer et produits
  * laitiers l'excluent. Les préparations de base (sous-recettes) sont inspectées
- * récursivement — une béchamel rend non-vegan.
+ * récursivement, une béchamel rend non-vegan.
  *
  * Limite assumée (comme la saisonnalité) : un ingrédient introuvable n'apporte
  * pas de signal. On exige au moins un ingrédient identifié pour affirmer

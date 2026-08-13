@@ -1,8 +1,8 @@
 /**
  * Calculatrices de recette (pures) :
- * 1. Moule / plat — facteur d'adaptation des quantités entre deux moules (ratio de
+ * 1. Moule / plat, facteur d'adaptation des quantités entre deux moules (ratio de
  *    surface, ou de volume si les deux hauteurs sont fournies).
- * 2. Conversions d'unités — masse ↔ volume via la densité de l'ingrédient.
+ * 2. Conversions d'unités, masse ↔ volume via la densité de l'ingrédient.
  *
  * @module calculators
  */

@@ -43,7 +43,7 @@ function CalcRow({ c, color }) {
   );
 }
 
-// Vue « Détail du calcul » (traçabilité Nutri-Score) — abonnés Mijoté+.
+// Vue « Détail du calcul » (traçabilité Nutri-Score), abonnés Mijoté+.
 function NutriCalcView({ breakdown }) {
   const { negatives, N, positives, P, ns, letter } = breakdown;
   const stat = (val, label, color) => (
@@ -98,7 +98,7 @@ function CalcLocked({ onUpgrade }) {
       </span>
       <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Le détail du calcul</div>
       <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.55, maxWidth: 300, margin: "0 auto 16px" }}>
-        Vois exactement d'où vient la note — points négatifs, points positifs et l'équation qui aboutit à la lettre. Réservé à <PlusBadge />.
+        Vois exactement d'où vient la note, points négatifs, points positifs et l'équation qui aboutit à la lettre. Réservé à <PlusBadge />.
       </div>
       <button onClick={onUpgrade} className="btn btn-primary btn-pill" style={{ padding: "10px 20px" }}>
         <Icon name="sparkle" size={15} color="#fff" /> Passer à Mijoté+
@@ -121,7 +121,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   // En dessous de ce seuil de couverture, la quasi-totalité du plat n'a pas de
   // données : normaliser sur cette petite fraction produit des valeurs absurdes
   // (ex. « 3 kcal / portion », « 15 g de sel pour 100 g » quand seul le sel est
-  // renseigné). On refuse alors d'afficher des chiffres — et la lettre — trompeurs.
+  // renseigné). On refuse alors d'afficher des chiffres, et la lettre, trompeurs.
   const reliable = detail.coverage >= 0.5;
   const letter = reliable ? (liveLetter ?? recipe.nutriLetter) : null;
   const data = basis === "portion" ? detail.perServing : detail.per100;

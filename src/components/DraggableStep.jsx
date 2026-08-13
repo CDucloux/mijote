@@ -8,7 +8,7 @@ import { IngImage } from "./Img.jsx";
 import { UtImage } from "./StepPills.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 
-// Petit label de sous-bloc (Ingrédients liés / Ustensiles liés) — épuré, sans capitales.
+// Petit label de sous-bloc (Ingrédients liés / Ustensiles liés), épuré, sans capitales.
 function BlockLabel({ icon, color, children }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9 }}>
@@ -56,7 +56,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         </div>
       </div>
 
-      {/* Instructions — surface douce, sans bordure dure */}
+      {/* Instructions, surface douce, sans bordure dure */}
       <AutoResizeTextarea className="field-input step-instructions" placeholder="Décris cette étape…" value={step.text} onChange={e => onUpdate(step.id, "text", e.target.value)}
         style={{ marginBottom: 12, background: "var(--surface2)", border: "1px solid transparent", borderRadius: 14, padding: "13px 15px", fontSize: 14.5, lineHeight: 1.55, minHeight: 88 }} />
 
@@ -99,7 +99,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         </div>
       )}
 
-      {/* Ingrédients liés — vignette + nom + quantité, état sélectionné plein accent */}
+      {/* Ingrédients liés, vignette + nom + quantité, état sélectionné plein accent */}
       {ingredients.length > 0 && (
         <>
           <BlockLabel icon="leaf" color="var(--green)">Ingrédients de l'étape</BlockLabel>

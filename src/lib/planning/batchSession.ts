@@ -3,7 +3,7 @@
  * un module : c'est une VUE dérivée du planning de la semaine et du graphe de
  * sous-recettes. On agrège :
  *   1. les plats à cuisiner (regroupés ; les portions réutilisées = une seule
- *      cuisson pour plusieurs repas — d'où le nombre de « cuissons ») ;
+ *      cuisson pour plusieurs repas, d'où le nombre de « cuissons ») ;
  *   2. les préparations de base partagées entre plusieurs recettes de la semaine,
  *      avec la quantité totale à préparer d'avance (le vrai différenciateur : rien
  *      dans une app de contenu ne connaît le rendement ni le partage des bases).

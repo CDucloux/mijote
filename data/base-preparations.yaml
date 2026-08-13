@@ -12,7 +12,7 @@
 #   name          nom affiché.
 #   isComponent   toujours true.
 #   cuisine       libellé de cuisine.
-#   yield         { amount, unit } — ce que produit la préparation.
+#   yield         { amount, unit } : ce que produit la préparation.
 #   prepTime/cookTime  minutes (entiers).
 #   tags          mots-clés.
 #   source        attribution.
@@ -111,7 +111,7 @@
     - { id: i4, name: Champignons de Paris, amount: 40, unit: g }
     - { id: i5, name: Bouquet garni, amount: 1, unit: pièce }
   steps:
-    - text: Préparer un roux blond — un roux blanc poussé jusqu'à une teinte dorée.
+    - text: Préparer un roux blond, un roux blanc poussé jusqu'à une teinte dorée.
       ingredients: [i1, i2]
     - text: >
         Délayer au fouet avec le fond blanc bouillant et porter à ébullition en

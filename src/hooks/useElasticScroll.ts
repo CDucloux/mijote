@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 
 /**
  * Overscroll vertical « stretch » au BAS d'un conteneur scrollable : arrivé en bas,
- * continuer à tirer ÉTIRE le contenu (scaleY ancré au bas — le dernier élément reste
+ * continuer à tirer ÉTIRE le contenu (scaleY ancré au bas, le dernier élément reste
  * fixe, ceux au-dessus s'espacent), piloté au doigt, puis revient en ressort au
  * relâcher. Le contenu ne « monte » pas : il s'expanse dans le sens du geste.
- * Volontairement borné au bas — le haut est réservé au pull-to-refresh global (sinon
+ * Volontairement borné au bas, le haut est réservé au pull-to-refresh global (sinon
  * conflit). Écrit directement dans le DOM (transform sur `contentRef`), listeners
  * natifs (touchmove non passif pour `preventDefault` au bord). Neutre en
  * `prefers-reduced-motion`.
@@ -19,7 +19,7 @@ import { useEffect, useRef } from "react";
  * `scroll` et on déclenche une brève expansion proportionnelle à l'impact.
  *
  * @param options - Réglages.
- * @param options.max - Décalage maximal en pixels (défaut 38 — volontairement subtil).
+ * @param options.max - Décalage maximal en pixels (défaut 38, volontairement subtil).
  * @param options.disabled - Désactive l'effet (ex. desktop).
  * @returns `scrollRef` (conteneur `overflow-y`) et `contentRef` (enfant transformé,
  *   englobant tout le contenu défilable).
@@ -63,7 +63,7 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
       inner.style.transform = `scaleY(${stretch(pull).toFixed(4)})`;
     };
     // Rebond joué par la seule inertie (fling) : brève expansion (scaleY) ancrée au
-    // bas puis retour ressort posé — même langage que le geste au doigt.
+    // bas puis retour ressort posé, même langage que le geste au doigt.
     const playBounce = (amp: number): void => {
       bounce?.cancel();
       lift(true);
@@ -83,7 +83,7 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
     // Relâche la couche GPU une fois le ressort de retour terminé.
     const onEnd = (): void => { if (!pull) lift(false); };
     inner.addEventListener("transitionend", onEnd);
-    // IMPORTANT : on ne promeut PAS la couche GPU dès le touchstart — sur une page à
+    // IMPORTANT : on ne promeut PAS la couche GPU dès le touchstart, sur une page à
     // beaucoup d'éléments (ex. 55 cartes), `will-change` sur tout le contenu à chaque
     // amorce de scroll rasterise une couche géante et provoque du jank. On ne « lift »
     // qu'au moment où l'élastique s'arme réellement (mode === "bottom").

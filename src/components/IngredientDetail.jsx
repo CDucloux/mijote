@@ -198,11 +198,11 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
             {!editing && <div style={{ flexShrink: 0 }}><NutriScoreBadge letter={letter} /></div>}
           </div>
 
-          {/* Poids d'une pièce — éditable en place */}
+          {/* Poids d'une pièce, éditable en place */}
           {editing ? (
             <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "var(--text2)", background: "var(--surface2)", borderRadius: 999, padding: "6px 13px", marginTop: 14, width: "fit-content" }}>
               <Icon name="portions" size={14} color="var(--accent)" /> 1 pièce ≈
-              <input type="number" min="0" step="1" value={draft.gramsPerPiece ?? ""} placeholder="—" onChange={e => up({ gramsPerPiece: e.target.value === "" ? undefined : +e.target.value })}
+              <input type="number" min="0" step="1" value={draft.gramsPerPiece ?? ""} placeholder="-" onChange={e => up({ gramsPerPiece: e.target.value === "" ? undefined : +e.target.value })}
                 style={{ width: 50, textAlign: "right", fontSize: 12, fontWeight: 700, color: "var(--text)", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 7, padding: "2px 6px", outline: "none" }} /> g
             </div>
           ) : ingredient.gramsPerPiece != null && (
@@ -211,7 +211,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
             </div>
           )}
 
-          {/* Description (accroche) — visible/éditable seulement en édition */}
+          {/* Description (accroche), visible/éditable seulement en édition */}
           {editing && (
             <textarea value={draft.description || ""} onChange={e => up({ description: e.target.value })} rows={2} maxLength={280} placeholder="Accroche « ingrédient du moment » (optionnel)…"
               style={{ width: "100%", marginTop: 12, fontSize: 12.5, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, padding: "9px 11px", resize: "vertical", minHeight: 44, outline: "none", fontFamily: "var(--ff-body)" }} />

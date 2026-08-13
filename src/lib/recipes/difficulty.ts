@@ -1,7 +1,7 @@
 /**
  * Moteur de difficulté (pur) : estime la difficulté d'une recette (1–5) à partir
  * des gestes techniques repérés dans ses étapes, plus quelques modificateurs.
- * Transparent et corrigeable — `recipe.difficultyOverride` force la valeur.
+ * Transparent et corrigeable, `recipe.difficultyOverride` force la valeur.
  *
  * ```text
  * base  = max(difficulté des gestes détectés)              // signal dominant
@@ -30,7 +30,7 @@ interface DiffRecipe {
   steps?: DiffStep[];
 }
 /** Options communes : index de glossaire pré-construit et base de recettes
- * (typée souplement — les appelants passent des recettes de formes variées). */
+ * (typée souplement, les appelants passent des recettes de formes variées). */
 export interface DiffOpts {
   index?: unknown;
   recipes?: unknown;

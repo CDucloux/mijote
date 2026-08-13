@@ -1,7 +1,7 @@
 // ─── CONTRÔLE D'ACCÈS + QUOTAS MIJOTÉ+ (côté serveur) ────────────────────────
 // Les imports IA (coûteux) sont réservés à l'ADMIN (illimité) OU à un abonné
 // Mijoté+ ACTIF, avec des QUOTAS journaliers/mensuels pour les abonnés. Toute la
-// vérification est côté serveur (token d'auth + Firestore) — jamais le client.
+// vérification est côté serveur (token d'auth + Firestore), jamais le client.
 // Source de vérité abonnement : `customers/{uid}/subscriptions` (webhook Stripe).
 // Compteurs d'usage : `aiUsage/{uid}` (écrit ici, en transaction).
 import { HttpsError, type CallableRequest } from "firebase-functions/v2/https";
