@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.11.0 – Safran · Mise en place cochable
+
+### Mode pas à pas
+- **Mise en place cochable** : les ingrédients et ustensiles de l'écran d'aperçu se cochent au fur et à mesure qu'on les rassemble, avec un compteur de progression
+- **Regroupement par catégorie (optionnel)** : les ingrédients peuvent s'afficher par rayon (Légumes, Produits laitiers…) plutôt qu'en liste plate, préférence mémorisée d'une recette à l'autre
+
 ## v3.10.49 – Safran · Toilettage éditorial
 
 ### Sous le capot

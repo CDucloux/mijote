@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-3.10.49-e8703a?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.11.0-e8703a?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -77,8 +77,8 @@ toujours avec vous.
   entre les membres d'un même foyer (invitation par e-mail).
 - 🧭 **Découvrir** : recettes publiées par la communauté, filtrables et
   clonables en un geste ; publication depuis vos propres recettes.
-- 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, photos et astuces
-  d'étape incluses.
+- 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable
+  (regroupable par catégorie), photos et astuces d'étape incluses.
 - 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
   coupées, badges vegan / cuisine / difficulté) et JSON (import / export).
 - 👤 **Profil** : nom d'affichage, heatmap d'activité cuisine façon GitHub, et
