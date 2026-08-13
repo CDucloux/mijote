@@ -1359,6 +1359,16 @@ select {
 }
 
 /* Bouton « Ajouter » de l'éditeur : pastille pointillée, teinte accent. */
+/* Colonne unique de l'éditeur de recette : la barre d'action, les onglets et les
+   quatre panneaux la partagent, pour que titres, en-têtes de section et champs
+   restent alignés sur la même verticale, y compris sur grand écran (les fonds et
+   filets, eux, restent pleine largeur). */
+.editor-col {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
 .editor-add {
   width: 100%;
   display: flex;

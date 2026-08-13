@@ -187,10 +187,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
     const invalid = cleaned.filter(ingIsMissingQty);
     if (invalid.length > 0) {
       setForm(p => ({ ...p, ingredients: cleaned }));
-      setSection("ingrédients");
       setSaveError(`${invalid.length} ingrédient${invalid.length > 1 ? "s" : ""} sans quantité valide. Renseigne une quantité ou supprime la ligne.`);
-      const el = document.getElementById("editor-swiper");
-      if (el) el.scrollTo({ left: el.offsetWidth, behavior: "smooth" });
+      goSection("ingrédients", 1);
       return;
     }
     setSaveError("");
@@ -285,8 +283,18 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const paneInfo = useElasticScroll({ disabled: isDesktop });
   const paneIng = useElasticScroll({ disabled: isDesktop });
   const paneStep = useElasticScroll({ disabled: isDesktop });
-  const isProgrammaticScroll = useRef(false);
-  const scrollTimer = useRef(null);
+  // Ligne visée par un glisser en cours (index global), par liste.
+  const [ingDropIdx, setIngDropIdx] = useState(null);
+  const [stepDropIdx, setStepDropIdx] = useState(null);
+
+  const swiperRef = useRef(null);
+  // Onglet visé par un défilement programmé : tant qu'il n'est pas atteint, les
+  // panneaux TRAVERSÉS ne doivent pas s'allumer au passage (le saut Infos → Étapes
+  // dure plus longtemps qu'un délai fixe, d'où le clignotement d'autant plus marqué
+  // que l'onglet est loin). `null` = défilement libre au doigt.
+  const pendingTab = useRef(null);
+  const settleTimer = useRef(null);
+  useEffect(() => () => clearTimeout(settleTimer.current), []);
 
   const TABS = [
     { id: "info", label: "Infos", icon: "info" },
@@ -296,13 +304,28 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   ];
   const goSection = (id, i) => {
     setSection(id);
-    const el = document.getElementById("editor-swiper");
-    if (el) {
-      isProgrammaticScroll.current = true;
-      clearTimeout(scrollTimer.current);
-      el.scrollTo({ left: i * el.offsetWidth, behavior: "smooth" });
-      scrollTimer.current = setTimeout(() => { isProgrammaticScroll.current = false; }, 350);
+    const el = swiperRef.current;
+    if (!el) return;
+    const left = i * el.offsetWidth;
+    // Déjà en place : ne pas armer la garde, elle ne serait jamais levée (aucun
+    // événement de défilement) et bloquerait le balayage au doigt.
+    if (Math.abs(el.scrollLeft - left) < 2) { pendingTab.current = null; return; }
+    pendingTab.current = i;
+    el.scrollTo({ left, behavior: "smooth" });
+  };
+  const onSwiperScroll = (e) => {
+    const el = e.currentTarget;
+    const width = el.offsetWidth || 1;
+    const idx = Math.round(el.scrollLeft / width);
+    if (pendingTab.current !== null) {
+      if (idx === pendingTab.current && Math.abs(el.scrollLeft - idx * width) < 2) pendingTab.current = null;
+      // Filet : si le défilement s'interrompt avant la cible (geste concurrent), on
+      // rend la main au suivi libre dès qu'il s'est stabilisé.
+      clearTimeout(settleTimer.current);
+      settleTimer.current = setTimeout(() => { pendingTab.current = null; }, 140);
+      return;
     }
+    setSection(TABS[idx]?.id || "info");
   };
   // Petit en-tête de sous-section (pastille d'icône + libellé).
   const head = (icon, label, extra) => (
@@ -315,31 +338,36 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
 
   return (
     <div className="editor-enter" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* Barre d'action */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "var(--surface)" }}>
-        <button onClick={onCancel} className="cook-close-btn" style={{ flexShrink: 0, width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer" }}><Icon name="close" size={14} /></button>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>{recipe.id ? "Modifier la recette" : "Nouvelle recette"}</div>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>{form.name.trim() || "Sans titre"}</div>
+      {/* Barre d'action. Le fond et le filet restent pleine largeur, le CONTENU suit la
+          colonne `.editor-col`, commune aux onglets et aux panneaux : tout s'aligne. */}
+      <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "var(--surface)" }}>
+        <div className="editor-col" style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 20px" }}>
+          <button onClick={onCancel} className="cook-close-btn" style={{ flexShrink: 0, width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer" }}><Icon name="close" size={14} /></button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>{recipe.id ? "Modifier la recette" : "Nouvelle recette"}</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>{form.name.trim() || "Sans titre"}</div>
+          </div>
+          <button className="btn btn-primary btn-pill" style={{ flexShrink: 0 }} onClick={handleSave}><Icon name="check" size={15} /> Enregistrer</button>
         </div>
-        <button className="btn btn-primary btn-pill" style={{ flexShrink: 0 }} onClick={handleSave}><Icon name="check" size={15} /> Enregistrer</button>
       </div>
       {/* Onglets segmentés (icône + libellé), pilotent aussi le glissement */}
-      <div style={{ display: "flex", gap: 5, padding: "9px 12px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-        {TABS.map(({ id, label, icon }, i) => {
-          const active = section === id;
-          return (
-            <button key={id} onClick={() => goSection(id, i)} style={{
-              flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 3px", borderRadius: 11, border: "none", cursor: "pointer",
-              background: active ? "rgba(232,112,58,0.12)" : "transparent", color: active ? "var(--accent)" : "var(--text3)",
-              transition: "color 0.15s ease, background-color 0.15s ease" }}>
-              <Icon name={icon} size={17} color="currentColor" />
-              <span style={{ fontSize: 10.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{label}</span>
-            </button>
-          );
-        })}
+      <div style={{ padding: "9px 0", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+        <div className="editor-col" style={{ display: "flex", gap: 5, padding: "0 20px" }}>
+          {TABS.map(({ id, label, icon }, i) => {
+            const active = section === id;
+            return (
+              <button key={id} onClick={() => goSection(id, i)} style={{
+                flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 3px", borderRadius: 11, border: "none", cursor: "pointer",
+                background: active ? "rgba(232,112,58,0.12)" : "transparent", color: active ? "var(--accent)" : "var(--text3)",
+                transition: "color 0.15s ease, background-color 0.15s ease" }}>
+                <Icon name={icon} size={17} color="currentColor" />
+                <span style={{ fontSize: 10.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
-      <div id="editor-swiper"
+      <div id="editor-swiper" ref={swiperRef}
         onTouchStart={e => {
           const el = e.currentTarget;
           el._touchStartX = e.touches[0].clientX;
@@ -358,15 +386,12 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           else el.style.overflowX = "auto";
         }}
         onTouchEnd={e => { e.currentTarget.style.overflowX = "auto"; }}
-        onScroll={e => {
-          if (isProgrammaticScroll.current) return;
-          const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
-          setSection(["info", "ingrédients", "ustensiles", "étapes"][idx]);
-        }} style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+        onScroll={onSwiperScroll}
+        style={{ flex: 1, display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
 
         {/* Slide 1 – Infos */}
         <div ref={paneInfo.scrollRef} style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
-          <div ref={paneInfo.contentRef} style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 22 }}>
+          <div ref={paneInfo.contentRef} className="editor-col" style={{ padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 22 }}>
 
             {/* Photo + identité */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -474,7 +499,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
 
         {/* Slide 2 – Ingrédients */}
         <div ref={paneIng.scrollRef} style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
-          <div ref={paneIng.contentRef} style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div ref={paneIng.contentRef} className="editor-col" style={{ padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 12 }}>
             {head("leaf", "Ingrédients", form.ingredients.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, fontWeight: 600, color: "var(--text3)" }}>{form.ingredients.length}</span>)}
             {saveError && (
               <div className="shake" style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 13px", borderRadius: 12, background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.4)", color: "var(--red)", fontSize: 12.5, fontWeight: 600, lineHeight: 1.4 }}>
@@ -496,6 +521,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                       <DraggableIngredient key={ing.id} ing={ing} index={gi} total={form.ingredients.length}
                         draggable={!isDesktop} ingredientDB={ingredientDB} recipes={recipes}
                         autoFocus={ing.id === lastAddedIdRef.current}
+                        isDropTarget={ingDropIdx === gi} onTargetChange={setIngDropIdx}
                         onRawChange={handleRawChange}
                         onUpdateAmount={(id, v) => updIng(id, "amount", v)}
                         onRemove={remIng} onMove={moveIngGlobal} onEnter={() => addIngAt(gi + 1, g || "")} onBackspaceEmpty={removeIngBackspace} />
@@ -521,7 +547,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
 
         {/* Slide 4 – Étapes */}
         <div ref={paneStep.scrollRef} style={{ minWidth: "100%", scrollSnapAlign: "start", overflowY: "auto" }}>
-          <div ref={paneStep.contentRef} style={{ maxWidth: 620, margin: "0 auto", padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div ref={paneStep.contentRef} className="editor-col" style={{ padding: "20px 20px 40px", display: "flex", flexDirection: "column", gap: 12 }}>
             {head("list2", "Étapes", form.steps.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, fontWeight: 600, color: "var(--text3)" }}>{form.steps.length}</span>)}
             {!isDesktop && form.steps.length > 1 && (
               <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: "var(--text3)", background: "var(--surface)", border: "1px solid var(--border)", padding: "9px 12px", borderRadius: 12 }}>
@@ -542,6 +568,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                       <DraggableStep key={step.id} step={step} index={gi} total={form.steps.length}
                         ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
                         draggable={!isDesktop}
+                        isDropTarget={stepDropIdx === gi} onTargetChange={setStepDropIdx}
                         onUpdate={updStep} onRemove={remStep} onMove={moveStepGlobal} />
                     );
                   })}

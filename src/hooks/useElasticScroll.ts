@@ -87,7 +87,13 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
     // beaucoup d'éléments (ex. 55 cartes), `will-change` sur tout le contenu à chaque
     // amorce de scroll rasterise une couche géante et provoque du jank. On ne « lift »
     // qu'au moment où l'élastique s'arme réellement (mode === "bottom").
-    const onDown = (e: TouchEvent): void => { bounce?.cancel(); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0; };
+    // Un geste amorcé sur une poignée de réordonnancement pilote un glisser d'item,
+    // pas le défilement : l'élastique ne doit pas s'y superposer (sinon le contenu
+    // s'étire sous la ligne qu'on déplace).
+    const onDown = (e: TouchEvent): void => {
+      if ((e.target as HTMLElement | null)?.closest?.("[data-drag-handle]")) { dragging = false; return; }
+      bounce?.cancel(); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0;
+    };
     const onMove = (e: TouchEvent): void => {
       if (!dragging) return;
       const dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
