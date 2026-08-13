@@ -16,6 +16,8 @@ import { AutoResizeTextarea } from "../components/AutoResizeTextarea.jsx";
 import { RatingPicker } from "../components/RatingPicker.jsx";
 import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { useLS } from "../hooks/useLS.js";
+import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 
 // Formate un temps écoulé en `m:ss` (ou `h:mm:ss` au-delà d'une heure).
 function fmtElapsed(s) {
@@ -30,7 +32,7 @@ function fmtElapsed(s) {
 // - dans chaque step : les lignes composant s'affichent avec 🧈 (pas d'image dbId).
 // - bouton « Réaliser » → CookMode imbriqué sur le composant mis à l'échelle.
 
-function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooked, recipesById, stockSet, onUpdateRecipe, isNested = false }) {
+function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEFAULT_CATEGORIES, onClose, onCooked, recipesById, stockSet, onUpdateRecipe, isNested = false }) {
   const { techniques, notify } = useAppShell();
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const [stepIdx, setStepIdx] = useState(0);
@@ -55,6 +57,15 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
   const requestClose = () => { if (closing) return; setClosing(true); setTimeout(() => onClose(), 280); };
   const [subCook, setSubCook] = useState(null); // { recipe, mult }
   const [doneComponents, setDoneComponents] = useState(new Set());
+  // Checklist de « mise en place » (ingrédients/ustensiles rassemblés) : propre à
+  // CETTE session de cuisine, jamais persistée (elle n'a plus de sens à la prochaine).
+  const [checkedIngIds, setCheckedIngIds] = useState(() => new Set());
+  const [checkedUtIds, setCheckedUtIds] = useState(() => new Set());
+  const toggleIngChecked = (id) => setCheckedIngIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const toggleUtChecked = (id) => setCheckedUtIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  // Préférence d'affichage (liste / par catégorie) : persistée, elle reste valable
+  // d'une recette à l'autre.
+  const [groupByCategory, setGroupByCategory] = useLS("rf_cookModeGroupByCategory", false);
   // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
   const [iterOpen, setIterOpen] = useState(false);
   const [iterRating, setIterRating] = useState(null);
@@ -98,6 +109,20 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
   const overviewIngs = recipe.ingredients || [];
   const overviewUts = recipe.utensils || [];
   const hasOverview = overviewIngs.length > 0 || overviewUts.length > 0;
+
+  // Ingrédients de la mise en place, regroupés par catégorie (rayon) dans l'ordre
+  // configuré ; option d'affichage alternative à la liste plate.
+  const overviewIngGroups = useMemo(() => {
+    const buckets = {};
+    for (const ing of recipe.ingredients || []) {
+      const info = ingredientDB.find(d => d.id === ing.dbId) || (ing.name ? findIngredientMatch(ing.name, ingredientDB) : undefined);
+      const cat = info?.category || "other";
+      (buckets[cat] = buckets[cat] || []).push(ing);
+    }
+    return sortedCategoryEntries(categories)
+      .filter(([k]) => buckets[k]?.length)
+      .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: buckets[k] }));
+  }, [recipe.ingredients, ingredientDB, categories]);
   const realStepCount = (recipe.steps || []).length;
   const pages = useMemo(() => {
     const arr = [];
@@ -281,6 +306,34 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
     );
   };
 
+  // Rendu d'une ligne ingrédient COCHABLE (mise en place) : même contenu que
+  // `renderIngLine`, dans une rangée cliquable qui bascule son état « rassemblé ».
+  const renderOverviewIngRow = (ing) => {
+    const isComp = !!ing.recipeId && !ing.dbId;
+    const comp = isComp && recipesById ? recipesById.get(ing.recipeId) : null;
+    const displayName = isComp ? (comp?.name || ing.name || "Préparation introuvable") : ing.name;
+    const imgSrc = isComp ? (comp?.image || "") : getIngImage(ing.dbId, ing.name);
+    const gathered = checkedIngIds.has(ing.id);
+    return (
+      <button key={ing.id} type="button" onClick={() => toggleIngChecked(ing.id)} className="pressable"
+        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", borderRadius: 10 }}>
+        <span style={{ width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: "grid", placeItems: "center", border: `2px solid ${gathered ? "var(--green)" : "var(--border)"}`, background: gathered ? "var(--green)" : "transparent", transition: "background 0.15s, border-color 0.15s" }}>
+          {gathered && <Icon name="check" size={13} color="#fff" />}
+        </span>
+        <span style={{ flexShrink: 0, opacity: gathered ? 0.5 : 1, transition: "opacity 0.15s" }}>
+          {isComp
+            ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(232,112,58,0.1)", border: "1.5px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
+            : <IngImage src={imgSrc} alt={displayName} size={42} />
+          }
+        </span>
+        <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400, textDecoration: gathered ? "line-through" : "none", opacity: gathered ? 0.55 : 1, transition: "opacity 0.15s" }}>{capitalize(displayName)}</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", opacity: gathered ? 0.55 : 1, transition: "opacity 0.15s" }}>
+          {fmtQtyUnit(ing.amount * (mult || 1), ing.unit)}
+        </span>
+      </button>
+    );
+  };
+
   return createPortal(
     <>
       {/* CookMode imbriqué pour un composant */}
@@ -290,6 +343,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
           mult={subCook.mult}
           ingredientDB={ingredientDB}
           utensilDB={utensilDB}
+          categories={categories}
           recipesById={recipesById}
           stockSet={stockSet}
           isNested
@@ -411,22 +465,62 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
                   </p>
                   {overviewIngs.length > 0 && (
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ingrédients</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {overviewIngs.map(renderIngLine)}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ingrédients</span>
+                        {checkedIngIds.size > 0 && (
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.12)", borderRadius: 999, padding: "1px 8px" }}>
+                            {checkedIngIds.size}/{overviewIngs.length}
+                          </span>
+                        )}
+                        <button type="button" onClick={() => setGroupByCategory(v => !v)} className="pressable"
+                          title={groupByCategory ? "Afficher en liste" : "Regrouper par catégorie"}
+                          style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: groupByCategory ? "var(--accent)" : "var(--text3)", background: groupByCategory ? "rgba(232,112,58,0.1)" : "var(--surface2)", border: `1px solid ${groupByCategory ? "rgba(232,112,58,0.3)" : "var(--border)"}`, borderRadius: 999, padding: "5px 11px", cursor: "pointer", flexShrink: 0 }}>
+                          <Icon name="grid" size={12} color={groupByCategory ? "var(--accent)" : "var(--text3)"} /> Catégories
+                        </button>
                       </div>
+                      {groupByCategory ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                          {overviewIngGroups.map(g => (
+                            <div key={g.key}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                                <span style={{ fontSize: 13 }}>{g.icon}</span>
+                                <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{g.label}</span>
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                {g.items.map(renderOverviewIngRow)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {overviewIngs.map(renderOverviewIngRow)}
+                        </div>
+                      )}
                     </div>
                   )}
                   {overviewUts.length > 0 && (
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles</div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                        {overviewUts.map(u => (
-                          <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
-                            <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
-                            {u.name}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ustensiles</span>
+                        {checkedUtIds.size > 0 && (
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.12)", borderRadius: 999, padding: "1px 8px" }}>
+                            {checkedUtIds.size}/{overviewUts.length}
                           </span>
-                        ))}
+                        )}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {overviewUts.map(u => {
+                          const gathered = checkedUtIds.has(u.id);
+                          return (
+                            <button key={u.id} type="button" onClick={() => toggleUtChecked(u.id)} className="pressable"
+                              style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: gathered ? "rgba(76,175,125,0.12)" : "var(--surface2)", border: `1px solid ${gathered ? "rgba(76,175,125,0.35)" : "transparent"}`, borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: gathered ? "var(--green)" : "var(--text)", cursor: "pointer", textDecoration: gathered ? "line-through" : "none" }}>
+                              <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0, opacity: gathered ? 0.6 : 1 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
+                              {gathered && <Icon name="check" size={11} color="var(--green)" />}
+                              {u.name}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -585,7 +679,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, onClose, onCooke
   );
 }
 
-export function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose, onCooked, recipes = [], stockSet, onUpdateRecipe }) {
+export function CookMode({ recipe, mult, ingredientDB, utensilDB, categories, onClose, onCooked, recipes = [], stockSet, onUpdateRecipe }) {
   const recipesById = useMemo(() => new Map((recipes || []).map(r => [r.id, r])), [recipes]);
   return (
     <CookModeInner
@@ -593,6 +687,7 @@ export function CookMode({ recipe, mult, ingredientDB, utensilDB, onClose, onCoo
       mult={mult}
       ingredientDB={ingredientDB}
       utensilDB={utensilDB}
+      categories={categories}
       onClose={onClose}
       onCooked={onCooked}
       recipesById={recipesById}
