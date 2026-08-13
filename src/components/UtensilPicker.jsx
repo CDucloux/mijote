@@ -51,7 +51,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
     <div style={{ minWidth: "100%", scrollSnapAlign: "start", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Selected chips */}
       {selected.length > 0 && (
-        <div style={{ padding: "14px 16px 0", display: "flex", flexWrap: "wrap", gap: 8, flexShrink: 0 }}>
+        <div className="editor-col" style={{ padding: "14px 20px 0", display: "flex", flexWrap: "wrap", gap: 8, flexShrink: 0 }}>
           {selected.map(u => {
             const db = utensilDB.find(d => d.id === u.dbId);
             const active = replacing === u.id;
@@ -75,19 +75,21 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
 
       {/* Bandeau mode remplacement */}
       {replacing && (
-        <div className="slide-up" style={{ margin: "12px 16px 0", padding: "9px 12px", borderRadius: 12, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <Icon name="swap" size={14} color="var(--accent)" />
-          <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 500, flex: 1 }}>
-            Choisis un ustensile pour remplacer <strong>{replacingName}</strong>
-          </span>
-          <button onClick={() => setReplacing(null)} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
-            <Icon name="close" size={13} color="var(--accent)" />
-          </button>
+        <div className="slide-up editor-col" style={{ marginTop: 12, padding: "0 20px", flexShrink: 0 }}>
+          <div style={{ padding: "9px 12px", borderRadius: 12, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+            <Icon name="swap" size={14} color="var(--accent)" />
+            <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 500, flex: 1 }}>
+              Choisis un ustensile pour remplacer <strong>{replacingName}</strong>
+            </span>
+            <button onClick={() => setReplacing(null)} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
+              <Icon name="close" size={13} color="var(--accent)" />
+            </button>
+          </div>
         </div>
       )}
 
       {/* Search */}
-      <div style={{ padding: "12px 16px 8px", flexShrink: 0 }}>
+      <div className="editor-col" style={{ padding: "12px 20px 8px", flexShrink: 0 }}>
         <div style={{ position: "relative" }}>
           <div style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex" }}>
             <Icon name="search" size={16} color="var(--text3)" />
@@ -114,8 +116,8 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
       </div>
 
       {/* Grid */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "4px 16px 20px" }}>
-        <div ref={contentRef} style={{ minHeight: "100%" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto" }}>
+        <div ref={contentRef} className="editor-col" style={{ minHeight: "100%", padding: "4px 20px 20px" }}>
         {sorted.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "32px 0" }}>Aucun ustensile trouvé</div>
         ) : (

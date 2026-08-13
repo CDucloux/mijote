@@ -7,6 +7,7 @@ import { MoveArrows } from "./MoveArrows.jsx";
 import { IngImage } from "./Img.jsx";
 import { UtImage } from "./StepPills.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
 
 // Petit label de sous-bloc (Ingrédients liés / Ustensiles liés), épuré, sans capitales.
 function BlockLabel({ icon, color, children }) {
@@ -18,10 +19,11 @@ function BlockLabel({ icon, color, children }) {
   );
 }
 
-export function DraggableStep({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, onUpdate, onRemove, onMove }) {
-  const [dragging, setDragging] = useState(false);
-  const [over, setOver] = useState(false);
+export function DraggableStep({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, isDropTarget = false, onUpdate, onRemove, onMove, onTargetChange }) {
   const [trashHover, setTrashHover] = useState(false);
+  const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
+  // La carte saisie se soulève ; la carte VISÉE s'entoure d'accent.
+  const aimed = isDropTarget && !dragging;
   // Champs optionnels repliés par défaut pour garder une carte d'étape compacte.
   const [showPhoto, setShowPhoto] = useState(!!step.image);
   const [showTip, setShowTip] = useState(!!step.tip);
@@ -33,18 +35,13 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
 
   return (
     <div
-      draggable={isDraggable}
-      onDragStart={isDraggable ? e => { e.dataTransfer.setData("stepIdx", String(index)); setDragging(true); } : undefined}
-      onDragEnd={isDraggable ? () => setDragging(false) : undefined}
-      onDragOver={isDraggable ? e => { e.preventDefault(); setOver(true); } : undefined}
-      onDragLeave={isDraggable ? () => setOver(false) : undefined}
-      onDrop={isDraggable ? e => { e.preventDefault(); setOver(false); const raw = e.dataTransfer.getData("stepIdx"); if (raw === "") return; const from = +raw; if (from !== index) onMove(from, index); } : undefined}
-      style={{ background: "var(--surface)", borderRadius: 18, padding: 16, border: `1px solid ${over ? "var(--accent)" : "var(--border)"}`, opacity: dragging ? 0.5 : 1, boxShadow: over ? "0 8px 24px -12px rgba(232,112,58,0.5)" : "0 1px 2px rgba(0,0,0,0.04)", transition: "opacity 0.15s, border-color 0.15s, box-shadow 0.2s", cursor: isDraggable ? "grab" : "default" }}
+      {...rowProps}
+      style={{ background: "var(--surface)", borderRadius: 18, padding: 16, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, boxShadow: aimed ? "0 8px 24px -12px rgba(232,112,58,0.5)" : "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.15s, box-shadow 0.2s", ...(dragging ? LIFTED_ROW_STYLE : null) }}
     >
       {/* En-tête : poignée + numéro (badge dégradé) · section + supprimer */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          {isDraggable && <span style={{ display: "flex", color: "var(--text3)", cursor: "grab", touchAction: "none" }}><Icon name="drag" size={16} color="var(--text3)" /></span>}
+          {isDraggable && <span {...handleProps} style={{ ...handleProps.style, display: "flex", color: "var(--text3)" }}><Icon name="drag" size={16} color="var(--text3)" /></span>}
           <span style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #f0894e)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", boxShadow: "0 2px 6px -1px rgba(232,112,58,0.5)", flexShrink: 0 }}>{index + 1}</span>
           {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} />}
         </div>

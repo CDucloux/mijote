@@ -3,34 +3,27 @@ import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { MoveArrows } from "./MoveArrows.jsx";
+import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
 
 // Ligne d'ingrédient réorganisable LIBREMENT dans la liste complète (index global).
-// Drag tactile sur mobile (draggable=true), flèches ↑/↓ sur desktop. La section est
+// Glisser au doigt sur mobile (poignée), flèches ↑/↓ sur desktop. La section est
 // déterminée par la POSITION (pas de pastille) : voir `moveWithAdopt`.
 export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
-  ingredientDB, recipes, autoFocus,
-  onRawChange, onUpdateAmount, onRemove, onMove, onEnter, onBackspaceEmpty,
+  ingredientDB, recipes, autoFocus, isDropTarget = false,
+  onRawChange, onUpdateAmount, onRemove, onMove, onTargetChange, onEnter, onBackspaceEmpty,
 }) {
-  const [dragging, setDragging] = useState(false);
-  const [over, setOver] = useState(false);
   const [trashHover, setTrashHover] = useState(false);
   const inputRef = useRef(null);
+  const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
+  // La ligne saisie se soulève ; la ligne VISÉE s'entoure d'accent.
+  const dragStyle = dragging ? LIFTED_ROW_STYLE : null;
+  const aimed = isDropTarget && !dragging;
 
   useEffect(() => { if (autoFocus) inputRef.current?.focus(); }, [autoFocus]);
 
-  const dragProps = isDraggable ? {
-    draggable: true,
-    onDragStart: e => { e.dataTransfer.setData("ingIdx", String(index)); setDragging(true); },
-    onDragEnd: () => setDragging(false),
-    onDragOver: e => { e.preventDefault(); setOver(true); },
-    onDragLeave: () => setOver(false),
-    // Drop sur une ligne : déplacement libre (l'item adopte la section d'arrivée).
-    onDrop: e => { e.preventDefault(); setOver(false); const raw = e.dataTransfer.getData("ingIdx"); if (raw === "") return; const from = +raw; if (from !== index) onMove(from, index); },
-  } : {};
-
   const handle = isDraggable ? (
-    <span style={{ flexShrink: 0, color: "var(--text3)", cursor: "grab", display: "flex", alignItems: "center", touchAction: "none" }}>
+    <span {...handleProps} style={{ ...handleProps.style, flexShrink: 0, color: "var(--text3)", display: "flex", alignItems: "center" }}>
       <Icon name="drag" size={16} color="var(--text3)" />
     </span>
   ) : (
@@ -48,7 +41,7 @@ export function DraggableIngredient({
   if (ing.recipeId) {
     const comp = (recipes || []).find(r => r.id === ing.recipeId);
     return (
-      <div {...dragProps} style={{ background: "rgba(232,112,58,0.06)", borderRadius: 12, padding: 12, border: `1px solid ${over ? "var(--accent)" : "rgba(232,112,58,0.4)"}`, opacity: dragging ? 0.5 : 1, transition: "opacity 0.15s, border-color 0.15s", display: "flex", alignItems: "center", gap: 10 }}>
+      <div {...rowProps} style={{ background: "rgba(232,112,58,0.06)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "rgba(232,112,58,0.4)"}`, transition: "border-color 0.15s, box-shadow 0.2s", display: "flex", alignItems: "center", gap: 10, ...dragStyle }}>
         {handle}
         <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><BaseIcon size={20} /></span>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -71,7 +64,7 @@ export function DraggableIngredient({
   // ── Ligne ingrédient brut ──
   const img = ing.dbId ? ingredientDB.find(d => d.id === ing.dbId)?.image : null;
   return (
-    <div {...dragProps} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: `1px solid ${over ? "var(--accent)" : "var(--border)"}`, opacity: dragging ? 0.5 : 1, transition: "opacity 0.15s, border-color 0.15s" }}>
+    <div {...rowProps} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, transition: "border-color 0.15s, box-shadow 0.2s", ...dragStyle }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {handle}
         {img
