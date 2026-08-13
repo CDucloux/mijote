@@ -59,7 +59,7 @@ export default defineConfig([
   },
   {
     // Cloud Functions : code CommonJS (require/module/exports) exécuté par Node,
-    // pas le navigateur — sinon require/module/Buffer/__dirname sortent en no-undef.
+    // pas le navigateur, sinon require/module/Buffer/__dirname sortent en no-undef.
     files: ['functions/**/*.js'],
     languageOptions: {
       sourceType: 'commonjs',

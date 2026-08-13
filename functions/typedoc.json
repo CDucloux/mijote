@@ -4,7 +4,7 @@
   "out": "docs",
   "exclude": ["src/**/*.test.ts"],
   "readme": "README.md",
-  "name": "Mijoté — Cloud Functions",
+  "name": "Mijoté : Cloud Functions",
   "excludePrivate": false,
   "categorizeByGroup": true,
   "intentionallyNotExported": ["CheckoutData", "PortalData"]

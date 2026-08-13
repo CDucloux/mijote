@@ -98,7 +98,7 @@ export function ingredientGrams(recipeIng: IngredientLine, dbItem?: DbItem): num
   const entry = UNIT_GRAMS[unit];
   let perUnit: number;
   // Unité vide/inconnue (« 2 avocats », « 1 citron vert ») : un nombre nu dénombre
-  // des PIÈCES dès que l'ingrédient a un poids à la pièce — sinon on retombe sur des
+  // des PIÈCES dès que l'ingrédient a un poids à la pièce, sinon on retombe sur des
   // grammes. Sans ce repli, « 2 avocats » valait 2 g et faussait tout le calcul.
   if (entry == null) perUnit = dbItem?.gramsPerPiece || 1;
   else if (typeof entry === "object") perUnit = dbItem?.gramsPerPiece || entry.g; // pièce : poids spécifique sinon défaut
@@ -133,7 +133,7 @@ export const buildRecipeIndex = (recipes: NutriRecipe[] | null | undefined): Map
  * instantané figé à l'enregistrement : si l'ingrédient n'était pas encore dans la
  * base à ce moment-là, il est vide. On retombe alors sur un appariement par NOM
  * (comme l'image, la saison et le stock côté fiche), pour que la nutrition tienne
- * compte des ingrédients appariés après coup — sans devoir ré-enregistrer.
+ * compte des ingrédients appariés après coup, sans devoir ré-enregistrer.
  */
 function dbItemFor(line: IngredientLine, ingredientDB: DbItem[]): DbItem | undefined {
   if (line.dbId) {

@@ -8,7 +8,7 @@ import { useIsDesktop } from "../hooks/useIsDesktop.js";
 // Désactivé sur desktop (souris).
 //
 // Le montage de la primitive suit celui du conteneur : idéal pour des contenus
-// CONDITIONNELS (feuilles/modales) où les refs n'existent qu'à l'ouverture — les
+// CONDITIONNELS (feuilles/modales) où les refs n'existent qu'à l'ouverture, les
 // listeners s'attachent alors au bon moment (contrairement à un hook appelé une
 // seule fois au montage de la page parente).
 //

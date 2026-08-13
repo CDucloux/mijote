@@ -117,7 +117,7 @@ export function HouseholdPanel({ onClose }) {
             </>
           )}
 
-          {/* Inviter — uniquement des utilisateurs déjà connus de Mijoté */}
+          {/* Inviter, uniquement des utilisateurs déjà connus de Mijoté */}
           {owner && !full && (
             card(
               <>

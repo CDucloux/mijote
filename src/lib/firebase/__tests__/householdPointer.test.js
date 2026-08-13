@@ -35,7 +35,7 @@ describe("subscribeHouseholdPointer", () => {
     expect(cb).toHaveBeenCalledWith(null);
   });
 
-  it("N'émet PAS null sur erreur d'écoute (blip réseau/jeton) — garde le dernier pointeur, évite la bascule solo", () => {
+  it("N'émet PAS null sur erreur d'écoute (blip réseau/jeton), garde le dernier pointeur, évite la bascule solo", () => {
     const cb = vi.fn();
     subscribeHouseholdPointer("me", cb);
     successCb({ exists: () => true, data: () => ({ id: "h1", migrated: true }) }); // foyer connu

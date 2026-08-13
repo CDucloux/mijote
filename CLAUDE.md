@@ -49,5 +49,5 @@ Avant de considérer une tâche terminée :
 - Ne jamais commiter de secret (`sk_live_`, `whsec_`, clés API) : ils vivent dans les secrets Firebase / variables d'environnement.
 
 ## 8. Typographie : tirets cadratins bannis
-- **Aucun tiret cadratin (« — », caractère U+2014) nulle part, sans exception** : code, commentaires, docstrings, documentation (CLAUDE.md, README, CHANGELOG…), UI/front, messages de commit. Si tu en vois un, tu le retires, où qu'il soit.
+- **Aucun tiret cadratin (le tiret long typographique, caractère Unicode U+2014) nulle part, sans exception** : code, commentaires, docstrings, documentation (CLAUDE.md, README, CHANGELOG…), UI/front, messages de commit. Si tu en vois un, tu le retires, où qu'il soit, y compris dans ce fichier, qui ne doit lui-même jamais en contenir.
 - Remplacer selon le contexte par une virgule, un point, des parenthèses, des deux-points, ou à défaut un tiret simple (`-`) pour une liaison courte.

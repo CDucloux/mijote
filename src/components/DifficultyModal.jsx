@@ -79,7 +79,7 @@ export function DifficultyModal({ data, onClose }) {
           <Col gap={8}>
             {data.mods.map((m, i) => (
               <Row key={i} gap={12} style={{ padding: "12px 14px", borderRadius: 14, background: m.applied ? "rgba(232,112,58,0.09)" : "var(--surface2)", border: `1px solid ${m.applied ? "rgba(232,112,58,0.28)" : "var(--border)"}`, opacity: m.applied ? 1 : 0.68 }}>
-                <IconChip size={26} radius={9} tint={m.applied ? "var(--accent)" : "var(--surface3)"} style={{ fontSize: 12.5, fontWeight: 800, color: m.applied ? "#fff" : "var(--text3)" }}>{m.applied ? "+1" : "—"}</IconChip>
+                <IconChip size={26} radius={9} tint={m.applied ? "var(--accent)" : "var(--surface3)"} style={{ fontSize: 12.5, fontWeight: 800, color: m.applied ? "#fff" : "var(--text3)" }}>{m.applied ? "+1" : "-"}</IconChip>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{m.label}</div>
                   <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 1 }}>{m.detail}</div>

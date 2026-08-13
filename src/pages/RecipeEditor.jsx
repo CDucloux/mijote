@@ -80,7 +80,7 @@ function EditorSectionHeader({ name, onRename, onDelete }) {
   );
 }
 
-// Bouton « Nouvelle section » — volontairement DISTINCT des ajouts d'ingrédient/étape
+// Bouton « Nouvelle section », volontairement DISTINCT des ajouts d'ingrédient/étape
 // (fond teinté accent + icône layers), pour ne pas les confondre. Au clic, il se
 // déplie en une petite carte de nommage soignée.
 function NewSectionButton({ onAdd }) {
@@ -131,7 +131,7 @@ function NewSectionButton({ onAdd }) {
 }
 
 // Barre d'ajout d'une zone d'ingrédients (principale ou section) : le choix est
-// toujours présenté — ajouter un ingrédient brut OU assigner une préparation de base.
+// toujours présenté, ajouter un ingrédient brut OU assigner une préparation de base.
 // `canBase` = false uniquement quand on édite soi-même un composant (mono-niveau v1).
 function SectionAddBar({ onAddIngredient, components, canBase = true }) {
   const [picking, setPicking] = useState(false);
@@ -243,7 +243,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
     up("ingredients", arr);
   };
 
-  // Étapes — mêmes primitives : insertion positionnelle + déplacement libre.
+  // Étapes, mêmes primitives : insertion positionnelle + déplacement libre.
   const addStepAt = (index, group) => {
     const arr = form.steps.slice();
     arr.splice(index, 0, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [], group });
@@ -255,7 +255,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
 
   // ── Sections partagées (ingrédients + étapes) ───────────────────────────────
   // `sectionNames` porte l'ORDRE des sections et permet les sections VIDES (créées
-  // avant d'y ajouter le moindre item — le modèle « libellé » ne peut pas les stocker).
+  // avant d'y ajouter le moindre item, le modèle « libellé » ne peut pas les stocker).
   const [sectionNames, setSectionNames] = useState(() => groupOrder(form));
   // Union ordonnée : sections déclarées + toute section présente dans les données.
   const allSections = [...new Set([...sectionNames, ...groupOrder(form)])];
@@ -324,7 +324,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
         </div>
         <button className="btn btn-primary btn-pill" style={{ flexShrink: 0 }} onClick={handleSave}><Icon name="check" size={15} /> Enregistrer</button>
       </div>
-      {/* Onglets segmentés (icône + libellé) — pilotent aussi le glissement */}
+      {/* Onglets segmentés (icône + libellé), pilotent aussi le glissement */}
       <div style={{ display: "flex", gap: 5, padding: "9px 12px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
         {TABS.map(({ id, label, icon }, i) => {
           const active = section === id;

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// ─── SEED — pousse la couche de données YAML vers Firestore ───────────────────
+// ─── SEED : pousse la couche de données YAML vers Firestore ───────────────────
 // Lit data/*.yaml, valide avec la même lib que l'UI (src/lib/dataYaml.js), puis :
 //   • écrit la Master DB    → master/ingredients · master/utensils · master/techniques
 //   • publie les bases      → publicRecipes/* sous l'auteur officiel `mijote-official`
 //
 // Opération MANUELLE (comme le déploiement des règles Firestore). Nécessite un
-// compte de service Firebase Admin — qui CONTOURNE les règles client, seul moyen
+// compte de service Firebase Admin, qui CONTOURNE les règles client, seul moyen
 // d'écrire des docs publics sous un authorUid synthétique.
 //
 // Identifiants admin (au choix, du plus simple au plus explicite) :
@@ -19,7 +19,7 @@
 //   npm run seed -- --dry-run     # valide et affiche, n'écrit rien (sans credentials)
 //
 // Merge NON destructif : chaque entrée est mise à jour (par id, sinon par nom) ou
-// ajoutée — aucune entrée existante n'est jamais supprimée. `ingredients.yaml` et
+// ajoutée, aucune entrée existante n'est jamais supprimée. `ingredients.yaml` et
 // `utensils.yaml` sont des échantillons de format, hors du seed par défaut.
 
 import fs from "node:fs";
@@ -98,21 +98,21 @@ if (wants("techniques")) {
   const { items, errors } = parseTechniquesYaml(read("techniques.yaml"));
   if (errors.length) fail(`techniques.yaml : ${errors.length} erreur(s)\n  - ` + errors.join("\n  - "));
   parsed.techniques = items;
-  log(`✓ techniques.yaml      — ${items.length} techniques`);
+  log(`✓ techniques.yaml      : ${items.length} techniques`);
 }
 
 if (wants("ingredients")) {
   const { items, errors } = parseIngredientsYaml(read("ingredients.yaml"), { validCategories: Object.keys(DEFAULT_CATEGORIES) });
   if (errors.length) fail(`ingredients.yaml : ${errors.length} erreur(s)\n  - ` + errors.join("\n  - "));
   parsed.ingredients = items;
-  log(`✓ ingredients.yaml     — ${items.length} ingrédients`);
+  log(`✓ ingredients.yaml     : ${items.length} ingrédients`);
 }
 
 if (wants("utensils")) {
   const { items, errors } = parseUtensilsYaml(read("utensils.yaml"));
   if (errors.length) fail(`utensils.yaml : ${errors.length} erreur(s)\n  - ` + errors.join("\n  - "));
   parsed.utensils = items;
-  log(`✓ utensils.yaml        — ${items.length} ustensiles`);
+  log(`✓ utensils.yaml        : ${items.length} ustensiles`);
 }
 
 if (wants("bases")) {
@@ -131,7 +131,7 @@ if (wants("bases")) {
   }
   if (errs.length) fail(`base-preparations.yaml : ${errs.length} erreur(s)\n  - ` + errs.join("\n  - "));
   parsed.bases = bases;
-  log(`✓ base-preparations.yaml — ${bases.length} préparations de base`);
+  log(`✓ base-preparations.yaml : ${bases.length} préparations de base`);
 }
 
 // Lie les lignes d'une base à la base d'ingrédients master (par nom) et calcule
@@ -157,7 +157,7 @@ function enrichBase(recipe, masterIngredients, resolve) {
 if (DRY) {
   // Sans Firestore (donc sans base master), on ne peut pas scorer : aperçu seul.
   const docs = (parsed.bases || []).flatMap(b => buildPublishBundle(b, MIJOTE_OFFICIAL, {}).docs);
-  log("\n— DRY RUN — rien n'est écrit.");
+  log("\n[DRY RUN] rien n'est écrit.");
   if (parsed.bases) log(`  Bases → ${docs.length} docs publics sous ${MIJOTE_OFFICIAL.uid} (Nutri-Score calculé au seed réel) :`);
   for (const d of docs) log(`    publicRecipes/${d.pubId}  (${d.name})`);
   log("\n✓ Validation OK.");
@@ -229,7 +229,7 @@ try {
     const masterSnap = await dbAdmin.doc("master/ingredients").get();
     const masterIngredients = [...(masterSnap.exists ? (masterSnap.data().items || []) : []), ...(parsed.ingredients || [])];
     const resolve = createIngredientResolver(masterIngredients);
-    if (!masterIngredients.length) log("  ⚠ master/ingredients est vide → Nutri-Score non calculable (« — »). Seed les ingrédients d'abord.");
+    if (!masterIngredients.length) log("  ⚠ master/ingredients est vide → Nutri-Score non calculable (affiché « - »). Seed les ingrédients d'abord.");
 
     let totalLines = 0, linkedLines = 0;
     const baseDocs = parsed.bases.flatMap(b => {

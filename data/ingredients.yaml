@@ -8,14 +8,14 @@
 #   id            dbid stable (facultatif ; généré si absent à l'import).
 #   name          nom affiché (requis).
 #   aliases       autres appellations (pour le rapprochement d'ingrédients).
-#   category      clé de catégorie (voir src/constants/categories.js) — doit
+#   category      clé de catégorie (voir src/constants/categories.js) : doit
 #                 exister dans les catégories de la base.
 #   months        mois de saison [1..12] (facultatif).
 #   gramsPerPiece poids moyen d'une pièce, en g (facultatif).
 #   image         URL (facultatif).
 #   nutrition     valeurs pour 100 g : calories, protein, carbs, sugar, fat,
 #                 saturatedFat, omega3, fiber, salt.
-#   tips          [{ type, text }] — voir src/constants/tipTypes.js.
+#   tips          [{ type, text }] : voir src/constants/tipTypes.js.
 
 - id: db_i_carotte
   name: Carotte

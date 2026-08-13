@@ -1,4 +1,4 @@
-# Mijoté — Bibliothèque métier
+# Mijoté : Bibliothèque métier
 
 Cette documentation est générée automatiquement à partir des annotations **TSDoc**
 du dossier [`src/lib`](https://github.com/CDucloux/mijote/tree/main/src/lib) : le
@@ -6,7 +6,7 @@ cœur logique de l'application, entièrement typé et découplé de React.
 
 L'organisation suit **5 domaines** + quelques modules transverses à la racine.
 
-## 🔥 `firebase/` — Infrastructure
+## 🔥 `firebase/` : Infrastructure
 
 Accès au backend Firebase, sans logique métier.
 
@@ -18,7 +18,7 @@ Accès au backend Firebase, sans logique métier.
 | `storage` | Upload d'images (compression, URLs) |
 | `imageResize` | Redimensionnement des photos avant import IA (≤ 2000 px, JPEG) |
 
-## 🥕 `food/` — Ingrédients & alimentation
+## 🥕 `food/` : Ingrédients & alimentation
 
 Tout ce qui touche aux ingrédients : rapprochement, saisonnalité, régimes, courses.
 
@@ -32,7 +32,7 @@ Tout ce qui touche aux ingrédients : rapprochement, saisonnalité, régimes, co
 | `shoppingAggregate` | Agrégation des lignes de courses par ingrédient |
 | `ingredientsMarkdown` | Rendu Markdown des ingrédients |
 
-## 📅 `planning/` — Planning repas & batch cooking
+## 📅 `planning/` : Planning repas & batch cooking
 
 Génération de semaine, mutualisation de la préparation, tableau de bord.
 
@@ -46,7 +46,7 @@ Génération de semaine, mutualisation de la préparation, tableau de bord.
 | `spotlight` | Mise en avant (ingrédient/recette du moment) |
 | `stepTimers` | Minuteurs des étapes de cuisson |
 
-## 📖 `recipes/` — Recettes
+## 📖 `recipes/` : Recettes
 
 Le cœur : schéma, filtres, tri, difficulté, Nutri-Score, import IA, export PDF.
 
@@ -65,7 +65,7 @@ Le cœur : schéma, filtres, tri, difficulté, Nutri-Score, import IA, export PD
 | `recipeUrlImport` | Extraction IA depuis une URL ou des photos |
 | `recipePdf` | Export PDF |
 
-## 🏠 `household/` — Foyer & partage
+## 🏠 `household/` : Foyer & partage
 
 Espace partagé (foyer), migration, recettes publiques.
 
@@ -77,7 +77,7 @@ Espace partagé (foyer), migration, recettes publiques.
 | `publicRecipes` | Publication / clonage de recettes communautaires |
 | `dataYaml` | Sérialisation YAML (export/import de données) |
 
-## 🧰 Racine — Transverse
+## 🧰 Racine : Transverse
 
 | Module | Rôle |
 | --- | --- |

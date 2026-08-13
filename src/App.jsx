@@ -51,7 +51,7 @@ import { ImportFromPicture } from "./pages/ImportFromPicture.jsx";
 import { PlusPage } from "./pages/PlusPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
-// Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent —
+// Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent,
 // et non à chaque render d'App (toast, statut de sync…). Requiert des props stables
 // (setters useState/useLS, valeurs mémoïsées) + une valeur de contexte stable.
 const MealPlanPageMemo = memo(MealPlanPage);
@@ -68,7 +68,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   const navigate = useNavigate();
   const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : location.pathname.startsWith("/recipes") ? "recipes" : location.pathname.startsWith("/meal-plan") ? "meal-plan" : "home");
   // Fiche ingrédient (/admin/ingredients/{id}) : page PUBLIQUE (lisible par tous, en
-  // lecture seule pour les non-admins) — on la laisse passer même hors console admin.
+  // lecture seule pour les non-admins), on la laisse passer même hors console admin.
   const adminFiche = /^\/admin\/ingredients\/.+/.test(location.pathname);
   const setTab = useCallback((id) => navigate(TAB_BY_ID[id] || "/home"), [navigate]);
   // ── Auth state (declared early so DB setters can read isAdmin) ────────────────
@@ -98,7 +98,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     try { setDirectory(await fetchUserDirectory()); }
     catch { directoryLoadedRef.current = null; }
   }, [user]);
-  // Base de référence (Master partagée + ajouts perso) — voir useMasterData.
+  // Base de référence (Master partagée + ajouts perso), voir useMasterData.
   const {
     masterDB, setMasterDB, userDB, setUserDB,
     categories, setCategories, ingredientDB, utensilDB, techniques,
@@ -139,7 +139,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Pages d'import IA (routes dédiées) : ne correspondent à aucune recette.
   const importRoute = recipeSeg === "import-from-url" ? "url" : recipeSeg === "import-from-picture" ? "picture" : null;
   // Éditeur d'une NOUVELLE recette (création manuelle ou brouillon d'import IA) :
-  // route dédiée pour lui donner une URL stable — le retour arrière / rafraîchis-
+  // route dédiée pour lui donner une URL stable, le retour arrière / rafraîchis-
   // sement ont un comportement défini et le brouillon extrait n'est plus perdu par
   // mégarde (il est aussi mis en cache en sessionStorage, restauré ci-dessous).
   const newRoute = recipeSeg === "new";
@@ -210,8 +210,8 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Valeur de contexte À IDENTITÉ STABLE : sans ça, `shellValue` était recréé à
   // chaque render → TOUS les consommateurs useAppShell (toutes les pages, cartes,
   // sections…) se re-rendaient à chaque render d'App, même pour un simple toast.
-  // Les fonctions passent par une ref (toujours la dernière closure, jamais périmée
-  // — utile car certaines sont définies après les retours anticipés), et l'objet ne
+  // Les fonctions passent par une ref (toujours la dernière closure, jamais périmée,
+  // utile car certaines sont définies après les retours anticipés), et l'objet ne
   // change que quand une VRAIE valeur change (user, syncStatus, thème, techniques…).
   // Déclaré AVANT tout return conditionnel (règles des hooks) ; la ref est remplie
   // plus bas, une fois les fonctions définies.
@@ -233,13 +233,13 @@ function AppInner({ user, isDark, toggleTheme }) {
     [user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, stableApi]
   );
 
-  // Recettes — opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
+  // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
   const { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF } = useRecipeCrud({
     recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
     ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate,
   });
 
-  // Publier / dépublier / cloner des recettes publiques (communauté) — voir usePublicRecipes.
+  // Publier / dépublier / cloner des recettes publiques (communauté), voir usePublicRecipes.
   const { publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic } =
     usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate });
 
@@ -306,8 +306,8 @@ function AppInner({ user, isDark, toggleTheme }) {
   }, [notify]);
 
   // Journal de cuisine : un plat mené jusqu'au bout du mode pas à pas est consigné
-  // au jour courant (dans les préférences, synchronisées perso). C'est CE journal —
-  // et non le planning — qui alimente la heatmap d'activité du profil.
+  // au jour courant (dans les préférences, synchronisées perso). C'est CE journal,
+  // et non le planning, qui alimente la heatmap d'activité du profil.
   const logCooked = useCallback((recipeId) => {
     if (!recipeId) return;
     const day = new Date().toISOString().slice(0, 10);
@@ -394,7 +394,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   const [scrollHold, setScrollHold] = useState(false); // masque l'onglet le temps de se caler
   useEffect(() => { if (publicPubId) lastPublicPubId.current = publicPubId; }, [publicPubId]);
   // La console admin (/admin) est réservée aux admins ; tout autre utilisateur connecté
-  // est renvoyé vers son profil — SAUF la fiche ingrédient, qui reste publique.
+  // est renvoyé vers son profil, SAUF la fiche ingrédient, qui reste publique.
   useEffect(() => { if (tab === "admin" && user && !isAdmin && !adminFiche) navigate("/profile", { replace: true }); }, [tab, user, isAdmin, adminFiche, navigate]);
   const atTabView = !isEditing && !publicPubId
     && !(selectedRecipe && currentRecipe)
@@ -508,7 +508,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // anticipés) est publiée dans la ref stable déclarée en tête de composant. Écriture
   // pendant le render volontaire (motif « latest ref ») : idempotente, sans effet de
   // bord, et ces fonctions ne sont appelées que sur action utilisateur (jamais au
-  // render ni dans un effet de montage) — donc jamais lue avant d'être remplie.
+  // render ni dans un effet de montage), donc jamais lue avant d'être remplie.
   // eslint-disable-next-line react-hooks/refs
   shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages };
 

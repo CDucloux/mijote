@@ -2,7 +2,7 @@
  * Import de recette par IA (Cloud Functions).
  *
  * Deux points d'entrée `onCall`, tous deux réservés côté serveur (admin illimité,
- * abonné Mijoté+ avec quota — cf. {@link assertImportAllowed}), jamais en masquant
+ * abonné Mijoté+ avec quota, cf. {@link assertImportAllowed}), jamais en masquant
  * un simple bouton :
  * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 4.5) ;
  * - {@link importRecipeFromImages} : extraction depuis 1–2 photos de livre (Sonnet).
@@ -28,7 +28,7 @@ import {
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
 
-/** Clé API Anthropic (secret) — l'extraction IA est refusée si elle est absente. */
+/** Clé API Anthropic (secret), l'extraction IA est refusée si elle est absente. */
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 /** E-mail de l'admin autorisé (le créateur), paramètre non secret. */
 const ADMIN_EMAIL = defineString("ADMIN_EMAIL");
@@ -82,7 +82,7 @@ function parseJsonLoose(s: string): unknown {
 
 /**
  * Récupère le HTML d'une page côté serveur (pas de CORS), avec un UA de navigateur
- * — beaucoup de sites renvoient une page vide aux bots —, un timeout et une taille
+ * (beaucoup de sites renvoient une page vide aux bots), un timeout et une taille
  * bornée pour éviter les abus.
  *
  * @param url - L'URL de la page à récupérer.
@@ -297,7 +297,7 @@ function logRawModelJson(kind: string, raw: string): void {
 
 /**
  * Lit et borne la liste de noms d'ustensiles connus fournie par le client (base
- * master) — elle sert à restreindre les propositions du modèle.
+ * master), elle sert à restreindre les propositions du modèle.
  *
  * @param request - La requête onCall.
  * @returns Les noms d'ustensiles (chaînes non vides, plafonnés à 200).
@@ -347,7 +347,7 @@ export const importRecipeFromUrl = onCall(
       return { recipe, method: "llm" };
     } catch (e) {
       if (e instanceof HttpsError) throw e; // messages déjà lisibles
-      logger.error("importRecipeFromUrl — erreur inattendue:", e);
+      logger.error("importRecipeFromUrl, erreur inattendue:", e);
       throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
     }
   }
@@ -390,7 +390,7 @@ export const importRecipeFromImages = onCall(
       return { recipe, method: "image", coverIndex };
     } catch (e) {
       if (e instanceof HttpsError) throw e;
-      logger.error("importRecipeFromImages — erreur inattendue:", e);
+      logger.error("importRecipeFromImages, erreur inattendue:", e);
       throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
     }
   }

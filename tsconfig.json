@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    /* Cible & modules — résolution « bundler » : les imports gardent leur suffixe
+    /* Cible & modules, résolution « bundler » : les imports gardent leur suffixe
        .js même quand la cible est un .ts (migration indolore, sans toucher aux importeurs). */
     "target": "ESNext",
     "module": "ESNext",

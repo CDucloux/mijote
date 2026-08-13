@@ -21,7 +21,7 @@ type PublicRecipeDoc = Record<string, unknown>;
 let feedCache: { key: string | null; recipes: PublicRecipeDoc[] } = { key: null, recipes: [] };
 
 /**
- * Découverte — chargement des recettes publiques récentes (I/O uniquement ; le
+ * Découverte, chargement des recettes publiques récentes (I/O uniquement ; le
  * filtrage reste pur côté composant). Cache module + rechargement au retour de
  * connexion si la 1re charge s'est faite hors-ligne.
  *

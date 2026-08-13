@@ -279,7 +279,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           qui flasherait avant l'arrivée des listes (bootstrap / cache temps réel). */}
       {shoppingLists.length === 0 && loading && <LoadingSpinner />}
 
-      {/* Empty state (première visite) — même base que « Aucune recette trouvée » */}
+      {/* Empty state (première visite), même base que « Aucune recette trouvée » */}
       {shoppingLists.length === 0 && !loading && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
           <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>

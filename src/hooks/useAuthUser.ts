@@ -26,7 +26,7 @@ const MIN_POST_LOGIN_MS = 1000;
  * S'abonne à l'écouteur d'auth Firebase et renvoie l'utilisateur courant ainsi
  * qu'un indicateur de « connexion en cours » post-login.
  *
- * @returns `{ user, postLogin }` — `user` vaut `undefined` tant que l'état n'est
+ * @returns `{ user, postLogin }`, `user` vaut `undefined` tant que l'état n'est
  *   pas résolu, `null` si déconnecté, sinon l'utilisateur ; `postLogin` est vrai
  *   pendant la fenêtre minimale d'affichage suivant une connexion.
  *

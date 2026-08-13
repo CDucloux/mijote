@@ -15,7 +15,7 @@ import { soloWorkspace, householdWorkspace, type Workspace } from "@/lib/househo
 import { mergeShared, type SharedData } from "@/lib/household/householdMigration.js";
 import type { Recipe } from "@/lib/types.js";
 
-/** Slices partagés (recettes, carnets, planning, listes, stock) — formes opaques. */
+/** Slices partagés (recettes, carnets, planning, listes, stock), formes opaques. */
 interface SharedSlices {
   recipes?: Recipe[] | null;
   collections?: unknown[] | null;
@@ -175,7 +175,7 @@ export function useFirestoreSync({
     getRedirectResult(auth).catch(() => { });
     // Anti double-démarrage : le repli hors-ligne (plus bas) et la 1re émission du
     // listener peuvent viser le même utilisateur ; on ne bootstrape qu'une fois par
-    // uid (les émissions ultérieures pour le même uid — refresh de jeton — sont ignorées).
+    // uid (les émissions ultérieures pour le même uid, refresh de jeton, sont ignorées).
     let bootstrappedUid: string | null | undefined = undefined;
     const handle = async (u: User | null): Promise<void> => {
       if (bootstrappedUid !== undefined && bootstrappedUid === (u?.uid ?? null)) return;
@@ -233,8 +233,8 @@ export function useFirestoreSync({
         // IMPORTANT (hors-ligne) : si un foyer est connu (bootHid en cache), on RESTE
         // sur le foyer quoi qu'il arrive. Basculer sur le solo afficherait un tout autre
         // jeu de données (ex. 10 recettes / 0 carnet). En cas d'échec de lecture (réseau,
-        // jeton), on part d'un partagé VIDE et on laisse l'abonnement temps réel — servi
-        // par le cache Firestore — repeupler ; on ne retombe JAMAIS sur le solo.
+        // jeton), on part d'un partagé VIDE et on laisse l'abonnement temps réel, servi
+        // par le cache Firestore, repeupler ; on ne retombe JAMAIS sur le solo.
         let shared: BootData = data, loadedFromHousehold = false, sharedLoadFailed = false;
         if (bootHid) {
           loadedFromHousehold = true;
@@ -371,7 +371,7 @@ export function useFirestoreSync({
           // dans le foyer (recettes, carnets, planning, listes, stock) et on l'écrit
           // dans l'espace perso, qui REMPLACE l'ancienne sauvegarde solo (potentiellement
           // périmée : vieilles listes de courses, etc.). Aucune donnée ne « ressuscite »,
-          // et rien ne disparaît — le foyer contenait déjà tout (nos données solo y ont
+          // et rien ne disparaît, le foyer contenait déjà tout (nos données solo y ont
           // été fusionnées à l'adhésion). Transition additive → pas de flicker.
           const soloWs = soloWorkspace(user.uid);
           const soloPrev = await loadSharedData(soloWs); // uniquement pour differ les recettes

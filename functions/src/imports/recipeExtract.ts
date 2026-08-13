@@ -18,7 +18,7 @@ export interface DraftIngredient {
   group?: string;
 }
 
-/** Ustensile (nom seul) — parfois une simple chaîne côté LLM. */
+/** Ustensile (nom seul), parfois une simple chaîne côté LLM. */
 export interface DraftUtensil {
   name?: string;
 }
@@ -94,7 +94,7 @@ export interface Recipe {
   steps: RecipeStep[];
 }
 
-// Styles de cuisine reconnus (miroir de src/constants/cuisines.js — garder aligné).
+// Styles de cuisine reconnus (miroir de src/constants/cuisines.js, garder aligné).
 export const CUISINE_LABELS: string[] = ["Française", "Italienne", "Espagnole", "Portugaise", "Grecque",
   "Marocaine", "Tunisienne", "Libanaise", "Turque", "Indienne", "Chinoise", "Japonaise",
   "Coréenne", "Thaïlandaise", "Vietnamienne", "Mexicaine", "Américaine", "Fusion"];
@@ -128,7 +128,7 @@ function pluralUnit(amount: number | string | undefined, unit: string | undefine
 
 // Retire un mot de mesure en tête de nom quand le LLM l'y a laissé (« gousse
 // d'ail » → « ail », « tranche de pain » → « pain »). Renvoie l'unité canonique
-// (singulier) détectée pour la promouvoir si le champ `unit` est vide — évite le
+// (singulier) détectée pour la promouvoir si le champ `unit` est vide, évite le
 // doublon « 2 gousses gousse d'ail » et rétablit le rapprochement à la base.
 function stripMeasurePrefix(name: string | undefined): { name: string; measure: string } | null {
   const s = (name || "").toString().trim();
@@ -185,7 +185,7 @@ export function matchCuisine(v: unknown): string {
   return hit || "";
 }
 
-/** og:image (ou twitter:image) depuis le <head> — image principale de la recette. */
+/** og:image (ou twitter:image) depuis le <head>, image principale de la recette. */
 export function extractOgImage(html: string): string {
   const m = html.match(/<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)(?::url)?["'][^>]*>/i);
   if (!m) return "";
@@ -272,7 +272,7 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     const explicitIng = new Set((s.ingredients || []).map(norm));
     const explicitUt = new Set((s.utensils || []).map((x) => norm(typeof x === "string" ? x : x?.name)));
     // Cloisonnement des sections : une étape appartenant à une sous-préparation ne
-    // peut se lier qu'aux ingrédients du MÊME groupe (ou hors-section) — jamais à un
+    // peut se lier qu'aux ingrédients du MÊME groupe (ou hors-section), jamais à un
     // ingrédient homonyme d'un AUTRE groupe (sinon l'« huile d'olive » de la
     // vinaigrette se relie à tort à une étape du groupe « Croûtons »). Une étape
     // hors-section (montage/dressage) reste libre de tout lier (comportement inchangé).

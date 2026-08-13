@@ -21,7 +21,7 @@ export interface RecipeImportDeps {
 /**
  * Import de recette (IA) depuis une URL ou 1-2 photos : appelle la Cloud Function,
  * complète les dbId + Nutri-Score, purge les ustensiles hors base master, puis OUVRE
- * le brouillon dans l'éditeur (jamais d'enregistrement direct — le créateur relit).
+ * le brouillon dans l'éditeur (jamais d'enregistrement direct, le créateur relit).
  *
  * @param deps - Bases d'ingrédients/ustensiles et `openEditor`.
  * @returns `{ importFromUrl, importFromImages }`.

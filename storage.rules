@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// ─── Règles Firebase Storage — Mijoté ────────────────────────────────────────
+// ─── Règles Firebase Storage : Mijoté ────────────────────────────────────────
 // Arborescence :
 //   users/{uid}/**   images privées de chaque utilisateur (photos de recettes…)
 //   master/**        images de la base partagée (lecture tous, écriture admin)

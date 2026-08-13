@@ -1,5 +1,5 @@
 /**
- * Primitives de mise en page & typographie — une fine couche pour dégraisser les
+ * Primitives de mise en page & typographie, une fine couche pour dégraisser les
  * `style={{ … }}` répétés dans les écrans. Elles s'appuient sur les tokens CSS
  * existants (`var(--surface)`, `var(--text)`, `var(--accent)`…), acceptent
  * toujours un `style` qui SURCHARGE les défauts, et transmettent le reste des

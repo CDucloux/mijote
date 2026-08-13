@@ -41,7 +41,7 @@ export const STOCK_CATEGORIES = new Set([
 ]);
 
 // Catégories comptées comme « fruits & légumes » dans la composante POSITIVE du
-// Nutri-Score (fruits, légumes, légumineuses, fruits à coque — auxquels s'ajoutent
+// Nutri-Score (fruits, légumes, légumineuses, fruits à coque, auxquels s'ajoutent
 // herbes et champignons). Inclure les FRUITS est essentiel : sans eux, un plat à
 // base d'avocat/tomate/agrumes (guacamole…) perd ses points positifs à tort.
 export const FRUIT_VEG_CATEGORIES = new Set([

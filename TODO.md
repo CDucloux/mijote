@@ -11,7 +11,7 @@
 
 - [x] Onglet Accueil (dashboard de notifications + idées de saison + teaser découverte)
 - [x] Préférences alimentaires gérées dans l'espace avatar (Configuration déplacée dans l'avatar)
-- [x] Partage des recettes (mode public / privé) — collection `publicRecipes` + règles Firestore, publication en cascade des bases, moteur de découverte (créateur/cuisine/saison/Nutri-Score/préférences), clone hybride avec attribution et anti-doublon
+- [x] Partage des recettes (mode public / privé), collection `publicRecipes` + règles Firestore, publication en cascade des bases, moteur de découverte (créateur/cuisine/saison/Nutri-Score/préférences), clone hybride avec attribution et anti-doublon
   - [ ] À déployer : `npx firebase deploy --only firestore:rules` (nouvelles règles `publicRecipes`)
   - [ ] Re-liaison des `dbId` au clone si l'auteur a utilisé des ingrédients privés (via nameMatcher)
   - [ ] Modération / signalement des recettes publiques
@@ -24,7 +24,7 @@
 - [x] README plus moderne à construire
 
 - [x] App & légal
-  - [x] Page À propos — licence, crédits, copyright
+  - [x] Page À propos, licence, crédits, copyright
 
 - [x] Système saisonnier
 
@@ -38,7 +38,7 @@
 - [ ] Blabla sur le traitement des données ?
 
 - [x] Couche de données YAML versionnée (`data/*.yaml`) : source de vérité ingrédients / ustensiles / techniques ; import YAML + export Markdown dans la Config ; script `npm run seed`
-- [x] Glossaire des techniques (Master DB `master/techniques`) — section Configuration › Techniques
+- [x] Glossaire des techniques (Master DB `master/techniques`), section Configuration › Techniques
   - [x] Survol/tap des gestes dans le mode pas-à-pas (CookMode) → définition depuis le glossaire (`TechniqueText` + `lib/techniques.js`)
   - [ ] Élargir la couverture des aliases (conjugaisons) ; éventuel stemming léger
 - [x] Préparations de base publiques pré-initialisées (sauces mères, fonds, farces d'Escoffier) sous le compte `mijote-official`
@@ -51,7 +51,7 @@
 
 1. Moteur d'affinités / accords d'ingrédients. Le "ça va avec quoi" à la Flavour Thesaurus de Niki Segnit. Tu ajoutes à chaque ingrédient de la base quelques flavorTags (familles aromatiques : agrumé, torréfié, lacté, anisé, fumé, terreux…) et une liste d'affinités. En éditant une recette, l'app suggère "le cardamome + l'orange + le chocolat marchent ensemble", ou propose un ingrédient qui ponte deux saveurs qui jurent. C'est la feature pour les cuisiniers de saveurs complexes, sucré comme salé, et elle se greffe directement sur ton ingredientDB. Personne ne le fait bien sur le marché FR.
 
-2. Tableau d'équilibre des saveurs + "qu'est-ce qui manque ?". Pour chaque recette, une roue sur 7 axes — sucré / salé / acide / amer / umami / gras / piquant. Une partie se dérive déjà de ce que tu as (sucre et sel via Ciqual), le reste via tags d'ingrédients. Et surtout le troubleshooter type Salt Fat Acid Heat : "ton plat est plat → ajoute de l'acide (citron, vinaigre) ou de l'umami (parmesan, sauce soja)". Pour le sucré : "trop écœurant → manque d'acidité ou d'amertume (zeste, café, sel de fleur)". C'est l'outil qu'on aurait voulu avoir le couteau à la main.
+2. Tableau d'équilibre des saveurs + "qu'est-ce qui manque ?". Pour chaque recette, une roue sur 7 axes, sucré / salé / acide / amer / umami / gras / piquant. Une partie se dérive déjà de ce que tu as (sucre et sel via Ciqual), le reste via tags d'ingrédients. Et surtout le troubleshooter type Salt Fat Acid Heat : "ton plat est plat → ajoute de l'acide (citron, vinaigre) ou de l'umami (parmesan, sauce soja)". Pour le sucré : "trop écœurant → manque d'acidité ou d'amertume (zeste, café, sel de fleur)". C'est l'outil qu'on aurait voulu avoir le couteau à la main.
 
 ### Précision & reproductibilité
 
@@ -59,16 +59,16 @@
 
 5. Conversions exactes + calculatrices d'atelier. Poids ↔ volume ↔ pièce (ton champ gramsPerPiece fait déjà la moitié du boulot), plus densités par ingrédient (1 cup de farine ≠ 1 cup de miel). Et un petit set de calculatrices que ce public réutilise sans arrêt : % de sel pour une saumure, fermentation lacto (2–3 % du poids des légumes), ratio sucre/eau d'un sirop, stades du caramel par température. Ce sont des "mini-recettes" exactes, très demandées, faciles à coder sur ta lib métier.
 
-### Exécution sous pression — quand on cuisine gros
+### Exécution sous pression : quand on cuisine gros
 
 7. Timeline "mise en place" multi-recettes. Quand on fait un repas à plusieurs composants (une sauce + un plat + un dessert), on jongle. Si tu ajoutes une durée et des dépendances aux étapes, l'app fusionne les étapes de plusieurs recettes sur une seule frise et fait le back-timing depuis l'heure de service : "service à 20h → lance la pâte à 17h30, le bouillon à 18h". Très pratique, et c'est une extension naturelle de ton cook mode.
 
 
-## 🔜 Backlog — v2.0.0
+## 🔜 Backlog : v2.0.0
 
 - [x] Refactoring des composants / modularisartion
 
-## 🔜 Backlog — v1.0.7
+## 🔜 Backlog : v1.0.7
 
 - [x] Qualité & contenu
   - [x] Score de santé plus élaboré (pondération, Nutri-Score)
@@ -85,7 +85,7 @@
 
 - [x] (En mode master uniquement) Pouvoir télécharger la liste de tous les ingrédients implémentés pour feed à Claude précisément (en tant que table dans un fichier markdown) ? (Nom + Aliases + dbid + catégorie pour ingrédients)
 
-## 🔜 Backlog — v1.0.6
+## 🔜 Backlog : v1.0.6
 
 - [x] Architecture avec routeurs vers pages /config, /recipes, etc etc
   - [x] Faire pareil pour les recettes individuelles - id des recettes
@@ -99,7 +99,7 @@
 
 - [x] Pour tous les popup (Succes; error, etc etc => Avoir une icone) + comportement étrange des popup - ça pop un peu à droite avant d'arriver au milieu ?
 
-## 🔜 Backlog — v1.0.5
+## 🔜 Backlog : v1.0.5
 
 - [x] Simplification Courses : ne plus disposer des pills Manuel, A-Z, Catégories => En effet, le tri doit par défaut etre groupé par catégorie et etre alphabétique. La catégorie "Pris" devient "Acheté" et elle est affichée en bas elle par contre - l'icone poubelle doit etre affichée en rouge + remonter "Ajouter un article" en haut de la liste + sur mode desktop, faire en sorte que ça fasse toute la largeur du screen (il faudra un switch à droite pour coller une liste avec tous les éléments plutot que de le faire dans le même widget)
 
@@ -111,7 +111,7 @@
 
 - [x] Partage de liste de courses (version alpha)
 
-## 🔜 Backlog — v1.0.4
+## 🔜 Backlog : v1.0.4
 
 - [x] Mode Courses : 
   - [x] Pouvoir coller une liste de courses séparés par un \n et commençant par des tirets
@@ -128,7 +128,7 @@
 
 - [x] Tab ustensiles + ingrédients avec indicateurs de nombre + scroll à partir du message master DB
 
-## 🔜 Backlog — v1.0.3
+## 🔜 Backlog : v1.0.3
 
 - [x] Système de parsing pluriel amélioré
 - [x] Nombre d'ingrédients sur la card de recetes dans "Mes Recettes"
@@ -137,7 +137,7 @@
 - [x] Pur la génération du pdf, mieux géréer les sauts de page aussi
 - [x] Limiter à 24 portions MAX
 
-## 🔜 Backlog — v1.0.2
+## 🔜 Backlog : v1.0.2
 
 - [x] Entrée dans le mode "Pas à pas" trop instantannée -> nope.
 - [x] Même système de Zoom sur la landing page
@@ -155,7 +155,7 @@
 - [x] Avatars d'images améliorés 
 
 
-## 🔜 Backlog — v1.0.1
+## 🔜 Backlog : v1.0.1
 
 
 DB: 
@@ -171,7 +171,7 @@ DB:
   - [x] Uniformiser la hauteur des titres quand sur mobile + avatar
   - [x] Sur mobile, avoir la possibilité de faire glisser vers le bas certains popups (Ajouter au planning, ajouter aux courses, ajouter au frigo, supprimer la recette, supprimer la liste)
 
-## ✅ Fait — v1.0 Cardamome
+## ✅ Fait : v1.0 Cardamome
 
 - [x] Auth & Sync
   - [x] Authentification Google avec avatar
@@ -194,7 +194,7 @@ DB:
 
 - [x] Inventaire et Mode Frigo
 
-## 🔭 Horizon — v1.2+
+## 🔭 Horizon : v1.2+
 
 - [x] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
 

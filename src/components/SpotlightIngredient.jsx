@@ -10,7 +10,7 @@ import { SeasonBar } from "./SeasonBar.jsx";
 // ─── L'INGRÉDIENT DU MOMENT ───────────────────────────────────────────────────
 // Carte éditoriale en tête de « Découvrir » : un fruit/légume de saison, sa frise
 // de saison (donnée réelle `months`), une accroche (description), et les recettes
-// publiques qui l'utilisent — ou une invitation à publier si la communauté est vide.
+// publiques qui l'utilisent, ou une invitation à publier si la communauté est vide.
 const CAT_LABEL = { fruit: "Fruit", vegetable: "Légume" };
 
 // Frise de saison (accent) : réutilise la barre partagée <SeasonBar/> et ajoute

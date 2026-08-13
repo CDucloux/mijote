@@ -1,4 +1,4 @@
-# `data/` — couche de données versionnée
+# `data/` : couche de données versionnée
 
 Source de vérité **lisible et configurable** de la base de référence de Mijoté.
 On édite ces fichiers YAML, puis on les pousse vers Firestore.
@@ -15,7 +15,7 @@ Le format de chaque fichier est documenté en tête du fichier lui-même.
 ## Import / Export
 
 - **Import = YAML** : dans l'app, `Configuration › (Ingrédients / Ustensiles / Techniques)`, l'admin colle ou dépose un fichier YAML. La validation est stricte : à la moindre erreur, **tout** l'import est annulé (jamais d'écrasement partiel).
-- **Export = Markdown** : les boutons d'export produisent un tableau Markdown lisible (revue, partage, PDF). Le Markdown n'est pas réimporté — le YAML est la source canonique.
+- **Export = Markdown** : les boutons d'export produisent un tableau Markdown lisible (revue, partage, PDF). Le Markdown n'est pas réimporté, le YAML est la source canonique.
 
 ## Seed (script)
 
@@ -31,7 +31,7 @@ opération **manuelle** qui nécessite des droits d'administration.
 3. ou exporte la variable dans le shell.
 
 Les trois sont gitignorés (`serviceAccount*.json`, `*-firebase-adminsdk-*.json`,
-`secrets/`, `.env.local`) — la clé n'est **jamais** committée.
+`secrets/`, `.env.local`), la clé n'est **jamais** committée.
 
 ```bash
 npm run seed                  # défaut : techniques + bases (contenu canonique)
@@ -54,7 +54,7 @@ Le service account n'est **jamais** committé (voir `.gitignore`).
 > Les préparations de base sont publiées sous l'auteur officiel
 > `mijote-official` (« Mijoté × Escoffier »). Ce `authorUid` synthétique ne
 > correspond à aucun compte connecté : seul le SDK Admin (qui contourne les
-> règles client) peut les écrire — d'où le script plutôt qu'un import depuis
+> règles client) peut les écrire, d'où le script plutôt qu'un import depuis
 > l'app.
 
 ## Sources & licence

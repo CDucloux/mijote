@@ -1,4 +1,4 @@
-# Paiement Mijoté+ — intégration Stripe maison
+# Paiement Mijoté+ : intégration Stripe maison
 
 Le paiement **ne dépend PAS** de l'extension Firebase (`firestore-stripe-payments`),
 annoncée en fin de vie (arrêt mars 2027). Tout vit dans nos propres Cloud Functions
@@ -56,7 +56,7 @@ Dans `.env.local` (préfixe `VITE_`, **baké au build** → rebuild après) :
 ```
 VITE_STRIPE_PRICE_MONTHLY=price_…   # tarif mensuel
 VITE_STRIPE_PRICE_YEARLY=price_…    # tarif annuel
-# Optionnel — seulement si les fonctions ne sont PAS en europe-west1 :
+# Optionnel : seulement si les fonctions ne sont PAS en europe-west1 :
 # VITE_STRIPE_EXT_REGION=europe-west1
 ```
 Tant que ces prix sont absents, le CTA « Passer à Mijoté+ » affiche « arrive bientôt ».

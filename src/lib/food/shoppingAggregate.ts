@@ -1,7 +1,7 @@
 /**
  * Agrégation des listes de courses : fusionne toutes les listes en articles
  * dédupliqués par ingrédient (quantités de même unité sommées, provenance
- * conservée) — une seule « sortie au supermarché » plutôt qu'une check-list par
+ * conservée), une seule « sortie au supermarché » plutôt qu'une check-list par
  * recette.
  *
  * @module shoppingAggregate

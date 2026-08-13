@@ -11,7 +11,7 @@ import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";
 import type { Recipe, IngredientLine } from "@/lib/types.js";
 
-/** Ligne d'ingrédient (brute ou composant — alias de domaine). */
+/** Ligne d'ingrédient (brute ou composant, alias de domaine). */
 export type PubLine = IngredientLine;
 
 /** Recette locale (type de domaine avec `id` garanti + attribution de clone). */

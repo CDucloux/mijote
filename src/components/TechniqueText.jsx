@@ -45,7 +45,7 @@ export function TechniqueText({ text, index: indexProp }) {
   const { techniques } = useAppShell();
   const builtIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const index = indexProp || builtIndex;
-  // On retire les tirets cadratins « — » (marqueur des textes IA) avant tout.
+  // On retire les tirets cadratins (marqueur des textes IA) avant tout.
   const clean = useMemo(() => stripAiDashes(text), [text]);
   const segments = useMemo(() => annotateText(clean, index), [clean, index]);
   // Bulle affichée : { key, tech, left, top, width, above } ou null.

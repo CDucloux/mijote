@@ -1,6 +1,6 @@
 /**
  * Repas composé : rôles typés (entrée / plat / accompagnement / dessert) et
- * regroupement des items d'un créneau. Modèle NON destructif — chaque item de
+ * regroupement des items d'un créneau. Modèle NON destructif, chaque item de
  * `mealPlan` reste plat, mais porte un `groupId` (le repas) et un `role` ; un item
  * legacy sans `groupId` est un plat autonome. Le shopping et le drag-and-drop
  * itèrent les items sans rien savoir de la composition.

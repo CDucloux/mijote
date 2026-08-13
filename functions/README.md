@@ -1,11 +1,11 @@
-# Cloud Functions — Mijoté
+# Cloud Functions : Mijoté
 
 Fonctions déployées :
 
-- **`importRecipeFromUrl`** / **`importRecipeFromImages`** — import d'une recette
+- **`importRecipeFromUrl`** / **`importRecipeFromImages`** : import d'une recette
   depuis une URL ou 1–2 photos. Accès vérifié **côté serveur** (admin illimité,
   abonné Mijoté+ avec quotas jour/mois).
-- **`createStripeCheckout`** / **`createStripePortal`** / **`stripeWebhook`** —
+- **`createStripeCheckout`** / **`createStripePortal`** / **`stripeWebhook`** :
   paiement Mijoté+ (intégration Stripe maison).
 
 ## Structure & build (TypeScript)
@@ -22,7 +22,7 @@ npm run docs      # TypeDoc → functions/docs/ (documentation d'API)
 ```
 
 Le déploiement recompile automatiquement via le hook `predeploy` de
-`firebase.json` (`npm --prefix functions run build`) — pas besoin de builder à la
+`firebase.json` (`npm --prefix functions run build`), pas besoin de builder à la
 main avant `firebase deploy`. Les tests (`*.test.ts`) tournent avec Vitest à la
 racine (`npm test`) et sont exclus de la compilation.
 
@@ -43,7 +43,7 @@ Le code est organisé par **domaine** :
 1. Vérifie que l'appelant est authentifié **et** que son e-mail == `ADMIN_EMAIL`.
 2. Télécharge la page côté serveur (pas de CORS, UA navigateur, taille/temps bornés).
 3. Envoie le texte de la page à **Claude Haiku 4.5** → JSON (le chemin JSON-LD a été
-   abandonné : à qualité de rendu, Haiku est nettement meilleur — étapes reformulées à
+   abandonné : à qualité de rendu, Haiku est nettement meilleur, étapes reformulées à
    l'infinitif, quantités estimées, liaisons ingrédients/ustensiles).
 4. Renvoie `{ recipe, method: "llm" }`. Le client relit/corrige dans l'éditeur.
 
@@ -69,10 +69,10 @@ Après édition : `firebase deploy --only functions` (le prompt vit dans la fonc
 # 1. Dépendances
 cd functions && npm install && cd ..
 
-# 2. E-mail autorisé (le créateur) — paramètre non secret, lu depuis functions/.env
+# 2. E-mail autorisé (le créateur) : paramètre non secret, lu depuis functions/.env
 echo "ADMIN_EMAIL=ton.email@exemple.com" > functions/.env
 
-# 3. Clé API Anthropic — SECRET (jamais dans le code ni le bundle)
+# 3. Clé API Anthropic : SECRET (jamais dans le code ni le bundle)
 firebase functions:secrets:set ANTHROPIC_API_KEY
 #    (colle la clé sk-ant-... quand demandé)
 

@@ -1,5 +1,5 @@
 /**
- * Abonnement Mijoté+ — intégration Stripe MAISON (Cloud Functions, sans dépendre
+ * Abonnement Mijoté+, intégration Stripe MAISON (Cloud Functions, sans dépendre
  * de l'extension Firebase en fin de vie). Le front :
  *   • écoute `customers/{uid}/subscriptions` (statut renseigné par le webhook) ;
  *   • appelle `createStripeCheckout` pour obtenir l'URL de Stripe Checkout ;
@@ -32,7 +32,7 @@ export function subscribeToPlan(uid: string, cb: (active: boolean) => void): () 
 /**
  * Lance un Stripe Checkout (mode abonnement) pour un tarif donné, puis redirige
  * vers la page de paiement. La session est créée côté serveur (uid dérivé du token
- * d'authentification, d'où le `_uid` inutilisé ici — conservé pour l'appelant).
+ * d'authentification, d'où le `_uid` inutilisé ici, conservé pour l'appelant).
  *
  * @param _uid - L'identifiant de l'utilisateur (non utilisé : le serveur le dérive).
  * @param priceId - L'ID de tarif Stripe (`price_…`).

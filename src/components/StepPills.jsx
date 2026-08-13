@@ -23,7 +23,7 @@ export function IngredientPill({ image, name, amount, unit, cover = false, size 
 }
 
 // Image d'ustensile : détourée (contain) sur pastille blanche. Réutilisée partout
-// où un ustensile s'affiche (pastilles d'étapes, listes) — remplace le motif
+// où un ustensile s'affiche (pastilles d'étapes, listes), remplace le motif
 // `<div cercle blanc><Img contain/></div>` dupliqué.
 export function UtImage({ src, alt, size = 22, radius = "50%", border = false }) {
   return (

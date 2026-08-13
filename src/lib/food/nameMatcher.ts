@@ -11,7 +11,7 @@
  *
  * Les alias d'une entrée sont indexés comme son nom à chaque palier. Les mots de
  * VARIÉTÉ/TYPE (blanc, doux, nouveau…) ne sont jamais retirés : ils distinguent
- * des ingrédients différents — ces équivalences relèvent des alias.
+ * des ingrédients différents, ces équivalences relèvent des alias.
  *
  * @module nameMatcher
  */

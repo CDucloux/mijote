@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 
 // ─── THÈME CLAIR / SOMBRE ─────────────────────────────────────────────────────
 // État persistant (localStorage) + bascule fluide via l'API View Transitions.
-// Entièrement autonome (aucune dépendance applicative) — extrait d'App.jsx.
+// Entièrement autonome (aucune dépendance applicative), extrait d'App.jsx.
 
 /** Document doté de l'API View Transitions (pas encore dans la lib DOM standard). */
 type ViewTransitionDocument = Document & {

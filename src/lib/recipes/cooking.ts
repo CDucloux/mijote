@@ -1,7 +1,7 @@
 /**
  * Modes de cuisson, déduits des ustensiles d'une recette. Les ustensiles n'ont pas
  * de champ « type de cuisson » : on le déduit du nom via des listes de mots-clés
- * (normalisés, sans accents). Une recette peut relever de plusieurs modes — on
+ * (normalisés, sans accents). Une recette peut relever de plusieurs modes, on
  * parle alors de cuisson « mixte ».
  *
  * @module cooking

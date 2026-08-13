@@ -13,7 +13,7 @@ import { prepareImageForUpload, blobToBase64 } from "@/lib/firebase/imageResize.
 export interface ImportError extends Error { code: string }
 
 /**
- * Messages par défaut, par code canonique — utilisés quand le serveur n'a pas
+ * Messages par défaut, par code canonique, utilisés quand le serveur n'a pas
  * fourni de message lisible (crash → le message vaut littéralement le code).
  */
 const ERROR_MESSAGES: Record<string, string> = {

@@ -45,7 +45,7 @@ export function consumptionFraction(line: ComponentLine, component: ComponentRec
 }
 
 /**
- * Recettes qui référencent un composant donné — pour avertir avant sa suppression
+ * Recettes qui référencent un composant donné, pour avertir avant sa suppression
  * / son déliage.
  *
  * @param componentId - L'id du composant.

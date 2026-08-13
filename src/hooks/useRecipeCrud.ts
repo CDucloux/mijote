@@ -40,7 +40,7 @@ const componentIndex = (recipes: Recipe[]): Map<string, ComponentRecipe> =>
   buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, ComponentRecipe>;
 
 /**
- * Recettes — opérations cœur (CRUD, courses, import/export). Sauvegarde, suppression
+ * Recettes, opérations cœur (CRUD, courses, import/export). Sauvegarde, suppression
  * (avec déliage des bases référencées), ajout aux courses, import/export JSON et
  * impression PDF.
  *
@@ -52,7 +52,7 @@ export function useRecipeCrud({
   ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate,
 }: RecipeCrudDeps) {
   // Quota du plan gratuit : bloque la création au-delà de la limite. `redirect`
-  // renvoie vers l'offre — désactivé depuis l'éditeur (qui masquerait /plus).
+  // renvoie vers l'offre, désactivé depuis l'éditeur (qui masquerait /plus).
   const guardQuota = (adding = 1, redirect = true): boolean => {
     if (canAddRecipes(recipes, isPlus, adding)) return true;
     notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");

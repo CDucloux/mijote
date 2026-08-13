@@ -5,7 +5,7 @@
  * fournisseur. Brancher (ou changer) Sentry / GlitchTip / autre = enregistrer un
  * `ObservabilitySink` via {@link initObservability}, sans toucher au reste du code.
  *
- * Phase 1 (Sentry) — exemple de branchement dans `main.jsx`, une fois le DSN en
+ * Phase 1 (Sentry), exemple de branchement dans `main.jsx`, une fois le DSN en
  * place (`VITE_SENTRY_DSN`) :
  * ```ts
  * import * as Sentry from "@sentry/react";
@@ -37,7 +37,7 @@ export function initObservability(s: ObservabilitySink): void {
 
 /**
  * Remonte une erreur. En dev : trace console lisible. En prod : transmise au sink.
- * Ne throw JAMAIS — l'observabilité ne doit pas casser l'app.
+ * Ne throw JAMAIS, l'observabilité ne doit pas casser l'app.
  *
  * @param error - L'erreur (Error, rejet de promesse, valeur quelconque).
  * @param context - Métadonnées ({ where, uid… }) pour retrouver l'origine.
@@ -56,7 +56,7 @@ export function logEvent(name: string, data?: Record<string, unknown>): void {
   try { sink?.captureEvent?.(name, data); } catch { /* ignore */ }
 }
 
-/** Associe (ou détache) l'utilisateur courant aux signaux — corrèle les erreurs. */
+/** Associe (ou détache) l'utilisateur courant aux signaux, corrèle les erreurs. */
 export function setObservabilityUser(user: { id: string; email?: string | null } | null): void {
   try { sink?.setUser?.(user); } catch { /* ignore */ }
 }

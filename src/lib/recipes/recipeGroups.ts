@@ -1,7 +1,7 @@
 /**
  * Groupements (sections nommées) d'ingrédients et d'étapes. Une recette peut
- * organiser ses lignes en sous-préparations partagées — « Pour la pâte », « Pour la
- * crème »… — via le champ `group` (libellé) porté par chaque `IngredientLine` et
+ * organiser ses lignes en sous-préparations partagées, « Pour la pâte », « Pour la
+ * crème »…, via le champ `group` (libellé) porté par chaque `IngredientLine` et
  * chaque `Step`. Une ligne sans `group` appartient à la section PRINCIPALE (rendue en
  * premier, sans en-tête).
  *
@@ -24,7 +24,7 @@ const label = (g: unknown): string => (typeof g === "string" ? g.trim() : "");
  * Regroupe une liste (ingrédients ou étapes) par `group`. Les sections NOMMÉES
  * viennent d'abord (ordre de première apparition) car ce sont des sous-préparations
  * prioritaires ; la section principale (`group: null`, items sans groupe) est reléguée
- * EN DERNIER — l'assemblage/hors-section se fait après les sous-préparations. L'ordre
+ * EN DERNIER, l'assemblage/hors-section se fait après les sous-préparations. L'ordre
  * interne des items reste celui du tableau source.
  *
  * @param items - Lignes à regrouper (chaque item peut porter un `group?: string`).
@@ -50,7 +50,7 @@ export function groupBy<T extends { group?: string }>(items: readonly T[]): Sect
 /**
  * Découpe une liste en « runs » CONTIGUS de même section, **sans réordonner** ni
  * fusionner les runs non adjacents. Contrairement à {@link groupBy}, l'ordre du
- * tableau est strictement préservé — indispensable pour les ÉTAPES, dont la
+ * tableau est strictement préservé, indispensable pour les ÉTAPES, dont la
  * numérotation doit rester continue et suivre le fil de la recette (comme le mode
  * pas à pas). `start` = index global (0-based) du premier item du run → la n-ième
  * étape d'un run porte le numéro `start + n` (1-based).
@@ -95,8 +95,8 @@ export function relabelGroup<T extends { group?: string }>(items: readonly T[], 
 }
 
 /**
- * Réordonne UN item À L'INTÉRIEUR de sa section (les autres items — et les autres
- * sections — gardent leur position dans le tableau). `group` cible la section
+ * Réordonne UN item À L'INTÉRIEUR de sa section (les autres items, et les autres
+ * sections, gardent leur position dans le tableau). `group` cible la section
  * (`""` = section principale) ; `fromLocal`/`toLocal` sont les index DANS la section.
  * Utilisé par l'éditeur pour un glisser/déposer ou des flèches ↑/↓ scopés à la section.
  */

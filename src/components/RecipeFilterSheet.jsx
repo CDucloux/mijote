@@ -113,7 +113,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* En-tête — collant en haut de la feuille, fond opaque couvrant la bande de
+      {/* En-tête, collant en haut de la feuille, fond opaque couvrant la bande de
           padding du haut pour qu'aucun contenu ne transparaisse pendant le défilement */}
       <div style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", margin: "0 -20px 10px", padding: "18px 20px 12px", borderBottom: "1px solid var(--border)" }}>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: 0, lineHeight: 1 }}>Tous les filtres</h2>
@@ -121,7 +121,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
         <button onClick={onClose} aria-label="Fermer" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "var(--surface2)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>
       </div>
 
-      {/* Type de recette (rôle dans le repas) — le tri vit désormais hors du
+      {/* Type de recette (rôle dans le repas), le tri vit désormais hors du
           panneau (barre d'outils dédiée), côté /recipes comme Découvrir. */}
       <Group title="Type de recette" first defaultOpen={false} summary={recipeCatCount ? `${recipeCatCount} sélectionné${recipeCatCount > 1 ? "s" : ""}` : null}>
         <Row>
@@ -133,7 +133,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
         </Row>
       </Group>
 
-      {/* Type de préparation de base (fond, sauce, appareil…) — même champ de
+      {/* Type de préparation de base (fond, sauce, appareil…), même champ de
           filtre `categories`, mais familles propres aux composants. */}
       <Group title="Type de préparation de base" defaultOpen={false} summary={baseCatCount ? `${baseCatCount} sélectionné${baseCatCount > 1 ? "s" : ""}` : null}>
         <Row>
@@ -213,7 +213,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
         </div>
       </Group>
 
-      {/* Difficulté — pills libellées */}
+      {/* Difficulté, pills libellées */}
       <Group title="Difficulté" defaultOpen={false} summary={filters.diffMax ? `jusqu'à ${DIFFICULTY_LABEL[filters.diffMax]}` : null}>
         <Row>
           {[1, 2, 3, 4, 5].map(n => {
@@ -245,7 +245,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
         <IngredientPicker ingredientDB={ingredientDB} selected={filters.ingredients} setFilters={setFilters} />
       </Group>
 
-      {/* CTA — pied plein, sans liseré, jusqu'au bas de la feuille */}
+      {/* CTA, pied plein, sans liseré, jusqu'au bas de la feuille */}
       <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "10px 20px calc(16px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 10 }}>
         <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5 }} onClick={onClose}>
           Voir {resultCount} recette{resultCount > 1 ? "s" : ""}

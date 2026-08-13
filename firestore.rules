@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// ─── Règles Firestore — Mijoté ───────────────────────────────────────────────
+// ─── Règles Firestore : Mijoté ───────────────────────────────────────────────
 // Modèle de données :
 //   users/{uid}/**         données privées de chaque utilisateur (recettes, méta…)
 //   master/{doc}           base partagée en lecture, écriture réservée à l'admin
@@ -67,7 +67,7 @@ service cloud.firestore {
     // ── Foyers (households) ───────────────────────────────────────────────────
     // Appartenance par uid (membre) ; invitation par email. Plafond « 4 places »
     // (membres actifs + invitations en attente) et propriétaire immuable appliqués
-    // côté serveur. Les sous-collections (recettes, méta du foyer — Phase 2) sont
+    // côté serveur. Les sous-collections (recettes, méta du foyer, Phase 2) sont
     // accessibles aux membres via un get() sur le doc parent.
     match /households/{hid} {
       function isHMember(rsc) { return isSignedIn() && request.auth.uid in rsc.data.memberUids; }
@@ -92,7 +92,7 @@ service cloud.firestore {
       // Dissolution : propriétaire uniquement.
       allow delete: if isSignedIn() && request.auth.uid == resource.data.ownerUid;
 
-      // Sous-collections du foyer (recettes / meta) — accès réservé aux membres.
+      // Sous-collections du foyer (recettes / meta), accès réservé aux membres.
       match /{document=**} {
         allow read, write: if isSignedIn()
           && request.auth.uid in get(/databases/$(database)/documents/households/$(hid)).data.memberUids;
@@ -112,7 +112,7 @@ service cloud.firestore {
       }
       // Lecture : email vérifié requis. `get` (voir une recette publique / cloner
       // un composant par pubId) libre ; `list` (feed Découverte) borné à 120 pour
-      // interdire l'aspiration de toute la collection en une requête — aligné sur
+      // interdire l'aspiration de toute la collection en une requête, aligné sur
       // fetchPublicRecipes(max = 120). Une requête sans limite est refusée.
       allow get: if hasVerifiedEmail();
       allow list: if hasVerifiedEmail() && request.query.limit <= 120;
