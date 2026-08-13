@@ -482,7 +482,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           isAdmin={isAdmin}
           onReport={(reason, note) => reportPublicRecipe({ pubId: publicDocs.pub.pubId, recipeName: publicDocs.pub.recipe?.name, authorUid: publicDocs.pub.authorUid, reason, note, reporterUid: user?.uid, reporterEmail: user?.email || null }).then(() => notify("Merci, ton signalement a été transmis.")).catch(() => notify("Signalement impossible pour le moment.", "error"))}
           onAdminDelete={() => deletePublicRecipe(publicDocs.pub.pubId).then(() => { notify("Recette retirée de la communauté."); navigate("/home"); }).catch(() => notify("Suppression impossible.", "error"))}
-          ingredientDB={ingredientDB} utensilDB={utensilDB} collections={[]} notify={notify}
+          ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={[]} notify={notify}
         />
       </div>
     ) : publicDocs === undefined ? (
@@ -494,7 +494,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => setSelectedRecipe(null)} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
+      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => setSelectedRecipe(null)} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
     </div>
   ) : justDeleted ? (
     // Recette supprimée : la redirection vers /recipes est en cours, on n'affiche

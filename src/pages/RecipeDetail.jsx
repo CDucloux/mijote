@@ -29,6 +29,7 @@ import { spawnRipple } from "@/lib/ui/ripple.js";
 import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
+import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { computeDifficulty, explainDifficulty } from "@/lib/recipes/difficulty.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "@/lib/recipes/recipeComponents.js";
@@ -72,7 +73,7 @@ function looseRunLabel(run, isLast, hasSections) {
 }
 
 // ─── RECIPE DETAIL ────────────────────────────────────────────────────────────
-export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid, isAdmin = false, onReport, onAdminDelete }) {
+export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCookMode, onBack, onEdit, onDelete, onAddToShopping, onAddToMealPlan, onExportJSON, onExportPDF, onPublish, onUnpublish, ingredientDB, utensilDB, categories = DEFAULT_CATEGORIES, collections, onToggleCollection, onUpdateRecipe, onCooked, notify, stock = [], lowStock = [], publicMode = false, owned = false, onClone, authorName, authorPhoto, authorUid, isAdmin = false, onReport, onAdminDelete }) {
   const navigate = useNavigate();
   const location = useLocation();
   // `state.fromPath` = page d'origine (ex. "/home") → on y retourne tel quel.
@@ -1189,7 +1190,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <NutritionModal recipe={recipe} recipes={recipes} ingredientDB={ingredientDB} servings={recipe.servings || 2} onClose={() => setShowNutrition(false)} />
       )}
       {cookModeActive && recipe.steps?.length > 0 && (
-        <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} recipes={recipes} stockSet={new Set(stock)} onUpdateRecipe={onUpdateRecipe} onCooked={onCooked} onClose={() => setCookMode(false)} />
+        <CookMode recipe={recipe} mult={mult} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} recipes={recipes} stockSet={new Set(stock)} onUpdateRecipe={onUpdateRecipe} onCooked={onCooked} onClose={() => setCookMode(false)} />
       )}
 
       {/* Shopping ingredient selection modal */}
