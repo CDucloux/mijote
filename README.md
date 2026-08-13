@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-3.8.1-e8703a?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.10.49-e8703a?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -52,7 +52,8 @@ toujours avec vous.
   automatiquement la base en ingrédients bruts.
 - 🤖 **Import par IA** : importez une recette depuis une **URL** ou **1 à 2
   photos** d'un livre : extraction, structuration et liaison des ingrédients /
-  ustensiles par Claude (Cloud Function réservée à l'administrateur).
+  ustensiles par Claude (réservé aux abonnés **Mijoté+**, quotas jour/mois ;
+  illimité pour l'administrateur).
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
   « intelligents », dérivés d'un filtre).
 - 🌍 **Style de cuisine** : un champ unique parmi une liste prédéfinie
@@ -90,6 +91,9 @@ toujours avec vous.
   Firestore durcies contre l'aspiration des données.
 - 🌗 **Thème clair / sombre** et interface responsive mobile + desktop (PWA
   installable), avec onboarding illustré.
+- 💳 **Mijoté+** : abonnement (mensuel ou annuel, paiement Stripe) qui débloque
+  l'import IA, le générateur de semaine, la session batch, le foyer partagé, le
+  détail du calcul Nutri-Score et les recettes illimitées (50 en plan gratuit).
 
 ## 🛠️ Stack technique
 
@@ -100,7 +104,7 @@ toujours avec vous.
 | Backend | Firebase 12 (Auth, Firestore, Storage) |
 | Serveur | Cloud Functions v2 (Node 22, `europe-west1`) |
 | IA | Claude (Anthropic) pour l'import de recettes (vision + texte) |
-| Tests | Vitest 4 (303 tests unitaires sur les libs et hooks critiques) |
+| Tests | Vitest 4 (413 tests unitaires sur les libs et hooks critiques) |
 | CI | GitHub Actions (test + build sur chaque push) |
 | Qualité | ESLint 10 |
 
@@ -138,6 +142,10 @@ VITE_ADMIN_EMAIL=...     # e-mail admin (édition de la base de référence, imp
 # App Check / anti-scraping (optionnel : voir Déploiement)
 VITE_FIREBASE_RECAPTCHA_SITE_KEY=...   # active App Check (reCAPTCHA v3) si renseignée
 VITE_APPCHECK_DEBUG_TOKEN=...          # jeton de debug, en développement uniquement
+
+# Mijoté+ / Stripe (optionnel : voir docs/stripe-mijote-plus.md)
+VITE_STRIPE_PRICE_MONTHLY=...   # id du tarif mensuel (price_…)
+VITE_STRIPE_PRICE_YEARLY=...    # id du tarif annuel (price_…)
 ```
 
 > [!IMPORTANT]
@@ -150,6 +158,10 @@ VITE_APPCHECK_DEBUG_TOKEN=...          # jeton de debug, en développement uniqu
 > Laissez la variable vide pour autoriser n'importe quel compte Google.
 > L'import IA (Cloud Functions) requiert en plus le secret serveur
 > `ANTHROPIC_API_KEY` et le paramètre `ADMIN_EMAIL` (voir `functions/README.md`).
+> Tant que `VITE_STRIPE_PRICE_*` est absent, le CTA « Passer à Mijoté+ »
+> affiche « arrive bientôt » (voir `docs/stripe-mijote-plus.md` pour la mise
+> en place complète, y compris les secrets `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`
+> côté fonctions).
 
 ### Lancer en développement
 
@@ -224,7 +236,7 @@ src/
 ├── pages/           # Écrans (Home, MealPlan, Shopping, Recipes, Profile…)
 └── styles/          # global.css
 
-functions/           # Cloud Functions (import IA), extraction pure testée à part
+functions/           # Cloud Functions (import IA, paiement Stripe), extraction pure testée à part
 data/                # Base d'ingrédients (YAML, source Ciqual)
 scripts/             # Outils (seed de la base de référence)
 ```

@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.10.49 – Safran · Toilettage éditorial
+
+### Sous le capot
+- **Suppression de tous les tirets cadratins** du dépôt (code, commentaires, docs, prompts IA, README, CHANGELOG) : nouvelle règle CLAUDE.md qui les bannit définitivement, remplacés par des virgules, deux-points ou parenthèses selon le contexte
+- **README remis à jour** (badge de version, nombre de tests, accès Mijoté+ à l'import IA, variables Stripe) : la checklist de MEP impose désormais explicitement sa mise à jour à chaque version
+- Tests unitaires ajoutés pour `stripAiDashes` (jusqu'ici non testée)
+
 ## v3.10.48 – Safran · Onde tactile
 
 ### Interface & tactile
