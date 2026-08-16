@@ -186,7 +186,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     if (cached) setEditingRecipe(cached);
     else navigate("/recipes", { replace: true });
   }, [newRoute, editingRecipe, navigate]);
-  const { notification, notify } = useNotifications();
+  const { notification, leaving: notifLeaving, notify } = useNotifications();
   // Vue d'une recette publique (route /discover/:pubId) – logique isolée dans son hook.
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
@@ -241,7 +241,7 @@ function AppInner({ user, isDark, toggleTheme }) {
 
   // Publier / dépublier / cloner des recettes publiques (communauté), voir usePublicRecipes.
   const { publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic } =
-    usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate });
+    usePublicRecipes({ user, displayName: preferences?.displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate });
 
   // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer
   // à sa création (copie de mes données vers le namespace du foyer).
@@ -273,8 +273,12 @@ function AppInner({ user, isDark, toggleTheme }) {
       navigate("/plus");
       return;
     }
-    const name = preset && typeof preset === "object" && typeof preset.name === "string" ? preset.name : "";
-    openDraftEditor({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" });
+    const p = preset && typeof preset === "object" ? preset : {};
+    const name = typeof p.name === "string" ? p.name : "";
+    // Un preset peut pré-remplir des lignes d'ingrédients (ex. « Publier » depuis
+    // l'ingrédient du moment ouvre une recette le contenant déjà).
+    const ingredients = Array.isArray(p.ingredients) ? p.ingredients : [];
+    openDraftEditor({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients, utensils: [], steps: [], collections: [], image: "" });
   }, [recipes, isPlus, notify, navigate, openDraftEditor]);
 
   // Requête semée dans « Découvrir » depuis un autre onglet (ex. « chercher dans
@@ -515,12 +519,20 @@ function AppInner({ user, isDark, toggleTheme }) {
   return (
     <AppShellProvider value={shellValue}>
     <div id="root" className={isDark ? "" : "light"}>
+        {/* Garde-rotation (navigateur) : masque l'app en paysage sur téléphone, où la
+            mise en page bascule vers un rendu desktop inadapté. CSS-only (voir
+            .rotate-guard), rendu inerte hors du cas ciblé. */}
+        <div className="rotate-guard" aria-hidden="true">
+          <div className="rotate-guard__icon">📱</div>
+          <div className="rotate-guard__title">Tourne ton téléphone</div>
+          <div className="rotate-guard__hint">Mijoté est pensé pour le mode portrait. Remets ton écran à la verticale pour continuer.</div>
+        </div>
         {notification && (
           <div style={{ position: "fixed", left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none",
             ...(isDesktop
               ? { top: 16 }
               : { bottom: "calc(var(--tab-h) + env(safe-area-inset-bottom) + 12px)" }) }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, maxWidth: "calc(100vw - 32px)", background: notification.type === "error" ? "var(--red)" : notification.type === "warning" ? "#e8920a" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: `${isDesktop ? "toastIn" : "toastUp"} 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both` }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, maxWidth: "calc(100vw - 32px)", background: notification.type === "error" ? "var(--red)" : notification.type === "warning" ? "#e8920a" : notification.type === "info" ? "#4a90d9" : "var(--green)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: `${notifLeaving ? (isDesktop ? "toastOut 0.24s ease-in both" : "toastDown 0.24s cubic-bezier(0.4,0,1,1) both") : (isDesktop ? "toastIn" : "toastUp") + " 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both"}` }}>
               <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name={notification.type === "error" ? "close" : notification.type === "warning" ? "warning" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
               </div>

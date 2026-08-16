@@ -29,25 +29,36 @@ L'interface doit avoir le niveau d'un **produit conçu par un designer UI/UX sen
 - Tester les cas limites (vide, null, données externes malformées), pas seulement le chemin heureux.
 - `npm test` doit être vert avant de considérer un travail terminé.
 - L'UI (`.jsx`) n'exige pas de test unitaire systématique, mais la **logique** qu'elle utilise doit vivre (et être testée) dans `src/lib/`.
+- **Pas de repros navigateur** (Playwright, montage d'un harness, captures d'écran pour « vérifier » un rendu) : c'est interdit. Ça n'apporte quasiment rien et ça consomme énormément de tokens. La validation passe par les tests unitaires (`src/lib/`), `tsc`, le lint et le build ; le rendu visuel se vérifie côté utilisateur. Se limiter au raisonnement CSS/JSX pour les changements d'UI.
 
 ## 5. Commentaires & documentation
 - **Docstrings TypeDoc** (`/** … */`) sur les fonctions/exports du backend et de `src/lib/` : décrire le **POURQUOI** et le contrat (params, retour, effets), **jamais le COMMENT** (le code dit déjà comment).
 - **Ne pas raconter sa vie** : pas de narration, pas de commentaire redondant qui paraphrase le code.
 - Un **commentaire ponctuel** est justifié uniquement pour un **détail d'implémentation non évident** à un endroit précis (piège, contournement, invariant subtil), bref et ciblé.
 
-## 6. Qualité avant de finir (checklist)
-Avant de considérer une tâche terminée :
-1. `npm run lint` → **0 erreur** (`no-unused-vars` est une ERREUR ; les warnings `react-hooks/*` pré-existants sont tolérés).
-2. `tsc --noEmit` → OK.
-3. `vite build` → OK.
-4. `npm test` → vert (avec les nouveaux tests si `lib`/backend touchés).
+## 6. Qualité avant de finir (checks proportionnels au diff)
+Ne PAS tout relancer à chaque petite modif : c'est overkill et `vite build` (lent, sortie très verbeuse) coûte cher en tokens pour rien sur un petit changement. On lance **uniquement ce que le diff peut casser** :
+- **CSS uniquement** : rien d'automatique (eslint ne lint pas le CSS, `tsc` ne le voit pas, une erreur CSS ne casse quasi jamais le build). Raisonner sur le CSS. Au pire un `vite build` en fin de session si gros remaniement de styles.
+- **JSX/UI sans logique métier** : `tsc --noEmit` + `npm run lint`. Pas de build.
+- **`src/lib/` ou `functions/src/`** : `tsc --noEmit` + `npm test` (au moins la zone touchée, avec les nouveaux tests) + `npm run lint`.
+- **Imports transverses, dépendances, config Vite/TS** : ajouter `vite build` (c'est là qu'il attrape vraiment quelque chose : chaîne d'imports/bundling).
+
+Règles transverses :
+- `npm run lint` → **0 erreur** dès qu'on touche du JS/JSX/TS (`no-unused-vars` est une ERREUR ; les warnings `react-hooks/*` pré-existants sont tolérés).
+- `tsc --noEmit` est quasi gratuit et silencieux quand c'est vert : c'est le gardien par défaut dès qu'on touche du TS/TSX.
+- **La checklist COMPLÈTE (`npm run lint` + `tsc --noEmit` + `vite build` + `npm test`) est obligatoire et non négociable à la MEP** (cf. §7) et avant tout merge vers `main` : là, c'est le dernier filet avant prod.
 
 ## 7. Git & mise en prod (MEP)
 - Développer sur la branche de feature, jamais directement sur `main`.
-- **MEP** = bump version (`package.json` + `package-lock.json`) + entrée en tête de `CHANGELOG.md` + **mise à jour du `README.md`** (badge de version en tête, et tout passage du README devenu obsolète au vu du diff : fonctionnalités, architecture, scripts…) + merge `--no-ff` vers `main` + push des deux branches. Ne MEP que sur demande explicite.
+- **MEP** = bump version (`package.json` + `package-lock.json`, **impérativement via `npm version <x.y.z> --no-git-tag-version`** qui met à jour les deux fichiers en une passe : ne jamais lire ni éditer `package-lock.json` à la main, il fait ~11 500 lignes et sa lecture explose le coût en tokens) + entrée en tête de `CHANGELOG.md` (**ne lire que ses ~30 premières lignes** pour en épouser le format, puis insérer au sommet : ne jamais charger le fichier entier, il fait plus de 1000 lignes) + **mise à jour du `README.md`** (badge de version en tête, et tout passage du README devenu obsolète au vu du diff : fonctionnalités, architecture, scripts…) + merge `--no-ff` vers `main` + push des deux branches. Ne MEP que sur demande explicite.
 - Les changements **Cloud Functions** ne sont actifs qu'après un déploiement manuel (`cd functions && npm run deploy`), le préciser.
 - Ne jamais commiter de secret (`sk_live_`, `whsec_`, clés API) : ils vivent dans les secrets Firebase / variables d'environnement.
 
 ## 8. Typographie : tirets cadratins bannis
 - **Aucun tiret cadratin (le tiret long typographique, caractère Unicode U+2014) nulle part, sans exception** : code, commentaires, docstrings, documentation (CLAUDE.md, README, CHANGELOG…), UI/front, messages de commit. Si tu en vois un, tu le retires, où qu'il soit, y compris dans ce fichier, qui ne doit lui-même jamais en contenir.
 - Remplacer selon le contexte par une virgule, un point, des parenthèses, des deux-points, ou à défaut un tiret simple (`-`) pour une liaison courte.
+
+## 9. Économie de contexte : suggérer /clear et /compact
+Le quota d'usage se compte en tokens traités, et chaque tour renvoie tout le contexte : plus la fenêtre est pleine, plus chaque action coûte cher. Claude ne peut pas lancer ces commandes lui-même, mais il DOIT les suggérer à l'utilisateur aux bons moments, **avec parcimonie** : uniquement aux points de coupure naturels, jamais en boucle ni en plein milieu d'une action.
+- Suggérer **`/clear`** (reset total, gain maximal) quand la continuité ne sert plus : une tâche est terminée et la suivante est indépendante ; juste avant une MEP si le dev qui précède est inutile à la suite ; après une longue session de debug/exploration une fois la conclusion actée.
+- Suggérer **`/compact`** (garde un résumé, jette le bruit) quand il faut continuer la MÊME tâche mais que le contexte est lourd : gros fichiers lus ou sorties verbeuses accumulées ; fenêtre de contexte qui approche d'un seuil élevé (~60-70 %) en cours de tâche ; bug compris après beaucoup de tâtonnements.

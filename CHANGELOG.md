@@ -1,5 +1,28 @@
 # Changelog – Mijoté
 
+## v3.11.3 – Safran · Éditeur pleine largeur
+
+### Éditeur de recette
+- **Entête et champs étendus au cadre** (bureau) : l'entête et tous les champs du formulaire vont désormais jusqu'au bord de la colonne, sans bande morte à gauche et à droite, le tout centré dans la zone de contenu
+
+## v3.11.2 – Safran · Finitions tactiles
+
+### Interface & tactile
+- **Onde tactile** étendue aux cartes de recette (bibliothèque et Découvrir) et aux cartes d'ustensile, ainsi qu'à la carte « l'ingrédient du moment » (mobile)
+- **Notifications** : animation de sortie vers le bas sur mobile (standard snackbar)
+- **Rotation verrouillée en portrait** (PWA installée, et invite à revenir en portrait dans le navigateur)
+- Plus de **surbrillance de survol « collée »** sur les cartes de l'accueil au tap/appui long (mobile)
+- Boutons des fenêtres et dialogues **sans liseré** (rendu plus épuré)
+- Cercle de « l'ingrédient du moment » : un seul anneau net (fini le « double cercle »)
+
+### Recettes & communauté
+- **Nom d'auteur** des recettes publiées : le nom choisi dans l'app (préférences) prime sur le nom Google (effectif à la re-publication)
+- « Publier » depuis « l'ingrédient du moment » ouvre l'éditeur, pré-rempli avec l'ingrédient
+
+### Corrections
+- **Découvrir** : les carrousels ne défilent plus « dans le vide » (cartes qui gonflaient à la largeur de leur image)
+- **Fractions** (½, ⅓, ¾…) réservées aux unités discrètes (pièce, gousse, cuillère…) : les mesures métriques (g, kg, ml…) repassent au décimal
+
 ## v3.11.1 – Safran · Éditeur au cordeau
 
 ### Éditeur de recette
