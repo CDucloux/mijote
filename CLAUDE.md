@@ -45,7 +45,7 @@ Avant de considérer une tâche terminée :
 
 ## 7. Git & mise en prod (MEP)
 - Développer sur la branche de feature, jamais directement sur `main`.
-- **MEP** = bump version (`package.json` + `package-lock.json`) + entrée en tête de `CHANGELOG.md` + **mise à jour du `README.md`** (badge de version en tête, et tout passage du README devenu obsolète au vu du diff : fonctionnalités, architecture, scripts…) + merge `--no-ff` vers `main` + push des deux branches. Ne MEP que sur demande explicite.
+- **MEP** = bump version (`package.json` + `package-lock.json`, **impérativement via `npm version <x.y.z> --no-git-tag-version`** qui met à jour les deux fichiers en une passe : ne jamais lire ni éditer `package-lock.json` à la main, il fait ~11 500 lignes et sa lecture explose le coût en tokens) + entrée en tête de `CHANGELOG.md` (**ne lire que ses ~30 premières lignes** pour en épouser le format, puis insérer au sommet : ne jamais charger le fichier entier, il fait plus de 1000 lignes) + **mise à jour du `README.md`** (badge de version en tête, et tout passage du README devenu obsolète au vu du diff : fonctionnalités, architecture, scripts…) + merge `--no-ff` vers `main` + push des deux branches. Ne MEP que sur demande explicite.
 - Les changements **Cloud Functions** ne sont actifs qu'après un déploiement manuel (`cd functions && npm run deploy`), le préciser.
 - Ne jamais commiter de secret (`sk_live_`, `whsec_`, clés API) : ils vivent dans les secrets Firebase / variables d'environnement.
 
