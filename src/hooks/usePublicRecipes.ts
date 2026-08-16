@@ -13,6 +13,9 @@ const indexOf = (recipes: PubRecipe[]): Map<string, PubRecipe> =>
 /** Dépendances injectées (état + notify + navigate). */
 export interface PublicRecipesDeps {
   user: PubUser | null | undefined;
+  /** Nom d'affichage de l'app (préférences), prioritaire sur le nom Google au moment
+   *  de publier : c'est celui que l'utilisateur a choisi dans Mijoté. */
+  displayName?: string;
   recipes: PubRecipe[];
   setRecipes: Dispatch<SetStateAction<PubRecipe[]>>;
   setCollections: Dispatch<SetStateAction<Collection[]>>;
@@ -29,7 +32,7 @@ export interface PublicRecipesDeps {
  * @param deps - État de l'app, `notify` et `navigate`.
  * @returns `{ publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic }`.
  */
-export function usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate }: PublicRecipesDeps) {
+export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate }: PublicRecipesDeps) {
   // Quota du plan gratuit : cloner une recette publique compte pour 1 (les bases
   // sont des composants, hors quota). Bloque + renvoie vers l'offre si dépassé.
   const guardQuota = (): boolean => {
@@ -42,7 +45,9 @@ export function usePublicRecipes({ user, recipes, setRecipes, setCollections, in
     if (!user) return;
     try {
       const recipesById = indexOf(recipes);
-      const { docs } = buildPublishBundle(recipe, user, { ingredientDB, recipesById });
+      // Nom d'auteur = celui choisi dans l'app (préférences), pas le nom Google brut.
+      const pubUser = { uid: user.uid, displayName: (displayName || "").trim() || user.displayName || "", photoURL: user.photoURL };
+      const { docs } = buildPublishBundle(recipe, pubUser, { ingredientDB, recipesById });
       await publishPublicBundle(docs);
       setRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, visibility: "public", publicId: publicId(user.uid, recipe.id) } : r));
       const bases = docs.length - 1;

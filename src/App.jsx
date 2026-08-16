@@ -241,7 +241,7 @@ function AppInner({ user, isDark, toggleTheme }) {
 
   // Publier / dépublier / cloner des recettes publiques (communauté), voir usePublicRecipes.
   const { publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic } =
-    usePublicRecipes({ user, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate });
+    usePublicRecipes({ user, displayName: preferences?.displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate });
 
   // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer
   // à sa création (copie de mes données vers le namespace du foyer).
