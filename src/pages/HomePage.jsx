@@ -10,6 +10,7 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
+import { useCanHover } from "../hooks/useCanHover.js";
 import { peopleCount, MAX_HOUSEHOLD } from "@/lib/household/household.js";
 import { buildDashboardSummary } from "@/lib/planning/dashboard.js";
 import { SLOT_BY_ID } from "../constants/mealSlots.js";
@@ -24,7 +25,9 @@ function greeting(date = new Date()) {
 }
 
 // Carte de notification compacte (courses, stock bas) – icône + libellé + chevron.
-function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }) {
+// La surbrillance de survol n'est câblée que sur pointeur fin (souris) : sur tactile,
+// un mouseenter synthétisé au tap/appui long resterait collé (pas de mouseleave).
+function NotifRow({ icon, color, title, subtitle, onClick, animationDelay, canHover }) {
   return (
     <button onClick={onClick} className="slide-up pressable ripple"
       style={{
@@ -35,8 +38,8 @@ function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }) {
         cursor: "pointer", transition: "border-color 0.15s, box-shadow 0.15s",
         boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
       }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = `0 4px 20px ${color}28`; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}>
+      onMouseEnter={canHover ? (e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = `0 4px 20px ${color}28`; }) : undefined}
+      onMouseLeave={canHover ? (e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }) : undefined}>
       <span style={{
         width: 44, height: 44, borderRadius: 13, flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -178,6 +181,7 @@ function FoyerSection() {
 
 export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, loading = false, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
+  const canHover = useCanHover();
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
 
   const summary = useMemo(
@@ -265,8 +269,8 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                     boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
                     transition: "border-color 0.15s, box-shadow 0.15s",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = (SLOT_BY_ID[m.slot]?.accent || "var(--accent)"); e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.12)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}>
+                  onMouseEnter={canHover ? (e => { e.currentTarget.style.borderColor = (SLOT_BY_ID[m.slot]?.accent || "var(--accent)"); e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.12)"; }) : undefined}
+                  onMouseLeave={canHover ? (e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }) : undefined}>
                   <div style={{ width: 70, height: 70, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 3px 10px rgba(0,0,0,0.14)" }}>
                     <Img src={m.recipe.image} alt={m.recipe.name} style={{ width: "100%", height: "100%" }} />
                   </div>
@@ -298,7 +302,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
               {shoppingTodo > 0 && (
                 <NotifRow
                   animationDelay={`${meals.length * 0.06 + 0.04}s`}
-                  icon="shopping" color="var(--accent)"
+                  icon="shopping" color="var(--accent)" canHover={canHover}
                   onClick={() => setTab?.("shopping")}
                   title={`${shoppingTodo} article${shoppingTodo > 1 ? "s" : ""} à acheter`}
                   subtitle="Ta liste de courses t'attend" />
@@ -308,7 +312,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
               {lowStockNames.length > 0 && (
                 <NotifRow
                   animationDelay={`${(meals.length + (shoppingTodo > 0 ? 1 : 0)) * 0.06 + 0.04}s`}
-                  icon="warning" color="#e8920a"
+                  icon="warning" color="#e8920a" canHover={canHover}
                   onClick={() => setTab?.("stock")}
                   title={`${lowStockNames.length} ingrédient${lowStockNames.length > 1 ? "s" : ""} à racheter bientôt`}
                   subtitle={lowStockNames.slice(0, 4).join(" · ")} />
