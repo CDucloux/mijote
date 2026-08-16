@@ -125,7 +125,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
             {sorted.map(d => {
               const on = selectedIds.has(d.id);
               return (
-                <button key={d.id} onClick={() => onGridClick(d)} style={{
+                <button key={d.id} onClick={() => onGridClick(d)} className="pressable ripple" style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
                   padding: "14px 8px 10px",
                   borderRadius: 14,
