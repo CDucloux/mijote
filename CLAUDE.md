@@ -36,12 +36,17 @@ L'interface doit avoir le niveau d'un **produit conçu par un designer UI/UX sen
 - **Ne pas raconter sa vie** : pas de narration, pas de commentaire redondant qui paraphrase le code.
 - Un **commentaire ponctuel** est justifié uniquement pour un **détail d'implémentation non évident** à un endroit précis (piège, contournement, invariant subtil), bref et ciblé.
 
-## 6. Qualité avant de finir (checklist)
-Avant de considérer une tâche terminée :
-1. `npm run lint` → **0 erreur** (`no-unused-vars` est une ERREUR ; les warnings `react-hooks/*` pré-existants sont tolérés).
-2. `tsc --noEmit` → OK.
-3. `vite build` → OK.
-4. `npm test` → vert (avec les nouveaux tests si `lib`/backend touchés).
+## 6. Qualité avant de finir (checks proportionnels au diff)
+Ne PAS tout relancer à chaque petite modif : c'est overkill et `vite build` (lent, sortie très verbeuse) coûte cher en tokens pour rien sur un petit changement. On lance **uniquement ce que le diff peut casser** :
+- **CSS uniquement** : rien d'automatique (eslint ne lint pas le CSS, `tsc` ne le voit pas, une erreur CSS ne casse quasi jamais le build). Raisonner sur le CSS. Au pire un `vite build` en fin de session si gros remaniement de styles.
+- **JSX/UI sans logique métier** : `tsc --noEmit` + `npm run lint`. Pas de build.
+- **`src/lib/` ou `functions/src/`** : `tsc --noEmit` + `npm test` (au moins la zone touchée, avec les nouveaux tests) + `npm run lint`.
+- **Imports transverses, dépendances, config Vite/TS** : ajouter `vite build` (c'est là qu'il attrape vraiment quelque chose : chaîne d'imports/bundling).
+
+Règles transverses :
+- `npm run lint` → **0 erreur** dès qu'on touche du JS/JSX/TS (`no-unused-vars` est une ERREUR ; les warnings `react-hooks/*` pré-existants sont tolérés).
+- `tsc --noEmit` est quasi gratuit et silencieux quand c'est vert : c'est le gardien par défaut dès qu'on touche du TS/TSX.
+- **La checklist COMPLÈTE (`npm run lint` + `tsc --noEmit` + `vite build` + `npm test`) est obligatoire et non négociable à la MEP** (cf. §7) et avant tout merge vers `main` : là, c'est le dernier filet avant prod.
 
 ## 7. Git & mise en prod (MEP)
 - Développer sur la branche de feature, jamais directement sur `main`.
