@@ -57,3 +57,8 @@ Règles transverses :
 ## 8. Typographie : tirets cadratins bannis
 - **Aucun tiret cadratin (le tiret long typographique, caractère Unicode U+2014) nulle part, sans exception** : code, commentaires, docstrings, documentation (CLAUDE.md, README, CHANGELOG…), UI/front, messages de commit. Si tu en vois un, tu le retires, où qu'il soit, y compris dans ce fichier, qui ne doit lui-même jamais en contenir.
 - Remplacer selon le contexte par une virgule, un point, des parenthèses, des deux-points, ou à défaut un tiret simple (`-`) pour une liaison courte.
+
+## 9. Économie de contexte : suggérer /clear et /compact
+Le quota d'usage se compte en tokens traités, et chaque tour renvoie tout le contexte : plus la fenêtre est pleine, plus chaque action coûte cher. Claude ne peut pas lancer ces commandes lui-même, mais il DOIT les suggérer à l'utilisateur aux bons moments, **avec parcimonie** : uniquement aux points de coupure naturels, jamais en boucle ni en plein milieu d'une action.
+- Suggérer **`/clear`** (reset total, gain maximal) quand la continuité ne sert plus : une tâche est terminée et la suivante est indépendante ; juste avant une MEP si le dev qui précède est inutile à la suite ; après une longue session de debug/exploration une fois la conclusion actée.
+- Suggérer **`/compact`** (garde un résumé, jette le bruit) quand il faut continuer la MÊME tâche mais que le contexte est lourd : gros fichiers lus ou sorties verbeuses accumulées ; fenêtre de contexte qui approche d'un seuil élevé (~60-70 %) en cours de tâche ; bug compris après beaucoup de tâtonnements.
