@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fmtTime, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes } from "../format.js";
+import { fmtTime, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes, allowsFractionGlyph } from "../format.js";
 
 const EM_DASH = "\u2014";
 const EN_DASH = "\u2013";
@@ -22,6 +22,40 @@ describe("fmtQty", () => {
   });
   it("décimal court à la française sinon", () => { expect(fmtQty(0.9)).toBe("0,9"); });
   it("gère vide/invalide", () => { expect(fmtQty("")).toBe(""); expect(fmtQty(null)).toBe(""); });
+  it("bannit les fractions pour les unités métriques (décimal à la place)", () => {
+    expect(fmtQty(0.5, "g")).toBe("0,5");
+    expect(fmtQty(0.5, "kg")).toBe("0,5");
+    expect(fmtQty(0.25, "ml")).toBe("0,25");
+    expect(fmtQty(250.5, "g")).toBe("250,5");
+    expect(fmtQty(1.5, "l")).toBe("1,5");
+    expect(fmtQty(1.5, "cl")).toBe("1,5");
+  });
+  it("garde les fractions pour les unités discrètes et sans unité", () => {
+    expect(fmtQty(0.5, "gousse")).toBe("½");
+    expect(fmtQty(0.5, "cuillère à café")).toBe("½");
+    expect(fmtQty(1.5, "cuillère à soupe")).toBe("1 ½");
+    expect(fmtQty(0.5, "")).toBe("½");
+    expect(fmtQty(0.5, undefined)).toBe("½");
+  });
+  it("garde les entiers même en unité métrique", () => {
+    expect(fmtQty(250, "g")).toBe("250");
+    expect(fmtQty(2, "kg")).toBe("2");
+  });
+});
+
+describe("allowsFractionGlyph", () => {
+  it("refuse les mesures métriques continues", () => {
+    for (const u of ["g", "kg", "mg", "ml", "cl", "dl", "l"]) expect(allowsFractionGlyph(u)).toBe(false);
+  });
+  it("insensible à la casse et aux espaces", () => {
+    expect(allowsFractionGlyph(" G ")).toBe(false);
+    expect(allowsFractionGlyph("ML")).toBe(false);
+  });
+  it("autorise les unités discrètes et l'absence d'unité", () => {
+    for (const u of ["gousse", "cuillère à café", "cuillère à soupe", "tranche", "pièce", "", null, undefined]) {
+      expect(allowsFractionGlyph(u)).toBe(true);
+    }
+  });
 });
 
 describe("fmtQtyUnit", () => {
@@ -33,6 +67,12 @@ describe("fmtQtyUnit", () => {
     expect(fmtQtyUnit(0.5, "cuillère à café")).toBe("½ cuillère à café");
   });
   it("sans unité → quantité seule", () => { expect(fmtQtyUnit(0.5, "")).toBe("½"); });
+  it("décimal (pas de fraction) pour les mesures métriques", () => {
+    expect(fmtQtyUnit(0.5, "g")).toBe("0,5g");
+    expect(fmtQtyUnit(0.5, "kg")).toBe("0,5kg");
+    expect(fmtQtyUnit(2.5, "ml")).toBe("2,5 ml");
+    expect(fmtQtyUnit(0.5, "cuillère à café")).toBe("½ cuillère à café"); // discrète → fraction
+  });
   it("accorde l'unité comptable au pluriel dès 2", () => {
     expect(fmtQtyUnit(4, "gousse")).toBe("4 gousses");
     expect(fmtQtyUnit(2, "cuillère à soupe")).toBe("2 cuillères à soupe");
