@@ -115,7 +115,7 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
 }
 
 // ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
-export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic, initialSearch = "", onSeedConsumed }) {
+export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic, onNewRecipe, initialSearch = "", onSeedConsumed }) {
   const { user, techniques = [] } = useAppShell();
   const navigate = useNavigate();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
@@ -260,7 +260,9 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           loading={loading && !loadedOnce}
           onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)}
           onOpenPublic={(p) => onOpenPublic?.(p, componentsFor(p))}
-          onPublish={() => navigate("/recipes")}
+          onPublish={onNewRecipe
+            ? () => onNewRecipe({ ingredients: [{ id: "i" + Date.now(), dbId: spotlight.id, name: spotlight.name || "", amount: "", unit: "", _raw: spotlight.name || "", group: "" }] })
+            : undefined}
         />
       )}
 

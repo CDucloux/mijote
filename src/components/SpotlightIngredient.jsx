@@ -119,7 +119,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
             <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "var(--text2)" }}>
               Personne n'a encore partagé de recette contenant cet ingrédient. <strong style={{ color: "var(--text)" }}>Et si tu ouvrais le bal ?</strong>
             </span>
-            <button className="btn btn-primary btn-sm" style={{ marginLeft: "auto", flexShrink: 0 }} onClick={onPublish}>Publier</button>
+            {onPublish && <button className="btn btn-primary btn-sm" style={{ marginLeft: "auto", flexShrink: 0 }} onClick={onPublish}>Publier</button>}
           </div>
         )}
       </article>

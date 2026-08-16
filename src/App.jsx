@@ -273,8 +273,12 @@ function AppInner({ user, isDark, toggleTheme }) {
       navigate("/plus");
       return;
     }
-    const name = preset && typeof preset === "object" && typeof preset.name === "string" ? preset.name : "";
-    openDraftEditor({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients: [], utensils: [], steps: [], collections: [], image: "" });
+    const p = preset && typeof preset === "object" ? preset : {};
+    const name = typeof p.name === "string" ? p.name : "";
+    // Un preset peut pré-remplir des lignes d'ingrédients (ex. « Publier » depuis
+    // l'ingrédient du moment ouvre une recette le contenant déjà).
+    const ingredients = Array.isArray(p.ingredients) ? p.ingredients : [];
+    openDraftEditor({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients, utensils: [], steps: [], collections: [], image: "" });
   }, [recipes, isPlus, notify, navigate, openDraftEditor]);
 
   // Requête semée dans « Découvrir » depuis un autre onglet (ex. « chercher dans

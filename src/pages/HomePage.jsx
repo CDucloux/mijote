@@ -176,7 +176,7 @@ function FoyerSection() {
   );
 }
 
-export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, loading = false, onSelectRecipe, setTab, onOpenPublic, onClonePublic, discoverSeed = "", onDiscoverSeedConsumed }) {
+export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, loading = false, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
 
@@ -318,7 +318,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
         </section>
 
         {/* ── Découvrir la communauté ─────────────────────────────────────── */}
-        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
+        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
       </ElasticScroll>
     </div>
   );
