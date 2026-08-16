@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Icon } from "./Icon.jsx";
 import { Img, IngImage } from "./Img.jsx";
 import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
@@ -6,6 +7,8 @@ import { ingredientMonths } from "@/lib/food/seasonality.js";
 import { fmtTime } from "../lib/format.js";
 import { OverscrollRow } from "./OverscrollRow.jsx";
 import { SeasonBar } from "./SeasonBar.jsx";
+import { spawnRipple } from "@/lib/ui/ripple.js";
+import { useCanHover } from "../hooks/useCanHover.js";
 
 // ─── L'INGRÉDIENT DU MOMENT ───────────────────────────────────────────────────
 // Carte éditoriale en tête de « Découvrir » : un fruit/légume de saison, sa frise
@@ -48,6 +51,16 @@ function MiniRecipe({ pub, onOpen, nutriFor }) {
 }
 
 export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loading = false, onOpenIngredient, onOpenPublic, onPublish }) {
+  const canHover = useCanHover();
+  // Onde tactile posée dans une COUCHE dédiée (sœur de la photo), pas via la classe
+  // `.ripple` : celle-ci imposerait `overflow: hidden` au bouton, qui rognerait le
+  // cercle de l'ingrédient et son ombre douce. Ici seule l'encre est bornée.
+  const rippleClipRef = useRef(null);
+  const onHeaderPress = (e) => {
+    if (canHover) return; // souris : on garde hover/active, pas d'onde
+    const layer = rippleClipRef.current;
+    if (layer) spawnRipple({ currentTarget: layer, clientX: e.clientX, clientY: e.clientY });
+  };
   if (!ingredient) return null;
   const months = ingredientMonths(ingredient);
   const catLabel = CAT_LABEL[ingredient.category] || "Ingrédient";
@@ -70,11 +83,13 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
         <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: "linear-gradient(90deg, var(--accent), #f4a05f)" }} />
 
         {/* En-tête cliquable → fiche ingrédient */}
-        <button onClick={() => onOpenIngredient?.(ingredient)} className="pressable ripple" style={{ display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0, borderRadius: 12 }}>
-          <span style={{ flexShrink: 0, width: 74, height: 74, borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 34% 30%, #fff, var(--surface2))", boxShadow: "0 6px 16px -8px rgba(110,61,109,0.45), 0 0 0 1px var(--border)", display: "grid", placeItems: "center" }}>
+        <button onClick={() => onOpenIngredient?.(ingredient)} onPointerDown={onHeaderPress} className="pressable" style={{ position: "relative", display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+          {/* Couche d'onde tactile : borne l'encre sans rogner la photo (sœur, pas parent). */}
+          <span ref={rippleClipRef} aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", borderRadius: 12, pointerEvents: "none", zIndex: 0 }} />
+          <span style={{ position: "relative", zIndex: 1, flexShrink: 0, width: 74, height: 74, borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 34% 30%, #fff, var(--surface2))", boxShadow: "0 6px 16px -8px rgba(110,61,109,0.45), 0 0 0 1px var(--border)", display: "grid", placeItems: "center" }}>
             <IngImage src={ingredient.image} alt={ingredient.name} size={74} />
           </span>
-          <span style={{ minWidth: 0, flex: 1 }}>
+          <span style={{ position: "relative", zIndex: 1, minWidth: 0, flex: 1 }}>
             <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 6, color: "var(--text)" }}>{ingredient.name}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(232,146,10,0.95)", color: "#fff", fontWeight: 700, fontSize: 10, padding: "3px 9px 3px 7px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -83,7 +98,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
               <span style={{ fontSize: 12, color: "var(--text3)", fontWeight: 500 }}>{catLabel}</span>
             </span>
           </span>
-          <Icon name="forward" size={16} color="var(--text3)" />
+          <span style={{ position: "relative", zIndex: 1, display: "flex", flexShrink: 0 }}><Icon name="forward" size={16} color="var(--text3)" /></span>
         </button>
 
         {ingredient.description && (
