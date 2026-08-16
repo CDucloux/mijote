@@ -37,6 +37,21 @@ export interface Utensil {
   dbId?: string;
 }
 
+/**
+ * Ligne de la base d'ustensiles (master partagée / ajouts perso). Forme large :
+ * `category` peut manquer sur d'anciennes entrées (repli « divers » à l'import).
+ * `_ro` marque la lecture seule côté vue fusionnée (non-admin).
+ */
+export interface UtensilDbItem {
+  id: string;
+  name?: string;
+  image?: string;
+  /** Famille d'ustensile (clé de `UTENSIL_CATEGORIES`). */
+  category?: string;
+  _ro?: boolean;
+  [k: string]: unknown;
+}
+
 /** Étape de préparation, avec liaisons optionnelles vers ingrédients/ustensiles. */
 export interface Step {
   id?: string;

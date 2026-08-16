@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
+import { UTENSIL_CATEGORIES } from "@/lib/household/dataYaml.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
@@ -9,6 +10,40 @@ const SORT_MODES = [
   { key: "az", label: "A → Z" },
   { key: "selected", label: "Sélectionnés d'abord" },
 ];
+
+// Grille de cartes d'ustensiles (image détourée + nom + coche si sélectionné).
+// Extraite pour être réutilisée en mode plat ET en mode groupé par catégorie.
+function UtensilGrid({ list, selectedIds, onGridClick }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+      {list.map(d => {
+        const on = selectedIds.has(d.id);
+        return (
+          <button key={d.id} onClick={() => onGridClick(d)} className="pressable ripple" style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+            padding: "14px 8px 10px",
+            borderRadius: 14,
+            background: on ? "rgba(232,112,58,0.1)" : "var(--surface)",
+            border: `1.5px solid ${on ? "var(--accent)" : "var(--border)"}`,
+            cursor: "pointer", position: "relative", transition: "all 0.15s",
+          }}>
+            {on && (
+              <div style={{ position: "absolute", top: 7, right: 7, width: 18, height: 18, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="check" size={10} color="#fff" />
+              </div>
+            )}
+            <div style={{ width: 56, height: 56, borderRadius: 12, background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)" }}>
+              {d.image
+                ? <img src={d.image} alt={d.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} referrerPolicy="no-referrer" loading="lazy" />
+                : <Icon name="photo" size={22} color="#b3afaa" />}
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 500, color: on ? "var(--accent)" : "var(--text2)", textAlign: "center", lineHeight: 1.3, wordBreak: "break-word" }}>{d.name}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function UtensilPicker({ utensilDB, selected, onChange }) {
   const isDesktop = useIsDesktop();
@@ -120,34 +155,22 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
         <div ref={contentRef} className="editor-col" style={{ minHeight: "100%", padding: "4px 20px 20px" }}>
         {sorted.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "32px 0" }}>Aucun ustensile trouvé</div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {sorted.map(d => {
-              const on = selectedIds.has(d.id);
+        ) : sortKey === "default" ? (
+          // Groupé par famille (taxonomie fixe) : plus lisible pour parcourir la base.
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {Object.entries(UTENSIL_CATEGORIES).map(([catKey, catLabel]) => {
+              const list = sorted.filter(d => (d.category || "divers") === catKey);
+              if (list.length === 0) return null;
               return (
-                <button key={d.id} onClick={() => onGridClick(d)} className="pressable ripple" style={{
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-                  padding: "14px 8px 10px",
-                  borderRadius: 14,
-                  background: on ? "rgba(232,112,58,0.1)" : "var(--surface)",
-                  border: `1.5px solid ${on ? "var(--accent)" : "var(--border)"}`,
-                  cursor: "pointer", position: "relative", transition: "all 0.15s",
-                }}>
-                  {on && (
-                    <div style={{ position: "absolute", top: 7, right: 7, width: 18, height: 18, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Icon name="check" size={10} color="#fff" />
-                    </div>
-                  )}
-                  <div style={{ width: 56, height: 56, borderRadius: 12, background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)" }}>
-                    {d.image
-                      ? <img src={d.image} alt={d.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} referrerPolicy="no-referrer" loading="lazy" />
-                      : <Icon name="photo" size={22} color="#b3afaa" />}
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 500, color: on ? "var(--accent)" : "var(--text2)", textAlign: "center", lineHeight: 1.3, wordBreak: "break-word" }}>{d.name}</span>
-                </button>
+                <div key={catKey}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text3)", margin: "0 2px 8px", letterSpacing: "0.02em" }}>{catLabel}</div>
+                  <UtensilGrid list={list} selectedIds={selectedIds} onGridClick={onGridClick} />
+                </div>
               );
             })}
           </div>
+        ) : (
+          <UtensilGrid list={sorted} selectedIds={selectedIds} onGridClick={onGridClick} />
         )}
         </div>
       </div>
