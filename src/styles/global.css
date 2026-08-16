@@ -451,10 +451,13 @@ select {
 /* Boutons DANS les modals (bottom sheets `.modal-sheet` + dialogues centrés
    `.alert-dialog`) en pilules : plus net / moderne. `!important` sur le seul rayon
    pour primer d'éventuels `borderRadius` inline, les couleurs et surtout les
-   états :hover (desktop) restent inchangés. */
+   états :hover (desktop) restent inchangés. Liseré retiré (rendu plus moderne) :
+   le fond teinté suffit à détacher chaque bouton, y compris le liseré rouge du
+   bouton destructif qui, sur fond clair, alourdissait la note « rouge ». */
 .modal-sheet .btn,
 .alert-dialog .btn {
   border-radius: 999px !important;
+  border: none;
 }
 
 /* Bouton d'action principal en pilule pleine avec halo orange
