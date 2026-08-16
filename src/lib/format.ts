@@ -29,28 +29,56 @@ const FRACTION_GLYPHS: [number, string][] = [
 ];
 
 /**
- * Formate une quantité : entier tel quel, fraction courante en glyphe (½, ⅓, ¾…)
- * précédée au besoin de la partie entière (« 1 ½ »), sinon décimal court à la
+ * Unités de MESURE continue (métrique) : les fractions en glyphe n'y ont aucun sens
+ * (« 250 ½ g », « ½ ml » sont absurdes), on y affiche donc un décimal. Toute AUTRE
+ * unité, ainsi que l'absence d'unité, sont DISCRÈTES et gardent les fractions
+ * (« ½ », « 1 ½ gousse », « ¾ cuillère à café »).
+ */
+const DECIMAL_UNITS = new Set(["g", "kg", "mg", "ml", "cl", "dl", "l"]);
+
+/**
+ * Une unité tolère-t-elle un affichage en fraction (½, ⅓, ¾…) ? Vrai pour les unités
+ * discrètes (gousse, cuillère, tranche…) et l'absence d'unité (ingrédient à la pièce) ;
+ * faux pour les mesures métriques continues (g, kg, mg, ml, cl, dl, l).
+ *
+ * @param unit - L'unité (vide/absente = ingrédient à la pièce, fractions permises).
+ * @returns `true` si la fraction en glyphe a du sens pour cette unité.
+ */
+export function allowsFractionGlyph(unit: string | null | undefined): boolean {
+  return !DECIMAL_UNITS.has((unit || "").toString().trim().toLowerCase());
+}
+
+/**
+ * Formate une quantité : entier tel quel, sinon fraction courante en glyphe (½, ⅓, ¾…)
+ * précédée au besoin de la partie entière (« 1 ½ »), à défaut décimal court à la
  * française (virgule).
+ *
+ * La fraction en glyphe n'est produite que pour les unités DISCRÈTES (gousse,
+ * cuillère…) ou sans unité : passer `unit` pour une mesure métrique (g, kg, ml…) force
+ * le décimal (« 250,5 g », jamais « 250 ½ g »). Sans `unit`, les fractions restent
+ * permises (compatibilité : l'ingrédient à la pièce).
  *
  * Pour la mise à l'échelle des portions, passer la valeur DÉJÀ multipliée : la
  * fraction évolue d'elle-même (0.5×2 = « 1 », 0.5×3 = « 1 ½ »).
  *
  * @param n - La quantité (tolère string/null).
+ * @param unit - L'unité, pour décider fraction vs décimal (optionnelle).
  * @returns La quantité formatée pour l'affichage (`""` si vide/nulle).
  */
-export function fmtQty(n: NumLike): string {
+export function fmtQty(n: NumLike, unit?: string | null): string {
   if (n === "" || n == null) return "";
   const num = Number(n);
   if (!isFinite(num)) return String(n);
   const sign = num < 0 ? "-" : "";
   const abs = Math.abs(num);
-  const whole = Math.floor(abs + 1e-9); // epsilon : évite 1.9999… → 1 sur les fractions
-  const frac = abs - whole;
-  if (frac < 0.02) return sign + String(whole);
-  // Tolérance 0.02 : les fractions issues d'un ×portions ne tombent pas pile.
-  for (const [v, g] of FRACTION_GLYPHS) {
-    if (Math.abs(frac - v) < 0.02) return sign + (whole ? whole + " " : "") + g;
+  if (allowsFractionGlyph(unit)) {
+    const whole = Math.floor(abs + 1e-9); // epsilon : évite 1.9999… → 1 sur les fractions
+    const frac = abs - whole;
+    if (frac < 0.02) return sign + String(whole);
+    // Tolérance 0.02 : les fractions issues d'un ×portions ne tombent pas pile.
+    for (const [v, g] of FRACTION_GLYPHS) {
+      if (Math.abs(frac - v) < 0.02) return sign + (whole ? whole + " " : "") + g;
+    }
   }
   const rounded = Math.round(abs * 100) / 100;
   return sign + String(rounded).replace(".", ",");
@@ -96,7 +124,7 @@ export function pluralizeUnit(amount: NumLike, unit: string | null | undefined):
  * @returns La chaîne quantité + unité prête à afficher.
  */
 export function fmtQtyUnit(amount: NumLike, unit: string | null | undefined): string {
-  const q = fmtQty(amount);
+  const q = fmtQty(amount, unit);
   const u = pluralizeUnit(amount, unit);
   if (!u) return q;
   return GLUED_UNITS.has(u.toLowerCase()) ? `${q}${u}` : `${q} ${u}`;
