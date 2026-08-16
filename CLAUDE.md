@@ -29,6 +29,7 @@ L'interface doit avoir le niveau d'un **produit conçu par un designer UI/UX sen
 - Tester les cas limites (vide, null, données externes malformées), pas seulement le chemin heureux.
 - `npm test` doit être vert avant de considérer un travail terminé.
 - L'UI (`.jsx`) n'exige pas de test unitaire systématique, mais la **logique** qu'elle utilise doit vivre (et être testée) dans `src/lib/`.
+- **Pas de repros navigateur** (Playwright, montage d'un harness, captures d'écran pour « vérifier » un rendu) : c'est interdit. Ça n'apporte quasiment rien et ça consomme énormément de tokens. La validation passe par les tests unitaires (`src/lib/`), `tsc`, le lint et le build ; le rendu visuel se vérifie côté utilisateur. Se limiter au raisonnement CSS/JSX pour les changements d'UI.
 
 ## 5. Commentaires & documentation
 - **Docstrings TypeDoc** (`/** … */`) sur les fonctions/exports du backend et de `src/lib/` : décrire le **POURQUOI** et le contrat (params, retour, effets), **jamais le COMMENT** (le code dit déjà comment).
