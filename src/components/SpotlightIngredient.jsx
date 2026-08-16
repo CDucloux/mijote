@@ -70,7 +70,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
         <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: "linear-gradient(90deg, var(--accent), #f4a05f)" }} />
 
         {/* En-tête cliquable → fiche ingrédient */}
-        <button onClick={() => onOpenIngredient?.(ingredient)} style={{ display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+        <button onClick={() => onOpenIngredient?.(ingredient)} className="pressable ripple" style={{ display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0, borderRadius: 12 }}>
           <span style={{ flexShrink: 0, width: 74, height: 74, borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 34% 30%, #fff, var(--surface2))", boxShadow: "0 6px 16px -8px rgba(110,61,109,0.45), 0 0 0 1px var(--border)", display: "grid", placeItems: "center" }}>
             <IngImage src={ingredient.image} alt={ingredient.name} size={74} />
           </span>
