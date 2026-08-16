@@ -86,7 +86,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
         <button onClick={() => onOpenIngredient?.(ingredient)} onPointerDown={onHeaderPress} className="pressable" style={{ position: "relative", display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
           {/* Couche d'onde tactile : borne l'encre sans rogner la photo (sœur, pas parent). */}
           <span ref={rippleClipRef} aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", borderRadius: 12, pointerEvents: "none", zIndex: 0 }} />
-          <span style={{ position: "relative", zIndex: 1, flexShrink: 0, width: 74, height: 74, borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 34% 30%, #fff, var(--surface2))", boxShadow: "0 6px 16px -8px rgba(110,61,109,0.45), 0 0 0 1px var(--border)", display: "grid", placeItems: "center" }}>
+          <span style={{ position: "relative", zIndex: 1, flexShrink: 0, width: 74, height: 74, borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 34% 30%, #fff, var(--surface2))", boxShadow: "0 0 0 1px var(--border), 0 8px 20px -12px rgba(0,0,0,0.28)", display: "grid", placeItems: "center" }}>
             <IngImage src={ingredient.image} alt={ingredient.name} size={74} />
           </span>
           <span style={{ position: "relative", zIndex: 1, minWidth: 0, flex: 1 }}>
