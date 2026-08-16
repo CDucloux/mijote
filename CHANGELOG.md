@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.11.3 – Safran · Éditeur pleine largeur
+
+### Éditeur de recette
+- **Entête et champs étendus au cadre** (bureau) : l'entête et tous les champs du formulaire vont désormais jusqu'au bord de la colonne, sans bande morte à gauche et à droite, le tout centré dans la zone de contenu
+
 ## v3.11.2 – Safran · Finitions tactiles
 
 ### Interface & tactile
