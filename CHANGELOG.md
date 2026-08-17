@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.13.0 – Safran · Sans balance
+
+### Recettes
+- **Conversion en cuillères d'un tap** : toucher la quantité d'un ingrédient (quand ça a du sens) ouvre son équivalent en cuillères à soupe et à café (« 100 g ≈ 6 ¾ c. à soupe »), pratique pour qui n'a pas de balance. Le volume (ml, cl, l) est toujours converti ; la masse (g, kg) seulement quand la densité de l'ingrédient est connue, pour ne jamais afficher une valeur trompeuse. Les équivalents suivent la mise à l'échelle des portions.
+
+### Ustensiles
+- **Type d'appareil contextuel** : dans l'éditeur d'ustensile, le choix du type d'appareil (four, blender…) n'apparaît que pour la famille « Appareils » ; changer de famille l'efface, plus de champ superflu.
+
 ## v3.12.0 – Safran · Ustensiles rangés, appareils réglés
 
 ### Ustensiles
