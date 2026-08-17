@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.19.2 – Safran · Recherches à vide soignées
+
+### Interface
+- **États vides de recherche harmonisés** : quand une recherche ne trouve rien, l'écran affiche partout le même croquis animé « à l'encre » (la loupe qui se dessine), avec une vraie invitation à agir. Fini le texte brut posé au milieu de la page.
+  - **Mon Stock** : chercher un ingrédient inexistant montre désormais le croquis animé, comme les autres écrans, au lieu d'une simple pastille d'icône.
+  - **Découvrir (communauté)** : une recherche publique sans résultat propose de créer la recette ou d'élargir les filtres, avec le même soin visuel que la recherche privée.
+- **Carnets escamotés quand rien ne ressort** : dans Mes Recettes, la rangée des carnets se retire dès qu'une recherche ou des filtres ne renvoient aucune recette. L'état vide occupe alors toute la place au lieu d'être coincé sous une bande de carnets.
+
 ## v3.19.1 – Safran · Finitions
 
 ### Interface

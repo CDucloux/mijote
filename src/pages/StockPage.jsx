@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Icon } from "../components/Icon.jsx";
+import { EmptyArt } from "../components/EmptyArt.jsx";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -12,15 +13,21 @@ import { useElasticScroll } from "../hooks/useElasticScroll.js";
 // Chaque ingrédient de la base est listable ; le stock = tableau d'IDs.
 
 /**
- * État vide centré et soigné (pastille d'icône + titre + texte + action),
- * calqué sur l'état « aucune recette » de la bibliothèque pour l'homogénéité.
+ * État vide centré et soigné (titre + texte + action), calqué sur l'état
+ * « aucune recette » de la bibliothèque pour l'homogénéité. En tête, soit un
+ * croquis animé « à l'encre » (`art`, prioritaire, comme les autres écrans),
+ * soit à défaut une pastille d'icône.
  */
-function StockEmpty({ icon, title, body, action }) {
+function StockEmpty({ icon, art, title, body, action }) {
   return (
     <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
-      <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
-        <Icon name={icon} size={30} color="var(--accent)" />
-      </div>
+      {art ? (
+        <EmptyArt name={art} size={116} style={{ marginBottom: 6 }} />
+      ) : (
+        <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
+          <Icon name={icon} size={30} color="var(--accent)" />
+        </div>
+      )}
       <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>{title}</h3>
       <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: action ? 22 : 0 }}>{body}</p>
       {action}
@@ -155,7 +162,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           const qShort = q.length > 22 ? q.slice(0, 22) + "…" : q;
           if (q) {
             return (
-              <StockEmpty icon="search" title="Aucun ingrédient trouvé"
+              <StockEmpty art="loupe" title="Aucun ingrédient trouvé"
                 body={<>Rien ne correspond à « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans ta base d'ingrédients.<br />Vérifie l'orthographe ou essaie un autre terme.</>}
                 action={
                   <button onClick={() => setSearch("")} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
