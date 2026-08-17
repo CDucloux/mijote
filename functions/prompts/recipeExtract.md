@@ -7,6 +7,9 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
   "name": string,
   "cuisine": string,
   "category": string,
+  "isBase": boolean,
+  "baseCategory": string,
+  "yield": { "amount": number, "unit": string },
   "prepTime": number, "cookTime": number, "servings": number,
   "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string }],
   "utensils": [{ "name": string }],
@@ -19,6 +22,13 @@ TITRE & MÉTA
 - `prepTime` / `cookTime` : minutes entières (0 si inconnu). `servings` : entier (2 si absent).
 - `cuisine` : une valeur EXACTE de cette liste, sinon `""` : {{CUISINE_LIST}}
 - `category` : le rôle de la recette dans le repas, un SEUL id EXACT de cette liste, sinon `""` : `aperitif`, `entree`, `soupe`, `salade`, `plat`, `gratin`, `pasta`, `pizza`, `accompagnement`, `dessert`, `tarte`, `petit-dej`, `boisson`, `sauce`, `boulangerie`. Choisis le plus spécifique : un plat de pâtes → `pasta` ; une pizza → `pizza` ; un gratin → `gratin` ; une tarte (salée ou sucrée) → `tarte`.
+
+PRÉPARATION DE BASE (composant)
+- `isBase` : `true` UNIQUEMENT si la recette est une **préparation de base autonome et réutilisable**, jamais un plat/dessert servi tel quel. Exemples de bases : caramel (beurre salé), pâte (brisée, sablée, feuilletée, à choux), fond (de veau, de volaille, bouillon), sauce mère (béchamel, tomate, hollandaise, velouté), crème (pâtissière, d'amande), appareil (à quiche, à flan), ganache, praliné, sirop, marinade. **Par défaut `false`.**
+- Une recette qui **produit un plat fini** (tarte, gâteau, curry, salade, soupe, gratin…) → `isBase: false`, MÊME si elle contient une base. On ne marque que la base elle-même, isolée.
+- `baseCategory` : quand `isBase` vaut `true`, la famille, un SEUL id EXACT de cette liste, sinon `""` : `fond`, `sauce`, `appareil`, `liaison`, `pate`, `sirop`, `marinade`. Repères : pâte à tarte/à choux → `pate` ; caramel, ganache, crème, appareil à flan/quiche → `appareil` ; béchamel, tomate, hollandaise → `sauce` ; fond, bouillon → `fond` ; roux, liaison à l'œuf ou à la fécule → `liaison` ; sirop → `sirop` ; marinade → `marinade`.
+- Quand `isBase` vaut `true`, `category` (rôle dans le repas) DOIT valoir `""` : une base n'est pas un plat.
+- `yield` : le **rendement** de la base, ce qu'elle produit au total. `amount` : nombre entier estimé (grossier, l'utilisateur le corrigera). `unit` : `g` (masses), `ml` (liquides, sirops) ou `pièce` (dénombrable : 1 pâte, N crêpes). Estime depuis les quantités (caramel ou sauce ≈ somme des ingrédients ; pâte brisée standard ≈ 1 `pièce`). Si `isBase` vaut `false`, mets `"yield": { "amount": 0, "unit": "g" }`.
 
 LANGUE & CONVERSIONS
 - La recette source peut être dans N'IMPORTE QUELLE langue. **La sortie est TOUJOURS en français** : `name`, noms d'ingrédients, `text` et `tip` des étapes.

@@ -34,6 +34,18 @@ export interface DraftStep {
   group?: string;
 }
 
+/** Rendement d'une base au fil de l'assemblage (valeurs lâches côté LLM). */
+export interface YieldDraft {
+  amount?: number | string;
+  unit?: string;
+}
+
+/** Rendement validé d'une base (montant numérique, unité de la liste fermée). */
+export interface YieldValue {
+  amount: number;
+  unit: string;
+}
+
 /** Brouillon INTERMÉDIAIRE (sortie de `llmToIntermediate`, entrée d'`assignIdsAndLink`). */
 export interface Intermediate {
   name: string;
@@ -47,6 +59,12 @@ export interface Intermediate {
   ingredients: DraftIngredient[];
   utensils: DraftUtensil[];
   steps: DraftStep[];
+  /** Préparation de base réutilisable (caramel, pâte, fond…) plutôt qu'un plat fini. */
+  isComponent?: boolean;
+  /** Famille de base proposée par le LLM (fond, appareil, pâte…), validée ensuite. */
+  baseCategory?: string;
+  /** Rendement estimé de la base (l'utilisateur peut le corriger). */
+  yield?: YieldDraft;
 }
 
 /** Ingrédient au schéma final Mijoté (id stable + texte éditable `_raw`). */
@@ -92,6 +110,10 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   utensils: RecipeUtensil[];
   steps: RecipeStep[];
+  /** Marqueur de préparation de base (composant réutilisable). Absent = plat normal. */
+  isComponent?: boolean;
+  /** Rendement de la base (présent seulement si `isComponent`). */
+  yield?: YieldValue;
 }
 
 // Styles de cuisine reconnus (miroir de src/constants/cuisines.js, garder aligné).
@@ -102,6 +124,15 @@ export const CUISINE_LABELS: string[] = ["Française", "Italienne", "Espagnole",
 // Catégories (rôle dans le repas) reconnues (miroir de src/constants/recipeCategories.js).
 const CATEGORY_IDS: string[] = ["aperitif", "entree", "soupe", "salade", "plat", "gratin", "pasta", "pizza",
   "accompagnement", "dessert", "tarte", "petit-dej", "boisson", "sauce", "boulangerie"];
+
+// Familles de préparations de base (miroir de BASE_CATEGORIES). Distinctes du rôle
+// dans le repas : une base est un composant réutilisable (fond, sauce mère, appareil,
+// pâte…). `sauce` est partagé avec la liste principale ; c'est `isComponent` qui
+// distingue une sauce mère (base) d'une sauce d'accompagnement (plat).
+const BASE_CATEGORY_IDS: string[] = ["fond", "sauce", "appareil", "liaison", "pate", "sirop", "marinade"];
+
+// Unités de rendement autorisées pour une base (miroir du sélecteur de l'éditeur).
+const YIELD_UNITS = new Set(["g", "ml", "pièce"]);
 
 const norm = (s: unknown): string => (s ?? "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
@@ -175,6 +206,32 @@ function pluralName(amount: number | string | undefined, name: string | undefine
 export function matchCategory(v: unknown): string {
   const n = norm(Array.isArray(v) ? v[0] : v);
   return CATEGORY_IDS.includes(n) ? n : "";
+}
+
+/**
+ * Valide la famille de préparation de base renvoyée par le LLM (`fond`, `appareil`,
+ * `pate`…), sinon `""`. Tolère accents et casse (« Pâte » → `pate`).
+ */
+export function matchBaseCategory(v: unknown): string {
+  const n = norm(Array.isArray(v) ? v[0] : v);
+  return BASE_CATEGORY_IDS.find((id) => norm(id) === n) || "";
+}
+
+/**
+ * Normalise le rendement estimé par le LLM pour une base : montant entier positif
+ * et unité parmi { g, ml, pièce }. L'estimation est volontairement grossière et
+ * destinée à être corrigée par l'utilisateur ; un rendement inexploitable retombe
+ * sur `{ amount: 0, unit: "g" }` (l'éditeur affiche alors le champ à compléter).
+ *
+ * @param raw - Le rendement brut (objet lâche du LLM), de forme inconnue.
+ * @returns Un rendement exploitable par l'éditeur.
+ */
+export function validateYield(raw: unknown): YieldValue {
+  const y = (raw && typeof raw === "object" ? raw : {}) as YieldDraft;
+  const n = Number(String(y.amount ?? "").replace(",", "."));
+  const amount = Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+  const unit = YIELD_UNITS.has((y.unit || "").toString()) ? (y.unit as string) : "g";
+  return { amount, unit };
 }
 
 /** Rapproche une valeur libre du label de cuisine canonique le plus proche (ou ""). */
@@ -284,17 +341,25 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     return rs;
   });
 
-  return {
+  // Une base (composant réutilisable) tire sa catégorie de la liste des familles de
+  // base et n'a PAS de rôle dans le repas ; sinon on garde la catégorie de plat.
+  const isBase = d.isComponent === true;
+  const recipe: Recipe = {
     name: (d.name || "").slice(0, 200),
     prepTime: Math.max(0, Math.round(d.prepTime || 0)),
     cookTime: Math.max(0, Math.round(d.cookTime || 0)),
     servings: Math.max(1, Math.round(d.servings || 2)),
     cuisine: matchCuisine(d.cuisine),
-    category: matchCategory(d.category),
+    category: isBase ? matchBaseCategory(d.baseCategory) : matchCategory(d.category),
     source: d.source || "",
     image: d.image || "",
     ingredients, utensils, steps,
   };
+  if (isBase) {
+    recipe.isComponent = true;
+    recipe.yield = validateYield(d.yield);
+  }
+  return recipe;
 }
 
 // Images décoratives / techniques à ignorer (logo, avatar, icône, pixel, svg…).

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  matchCuisine, matchCategory, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText,
+  matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -27,6 +27,30 @@ describe("matchCategory", () => {
     expect(matchCategory("Dessert")).toBe("dessert");
     expect(matchCategory("plat principal")).toBe("");
     expect(matchCategory("")).toBe("");
+  });
+});
+
+describe("matchBaseCategory", () => {
+  it("ne garde qu'une famille de base valide, accents/casse tolérés", () => {
+    expect(matchBaseCategory("appareil")).toBe("appareil");
+    expect(matchBaseCategory("Pâte")).toBe("pate"); // accent retiré → id sans accent
+    expect(matchBaseCategory("sauce")).toBe("sauce");
+    expect(matchBaseCategory("dessert")).toBe(""); // rôle dans le repas, pas une base
+    expect(matchBaseCategory("")).toBe("");
+  });
+});
+
+describe("validateYield", () => {
+  it("normalise un rendement exploitable (montant entier, unité fermée)", () => {
+    expect(validateYield({ amount: "400", unit: "g" })).toEqual({ amount: 400, unit: "g" });
+    expect(validateYield({ amount: 1, unit: "pièce" })).toEqual({ amount: 1, unit: "pièce" });
+    expect(validateYield({ amount: "250,5", unit: "ml" })).toEqual({ amount: 251, unit: "ml" });
+  });
+  it("retombe sur { 0, g } quand le rendement est inexploitable", () => {
+    expect(validateYield({ amount: 0, unit: "g" })).toEqual({ amount: 0, unit: "g" });
+    expect(validateYield({ amount: "abc", unit: "cuillère" })).toEqual({ amount: 0, unit: "g" });
+    expect(validateYield(null)).toEqual({ amount: 0, unit: "g" });
+    expect(validateYield({ amount: 5 })).toEqual({ amount: 5, unit: "g" }); // unité absente → g
   });
 });
 
@@ -156,6 +180,37 @@ describe("assignIdsAndLink", () => {
     expect(r.ingredients[1]._raw).toBe("4 œufs");
     expect(r.ingredients[2]._raw).toBe("3 poireaux");
     expect(r.ingredients[3]._raw).toBe("800 g tomate");
+  });
+  it("classe une base (isComponent) : catégorie de la famille de base, yield validé, pas de rôle repas", () => {
+    const r = assignIdsAndLink({
+      name: "Caramel beurre salé", isComponent: true, baseCategory: "appareil",
+      yield: { amount: "300", unit: "g" }, category: "dessert", // category (rôle repas) ignorée pour une base
+      ingredients: [{ name: "sucre", amount: 200, unit: "g" }, { name: "beurre", amount: 100, unit: "g" }],
+      utensils: [], steps: [],
+    });
+    expect(r.isComponent).toBe(true);
+    expect(r.category).toBe("appareil");
+    expect(r.yield).toEqual({ amount: 300, unit: "g" });
+  });
+  it("base à famille inconnue : reste une base sans catégorie (utilisateur choisit)", () => {
+    const r = assignIdsAndLink({ name: "Base", isComponent: true, baseCategory: "truc", yield: { amount: 0, unit: "g" }, ingredients: [{ name: "eau", amount: 1 }], utensils: [], steps: [] });
+    expect(r.isComponent).toBe(true);
+    expect(r.category).toBe("");
+    expect(r.yield).toEqual({ amount: 0, unit: "g" });
+  });
+  it("recette normale (isBase absent) : pas de isComponent ni yield, catégorie de plat", () => {
+    const r = assignIdsAndLink({ name: "Tarte au citron", category: "tarte", ingredients: [{ name: "citron", amount: 3 }], utensils: [], steps: [] });
+    expect(r.isComponent).toBeUndefined();
+    expect(r.yield).toBeUndefined();
+    expect(r.category).toBe("tarte");
+  });
+  it("sauce mère (base) vs sauce d'accompagnement (plat) : isComponent tranche", () => {
+    const base = assignIdsAndLink({ name: "Béchamel", isComponent: true, baseCategory: "sauce", yield: { amount: 500, unit: "ml" }, ingredients: [{ name: "lait", amount: 500, unit: "ml" }], utensils: [], steps: [] });
+    expect(base.isComponent).toBe(true);
+    expect(base.category).toBe("sauce");
+    const plat = assignIdsAndLink({ name: "Sauce tomate express", category: "sauce", ingredients: [{ name: "tomate", amount: 400, unit: "g" }], utensils: [], steps: [] });
+    expect(plat.isComponent).toBeUndefined();
+    expect(plat.category).toBe("sauce");
   });
 });
 

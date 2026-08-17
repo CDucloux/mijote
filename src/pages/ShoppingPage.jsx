@@ -523,27 +523,29 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       {/* Modal ajout d'article / liste */}
       {showAddModal && activeList?.type === "free" && (
         <SwipeableSheet onClose={() => { setShowAddModal(false); setListMode(false); setNewItemName(""); setPasteText(""); }}>
-          {/* En-tête avec icône presse-papiers */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-            <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg,rgba(232,112,58,0.18),rgba(232,112,58,0.06))", border: "1px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-                <line x1="9" y1="12" x2="15" y2="12" />
-                <line x1="9" y1="16" x2="13" y2="16" />
-              </svg>
+          {/* En-tête : puce accent + titre display + nom de la liste */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
+              <Icon name={listMode ? "list2" : "shopping"} size={21} color="var(--accent)" />
             </div>
-            <div>
-              <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 1 }}>{listMode ? "Coller une liste" : "Ajouter un article"}</h3>
-              <p style={{ fontSize: 12, color: "var(--text3)" }}>{activeList.name}</p>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>{listMode ? "Coller une liste" : "Ajouter un article"}</h3>
+              <p style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeList.name}</p>
             </div>
           </div>
 
-          {/* Toggle article / liste */}
-          <div style={{ display: "flex", background: "var(--surface2)", borderRadius: 10, padding: 3, marginBottom: 16, gap: 3 }}>
+          {/* Mode : contrôle segmenté avec pastille glissante (façon planning) */}
+          <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 16 }}>
+            <div aria-hidden="true" style={{
+              position: "absolute", top: 4, bottom: 4, left: 4, width: "calc((100% - 8px) / 2)",
+              background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+              transform: `translateX(calc(${listMode ? 1 : 0} * 100%))`,
+              transition: "transform 0.32s cubic-bezier(0.34, 1.4, 0.5, 1)",
+            }} />
             {[{ label: "Article", val: false }, { label: "Coller une liste", val: true }].map(({ label, val }) => (
               <button key={label} onClick={() => setListMode(val)}
-                style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: listMode === val ? "var(--surface)" : "transparent", color: listMode === val ? "var(--accent)" : "var(--text3)", boxShadow: listMode === val ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>
+                style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
+                  background: "transparent", color: listMode === val ? "var(--accent)" : "var(--text3)", transition: "color 0.3s ease" }}>
                 {label}
               </button>
             ))}
@@ -565,7 +567,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois – retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
                 <button className="btn btn-primary" style={{ width: "100%" }} disabled={count === 0 || over}
                   onClick={() => { addManyFromText(pasteText); setPasteText(""); setShowAddModal(false); setListMode(false); }}>
-                  <Icon name="plus" size={15} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}
+                  <Icon name="plusCircle" size={17} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}
                 </button>
               </>
             );
@@ -595,7 +597,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 );
               })()}
               <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => { addManualItem(); setShowAddModal(false); }} disabled={!newItemName.trim()}>
-                <Icon name="plus" size={15} /> Ajouter
+                <Icon name="plusCircle" size={17} /> Ajouter
               </button>
             </>
           )}
