@@ -308,7 +308,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             <div ref={aggContentRef} style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
             {aggregated.length === 0 ? (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, textAlign: "center" }}>
-                <Icon name="grid" size={48} color="var(--text3)" />
+                <EmptyArt name="panier" size={104} />
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)" }}>Rien à acheter</div>
                 <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 260 }}>
                   Tes listes sont vides. Ajoute des articles ou envoie une recette aux courses, et tout se regroupe ici.
@@ -389,7 +389,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
             {activeList.items.length === 0 && activeList.type === "free" && (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, textAlign: "center" }}>
-                <Icon name="shopping" size={48} color="var(--text3)" />
+                <EmptyArt name="panier" size={104} />
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)" }}>Liste vide</div>
                 <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 240 }}>
                   Appuie sur le bouton <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", verticalAlign: "middle" }}><Icon name="plus" size={11} color="#fff" /></span> en bas à droite pour ajouter des articles.

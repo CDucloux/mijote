@@ -418,9 +418,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           const reset = () => { setSearch(""); setFilters({ ...DEFAULT_FILTERS }); setFilterCol(null); };
           return (
           <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
-            <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
-              <Icon name="search" size={30} color="var(--accent)" />
-            </div>
+            <EmptyArt name="loupe" size={116} style={{ marginBottom: 6 }} />
             <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
             <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
               {q
