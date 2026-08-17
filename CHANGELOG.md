@@ -1,5 +1,18 @@
 # Changelog – Mijoté
 
+## v3.15.0 – Safran · Bases détectées, écrans soignés
+
+### Recettes
+- **Préparations de base reconnues à l'import** : l'import IA (URL et photos) sait maintenant repérer une préparation de base réutilisable (caramel, pâte, fond, sauce mère, appareil…) et la classe comme telle, avec sa famille (fond, sauce, appareil, liaison, pâte, sirop, marinade) et un rendement estimé à corriger, au lieu d'une recette sans catégorie. Un plat qui *contient* une base reste un plat.
+- **Feuille de conversion en cuillères repensée** : en-tête avec la quantité source en pilule, équivalents cuillère à soupe / café regroupés dans un bloc épuré à filets fins, et le badge d'accès posé en bas à droite de la vignette de l'ingrédient (mobile et bureau).
+
+### Courses
+- **Feuille d'ajout modernisée** : en-tête à puce accent et titre soigné, bascule Article / Coller une liste à pastille glissante, et bouton d'ajout à la nouvelle icône « plus » cerclée.
+
+### Foyer
+- **Nom personnalisé** : ta fiche membre affiche le nom que tu as choisi dans l'app, plus le nom technique du compte.
+- **Panneau clarifié** : bandeau d'information resserré, et bouton « Dissoudre / Quitter le foyer » franchement rouge (action destructive lisible).
+
 ## v3.14.0 – Safran · Cap sur le mobile
 
 ### Recettes

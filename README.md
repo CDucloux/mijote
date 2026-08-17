@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-3.14.0-e8703a?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.15.0-e8703a?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -55,8 +55,9 @@ toujours avec vous.
   automatiquement la base en ingrédients bruts.
 - 🤖 **Import par IA** : importez une recette depuis une **URL** ou **1 à 2
   photos** d'un livre : extraction, structuration et liaison des ingrédients /
-  ustensiles par Claude (réservé aux abonnés **Mijoté+**, quotas jour/mois ;
-  illimité pour l'administrateur).
+  ustensiles par Claude, qui **détecte aussi les préparations de base** (caramel,
+  pâte, fond…) et leur rendement estimé (réservé aux abonnés **Mijoté+**, quotas
+  jour/mois ; illimité pour l'administrateur).
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
   « intelligents », dérivés d'un filtre).
 - 🌍 **Style de cuisine** : un champ unique parmi une liste prédéfinie
