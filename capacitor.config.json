@@ -1,0 +1,14 @@
+{
+  "appId": "app.mijote",
+  "appName": "Mijoté",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#0e0e0f"
+  },
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": ["google.com"]
+    }
+  }
+}

@@ -6,8 +6,10 @@
  *
  * @module auth
  */
-import { signInWithPopup, signInWithRedirect, signOut, type User } from "firebase/auth";
+import { signInWithRedirect, signOut, type User } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase/firebase.js";
+import { googleSignIn } from "@/lib/firebase/googleAuth.js";
+import { isCancelledSignIn } from "@/lib/firebase/authErrors.js";
 
 /** E-mail autorisé à se connecter (app perso). Vide/absent = aucune restriction. */
 export const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
@@ -23,24 +25,23 @@ export function isAllowedUser(user: User | null | undefined): boolean {
 }
 
 /**
- * Connexion Google. Filtre l'e-mail autorisé (déconnecte sinon) et retombe sur la
- * redirection si la popup est bloquée. Les annulations volontaires (popup fermée)
- * sont silencieuses.
+ * Connexion Google. Le canal (popup web ou SDK natif) est choisi selon la plateforme
+ * par `googleSignIn`. Filtre l'e-mail autorisé (déconnecte sinon) et retombe sur la
+ * redirection si la popup web est bloquée. Les annulations volontaires sont silencieuses.
  *
  * @param onError - Rappel optionnel invoqué avec un message lisible en cas d'échec.
  * @returns Une promesse résolue une fois la tentative terminée.
  */
 export async function signInWithGoogle(onError?: (msg: string) => void): Promise<void> {
   try {
-    const result = await signInWithPopup(auth, provider);
+    const result = await googleSignIn();
     if (!isAllowedUser(result.user)) {
       await signOut(auth);
       onError?.("Accès non autorisé pour ce compte.");
     }
   } catch (e) {
-    const code = (e as { code?: string })?.code;
-    if (code === "auth/popup-blocked") signInWithRedirect(auth, provider);
-    else if (code !== "auth/cancelled-popup-request" && code !== "auth/popup-closed-by-user") onError?.("Connexion échouée. Réessaie.");
+    if ((e as { code?: string })?.code === "auth/popup-blocked") signInWithRedirect(auth, provider);
+    else if (!isCancelledSignIn(e)) onError?.("Connexion échouée. Réessaie.");
   }
 }
 

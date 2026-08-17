@@ -4,9 +4,24 @@ import { IngImage } from "./Img.jsx";
 import { fmtQty, pluralizeUnit, capitalize } from "../lib/format.js";
 
 // ─── FEUILLE DE CONVERSION EN CUILLÈRES ───────────────────────────────────────
-// Ouverte au tap sur la quantité d'un ingrédient (fiche recette). Aide qui ne pèse
-// pas : « 100 g → ≈ 6 ¾ c. à soupe · 20 c. à café ». Les équivalents sont calculés
-// en amont (lib `spoonConversions`) ; ici on ne fait qu'afficher.
+// Ouverte via un petit badge « flèches » posé en bas de la vignette d'un ingrédient
+// (fiche recette). Aide qui ne pèse pas : « 100 g → ≈ 6 ¾ c. à soupe · 20 c. à café ».
+// Les équivalents sont calculés en amont (lib `spoonConversions`) ; ici on affiche.
+
+// Badge d'action posé en bas-centre d'une vignette d'ingrédient : ouvre la
+// conversion en cuillères. À placer dans un conteneur `position: relative`.
+export function ConvertBadge({ onClick, size = 18 }) {
+  return (
+    <button type="button" onClick={e => { e.stopPropagation(); onClick(); }} className="tap"
+      title="Convertir en cuillères" aria-label="Convertir en cuillères"
+      style={{ position: "absolute", bottom: -3, left: "50%", transform: "translateX(-50%)",
+        width: size, height: size, borderRadius: "50%", background: "var(--accent)",
+        border: "2px solid var(--surface)", display: "grid", placeItems: "center",
+        cursor: "pointer", padding: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }}>
+      <Icon name="swap" size={size - 8} color="#fff" />
+    </button>
+  );
+}
 
 /**
  * @param {{ name?: string, image?: string, amount: number, unit?: string, spoons: {unit: string, value: number}[] }} ing
