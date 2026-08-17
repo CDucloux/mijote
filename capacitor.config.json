@@ -1,0 +1,8 @@
+{
+  "appId": "app.mijote",
+  "appName": "Mijoté",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#0e0e0f"
+  }
+}
