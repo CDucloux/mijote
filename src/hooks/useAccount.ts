@@ -1,8 +1,8 @@
-import { signInWithPopup, signInWithRedirect, signOut, deleteUser } from "firebase/auth";
-import { auth, provider } from "@/lib/firebase/firebase.js";
+import { signOut, deleteUser } from "firebase/auth";
+import { auth } from "@/lib/firebase/firebase.js";
 import { deleteAllUserData } from "@/lib/firebase/firestore.js";
-
-const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
+import { signInWithGoogle } from "@/lib/firebase/auth.js";
+import { googleSignIn } from "@/lib/firebase/googleAuth.js";
 
 /** Portée d'une purge de données depuis le profil. */
 type PurgeScope = "planning" | "shopping" | "stock" | "all";
@@ -29,19 +29,8 @@ export interface AccountDeps {
  * @returns `{ handleSignIn, handleSignOut, purgeData, deleteAccount }`.
  */
 export function useAccount({ user, setUser, notify, setMealPlan, setShoppingLists, setStock, setLowStock, setRecipes, setCollections }: AccountDeps) {
-  const handleSignIn = async (): Promise<void> => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      if (ALLOWED_EMAIL && result.user.email !== ALLOWED_EMAIL) {
-        await signOut(auth);
-        notify("Accès non autorisé", "error");
-        return;
-      }
-    } catch (e) {
-      if ((e as { code?: string }).code === "auth/popup-blocked") signInWithRedirect(auth, provider);
-      else notify("Connexion échouée", "error");
-    }
-  };
+  // Connexion déléguée au point d'entrée unique (allowlist + native-aware).
+  const handleSignIn = (): Promise<void> => signInWithGoogle(msg => notify(msg, "error"));
   const handleSignOut = (): void => { signOut(auth); setUser(null); };
 
   // Purge de données (depuis le profil). Vide l'état local ; la synchro propage
@@ -65,8 +54,9 @@ export function useAccount({ user, setUser, notify, setMealPlan, setShoppingList
         if (auth.currentUser) await deleteUser(auth.currentUser);
       } catch (e) {
         if ((e as { code?: string })?.code === "auth/requires-recent-login") {
-          // Firebase exige une connexion récente pour supprimer : on ré-authentifie.
-          await signInWithPopup(auth, provider);
+          // Firebase exige une connexion récente pour supprimer : on ré-authentifie
+          // (popup web ou SDK natif selon la plateforme).
+          await googleSignIn();
           if (auth.currentUser) await deleteUser(auth.currentUser);
         } else throw e;
       }

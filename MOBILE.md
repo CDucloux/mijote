@@ -54,19 +54,31 @@ Bundle**, choisir/creer la clé de signature, produire le fichier **`.aab`**.
       (ex. `app.mijote` si tu as `mijote.app`, `fr.mijote` si `mijote.fr`).
       Le changer plus tard = nouvelle fiche Play, nouvelle app.
 
-## 5. Auth Google dans la WebView (Phase 2, REQUISE pour un beta utilisable)
+## 5. Auth Google native (Phase 2)
 
-Le `signInWithPopup` web de Firebase ne marche pas de façon fiable dans la WebView
-Capacitor. Il faut l'auth native :
+Le `signInWithPopup` web de Firebase ne marche pas dans la WebView Capacitor. La
+bascule vers l'auth native est **déjà codée** : `googleSignIn` (dans
+`src/lib/firebase/googleAuth.ts`) choisit le canal selon la plateforme (popup web
+vs SDK Google natif via `@capacitor-firebase/authentication`, puis credential ->
+Firebase JS). Le web est inchangé. `capacitor.config.json` porte déjà la config du
+plugin (`skipNativeAuth: true`, provider `google.com`).
 
-- [ ] Ajouter le plugin `@capacitor-firebase/authentication` (+ SDK Google natif).
-- [ ] Déposer le fichier **`google-services.json`** (console Firebase > projet > app Android) dans `android/app/`.
+Il reste la **configuration native** (côté Firebase / Google, pas du code) :
+
+- [ ] Dans **Firebase Auth**, activer le fournisseur **Google** (crée le client OAuth
+      « Web » dont le SDK natif a besoin pour obtenir un idToken).
+- [ ] Enregistrer l'app **Android** (`appId` = `app.mijote`) dans le projet Firebase,
+      puis télécharger **`google-services.json`** et le déposer dans `android/app/`.
 - [ ] Enregistrer le **SHA-1** (et SHA-256) de ta clé de signature dans Firebase
-      (Paramètres du projet > Ton app Android > Empreintes). Avec Play App Signing,
-      prendre l'empreinte fournie par Play (Play Console > App integrity).
+      (Paramètres du projet > ton app Android > Empreintes). Avec **Play App Signing**,
+      prendre l'empreinte fournie par Play (Play Console > App integrity) EN PLUS de
+      ta clé d'upload. **Régénérer `google-services.json` après avoir ajouté le SHA-1.**
 - [ ] Vérifier que le domaine de prod est dans **Firebase Auth > Authorized domains**.
+- [ ] `npm run cap:sync` (le plugin installe sa partie native), puis tester la
+      connexion sur un vrai appareil.
 
-Tant que ce n'est pas fait, la connexion échouera dans l'app installee.
+Tant que le SHA-1 et `google-services.json` ne sont pas en place, la connexion
+Google échouera dans l'app installée (le code, lui, est prêt).
 
 ---
 
