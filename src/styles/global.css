@@ -127,16 +127,7 @@ select {
 
 html,
 body {
-  /* Grain de papier : un bruit gris fondu en `soft-light` sur le fond de page.
-     Le même calque marche en clair (assombrit finement) comme en sombre (éclaircit
-     finement) sans devoir gérer deux images. Volontairement discret, surtout en
-     sombre : un grain appuyé sur fond noir vire au « bruit de capteur », l'inverse
-     de l'effet papier voulu. Il ne transparaît que sur `--bg` (les surfaces des
-     cartes le recouvrent), exactement comme une feuille sous des éléments posés. */
   background-color: var(--bg);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.55'/%3E%3C/svg%3E");
-  background-size: 150px 150px;
-  background-blend-mode: soft-light;
   color: var(--text);
   font-family: var(--ff-body);
   font-size: 15px;
@@ -539,6 +530,31 @@ select {
   background: rgba(224, 82, 82, 0.15);
   color: var(--red);
   border: 1px solid rgba(224, 82, 82, 0.3);
+}
+
+/* Bouton « Supprimer la liste » de l'état vide « Tout est acheté » : pilule rouge
+   douce SANS liseré (le fond teinté détache déjà l'action). Desktop → le rouge
+   s'affirme au survol (fond plus dense, texte plus vif) ; mobile → l'onde `.ripple`
+   (délégation globale) fait le retour tactile. */
+.list-del-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  border: none;
+  background: rgba(224, 82, 82, 0.1);
+  color: var(--red);
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+@media (hover: hover) {
+  .list-del-btn:hover {
+    background: rgba(224, 82, 82, 0.2);
+    color: color-mix(in srgb, var(--red) 82%, #fff);
+  }
 }
 
 .btn-sm {
@@ -1005,6 +1021,20 @@ select {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Sortie du menu avatar (réciproque d'expandDown) : sans ça le menu disparaissait
+   d'un coup. Joué via useModalExit quand `closing` passe à vrai. */
+@keyframes collapseUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
   }
 }
 
@@ -2791,6 +2821,23 @@ select {
   transform: scale(0.97);
 }
 
+/* Page Profil : sur desktop, TOUS les boutons manquaient de feedback au survol.
+   Leurs styles de base sont inline et de couleurs très variées (accent, rouge,
+   surfaces, pilules toggle) : on passe donc par `filter`, indépendant de la
+   couleur de fond, qui éclaircit en sombre et assombrit légèrement en clair.
+   Les cellules de la heatmap sont des `div` (jamais ciblées ici). */
+.profile-page button {
+  transition: filter 0.16s ease;
+}
+@media (hover: hover) {
+  .profile-page button:not(:disabled):hover {
+    filter: brightness(1.14);
+  }
+  .light .profile-page button:not(:disabled):hover {
+    filter: brightness(0.96);
+  }
+}
+
 /* Bouton « retirer du planning », pastille discrète qui rougit au survol */
 .mp-remove-btn {
   display: inline-flex;
@@ -2993,6 +3040,9 @@ select {
 /* Variante claire : sur une surface sombre (boutons ronds translucides sur photo),
    l'onde grise ne se voit pas → encre blanche. L'ink est inséré comme enfant direct. */
 .ripple-light > .ripple-ink { background: rgba(255, 255, 255, 0.4); }
+/* Variante accent : onde teintée terracotta, pour les surfaces où le retour tactile
+   doit se lire dans la couleur d'accent (ex. pastille d'onglet actif de la tab bar). */
+.ripple-accent > .ripple-ink { background: rgba(232, 112, 58, 0.32); }
 
 .tap-row .tap-chevron {
   transition: transform 0.38s cubic-bezier(0.33, 1, 0.68, 1);

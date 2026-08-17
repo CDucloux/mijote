@@ -1,5 +1,27 @@
 # Changelog – Mijoté
 
+## v3.18.0 – Safran · Le planning tient bon
+
+### Planning
+- **« Planning » tout court** : l'écran ne s'appelle plus « Planning Repas », le titre est allégé.
+- **Annuler une génération qui reste disponible** : le bouton d'annulation ne disparaît plus dès qu'on change de semaine ou d'onglet. Il reste proposé sur la semaine générée, y compris après un rechargement complet de la page, jusqu'à ce qu'on annule ou relance une génération. Sur les autres semaines, la génération reste possible comme avant.
+- **Bouton « Annuler » soigné** : pilule blanche épurée avec une vraie icône de retour (flèche undo) au lieu du chevron.
+
+### Courses
+- **Bouton « Supprimer la liste » épuré** : liseré retiré, survol qui avive le rouge sur ordinateur, onde tactile au tap sur mobile.
+- **États vides plus cohérents** : le titre « Liste vide » adopte la même typographie que « Tout est acheté ! », et la copie « Tous les ingrédients de cette liste ont été cochés » est plus directe.
+
+### Interface
+- **Survol des boutons du profil** : sur ordinateur, tous les boutons de la page Profil réagissent désormais au passage de la souris (feedback qui s'adapte au thème clair/sombre).
+- **Retour tactile sur l'onglet actif** : changer d'onglet déclenche une onde dans la pastille orange de la barre de navigation (mobile).
+- **Menu du compte animé à la fermeture** : le menu de l'avatar se replie avec une animation de sortie au lieu de disparaître d'un coup ; chaque action joue la fermeture avant de naviguer.
+- **Survol du bouton « Dissoudre le foyer »** : le rouge se densifie au passage de la souris.
+- **Spinner de déconnexion visible** : la roue de chargement de la modale de déconnexion tourne assez longtemps pour être perceptible, au lieu d'un éclair fugace.
+- **Grain de papier retiré** : le léger grain de fond introduit en 3.17 est retiré (rendu peu convaincant), retour à un fond à plat.
+
+### Performances
+- **Accueil qui s'affiche plus vite** : au rechargement, le squelette de chargement se lève plus tôt. Les lectures Firestore (données perso et foyer) sont menées en parallèle et la base de référence est chargée en arrière-plan, sans retarder l'affichage du tableau de bord.
+
 ## v3.17.0 – Safran · L'encre s'anime
 
 ### Interface

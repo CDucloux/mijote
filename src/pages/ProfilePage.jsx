@@ -69,7 +69,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
   const atLimit = recipeCount >= FREE_RECIPE_LIMIT;
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div className="profile-page" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* En-tête */}
       <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={() => navigate(-1)} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}><Icon name="back" size={17} /></button>

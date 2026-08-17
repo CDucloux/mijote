@@ -14,7 +14,6 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "@/lib/household/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
-import { useMealPlanner } from "../hooks/useMealPlanner.js";
 import { useLS } from "../hooks/useLS.js";
 import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
@@ -124,14 +123,13 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
-export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false }) {
+export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
   const { notify, user, isPlus } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
   // vers l'offre Mijoté+ quand une fonctionnalité premium est verrouillée.
   const gotoRoute = useNavigate();
   const goPlus = () => gotoRoute("/plus");
   const { household } = useHousehold();
-  const { generate, undo } = useMealPlanner({ recipes, ingredientDB, preferences, stock, mealPlan, setMealPlan });
   const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dragInfo, setDragInfo] = useState(null);
@@ -174,7 +172,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   // Génération de la semaine visible (créneaux midi/soir vides), avec un
   // sous-menu de configuration (style : facile / équilibré / aventureux).
-  const [genDone, setGenDone] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const [genStyle, setGenStyle] = useState("equilibre");
   const [genBatch, setGenBatch] = useState(false); // batch cooking : tout préparer d'avance
@@ -200,7 +197,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const { count } = generate(weekDays, slots, { compose: true, portionsPerMeal: ppm, style, batch });
     setGenOpen(false);
     if (count > 0) {
-      setGenDone(true);
       notify(`${count} repas proposés, à relire et ajuster`, "success");
       // Batch cooking demandé → on ouvre directement la session (tout à préparer).
       if (batch) openBatch();
@@ -209,7 +205,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       notify("Ajoute d'abord des recettes pour générer une semaine", "info");
     } else notify(`Cette semaine est déjà remplie (${slotsLabel})`, "info");
   }, [generate, weekDays, notify, household, recipes, genSlots]);
-  const handleUndo = useCallback(() => { if (undo()) { setGenDone(false); notify("Génération annulée", "info"); } }, [undo, notify]);
+  const handleUndo = useCallback(() => { if (undo()) notify("Génération annulée", "info"); }, [undo, notify]);
 
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
   // Calculée UNIQUEMENT quand le panneau batch est ouvert : sinon on la recalculait
@@ -268,9 +264,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   );
   // Repartir d'une checklist vierge à chaque ouverture / changement de session.
   useEffect(() => { if (batchOpen) setCheckedPrep(new Set()); }, [batchOpen, weekDays]);
-  // Change de semaine → on repart d'un état « générable » (le bouton undo ne vaut
-  // que pour la dernière génération sur la semaine où elle a eu lieu).
-  useEffect(() => { setGenDone(false); }, [weekDays]);
 
   const getMeals = useCallback((date, slot) => (mealPlan[date] || []).filter(m => m.slot === slot), [mealPlan]);
 
@@ -383,10 +376,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning Repas</h1></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning</h1></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {genDone
-              ? <button onClick={handleUndo} className="btn btn-ghost" style={{ padding: "8px 12px", borderRadius: 12, fontSize: 13 }}><Icon name="back" size={15} /> Annuler</button>
+            {undoKey === weekDays[0]
+              ? <button onClick={handleUndo} className="btn btn-ghost btn-pill" style={{ padding: "8px 14px", fontSize: 13, background: "var(--surface)" }}><Icon name="undo" size={15} /> Annuler</button>
               : <button onClick={() => isPlus ? setGenOpen(true) : goPlus()} className="btn btn-primary btn-pill"><Icon name={isPlus ? "calendar" : "sparkle"} size={15} /> Générer</button>}
             <UserAvatar />
           </div>

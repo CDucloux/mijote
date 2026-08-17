@@ -20,7 +20,7 @@ function setup(initialPlan = {}) {
 }
 
 describe("useMealPlanner", () => {
-  beforeEach(() => generateWeek.mockReset());
+  beforeEach(() => { generateWeek.mockReset(); localStorage.clear(); });
 
   it("applique les assignations au planning et active l'undo", () => {
     generateWeek.mockReturnValue([{ date: "2026-01-01", slot: "midi", recipeId: "r1", role: "plat" }]);
@@ -31,6 +31,18 @@ describe("useMealPlanner", () => {
     expect(setMealPlan).toHaveBeenCalled();
     expect(state.plan["2026-01-01"]).toEqual([{ recipeId: "r1", slot: "midi", portions: 1, role: "plat" }]);
     expect(result.current.canUndo).toBe(true);
+    // undoKey = 1er jour de la semaine générée → l'undo n'est proposé QUE là.
+    expect(result.current.undoKey).toBe("2026-01-01");
+  });
+
+  it("undoKey cible la semaine générée et se vide à l'undo (pas d'undo ailleurs)", () => {
+    generateWeek.mockReturnValue([{ date: "2026-01-05", slot: "midi", recipeId: "r1" }]);
+    const { result } = setup();
+    expect(result.current.undoKey).toBe(null);
+    act(() => { result.current.generate(["2026-01-05", "2026-01-06"], ["midi"]); });
+    expect(result.current.undoKey).toBe("2026-01-05"); // semaine de la génération
+    act(() => { result.current.undo(); });
+    expect(result.current.undoKey).toBe(null);
   });
 
   it("ne compte pas les accompagnements comme des repas", () => {
@@ -62,5 +74,20 @@ describe("useMealPlanner", () => {
     act(() => { result.current.undo(); });
     expect(state.plan).toEqual({ existing: true });
     expect(result.current.canUndo).toBe(false);
+  });
+
+  it("persiste l'undo (snapshot + semaine) : un nouveau montage le restaure (survit au reload)", () => {
+    generateWeek.mockReturnValue([{ date: "2026-03-02", slot: "midi", recipeId: "r1" }]);
+    const first = setup({ existing: true });
+    act(() => { first.result.current.generate(["2026-03-02"], ["midi"]); });
+    expect(localStorage.getItem("rf_mealplan_undo")).toBeTruthy();
+
+    // Remontage (simule un reload) : l'undo est réhydraté depuis le stockage.
+    const second = setup({ generated: true });
+    expect(second.result.current.undoKey).toBe("2026-03-02");
+    expect(second.result.current.canUndo).toBe(true);
+    act(() => { second.result.current.undo(); });
+    expect(second.state.plan).toEqual({ existing: true }); // snapshot d'avant génération restauré
+    expect(localStorage.getItem("rf_mealplan_undo")).toBe(null);
   });
 });
