@@ -54,3 +54,23 @@ export function overlayHex(baseHex: string, overlayHexColor: string, alpha: numb
 export function scrimThemeColor(baseHex: string, alpha: number): string {
   return overlayHex(baseHex, "#000000", alpha);
 }
+
+/**
+ * Variante imperceptible d'une couleur : un unique canal décalé de 1/255, pour
+ * obtenir une valeur GARANTIE différente de l'entrée mais visuellement identique.
+ *
+ * Sert à forcer un repaint de la barre système PWA sur Android : reposer deux fois
+ * la MÊME couleur ne déclenche aucun redraw (Chrome ignore un `theme-color` inchangé),
+ * or après une bascule clair -> sombre -> clair Android laisse un calque de contraste
+ * « collé » sous la barre de statut. Intercaler cette valeur voisine puis la vraie
+ * base constitue un changement réel que Chrome honore, ce qui nettoie le résidu, sans
+ * flash visible (le canal bleu bouge d'un pas, sous le seuil de perception).
+ *
+ * @param hex - Couleur à décaler (`#rgb` ou `#rrggbb`).
+ * @returns Une couleur `#rrggbb` distincte de `hex` d'exactement 1/255 sur le bleu (rebondit en +1 si le canal est à 0). Renvoie `hex` tel quel s'il n'est pas parsable.
+ */
+export function nudgeThemeColor(hex: string): string {
+  const rgb = parseHex(hex);
+  if (!rgb) return hex;
+  return toHex([rgb[0], rgb[1], rgb[2] > 0 ? rgb[2] - 1 : rgb[2] + 1]);
+}

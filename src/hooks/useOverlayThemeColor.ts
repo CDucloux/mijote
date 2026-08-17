@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { scrimThemeColor } from "@/lib/ui/themeColor.js";
+import { scrimThemeColor, nudgeThemeColor } from "@/lib/ui/themeColor.js";
 
 // Voile la barre système (theme-color) tant qu'une modale plein écran est ouverte.
 // En PWA installée, la barre de statut prend la couleur de `theme-color` (chrome
@@ -43,13 +43,36 @@ export function useOverlayThemeColor(): void {
       return null;
     };
 
+    let raf1 = 0;
+    let raf2 = 0;
+
+    // Restaure la couleur de base ET force un repaint propre de la barre système.
+    // Sur Android, la bascule clair -> sombre (ouverture) puis le retour au clair
+    // laisse un calque de contraste « collé » sous la barre de statut : un simple
+    // `setAttribute(base)` ne le nettoie pas. On repose donc la vraie base tout de
+    // suite (valeur correcte au repos), puis on intercale une frame une valeur
+    // voisine imperceptible avant de reposer la base : ce second changement réel
+    // force Chrome à redessiner la barre et efface le résidu. Les gardes (`content`
+    // inchangé) évitent d'écraser un scrim si une modale se rouvre pendant les rAF.
+    const restore = (color: string): void => {
+      meta.setAttribute("content", color);
+      raf1 = requestAnimationFrame(() => {
+        if (meta.getAttribute("content") !== color) return; // autre écrivain (modale/thème) : on n'insiste pas
+        const blip = nudgeThemeColor(color);
+        meta.setAttribute("content", blip);
+        raf2 = requestAnimationFrame(() => {
+          if (meta.getAttribute("content") === blip) meta.setAttribute("content", color); // ne défait QUE notre blip
+        });
+      });
+    };
+
     const sync = (): void => {
       const alpha = activeAlpha();
       if (alpha !== null && base === null) {
         base = meta.getAttribute("content") ?? "";
         meta.setAttribute("content", scrimThemeColor(base, alpha));
       } else if (alpha === null && base !== null) {
-        meta.setAttribute("content", base);
+        restore(base);
         base = null;
       }
     };
@@ -60,6 +83,8 @@ export function useOverlayThemeColor(): void {
 
     return () => {
       observer.disconnect();
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
       if (base !== null) meta.setAttribute("content", base); // ne jamais laisser la barre voilée
     };
   }, []);
