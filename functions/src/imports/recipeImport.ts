@@ -135,6 +135,12 @@ type LlmDraft = Record<string, unknown> & {
   steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; group?: unknown }[];
   /** Numéro (1-based) de l'image qui est la photo du plat, 0/absent si aucune. */
   coverPhoto?: unknown;
+  /** Préparation de base réutilisable (caramel, pâte, fond…) plutôt qu'un plat fini. */
+  isBase?: unknown;
+  /** Famille de base (fond, appareil, pâte…), validée côté `recipeExtract`. */
+  baseCategory?: unknown;
+  /** Rendement estimé de la base (montant + unité g/ml/pièce). */
+  yield?: { amount?: unknown; unit?: unknown };
 };
 
 /**
@@ -148,7 +154,7 @@ type LlmDraft = Record<string, unknown> & {
  */
 function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
   const num = (s: unknown): number | undefined => { const n = Number(String(s ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? n : undefined; };
-  return {
+  const inter: Intermediate = {
     name: (d.name || "").slice(0, 200),
     prepTime: d.prepTime, cookTime: d.cookTime, servings: d.servings,
     cuisine: d.cuisine || "",
@@ -174,6 +180,19 @@ function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
       return step;
     }).filter((s) => s.text),
   };
+  // Base réutilisable : on transmet le marqueur, la famille et le rendement estimé
+  // au brut ; la validation (famille connue, unité, montant) est faite en aval par
+  // `assignIdsAndLink` (mêmes garanties que pour la catégorie de plat).
+  if (d.isBase === true) {
+    inter.isComponent = true;
+    if (typeof d.baseCategory === "string") inter.baseCategory = d.baseCategory;
+    const y = (d.yield && typeof d.yield === "object" ? d.yield : {}) as { amount?: unknown; unit?: unknown };
+    inter.yield = {
+      amount: typeof y.amount === "number" || typeof y.amount === "string" ? y.amount : undefined,
+      unit: typeof y.unit === "string" ? y.unit : undefined,
+    };
+  }
+  return inter;
 }
 
 /** Une image fournie par le client (base64 + type MIME). */
