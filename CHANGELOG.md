@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.16.0 – Safran · Le trait fait main
+
+### Interface
+- **Écrans vides dessinés à l'encre** : les grands états vides (bibliothèque de recettes, aucune liste de courses, tout est acheté) affichent désormais un croquis au trait (cocotte, panier, assiette) plutôt qu'une icône dans une boîte. Tous partagent la même irrégularité « posée au pinceau » pour un rendu fait main cohérent, s'adaptent au thème clair/sombre, et gardent une touche chaude en terracotta. Au passage, l'emoji de l'accueil bibliothèque laisse place au dessin.
+
 ## v3.15.1 – Safran · Retouches d'écran
 
 ### Recettes
