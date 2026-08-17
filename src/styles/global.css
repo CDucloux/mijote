@@ -2821,6 +2821,23 @@ select {
   transform: scale(0.97);
 }
 
+/* Page Profil : sur desktop, TOUS les boutons manquaient de feedback au survol.
+   Leurs styles de base sont inline et de couleurs très variées (accent, rouge,
+   surfaces, pilules toggle) : on passe donc par `filter`, indépendant de la
+   couleur de fond, qui éclaircit en sombre et assombrit légèrement en clair.
+   Les cellules de la heatmap sont des `div` (jamais ciblées ici). */
+.profile-page button {
+  transition: filter 0.16s ease;
+}
+@media (hover: hover) {
+  .profile-page button:not(:disabled):hover {
+    filter: brightness(1.14);
+  }
+  .light .profile-page button:not(:disabled):hover {
+    filter: brightness(0.96);
+  }
+}
+
 /* Bouton « retirer du planning », pastille discrète qui rougit au survol */
 .mp-remove-btn {
   display: inline-flex;
