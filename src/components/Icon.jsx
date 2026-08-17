@@ -17,6 +17,7 @@ export const Icon = ({ name, size = 20, color = "currentColor" }) => {
     check: <svg {...p} strokeWidth="2.2"><polyline points="20 6 9 17 4 12" /></svg>,
     back: <svg {...p}><polyline points="15 18 9 12 15 6" /></svg>,
     forward: <svg {...p}><polyline points="9 18 15 12 9 6" /></svg>,
+    undo: <svg {...p}><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H10" /></svg>,
     chevronUp: <svg {...p} strokeWidth="2.2"><polyline points="18 15 12 9 6 15" /></svg>,
     chevronDown: <svg {...p} strokeWidth="2.2"><polyline points="6 9 12 15 18 9" /></svg>,
     close: <svg {...p}><line x1="18" x2="6" y1="6" y2="18" /><line x1="6" x2="18" y1="6" y2="18" /></svg>,
