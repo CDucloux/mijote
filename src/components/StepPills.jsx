@@ -33,12 +33,14 @@ export function UtImage({ src, alt, size = 22, radius = "50%", border = false })
   );
 }
 
-// Pastille ustensile : image détourée sur cercle blanc + nom.
-export function UtensilPill({ image, name, size = 22 }) {
+// Pastille ustensile : image détourée sur cercle blanc + nom (+ résumé des réglages
+// d'appareil si fourni, ex : « 180 °C · Chaleur tournante »).
+export function UtensilPill({ image, name, detail, size = 22 }) {
   return (
     <span style={chip}>
       <UtImage src={image} alt={name} size={size} />
       {name}
+      {detail && <span style={qtyStyle}>{detail}</span>}
     </span>
   );
 }

@@ -19,6 +19,7 @@ import {
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
   TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES, slugifyId,
 } from "@/lib/household/dataYaml.js";
+import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { formatMonths } from "@/lib/food/seasonality.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
@@ -746,7 +747,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       </div>
       {/* FAB « + » flottant pour ajouter un ustensile (comme les listes de courses libres) */}
       {isAdmin && section === "ustensiles" && (
-        <button onClick={() => setEditUt({ id: "", name: "", category: "divers", image: "" })} title="Nouvel ustensile" className="pressable"
+        <button onClick={() => setEditUt({ id: "", name: "", category: "divers", appliance: "", image: "" })} title="Nouvel ustensile" className="pressable"
           style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
           <Icon name="plus" size={22} color="#fff" />
         </button>
@@ -823,6 +824,11 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <div className="field-label">Catégorie</div>
           <select className="field-input" value={editUt.category || "divers"} onChange={e => setEditUt(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
             {Object.entries(UTENSIL_CATEGORIES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+          </select>
+          <div className="field-label">Appareil (réglages par étape)</div>
+          <select className="field-input" value={editUt.appliance || ""} onChange={e => setEditUt(p => ({ ...p, appliance: e.target.value }))} style={{ marginBottom: 12 }}>
+            <option value="">Aucun (ustensile simple)</option>
+            {Object.entries(APPLIANCE_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
           </select>
           <div className="field-label">Photo</div>
           <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} pathPrefix={isAdmin ? "master/utensils" : "utensils"} />

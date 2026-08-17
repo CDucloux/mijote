@@ -14,6 +14,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { ING_MD_BOUNDS } from "@/lib/food/ingredientsMarkdown.js";
 import { TIP_TYPES } from "@/constants/tipTypes.js";
 import { isFruitVeg } from "@/constants/categories.js";
+import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 
 /** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
 export interface ParseResult<T = Record<string, unknown>> {
@@ -263,7 +264,7 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
 }
 
 /** Ustensile (forme minimale utilisée par l'export). */
-interface UtensilRow { id?: string; name?: string; category?: string; image?: string }
+interface UtensilRow { id?: string; name?: string; category?: string; appliance?: string; image?: string }
 
 /**
  * Rend la base d'ustensiles en YAML réimportable, trié par nom. La catégorie est
@@ -275,7 +276,7 @@ interface UtensilRow { id?: string; name?: string; category?: string; image?: st
 export function formatUtensilsYaml(list: UtensilRow[]): string {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
-    .map(d => { const o: Record<string, unknown> = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.category) o.category = d.category; if (d.image) o.image = d.image; return o; });
+    .map(d => { const o: Record<string, unknown> = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.category) o.category = d.category; if (d.appliance) o.appliance = d.appliance; if (d.image) o.image = d.image; return o; });
   return dumpYaml(rows, `# Base d'ustensiles Mijoté (${rows.length}) – généré, réimportable.\n`);
 }
 
@@ -402,7 +403,14 @@ export function parseUtensilsYaml(text: string): ParseResult {
       errors.push(`${where} : catégorie inconnue « ${category} » (${Object.keys(UTENSIL_CATEGORIES).join(", ")}).`);
       category = "";
     }
+    // Appareil (facultatif) validé contre les appareils connus ; inconnu → erreur
+    // (import annulé), comme la catégorie. Absent = ustensile simple.
+    const appliance = str(raw.appliance);
+    if (appliance && !(appliance in APPLIANCE_LABELS))
+      errors.push(`${where} : appareil inconnu « ${appliance} » (${Object.keys(APPLIANCE_LABELS).join(", ")}).`);
+
     const row: Record<string, unknown> = { id, name, category: category || "divers" };
+    if (appliance && appliance in APPLIANCE_LABELS) row.appliance = appliance;
     if (raw.image != null) row.image = str(raw.image);
     items.push(row);
   });

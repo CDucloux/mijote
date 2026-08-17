@@ -40,7 +40,9 @@ export interface Utensil {
 /**
  * Ligne de la base d'ustensiles (master partagée / ajouts perso). Forme large :
  * `category` peut manquer sur d'anciennes entrées (repli « divers » à l'import).
- * `_ro` marque la lecture seule côté vue fusionnée (non-admin).
+ * `appliance`, s'il est posé, désigne un appareil connu (clé de `APPLIANCE_SCHEMAS`)
+ * qui expose des réglages au niveau étape. `_ro` marque la lecture seule côté vue
+ * fusionnée (non-admin).
  */
 export interface UtensilDbItem {
   id: string;
@@ -48,6 +50,8 @@ export interface UtensilDbItem {
   image?: string;
   /** Famille d'ustensile (clé de `UTENSIL_CATEGORIES`). */
   category?: string;
+  /** Appareil associé (clé de `APPLIANCE_SCHEMAS`) ; absent = ustensile simple. */
+  appliance?: string;
   _ro?: boolean;
   [k: string]: unknown;
 }
@@ -59,6 +63,12 @@ export interface Step {
   tip?: string;
   ingredients?: string[];
   utensils?: string[];
+  /**
+   * Réglages d'appareils posés SUR cette étape, indexés par id d'ustensile de
+   * recette (les mêmes ids que `utensils`). Additif : n'affecte pas `utensils`,
+   * donc aucune migration des recettes existantes.
+   */
+  utensilParams?: Record<string, Record<string, unknown>>;
   /** Libellé de la section/groupe (« Pour la pâte »). Vide/absent = section principale. */
   group?: string;
 }

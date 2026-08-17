@@ -271,4 +271,30 @@ describe("parseUtensilsYaml", () => {
     // survit au ré-import
     expect(parseUtensilsYaml(out).items[0].category).toBe("appareils");
   });
+
+  it("round-trips a known appliance", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: Four
+  category: appareils
+  appliance: four
+`);
+    expect(errors).toEqual([]);
+    expect(items[0].appliance).toBe("four");
+    // sérialisé puis réimporté à l'identique
+    expect(parseUtensilsYaml(formatUtensilsYaml(items)).items[0].appliance).toBe("four");
+  });
+
+  it("omits appliance when absent (ustensile simple)", () => {
+    const { items } = parseUtensilsYaml(`- name: Louche`);
+    expect(items[0]).not.toHaveProperty("appliance");
+  });
+
+  it("rejects an unknown appliance", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: Truc
+  appliance: teleporteur
+`);
+    expect(items).toEqual([]);
+    expect(errors.join(" ")).toMatch(/appareil inconnu/);
+  });
 });
