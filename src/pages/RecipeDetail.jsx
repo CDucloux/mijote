@@ -27,6 +27,8 @@ import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { formatParamSummary } from "@/lib/utensils/appliances.js";
+import { spoonConversions } from "@/lib/food/calculators.js";
+import { QuantityConvertSheet } from "../components/QuantityConvertSheet.jsx";
 import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
@@ -89,6 +91,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const [bump, setBump] = useState(0); // relance l'animation « rebond » du compteur de portions
   const [panFactor, setPanFactor] = useState(1); // facteur d'adaptation de moule (calculatrice)
   const [showCalc, setShowCalc] = useState(false);
+  const [convIng, setConvIng] = useState(null); // ingrédient dont on montre l'équivalent cuillères
   const [activeTab, setActiveTab] = useState("Ingrédients");
   const isDesktop = useIsDesktop();
   const [showMealModal, setShowMealModal] = useState(false);
@@ -891,10 +894,24 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         </div>
                         {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name={badge.icon} size={12} color={badge.color} />{badge.text}</div>}
                       </div>
-                      <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
-                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
-                        <span style={{ fontSize: 12, color: "var(--text2)" }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
-                      </div>
+                      {(() => {
+                        const spoons = isComp ? null : spoonConversions(ing.amount * mult, ing.unit, ing.name);
+                        const qty = (
+                          <>
+                            <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
+                            <span style={{ fontSize: 12, color: "var(--text2)" }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
+                          </>
+                        );
+                        // Quantité tappable → équivalent cuillères (uniquement si convertible).
+                        return spoons
+                          ? <button onClick={e => { e.stopPropagation(); setConvIng({ name: ing.name, image: getIngImage(ing.dbId, ing.name), amount: ing.amount * mult, unit: ing.unit, spoons }); }}
+                              className="tap" title="Convertir en cuillères"
+                              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0, display: "inline-flex", alignItems: "baseline", gap: 3 }}>
+                              {qty}
+                              <span style={{ alignSelf: "center", display: "flex", marginLeft: 1 }}><Icon name="swap" size={12} color="var(--text3)" /></span>
+                            </button>
+                          : <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>{qty}</div>;
+                      })()}
                       {clickable && <span className="tap-chevron" style={{ display: "flex", flexShrink: 0 }}><Icon name="forward" size={14} color="var(--text3)" /></span>}
                     </div>
                   );
@@ -1500,6 +1517,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <RecipeCalculators recipe={recipe} panApplied={panFactor !== 1}
           onApply={f => setPanFactor(f)} onReset={() => setPanFactor(1)} onClose={() => setShowCalc(false)} />
       )}
+      {convIng && <QuantityConvertSheet ing={convIng} onClose={() => setConvIng(null)} />}
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
       {showDifficulty && <DifficultyModal data={difficultyExplain} onClose={() => setShowDifficulty(false)} />}
       {showCollModal && (

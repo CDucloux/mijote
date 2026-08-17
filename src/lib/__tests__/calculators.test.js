@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  panArea, panFactor, roundNice, densityFor, convertQuantity,
+  panArea, panFactor, roundNice, densityFor, convertQuantity, spoonConversions,
 } from "@/lib/food/calculators.js";
 
 describe("panArea", () => {
@@ -80,5 +80,51 @@ describe("convertQuantity", () => {
   it("null pour une unité inconnue ou valeur non numérique", () => {
     expect(convertQuantity(1, "g", "parsec")).toBeNull();
     expect(convertQuantity("abc", "g", "kg")).toBeNull();
+  });
+});
+
+describe("spoonConversions", () => {
+  it("volume → cuillères : toujours possible, sans densité", () => {
+    expect(spoonConversions(15, "ml")).toEqual([
+      { unit: "cuillère à soupe", value: 1 },
+      { unit: "cuillère à café", value: 3 },
+    ]);
+    expect(spoonConversions(30, "ml")).toEqual([
+      { unit: "cuillère à soupe", value: 2 },
+      { unit: "cuillère à café", value: 6 },
+    ]);
+  });
+
+  it("masse → cuillères quand la densité est connue (arrondi au quart)", () => {
+    const r = spoonConversions(100, "g", "sucre"); // densité 0.85 → ~117,6 ml
+    expect(r).not.toBeNull();
+    const cs = r.find(x => x.unit === "cuillère à soupe");
+    expect(cs.value).toBeCloseTo(7.75, 5); // 7,84 arrondi au quart
+    expect(cs.value * 4 % 1).toBe(0); // multiple de 0,25
+  });
+
+  it("masse sans densité connue → null (aucune invention)", () => {
+    expect(spoonConversions(120, "g", "persil")).toBeNull();
+    expect(spoonConversions(60, "g", "parmesan")).toBeNull();
+    expect(spoonConversions(100, "g")).toBeNull(); // pas de nom
+  });
+
+  it("unités non convertibles (pièce, cuillère, vide) → null", () => {
+    expect(spoonConversions(2, "gousse")).toBeNull();
+    expect(spoonConversions(1, "pièce")).toBeNull();
+    expect(spoonConversions(3, "cuillère à soupe")).toBeNull(); // déjà en cuillères
+    expect(spoonConversions(1, "")).toBeNull();
+  });
+
+  it("quantité nulle/négative/non numérique → null", () => {
+    expect(spoonConversions(0, "ml")).toBeNull();
+    expect(spoonConversions(-5, "ml")).toBeNull();
+    expect(spoonConversions("abc", "ml")).toBeNull();
+  });
+
+  it("kg est accepté comme source de masse", () => {
+    const r = spoonConversions(0.03, "kg", "sel"); // 30 g, densité 1.2 → 25 ml
+    expect(r).not.toBeNull();
+    expect(r.find(x => x.unit === "cuillère à café").value).toBeCloseTo(5, 5);
   });
 });

@@ -130,3 +130,39 @@ export function convertQuantity(value: number | string, from: string, to: string
 
 /** Unités proposées au convertisseur (ordre d'affichage). */
 export const CONVERT_UNITS = ["g", "kg", "ml", "cl", "l", "cuillère à soupe", "cuillère à café", "cup", "tasse"];
+
+/** Un équivalent en cuillères d'une quantité métrique. */
+export interface SpoonConversion { unit: string; value: number }
+
+// Cibles cuillères de la conversion inline (à soupe en tête). Unités source
+// éligibles : métriques « pesables/mesurables » (ni pièce, ni cuillère déjà).
+const SPOON_TARGETS = ["cuillère à soupe", "cuillère à café"];
+const SPOON_SOURCES = new Set(["mg", "g", "kg", "ml", "cl", "dl", "l"]);
+
+/**
+ * Équivalents en cuillères (à soupe puis à café) d'une quantité, pour aider qui ne
+ * pèse pas. Volume → cuillères : toujours possible (rapport de volumes). Masse →
+ * cuillères : seulement si la densité de l'ingrédient est connue ; sinon on
+ * n'invente rien (retour `null`). Chaque valeur est arrondie au quart de cuillère
+ * (précision « cuisine », lisible en fraction : ¼, ½, ¾).
+ *
+ * @param amount - Quantité (passer la valeur DÉJÀ mise à l'échelle des portions).
+ * @param unit - Unité source ; toute unité non métrique (pièce, cuillère…) → `null`.
+ * @param name - Nom de l'ingrédient, pour deviner la densité en masse → volume.
+ * @returns Les équivalents non nuls, ou `null` si la conversion n'a pas de sens.
+ */
+export function spoonConversions(amount: number | string, unit: string | null | undefined, name?: string | null): SpoonConversion[] | null {
+  const u = (unit || "").trim().toLowerCase();
+  if (!SPOON_SOURCES.has(u)) return null;
+  const v = Number(amount);
+  if (!Number.isFinite(v) || v <= 0) return null;
+  const density = densityFor(name) ?? undefined;
+  const out: SpoonConversion[] = [];
+  for (const target of SPOON_TARGETS) {
+    const r = convertQuantity(v, u, target, density);
+    if (r == null) continue;
+    const q = Math.round(r * 4) / 4; // quart de cuillère
+    if (q > 0) out.push({ unit: target, value: q });
+  }
+  return out.length ? out : null;
+}
