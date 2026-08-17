@@ -213,6 +213,16 @@ export function useFirestoreSync({
         // (pas de flash solo→foyer au reload). Le coordinateur confirmera/corrigera.
         const bootHid = readCachedHid(u.uid);
 
+        // Lecture du foyer lancée EN PARALLÈLE du solo (au lieu d'attendre l'un puis
+        // l'autre) : deux allers-retours Firestore concurrents, pas séquentiels → le
+        // skeleton se lève d'autant plus tôt. On capture ok/échec sur la promesse pour
+        // qu'un rejet éventuel ne file jamais sans gestionnaire pendant l'attente du solo.
+        const sharedProbe = bootHid
+          ? loadSharedData(householdWorkspace(bootHid)).then(
+              d => ({ ok: true as const, data: d as BootData }),
+              (e: unknown) => ({ ok: false as const, err: e }))
+          : null;
+
         let data: BootData = await loadUserData(ws);
         const isEmpty = !bootHid && data.recipes.length === 0 && !data.collections && !data.userDB
           && !data.mealPlan && !data.shoppingLists && !data.stock;
@@ -236,12 +246,13 @@ export function useFirestoreSync({
         // jeton), on part d'un partagé VIDE et on laisse l'abonnement temps réel, servi
         // par le cache Firestore, repeupler ; on ne retombe JAMAIS sur le solo.
         let shared: BootData = data, loadedFromHousehold = false, sharedLoadFailed = false;
-        if (bootHid) {
+        if (sharedProbe) {
           loadedFromHousehold = true;
-          try { shared = await loadSharedData(householdWorkspace(bootHid)); }
-          catch (e) {
+          const probe = await sharedProbe;
+          if (probe.ok) shared = probe.data;
+          else {
             shared = { recipes: [] }; sharedLoadFailed = true;
-            reportError(e, { where: "sync:bootstrap:loadShared", bootHid });
+            reportError(probe.err, { where: "sync:bootstrap:loadShared", bootHid });
             // On attend la 1re livraison de l'abonnement temps réel (cache Firestore)
             // avant de conclure « bibliothèque vide » → pas de flash. Filet de sécurité
             // à 6 s au cas où aucun snapshot n'arriverait (foyer réellement vide/injoignable).
@@ -277,19 +288,27 @@ export function useFirestoreSync({
           }
         }
         setUserDB(data.userDB || { ingredients: [], utensils: [] });               // perso : toujours solo
-        const freshMaster = await masterPromise;
-        // Ne PAS écraser une Master valide (état + cache) par un résultat vide :
-        // `loadMasterDB` retombe sur des tableaux vides en cas d'échec de lecture
-        // (droits refusés sur `master/*` si la session mobile est dégradée). Un tel
-        // vide clobberait le cache localStorage et rendrait l'appli sans ingrédients/
-        // ustensiles de façon persistante. On applique le nouveau Master uniquement
-        // s'il n'est pas vide, ou si on n'a rien en mémoire (1er chargement légitime).
-        const freshHasData = freshMaster.ingredients.length > 0 || freshMaster.utensils.length > 0;
-        if (freshHasData || (!masterDB.ingredients.length && !masterDB.utensils.length)) {
-          setMasterDB(freshMaster);
-          masterSigRef.current = masterSig(freshMaster); // seed anti-écho : le 1er snapshot (identique) ne re-déclenche rien
-          if (freshHasData) { try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ } }
-        }
+        // Master : lue en parallèle mais appliquée EN ARRIÈRE-PLAN. Elle est déjà
+        // amorcée depuis le cache localStorage (cf. useMasterData) et n'est pas requise
+        // pour peindre le tableau de bord : inutile de bloquer le bootstrap (donc le
+        // skeleton) sur son aller-retour réseau. On sème d'abord la signature depuis
+        // l'état courant pour que la garde de l'écriture admin ne parte pas à tort avant
+        // l'arrivée de la version fraîche.
+        if (!masterSigRef.current) masterSigRef.current = masterSig(masterDB);
+        masterPromise.then(freshMaster => {
+          // Ne PAS écraser une Master valide (état + cache) par un résultat vide :
+          // `loadMasterDB` retombe sur des tableaux vides en cas d'échec de lecture
+          // (droits refusés sur `master/*` si la session mobile est dégradée). Un tel
+          // vide clobberait le cache localStorage et rendrait l'appli sans ingrédients/
+          // ustensiles de façon persistante. On applique le nouveau Master uniquement
+          // s'il n'est pas vide, ou si on n'a rien en mémoire (1er chargement légitime).
+          const freshHasData = freshMaster.ingredients.length > 0 || freshMaster.utensils.length > 0;
+          if (freshHasData || (!masterDB.ingredients.length && !masterDB.utensils.length)) {
+            setMasterDB(freshMaster);
+            masterSigRef.current = masterSig(freshMaster); // seed anti-écho : le 1er snapshot (identique) ne re-déclenche rien
+            if (freshHasData) { try { localStorage.setItem("rf_masterDB_cache", JSON.stringify(freshMaster)); } catch { /* quota */ } }
+          }
+        }).catch(e => reportError(e, { where: "sync:bootstrap:master" }));
 
         recipeSyncMap.current = mapOf(shared.recipes);
         recipesSigRef.current = JSON.stringify(shared.recipes || []);
