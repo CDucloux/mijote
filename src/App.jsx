@@ -418,6 +418,11 @@ function AppInner({ user, isDark, toggleTheme }) {
     const anchor = lastPublicPubId.current;
     if (!returning || !anchor) return;
     lastPublicPubId.current = null;
+    // L'ancre (#discover-card-…) ne vit QUE dans le feed « Découvrir » de l'Accueil.
+    // Quitter une recette publique vers un AUTRE onglet (Recettes, Planning…) n'a
+    // rien à restaurer : on ne masque pas le rendu, sinon la recherche de l'ancre
+    // absente tient l'écran blanc jusqu'à l'échéance (~1,2 s).
+    if (tab !== "home") return;
     setScrollHold(true); // rendu masqué avant peinture → pas de flash en haut
     // Filet de sécurité : le feed est réhydraté depuis le cache, l'ancre apparaît
     // donc quasi immédiatement. On borne court pour ne jamais rester blanc longtemps.
@@ -431,7 +436,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     };
     tryScroll();
     return () => cancelAnimationFrame(raf);
-  }, [atTabView]);
+  }, [atTabView, tab]);
 
 
   const tabContent = (
