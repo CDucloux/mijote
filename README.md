@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-3.13.0-e8703a?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.14.0-e8703a?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -188,6 +188,10 @@ L'application est disponible sur `http://localhost:5173`.
 | `npm run preview` | Prévisualise le build de production |
 | `npm test` | Lance la suite de tests Vitest |
 | `npm run lint` | Analyse statique ESLint |
+| `npm run cap:sync` | Build web puis synchronise dans le projet natif Capacitor |
+| `npm run cap:android` | Ouvre le projet Android dans Android Studio |
+
+> Empaquetage mobile (Android via Capacitor, iOS à terme) : voir [`MOBILE.md`](MOBILE.md).
 
 ## ☁️ Déploiement
 

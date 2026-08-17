@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.14.0 – Safran · Cap sur le mobile
+
+### Recettes
+- **Badge de conversion sur la vignette** : la conversion d'une quantité en cuillères se déclenche via un petit badge « flèches » posé en bas de l'image de l'ingrédient, désormais visible aussi bien sur mobile que sur le bureau (elle manquait sur la liste bureau). Le badge n'apparaît que pour les ingrédients réellement convertibles.
+
+### Sous le capot
+- **Préparation des apps mobiles** : la PWA peut désormais être empaquetée en application native via Capacitor (Android d'abord, iOS à terme), sans changer le site web. La **connexion Google** bascule automatiquement sur le SDK natif dans l'app installée (le popup web ne fonctionne pas dans une WebView), le web restant inchangé. Guide complet dans `MOBILE.md`.
+
 ## v3.13.0 – Safran · Sans balance
 
 ### Recettes
