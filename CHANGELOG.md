@@ -1,5 +1,15 @@
 # Changelog – Mijoté
 
+## v3.12.0 – Safran · Ustensiles rangés, appareils réglés
+
+### Ustensiles
+- **Catégorisation** : chaque ustensile appartient désormais à une famille (Cuisson, Appareils, Découpe, Mesure, Préparation, Pâtisserie, Filtrage, Divers). La console d'administration et le sélecteur d'ustensiles d'une étape les regroupent par famille, bien plus lisible à mesure que la base grandit.
+- **Appareils avec réglages** : un ustensile peut être un **appareil** (four, air fryer, blender, robot pâtissier, batteur, mixeur plongeant, cuiseur à riz). Chaque appareil expose ses propres réglages, saisis **au niveau de l'étape** (température, mode de cuisson, préchauffage, vitesse, programme, durée…). Une même recette peut ainsi régler le four à deux températures selon l'étape.
+- Le réglage est **résumé sur la pastille** de l'ustensile dans la fiche recette et le mode cuisine (« Préchauffage · 180 °C · Chaleur tournante »).
+
+### Éditeur de recette
+- **Champs Ingrédients et Infos sans bordure** : à l'image des étapes, les champs du formulaire adoptent une surface douce sans liseré dur, pour un rendu plus épuré.
+
 ## v3.11.3 – Safran · Éditeur pleine largeur
 
 ### Éditeur de recette

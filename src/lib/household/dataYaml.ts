@@ -14,6 +14,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { ING_MD_BOUNDS } from "@/lib/food/ingredientsMarkdown.js";
 import { TIP_TYPES } from "@/constants/tipTypes.js";
 import { isFruitVeg } from "@/constants/categories.js";
+import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 
 /** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
 export interface ParseResult<T = Record<string, unknown>> {
@@ -46,6 +47,22 @@ export const TECHNIQUE_CATEGORIES: Record<string, string> = {
   liaison: "Liaison",
   preparation: "Préparation",
   dressage: "Dressage",
+};
+
+/**
+ * Familles d'ustensiles (clé → libellé affiché). Taxonomie FIXE (contrairement aux
+ * catégories nutritionnelles des ingrédients, éditables en admin) : on la valide donc
+ * en dur à l'import. `divers` est le repli des ustensiles sans catégorie explicite.
+ */
+export const UTENSIL_CATEGORIES: Record<string, string> = {
+  cuisson: "Cuisson",
+  appareils: "Appareils",
+  decoupe: "Découpe",
+  mesure: "Mesure",
+  preparation: "Préparation",
+  patisserie: "Pâtisserie",
+  filtrage: "Filtrage",
+  divers: "Divers",
 };
 
 /**
@@ -247,10 +264,11 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
 }
 
 /** Ustensile (forme minimale utilisée par l'export). */
-interface UtensilRow { id?: string; name?: string; image?: string }
+interface UtensilRow { id?: string; name?: string; category?: string; appliance?: string; image?: string }
 
 /**
- * Rend la base d'ustensiles en YAML réimportable, trié par nom.
+ * Rend la base d'ustensiles en YAML réimportable, trié par nom. La catégorie est
+ * sérialisée après le nom (avant l'image) pour rester lisible en revue de diff.
  *
  * @param list - Ustensiles à exporter.
  * @returns Le document YAML réimportable.
@@ -258,7 +276,7 @@ interface UtensilRow { id?: string; name?: string; image?: string }
 export function formatUtensilsYaml(list: UtensilRow[]): string {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
-    .map(d => { const o: Record<string, unknown> = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.image) o.image = d.image; return o; });
+    .map(d => { const o: Record<string, unknown> = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.category) o.category = d.category; if (d.appliance) o.appliance = d.appliance; if (d.image) o.image = d.image; return o; });
   return dumpYaml(rows, `# Base d'ustensiles Mijoté (${rows.length}) – généré, réimportable.\n`);
 }
 
@@ -377,7 +395,22 @@ export function parseUtensilsYaml(text: string): ParseResult {
     const id = str(raw.id) || slugifyId("db_u_", name);
     if (seenIds.has(id)) { errors.push(`${where} : id en double « ${id} ».`); return; }
     seenIds.add(id);
-    const row: Record<string, unknown> = { id, name };
+    // Catégorie validée contre la taxo fixe ; absente → repli « divers » (migration
+    // douce des ustensiles historiques, sans catégorie). Une catégorie fournie mais
+    // inconnue est une erreur (import annulé), comme pour les ingrédients.
+    let category = str(raw.category);
+    if (category && !(category in UTENSIL_CATEGORIES)) {
+      errors.push(`${where} : catégorie inconnue « ${category} » (${Object.keys(UTENSIL_CATEGORIES).join(", ")}).`);
+      category = "";
+    }
+    // Appareil (facultatif) validé contre les appareils connus ; inconnu → erreur
+    // (import annulé), comme la catégorie. Absent = ustensile simple.
+    const appliance = str(raw.appliance);
+    if (appliance && !(appliance in APPLIANCE_LABELS))
+      errors.push(`${where} : appareil inconnu « ${appliance} » (${Object.keys(APPLIANCE_LABELS).join(", ")}).`);
+
+    const row: Record<string, unknown> = { id, name, category: category || "divers" };
+    if (appliance && appliance in APPLIANCE_LABELS) row.appliance = appliance;
     if (raw.image != null) row.image = str(raw.image);
     items.push(row);
   });

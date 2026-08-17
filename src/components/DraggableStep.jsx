@@ -6,6 +6,8 @@ import { ImageUpload } from "./ImageUpload.jsx";
 import { MoveArrows } from "./MoveArrows.jsx";
 import { IngImage } from "./Img.jsx";
 import { UtImage } from "./StepPills.jsx";
+import { ApplianceParamsEditor } from "./ApplianceParams.jsx";
+import { isApplianceKey } from "@/lib/utensils/appliances.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
 
@@ -31,7 +33,18 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
   const ingImg = (ing) => ing.recipeId
     ? ((recipes || []).find(r => r.id === ing.recipeId)?.image || "")
     : ((ingredientDB || []).find(d => d.id === ing.dbId)?.image || (ing.name ? findIngredientMatch(ing.name, ingredientDB || [])?.image || "" : ""));
-  const utImg = (u) => (utensilDB || []).find(d => d.id === u.dbId)?.image || "";
+  const utDbRow = (u) => (utensilDB || []).find(d => d.id === u.dbId);
+  const utImg = (u) => utDbRow(u)?.image || "";
+
+  // Réglages d'appareil posés sur l'étape (indexés par id d'ustensile de recette).
+  // Un objet vide retire l'entrée pour garder `utensilParams` propre.
+  const setUtParams = (uId, vals) => {
+    const next = { ...(step.utensilParams || {}) };
+    if (vals && Object.keys(vals).length) next[uId] = vals;
+    else delete next[uId];
+    onUpdate(step.id, "utensilParams", next);
+  };
+  const applianceUts = utensils.filter(u => step.utensils?.includes(u.id) && isApplianceKey(utDbRow(u)?.appliance));
 
   return (
     <div
@@ -54,8 +67,8 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
       </div>
 
       {/* Instructions, surface douce, sans bordure dure */}
-      <AutoResizeTextarea className="field-input step-instructions" placeholder="Décris cette étape…" value={step.text} onChange={e => onUpdate(step.id, "text", e.target.value)}
-        style={{ marginBottom: 12, background: "var(--surface2)", border: "1px solid transparent", borderRadius: 14, padding: "13px 15px", fontSize: 14.5, lineHeight: 1.55, minHeight: 88 }} />
+      <AutoResizeTextarea className="field-input field-soft step-instructions" placeholder="Décris cette étape…" value={step.text} onChange={e => onUpdate(step.id, "text", e.target.value)}
+        style={{ marginBottom: 12, background: "var(--surface2)", borderRadius: 14, padding: "13px 15px", fontSize: 14.5, lineHeight: 1.55, minHeight: 88 }} />
 
       {/* Add-ons optionnels : chips discrètes tant qu'ils ne sont pas utilisés */}
       {(!showPhoto || !showTip) && (
@@ -147,6 +160,18 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
               );
             })}
           </div>
+
+          {/* Réglages des appareils liés à l'étape (four, blender…) */}
+          {applianceUts.map(u => (
+            <div key={u.id} style={{ marginTop: 12, background: "var(--surface2)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <UtImage src={utImg(u)} alt={u.name} size={22} border />
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text2)" }}>{u.name}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>· réglages</span>
+              </div>
+              <ApplianceParamsEditor appliance={utDbRow(u)?.appliance} values={step.utensilParams?.[u.id]} onChange={vals => setUtParams(u.id, vals)} />
+            </div>
+          ))}
         </>
       )}
     </div>

@@ -11,6 +11,7 @@ import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { consumptionFraction } from "@/lib/recipes/recipeComponents.js";
+import { formatParamSummary } from "@/lib/utensils/appliances.js";
 import { capitalize, fmtQtyUnit } from "../lib/format.js";
 import { AutoResizeTextarea } from "../components/AutoResizeTextarea.jsx";
 import { RatingPicker } from "../components/RatingPicker.jsx";
@@ -606,12 +607,16 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles</div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                        {linkedUts.map(u => (
+                        {linkedUts.map(u => {
+                          const detail = formatParamSummary((utensilDB || []).find(d => d.id === u.dbId)?.appliance, step.utensilParams?.[u.id]);
+                          return (
                           <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
                             <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
                             {u.name}
+                            {detail && <span style={{ color: "var(--text3)", fontWeight: 400 }}>{detail}</span>}
                           </span>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}

@@ -17,8 +17,9 @@ import { ING_MD_COLUMNS, formatTips } from "@/lib/food/ingredientsMarkdown.js";
 import {
   parseIngredientsYaml, parseUtensilsYaml, parseTechniquesYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
-  TECHNIQUE_CATEGORIES, slugifyId,
+  TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES, slugifyId,
 } from "@/lib/household/dataYaml.js";
+import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { formatMonths } from "@/lib/food/seasonality.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
@@ -542,24 +543,41 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         })()}
 
         {section === "ustensiles" && (
-          <div>
-            <div className="config-ut-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {[...utensilDB].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr")).map((item, ui) => (
-                <div key={item.id} className="slide-up" style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, animationDelay: `${ui * 0.03}s` }}>
-                  <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "#fff", display: "grid", placeItems: "center" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 5, boxSizing: "border-box" }} /></div>
-                  <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {item._ro
-                      ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8 }}>Master</span>
-                      : <>
-                        <button onClick={() => setEditUt({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={14} /></button>
-                        <button onClick={() => setConfirmDel({ type: "ut", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
-                      </>
-                    }
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Ustensiles groupés par famille (taxonomie fixe UTENSIL_CATEGORIES).
+                Les entrées sans catégorie retombent dans « divers ». */}
+            {Object.entries(UTENSIL_CATEGORIES).map(([catKey, catLabel], ci) => {
+              const list = utensilDB
+                .filter(d => (d.category || "divers") === catKey)
+                .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
+              if (list.length === 0) return null; // famille vide : masquée
+              return (
+                <div key={catKey} className="slide-up" style={{ animationDelay: `${ci * 0.04}s` }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, margin: "2px 2px 10px" }}>
+                    <span style={{ fontSize: 14, fontWeight: 700 }}>{catLabel}</span>
+                    <span style={{ fontSize: 11, color: "var(--text3)" }}>{list.length}</span>
+                    <code style={{ fontSize: 10, color: "var(--text3)", background: "var(--surface2)", borderRadius: 4, padding: "1px 5px" }}>{catKey}</code>
+                  </div>
+                  <div className="config-ut-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {list.map((item, ui) => (
+                      <div key={item.id} className="slide-up" style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, animationDelay: `${ui * 0.03}s` }}>
+                        <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "#fff", display: "grid", placeItems: "center" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 5, boxSizing: "border-box" }} /></div>
+                        <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {item._ro
+                            ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8 }}>Master</span>
+                            : <>
+                              <button onClick={() => setEditUt({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={14} /></button>
+                              <button onClick={() => setConfirmDel({ type: "ut", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
+                            </>
+                          }
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
 
             {/* ── Import / Export de la base ustensiles (admin) – en bas ── */}
             {isAdmin && (
@@ -729,7 +747,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       </div>
       {/* FAB « + » flottant pour ajouter un ustensile (comme les listes de courses libres) */}
       {isAdmin && section === "ustensiles" && (
-        <button onClick={() => setEditUt({ id: "", name: "", image: "" })} title="Nouvel ustensile" className="pressable"
+        <button onClick={() => setEditUt({ id: "", name: "", category: "divers", appliance: "", image: "" })} title="Nouvel ustensile" className="pressable"
           style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
           <Icon name="plus" size={22} color="#fff" />
         </button>
@@ -803,6 +821,15 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editUt.id ? "Modifier" : "Nouvel"} ustensile</h3>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Casserole" value={editUt.name} onChange={e => setEditUt(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
+          <div className="field-label">Catégorie</div>
+          <select className="field-input" value={editUt.category || "divers"} onChange={e => setEditUt(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+            {Object.entries(UTENSIL_CATEGORIES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+          </select>
+          <div className="field-label">Appareil (réglages par étape)</div>
+          <select className="field-input" value={editUt.appliance || ""} onChange={e => setEditUt(p => ({ ...p, appliance: e.target.value }))} style={{ marginBottom: 12 }}>
+            <option value="">Aucun (ustensile simple)</option>
+            {Object.entries(APPLIANCE_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+          </select>
           <div className="field-label">Photo</div>
           <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} pathPrefix={isAdmin ? "master/utensils" : "utensils"} />
           <div style={{ display: "flex", gap: 10 }}>

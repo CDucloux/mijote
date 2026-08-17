@@ -398,11 +398,11 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               <ImageUpload value={form.image} onChange={v => up("image", v)} style={{ height: 172, borderRadius: 16 }} pathPrefix="recipes" />
               <div>
                 <div className="field-label">Nom <span style={{ color: "var(--accent2)" }}>*</span></div>
-                <input className="field-input" placeholder="ex : Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46 }} />
+                <input className="field-input field-soft" placeholder="ex : Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46 }} />
               </div>
               <div>
                 <div className="field-label">Source <span style={{ color: "var(--text3)", fontWeight: 400 }}>· optionnel</span></div>
-                <input className="field-input" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46 }} />
+                <input className="field-input field-soft" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46 }} />
               </div>
             </div>
 
@@ -449,8 +449,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(232,112,58,0.25)" }}>
                   <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>· ce que produit la préparation</span></div>
                   <div style={{ display: "flex", gap: 10 }}>
-                    <input className="field-input" type="number" min="0" step="any" placeholder="ex : 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2, background: "var(--surface)", borderRadius: 12 }} />
-                    <select className="field-input" value={form.yield?.unit || "g"} onChange={e => upYield("unit", e.target.value)} style={{ flex: 1, background: "var(--surface)", borderRadius: 12 }}>
+                    <input className="field-input field-soft" type="number" min="0" step="any" placeholder="ex : 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2, background: "var(--surface)", borderRadius: 12 }} />
+                    <select className="field-input field-soft" value={form.yield?.unit || "g"} onChange={e => upYield("unit", e.target.value)} style={{ flex: 1, background: "var(--surface)", borderRadius: 12 }}>
                       <option value="g">g</option>
                       <option value="ml">ml</option>
                       <option value="pièce">pièce(s)</option>

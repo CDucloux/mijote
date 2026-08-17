@@ -26,6 +26,7 @@ import { isRecipeInSeason, isIngredientInSeason } from "@/lib/food/seasonality.j
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
+import { formatParamSummary } from "@/lib/utensils/appliances.js";
 import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
@@ -521,6 +522,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
+  // Résumé des réglages d'appareil posés sur l'étape (vide si l'ustensile n'en est pas un).
+  const getUtDetail = (u, step) => formatParamSummary(utensilDB.find(d => d.id === u.dbId)?.appliance, step?.utensilParams?.[u.id]);
 
   return (
     <div className="recipe-detail-root" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -947,7 +950,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                                   amount={ing.amount} unit={ing.unit} cover={!!ing.recipeId} />
                               ))}
                               {cUts.map(u => (
-                                <UtensilPill key={u.id} image={getUtImage(u.dbId, u.name)} name={u.name} />
+                                <UtensilPill key={u.id} image={getUtImage(u.dbId, u.name)} name={u.name} detail={getUtDetail(u, cstep)} />
                               ))}
                             </div>
                           )}
@@ -989,7 +992,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                               amount={ing.amount * mult} unit={ing.unit} cover={!!ing.recipeId} />
                           ))}
                           {linkedUts.map(u => (
-                            <UtensilPill key={u.id} image={getUtImage(u.dbId, u.name)} name={u.name} />
+                            <UtensilPill key={u.id} image={getUtImage(u.dbId, u.name)} name={u.name} detail={getUtDetail(u, step)} />
                           ))}
                         </div>
                       )}

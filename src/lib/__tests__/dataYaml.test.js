@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
-  slugifyId, TECHNIQUE_CATEGORIES,
+  slugifyId, TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES,
 } from "@/lib/household/dataYaml.js";
 
 describe("slugifyId", () => {
@@ -235,5 +235,66 @@ describe("parseUtensilsYaml", () => {
 
   it("requires a name", () => {
     expect(parseUtensilsYaml(`- image: http://x`).errors.join(" ")).toMatch(/name/);
+  });
+
+  it("round-trips a valid category", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: Blender
+  category: appareils
+`);
+    expect(errors).toEqual([]);
+    expect(items[0].category).toBe("appareils");
+    expect(items[0].category in UTENSIL_CATEGORIES).toBe(true);
+  });
+
+  it("defaults a missing category to « divers »", () => {
+    const { items } = parseUtensilsYaml(`- name: Louche`);
+    expect(items[0].category).toBe("divers");
+  });
+
+  it("rejects an unknown category", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: Blender
+  category: bogus
+`);
+    expect(items).toEqual([]);
+    expect(errors.join(" ")).toMatch(/catégorie inconnue/);
+  });
+
+  it("serializes category in the export (after name)", () => {
+    const src = parseUtensilsYaml(`
+- name: Blender
+  category: appareils
+`).items;
+    const out = formatUtensilsYaml(src);
+    expect(out).toMatch(/name: Blender\n {2}category: appareils/);
+    // survit au ré-import
+    expect(parseUtensilsYaml(out).items[0].category).toBe("appareils");
+  });
+
+  it("round-trips a known appliance", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: Four
+  category: appareils
+  appliance: four
+`);
+    expect(errors).toEqual([]);
+    expect(items[0].appliance).toBe("four");
+    // sérialisé puis réimporté à l'identique
+    expect(parseUtensilsYaml(formatUtensilsYaml(items)).items[0].appliance).toBe("four");
+  });
+
+  it("omits appliance when absent (ustensile simple)", () => {
+    const { items } = parseUtensilsYaml(`- name: Louche`);
+    expect(items[0]).not.toHaveProperty("appliance");
+  });
+
+  it("rejects an unknown appliance", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: Truc
+  appliance: teleporteur
+`);
+    expect(items).toEqual([]);
+    expect(errors.join(" ")).toMatch(/appareil inconnu/);
   });
 });
