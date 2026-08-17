@@ -129,8 +129,8 @@ export function UserAvatar() {
           onConfirm={async () => {
             setSigningOut(true);
             // La révocation Firebase est quasi-instantanée : on garde le spinner
-            // affiché au moins ~650 ms pour qu'il soit perceptible (sinon on le voit à peine).
-            try { await Promise.all([onSignOut(), new Promise(r => setTimeout(r, 650))]); }
+            // affiché au moins ~1400 ms pour qu'il soit clairement perceptible (sinon on le voit à peine).
+            try { await Promise.all([onSignOut(), new Promise(r => setTimeout(r, 1400))]); }
             catch { setSigningOut(false); }
           }}>
           Tes recettes restent synchronisées. Tu pourras te reconnecter à tout moment.
