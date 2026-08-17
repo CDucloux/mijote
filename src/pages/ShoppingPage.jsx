@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { EmptyArt } from "../components/EmptyArt.jsx";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -282,9 +283,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       {/* Empty state (première visite), même base que « Aucune recette trouvée » */}
       {shoppingLists.length === 0 && !loading && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
-          <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
-            <Icon name="shopping" size={30} color="var(--accent)" />
-          </div>
+          <EmptyArt name="panier" size={128} style={{ marginBottom: 8 }} />
           <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune liste de courses</h3>
           <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
             Crée une liste libre pour noter tes achats,<br />ou envoie une recette aux courses depuis sa fiche.
@@ -377,9 +376,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
             {activeList.items.length === 0 && activeList.type !== "free" && (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
-                <div style={{ width: 76, height: 76, borderRadius: 22, background: "rgba(76,175,125,0.14)", border: "1px solid rgba(76,175,125,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
-                  <Icon name="check" size={32} color="var(--green)" />
-                </div>
+                <EmptyArt name="assiette" size={128} style={{ marginBottom: 8 }} />
                 <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Tout est acheté&nbsp;!</h3>
                 <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
                   Tous les ingrédients de « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{activeList.name}</strong> » ont été cochés. Tu peux supprimer cette liste, elle a fait son travail.
