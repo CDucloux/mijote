@@ -24,6 +24,24 @@ L'interface doit avoir le niveau d'un **produit conçu par un designer UI/UX sen
 - Jamais de rendu « brut » ou d'état vide non soigné : squelettes/spinners pendant le chargement, états vides travaillés.
 - Mobile-first : penser tactile, cibles suffisantes, feedback immédiat.
 
+### 3.1 Anti-look « vibe-codé » : bannir les tells de l'IA
+Le fil rouge : une IA recrache la **moyenne** de ses données d'entraînement ; le bon design fait des choix **spécifiques** au produit (Mijoté = cuisine, chaleur, gourmandise), à l'utilisateur et au contexte. Chaque défaut laissé tel quel crie « fait avec une IA ». À proscrire :
+- **Pas de gradient violet / bleu-violet** (hero, fonds, boutons) : c'est LE drapeau « fait par IA ». Fonds plats, une couleur d'accent assumée tirée des tokens.
+- **Pas d'emoji comme système d'icônes** (nav, puces, en-têtes, boutons) : un set d'icônes cohérent (même famille, poids, taille). L'emoji reste toléré dans le contenu / la microcopy quand le ton s'y prête, jamais comme brique d'UI.
+- **Pas de palette néon ni de 5-6 couleurs saturées qui se battent** : la couleur est une ressource partagée à budgéter globalement (une dominante, un accent, un neutre). L'emphase vient du contraste et de la retenue, pas de l'accumulation.
+- **Pas de glow / aurora / blur décoratif** en sombre : la profondeur du dark mode naît de la typo, du contraste et des niveaux de surface. Un effet qui ne traduit ni interaction, ni statut, ni hiérarchie dégage.
+- **Pas de cartes empilées à l'infini** (carte dans une carte dans une carte) : la card est réservée à ce qui est **indépendamment actionnable**. Sinon, grouper par blanc, proximité et typo.
+- **Pas de barres latérales multicolores ni de status dots décoratifs** : un indicateur ne vit que s'il **mappe un état défini et compréhensible** ; sinon, un label texte ou rien.
+- **Pas de tout-centré en colonne unique** : structure, grille, alignement sur un bord ; corps de texte aligné à gauche en colonnes lisibles (~60-80 caractères) ; largeurs variées (tableaux au large, lecture en colonne étroite), asymétrie bienvenue.
+- **Pas d'une seule fonte à poids unique** : la hiérarchie naît du **contraste** typographique (un titre gros et fort, un corps discret, un vrai écart entre les deux) ; une fonte à caractère sur les titres fait déjà l'essentiel du travail.
+- **Pas d'espacement uniforme** (mécanique) : un rythme intentionnel, serré pour grouper ce qui va ensemble, moyen pour séparer les sections, généreux autour de ce qui compte. Le blanc lu comme de la confiance.
+- **Pas de microcopy placeholder** (« Submit », « Erreur », « Aucune donnée ») : écrire boutons, états et messages comme on les dirait, une seule voix cohérente de bout en bout.
+- **Pas d'image IA à la « sheen » plastique** (mains ratées, doigts en trop) : vraie photo, pas d'image du tout, ou génération sous contraintes strictes.
+
+Deux principes qui font vraiment basculer :
+- **Hiérarchie assumée** : sur chaque écran, un élément **domine** (taille, couleur, contraste, position). L'action principale (CTA) est la plus contrastée, le reste décroît. Si tout a le même poids, rien ne ressort.
+- **Le détail fait-main** : ajouter **un** détail qu'aucun template par défaut ne produirait (une micro-interaction, une forme, une touche soignée), la signature humaine qui fait lire l'ensemble comme « conçu par quelqu'un qui y tient ». Un seul suffit, mais il compte.
+
 ## 4. Tests : `src/lib/` et backend, tests unitaires obligatoires, non négociable
 - **Tout ajout ou modification** dans `src/lib/` ou `functions/src/` s'accompagne de **tests unitaires** (Vitest), y compris un test de non-régression pour chaque bug corrigé.
 - Tester les cas limites (vide, null, données externes malformées), pas seulement le chemin heureux.
