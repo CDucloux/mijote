@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scrimThemeColor, overlayHex } from "@/lib/ui/themeColor.ts";
+import { scrimThemeColor, overlayHex, nudgeThemeColor } from "@/lib/ui/themeColor.ts";
 
 describe("scrimThemeColor", () => {
   it("compose exactement sur du noir (thème clair, voile sheet 0.7)", () => {
@@ -81,5 +81,36 @@ describe("overlayHex", () => {
 
   it("renvoie le fond tel quel s'il n'est pas parsable", () => {
     expect(overlayHex("nope", "#000000", 0.5)).toBe("nope");
+  });
+});
+
+describe("nudgeThemeColor", () => {
+  it("décale le bleu de 1/255 (thème clair)", () => {
+    expect(nudgeThemeColor("#f5f0eb")).toBe("#f5f0ea");
+  });
+
+  it("décale le bleu de 1/255 (thème sombre)", () => {
+    expect(nudgeThemeColor("#0e0e0f")).toBe("#0e0e0e");
+  });
+
+  it("renvoie TOUJOURS une valeur distincte de l'entrée (sinon aucun repaint forcé)", () => {
+    for (const c of ["#f5f0eb", "#0e0e0f", "#4a4847", "#000000", "#ffffff"]) {
+      expect(nudgeThemeColor(c)).not.toBe(c);
+    }
+  });
+
+  it("rebondit en +1 quand le bleu est déjà à 0", () => {
+    expect(nudgeThemeColor("#000000")).toBe("#000001");
+  });
+
+  it("normalise la forme courte et l'hex sans dièse", () => {
+    expect(nudgeThemeColor("#abc")).toBe("#aabbcb"); // #aabbcc -> bleu 204 -> 203 = 0xcb
+    expect(nudgeThemeColor("f5f0eb")).toBe("#f5f0ea");
+  });
+
+  it("renvoie l'entrée telle quelle si elle n'est pas une couleur hex", () => {
+    expect(nudgeThemeColor("rebeccapurple")).toBe("rebeccapurple");
+    expect(nudgeThemeColor("")).toBe("");
+    expect(nudgeThemeColor("#12")).toBe("#12");
   });
 });
