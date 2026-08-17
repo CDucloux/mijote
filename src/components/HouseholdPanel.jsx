@@ -154,7 +154,9 @@ export function HouseholdPanel({ onClose }) {
           )}
 
           {/* Quitter / dissoudre : action destructive, franchement rouge (pilule teintée). */}
-          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => setConfirmLeave(true)}>
+          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => setConfirmLeave(true)}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.2)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.12)"; }}>
             <Icon name="logout" size={15} color="var(--red)" /> {owner ? "Dissoudre le foyer" : "Quitter le foyer"}
           </button>
         </>

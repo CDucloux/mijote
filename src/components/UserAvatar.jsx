@@ -6,6 +6,7 @@ import { useOnline } from "../hooks/useOnline.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { AboutModal } from "./AboutModal.jsx";
 import { ConfirmDialog } from "./ConfirmDialog.jsx";
+import { useModalExit } from "../hooks/useModalExit.js";
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
 export function UserAvatar() {
@@ -18,6 +19,15 @@ export function UserAvatar() {
   const [dropPos, setDropPos] = useState({ top: 0, right: 0 });
   const btnRef = useRef(null);
   const online = useOnline();
+  // Sortie animée du menu (sinon il disparaissait d'un coup). `closing` bascule la
+  // pastille sur la keyframe collapseUp, puis onAnimationEnd applique la fermeture.
+  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(
+    () => { setOpen(false); setConfirmSignOut(false); },
+    { disabled: !open }
+  );
+  // Ferme en jouant la sortie, puis exécute l'action (navigation, ouverture d'une
+  // autre modale…) une fois l'animation terminée.
+  const closeThen = (fn) => beginClose(() => { setOpen(false); setConfirmSignOut(false); fn?.(); });
   // Le changelog vit dans « À propos » : d'autres composants (popup de nouveautés)
   // demandent son ouverture via un événement global plutôt qu'en dupliquant la modale.
   useEffect(() => {
@@ -44,7 +54,7 @@ export function UserAvatar() {
   const showDot = offline || syncStatus !== "idle";
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
-      <button ref={btnRef} className="ripple ripple-light" onClick={() => { if (open) { setOpen(false); setConfirmSignOut(false); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }} aria-label="Mon compte">
+      <button ref={btnRef} className="ripple ripple-light" onClick={() => { if (open) { closeThen(); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }} aria-label="Mon compte">
         {/* Anneau orange = abonné Mijoté+ (sinon bordure neutre). */}
         {user.photoURL
           ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: `2px solid ${isPlus ? "var(--accent)" : "var(--border)"}` }} />
@@ -53,15 +63,15 @@ export function UserAvatar() {
       </button>
       {/* Pastille de sync HORS du bouton (sinon le clip circulaire du ripple la masque). */}
       <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none", pointerEvents: "none" }} />
-      {open && createPortal(
+      {(open || closing) && createPortal(
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 1299 }} onClick={() => { setOpen(false); setConfirmSignOut(false); }} />
-          <div style={{ position: "fixed", top: dropPos.top, right: dropPos.right, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 1300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: "expandDown 0.2s ease" }}>
+          <div style={{ position: "fixed", inset: 0, zIndex: 1299 }} onClick={() => closeThen()} />
+          <div ref={surfaceRef} onAnimationEnd={onAnimationEnd} style={{ position: "fixed", top: dropPos.top, right: dropPos.right, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 1300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: closing ? "collapseUp 0.16s ease forwards" : "expandDown 0.2s ease" }}>
             <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>{user.email}</div>
             {syncLabel && <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: syncColor, marginBottom: 4 }}>{offline && <Icon name="wifiOff" size={12} color={syncColor} />}{syncLabel}</div>}
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
             {isAdmin && (
-              <button onClick={() => { setOpen(false); navigate("/admin/dashboard"); }}
+              <button onClick={() => closeThen(() => navigate("/admin/dashboard"))}
                 style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "opacity 0.15s" }}
                 onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
@@ -70,7 +80,7 @@ export function UserAvatar() {
                 </span> Console admin
               </button>
             )}
-            <button onClick={() => { setOpen(false); navigate("/profile"); }}
+            <button onClick={() => closeThen(() => navigate("/profile"))}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
@@ -84,26 +94,26 @@ export function UserAvatar() {
                 {isDark ? "Mode clair" : "Mode sombre"}
               </button>
             )}
-            <button onClick={() => { setOpen(false); window.dispatchEvent(new Event("mijote:show-onboarding")); }}
+            <button onClick={() => closeThen(() => window.dispatchEvent(new Event("mijote:show-onboarding")))}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
               <Icon name="sparkle" size={13} color="currentColor" /> Revoir l'introduction
             </button>
-            <button onClick={() => { setOpen(false); setAbout(true); }}
+            <button onClick={() => closeThen(() => setAbout(true))}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
               <Icon name="info" size={13} color="currentColor" /> À propos
             </button>
-            <button onClick={() => { setOpen(false); navigate("/legal"); }}
+            <button onClick={() => closeThen(() => navigate("/legal"))}
               style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
               <Icon name="fileText" size={13} color="currentColor" /> Informations légales
             </button>
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
-            <button onClick={() => { setOpen(false); setConfirmSignOut(true); }}
+            <button onClick={() => closeThen(() => setConfirmSignOut(true))}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
               onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.18)"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.10)"; }}>

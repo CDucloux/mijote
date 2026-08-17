@@ -127,19 +127,7 @@ select {
 
 html,
 body {
-  /* Grain de papier : un bruit « sel et poivre » (contrasté par feComponentTransfer)
-     posé en calque semi-transparent sur le fond de page. Un fondu doux (soft-light)
-     restait invisible car il ne déplace presque pas les extrêmes (le quasi-noir du
-     sombre, le presque-blanc du papier clair). Ici, en compositing normal à faible
-     opacité, les grains CLAIRS éclaircissent le fond sombre et les grains SOMBRES
-     assombrissent le fond clair : le MÊME calque texture les deux thèmes, sans gérer
-     deux images. Il ne transparaît que sur `--bg` (les surfaces des cartes, opaques,
-     le recouvrent), exactement comme une feuille sous des éléments posés. Réglages :
-     `opacity` du rect = force du grain, `background-size` = finesse. */
   background-color: var(--bg);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.2' intercept='-0.6'/%3E%3CfeFuncG type='linear' slope='2.2' intercept='-0.6'/%3E%3CfeFuncB type='linear' slope='2.2' intercept='-0.6'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.14'/%3E%3C/svg%3E");
-  background-size: 160px 160px;
-  background-blend-mode: normal;
   color: var(--text);
   font-family: var(--ff-body);
   font-size: 15px;
@@ -1033,6 +1021,20 @@ select {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Sortie du menu avatar (réciproque d'expandDown) : sans ça le menu disparaissait
+   d'un coup. Joué via useModalExit quand `closing` passe à vrai. */
+@keyframes collapseUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
   }
 }
 
@@ -3021,6 +3023,9 @@ select {
 /* Variante claire : sur une surface sombre (boutons ronds translucides sur photo),
    l'onde grise ne se voit pas → encre blanche. L'ink est inséré comme enfant direct. */
 .ripple-light > .ripple-ink { background: rgba(255, 255, 255, 0.4); }
+/* Variante accent : onde teintée terracotta, pour les surfaces où le retour tactile
+   doit se lire dans la couleur d'accent (ex. pastille d'onglet actif de la tab bar). */
+.ripple-accent > .ripple-ink { background: rgba(232, 112, 58, 0.32); }
 
 .tap-row .tap-chevron {
   transition: transform 0.38s cubic-bezier(0.33, 1, 0.68, 1);
