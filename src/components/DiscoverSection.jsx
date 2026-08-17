@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
+import { EmptyArt } from "./EmptyArt.jsx";
 import { SpotlightIngredient } from "./SpotlightIngredient.jsx";
 import { pickSpotlightIngredient, publicRecipesWithIngredient } from "@/lib/planning/spotlight.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
@@ -394,11 +395,41 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
             </div>
           )}
         </>
-      ) : filtered.length === 0 ? (
-        <div style={{ textAlign: "center", color: "var(--text3)", padding: "32px 16px", fontSize: 13 }}>
-          Aucun résultat – essaie d'élargir tes filtres.
+      ) : filtered.length === 0 ? (() => {
+        const q = text.trim();
+        const qShort = q.length > 22 ? q.slice(0, 22) + "…" : q;
+        const hasFilters = nActiveFilters > 0 || usePrefs || !!authorUid;
+        const reset = () => { setText(""); setFilters({ ...DEFAULT_FILTERS }); setUsePrefs(false); setAuthorUid(null); };
+        return (
+        <div style={{ minHeight: "40vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
+          <EmptyArt name="loupe" size={116} style={{ marginBottom: 6 }} />
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
+          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
+            {q
+              ? <>Personne n'a encore partagé « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans la communauté.<br />Élargis ta recherche ou crée-la toi-même.</>
+              : "Aucune recette publique ne correspond à ces filtres."}
+          </p>
+
+          {q ? (onNewRecipe && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+              <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={() => onNewRecipe({ name: q })}>
+                <Icon name="plus" size={16} color="#fff" /> Créer « {qShort} »
+              </button>
+            </div>
+          )) : hasFilters && (
+            <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={reset}>
+              <Icon name="close" size={15} color="#fff" /> Enlever les filtres
+            </button>
+          )}
+
+          {q && (
+            <button onClick={reset} style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
+              <Icon name="eraser" size={15} color="var(--text3)" /> {hasFilters ? "Réinitialiser recherche et filtres" : "Effacer la recherche"}
+            </button>
+          )}
         </div>
-      ) : (
+        );
+      })() : (
         // ── Mode recherche / filtre : grille complète ──
         <div className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
           {filtered.map((p, idx) => <div key={p.pubId} id={`discover-card-${p.pubId}`}>{card(p, idx)}</div>)}

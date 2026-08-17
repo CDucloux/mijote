@@ -305,7 +305,9 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             </div>
           </>
         ) : (<>
-        {recipes.length > 0 && (
+        {/* Carnets masqués quand la recherche/les filtres ne renvoient rien : l'état
+            vide (loupe) doit respirer, sans que la rangée mange la moitié de l'écran. */}
+        {recipes.length > 0 && filtered.length > 0 && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <h2 style={{ fontSize: 16, fontWeight: 600 }}>Carnets</h2>
