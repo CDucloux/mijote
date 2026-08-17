@@ -25,10 +25,19 @@ import { CUISINES, cuisineEmoji } from "../constants/cuisines.js";
 import { relativeDate } from "../lib/format.js";
 
 const TINT = "rgba(232,112,58,0.2)";
-// Largeur des cartes en carrousel = exactement la moitié de la rangée visible
-// (gap 12 → 50% − 6px), pour afficher pile 2 cartes dans la largeur comme la
+// Largeur des cartes en carrousel = exactement la moitié de la rangée VISIBLE
+// (gap 12 → 50cqw - 6px), pour afficher pile 2 cartes dans la largeur comme la
 // grille de /recipes ; plafonné à 200px sur les écrans larges (desktop).
-const CARD_W = "clamp(150px, calc(50% - 6px), 200px)";
+//
+// `cqw` (et non `%`) est crucial : la piste flex interne est en `width:max-content`,
+// or un `flex-basis` en POURCENTAGE est traité comme `content` pendant le calcul du
+// max-content, si bien que la piste se dimensionnait sur la largeur NATURELLE des
+// cartes (titre sur une seule ligne, ~300px), d'où une piste bien plus large que les
+// cartes réellement rendues (200px) : scroll interminable et vide en fin de rangée.
+// `50cqw` se résout en longueur DÉFINIE contre le conteneur de requête (la rangée
+// scrollable, `container-type:inline-size`), indépendamment du contenu → la piste
+// vaut exactement la somme des largeurs de cartes.
+const CARD_W = "clamp(150px, calc(50cqw - 6px), 200px)";
 
 // Carte d'une recette publique : visuel (hover-lift) + crédit créateur & date dessous.
 function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, vegan, nutriLetter, style }) {
@@ -78,7 +87,7 @@ function SkeletonRow({ titleWidth = 130, count = 10 }) {
   return (
     <div style={{ marginBottom: 22 }}>
       <div className="skeleton" style={{ height: 15, width: titleWidth, borderRadius: 6, marginBottom: 12 }} />
-      <div style={{ display: "flex", gap: 12, overflow: "hidden" }}>
+      <div style={{ display: "flex", gap: 12, overflow: "hidden", containerType: "inline-size" }}>
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} style={{ flex: `0 0 ${CARD_W}` }}><SkeletonCard /></div>
         ))}
@@ -105,7 +114,7 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
       <h3 style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
         {iconNode || (icon && <Icon name={icon} size={15} color="var(--accent)" />)}{title}
       </h3>
-      <OverscrollRow stretch className="discover-row" style={{ gap: 12, paddingTop: 6, paddingBottom: 6 }} outerStyle={{ scrollSnapType: "x proximity" }}>
+      <OverscrollRow stretch className="discover-row" style={{ gap: 12, paddingTop: 6, paddingBottom: 6 }} outerStyle={{ scrollSnapType: "x proximity", containerType: "inline-size" }}>
         {items.map((it, i) => (
           <div key={it.pubId} id={`discover-card-${it.pubId}`} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
         ))}
