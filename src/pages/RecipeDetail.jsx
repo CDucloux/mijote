@@ -1416,17 +1416,29 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       {pendingPublish && (
         <SwipeableSheet onClose={() => setPendingPublish(false)}>
           {(close) => (<>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Publier cette recette ?</h3>
-          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: recipe.source ? 14 : 12, lineHeight: 1.5 }}>
+          {/* En-tête : puce accent + titre display + contexte communauté. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
+              <Icon name="globe" size={21} color="var(--accent)" />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Publier cette recette ?</h3>
+              <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>Communauté Mijoté</p>
+            </div>
+          </div>
+          <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: recipe.source ? 16 : 12, lineHeight: 1.5 }}>
             Elle rejoindra la communauté Mijoté : chacun pourra la découvrir et l'ajouter à ses recettes. Vous en restez l'auteur·e et pouvez la retirer à tout moment.
           </p>
           {recipe.source && (
-            <div style={{ borderRadius: 14, background: "rgba(224,146,10,0.09)", border: "1px solid rgba(224,146,10,0.3)", padding: "13px 14px", marginBottom: 18, display: "flex", gap: 10 }}>
-              <span style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: "rgba(224,146,10,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name="warning" size={14} color="#e8920a" />
-              </span>
+            <div style={{ borderRadius: 16, background: "rgba(224,146,10,0.08)", border: "1px solid rgba(224,146,10,0.22)", padding: 16, marginBottom: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                <span style={{ width: 30, height: 30, borderRadius: 10, flexShrink: 0, background: "rgba(224,146,10,0.16)", display: "grid", placeItems: "center" }}>
+                  <Icon name="shield" size={16} color="#e8920a" />
+                </span>
+                <span style={{ fontSize: 13.5, fontWeight: 650, color: "var(--text)" }}>Attention au droit d'auteur</span>
+              </div>
               <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5 }}>
-                <strong style={{ color: "var(--text)" }}>Attention au droit d'auteur.</strong> Cette recette provient d'une source externe. Ne republiez que ce dont vous avez le droit : reformulez les étapes avec vos propres mots et n'utilisez pas de textes ou de photos protégés dont vous n'êtes pas l'auteur·e.
+                Cette recette provient d'une source externe. Ne republiez que ce dont vous avez le droit : reformulez les étapes avec vos propres mots et n'utilisez pas de textes ou de photos protégés dont vous n'êtes pas l'auteur·e.
               </div>
             </div>
           )}
