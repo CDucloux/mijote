@@ -18,19 +18,39 @@ function parseHex(hex: string): [number, number, number] | null {
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
 
+/** Formate trois canaux [0,255] en `#rrggbb`. */
+function toHex(rgb: [number, number, number]): string {
+  return `#${rgb.map(n => Math.round(n).toString(16).padStart(2, "0")).join("")}`;
+}
+
 /**
- * Compose la couleur de base sur du noir à l'opacité `alpha` (voile) et renvoie le
- * résultat opaque, ce qui reproduit exactement l'aspect d'un scrim `rgba(0,0,0,alpha)`
- * posé au-dessus de `baseHex`.
+ * Compose `overlay` par-dessus `base` à l'opacité `alpha` (alpha compositing sur
+ * fond opaque) et renvoie la couleur opaque résultante, exactement l'aspect d'un
+ * calque `rgba(overlay, alpha)` posé sur `base`.
+ *
+ * @param baseHex - Couleur de fond opaque (`#rgb` ou `#rrggbb`).
+ * @param overlayHexColor - Couleur du calque posé au-dessus (`#rgb` ou `#rrggbb`).
+ * @param alpha - Opacité du calque : 0 laisse `base` inchangé, 1 renvoie `overlay`. Bornée à [0,1].
+ * @returns La couleur composée en `#rrggbb`. Renvoie `baseHex` tel quel si `base` n'est pas parsable ; ignore un `overlay` non parsable (renvoie `base` normalisé).
+ */
+export function overlayHex(baseHex: string, overlayHexColor: string, alpha: number): string {
+  const base = parseHex(baseHex);
+  if (!base) return baseHex;
+  const over = parseHex(overlayHexColor);
+  if (!over) return toHex(base);
+  const a = Math.min(1, Math.max(0, alpha));
+  return toHex([0, 1, 2].map(i => base[i] * (1 - a) + over[i] * a) as [number, number, number]);
+}
+
+/**
+ * Couleur de base « voilée » : composée sur un scrim noir semi-opaque. Cas
+ * particulier de {@link overlayHex} avec un calque noir, pour faire suivre la
+ * barre système au voile d'une modale.
  *
  * @param baseHex - Couleur de fond du thème (`#rgb` ou `#rrggbb`).
  * @param alpha - Opacité du voile noir : 0 laisse la couleur inchangée, 1 la rend noire. Bornée à [0,1].
  * @returns La couleur composée en `#rrggbb`. Renvoie `baseHex` tel quel s'il n'est pas parsable.
  */
 export function scrimThemeColor(baseHex: string, alpha: number): string {
-  const rgb = parseHex(baseHex);
-  if (!rgb) return baseHex;
-  const k = 1 - Math.min(1, Math.max(0, alpha));
-  const to2 = (n: number): string => Math.round(n * k).toString(16).padStart(2, "0");
-  return `#${to2(rgb[0])}${to2(rgb[1])}${to2(rgb[2])}`;
+  return overlayHex(baseHex, "#000000", alpha);
 }

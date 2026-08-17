@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scrimThemeColor } from "@/lib/ui/themeColor.ts";
+import { scrimThemeColor, overlayHex } from "@/lib/ui/themeColor.ts";
 
 describe("scrimThemeColor", () => {
   it("compose exactement sur du noir (thème clair, voile sheet 0.7)", () => {
@@ -43,5 +43,43 @@ describe("scrimThemeColor", () => {
     expect(scrimThemeColor("rebeccapurple", 0.5)).toBe("rebeccapurple");
     expect(scrimThemeColor("", 0.5)).toBe("");
     expect(scrimThemeColor("#12", 0.5)).toBe("#12");
+  });
+
+  it("reste équivalent à un calque noir via overlayHex", () => {
+    expect(scrimThemeColor("#f5f0eb", 0.7)).toBe(overlayHex("#f5f0eb", "#000000", 0.7));
+  });
+});
+
+describe("overlayHex", () => {
+  it("teinte un fond sombre vers l'accent chaud (barre PWA landing, thème sombre)", () => {
+    // #0e0e0f + accent #e8703a à 0.14 : lueur orange discrète sur du quasi-noir.
+    expect(overlayHex("#0e0e0f", "#e8703a", 0.14)).toBe("#2d1c15");
+  });
+
+  it("teinte un fond clair vers l'accent chaud (barre PWA landing, thème clair)", () => {
+    expect(overlayHex("#f5f0eb", "#e8703a", 0.1)).toBe("#f4e3d9");
+  });
+
+  it("compose au milieu (blanc sur noir à 0.5 = gris moyen)", () => {
+    expect(overlayHex("#000000", "#ffffff", 0.5)).toBe("#808080");
+  });
+
+  it("alpha 0 renvoie le fond (normalisé), alpha 1 renvoie le calque", () => {
+    expect(overlayHex("#f5f0eb", "#e8703a", 0)).toBe("#f5f0eb");
+    expect(overlayHex("#f5f0eb", "#e8703a", 1)).toBe("#e8703a");
+  });
+
+  it("borne les alpha hors [0,1]", () => {
+    expect(overlayHex("#f5f0eb", "#e8703a", -1)).toBe("#f5f0eb");
+    expect(overlayHex("#f5f0eb", "#e8703a", 9)).toBe("#e8703a");
+  });
+
+  it("ignore un calque non parsable (renvoie le fond normalisé)", () => {
+    expect(overlayHex("#f5f0eb", "nope", 0.5)).toBe("#f5f0eb");
+    expect(overlayHex("#abc", "", 0.5)).toBe("#aabbcc");
+  });
+
+  it("renvoie le fond tel quel s'il n'est pas parsable", () => {
+    expect(overlayHex("nope", "#000000", 0.5)).toBe("nope");
   });
 });
