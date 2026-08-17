@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.19.1 – Safran · Finitions
+
+### Interface
+- **Fine ligne grise sous la barre de statut supprimée** : en PWA installée, fermer une fenêtre (feuille du bas, boîte de dialogue) ne laisse plus de trait grisâtre coincé entre la barre système et le corps de l'app. La barre retrouve un aplat net dès la fermeture.
+- **Carrousel « À la une » qui s'arrête juste** : dans Découvrir, le défilement horizontal ne file plus longtemps dans le vide après la dernière carte. La longueur du carrousel colle enfin au nombre de recettes affichées.
+- **Plus d'écran blanc en quittant une recette publique** : revenir depuis une fiche de recette de la communauté ne provoque plus de flash blanc le temps du retour.
+
 ## v3.19.0 – Safran · La barre système se fond dans le décor
 
 ### Interface
