@@ -51,7 +51,7 @@ html.light,
 
 html.light,
 html.light body {
-  background: #f5f0eb;
+  background-color: #f5f0eb;
   color: #2c2420;
 }
 
@@ -127,7 +127,16 @@ select {
 
 html,
 body {
-  background: var(--bg);
+  /* Grain de papier : un bruit gris fondu en `soft-light` sur le fond de page.
+     Le même calque marche en clair (assombrit finement) comme en sombre (éclaircit
+     finement) sans devoir gérer deux images. Volontairement discret, surtout en
+     sombre : un grain appuyé sur fond noir vire au « bruit de capteur », l'inverse
+     de l'effet papier voulu. Il ne transparaît que sur `--bg` (les surfaces des
+     cartes le recouvrent), exactement comme une feuille sous des éléments posés. */
+  background-color: var(--bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+  background-blend-mode: soft-light;
   color: var(--text);
   font-family: var(--ff-body);
   font-size: 15px;
@@ -194,6 +203,41 @@ body::after {
   background: var(--bg);
   z-index: 0;
   pointer-events: none;
+}
+
+/* Croquis d'états vides (EmptyArt) : chaque trait se « dessine » à l'apparition,
+   en cascade, pour renforcer le côté fait main. `stroke-dasharray` large (> longueur
+   de tous les tracés) → au repos, ligne pleine sans pointillé. Coupé si l'utilisateur
+   demande moins d'animations. */
+@keyframes inkDraw {
+  from { stroke-dashoffset: 260; }
+  to { stroke-dashoffset: 0; }
+}
+
+.ink-art > * {
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  animation: inkDraw 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.ink-art > *:nth-child(1) { animation-delay: 0.03s; }
+.ink-art > *:nth-child(2) { animation-delay: 0.12s; }
+.ink-art > *:nth-child(3) { animation-delay: 0.21s; }
+.ink-art > *:nth-child(4) { animation-delay: 0.3s; }
+.ink-art > *:nth-child(5) { animation-delay: 0.39s; }
+.ink-art > *:nth-child(6) { animation-delay: 0.48s; }
+.ink-art > *:nth-child(7) { animation-delay: 0.57s; }
+.ink-art > *:nth-child(8) { animation-delay: 0.66s; }
+.ink-art > *:nth-child(9) { animation-delay: 0.75s; }
+.ink-art > *:nth-child(10) { animation-delay: 0.84s; }
+.ink-art > *:nth-child(11) { animation-delay: 0.93s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-art > * {
+    animation: none;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
 }
 
 button {

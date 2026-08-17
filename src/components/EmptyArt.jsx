@@ -55,6 +55,15 @@ const ARTS = {
       <path {...STROKE} stroke="var(--accent)" d="M60 50 C56 43 63 39 59 32" />
     </>
   ),
+  // Loupe avec un reflet (accent) : « rien trouvé », pour les recherches sans résultat.
+  loupe: (
+    <>
+      <ellipse {...STROKE} cx="53" cy="52" rx="24" ry="24" />
+      <path {...STROKE} d="M70 69 C78 77 83 82 90 90" />
+      <path {...STROKE} d="M67 72 C73 78 78 82 85 88" />
+      <path {...STROKE} stroke="var(--accent)" d="M44 42 C38 47 36 55 40 63" />
+    </>
+  ),
 };
 
 /**
@@ -79,7 +88,7 @@ export function EmptyArt({ name, size = 128, style }) {
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
-      <g filter={`url(#${fid})`}>{art}</g>
+      <g className="ink-art" filter={`url(#${fid})`}>{art}</g>
     </svg>
   );
 }

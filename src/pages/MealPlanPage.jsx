@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { EmptyArt } from "../components/EmptyArt.jsx";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { Img } from "../components/Img.jsx";
@@ -595,7 +596,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             })}
             {filteredRecipes.length === 0 && (
               <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
-                <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--surface2)", display: "grid", placeItems: "center", margin: "0 auto 12px" }}><Icon name="search" size={24} color="var(--text3)" /></div>
+                <EmptyArt name="loupe" size={78} style={{ margin: "0 auto 8px" }} />
                 <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette {searchQ.trim() ? "ne correspond à ta recherche" : "dans ta bibliothèque"}.</p>
               </div>
             )}
@@ -907,7 +908,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               })}
               {list.length === 0 && (
                 <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
-                  <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--surface2)", display: "grid", placeItems: "center", margin: "0 auto 12px" }}><Icon name="search" size={24} color="var(--text3)" /></div>
+                  <EmptyArt name="loupe" size={78} style={{ margin: "0 auto 8px" }} />
                   <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette « {roleLabel(completeRole).toLowerCase()} » {q ? "ne correspond à ta recherche" : "disponible pour l'instant"}.</p>
                 </div>
               )}

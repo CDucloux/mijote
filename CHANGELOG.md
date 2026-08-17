@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.17.0 – Safran · L'encre s'anime
+
+### Interface
+- **Croquis d'états vides animés** : les dessins au trait se tracent désormais en cascade à l'apparition, comme esquissés à la main (animation coupée si le système demande moins d'animations).
+- **Croquis étendus aux autres écrans vides** : « aucune recette trouvée », les listes de sélection vides du planning, « rien à acheter » et « liste vide » adoptent la même famille de croquis (loupe, panier), pour un langage visuel cohérent partout.
+- **Grain de papier** : un très léger grain façon papier habille le fond de page, en clair comme en sombre (volontairement discret en thème sombre), pour renforcer le côté fait main sans alourdir.
+
 ## v3.16.0 – Safran · Le trait fait main
 
 ### Interface
