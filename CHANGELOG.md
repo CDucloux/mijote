@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.19.0 – Safran · La barre système se fond dans le décor
+
+### Interface
+- **Barre de statut voilée pendant les modales** : en PWA installée, quand une fenêtre (feuille du bas, boîte de dialogue) s'ouvre et grise l'écran, le haut de l'écran s'assombrit désormais du même voile au lieu de rester clair. La barre système suit l'ouverture et la fermeture de toutes les modales de l'app.
+- **Barre de statut accordée à l'accueil** : sur l'écran de connexion, la barre système se teinte vers l'orange chaud pour prolonger la lueur du dégradé jusqu'en haut de l'écran, au lieu de trancher sur un aplat neutre (la teinte s'adapte au thème clair/sombre et se retire en quittant l'écran).
+
 ## v3.18.0 – Safran · Le planning tient bon
 
 ### Planning

@@ -16,6 +16,7 @@ import { installGlobalRipple } from "@/lib/ui/ripple.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
+import { useOverlayThemeColor } from "./hooks/useOverlayThemeColor.js";
 import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
@@ -614,6 +615,7 @@ export default function App() {
   // Thème et auth possédés à la racine : partagés par l'écran de connexion (public)
   // et l'app (protégée), sans doublon d'instance.
   const { isDark, toggleTheme } = useTheme();
+  useOverlayThemeColor(); // voile la barre système PWA tant qu'une modale est ouverte
   const { user, postLogin } = useAuthUser();
   const [signInError, setSignInError] = useState("");
   const onSignIn = useCallback(() => { setSignInError(""); return signInWithGoogle(setSignInError); }, []);

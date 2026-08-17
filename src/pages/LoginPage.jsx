@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Icon } from "../components/Icon.jsx";
+import { useLandingThemeColor } from "../hooks/useLandingThemeColor.js";
 
 const LOGIN_FEATS = [
   { icon: "list2", label: "Cuisine pas à pas" },
@@ -13,6 +14,9 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn, error }) {
   // Connexion Google : le clic ouvre le flux OAuth (popup/redirection), pas
   // instantané → on remplace le logo G par un petit spinner tant que ça mouline.
   const [busy, setBusy] = useState(false);
+  // Barre système teintée vers l'accent le temps de la landing : prolonge la lueur
+  // du dégradé jusqu'en haut de l'écran en PWA (restaurée à la sortie).
+  useLandingThemeColor(isDark);
   const handleSignIn = async () => {
     if (busy) return;
     setBusy(true);
