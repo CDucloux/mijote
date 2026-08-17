@@ -822,14 +822,20 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Casserole" value={editUt.name} onChange={e => setEditUt(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
           <div className="field-label">Catégorie</div>
-          <select className="field-input" value={editUt.category || "divers"} onChange={e => setEditUt(p => ({ ...p, category: e.target.value }))} style={{ marginBottom: 12 }}>
+          {/* Quitter la famille « appareils » retire le type d'appareil : les réglages
+              d'étape n'ont de sens que pour un appareil (pas de schéma orphelin). */}
+          <select className="field-input" value={editUt.category || "divers"} onChange={e => { const category = e.target.value; setEditUt(p => ({ ...p, category, ...(category === "appareils" ? null : { appliance: "" }) })); }} style={{ marginBottom: 12 }}>
             {Object.entries(UTENSIL_CATEGORIES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
           </select>
-          <div className="field-label">Appareil (réglages par étape)</div>
-          <select className="field-input" value={editUt.appliance || ""} onChange={e => setEditUt(p => ({ ...p, appliance: e.target.value }))} style={{ marginBottom: 12 }}>
-            <option value="">Aucun (ustensile simple)</option>
-            {Object.entries(APPLIANCE_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-          </select>
+          {/* Type d'appareil : contextuel à la famille « appareils ». Il précise QUEL
+              schéma de réglages (four ≠ blender ≠ cuiseur) exposer au niveau étape. */}
+          {editUt.category === "appareils" && (<>
+            <div className="field-label">Type d'appareil (réglages par étape)</div>
+            <select className="field-input" value={editUt.appliance || ""} onChange={e => setEditUt(p => ({ ...p, appliance: e.target.value }))} style={{ marginBottom: 12 }}>
+              <option value="">Aucun réglage</option>
+              {Object.entries(APPLIANCE_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+            </select>
+          </>)}
           <div className="field-label">Photo</div>
           <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} pathPrefix={isAdmin ? "master/utensils" : "utensils"} />
           <div style={{ display: "flex", gap: 10 }}>

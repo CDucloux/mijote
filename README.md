@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-3.12.0-e8703a?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.13.0-e8703a?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -48,7 +48,8 @@ toujours avec vous.
   étape peut porter une photo et une astuce, reprises dans la fiche et le mode
   pas-à-pas. Les **ustensiles** sont rangés par famille, et les **appareils**
   (four, blender…) portent des réglages propres à chaque étape (température,
-  mode, vitesse, durée) résumés sur leur pastille.
+  mode, vitesse, durée) résumés sur leur pastille. Un tap sur une quantité en
+  donne l'**équivalent en cuillères** (à soupe / à café) pour qui n'a pas de balance.
 - 🧩 **Préparations de base** : une recette peut consommer une « base »
   réutilisable (sauce, pâte, appareil) avec un rendement ; les courses éclatent
   automatiquement la base en ingrédients bruts.
