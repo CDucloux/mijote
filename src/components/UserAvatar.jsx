@@ -130,8 +130,8 @@ export function UserAvatar() {
             setSigningOut(true);
             // onSignOut() change l'etat d'auth et demonte aussitot cette modal :
             // attendre en parallele ne montre donc rien. On laisse le spinner tourner
-            // ~2000 ms AVANT de declencher la deconnexion pour qu'il soit bien visible.
-            await new Promise(r => setTimeout(r, 2000));
+            // ~1000 ms AVANT de declencher la deconnexion pour qu'il soit bien visible.
+            await new Promise(r => setTimeout(r, 1000));
             try { await onSignOut(); }
             catch { setSigningOut(false); }
           }}>
