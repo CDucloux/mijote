@@ -20,7 +20,7 @@ function setup(initialPlan = {}) {
 }
 
 describe("useMealPlanner", () => {
-  beforeEach(() => generateWeek.mockReset());
+  beforeEach(() => { generateWeek.mockReset(); localStorage.clear(); });
 
   it("applique les assignations au planning et active l'undo", () => {
     generateWeek.mockReturnValue([{ date: "2026-01-01", slot: "midi", recipeId: "r1", role: "plat" }]);
@@ -74,5 +74,20 @@ describe("useMealPlanner", () => {
     act(() => { result.current.undo(); });
     expect(state.plan).toEqual({ existing: true });
     expect(result.current.canUndo).toBe(false);
+  });
+
+  it("persiste l'undo (snapshot + semaine) : un nouveau montage le restaure (survit au reload)", () => {
+    generateWeek.mockReturnValue([{ date: "2026-03-02", slot: "midi", recipeId: "r1" }]);
+    const first = setup({ existing: true });
+    act(() => { first.result.current.generate(["2026-03-02"], ["midi"]); });
+    expect(localStorage.getItem("rf_mealplan_undo")).toBeTruthy();
+
+    // Remontage (simule un reload) : l'undo est réhydraté depuis le stockage.
+    const second = setup({ generated: true });
+    expect(second.result.current.undoKey).toBe("2026-03-02");
+    expect(second.result.current.canUndo).toBe(true);
+    act(() => { second.result.current.undo(); });
+    expect(second.state.plan).toEqual({ existing: true }); // snapshot d'avant génération restauré
+    expect(localStorage.getItem("rf_mealplan_undo")).toBe(null);
   });
 });
