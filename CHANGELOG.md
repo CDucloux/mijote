@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.15.1 – Safran · Retouches d'écran
+
+### Recettes
+- **Cartes sans image plus soignées** : tant qu'une photo de recette n'est pas chargée, la carte affiche l'état vide travaillé (initiale sur halo coloré) au lieu d'un carré blanc, puis l'image apparaît en fondu une fois prête.
+- **Feuille « Publier cette recette » modernisée** : en-tête à puce accent et titre soigné, et avertissement sur le droit d'auteur restructuré (icône bouclier, titre puis corps) au lieu d'un pavé bordé.
+
 ## v3.15.0 – Safran · Bases détectées, écrans soignés
 
 ### Recettes
