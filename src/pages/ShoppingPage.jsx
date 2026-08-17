@@ -379,9 +379,9 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                 <EmptyArt name="assiette" size={128} style={{ marginBottom: 8 }} />
                 <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Tout est acheté&nbsp;!</h3>
                 <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
-                  Tous les ingrédients de « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{activeList.name}</strong> » ont été cochés. Tu peux supprimer cette liste, elle a fait son travail.
+                  Tous les ingrédients de cette liste ont été cochés.
                 </p>
-                <button style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 20px", fontSize: 14, fontWeight: 600, borderRadius: 999, cursor: "pointer", background: "rgba(224,82,82,0.10)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.28)", boxShadow: "none" }} onClick={() => deleteList(activeList.id)}>
+                <button className="list-del-btn ripple" onClick={() => deleteList(activeList.id)}>
                   <Icon name="trash" size={15} color="var(--red)" /> Supprimer la liste
                 </button>
               </div>
@@ -390,7 +390,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             {activeList.items.length === 0 && activeList.type === "free" && (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, textAlign: "center" }}>
                 <EmptyArt name="panier" size={104} />
-                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text2)" }}>Liste vide</div>
+                <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em" }}>Liste vide</h3>
                 <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 240 }}>
                   Appuie sur le bouton <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", verticalAlign: "middle" }}><Icon name="plus" size={11} color="#fff" /></span> en bas à droite pour ajouter des articles.
                 </div>
