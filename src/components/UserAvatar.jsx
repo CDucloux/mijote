@@ -128,9 +128,11 @@ export function UserAvatar() {
           onCancel={() => setConfirmSignOut(false)}
           onConfirm={async () => {
             setSigningOut(true);
-            // La révocation Firebase est quasi-instantanée : on garde le spinner
-            // affiché au moins ~1400 ms pour qu'il soit clairement perceptible (sinon on le voit à peine).
-            try { await Promise.all([onSignOut(), new Promise(r => setTimeout(r, 1400))]); }
+            // onSignOut() change l'etat d'auth et demonte aussitot cette modal :
+            // attendre en parallele ne montre donc rien. On laisse le spinner tourner
+            // ~2000 ms AVANT de declencher la deconnexion pour qu'il soit bien visible.
+            await new Promise(r => setTimeout(r, 2000));
+            try { await onSignOut(); }
             catch { setSigningOut(false); }
           }}>
           Tes recettes restent synchronisées. Tu pourras te reconnecter à tout moment.
