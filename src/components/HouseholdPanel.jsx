@@ -17,7 +17,7 @@ function Avatar({ photo, label, size = 34, dim = false }) {
 // ─── PANNEAU FOYER ────────────────────────────────────────────────────────────
 // `onClose` (optionnel) : ferme la feuille parente après un quitter/dissoudre.
 export function HouseholdPanel({ onClose }) {
-  const { user, directory = [], loadDirectory } = useAppShell();
+  const { user, directory = [], loadDirectory, preferences } = useAppShell();
   const { household, invites, loading, actions } = useHousehold();
   const [name, setName] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
@@ -35,7 +35,10 @@ export function HouseholdPanel({ onClose }) {
   const full = household && peopleCount(household) >= MAX_HOUSEHOLD;
   const dirByEmail = new Map(directory.map(d => [(d.email || "").toLowerCase(), d]));
   const photoFor = (email) => (email === myEmail ? user?.photoURL : dirByEmail.get(email)?.photoURL) || "";
-  const nameFor = (email) => dirByEmail.get(email)?.displayName || "";
+  // Mon nom personnalisé dans l'app (préférences) prime sur le nom technique de
+  // l'annuaire (Google/Firestore) ; pour les autres membres, seul l'annuaire est connu.
+  const myName = (preferences?.displayName || user?.displayName || "").trim();
+  const nameFor = (email) => (email === myEmail ? myName : "") || dirByEmail.get(email)?.displayName || "";
 
   // Candidats à l'invitation : utilisateurs déjà connus, hors moi / membres / invités.
   const taken = new Set([...(household?.memberEmails || []), ...(household?.invitedEmails || []), myEmail]);
@@ -47,15 +50,19 @@ export function HouseholdPanel({ onClose }) {
 
   return (
     <Col gap={14}>
-      {/* Bandeau info */}
-      <Row align="flex-start" gap={12} style={{ background: "linear-gradient(135deg, rgba(232,112,58,0.10), rgba(232,112,58,0.04))", border: "1px solid rgba(232,112,58,0.25)", borderRadius: 14, padding: "14px 16px" }}>
-        <IconChip size={34} radius={10} tint="rgba(232,112,58,0.15)">
-          <Icon name="info" size={18} color="var(--accent)" />
-        </IconChip>
-        <span style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55 }}>
+      {/* Bandeau info : tint accent plate (plus sobre que l'ancien dégradé), titre
+          court puis explication du partage. */}
+      <Col gap={9} style={{ background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.18)", borderRadius: 16, padding: 16 }}>
+        <Row gap={10}>
+          <IconChip size={32} radius={10} tint="rgba(232,112,58,0.15)">
+            <Icon name="info" size={17} color="var(--accent)" />
+          </IconChip>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Un foyer, tout en commun</span>
+        </Row>
+        <span style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.6 }}>
           Jusqu'à <strong style={{ color: "var(--text)" }}>{MAX_HOUSEHOLD} personnes</strong> partagent recettes, stock, listes de courses et planning. En rejoignant un foyer, tes recettes y sont <strong style={{ color: "var(--text)" }}>ajoutées</strong> ; planning, stock et courses du foyer sont adoptés (ta version perso reste sauvegardée).
         </span>
-      </Row>
+      </Col>
 
       {/* Invitations reçues */}
       {invites.map(inv => (
@@ -146,8 +153,8 @@ export function HouseholdPanel({ onClose }) {
             )
           )}
 
-          {/* Quitter / dissoudre */}
-          <button className="btn btn-ghost" style={{ color: "var(--red)", borderColor: "rgba(224,82,82,0.3)" }} onClick={() => setConfirmLeave(true)}>
+          {/* Quitter / dissoudre : action destructive, franchement rouge (pilule teintée). */}
+          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => setConfirmLeave(true)}>
             <Icon name="logout" size={15} color="var(--red)" /> {owner ? "Dissoudre le foyer" : "Quitter le foyer"}
           </button>
         </>
