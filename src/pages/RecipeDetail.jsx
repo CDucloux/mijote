@@ -28,7 +28,7 @@ import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { formatParamSummary } from "@/lib/utensils/appliances.js";
 import { spoonConversions } from "@/lib/food/calculators.js";
-import { QuantityConvertSheet } from "../components/QuantityConvertSheet.jsx";
+import { QuantityConvertSheet, ConvertBadge } from "../components/QuantityConvertSheet.jsx";
 import { fmtTime, capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../lib/format.js";
 import { cuisineEmoji } from "../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../constants/recipeCategories.js";
@@ -527,6 +527,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
   // Résumé des réglages d'appareil posés sur l'étape (vide si l'ustensile n'en est pas un).
   const getUtDetail = (u, step) => formatParamSummary(utensilDB.find(d => d.id === u.dbId)?.appliance, step?.utensilParams?.[u.id]);
+  // Équivalent cuillères d'un ingrédient (null si non convertible). Sert de garde
+  // d'affichage du badge ET de payload d'ouverture de la feuille.
+  const convOf = (ing, amount) => spoonConversions(amount, ing.unit, ing.name);
+  const openConvert = (ing, amount) => setConvIng({ name: ing.name, image: getIngImage(ing.dbId, ing.name), amount, unit: ing.unit, spoons: convOf(ing, amount) });
 
   return (
     <div className="recipe-detail-root" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -882,11 +886,15 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                     if (isComp && rc.comp) navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } });
                     else if (!isComp && effDbId) navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`);
                   };
+                  const spoons = isComp ? null : convOf(ing, ing.amount * mult);
                   return (
                     <div key={ing.id} onClick={onClick} onPointerDown={clickable ? spawnRipple : undefined} className={clickable ? "tap-row" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
-                      {isComp && !rc.comp?.image
-                        ? <span style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
-                        : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
+                      <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
+                        {isComp && !rc.comp?.image
+                          ? <span style={{ width: 46, height: 46, borderRadius: "50%", background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
+                          : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
+                        {spoons && <ConvertBadge onClick={() => openConvert(ing, ing.amount * mult)} />}
+                      </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(!isComp && !ing.unit ? pluralizeName(ing.amount * mult, name) : name)}</span>
@@ -894,24 +902,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                         </div>
                         {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name={badge.icon} size={12} color={badge.color} />{badge.text}</div>}
                       </div>
-                      {(() => {
-                        const spoons = isComp ? null : spoonConversions(ing.amount * mult, ing.unit, ing.name);
-                        const qty = (
-                          <>
-                            <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
-                            <span style={{ fontSize: 12, color: "var(--text2)" }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
-                          </>
-                        );
-                        // Quantité tappable → équivalent cuillères (uniquement si convertible).
-                        return spoons
-                          ? <button onClick={e => { e.stopPropagation(); setConvIng({ name: ing.name, image: getIngImage(ing.dbId, ing.name), amount: ing.amount * mult, unit: ing.unit, spoons }); }}
-                              className="tap" title="Convertir en cuillères"
-                              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0, display: "inline-flex", alignItems: "baseline", gap: 3 }}>
-                              {qty}
-                              <span style={{ alignSelf: "center", display: "flex", marginLeft: 1 }}><Icon name="swap" size={12} color="var(--text3)" /></span>
-                            </button>
-                          : <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>{qty}</div>;
-                      })()}
+                      <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
+                        <span style={{ fontSize: 12, color: "var(--text2)" }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
+                      </div>
                       {clickable && <span className="tap-chevron" style={{ display: "flex", flexShrink: 0 }}><Icon name="forward" size={14} color="var(--text3)" /></span>}
                     </div>
                   );
@@ -1064,7 +1058,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   );
                   return (
                   <div key={ing.id} onClick={() => ing.dbId && navigate(`/admin/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: ing.dbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (ing.dbId) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
-                    <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
+                    <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
+                      <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
+                      {convOf(ing, ing.amount * mult) && <ConvertBadge onClick={() => openConvert(ing, ing.amount * mult)} />}
+                    </span>
                     <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
                       <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
