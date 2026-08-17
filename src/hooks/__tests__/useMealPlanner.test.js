@@ -31,6 +31,18 @@ describe("useMealPlanner", () => {
     expect(setMealPlan).toHaveBeenCalled();
     expect(state.plan["2026-01-01"]).toEqual([{ recipeId: "r1", slot: "midi", portions: 1, role: "plat" }]);
     expect(result.current.canUndo).toBe(true);
+    // undoKey = 1er jour de la semaine générée → l'undo n'est proposé QUE là.
+    expect(result.current.undoKey).toBe("2026-01-01");
+  });
+
+  it("undoKey cible la semaine générée et se vide à l'undo (pas d'undo ailleurs)", () => {
+    generateWeek.mockReturnValue([{ date: "2026-01-05", slot: "midi", recipeId: "r1" }]);
+    const { result } = setup();
+    expect(result.current.undoKey).toBe(null);
+    act(() => { result.current.generate(["2026-01-05", "2026-01-06"], ["midi"]); });
+    expect(result.current.undoKey).toBe("2026-01-05"); // semaine de la génération
+    act(() => { result.current.undo(); });
+    expect(result.current.undoKey).toBe(null);
   });
 
   it("ne compte pas les accompagnements comme des repas", () => {

@@ -29,12 +29,15 @@ export interface GenerateOptions {
  * (snapshot avant génération). Logique pure déléguée à `mealPlanner.ts`.
  *
  * @param deps - Données de l'app + `setMealPlan`.
- * @returns `{ generate, undo, canUndo }`.
+ * @returns `{ generate, undo, canUndo, undoKey }`. `undoKey` identifie la semaine
+ *   (1er jour, clé `YYYY-MM-DD`) sur laquelle la dernière génération a eu lieu : l'undo
+ *   ne doit être proposé QUE là, sans bloquer la génération sur les autres semaines.
  */
 export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = {}, stock = [], mealPlan = {}, setMealPlan }: MealPlannerDeps) {
   const resolver = useMemo(() => createIngredientResolver((ingredientDB || []) as Parameters<typeof createIngredientResolver>[0]), [ingredientDB]);
   const undoRef = useRef<MealPlan | null>(null);
   const [canUndo, setCanUndo] = useState(false);
+  const [undoKey, setUndoKey] = useState<string | null>(null);
 
   const generate = useCallback((dates: string[] = [], slots: string[] = ["midi", "soir"], { replace = false, compose = false, portionsPerMeal = 2, style = "equilibre", batch = false }: GenerateOptions = {}) => {
     const byId = new Map(recipes.map(r => [r.id as string, r]));
@@ -45,6 +48,7 @@ export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = 
 
     undoRef.current = mealPlan; // snapshot avant modification
     setCanUndo(true);
+    setUndoKey(dates[0] ?? null); // semaine de la génération : l'undo n'est valable que là
     setMealPlan(prev => {
       const next: MealPlan = { ...prev };
       if (replace) {
@@ -67,8 +71,9 @@ export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = 
     setMealPlan(undoRef.current);
     undoRef.current = null;
     setCanUndo(false);
+    setUndoKey(null);
     return true;
   }, [setMealPlan]);
 
-  return { generate, undo, canUndo };
+  return { generate, undo, canUndo, undoKey };
 }
