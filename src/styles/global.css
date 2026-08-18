@@ -2485,14 +2485,6 @@ select {
   overflow: hidden;
 }
 
-.loading-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.13;
-  pointer-events: none;
-}
-
 .loading-card {
   position: relative;
   z-index: 1;
@@ -2593,14 +2585,6 @@ select {
   background: var(--bg);
   position: relative;
   overflow: hidden;
-}
-
-.login-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.18;
-  pointer-events: none;
 }
 
 .login-card {

@@ -35,9 +35,6 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn, error }) {
           <div className={`login-toggle-thumb${isDark ? " dark" : " light"}`} />
         </div>
       </button>
-      {/* Decorative blobs */}
-      <div className="login-blob" style={{ width: 340, height: 340, background: "var(--accent)", top: "-80px", right: "-80px" }} />
-      <div className="login-blob" style={{ width: 260, height: 260, background: "#5b9cf6", bottom: "40px", left: "-60px" }} />
       <div className="login-card">
         <div className="login-emoji-wrap"><span className="login-emoji"><EmptyArt name="casserole" size={180} /></span></div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 10, width: "100%" }}>
