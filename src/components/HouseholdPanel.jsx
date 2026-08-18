@@ -52,9 +52,9 @@ export function HouseholdPanel({ onClose }) {
     <Col gap={14}>
       {/* Bandeau info : tint accent plate (plus sobre que l'ancien dégradé), titre
           court puis explication du partage. */}
-      <Col gap={9} style={{ background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.18)", borderRadius: 16, padding: 16 }}>
+      <Col gap={9} style={{ background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 16, padding: 16 }}>
         <Row gap={10}>
-          <IconChip size={32} radius={10} tint="rgba(232,112,58,0.15)">
+          <IconChip size={32} radius={10} tint="rgba(var(--accent-rgb),0.15)">
             <Icon name="info" size={17} color="var(--accent)" />
           </IconChip>
           <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Un foyer, tout en commun</span>
@@ -66,7 +66,7 @@ export function HouseholdPanel({ onClose }) {
 
       {/* Invitations reçues */}
       {invites.map(inv => (
-        <div key={inv.id} style={{ background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.35)", borderRadius: 16, padding: 16 }}>
+        <div key={inv.id} style={{ background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.35)", borderRadius: 16, padding: 16 }}>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Invitation à rejoindre « {inv.name} »</div>
           <div style={{ fontSize: 12, color: "var(--text3)", marginBottom: 12 }}>{(inv.memberEmails || []).length} membre(s)</div>
           <Row align="stretch" gap={10}>

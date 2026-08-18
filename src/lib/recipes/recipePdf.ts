@@ -299,7 +299,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
     .group-title { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; color: var(--accent); margin: 4px 0 10px; }
     /* Sous-préparation d'étapes : bloc encadré, nettement séparé des autres */
-    .step-group { border: 1px solid rgba(232, 112, 58, 0.35); border-radius: 14px; padding: 16px 18px 2px; margin-bottom: 20px; background: rgba(232, 112, 58, 0.035); }
+    .step-group { border: 1px solid rgba(var(--accent-rgb), 0.35); border-radius: 14px; padding: 16px 18px 2px; margin-bottom: 20px; background: rgba(var(--accent-rgb), 0.035); }
     .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(110, 154, 63, 0.28); }
     .step-group-ico { flex-shrink: 0; }
     .step-group .step:last-child { margin-bottom: 16px; }
@@ -308,10 +308,10 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .step-loose-title { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--accent); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     /* Pills */
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
-    .pill-comp { border-color: rgba(232,112,58,0.4); background: rgba(232,112,58,0.06); }
+    .pill-comp { border-color: rgba(var(--accent-rgb),0.4); background: rgba(var(--accent-rgb),0.06); }
     .pill-img { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #fff; border: 1px solid var(--border); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
     .pill-img img { width: 100%; height: 100%; object-fit: contain; padding: 8%; box-sizing: border-box; }
-    .pill-comp-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(232,112,58,0.12); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .pill-comp-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(var(--accent-rgb),0.12); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
     .pill-name { font-weight: 500; color: var(--text); }
     .pill-comp .pill-name { color: var(--accent); }
     .pill-qty { color: var(--text3); font-weight: 500; }
@@ -331,7 +331,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .comp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .comp-icon { display: inline-flex; align-items: center; }
     .comp-name { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
-    .comp-yield { font-size: 12px; color: var(--text3); background: rgba(232,112,58,0.1); border-radius: 20px; padding: 3px 10px; }
+    .comp-yield { font-size: 12px; color: var(--text3); background: rgba(var(--accent-rgb),0.1); border-radius: 20px; padding: 3px 10px; }
     /* Footer */
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); }
     .footer-brand { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }

@@ -25,7 +25,7 @@ import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { CUISINES, cuisineEmoji } from "../constants/cuisines.js";
 import { relativeDate } from "../lib/format.js";
 
-const TINT = "rgba(232,112,58,0.2)";
+const TINT = "rgba(var(--accent-rgb),0.2)";
 // Largeur des cartes en carrousel = exactement la moitié de la rangée VISIBLE
 // (gap 12 → 50cqw - 6px), pour afficher pile 2 cartes dans la largeur comme la
 // grille de /recipes ; plafonné à 200px sur les écrans larges (desktop).
@@ -254,7 +254,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   );
 
   const chip = (active, onClick, content, key) => (
-    <button key={key} onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? TINT : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}` }}>{content}</button>
+    <button key={key} onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? TINT : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}` }}>{content}</button>
   );
   const noPublic = pubs.length === 0; // aucun contenu public (ni recette, ni base)
 
@@ -369,7 +369,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         </div>
       ) : noPublic ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "26px 16px", borderRadius: 16, background: "var(--surface)", border: "1px dashed var(--border)" }}>
-          <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(232,112,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+          <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(var(--accent-rgb),0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
             <Icon name="sparkle" size={22} color="var(--accent)" />
           </div>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Encore aucune recette publique</div>

@@ -64,7 +64,7 @@ function YamlImport({ onText, warn }) {
         onDragLeave={() => setOver(false)}
         onDrop={e => { e.preventDefault(); setOver(false); read(Array.from(e.dataTransfer.files).find(f => /\.(ya?ml|txt)$/i.test(f.name))); }}
         onClick={() => ref.current.click()}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px", borderRadius: 12, border: `2px dashed ${over ? "var(--accent)" : "var(--border)"}`, background: over ? "rgba(232,112,58,0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px", borderRadius: 12, border: `2px dashed ${over ? "var(--accent)" : "var(--border)"}`, background: over ? "rgba(var(--accent-rgb),0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
         <Icon name="import" size={28} color={over ? "var(--accent)" : "var(--text3)"} />
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: over ? "var(--accent)" : "var(--text)" }}>Dépose un fichier YAML ici</div>
@@ -748,7 +748,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       {/* FAB « + » flottant pour ajouter un ustensile (comme les listes de courses libres) */}
       {isAdmin && section === "ustensiles" && (
         <button onClick={() => setEditUt({ id: "", name: "", category: "divers", appliance: "", image: "" })} title="Nouvel ustensile" className="pressable"
-          style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+          style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(var(--accent-rgb),0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
           <Icon name="plus" size={22} color="#fff" />
         </button>
       )}

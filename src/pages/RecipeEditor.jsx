@@ -31,7 +31,7 @@ function SectionCard({ name, onRename, onDelete, onZoneDrop, children }) {
       onDragOver={onZoneDrop ? (e => { e.preventDefault(); setZoneOver(true); }) : undefined}
       onDragLeave={onZoneDrop ? (() => setZoneOver(false)) : undefined}
       onDrop={onZoneDrop ? (e => { setZoneOver(false); onZoneDrop(e); }) : undefined}
-      style={{ background: zoneOver ? "rgba(232,112,58,0.1)" : "rgba(232,112,58,0.04)", border: `1px solid ${zoneOver ? "var(--accent)" : "rgba(232,112,58,0.3)"}`, borderRadius: 16, padding: 12, display: "flex", flexDirection: "column", gap: 10, transition: "background 0.15s, border-color 0.15s" }}>
+      style={{ background: zoneOver ? "rgba(var(--accent-rgb),0.1)" : "rgba(var(--accent-rgb),0.04)", border: `1px solid ${zoneOver ? "var(--accent)" : "rgba(var(--accent-rgb),0.3)"}`, borderRadius: 16, padding: 12, display: "flex", flexDirection: "column", gap: 10, transition: "background 0.15s, border-color 0.15s" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <Icon name="layers" size={15} color="var(--accent)" />
         {editing ? (
@@ -92,15 +92,15 @@ function NewSectionButton({ onAdd }) {
   const close = () => { setDraft(""); setOpen(false); };
   const submit = () => { const t = draft.trim(); if (t) { onAdd(t); close(); } };
   const chip = (
-    <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.16)" }}>
+    <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.16)" }}>
       <Icon name="layers" size={17} color="var(--accent)" />
     </span>
   );
   if (!open) return (
     <button type="button" onClick={() => setOpen(true)} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "11px 14px", borderRadius: 16, cursor: "pointer", textAlign: "left",
-        border: "1px solid rgba(232,112,58,0.4)", background: hover ? "rgba(232,112,58,0.12)" : "rgba(232,112,58,0.07)",
-        boxShadow: hover ? "0 6px 18px -10px rgba(232,112,58,0.6)" : "none", transition: "background 0.15s, box-shadow 0.2s" }}>
+        border: "1px solid rgba(var(--accent-rgb),0.4)", background: hover ? "rgba(var(--accent-rgb),0.12)" : "rgba(var(--accent-rgb),0.07)",
+        boxShadow: hover ? "0 6px 18px -10px rgba(var(--accent-rgb),0.6)" : "none", transition: "background 0.15s, box-shadow 0.2s" }}>
       {chip}
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nouvelle section</span>
@@ -110,7 +110,7 @@ function NewSectionButton({ onAdd }) {
     </button>
   );
   return (
-    <div style={{ padding: 12, borderRadius: 16, border: "1px solid rgba(232,112,58,0.45)", background: "rgba(232,112,58,0.07)", display: "flex", flexDirection: "column", gap: 11 }}>
+    <div style={{ padding: 12, borderRadius: 16, border: "1px solid rgba(var(--accent-rgb),0.45)", background: "rgba(var(--accent-rgb),0.07)", display: "flex", flexDirection: "column", gap: 11 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {chip}
         <span style={{ flex: 1, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nommer la section</span>
@@ -146,10 +146,10 @@ function SectionAddBar({ onAddIngredient, components, canBase = true }) {
           <p style={{ fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "10px 0", lineHeight: 1.5 }}>Aucune base disponible.<br />Crée d'abord une recette en « préparation de base ».</p>
         ) : components.map(comp => (
           <button key={comp.id} onClick={() => { comp.onPick(); setPicking(false); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", textAlign: "left", cursor: "pointer" }}>
-            <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.1)" }}><BaseIcon size={16} /></span>
+            <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.1)" }}><BaseIcon size={16} /></span>
             <span style={{ flex: 1, fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{comp.name}</span>
             <span style={{ fontSize: 11, color: "var(--text3)" }}>{comp.yield?.amount} {comp.yield?.unit}</span>
-            <span className="complete-add" style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)", color: "var(--accent)" }}><Icon name="plus" size={15} color="currentColor" /></span>
+            <span className="complete-add" style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}><Icon name="plus" size={15} color="currentColor" /></span>
           </button>
         ))}
       </div>
@@ -330,7 +330,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   // Petit en-tête de sous-section (pastille d'icône + libellé).
   const head = (icon, label, extra) => (
     <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 2 }}>
-      <span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name={icon} size={13} color="var(--accent)" /></span>
+      <span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name={icon} size={13} color="var(--accent)" /></span>
       <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text2)" }}>{label}</span>
       {extra}
     </div>
@@ -358,7 +358,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             return (
               <button key={id} onClick={() => goSection(id, i)} style={{
                 flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 3px", borderRadius: 11, border: "none", cursor: "pointer",
-                background: active ? "rgba(232,112,58,0.12)" : "transparent", color: active ? "var(--accent)" : "var(--text3)",
+                background: active ? "rgba(var(--accent-rgb),0.12)" : "transparent", color: active ? "var(--accent)" : "var(--text3)",
                 transition: "color 0.15s ease, background-color 0.15s ease" }}>
                 <Icon name={icon} size={17} color="currentColor" />
                 <span style={{ fontSize: 10.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{label}</span>
@@ -433,9 +433,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             </div>
 
             {/* Préparation de base (composant) : réutilisable comme ingrédient. */}
-            <div style={{ background: form.isComponent ? "rgba(232,112,58,0.05)" : "var(--surface)", border: `1px solid ${form.isComponent ? "rgba(232,112,58,0.4)" : "var(--border)"}`, borderRadius: 16, padding: 15, transition: "border-color 0.2s, background-color 0.2s" }}>
+            <div style={{ background: form.isComponent ? "rgba(var(--accent-rgb),0.05)" : "var(--surface)", border: `1px solid ${form.isComponent ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`, borderRadius: 16, padding: 15, transition: "border-color 0.2s, background-color 0.2s" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-                <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: form.isComponent ? "rgba(232,112,58,0.16)" : "var(--surface2)" }}><BaseIcon size={20} color={form.isComponent ? "var(--accent)" : "var(--text2)"} /></span>
+                <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: form.isComponent ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)" }}><BaseIcon size={20} color={form.isComponent ? "var(--accent)" : "var(--text2)"} /></span>
                 <div style={{ flex: 1, minWidth: 0 }} onClick={() => toggleComponent()}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>Préparation de base</div>
                   <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2, lineHeight: 1.4 }}>Réutilisable comme ingrédient (béchamel, sauce, pâte…)</div>
@@ -446,7 +446,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </button>
               </label>
               {form.isComponent && (
-                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(232,112,58,0.25)" }}>
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(var(--accent-rgb),0.25)" }}>
                   <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>· ce que produit la préparation</span></div>
                   <div style={{ display: "flex", gap: 10 }}>
                     <input className="field-input field-soft" type="number" min="0" step="any" placeholder="ex : 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2, background: "var(--surface)", borderRadius: 12 }} />
@@ -471,7 +471,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     const active = form.category === c.id;
                     return (
                       <button key={c.id} type="button" onClick={() => up("category", active ? "" : c.id)}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, background: active ? "rgba(232,112,58,0.14)" : "var(--surface)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, background: active ? "rgba(var(--accent-rgb),0.14)" : "var(--surface)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
                         <span style={{ fontSize: 14, lineHeight: 1 }}>{c.emoji}</span>{c.label}
                       </button>
                     );
@@ -485,7 +485,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     const active = form.cuisine === c.label;
                     return (
                       <button key={c.label} type="button" onClick={() => up("cuisine", active ? "" : c.label)}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, background: active ? "rgba(232,112,58,0.14)" : "var(--surface)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(232,112,58,0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, background: active ? "rgba(var(--accent-rgb),0.14)" : "var(--surface)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
                         <span style={{ fontSize: 14, lineHeight: 1 }}>{c.emoji}</span>{c.label}
                       </button>
                     );

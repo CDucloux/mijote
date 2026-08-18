@@ -20,7 +20,7 @@ export function ConvertBadge({ onClick, size = 19 }) {
       style={{ position: "absolute", bottom: -2, right: -2,
         width: size, height: size, borderRadius: "50%", background: "var(--accent)",
         border: "2px solid var(--surface)", display: "grid", placeItems: "center",
-        cursor: "pointer", padding: 0, boxShadow: "0 2px 7px -1px rgba(232,112,58,0.6)" }}>
+        cursor: "pointer", padding: 0, boxShadow: "0 2px 7px -1px rgba(var(--accent-rgb),0.6)" }}>
       <Icon name="swap" size={size - 8} color="#fff" />
     </button>
   );
@@ -38,11 +38,11 @@ export function QuantityConvertSheet({ ing, onClose }) {
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
         {ing.image
           ? <IngImage src={ing.image} alt={ing.name} size={52} />
-          : <span style={{ width: 52, height: 52, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}><Icon name="swap" size={22} color="var(--accent)" /></span>}
+          : <span style={{ width: 52, height: 52, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}><Icon name="swap" size={22} color="var(--accent)" /></span>}
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, color: "var(--text)", lineHeight: 1.15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(ing.name || "Ingrédient")}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", background: "rgba(232,112,58,0.12)", padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.12)", padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
               {fmtQty(ing.amount, ing.unit)} {pluralizeUnit(ing.amount, ing.unit)}
             </span>
             <span style={{ fontSize: 13, color: "var(--text3)", fontWeight: 500 }}>en cuillères</span>
@@ -55,7 +55,7 @@ export function QuantityConvertSheet({ ing, onClose }) {
       <div style={{ background: "var(--surface2)", borderRadius: 20, overflow: "hidden" }}>
         {ing.spoons.map((s, i) => (
           <div key={s.unit} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderTop: i ? "1px solid var(--border)" : "none" }}>
-            <span style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.13)", display: "grid", placeItems: "center" }}>
+            <span style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.13)", display: "grid", placeItems: "center" }}>
               <Icon name="utensils" size={19} color="var(--accent)" />
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>

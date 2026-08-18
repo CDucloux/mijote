@@ -11,7 +11,7 @@ const chipBase = {
   borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
   transition: "background 0.15s, border-color 0.15s, color 0.15s",
 };
-const chipOn = { background: "rgba(232,112,58,0.14)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.5)" };
+const chipOn = { background: "rgba(var(--accent-rgb),0.14)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.5)" };
 const chipOff = { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" };
 const fieldLabel = { fontSize: 11.5, fontWeight: 600, color: "var(--text3)", marginBottom: 6, letterSpacing: "0.01em" };
 

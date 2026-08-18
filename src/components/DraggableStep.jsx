@@ -49,13 +49,13 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
   return (
     <div
       {...rowProps}
-      style={{ background: "var(--surface)", borderRadius: 18, padding: 16, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, boxShadow: aimed ? "0 8px 24px -12px rgba(232,112,58,0.5)" : "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.15s, box-shadow 0.2s", ...(dragging ? LIFTED_ROW_STYLE : null) }}
+      style={{ background: "var(--surface)", borderRadius: 18, padding: 16, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, boxShadow: aimed ? "0 8px 24px -12px rgba(var(--accent-rgb),0.5)" : "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.15s, box-shadow 0.2s", ...(dragging ? LIFTED_ROW_STYLE : null) }}
     >
       {/* En-tête : poignée + numéro (badge dégradé) · section + supprimer */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           {isDraggable && <span {...handleProps} style={{ ...handleProps.style, display: "flex", color: "var(--text3)" }}><Icon name="drag" size={16} color="var(--text3)" /></span>}
-          <span style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #f0894e)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", boxShadow: "0 2px 6px -1px rgba(232,112,58,0.5)", flexShrink: 0 }}>{index + 1}</span>
+          <span style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-strong))", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", boxShadow: "0 2px 6px -1px rgba(var(--accent-rgb),0.5)", flexShrink: 0 }}>{index + 1}</span>
           {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -123,9 +123,9 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
               return (
                 <button key={ing.id} onClick={() => onUpdate(step.id, "ingredients", linked ? step.ingredients.filter(x => x !== ing.id) : [...(step.ingredients || []), ing.id])}
                   style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 12px 4px 4px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                    background: linked ? "rgba(232,112,58,0.14)" : "var(--surface2)",
+                    background: linked ? "rgba(var(--accent-rgb),0.14)" : "var(--surface2)",
                     color: linked ? "var(--accent)" : "var(--text2)",
-                    border: `1px solid ${linked ? "rgba(232,112,58,0.5)" : "var(--border)"}`, transition: "background 0.15s, border-color 0.15s, color 0.15s" }}>
+                    border: `1px solid ${linked ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, transition: "background 0.15s, border-color 0.15s, color 0.15s" }}>
                   {img
                     ? <IngImage src={img} alt={displayName} size={24} cover={!!ing.recipeId} />
                     : <span style={{ width: 24, height: 24, borderRadius: "50%", flexShrink: 0, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center" }}><Icon name="leaf" size={11} color="var(--text3)" /></span>}

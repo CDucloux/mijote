@@ -118,7 +118,7 @@ export function PlusPage() {
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Cardamome+</span>
             </div>
             {FEATURES.map((f, i) => (
-              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
+              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(var(--accent-rgb),0.04)" : "transparent" }}>
                 <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.35 }}>{f.label}</span>
                 <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.free} /></span>
                 <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.plus} accent /></span>

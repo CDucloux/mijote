@@ -16,9 +16,10 @@
   --surface2: #20241b;
   --surface3: #282d22;
   --border: rgba(255, 255, 255, 0.08);
-  --accent: #a7c97c;         /* vert gousse de cardamome, signature de la marque */
-  --accent2: #cadfae;
-  --accent-strong: #6e9a3f;  /* vert profond : CTA pressé, texte blanc lisible */
+  --accent: #6e9a3f;         /* vert gousse profond : signature UI, porte le texte blanc dans les deux thèmes */
+  --accent-rgb: 110, 154, 63;
+  --accent2: #a7c97c;        /* vert gousse clair : accents décoratifs, texte d'accent sur fond sombre */
+  --accent-strong: #5c8235;  /* vert profond : CTA pressé */
   --spice: #e0a23e;          /* ambre graine : emphase chaude, gourmandise (dosé) */
   --text: #ecefe4;
   --text2: #9ba08f;
@@ -47,6 +48,7 @@ html.light,
   --surface3: #dde0d0;
   --border: rgba(0, 0, 0, 0.09);
   --accent: #6e9a3f;         /* vert densifié : porte sur le fond crème */
+  --accent-rgb: 110, 154, 63;
   --accent2: #8bb257;
   --spice: #c67f1f;          /* ambre assombri pour le contraste sur clair */
   --text: #23281d;
@@ -347,9 +349,9 @@ select {
 }
 
 .tag.accent {
-  background: rgba(232, 112, 58, 0.15);
+  background: rgba(var(--accent-rgb), 0.15);
   color: var(--accent);
-  border-color: rgba(232, 112, 58, 0.3);
+  border-color: rgba(var(--accent-rgb), 0.3);
 }
 
 .tag.green {
@@ -402,7 +404,7 @@ select {
 }
 .recipe-search:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(232, 112, 58, 0.16);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16);
 }
 /* `type="search"` : on masque la croix native (WebKit), on a notre propre
    bouton d'effacement. */
@@ -433,9 +435,9 @@ select {
   border-color: var(--text3);
 }
 .toolbar-pill[data-active="1"] {
-  background: rgba(232, 112, 58, 0.14);
+  background: rgba(var(--accent-rgb), 0.14);
   color: var(--accent);
-  border-color: rgba(232, 112, 58, 0.5);
+  border-color: rgba(var(--accent-rgb), 0.5);
 }
 
 /* En-tête de la fiche ingrédient : boutons blancs dont le bord s'assombrit au
@@ -476,7 +478,7 @@ select {
   color: var(--accent);
 }
 .sort-control .sort-dir:hover {
-  background: rgba(232, 112, 58, 0.12);
+  background: rgba(var(--accent-rgb), 0.12);
 }
 
 .field-input::placeholder {
@@ -526,12 +528,12 @@ select {
 }
 
 .stepper-btn:hover {
-  background: rgba(232, 112, 58, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   color: var(--accent);
 }
 
 .stepper-btn:active {
-  background: rgba(232, 112, 58, 0.18);
+  background: rgba(var(--accent-rgb), 0.18);
 }
 
 .stepper-input {
@@ -589,11 +591,11 @@ select {
   padding: 10px 18px;
   border-radius: 999px;
   font-weight: 600;
-  box-shadow: 0 6px 16px -6px rgba(232, 112, 58, 0.7);
+  box-shadow: 0 6px 16px -6px rgba(var(--accent-rgb), 0.7);
   transition: transform 0.12s ease, box-shadow 0.18s ease;
 }
 .btn-pill:hover {
-  box-shadow: 0 8px 20px -6px rgba(232, 112, 58, 0.85);
+  box-shadow: 0 8px 20px -6px rgba(var(--accent-rgb), 0.85);
 }
 .btn-pill:active {
   transform: scale(0.96);
@@ -1027,14 +1029,14 @@ select {
 /* « Enregistrer comme carnet » : action secondaire « ghost » teintée accent, sous
    la CTA pleine. Fond dégradé très doux + liseré accent, avec relief au survol. */
 .save-carnet-btn {
-  background: linear-gradient(135deg, rgba(232, 112, 58, 0.09), rgba(240, 192, 96, 0.05));
-  border: 1px solid rgba(232, 112, 58, 0.24);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.09), rgba(240, 192, 96, 0.05));
+  border: 1px solid rgba(var(--accent-rgb), 0.24);
   transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 .save-carnet-btn:hover {
-  background: linear-gradient(135deg, rgba(232, 112, 58, 0.14), rgba(240, 192, 96, 0.08));
-  border-color: rgba(232, 112, 58, 0.4);
-  box-shadow: 0 6px 18px -12px rgba(232, 112, 58, 0.7);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.14), rgba(240, 192, 96, 0.08));
+  border-color: rgba(var(--accent-rgb), 0.4);
+  box-shadow: 0 6px 18px -12px rgba(var(--accent-rgb), 0.7);
 }
 .save-carnet-btn .save-carnet-icon {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1254,10 +1256,10 @@ select {
 .timer-btn:active { transform: scale(0.96); }
 .timer-btn-accent {
   color: var(--accent);
-  background: rgba(232, 112, 58, 0.12);
-  border-color: rgba(232, 112, 58, 0.35);
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.35);
 }
-.timer-btn-accent:hover { border-color: rgba(232, 112, 58, 0.6); }
+.timer-btn-accent:hover { border-color: rgba(var(--accent-rgb), 0.6); }
 .timer-btn-stop {
   color: var(--red);
   background: rgba(224, 82, 82, 0.1);
@@ -1312,7 +1314,7 @@ select {
 
 .drag-over {
   border-color: var(--accent) !important;
-  background: rgba(232, 112, 58, 0.08) !important;
+  background: rgba(var(--accent-rgb), 0.08) !important;
 }
 
 .search-clear-btn {
@@ -1442,8 +1444,8 @@ select {
 @media (hover: hover) {
   .login-consent-link:hover {
     color: var(--accent-strong, #d1541f);
-    background: rgba(232, 112, 58, 0.12);
-    box-shadow: 0 0 0 3px rgba(232, 112, 58, 0.12);
+    background: rgba(var(--accent-rgb), 0.12);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
   }
 }
 
@@ -1531,8 +1533,8 @@ select {
 
   /* Ligne de suggestion « compléter le repas » : mise en avant au survol. */
   .complete-row:hover {
-    border-color: rgba(232, 112, 58, 0.45);
-    box-shadow: 0 6px 18px -10px rgba(232, 112, 58, 0.55);
+    border-color: rgba(var(--accent-rgb), 0.45);
+    box-shadow: 0 6px 18px -10px rgba(var(--accent-rgb), 0.55);
   }
 
   .complete-row:hover .complete-add {
@@ -1542,8 +1544,8 @@ select {
 
   /* Choix « Nouvelle recette » : survol accent (import IA) / neutre (manuel). */
   .nr-choice:hover {
-    border-color: rgba(232, 112, 58, 0.5);
-    box-shadow: 0 8px 22px -12px rgba(232, 112, 58, 0.55);
+    border-color: rgba(var(--accent-rgb), 0.5);
+    box-shadow: 0 8px 22px -12px rgba(var(--accent-rgb), 0.55);
   }
 
   .nr-choice.nr-neutral:hover {
@@ -1580,7 +1582,7 @@ select {
   .ing-hover:hover {
     border-color: var(--accent) !important;
     color: var(--accent);
-    box-shadow: 0 6px 18px -12px rgba(232, 112, 58, 0.5) !important;
+    box-shadow: 0 6px 18px -12px rgba(var(--accent-rgb), 0.5) !important;
   }
 }
 
@@ -1637,7 +1639,7 @@ select {
   .editor-add:hover {
     border-color: var(--accent);
     background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-    box-shadow: 0 6px 18px -12px rgba(232, 112, 58, 0.5);
+    box-shadow: 0 6px 18px -12px rgba(var(--accent-rgb), 0.5);
   }
 }
 
@@ -2060,7 +2062,7 @@ select {
   }
 
   .desktop-nav-item.active {
-    background: rgba(232, 112, 58, 0.15);
+    background: rgba(var(--accent-rgb), 0.15);
     color: var(--accent);
   }
 
@@ -2183,7 +2185,7 @@ select {
 
   .btn-primary:hover {
     filter: brightness(1.06);
-    box-shadow: 0 4px 14px -4px rgba(232, 112, 58, 0.5);
+    box-shadow: 0 4px 14px -4px rgba(var(--accent-rgb), 0.5);
   }
 
   .btn-ghost:hover {
@@ -2263,7 +2265,7 @@ select {
 
   .fab-toggle:hover {
     filter: brightness(1.06);
-    box-shadow: 0 12px 30px -6px rgba(232, 112, 58, 0.6);
+    box-shadow: 0 12px 30px -6px rgba(var(--accent-rgb), 0.6);
   }
 
   .fab-toggle:active {
@@ -2395,7 +2397,7 @@ select {
   .action-dock-primary {
     background: var(--accent);
     color: #fff;
-    box-shadow: 0 6px 16px -6px rgba(232, 112, 58, 0.6);
+    box-shadow: 0 6px 16px -6px rgba(var(--accent-rgb), 0.6);
   }
 
   .action-dock-primary:hover {
@@ -2820,7 +2822,7 @@ select {
   border-radius: 999px;
   flex-shrink: 0;
   cursor: pointer;
-  background: var(--accent-soft, rgba(232, 112, 58, 0.13));
+  background: var(--accent-soft, rgba(var(--accent-rgb), 0.13));
   border: none;
   color: var(--accent);
   transition: background 0.24s ease, color 0.24s ease, box-shadow 0.24s ease, transform 0.14s ease;
@@ -2847,7 +2849,7 @@ select {
   .mp-add-btn:hover {
     background: var(--accent);
     color: #fff;
-    box-shadow: 0 8px 18px -7px rgba(232, 112, 58, 0.65);
+    box-shadow: 0 8px 18px -7px rgba(var(--accent-rgb), 0.65);
   }
 
   .mp-add-btn:hover .mp-add-label {
@@ -3101,7 +3103,7 @@ select {
 .ripple-light > .ripple-ink { background: rgba(255, 255, 255, 0.4); }
 /* Variante accent : onde teintée terracotta, pour les surfaces où le retour tactile
    doit se lire dans la couleur d'accent (ex. pastille d'onglet actif de la tab bar). */
-.ripple-accent > .ripple-ink { background: rgba(232, 112, 58, 0.32); }
+.ripple-accent > .ripple-ink { background: rgba(var(--accent-rgb), 0.32); }
 
 .tap-row .tap-chevron {
   transition: transform 0.38s cubic-bezier(0.33, 1, 0.68, 1);

@@ -296,7 +296,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     return (
       <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {isComp
-          ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(232,112,58,0.1)", border: "1.5px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={22} /></span>
+          ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", border: "1.5px solid rgba(var(--accent-rgb),0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={22} /></span>
           : <IngImage src={imgSrc} alt={displayName} size={42} />
         }
         <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{capitalize(displayName)}</span>
@@ -323,7 +323,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         </span>
         <span style={{ flexShrink: 0, opacity: gathered ? 0.5 : 1, transition: "opacity 0.15s" }}>
           {isComp
-            ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(232,112,58,0.1)", border: "1.5px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
+            ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", border: "1.5px solid rgba(var(--accent-rgb),0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
             : <IngImage src={imgSrc} alt={displayName} size={42} />
           }
         </span>
@@ -438,7 +438,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
               const dotFg = active || passed ? "#fff" : "var(--text3)";
               return (
                 <button key={pg.kind === "step" ? pg.step.id : pg.kind} onClick={() => setStepIdx(idx)}
-                  style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", background: active ? "rgba(232,112,58,0.1)" : "none", borderLeft: `3px solid ${active ? "var(--accent)" : "transparent"}`, textAlign: "left", transition: "all 0.15s" }}>
+                  style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", background: active ? "rgba(var(--accent-rgb),0.1)" : "none", borderLeft: `3px solid ${active ? "var(--accent)" : "transparent"}`, textAlign: "left", transition: "all 0.15s" }}>
                   <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: dotBg, color: dotFg }}>
                     {passed ? <Icon name="check" size={11} color="#fff" />
                       : pg.kind === "step" ? pg.realIdx + 1
@@ -475,7 +475,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                         )}
                         <button type="button" onClick={() => setGroupByCategory(v => !v)} className="pressable"
                           title={groupByCategory ? "Afficher en liste" : "Regrouper par catégorie"}
-                          style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: groupByCategory ? "var(--accent)" : "var(--text3)", background: groupByCategory ? "rgba(232,112,58,0.1)" : "var(--surface2)", border: `1px solid ${groupByCategory ? "rgba(232,112,58,0.3)" : "var(--border)"}`, borderRadius: 999, padding: "5px 11px", cursor: "pointer", flexShrink: 0 }}>
+                          style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: groupByCategory ? "var(--accent)" : "var(--text3)", background: groupByCategory ? "rgba(var(--accent-rgb),0.1)" : "var(--surface2)", border: `1px solid ${groupByCategory ? "rgba(var(--accent-rgb),0.3)" : "var(--border)"}`, borderRadius: 999, padding: "5px 11px", cursor: "pointer", flexShrink: 0 }}>
                           <Icon name="grid" size={12} color={groupByCategory ? "var(--accent)" : "var(--text3)"} /> Catégories
                         </button>
                       </div>
@@ -538,10 +538,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {pendingComponents.map(({ line, comp, nestedMult }) => (
-                      <div key={comp.id} style={{ background: "var(--surface)", border: `1.5px solid ${doneComponents.has(comp.id) ? "rgba(76,175,125,0.45)" : "rgba(232,112,58,0.3)"}`, borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 14, transition: "border-color 0.25s" }}>
+                      <div key={comp.id} style={{ background: "var(--surface)", border: `1.5px solid ${doneComponents.has(comp.id) ? "rgba(76,175,125,0.45)" : "rgba(var(--accent-rgb),0.3)"}`, borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 14, transition: "border-color 0.25s" }}>
                         {comp.image
                           ? <Img src={comp.image} alt={comp.name} style={{ width: 52, height: 52, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
-                          : <span style={{ width: 52, height: 52, borderRadius: 10, background: "rgba(232,112,58,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={28} /></span>
+                          : <span style={{ width: 52, height: 52, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={28} /></span>
                         }
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>{comp.name}</div>
@@ -585,7 +585,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
                       {stepDurations.map(d => (
                         <button key={d.minutes} onClick={() => addTimer(d)} className="pressable"
-                          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(232,112,58,0.1)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.35)" }}>
+                          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(var(--accent-rgb),0.1)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.35)" }}>
                           <Icon name="clock" size={14} color="var(--accent)" /> Minuteur {d.label}
                         </button>
                       ))}

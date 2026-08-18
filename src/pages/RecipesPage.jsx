@@ -550,7 +550,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 const inCol = (rec.collections || []).includes(col.id);
                 return (
                   <button key={col.id} onClick={() => onToggleCollection?.(rec.id, col.id)}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: inCol ? "rgba(232,112,58,0.10)" : "var(--surface2)", border: `1px solid ${inCol ? "rgba(232,112,58,0.4)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", transition: "background 0.15s, border-color 0.15s" }}>
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: inCol ? "rgba(var(--accent-rgb),0.10)" : "var(--surface2)", border: `1px solid ${inCol ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", transition: "background 0.15s, border-color 0.15s" }}>
                     <span style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: col.color + "33", display: "grid", placeItems: "center", fontSize: 18 }}>{col.icon || "📓"}</span>
                     <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{col.name}</span>
                     <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: inCol ? "var(--accent)" : "transparent", border: `2px solid ${inCol ? "var(--accent)" : "var(--border)"}`, display: "grid", placeItems: "center" }}>
@@ -710,7 +710,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 </div>
                 {chips.length ? (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 20, background: "rgba(232,112,58,0.12)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.28)" }}>{c}</span>)}
+                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 20, background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.28)" }}>{c}</span>)}
                   </div>
                 ) : (
                   <button onClick={editFilters} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 12px", borderRadius: 12, background: "var(--surface2)", border: "1px dashed var(--border)", color: "var(--text3)", fontSize: 12.5, cursor: "pointer", textAlign: "left" }}>

@@ -27,7 +27,7 @@ export function TagInput({ tags, onChange, allTags, label = "Tags", placeholder 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "8px 10px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", minHeight: 42, cursor: "text" }}
         onClick={() => document.getElementById(inputId).focus()}>
         {tags.map(t => (
-          <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)" }}>
+          <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)" }}>
             {t}
             <button onClick={e => { e.stopPropagation(); removeTag(t); }} style={{ fontSize: 14, lineHeight: 1, color: "var(--accent)", padding: 0 }}>×</button>
           </span>

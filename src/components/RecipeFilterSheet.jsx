@@ -38,9 +38,9 @@ function Chip({ on, onClick, color, children }) {
     <button onClick={onClick} style={{
       display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
       padding: "8px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer",
-      background: on ? (color ? `${color}22` : "rgba(232,112,58,0.16)") : "var(--surface2)",
+      background: on ? (color ? `${color}22` : "rgba(var(--accent-rgb),0.16)") : "var(--surface2)",
       color: on ? (color || "var(--accent)") : "var(--text2)",
-      border: `1px solid ${on ? (color ? `${color}88` : "rgba(232,112,58,0.5)") : "var(--border)"}`,
+      border: `1px solid ${on ? (color ? `${color}88` : "rgba(var(--accent-rgb),0.5)") : "var(--border)"}`,
     }}>{children}</button>
   );
 }
@@ -69,7 +69,7 @@ function IngredientPicker({ ingredientDB, selected, setFilters }) {
             const ing = byId.get(id);
             if (!ing) return null;
             return (
-              <button key={id} onClick={() => toggle(id)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(232,112,58,0.16)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.5)" }}>
+              <button key={id} onClick={() => toggle(id)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(var(--accent-rgb),0.16)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.5)" }}>
                 <span style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "var(--surface)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={22} /></span>
                 {ing.name}
                 <Icon name="close" size={12} color="var(--accent)" />
@@ -258,14 +258,14 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
             </div>
           ) : (
             <button onClick={onSaveAsCarnet} className="pressable save-carnet-btn" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 11px", borderRadius: 16, cursor: "pointer", textAlign: "left" }}>
-              <span className="save-carnet-icon" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--accent)", boxShadow: "0 4px 12px -4px rgba(232,112,58,0.6)" }}>
+              <span className="save-carnet-icon" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--accent)", boxShadow: "0 4px 12px -4px rgba(var(--accent-rgb),0.6)" }}>
                 <Icon name={updatingCarnetName ? "check" : "book"} size={17} color="#fff" />
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: "block", fontSize: 14, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
                 <span style={{ display: "block", fontSize: 11.5, color: "var(--text2)", marginTop: 1 }}>{updatingCarnetName ? "Remplacer les filtres du carnet" : "Retrouve cette sélection en un tap"}</span>
               </span>
-              <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.14)" }}>
+              <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.14)" }}>
                 <Icon name={updatingCarnetName ? "forward" : "plus"} size={15} color="var(--accent)" />
               </span>
             </button>

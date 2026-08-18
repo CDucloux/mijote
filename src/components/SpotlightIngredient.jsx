@@ -127,8 +127,8 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
             ))}
           </div>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(232,112,58,0.06)", border: "1px dashed rgba(232,112,58,0.35)", borderRadius: 14, padding: "12px 13px" }}>
-            <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: "rgba(232,112,58,0.15)", color: "var(--accent)", display: "grid", placeItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(var(--accent-rgb),0.06)", border: "1px dashed rgba(var(--accent-rgb),0.35)", borderRadius: 14, padding: "12px 13px" }}>
+            <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", display: "grid", placeItems: "center" }}>
               <Icon name="plus" size={18} color="var(--accent)" />
             </span>
             <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "var(--text2)" }}>

@@ -92,8 +92,8 @@ function NutriCalcView({ breakdown }) {
 // Aperçu verrouillé (non-abonnés) : pitch + CTA vers Cardamome+.
 function CalcLocked({ onUpgrade }) {
   return (
-    <div style={{ marginTop: 4, padding: "26px 20px", background: "linear-gradient(160deg, rgba(232,112,58,0.08), rgba(240,192,96,0.05))", border: "1px solid rgba(232,112,58,0.22)", borderRadius: 18, textAlign: "center" }}>
-      <span style={{ width: 46, height: 46, borderRadius: 14, background: "var(--accent)", display: "inline-grid", placeItems: "center", boxShadow: "0 6px 16px -6px rgba(232,112,58,0.6)", marginBottom: 12 }}>
+    <div style={{ marginTop: 4, padding: "26px 20px", background: "linear-gradient(160deg, rgba(var(--accent-rgb),0.08), rgba(240,192,96,0.05))", border: "1px solid rgba(var(--accent-rgb),0.22)", borderRadius: 18, textAlign: "center" }}>
+      <span style={{ width: 46, height: 46, borderRadius: 14, background: "var(--accent)", display: "inline-grid", placeItems: "center", boxShadow: "0 6px 16px -6px rgba(var(--accent-rgb),0.6)", marginBottom: 12 }}>
         <Icon name="shield" size={22} color="#fff" />
       </span>
       <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Le détail du calcul</div>
