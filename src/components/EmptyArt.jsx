@@ -91,22 +91,12 @@ const ARTS = {
       <path {...STROKE} stroke="var(--accent)" d="M40 79 L43 82 L48.5 74" />
     </>
   ),
-  // Toque de chef (crown gonflée + bandeau accent, deux plis) : accueil chaleureux
-  // « bienvenue, chef ». Croquis identitaire de la landing, hors thème marmite.
-  toque: (
-    <>
-      <path {...STROKE} d="M41 76 C32 76 27 67 32 59 C27 52 31 42 40 43 C43 34 56 31 60 38 C66 32 77 35 78 43 C87 44 90 53 83 60 C88 68 81 76 79 76" />
-      <path {...STROKE} stroke="var(--accent)" d="M41 78 C41 76.8 42 76 43.2 76 L76.8 76 C78 76 79 76.8 79 78 L79 92 C79 94 77.5 95 75.5 95 L44.5 95 C42.5 95 41 94 41 92 Z" />
-      <path {...STROKE} d="M53 79 L53 92" />
-      <path {...STROKE} d="M67 79 L67 92" />
-    </>
-  ),
 };
 
 /**
  * Illustration d'état vide au trait, avec le rendu « encre » commun.
  *
- * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `liste`, `toque`).
+ * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `liste`).
  * @param size Côté du carré de rendu en pixels (viewBox interne fixe).
  * @param style Styles complémentaires posés sur le `<svg>` (ex. marge basse).
  */
