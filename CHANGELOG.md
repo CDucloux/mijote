@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.19.5 – Safran · Bienvenue, chef
+
+### Interface
+- **Page de connexion redessinée** : l'emoji fondue laisse place à un croquis à l'encre fait main, une toque de chef avec bandeau accent, plus chaleureux et fidèle à l'identité de Mijoté. Le doux flottement du logo est conservé.
+
 ## v3.19.4 – Safran · La cocotte prend vie
 
 ### Interface
