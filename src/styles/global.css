@@ -2025,6 +2025,9 @@ select {
   }
 
   .desktop-sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     font-family: var(--ff-display);
     font-size: 22px;
     font-weight: 500;
@@ -2033,7 +2036,12 @@ select {
     color: var(--text);
   }
 
-  .desktop-sidebar-logo span {
+  .desktop-sidebar-logo .sidebar-pod {
+    flex-shrink: 0;
+    margin-top: -2px;
+  }
+
+  .desktop-sidebar-logo .dot {
     color: var(--accent);
   }
 
