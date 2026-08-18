@@ -10,20 +10,20 @@
 }
 
 :root {
-  --bg: #10120e;
-  --bg-rgb: 16, 18, 14;
-  --surface: #181b14;
-  --surface2: #20241b;
-  --surface3: #282d22;
-  --border: rgba(255, 255, 255, 0.08);
-  --accent: #6e9a3f;         /* vert gousse profond : signature UI, porte le texte blanc dans les deux thèmes */
-  --accent-rgb: 110, 154, 63;
+  --bg: #0f110d;
+  --bg-rgb: 15, 17, 13;
+  --surface: #191d15;
+  --surface2: #222720;
+  --surface3: #2c322a;
+  --border: rgba(255, 255, 255, 0.10);
+  --accent: #75a63f;         /* vert gousse vif : signature UI sombre, porte le texte blanc (contraste proche de l'ancien orange) */
+  --accent-rgb: 117, 166, 63;
   --accent2: #a7c97c;        /* vert gousse clair : accents décoratifs, texte d'accent sur fond sombre */
   --accent-strong: #5c8235;  /* vert profond : CTA pressé */
   --spice: #e0a23e;          /* ambre graine : emphase chaude, gourmandise (dosé) */
-  --text: #ecefe4;
-  --text2: #9ba08f;
-  --text3: #5e6353;
+  --text: #eef1e7;
+  --text2: #a7ac9c;
+  --text3: #6b7061;
   --green: #5fb88a;
   --red: #e05252;
   --yellow: #f0c060;
