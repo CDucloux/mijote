@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.19.4 – Safran · La cocotte prend vie
+
+### Interface
+- **Cocotte redessinée** : le croquis de marmite gagne un couvercle à bouton et deux anses, plus soigné et plus fidèle à « ça mijote ». On le retrouve à l'accueil de la bibliothèque, sur « Tout est acheté ! » et sur l'écran d'attente d'import.
+- **Vapeur qui monte** : les volutes de la cocotte s'animent désormais en boucle (une montée et un souffle doux, décalés entre les deux) une fois le trait dessiné, coupées si tu réduis les animations.
+- **Écran d'attente d'import plus généreux** : l'anneau de progression et la cocotte au centre sont nettement agrandis pour mieux remplir la carte.
+- **Croquis « rien à racheter » élargi** : la petite liste cochée était trop étroite, elle respire mieux.
+
 ## v3.19.3 – Safran · Dessiné à la main
 
 ### Interface
