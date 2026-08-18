@@ -17,7 +17,7 @@ const LOADING_STEPS = [
   "Presque prêt…",
 ];
 
-const RING_R = 34; // rayon de l'anneau (le tracé raisonne en % via pathLength)
+const RING_R = 45; // rayon de l'anneau (le tracé raisonne en % via pathLength)
 
 /**
  * Overlay plein écran non-annulable pendant l'extraction IA, avec une barre de
@@ -65,32 +65,32 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
         {/* Cocotte croquée « à l'encre » (même trait fait main que les états vides,
             avec ses volutes de vapeur : « on mijote ») au centre d'un anneau de
             progression qui se remplit et « bout » légèrement. */}
-        <div style={{ position: "relative", width: 92, height: 92, margin: "0 auto 18px" }}>
+        <div style={{ position: "relative", width: 116, height: 116, margin: "0 auto 18px" }}>
           {/* `pathLength="100"` → dash/offset raisonnent en POURCENTAGE, indépendamment
               du rayon (aucun calcul de circonférence à faire, aucun décalage possible).
-              Rotation de -90° portée par un attribut SVG (origine explicite 46,46) pour
+              Rotation de -90° portée par un attribut SVG (origine explicite 58,58) pour
               démarrer l'arc en haut, la version CSS `transform` sur le <svg> souffrait
               d'une origine de transformation ambiguë selon le navigateur. Le filtre
               d'encre ondule les deux tracés d'une même houle → cercle dessiné à la main. */}
-          <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true">
+          <svg width="116" height="116" viewBox="0 0 116 116" aria-hidden="true">
             <defs>
               <filter id={ringFid} x="-25%" y="-25%" width="150%" height="150%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.017" numOctaves="2" seed="7" result="noise">
                   {!reduceMotion && <animate attributeName="seed" values="7;15;3;11;7" dur="0.68s" repeatCount="indefinite" calcMode="discrete" />}
                 </feTurbulence>
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.6" xChannelSelector="R" yChannelSelector="G" />
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
               </filter>
             </defs>
             <g filter={`url(#${ringFid})`}>
-              <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--surface3)" strokeWidth="5" />
-              <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round"
+              <circle cx="58" cy="58" r={RING_R} fill="none" stroke="var(--surface3)" strokeWidth="6" />
+              <circle cx="58" cy="58" r={RING_R} fill="none" stroke="var(--accent)" strokeWidth="6" strokeLinecap="round"
                 pathLength="100" strokeDasharray="100" strokeDashoffset="100"
-                transform="rotate(-90 46 46)"
+                transform="rotate(-90 58 58)"
                 style={{ animation: `ringFill ${dur}ms cubic-bezier(0.215,0.61,0.355,1) forwards` }} />
             </g>
           </svg>
           <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-            <EmptyArt name="casserole" size={56} />
+            <EmptyArt name="casserole" size={84} />
           </div>
         </div>
         <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, margin: "0 0 6px" }}>On mijote ta recette…</h3>
