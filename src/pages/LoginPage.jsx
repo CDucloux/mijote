@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Icon } from "../components/Icon.jsx";
+import { EmptyArt } from "../components/EmptyArt.jsx";
 import { useLandingThemeColor } from "../hooks/useLandingThemeColor.js";
 
 const LOGIN_FEATS = [
@@ -38,7 +39,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn, error }) {
       <div className="login-blob" style={{ width: 340, height: 340, background: "var(--accent)", top: "-80px", right: "-80px" }} />
       <div className="login-blob" style={{ width: 260, height: 260, background: "#5b9cf6", bottom: "40px", left: "-60px" }} />
       <div className="login-card">
-        <div className="login-emoji-wrap"><span className="login-emoji">🫕</span></div>
+        <div className="login-emoji-wrap"><span className="login-emoji"><EmptyArt name="toque" size={128} /></span></div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 10, width: "100%" }}>
           <span style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)", whiteSpace: "nowrap", flexShrink: 0 }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span></span>
           <div style={{ width: 1.5, alignSelf: "stretch", background: "var(--border)", borderRadius: 1, flexShrink: 0 }} />
