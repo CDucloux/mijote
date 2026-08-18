@@ -14,19 +14,33 @@ const STROKE = { fill: "none", stroke: "currentColor", strokeWidth: 2.3, strokeL
 // Croquis disponibles, indexés par nom. Chacun est un fragment de tracés dans un
 // viewBox 0 0 120 120 ; la déformation est ajoutée par le filtre en amont.
 const ARTS = {
-  // Cocotte couverte (couvercle à bouton, deux anses) d'où montent deux volutes de
-  // vapeur (une chaude) : « ça mijote ». Les fumées portent une classe pour s'animer
-  // en boucle après s'être dessinées (cf. .ink-steam dans global.css).
+  // Cocotte couverte au trait de pinceau (épaisseur variable : les tracés sont des
+  // FORMES PLEINES effilées, pas des `stroke` uniformes), avec lavis d'ombre et
+  // d'intérieur pour le volume. Un seul accent : la vapeur, détachée au-dessus du
+  // couvercle (blanc d'air), qui monte et se dissipe. « Ça mijote. »
+  // Le corps est révélé par un balayage bas->haut (.ink-wipe-up) car les
+  // remplissages ne se dessinent pas au dashoffset ; la vapeur monte ensuite.
   casserole: (
     <>
-      <path {...STROKE} d="M32 58 C31 73 35 86 43 92 C54 98 66 98 77 92 C85 86 89 73 88 58" />
-      <path {...STROKE} d="M32 58 C43 63 77 63 88 58" />
-      <path {...STROKE} d="M33 57 C37 46 83 46 87 57" />
-      <path {...STROKE} d="M55 46 C56 41 64 41 65 46" />
-      <path {...STROKE} d="M32 66 C24 63 20 68 22 73 C23 76 27 77 31 75" />
-      <path {...STROKE} d="M88 66 C96 63 100 68 98 73 C97 76 93 77 89 75" />
-      <path {...STROKE} className="ink-steam" d="M50 44 C47 38 53 34 50 27 C47 22 52 18 49 13" />
-      <path {...STROKE} className="ink-steam2" stroke="var(--accent)" d="M70 44 C67 38 73 34 70 27 C67 22 72 18 69 13" />
+      <g className="ink-wipe-up" fill="currentColor">
+        {/* lavis : ombre portée + intérieur (volume, direction de lumière) */}
+        <ellipse cx="60" cy="98" rx="23" ry="3.4" opacity="0.1" />
+        <path opacity="0.12" d="M36 58 C46 62 74 62 84 58 C82 65 38 65 36 58 Z" />
+        {/* panse : paroi effilée, fine au bord, épaisse en bas, un peu inégale */}
+        <path d="M33 58 C32 78 42 94 60 93 C79 94 88 77 87 58 C85 76 76 89 60 88 C45 88 35 76 33 58 Z" />
+        {/* rebord : lentille effilée, légèrement asymétrique */}
+        <path d="M33 58 C44 65 74 64 87 58 C75 62 45 62 33 58 Z" />
+        {/* couvercle : dôme effilé, penché (sommet décentré) */}
+        <path d="M35 57 C38 45 78 45 86 56 C80 50 40 50 35 57 Z" />
+        {/* bouton */}
+        <path d="M55 46 C56 41 65 41 66 46 C64 44 57 44 55 46 Z" />
+        {/* anses : petites oreilles effilées, volontairement inégales */}
+        <path d="M35 65 C25 62 21 69 25 75 C26 71 31 70 35 70 Z" />
+        <path d="M85 66 C95 64 100 70 96 76 C95 72 90 71 85 71 Z" />
+      </g>
+      {/* accent unique : la vapeur, détachée du couvercle, montante */}
+      <path className="ink-steam" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M50 34 C45 28 55 24 50 17 C45 11 54 7 49 2" />
+      <path className="ink-steam2" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M69 35 C74 29 64 25 69 18 C74 12 65 8 70 3" />
     </>
   ),
   // Panier de marché vide, tressage suggéré, un brin d'herbe posé sur le bord (accent).
