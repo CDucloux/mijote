@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.20.3 – Safran · Livres empilés
+
+### Interface
+- **Croquis de bibliothèque redessiné** : l'étagère de tranches verticales (qui se lisait mal) laisse place à une pile de trois livres posés à plat les uns sur les autres, un peu décalés façon dessin à la main, chacun avec son dos rond et sa tranche de pages, le signet accent pendant du volume du dessus. Bien plus reconnaissable comme « des livres » sur l'état vide des recettes.
+
 ## v3.20.2 – Safran · Ta bibliothèque
 
 ### Interface
