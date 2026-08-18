@@ -7,7 +7,7 @@ export function DesktopSidebar({ tab, setTab }) {
   return (
     <div className="desktop-sidebar">
       <div className="desktop-sidebar-logo">
-        <svg className="sidebar-pod" viewBox="0 0 100 100" width="30" height="30" fill="none" aria-hidden="true">
+        <svg className="sidebar-pod" viewBox="15 15 70 70" width="36" height="36" fill="none" aria-hidden="true">
           <path d="M50 15 C68 30 74 48 67 63 C62.5 74 55.5 80 50 85 C44.5 80 37.5 74 33 63 C26 48 32 30 50 15 Z" fill="var(--accent2)" />
           <g stroke="var(--accent-strong)" strokeLinecap="round">
             <path d="M50 24 C50 40 50 62 50 77" strokeWidth="4" />
