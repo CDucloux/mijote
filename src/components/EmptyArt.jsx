@@ -64,12 +64,36 @@ const ARTS = {
       <path {...STROKE} stroke="var(--accent)" d="M44 42 C38 47 36 55 40 63" />
     </>
   ),
+  // Bocal de placard vide + un « ? » (accent) posé à côté : l'ingrédient cherché
+  // n'est pas au catalogue. Pour les recherches d'ingrédient sans résultat (stock).
+  bocal: (
+    <>
+      <path {...STROKE} d="M46 33 C46 30 72 30 72 33 L72 40 C72 43 46 43 46 40 Z" />
+      <path {...STROKE} d="M48 40 C48 47 42 48 42 56 L42 86 C42 92 47 96 53 96 L65 96 C71 96 76 92 76 86 L76 56 C76 48 70 47 70 40" />
+      <path {...STROKE} d="M47 67 C47 65 71 65 71 67 L71 80 C71 82 47 82 47 80 Z" />
+      <path {...STROKE} stroke="var(--accent)" d="M82 44 C81 37 95 36 94 45 C93 49 88 49 88 54" />
+      <path {...STROKE} stroke="var(--accent)" d="M88 59 L88 60" />
+    </>
+  ),
+  // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
+  // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
+  liste: (
+    <>
+      <path {...STROKE} d="M44 30 C44 28 45.5 27 47.5 27 L72.5 27 C74.5 27 76 28 76 30 L76 94 C76 96 74.5 97 72.5 97 L47.5 97 C45.5 97 44 96 44 94 Z" />
+      <path {...STROKE} d="M60 45 L71 45" />
+      <path {...STROKE} d="M60 62 L71 62" />
+      <path {...STROKE} d="M60 79 L71 79" />
+      <path {...STROKE} stroke="var(--accent)" d="M49 45 L51.5 48 L56 41" />
+      <path {...STROKE} stroke="var(--accent)" d="M49 62 L51.5 65 L56 58" />
+      <path {...STROKE} stroke="var(--accent)" d="M49 79 L51.5 82 L56 75" />
+    </>
+  ),
 };
 
 /**
  * Illustration d'état vide au trait, avec le rendu « encre » commun.
  *
- * @param name Croquis à afficher (`casserole`, `panier`, `assiette`).
+ * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `liste`).
  * @param size Côté du carré de rendu en pixels (viewBox interne fixe).
  * @param style Styles complémentaires posés sur le `<svg>` (ex. marge basse).
  */

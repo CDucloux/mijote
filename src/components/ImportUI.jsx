@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
+import { EmptyArt } from "./EmptyArt.jsx";
 import { AdminBadge } from "./AdminBadge.jsx";
 
 // ─── UI PARTAGÉE DES IMPORTS IA (lien / photo) ───────────────────────────────
@@ -48,27 +49,49 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
     return () => clearInterval(id);
   }, [dur]);
 
+  // Filtre « encre » propre à cet anneau (id unique, deux-points retirés car
+  // `url(#…)` les tolère mal). La graine saute par paliers pour faire « bouillir »
+  // le trait (boiling line du dessin animé fait main) ; coupé si l'utilisateur
+  // demande moins d'animations.
+  const ringFid = "ring" + useId().replace(/:/g, "");
+  const [reduceMotion] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+
   const stepIdx = Math.min(LOADING_STEPS.length - 1, Math.floor((progress / 0.92) * LOADING_STEPS.length));
   const pct = Math.round(progress * 100);
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(20,15,12,0.72)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", display: "grid", placeItems: "center", padding: 24, animation: "fadeIn 0.2s backwards" }}>
       <div style={{ width: "100%", maxWidth: 340, background: "var(--surface)", borderRadius: 24, padding: "34px 26px 28px", textAlign: "center", boxShadow: "0 24px 70px rgba(0,0,0,0.45)" }}>
-        {/* Marmite STATIQUE au centre d'un anneau de progression qui se remplit. */}
+        {/* Cocotte croquée « à l'encre » (même trait fait main que les états vides,
+            avec ses volutes de vapeur : « on mijote ») au centre d'un anneau de
+            progression qui se remplit et « bout » légèrement. */}
         <div style={{ position: "relative", width: 92, height: 92, margin: "0 auto 18px" }}>
           {/* `pathLength="100"` → dash/offset raisonnent en POURCENTAGE, indépendamment
               du rayon (aucun calcul de circonférence à faire, aucun décalage possible).
               Rotation de -90° portée par un attribut SVG (origine explicite 46,46) pour
               démarrer l'arc en haut, la version CSS `transform` sur le <svg> souffrait
-              d'une origine de transformation ambiguë selon le navigateur. */}
+              d'une origine de transformation ambiguë selon le navigateur. Le filtre
+              d'encre ondule les deux tracés d'une même houle → cercle dessiné à la main. */}
           <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true">
-            <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--surface3)" strokeWidth="5" />
-            <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round"
-              pathLength="100" strokeDasharray="100" strokeDashoffset="100"
-              transform="rotate(-90 46 46)"
-              style={{ animation: `ringFill ${dur}ms cubic-bezier(0.215,0.61,0.355,1) forwards` }} />
+            <defs>
+              <filter id={ringFid} x="-25%" y="-25%" width="150%" height="150%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.017" numOctaves="2" seed="7" result="noise">
+                  {!reduceMotion && <animate attributeName="seed" values="7;15;3;11;7" dur="0.68s" repeatCount="indefinite" calcMode="discrete" />}
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.6" xChannelSelector="R" yChannelSelector="G" />
+              </filter>
+            </defs>
+            <g filter={`url(#${ringFid})`}>
+              <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--surface3)" strokeWidth="5" />
+              <circle cx="46" cy="46" r={RING_R} fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round"
+                pathLength="100" strokeDasharray="100" strokeDashoffset="100"
+                transform="rotate(-90 46 46)"
+                style={{ animation: `ringFill ${dur}ms cubic-bezier(0.215,0.61,0.355,1) forwards` }} />
+            </g>
           </svg>
-          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 34 }}>🍲</div>
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+            <EmptyArt name="casserole" size={56} />
+          </div>
         </div>
         <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, margin: "0 0 6px" }}>On mijote ta recette…</h3>
         <div style={{ fontSize: 13.5, color: "var(--accent)", fontWeight: 600, minHeight: 20 }}>{LOADING_STEPS[stepIdx]} · {pct}%</div>

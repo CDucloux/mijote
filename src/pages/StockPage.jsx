@@ -162,7 +162,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           const qShort = q.length > 22 ? q.slice(0, 22) + "…" : q;
           if (q) {
             return (
-              <StockEmpty art="loupe" title="Aucun ingrédient trouvé"
+              <StockEmpty art="bocal" title="Aucun ingrédient trouvé"
                 body={<>Rien ne correspond à « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans ta base d'ingrédients.<br />Vérifie l'orthographe ou essaie un autre terme.</>}
                 action={
                   <button onClick={() => setSearch("")} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
@@ -173,7 +173,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           }
           const low = view === "low";
           return (
-            <StockEmpty icon={low ? "warning" : "box"}
+            <StockEmpty icon="box" art={low ? "liste" : undefined}
               title={low ? "Rien à racheter" : "Aucun article en stock"}
               body={low ? "Marque un ingrédient « bientôt vide » en tapant deux fois dessus." : "Ajoute des ingrédients depuis l'onglet « Tous »."}
               action={
