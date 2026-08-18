@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.20.1 – Safran · Croquis en fondu
+
+### Interface
+- **Apparition des croquis en fondu doux** : les états vides ne se dessinent plus « du bas vers le haut » (un balayage qui se lisait mal). Le corps de chaque scène arrive maintenant en fondu, et l'entrée reste soignée grâce au « pop » de sa touche chaude qui vient se poser à la fin.
+- **Vapeur de la cocotte raccourcie** : toujours détachée du couvercle (blanc d'air sous les volutes), mais nettement plus basse pour ne plus venir toucher le trait autour, notamment l'anneau du loader de l'écran d'import.
+
 ## v3.20.0 – Safran · Tout au pinceau
 
 ### Interface

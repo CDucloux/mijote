@@ -11,9 +11,9 @@ import { useId } from "react";
 //
 // Le trait est fait au « pinceau » : les marques principales sont des FORMES
 // PLEINES effilées (épaisseur variable), pas des `stroke` uniformes, épaulées de
-// lavis translucides pour le volume. Chaque croquis se révèle par un balayage
-// bas->haut (le corps, groupe `.ink-wipe-up`) puis l'accent qui pose à la fin
-// (`.ink-accent`), sauf la cocotte dont l'accent est la vapeur montante.
+// lavis translucides pour le volume. Le corps du croquis (groupe `.ink-body`)
+// apparaît en fondu doux, puis l'accent vient « poser » à la fin (`.ink-accent`),
+// sauf la cocotte dont l'accent est la vapeur montante.
 
 // Croquis disponibles, indexés par nom. Chacun est un fragment de tracés dans un
 // viewBox 0 0 120 120 ; la déformation est ajoutée par le filtre en amont.
@@ -22,11 +22,10 @@ const ARTS = {
   // FORMES PLEINES effilées, pas des `stroke` uniformes), avec lavis d'ombre et
   // d'intérieur pour le volume. Un seul accent : la vapeur, détachée au-dessus du
   // couvercle (blanc d'air), qui monte et se dissipe. « Ça mijote. »
-  // Le corps est révélé par un balayage bas->haut (.ink-wipe-up) car les
-  // remplissages ne se dessinent pas au dashoffset ; la vapeur monte ensuite.
+  // Le corps apparaît en fondu (.ink-body) ; la vapeur monte ensuite.
   casserole: (
     <>
-      <g className="ink-wipe-up" fill="currentColor">
+      <g className="ink-body" fill="currentColor">
         {/* lavis : ombre portée + intérieur (volume, direction de lumière) */}
         <ellipse cx="60" cy="98" rx="23" ry="3.4" opacity="0.1" />
         <path opacity="0.12" d="M36 58 C46 62 74 62 84 58 C82 65 38 65 36 58 Z" />
@@ -42,16 +41,17 @@ const ARTS = {
         <path d="M35 65 C25 62 21 69 25 75 C26 71 31 70 35 70 Z" />
         <path d="M85 66 C95 64 100 70 96 76 C95 72 90 71 85 71 Z" />
       </g>
-      {/* accent unique : la vapeur, détachée du couvercle, montante */}
-      <path className="ink-steam" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M50 34 C45 28 55 24 50 17 C45 11 54 7 49 2" />
-      <path className="ink-steam2" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M69 35 C74 29 64 25 69 18 C74 12 65 8 70 3" />
+      {/* accent unique : la vapeur, détachée du couvercle (blanc d'air) mais COURTE
+          pour ne pas venir toucher le trait alentour (ex. l'anneau du loader). */}
+      <path className="ink-steam" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M50 39 C46 35 54 32 50 27 C47 23 52 20 49 17" />
+      <path className="ink-steam2" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M69 39 C73 35 65 32 69 27 C72 23 67 20 70 17" />
     </>
   ),
   // Panier de marché vide : anse en arche pleine, panse au trait épaissi, rebord en
   // lentille, lavis d'intérieur, deux fils de tressage, et un brin d'herbe (accent).
   panier: (
     <>
-      <g className="ink-wipe-up" fill="currentColor">
+      <g className="ink-body" fill="currentColor">
         <path opacity="0.09" d="M31 58 C45 63 75 63 89 58 C86 71 78 85 60 85 C42 85 34 71 31 58 Z" />
         <path d="M37 56 C40 27 80 27 83 56 C79 33 41 33 37 56 Z" />
         <path fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" d="M28 57 L40 91 C52 96 68 96 80 91 L92 57" />
@@ -70,7 +70,7 @@ const ARTS = {
   // de part et d'autre, un oeuf au plat dont le jaune est l'accent : « prêt à manger ».
   assiette: (
     <>
-      <g className="ink-wipe-up" fill="currentColor">
+      <g className="ink-body" fill="currentColor">
         <ellipse cx="60" cy="86" rx="27" ry="3.5" opacity="0.1" />
         <path fillRule="evenodd" d="M60 52 C75 52 87 59 87 68 C87 77 75 84 60 84 C45 84 33 77 33 68 C33 59 45 52 60 52 Z M60 58 C48 58 41 63 41 68 C41 73 48 78 60 78 C72 78 79 73 79 68 C79 63 72 58 60 58 Z" />
         <ellipse cx="60" cy="68" rx="17" ry="10" opacity="0.08" />
@@ -89,7 +89,7 @@ const ARTS = {
   // (accent). « Rien trouvé », pour les recherches sans résultat.
   loupe: (
     <>
-      <g className="ink-wipe-up" fill="currentColor">
+      <g className="ink-body" fill="currentColor">
         <circle cx="52" cy="50" r="19" opacity="0.07" />
         <path fillRule="evenodd" d="M52 26 A25 25 0 1 0 52 76 A25 25 0 1 0 52 26 Z M52 32 A19 19 0 1 1 52 70 A19 19 0 1 1 52 32 Z" />
         <path d="M67 68 L90 91 L94 87 L71 64 Z" />
@@ -101,7 +101,7 @@ const ARTS = {
   // n'est pas au catalogue. Pour les recherches d'ingrédient sans résultat (stock).
   bocal: (
     <>
-      <g className="ink-wipe-up" fill="currentColor">
+      <g className="ink-body" fill="currentColor">
         <path opacity="0.08" d="M42 45 L42 86 C42 90 45 92 49 92 L67 92 C71 92 74 90 74 86 L74 45 Z" />
         <path d="M45 32 C45 30 46 29 48 29 L68 29 C70 29 71 30 71 32 L71 39 C71 41 70 42 68 42 L48 42 C46 42 45 41 45 39 Z" />
         <path fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" d="M43 42 C43 49 40 51 40 59 L40 87 C40 92 44 95 49 95 L67 95 C72 95 76 92 76 87 L76 59 C76 51 73 49 73 42" />
@@ -116,7 +116,7 @@ const ARTS = {
   // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
   liste: (
     <>
-      <g className="ink-wipe-up" fill="currentColor">
+      <g className="ink-body" fill="currentColor">
         <path opacity="0.07" d="M34 30 L86 30 L86 96 L34 96 Z" />
         <path fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" d="M34 32 C34 30 35 29 37 29 L83 29 C85 29 86 30 86 32 L86 92 C86 94 85 95 83 95 L37 95 C35 95 34 94 34 92 Z" />
         <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M55 46 L79 46" />
