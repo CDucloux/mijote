@@ -1,5 +1,12 @@
 # Changelog – Mijoté
 
+## v3.19.3 – Safran · Dessiné à la main
+
+### Interface
+- **Nouvelle recette recentrée** : l'en-tête de la feuille « Nouvelle recette » troque l'étoile (qui suggérait à tort une fonction IA) contre une icône livre, plus fidèle au sujet, une recette.
+- **Écran d'attente d'import redessiné** : pendant l'extraction IA, l'emoji marmite (posé un peu de travers) laisse place à un croquis de cocotte « à l'encre » avec ses volutes de vapeur, et l'anneau de progression ondule et « bout » légèrement comme un trait tracé à la main. La barre de progression reste honnête et l'effet se coupe si tu réduis les animations.
+- **États vides variés plutôt que la même loupe partout** : deux nouveaux croquis faits main. Chercher un ingrédient introuvable montre désormais un bocal de placard vide avec un « ? » ; « Rien à racheter » affiche une petite liste toute cochée (« tout est là ») au lieu d'un triangle d'alerte qui semblait signaler un problème.
+
 ## v3.19.2 – Safran · Recherches à vide soignées
 
 ### Interface
