@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText,
+  matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -230,7 +230,46 @@ describe("filterUtensilsToKnown", () => {
   });
 });
 
+describe("stripComments", () => {
+  const recipe = "<article><p>Faire mijoter 4 heures.</p></article>";
+  const comments = "<p>Super recette, testée et approuvée !</p><p>Merci Valérie.</p>";
+
+  it("coupe la section commentaires Blogger (guillemets simples)", () => {
+    const out = stripComments(`${recipe}<div class='comments' id='comments'>${comments}</div>`);
+    expect(out).toContain("mijoter 4 heures");
+    expect(out).not.toContain("Super recette");
+  });
+  it("coupe la section commentaires WordPress (id=comments, guillemets doubles)", () => {
+    const out = stripComments(`${recipe}<div id="comments" class="comments-area">${comments}</div>`);
+    expect(out).toContain("mijoter 4 heures");
+    expect(out).not.toContain("Merci Valérie");
+  });
+  it("coupe un fil Disqus", () => {
+    const out = stripComments(`${recipe}<div id="disqus_thread">${comments}</div>`);
+    expect(out).not.toContain("Super recette");
+  });
+  it("coupe une liste de commentaires WordPress (ol.comment-list) sans conteneur id", () => {
+    const out = stripComments(`${recipe}<ol class="comment-list">${comments}</ol>`);
+    expect(out).not.toContain("Super recette");
+  });
+  it("ne touche à rien quand il n'y a pas de section commentaires connue", () => {
+    const html = `${recipe}<footer>Mentions légales</footer>`;
+    expect(stripComments(html)).toBe(html);
+  });
+  it("ne tronque PAS sur un lien « 23 commentaires » en tête d'article", () => {
+    // Piège classique : un lien vers les commentaires placé AVANT la recette. Sa
+    // valeur de classe n'est pas exactement « comments », il ne doit rien couper.
+    const out = stripComments(`<a href="#comments" class="comment-link">23 commentaires</a>${recipe}`);
+    expect(out).toContain("mijoter 4 heures");
+  });
+});
+
 describe("htmlToText", () => {
+  it("laisse tomber les commentaires de lecteurs (bruit coûteux)", () => {
+    const t = htmlToText("<article><p>Étape unique.</p></article><div id='comments'><p>Trop bon merci !</p></div>");
+    expect(t).toContain("Étape unique");
+    expect(t).not.toContain("Trop bon merci");
+  });
   it("retire scripts, styles et balises", () => {
     const t = htmlToText("<style>a{}</style><script>x()</script><p>Bonjour</p><div>Monde</div>");
     expect(t).toContain("Bonjour");
