@@ -1,5 +1,13 @@
 # Changelog – Mijoté
 
+## v3.20.2 – Safran · Ta bibliothèque
+
+### Interface
+- **Bibliothèque vide redessinée** : l'écran « Bienvenue dans ta bibliothèque » troque la cocotte contre un vrai croquis de bibliothèque à l'encre (une rangée de livres de cuisine aux hauteurs inégales, un volume qui s'appuie de travers, un signet accent qui dépasse du plus grand), bien plus juste pour une collection de recettes.
+- **Cocotte de l'accueil agrandie** : sur la page de connexion, le croquis de cocotte était trop discret, il gagne en présence.
+- **Écran de chargement au trait** : l'emoji fondue laisse place au croquis de cocotte à l'encre, posé au centre de l'anneau de progression.
+- **Halos flous retirés** : les taches floutées violet/bleu en fond de la connexion et du chargement disparaissent ; la profondeur vient désormais de la typo, du contraste et du trait, pas d'un glow décoratif.
+
 ## v3.20.1 – Safran · Croquis en fondu
 
 ### Interface
