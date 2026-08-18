@@ -67,7 +67,7 @@ export interface Intermediate {
   yield?: YieldDraft;
 }
 
-/** Ingrédient au schéma final Mijoté (id stable + texte éditable `_raw`). */
+/** Ingrédient au schéma final Cardamome (id stable + texte éditable `_raw`). */
 export interface RecipeIngredient {
   id: string;
   dbId: string;
@@ -297,7 +297,7 @@ export function filterUtensilsToKnown(utensils: DraftUtensil[], knownNames: stri
   });
 }
 
-// Assemble le brouillon FINAL au schéma Mijoté : ids stables sur ingrédients/
+// Assemble le brouillon FINAL au schéma Cardamome : ids stables sur ingrédients/
 // ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
 // fourni par le LLM, complété par détection dans le texte de l'étape).
 export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {

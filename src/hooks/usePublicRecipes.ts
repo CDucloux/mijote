@@ -14,7 +14,7 @@ const indexOf = (recipes: PubRecipe[]): Map<string, PubRecipe> =>
 export interface PublicRecipesDeps {
   user: PubUser | null | undefined;
   /** Nom d'affichage de l'app (préférences), prioritaire sur le nom Google au moment
-   *  de publier : c'est celui que l'utilisateur a choisi dans Mijoté. */
+   *  de publier : c'est celui que l'utilisateur a choisi dans Cardamome. */
   displayName?: string;
   recipes: PubRecipe[];
   setRecipes: Dispatch<SetStateAction<PubRecipe[]>>;
@@ -37,7 +37,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
   // sont des composants, hors quota). Bloque + renvoie vers l'offre si dépassé.
   const guardQuota = (): boolean => {
     if (canAddRecipes(recipes, isPlus, 1)) return true;
-    notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");
+    notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
     navigate("/plus");
     return false;
   };

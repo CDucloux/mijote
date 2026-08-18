@@ -24,18 +24,18 @@
           var dark = localStorage.getItem("rf_theme") !== "light";
           if (!dark) document.documentElement.classList.add("light");
           var m = document.querySelector('meta[name="theme-color"]');
-          if (m) m.setAttribute("content", dark ? "#0e0e0f" : "#f5f0eb");
+          if (m) m.setAttribute("content", dark ? "#10120e" : "#f5f0eb");
         } catch (e) {}
       })();
     </script>
 
     <!-- Identité -->
-    <title>Mijoté, l'atelier de tes recettes</title>
-    <meta name="description" content="Mijoté : crée, affine et partage tes recettes. Journal d'itérations, Nutri-Score, saisonnalité des ingrédients, planning repas et liste de courses, synchronisés sur tous tes appareils." />
+    <title>Cardamome, l'atelier de tes recettes</title>
+    <meta name="description" content="Cardamome : crée, affine et partage tes recettes. Journal d'itérations, Nutri-Score, saisonnalité des ingrédients, planning repas et liste de courses, synchronisés sur tous tes appareils." />
     <!-- Balise UNIQUE (sans media) pilotée par l'appli : la couleur des barres PWA
          suit le thème in-app, pas celui du système. Valeur par défaut = thème sombre
          (défaut de l'appli), ajustée très tôt par le script ci-dessus puis en direct. -->
-    <meta name="theme-color" content="#0e0e0f" />
+    <meta name="theme-color" content="#10120e" />
     <link rel="canonical" href="https://mijote-sand.vercel.app/" />
 
     <!-- Icônes -->
@@ -46,8 +46,8 @@
 
     <!-- Open Graph (Facebook, WhatsApp, iMessage, Discord…) -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Mijoté" />
-    <meta property="og:title" content="Mijoté, l'atelier de tes recettes" />
+    <meta property="og:site_name" content="Cardamome" />
+    <meta property="og:title" content="Cardamome, l'atelier de tes recettes" />
     <meta property="og:description" content="Crée, affine et partage tes recettes. Journal d'itérations, Nutri-Score, saisonnalité, planning et courses." />
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:url" content="https://mijote-sand.vercel.app/" />
@@ -55,11 +55,11 @@
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
-    <meta property="og:image:alt" content="Logo Mijoté" />
+    <meta property="og:image:alt" content="Logo Cardamome" />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Mijoté, l'atelier de tes recettes" />
+    <meta name="twitter:title" content="Cardamome, l'atelier de tes recettes" />
     <meta name="twitter:description" content="Crée, affine et partage tes recettes. Journal d'itérations, Nutri-Score, saisonnalité, planning et courses." />
     <meta name="twitter:image" content="https://mijote-sand.vercel.app/pwa-512.png" />
   </head>

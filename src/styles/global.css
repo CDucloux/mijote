@@ -10,18 +10,20 @@
 }
 
 :root {
-  --bg: #0e0e0f;
-  --bg-rgb: 14, 14, 15;
-  --surface: #171718;
-  --surface2: #1f1f21;
-  --surface3: #252527;
-  --border: rgba(255, 255, 255, 0.07);
-  --accent: #e8703a;
-  --accent2: #f0a875;
-  --text: #f0ede8;
-  --text2: #9a9490;
-  --text3: #5a5754;
-  --green: #4caf7d;
+  --bg: #10120e;
+  --bg-rgb: 16, 18, 14;
+  --surface: #181b14;
+  --surface2: #20241b;
+  --surface3: #282d22;
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #a7c97c;         /* vert gousse de cardamome, signature de la marque */
+  --accent2: #cadfae;
+  --accent-strong: #6e9a3f;  /* vert profond : CTA pressé, texte blanc lisible */
+  --spice: #e0a23e;          /* ambre graine : emphase chaude, gourmandise (dosé) */
+  --text: #ecefe4;
+  --text2: #9ba08f;
+  --text3: #5e6353;
+  --green: #5fb88a;
   --red: #e05252;
   --yellow: #f0c060;
   --blue: #5b9cf6;
@@ -38,21 +40,24 @@
 /* ── LIGHT THEME ── */
 html.light,
 .light {
-  --bg: #f5f0eb;
-  --bg-rgb: 245, 240, 235;
+  --bg: #f3f4ec;
+  --bg-rgb: 243, 244, 236;
   --surface: #ffffff;
-  --surface2: #ede8e2;
-  --surface3: #e0d8d0;
+  --surface2: #e9ebdf;
+  --surface3: #dde0d0;
   --border: rgba(0, 0, 0, 0.09);
-  --text: #2c2420;
-  --text2: #5a5250;
-  --text3: #887870;
+  --accent: #6e9a3f;         /* vert densifié : porte sur le fond crème */
+  --accent2: #8bb257;
+  --spice: #c67f1f;          /* ambre assombri pour le contraste sur clair */
+  --text: #23281d;
+  --text2: #565b4c;
+  --text3: #838872;
 }
 
 html.light,
 html.light body {
-  background-color: #f5f0eb;
-  color: #2c2420;
+  background-color: #f3f4ec;
+  color: #23281d;
 }
 
 /* Pills ustensiles (desktop) : fond blanc en thème clair */
@@ -61,8 +66,8 @@ html.light .ut-pill-desktop {
 }
 
 html.light .field-input {
-  color: #2c2420;
-  background: #ede8e2;
+  color: #23281d;
+  background: #e9ebdf;
 }
 
 /* Barre de recherche recettes : blanc franc en clair (le halo suffit à la
@@ -72,8 +77,8 @@ html.light .recipe-search {
 }
 
 html.light select option {
-  background: #ede8e2;
-  color: #1a1614;
+  background: #e9ebdf;
+  color: #23281d;
 }
 
 *,
@@ -116,13 +121,13 @@ select {
   outline: none;
 }
 
-/* Selection highlight, Mijoté sage green, distinct from the orange accent and the default blue */
+/* Surlignage de sélection : vert gousse de cardamome, l'accent de la marque */
 ::selection {
-  background: rgba(76, 175, 125, 0.35);
+  background: rgba(167, 201, 124, 0.34);
 }
 
 ::-moz-selection {
-  background: rgba(76, 175, 125, 0.35);
+  background: rgba(167, 201, 124, 0.34);
 }
 
 html,

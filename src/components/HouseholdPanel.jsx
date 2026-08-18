@@ -124,12 +124,12 @@ export function HouseholdPanel({ onClose }) {
             </>
           )}
 
-          {/* Inviter, uniquement des utilisateurs déjà connus de Mijoté */}
+          {/* Inviter, uniquement des utilisateurs déjà connus de Cardamome */}
           {owner && !full && (
             card(
               <>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Inviter une personne</div>
-                <div style={{ fontSize: 11.5, color: "var(--text3)", marginBottom: 12 }}>Parmi les utilisateurs déjà connectés à Mijoté.</div>
+                <div style={{ fontSize: 11.5, color: "var(--text3)", marginBottom: 12 }}>Parmi les utilisateurs déjà connectés à Cardamome.</div>
                 {candidates.length === 0 ? (
                   <div style={{ fontSize: 12.5, color: "var(--text3)", textAlign: "center", padding: "10px 0" }}>Aucun autre utilisateur disponible pour l'instant.</div>
                 ) : (

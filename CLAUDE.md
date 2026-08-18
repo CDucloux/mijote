@@ -1,6 +1,6 @@
 # CLAUDE.md : Règles de contribution (à respecter scrupuleusement)
 
-Mijoté : PWA React 19 + Vite + Firebase (Auth/Firestore/Functions), déployée sur Vercel.
+Cardamome : PWA React 19 + Vite + Firebase (Auth/Firestore/Functions), déployée sur Vercel.
 Ces règles priment sur toute habitude par défaut. En cas de doute, demander.
 
 ## 1. Clean code & architecture : priorité absolue
@@ -25,7 +25,7 @@ L'interface doit avoir le niveau d'un **produit conçu par un designer UI/UX sen
 - Mobile-first : penser tactile, cibles suffisantes, feedback immédiat.
 
 ### 3.1 Anti-look « vibe-codé » : bannir les tells de l'IA
-Le fil rouge : une IA recrache la **moyenne** de ses données d'entraînement ; le bon design fait des choix **spécifiques** au produit (Mijoté = cuisine, chaleur, gourmandise), à l'utilisateur et au contexte. Chaque défaut laissé tel quel crie « fait avec une IA ». À proscrire :
+Le fil rouge : une IA recrache la **moyenne** de ses données d'entraînement ; le bon design fait des choix **spécifiques** au produit (Cardamome = cuisine, chaleur, gourmandise), à l'utilisateur et au contexte. Chaque défaut laissé tel quel crie « fait avec une IA ». À proscrire :
 - **Pas de gradient violet / bleu-violet** (hero, fonds, boutons) : c'est LE drapeau « fait par IA ». Fonds plats, une couleur d'accent assumée tirée des tokens.
 - **Pas d'emoji comme système d'icônes** (nav, puces, en-têtes, boutons) : un set d'icônes cohérent (même famille, poids, taille). L'emoji reste toléré dans le contenu / la microcopy quand le ton s'y prête, jamais comme brique d'UI.
 - **Pas de palette néon ni de 5-6 couleurs saturées qui se battent** : la couleur est une ressource partagée à budgéter globalement (une dominante, un accent, un neutre). L'emphase vient du contraste et de la retenue, pas de l'accumulation.

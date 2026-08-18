@@ -5,7 +5,7 @@ title: Politique de cookies
 order: 4
 ---
 
-Mijoté n'utilise que des cookies et des mécanismes de stockage **strictement nécessaires** à son fonctionnement. Aucun traceur de mesure d'audience, de publicité ou de réseau social n'est déposé.
+Cardamome n'utilise que des cookies et des mécanismes de stockage **strictement nécessaires** à son fonctionnement. Aucun traceur de mesure d'audience, de publicité ou de réseau social n'est déposé.
 
 ## Ce que nous utilisons
 

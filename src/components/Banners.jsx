@@ -12,7 +12,7 @@ export function ReadOnlyBanner({ style }) {
           <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(155,135,245,1)", letterSpacing: "0.02em" }}>MODE LECTURE</span>
           <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(155,135,245,0.85)", borderRadius: 5, padding: "1px 6px", letterSpacing: "0.04em" }}>READ ONLY</span>
         </div>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>La base partagée est gérée par l'administrateur Mijoté ✦</div>
+        <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 1 }}>La base partagée est gérée par l'administrateur Cardamome ✦</div>
       </div>
     </div>
   );

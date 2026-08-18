@@ -49,7 +49,7 @@ export function BaseInfoModal({ onClose }) {
           ))}
         </Col>
 
-        {/* Dans Mijoté – carte accent */}
+        {/* Dans Cardamome – carte accent */}
         <div style={{
           marginTop: 24, padding: "16px 18px", borderRadius: 16,
           background: "linear-gradient(135deg, rgba(232,112,58,0.13), rgba(232,112,58,0.05))",
@@ -57,10 +57,10 @@ export function BaseInfoModal({ onClose }) {
         }}>
           <Row gap={7} style={{ marginBottom: 7 }}>
             <BaseIcon size={15} color="var(--accent)" />
-            <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--accent)", letterSpacing: "-0.01em" }}>Dans Mijoté</span>
+            <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--accent)", letterSpacing: "-0.01em" }}>Dans Cardamome</span>
           </Row>
           <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>
-            Une recette marquée « Base » peut être liée à une autre recette en tant qu'ingrédient. Quand tu cuisines la recette parente, Mijoté te propose de réaliser d'abord toutes ses bases avant de passer aux étapes principales.
+            Une recette marquée « Base » peut être liée à une autre recette en tant qu'ingrédient. Quand tu cuisines la recette parente, Cardamome te propose de réaliser d'abord toutes ses bases avant de passer aux étapes principales.
           </p>
         </div>
       </div>

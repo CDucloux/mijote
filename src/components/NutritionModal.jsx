@@ -43,7 +43,7 @@ function CalcRow({ c, color }) {
   );
 }
 
-// Vue « Détail du calcul » (traçabilité Nutri-Score), abonnés Mijoté+.
+// Vue « Détail du calcul » (traçabilité Nutri-Score), abonnés Cardamome+.
 function NutriCalcView({ breakdown }) {
   const { negatives, N, positives, P, ns, letter } = breakdown;
   const stat = (val, label, color) => (
@@ -89,7 +89,7 @@ function NutriCalcView({ breakdown }) {
   );
 }
 
-// Aperçu verrouillé (non-abonnés) : pitch + CTA vers Mijoté+.
+// Aperçu verrouillé (non-abonnés) : pitch + CTA vers Cardamome+.
 function CalcLocked({ onUpgrade }) {
   return (
     <div style={{ marginTop: 4, padding: "26px 20px", background: "linear-gradient(160deg, rgba(232,112,58,0.08), rgba(240,192,96,0.05))", border: "1px solid rgba(232,112,58,0.22)", borderRadius: 18, textAlign: "center" }}>
@@ -101,7 +101,7 @@ function CalcLocked({ onUpgrade }) {
         Vois exactement d'où vient la note, points négatifs, points positifs et l'équation qui aboutit à la lettre. Réservé à <PlusBadge />.
       </div>
       <button onClick={onUpgrade} className="btn btn-primary btn-pill" style={{ padding: "10px 20px" }}>
-        <Icon name="sparkle" size={15} color="#fff" /> Passer à Mijoté+
+        <Icon name="sparkle" size={15} color="#fff" /> Passer à Cardamome+
       </button>
     </div>
   );
@@ -180,7 +180,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
         </div>
       ) : (
         <>
-      {/* Bascule portion / 100 g / Calcul (Calcul = traçabilité, réservé à Mijoté+) */}
+      {/* Bascule portion / 100 g / Calcul (Calcul = traçabilité, réservé à Cardamome+) */}
       <Row gap={4} style={{ background: "var(--surface2)", borderRadius: 10, padding: 3, margin: "14px 0 18px" }}>
         {[["portion", "Par portion"], ["100g", "Pour 100 g"], ["calc", "Calcul"]].map(([id, lbl]) => (
           <button key={id} onClick={() => setBasis(id)} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: basis === id ? "var(--surface)" : "transparent", color: basis === id ? "var(--text)" : "var(--text3)", boxShadow: basis === id ? "0 1px 3px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>

@@ -123,7 +123,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
               ...(isPlus ? { background: "linear-gradient(135deg, rgba(232,112,58,0.08), rgba(240,192,96,0.06))", borderColor: "rgba(232,112,58,0.3)" } : {}) }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 15.5, fontWeight: 700, color: "var(--text)" }}>{isPlus ? "Mijoté+" : "Plan gratuit"}</span>
+                  <span style={{ fontSize: 15.5, fontWeight: 700, color: "var(--text)" }}>{isPlus ? "Cardamome+" : "Plan gratuit"}</span>
                   {isPlus && <PlusBadge />}
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 4, lineHeight: 1.4 }}>

@@ -5,18 +5,18 @@ import { PlusBadge } from "../components/PlusBadge.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { startCheckout, openBillingPortal } from "@/lib/firebase/subscription.js";
 
-// Tarifs Mijoté+. `price` = ID Stripe (extension), fourni par l'env.
+// Tarifs Cardamome+. `price` = ID Stripe (extension), fourni par l'env.
 const PRICES = {
   monthly: { amount: "3,99 €", per: "/ mois", cta: "3,99 €/mois", price: import.meta.env.VITE_STRIPE_PRICE_MONTHLY },
   yearly: { amount: "29,99 €", per: "/ an", cta: "29,99 €/an", note: "soit 2,50 €/mois · économise 18 €/an", price: import.meta.env.VITE_STRIPE_PRICE_YEARLY },
 };
 
-// ─── MIJOTÉ+ (route /plus) ───────────────────────────────────────────────────
-// Page de présentation / achat de l'offre Mijoté+ : tableau comparatif Gratuit vs
-// Mijoté+. Le paiement n'est pas encore branché (CTA « bientôt »). Le plan est
+// ─── CARDAMOME+ (route /plus) ───────────────────────────────────────────────────
+// Page de présentation / achat de l'offre Cardamome+ : tableau comparatif Gratuit vs
+// Cardamome+. Le paiement n'est pas encore branché (CTA « bientôt »). Le plan est
 // dérivé de `isAdmin` en attendant un vrai système d'abonnement.
 
-// Comparatif Gratuit vs Mijoté+. Une valeur booléenne rend une coche / un tiret ;
+// Comparatif Gratuit vs Cardamome+. Une valeur booléenne rend une coche / un tiret ;
 // une chaîne rend un libellé (ex. quota de recettes).
 const FEATURES = [
   { label: "Nombre de recettes", free: "50", plus: "Illimité" },
@@ -53,7 +53,7 @@ export function PlusPage() {
   // Retour de Stripe Checkout (success_url) : petit message, puis on nettoie la query.
   useEffect(() => {
     if (new URLSearchParams(location.search).get("checkout") === "success") {
-      notify?.("Bienvenue dans Mijoté+ ! 🎉");
+      notify?.("Bienvenue dans Cardamome+ ! 🎉");
       navigate("/plus", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -61,7 +61,7 @@ export function PlusPage() {
   // Lance le paiement Stripe (extension Firebase) puis redirige. Si les tarifs ne
   // sont pas encore configurés (env absente), on informe simplement.
   const onSubscribe = async () => {
-    if (!user?.uid || !price.price) { notify?.("L'abonnement Mijoté+ arrive bientôt !"); return; }
+    if (!user?.uid || !price.price) { notify?.("L'abonnement Cardamome+ arrive bientôt !"); return; }
     setBusy(true);
     await startCheckout(user.uid, price.price, msg => { setBusy(false); notify?.(msg, "error"); });
   };
@@ -77,7 +77,7 @@ export function PlusPage() {
         <button onClick={() => navigate(-1)} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
         </button>
-        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Mijoté+</h1>
+        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Cardamome+</h1>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "22px 20px 24px" }}>
@@ -90,10 +90,10 @@ export function PlusPage() {
               </span>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  Tu es abonné·e à Mijoté+ <PlusBadge />
+                  Tu es abonné·e à Cardamome+ <PlusBadge />
                 </div>
                 <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "3px 0 0" }}>
-                  Merci de ton soutien&nbsp;! Tu profites de l'ensemble des fonctionnalités disponibles dans Mijoté.
+                  Merci de ton soutien&nbsp;! Tu profites de l'ensemble des fonctionnalités disponibles dans Cardamome.
                 </p>
               </div>
             </div>
@@ -115,7 +115,7 @@ export function PlusPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)" }}>Fonctionnalité</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />gratuit</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Mijoté+</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Cardamome+</span>
             </div>
             {FEATURES.map((f, i) => (
               <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(232,112,58,0.04)" : "transparent" }}>
@@ -154,7 +154,7 @@ export function PlusPage() {
           <p style={{ fontSize: 11.5, color: "var(--text3)", textAlign: "center", lineHeight: 1.5, margin: 0 }}>
             {paymentReady
               ? "Paiement sécurisé via Stripe · résiliable à tout moment."
-              : "L'abonnement Mijoté+ arrive bientôt. Les imports IA restent en accès limité en attendant."}
+              : "L'abonnement Cardamome+ arrive bientôt. Les imports IA restent en accès limité en attendant."}
           </p>
         </div>
       </div>
@@ -167,7 +167,7 @@ export function PlusPage() {
           </button>
         ) : (
           <button className="btn btn-primary btn-pill" style={{ width: "100%" }} disabled={busy} onClick={onSubscribe}>
-            <Icon name="sparkle" size={15} /> {busy ? "Redirection…" : `Passer à Mijoté+ · ${price.cta}`}
+            <Icon name="sparkle" size={15} /> {busy ? "Redirection…" : `Passer à Cardamome+ · ${price.cta}`}
           </button>
         )}
       </div>

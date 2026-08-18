@@ -223,7 +223,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   // Lien PUBLIC de la recette (page communauté), jamais le lien privé. Le menu
   // « Partager » n'apparaît que lorsque la recette est publiée (cf. menus).
   const publicUrl = recipe.publicId ? `${window.location.origin}${DISCOVER_PREFIX}${encodeURIComponent(recipe.publicId)}` : "";
-  const shareText = `${recipe.name} – une recette à découvrir sur Mijoté`;
+  const shareText = `${recipe.name} – une recette à découvrir sur Cardamome`;
   const copyLink = async () => {
     try { await navigator.clipboard.writeText(publicUrl); notify?.("Lien copié dans le presse-papier"); }
     catch { notify?.("Copie impossible", "error"); }
@@ -248,7 +248,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   );
   const recipeVegan = useMemo(() => isRecipeVegan(recipe, seasonResolver, { recipes }), [recipe, seasonResolver, recipes]);
   const { techniques, isPlus } = useAppShell();
-  // Journal d'itérations = fonctionnalité Mijoté+ : en gratuit → page d'offre.
+  // Journal d'itérations = fonctionnalité Cardamome+ : en gratuit → page d'offre.
   const openJournal = () => isPlus ? setJournalOpen(true) : navigate("/plus");
   const difficulty = useMemo(() => computeDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
   const difficultyExplain = useMemo(() => explainDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
@@ -1423,11 +1423,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
             <div style={{ minWidth: 0 }}>
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Publier cette recette ?</h3>
-              <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>Communauté Mijoté</p>
+              <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>Communauté Cardamome</p>
             </div>
           </div>
           <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: recipe.source ? 16 : 12, lineHeight: 1.5 }}>
-            Elle rejoindra la communauté Mijoté : chacun pourra la découvrir et l'ajouter à ses recettes. Vous en restez l'auteur·e et pouvez la retirer à tout moment.
+            Elle rejoindra la communauté Cardamome : chacun pourra la découvrir et l'ajouter à ses recettes. Vous en restez l'auteur·e et pouvez la retirer à tout moment.
           </p>
           {recipe.source && (
             <div style={{ borderRadius: 16, background: "rgba(224,146,10,0.08)", border: "1px solid rgba(224,146,10,0.22)", padding: 16, marginBottom: 18 }}>
@@ -1480,7 +1480,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 600, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><Icon name="globe" size={11} color="var(--text3)" /> Recette publique · Mijoté</div>
+              <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><Icon name="globe" size={11} color="var(--text3)" /> Recette publique · Cardamome</div>
             </div>
           </div>
 

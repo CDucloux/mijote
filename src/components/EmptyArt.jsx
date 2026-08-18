@@ -7,7 +7,7 @@ import { useId } from "react";
 // déformation commun (turbulence + displacement) applique la MÊME ondulation de
 // pinceau à tous les tracés, d'un écran à l'autre. Le trait suit `currentColor`
 // (donc le thème clair/sombre) ; un seul élément par croquis passe en accent
-// terracotta, la touche chaude de Mijoté, jamais le monochrome intégral.
+// terracotta, la touche chaude de Cardamome, jamais le monochrome intégral.
 //
 // Le trait est fait au « pinceau » : les marques principales sont des FORMES
 // PLEINES effilées (épaisseur variable), pas des `stroke` uniformes, épaulées de

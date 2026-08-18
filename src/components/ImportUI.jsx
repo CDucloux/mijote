@@ -132,7 +132,7 @@ export function HintCard({ icon, iconColor = "var(--text2)", tint = "var(--surfa
 }
 
 /**
- * Compteur de quota d'import IA (reliquat jour + mois) pour les abonnés Mijoté+.
+ * Compteur de quota d'import IA (reliquat jour + mois) pour les abonnés Cardamome+.
  * Purement INDICATIF : l'autorité reste le serveur. Deux jauges compactes (jour /
  * mois) avec un liseré rouge quand la limite est atteinte. L'admin voit « Illimité ».
  *

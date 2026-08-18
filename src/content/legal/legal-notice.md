@@ -5,11 +5,11 @@ title: Mentions légales
 order: 1
 ---
 
-Informations relatives à l'éditeur et à l'hébergeur du service Mijoté, en application de l'article 6 III de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN).
+Informations relatives à l'éditeur et à l'hébergeur du service Cardamome, en application de l'article 6 III de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN).
 
 ## Éditeur
 
-Le service Mijoté (ci-après « l'Application ») est édité par **[nom de l'éditeur à compléter]**, *particulier* [ou statut à préciser : auto-entrepreneur / société].
+Le service Cardamome (ci-après « l'Application ») est édité par **[nom de l'éditeur à compléter]**, *particulier* [ou statut à préciser : auto-entrepreneur / société].
 
 Contact : **contact-mijote@gmail.com**
 
@@ -28,7 +28,7 @@ Les autres prestataires intervenant dans le traitement de vos données, dont le 
 
 ## Propriété intellectuelle
 
-L'ensemble des éléments de l'Application (structure, code, marque « Mijoté », textes, éléments graphiques et illustrations) est protégé par le droit de la propriété intellectuelle et demeure la propriété exclusive de l'éditeur. Toute reproduction, représentation, modification ou extraction, totale ou partielle, sans autorisation écrite préalable, est interdite et susceptible de constituer une contrefaçon.
+L'ensemble des éléments de l'Application (structure, code, marque « Cardamome », textes, éléments graphiques et illustrations) est protégé par le droit de la propriété intellectuelle et demeure la propriété exclusive de l'éditeur. Toute reproduction, représentation, modification ou extraction, totale ou partielle, sans autorisation écrite préalable, est interdite et susceptible de constituer une contrefaçon.
 
 Les recettes et contenus que vous créez restent votre propriété, sous réserve des garanties et responsabilités décrites dans les [Conditions générales d'utilisation](/legal/terms).
 

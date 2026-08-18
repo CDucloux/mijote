@@ -115,7 +115,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     : "";
 
   // Icône « base » (casserole) – SVG inline, cohérente avec l'app.
-  const baseIconSvg = (size = 16): string => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#e8703a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.5 9H7.5L6 8Z"/><line x1="5" y1="8" x2="19" y2="8"/><path d="M6 10H3.5a1.5 1.5 0 0 0 0 3H6"/><path d="M18 10h2.5a1.5 1.5 0 0 1 0 3H18"/><path d="M10 5c0-1 1-1 1-2"/><path d="M14 5c0-1 1-1 1-2"/></svg>`;
+  const baseIconSvg = (size = 16): string => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#6e9a3f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.5 9H7.5L6 8Z"/><line x1="5" y1="8" x2="19" y2="8"/><path d="M6 10H3.5a1.5 1.5 0 0 0 0 3H6"/><path d="M18 10h2.5a1.5 1.5 0 0 1 0 3H18"/><path d="M10 5c0-1 1-1 1-2"/><path d="M14 5c0-1 1-1 1-2"/></svg>`;
 
   const pill = (imgOrEmoji: string | null, name: string | undefined, qty: string, isComp = false): string => {
     const imgHtml = isComp
@@ -261,12 +261,12 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>${recipe.name} – Mijoté</title>
+  <title>${recipe.name} – Cardamome</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,300&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --accent: #e8703a; --text: #1a1714; --text2: #5a5250; --text3: #9a9490; --border: #e8e0d8; --surface: #f9f6f2; }
+    :root { --accent: #6e9a3f; --text: #23281d; --text2: #565b4c; --text3: #838872; --border: #e3e5d9; --surface: #f7f8f1; }
     body { font-family: 'Hanken Grotesk', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .hero-wrap { position: relative; margin-bottom: 24px; }
     .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; display: block; }
@@ -300,7 +300,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .group-title { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; color: var(--accent); margin: 4px 0 10px; }
     /* Sous-préparation d'étapes : bloc encadré, nettement séparé des autres */
     .step-group { border: 1px solid rgba(232, 112, 58, 0.35); border-radius: 14px; padding: 16px 18px 2px; margin-bottom: 20px; background: rgba(232, 112, 58, 0.035); }
-    .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(232, 112, 58, 0.25); }
+    .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(110, 154, 63, 0.28); }
     .step-group-ico { flex-shrink: 0; }
     .step-group .step:last-child { margin-bottom: 16px; }
     /* Intitulé des étapes hors section (« Préparation », « Montage »), même accent que
@@ -389,7 +389,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   ${stepLines}` : ""}
 
   <div class="footer">
-    <span class="footer-brand">Mijoté<span class="dot">·</span></span>
+    <span class="footer-brand">Cardamome<span class="dot">·</span></span>
     <span class="footer-meta">
       <span class="footer-gen">Généré le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}${recipe.history?.length ? `<span class="version-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="14"/></svg>${recipe.history[recipe.history.length - 1].label}</span>` : ""}</span>
     </span>

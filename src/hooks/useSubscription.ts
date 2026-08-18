@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { subscribeToPlan } from "@/lib/firebase/subscription.js";
 
 /**
- * Suit l'état d'abonnement Mijoté+ de l'utilisateur (intégration Stripe maison,
+ * Suit l'état d'abonnement Cardamome+ de l'utilisateur (intégration Stripe maison,
  * cf. docs/stripe-mijote-plus.md).
  *
  * @param uid - L'identifiant de l'utilisateur (ou falsy si déconnecté).

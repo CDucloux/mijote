@@ -39,7 +39,7 @@ function Index({ navigate }) {
   return (
     <>
       <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: "0 0 20px" }}>
-        Retrouvez ici les documents encadrant l'utilisation de Mijoté et le traitement de vos données.
+        Retrouvez ici les documents encadrant l'utilisation de Cardamome et le traitement de vos données.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {LEGAL_DOCS.map(d => (

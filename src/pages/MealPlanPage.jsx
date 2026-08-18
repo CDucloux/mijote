@@ -126,7 +126,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
   const { notify, user, isPlus } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
-  // vers l'offre Mijoté+ quand une fonctionnalité premium est verrouillée.
+  // vers l'offre Cardamome+ quand une fonctionnalité premium est verrouillée.
   const gotoRoute = useNavigate();
   const goPlus = () => gotoRoute("/plus");
   const { household } = useHousehold();
@@ -364,7 +364,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const blob = new Blob([lines.join(CRLF)], { type: "text/calendar;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "Mijoté - Planning repas.ics";
+    a.download = "Cardamome - Planning repas.ics";
     a.click();
     URL.revokeObjectURL(a.href);
     notify?.("Planning exporté dans ton calendrier");

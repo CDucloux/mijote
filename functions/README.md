@@ -1,12 +1,12 @@
-# Cloud Functions : Mijoté
+# Cloud Functions : Cardamome
 
 Fonctions déployées :
 
 - **`importRecipeFromUrl`** / **`importRecipeFromImages`** : import d'une recette
   depuis une URL ou 1–2 photos. Accès vérifié **côté serveur** (admin illimité,
-  abonné Mijoté+ avec quotas jour/mois).
+  abonné Cardamome+ avec quotas jour/mois).
 - **`createStripeCheckout`** / **`createStripePortal`** / **`stripeWebhook`** :
-  paiement Mijoté+ (intégration Stripe maison).
+  paiement Cardamome+ (intégration Stripe maison).
 
 ## Structure & build (TypeScript)
 
@@ -49,7 +49,7 @@ Le code est organisé par **domaine** :
 
 Le brouillon renvoyé porte : ids stables, `_raw` éditable par ingrédient, liaisons
 ingrédients/ustensiles ↔ étapes, images d'étape pertinentes, image principale via
-`og:image`, style de cuisine rapproché de la liste Mijoté.
+`og:image`, style de cuisine rapproché de la liste Cardamome.
 
 ### Modifier le prompt d'extraction
 

@@ -61,7 +61,7 @@ export function DifficultyModal({ data, onClose }) {
       ) : (
         <>
           <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 2px 24px" }}>
-            Mijoté repère les <strong style={{ color: "var(--text)" }}>gestes techniques</strong> dans les étapes{data.inheritedFromBases ? " de la recette et de ses préparations de base" : ""} et retient le plus exigeant, puis ajoute des points selon la charge de travail.
+            Cardamome repère les <strong style={{ color: "var(--text)" }}>gestes techniques</strong> dans les étapes{data.inheritedFromBases ? " de la recette et de ses préparations de base" : ""} et retient le plus exigeant, puis ajoute des points selon la charge de travail.
           </p>
 
           {/* ── Geste dominant ── */}

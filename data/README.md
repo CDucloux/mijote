@@ -1,6 +1,6 @@
 # `data/` : couche de données versionnée
 
-Source de vérité **lisible et configurable** de la base de référence de Mijoté.
+Source de vérité **lisible et configurable** de la base de référence de Cardamome.
 On édite ces fichiers YAML, puis on les pousse vers Firestore.
 
 | Fichier | Cible Firestore | Contenu |
@@ -52,7 +52,7 @@ npm run seed -- --dry-run     # valide et affiche sans écrire (aucune clé requ
 Le service account n'est **jamais** committé (voir `.gitignore`).
 
 > Les préparations de base sont publiées sous l'auteur officiel
-> `mijote-official` (« Mijoté × Escoffier »). Ce `authorUid` synthétique ne
+> `mijote-official` (« Cardamome × Escoffier »). Ce `authorUid` synthétique ne
 > correspond à aucun compte connecté : seul le SDK Admin (qui contourne les
 > règles client) peut les écrire, d'où le script plutôt qu'un import depuis
 > l'app.

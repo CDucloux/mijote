@@ -1,4 +1,4 @@
-# Paiement Mijoté+ : intégration Stripe maison
+# Paiement Cardamome+ : intégration Stripe maison
 
 Le paiement **ne dépend PAS** de l'extension Firebase (`firestore-stripe-payments`),
 annoncée en fin de vie (arrêt mars 2027). Tout vit dans nos propres Cloud Functions
@@ -11,12 +11,12 @@ annoncée en fin de vie (arrêt mars 2027). Tout vit dans nos propres Cloud Func
 | `stripeWebhook` | HTTP | Stripe → Firestore : écrit le statut d'abonnement |
 
 Le front (`src/lib/firebase/subscription.ts`) appelle les deux callables et écoute
-`customers/{uid}/subscriptions` (statut `active`/`trialing`) pour débloquer Mijoté+.
+`customers/{uid}/subscriptions` (statut `active`/`trialing`) pour débloquer Cardamome+.
 Le lien uid Firebase ↔ client Stripe est stocké dans `customers/{uid}.stripeId` et
 dupliqué en métadonnée Stripe (`firebaseUID`). Région des fonctions : `europe-west1`.
 
 ## 1. Produits Stripe (déjà fait)
-Un produit **Mijoté+** avec deux tarifs récurrents : **3,99 €/mois** et **29,99 €/an**.
+Un produit **Cardamome+** avec deux tarifs récurrents : **3,99 €/mois** et **29,99 €/an**.
 Noter les deux identifiants `price_…` (bien ceux du **mode test** pour tester).
 
 ## 2. Secrets côté fonctions
@@ -59,10 +59,10 @@ VITE_STRIPE_PRICE_YEARLY=price_…    # tarif annuel
 # Optionnel : seulement si les fonctions ne sont PAS en europe-west1 :
 # VITE_STRIPE_EXT_REGION=europe-west1
 ```
-Tant que ces prix sont absents, le CTA « Passer à Mijoté+ » affiche « arrive bientôt ».
+Tant que ces prix sont absents, le CTA « Passer à Cardamome+ » affiche « arrive bientôt ».
 
 ## 7. Test de bout en bout (mode test)
-- `/plus` → « Passer à Mijoté+ » → Stripe Checkout.
+- `/plus` → « Passer à Cardamome+ » → Stripe Checkout.
 - Carte de test `4242 4242 4242 4242`, date future, CVC quelconque.
 - Retour sur `/plus?checkout=success` → `isPlus` bascule dès que le webhook a écrit
   l'abonnement (quelques secondes).

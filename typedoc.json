@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "name": "Mijoté : Bibliothèque métier (src/lib)",
+  "name": "Cardamome : Bibliothèque métier (src/lib)",
   "entryPoints": ["src/lib"],
   "entryPointStrategy": "expand",
   "exclude": ["**/__tests__/**", "**/*.test.*"],

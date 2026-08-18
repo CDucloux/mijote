@@ -100,7 +100,7 @@ function FoyerSection() {
   const { household, invites, loading } = useHousehold();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  // Foyer partagé = fonctionnalité Mijoté+ : en gratuit, la carte renvoie vers l'offre.
+  // Foyer partagé = fonctionnalité Cardamome+ : en gratuit, la carte renvoie vers l'offre.
   const openFoyer = () => isPlus ? setOpen(v => !v) : navigate("/plus");
   // Annuaire chargé à la demande, seulement s'il y a un foyer (avatars des membres).
   useEffect(() => { if (household || invites.length) loadDirectory?.(); }, [household, invites.length, loadDirectory]);
@@ -216,7 +216,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
             <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
-              Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 600, color: "var(--text2)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span></span>
+              Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 600, color: "var(--text2)" }}>Cardamome<span style={{ color: "var(--accent)" }}>·</span></span>
             </span>
           </div>
           <UserAvatar />

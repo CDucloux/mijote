@@ -1,13 +1,13 @@
 {
-  "name": "Mijoté",
-  "short_name": "Mijoté",
+  "name": "Cardamome",
+  "short_name": "Cardamome",
   "description": "Créez, affinez et partagez vos recettes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0e0e0f",
-  "theme_color": "#0e0e0f",
+  "background_color": "#10120e",
+  "theme_color": "#10120e",
   "share_target": {
     "action": "/recipes/import-from-url",
     "method": "GET",

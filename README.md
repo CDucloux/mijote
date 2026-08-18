@@ -1,6 +1,6 @@
 <div align="center">
 
-# Mijoté<span>·</span>
+# Cardamome<span>·</span>
 
 **Cuisinez mieux, organisez moins.**
 
@@ -56,7 +56,7 @@ toujours avec vous.
 - 🤖 **Import par IA** : importez une recette depuis une **URL** ou **1 à 2
   photos** d'un livre : extraction, structuration et liaison des ingrédients /
   ustensiles par Claude, qui **détecte aussi les préparations de base** (caramel,
-  pâte, fond…) et leur rendement estimé (réservé aux abonnés **Mijoté+**, quotas
+  pâte, fond…) et leur rendement estimé (réservé aux abonnés **Cardamome+**, quotas
   jour/mois ; illimité pour l'administrateur).
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
   « intelligents », dérivés d'un filtre).
@@ -95,7 +95,7 @@ toujours avec vous.
   Firestore durcies contre l'aspiration des données.
 - 🌗 **Thème clair / sombre** et interface responsive mobile + desktop (PWA
   installable), avec onboarding illustré.
-- 💳 **Mijoté+** : abonnement (mensuel ou annuel, paiement Stripe) qui débloque
+- 💳 **Cardamome+** : abonnement (mensuel ou annuel, paiement Stripe) qui débloque
   l'import IA, le générateur de semaine, la session batch, le foyer partagé, le
   détail du calcul Nutri-Score et les recettes illimitées (50 en plan gratuit).
 
@@ -147,7 +147,7 @@ VITE_ADMIN_EMAIL=...     # e-mail admin (édition de la base de référence, imp
 VITE_FIREBASE_RECAPTCHA_SITE_KEY=...   # active App Check (reCAPTCHA v3) si renseignée
 VITE_APPCHECK_DEBUG_TOKEN=...          # jeton de debug, en développement uniquement
 
-# Mijoté+ / Stripe (optionnel : voir docs/stripe-mijote-plus.md)
+# Cardamome+ / Stripe (optionnel : voir docs/stripe-mijote-plus.md)
 VITE_STRIPE_PRICE_MONTHLY=...   # id du tarif mensuel (price_…)
 VITE_STRIPE_PRICE_YEARLY=...    # id du tarif annuel (price_…)
 ```
@@ -162,7 +162,7 @@ VITE_STRIPE_PRICE_YEARLY=...    # id du tarif annuel (price_…)
 > Laissez la variable vide pour autoriser n'importe quel compte Google.
 > L'import IA (Cloud Functions) requiert en plus le secret serveur
 > `ANTHROPIC_API_KEY` et le paramètre `ADMIN_EMAIL` (voir `functions/README.md`).
-> Tant que `VITE_STRIPE_PRICE_*` est absent, le CTA « Passer à Mijoté+ »
+> Tant que `VITE_STRIPE_PRICE_*` est absent, le CTA « Passer à Cardamome+ »
 > affiche « arrive bientôt » (voir `docs/stripe-mijote-plus.md` pour la mise
 > en place complète, y compris les secrets `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`
 > côté fonctions).
@@ -176,7 +176,7 @@ npm run dev
 L'application est disponible sur `http://localhost:5173`.
 
 > [!TIP]
-> Mijoté est une PWA : depuis le navigateur (mobile ou desktop), utilisez
+> Cardamome est une PWA : depuis le navigateur (mobile ou desktop), utilisez
 > « Installer l'application » pour l'épingler comme une app native, avec un
 > fonctionnement hors-ligne.
 
@@ -211,7 +211,7 @@ npx firebase deploy --only firestore:rules,storage:rules,functions
 
 ## 🔖 Versionner
 
-Mijoté suit le [versionnage sémantique](https://semver.org/lang/fr/).
+Cardamome suit le [versionnage sémantique](https://semver.org/lang/fr/).
 Utilisez `npm version` pour incrémenter la version et créer le tag git associé :
 
 ```shell
@@ -263,5 +263,5 @@ de React et de tout I/O, donc testable en isolation.
 ---
 
 <div align="center">
-<sub>© 2026 Mijoté · Tous droits réservés</sub>
+<sub>© 2026 Cardamome · Tous droits réservés</sub>
 </div>

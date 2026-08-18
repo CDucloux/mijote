@@ -5,7 +5,7 @@ title: Politique de confidentialité
 order: 2
 ---
 
-Cette politique explique quelles données personnelles Mijoté traite, pourquoi, sur quelle base légale, et quels sont vos droits, conformément au Règlement (UE) 2016/679 (**RGPD**) et à la loi Informatique et Libertés.
+Cette politique explique quelles données personnelles Cardamome traite, pourquoi, sur quelle base légale, et quels sont vos droits, conformément au Règlement (UE) 2016/679 (**RGPD**) et à la loi Informatique et Libertés.
 
 ## Responsable du traitement
 

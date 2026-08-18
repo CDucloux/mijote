@@ -126,7 +126,7 @@ export function ImportFromUrl() {
 
           {/* Aides */}
           <HintCard icon="share" iconColor="var(--blue)" tint="rgba(91,156,246,0.14)">
-            Tu peux aussi <strong style={{ color: "var(--text)" }}>partager une page vers Mijoté</strong> depuis ton navigateur : la recette arrive directement ici.
+            Tu peux aussi <strong style={{ color: "var(--text)" }}>partager une page vers Cardamome</strong> depuis ton navigateur : la recette arrive directement ici.
           </HintCard>
         </div>
       </div>

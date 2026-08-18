@@ -3,7 +3,7 @@
 // testables sans réseau ni credentials. Cf. stripeHelpers.test.ts.
 import type Stripe from "stripe";
 
-/** Champs Firestore dérivés d'un abonnement Stripe (état d'accès Mijoté+). */
+/** Champs Firestore dérivés d'un abonnement Stripe (état d'accès Cardamome+). */
 export interface SubscriptionDocFields {
   status: Stripe.Subscription.Status;
   price: string | null;
@@ -17,7 +17,7 @@ export const ACTIVE_STATUSES: readonly Stripe.Subscription.Status[] = ["active",
 
 /**
  * @param status - Statut Stripe de l'abonnement.
- * @returns `true` si le statut donne accès à Mijoté+.
+ * @returns `true` si le statut donne accès à Cardamome+.
  */
 export function isActiveStatus(status: string | undefined | null): boolean {
   return ACTIVE_STATUSES.includes(status as Stripe.Subscription.Status);

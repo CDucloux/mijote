@@ -6,7 +6,7 @@ import { LEGAL_DOCS } from "../constants/legalDocs.js";
 export function DesktopSidebar({ tab, setTab }) {
   return (
     <div className="desktop-sidebar">
-      <div className="desktop-sidebar-logo">Mijoté<span>·</span></div>
+      <div className="desktop-sidebar-logo">Cardamome<span>·</span></div>
       <nav style={{ flex: 1 }}>
         {TABS.map(t => {
           const active = tab === t.id;

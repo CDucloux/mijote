@@ -152,7 +152,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // sement ont un comportement défini et le brouillon extrait n'est plus perdu par
   // mégarde (il est aussi mis en cache en sessionStorage, restauré ci-dessous).
   const newRoute = recipeSeg === "new";
-  // Page d'offre Mijoté+ (route dédiée).
+  // Page d'offre Cardamome+ (route dédiée).
   const plusRoute = location.pathname === "/plus";
   const cookModeRoute = recipeSeg.endsWith("/cookmode");
   const editRoute = recipeSeg.endsWith("/edit");
@@ -233,7 +233,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
   }), []);
-  // Accès à l'offre Mijoté+ : abonnement Stripe actif (extension Firebase) OU
+  // Accès à l'offre Cardamome+ : abonnement Stripe actif (extension Firebase) OU
   // admin (accès complet du propriétaire de l'app).
   const subscribed = useSubscription(user?.uid);
   const isPlus = isAdmin || subscribed;
@@ -276,9 +276,9 @@ function AppInner({ user, isDark, toggleTheme }) {
   // que `name` : certains appelants passent l'évènement click en argument.
   const startNewRecipe = useCallback((preset) => {
     // Quota du plan gratuit vérifié À L'OUVERTURE (évite de remplir le formulaire
-    // pour rien) : au-delà de la limite → offre Mijoté+.
+    // pour rien) : au-delà de la limite → offre Cardamome+.
     if (!canAddRecipes(recipes, isPlus, 1)) {
-      notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");
+      notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
       navigate("/plus");
       return;
     }
@@ -336,7 +336,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // de liste ; recalcule les compteurs de carnets (la copie hérite des carnets).
   const duplicateRecipe = useCallback((recipe) => {
     if (!canAddRecipes(recipes, isPlus, 1)) {
-      notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");
+      notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
       navigate("/plus");
       return;
     }
@@ -374,7 +374,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     const ingName = ingFicheId ? ingredientDB.find(d => d.id === ingFicheId)?.name : null;
     // Écrans hors onglets (dérivés de l'URL) : leur propre titre plutôt que le repli « Accueil ».
     const routeName = plusRoute ? "Abonnement" : null;
-    document.title = `Mijoté | ${recipeName || ingName || routeName || TAB_TITLES[tab] || "Accueil"}`;
+    document.title = `Cardamome | ${recipeName || ingName || routeName || TAB_TITLES[tab] || "Accueil"}`;
   }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB, plusRoute]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
@@ -539,7 +539,7 @@ function AppInner({ user, isDark, toggleTheme }) {
         <div className="rotate-guard" aria-hidden="true">
           <div className="rotate-guard__icon">📱</div>
           <div className="rotate-guard__title">Tourne ton téléphone</div>
-          <div className="rotate-guard__hint">Mijoté est pensé pour le mode portrait. Remets ton écran à la verticale pour continuer.</div>
+          <div className="rotate-guard__hint">Cardamome est pensé pour le mode portrait. Remets ton écran à la verticale pour continuer.</div>
         </div>
         {notification && (
           <div style={{ position: "fixed", left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none",

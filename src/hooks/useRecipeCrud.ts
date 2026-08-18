@@ -55,7 +55,7 @@ export function useRecipeCrud({
   // renvoie vers l'offre, désactivé depuis l'éditeur (qui masquerait /plus).
   const guardQuota = (adding = 1, redirect = true): boolean => {
     if (canAddRecipes(recipes, isPlus, adding)) return true;
-    notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Mijoté+ pour en créer plus.`, "warning");
+    notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
     if (redirect) navigate("/plus");
     return false;
   };

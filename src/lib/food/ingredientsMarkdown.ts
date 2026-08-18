@@ -88,7 +88,7 @@ export const ING_MD_COLUMNS: MdColumn[] = [
 ];
 
 /**
- * Colonnes minimales attendues dans l'en-tête d'un export Mijoté valide. Garde-fou :
+ * Colonnes minimales attendues dans l'en-tête d'un export Cardamome valide. Garde-fou :
  * un Markdown sans ces colonnes n'est pas un export d'ingrédients et ne doit surtout
  * pas écraser la base master.
  */

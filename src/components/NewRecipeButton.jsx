@@ -7,8 +7,8 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── BOUTON « NOUVELLE » (choix : import IA par lien/photo, ou saisie manuelle) ─
 // Le sélecteur est visible par tous. Les imports IA sont une fonctionnalité
-// Mijoté+ : en plan gratuit ils portent un badge et renvoient vers /plus ; en
-// Mijoté+ ils ouvrent leur page dédiée (/recipes/import-from-url | -picture).
+// Cardamome+ : en plan gratuit ils portent un badge et renvoient vers /plus ; en
+// Cardamome+ ils ouvrent leur page dédiée (/recipes/import-from-url | -picture).
 
 // Pastille « IA » : pastille orange, anneau blanc fin (net dans les deux
 // thèmes) et un petit robot blanc (yeux évidés couleur pastille), centré.
@@ -66,7 +66,7 @@ export function NewRecipeButton({ onManual }) {
   const [open, setOpen] = useState(false);
 
   const goManual = () => { setOpen(false); onManual(); };
-  // Imports IA = fonctionnalité Mijoté+. En plan gratuit, on renvoie vers la page
+  // Imports IA = fonctionnalité Cardamome+. En plan gratuit, on renvoie vers la page
   // d'offre au lieu d'ouvrir l'import.
   const goImportOrPlus = (path) => { setOpen(false); navigate(isPlus ? path : "/plus"); };
   const plusBadge = !isPlus ? <PlusBadge /> : undefined;
