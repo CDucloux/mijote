@@ -374,7 +374,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
         {recipes.length === 0 ? (
           // ── Première connexion : 0 recette, c'est normal → on invite, sans afficher « Carnets » ni « Recettes (0) » ──
           <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 420, margin: "0 auto" }}>
-            <EmptyArt name="casserole" size={140} style={{ marginBottom: 10 }} />
+            <EmptyArt name="bibliotheque" size={140} style={{ marginBottom: 10 }} />
             <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta bibliothèque</h3>
             <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
               Elle est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.

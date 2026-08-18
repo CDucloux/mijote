@@ -2485,14 +2485,6 @@ select {
   overflow: hidden;
 }
 
-.loading-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.13;
-  pointer-events: none;
-}
-
 .loading-card {
   position: relative;
   z-index: 1;
@@ -2541,17 +2533,12 @@ select {
   animation: spin 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-.loading-emoji {
+.loading-art {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  line-height: 1;
-  /* Correction optique : le glyph 🫕 est dessiné légèrement décentré
-     dans sa boîte (espace interne asymétrique), on le recale. */
-  transform: translate(0.5px, -0.5px);
 }
 
 .loading-label {
@@ -2598,14 +2585,6 @@ select {
   background: var(--bg);
   position: relative;
   overflow: hidden;
-}
-
-.login-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.18;
-  pointer-events: none;
 }
 
 .login-card {

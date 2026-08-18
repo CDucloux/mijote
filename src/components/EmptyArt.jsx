@@ -112,6 +112,33 @@ const ARTS = {
       </g>
     </>
   ),
+  // Rangée de livres de cuisine sur une étagère, hauteurs et largeurs inégales,
+  // un volume qui s'appuie de travers (le côté fait-main), un signet accent qui
+  // dépasse du plus grand. « Ta bibliothèque » : l'état vide de la liste des recettes.
+  bibliotheque: (
+    <>
+      <g className="ink-body" fill="currentColor">
+        {/* lavis : ombre au sol + contact des livres sur la planche (volume) */}
+        <ellipse cx="59" cy="96" rx="31" ry="2.7" opacity="0.1" />
+        <path opacity="0.08" d="M32 85 L68 85 L67 90 L33 90 Z" />
+        {/* planche de l'étagère : barre effilée, un peu ondulée */}
+        <path d="M26 90 C44 88 76 88 94 90 L92 95 C74 93 46 93 28 95 Z" />
+        {/* dos des livres debout : formes pleines effilées, tops inégaux */}
+        <path d="M33 89 L33.6 57 C34.6 55 40 55 40.8 57 L41.4 89 Z" />
+        <path d="M43.6 89 L44 47 C44.8 45.2 48.4 45.2 49 47 L49.2 89 Z" />
+        <path d="M51.4 89 L51.8 60 C52.8 58 57.6 58 58.4 60 L58.8 89 Z" />
+        <path d="M61 89 L61.4 53 C62.2 51.2 66.4 51.2 67 53 L67.2 89 Z" />
+        {/* le livre qui penche : appuyé de travers, un vide triangulaire dessous */}
+        <path d="M72 88 L77.4 89 L73 59 L68 58 Z" />
+        {/* étiquettes de dos : traits fins (contraste avec les formes pleines) */}
+        <path fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" d="M35 66 L39.4 66" />
+        <path fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" d="M35 70.5 L39.4 70.5" />
+        <path fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" d="M53 72 L57.2 72" />
+      </g>
+      {/* accent unique : le signet qui dépasse du dos du plus grand livre */}
+      <path className="ink-accent" fill="var(--accent)" d="M44.9 42.5 L47.5 42.5 L47.5 62 L46.2 59 L44.9 62 Z" />
+    </>
+  ),
   // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
   // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
   liste: (
@@ -135,7 +162,7 @@ const ARTS = {
 /**
  * Illustration d'état vide au trait, avec le rendu « encre » commun.
  *
- * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `liste`).
+ * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `liste`, `bibliotheque`).
  * @param size Côté du carré de rendu en pixels (viewBox interne fixe).
  * @param style Styles complémentaires posés sur le `<svg>` (ex. marge basse).
  */
