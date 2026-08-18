@@ -14,16 +14,19 @@ const STROKE = { fill: "none", stroke: "currentColor", strokeWidth: 2.3, strokeL
 // Croquis disponibles, indexés par nom. Chacun est un fragment de tracés dans un
 // viewBox 0 0 120 120 ; la déformation est ajoutée par le filtre en amont.
 const ARTS = {
-  // Cocotte ouverte et vide + deux volutes de vapeur (une chaude) : « à remplir ».
+  // Cocotte couverte (couvercle à bouton, deux anses) d'où montent deux volutes de
+  // vapeur (une chaude) : « ça mijote ». Les fumées portent une classe pour s'animer
+  // en boucle après s'être dessinées (cf. .ink-steam dans global.css).
   casserole: (
     <>
-      <path {...STROKE} d="M32 60 C31 74 35 87 41 92 C53 98 71 98 83 92 C89 87 92 74 91 60" />
-      <path {...STROKE} d="M32 60 C42 66 82 66 91 60" />
-      <path {...STROKE} d="M32 60 C42 54 82 54 91 60" />
+      <path {...STROKE} d="M32 58 C31 73 35 86 43 92 C54 98 66 98 77 92 C85 86 89 73 88 58" />
+      <path {...STROKE} d="M32 58 C43 63 77 63 88 58" />
+      <path {...STROKE} d="M33 57 C37 46 83 46 87 57" />
+      <path {...STROKE} d="M55 46 C56 41 64 41 65 46" />
       <path {...STROKE} d="M32 66 C24 63 20 68 22 73 C23 76 27 77 31 75" />
-      <path {...STROKE} d="M91 66 C99 63 103 68 101 73 C100 76 96 77 92 75" />
-      <path {...STROKE} d="M54 52 C50 45 57 41 53 33 C50 27 56 23 53 17" />
-      <path {...STROKE} stroke="var(--accent)" d="M70 52 C66 46 73 42 69 34 C66 29 72 25 69 19" />
+      <path {...STROKE} d="M88 66 C96 63 100 68 98 73 C97 76 93 77 89 75" />
+      <path {...STROKE} className="ink-steam" d="M50 44 C47 38 53 34 50 27 C47 22 52 18 49 13" />
+      <path {...STROKE} className="ink-steam2" stroke="var(--accent)" d="M70 44 C67 38 73 34 70 27 C67 22 72 18 69 13" />
     </>
   ),
   // Panier de marché vide, tressage suggéré, un brin d'herbe posé sur le bord (accent).
@@ -79,13 +82,13 @@ const ARTS = {
   // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
   liste: (
     <>
-      <path {...STROKE} d="M44 30 C44 28 45.5 27 47.5 27 L72.5 27 C74.5 27 76 28 76 30 L76 94 C76 96 74.5 97 72.5 97 L47.5 97 C45.5 97 44 96 44 94 Z" />
-      <path {...STROKE} d="M60 45 L71 45" />
-      <path {...STROKE} d="M60 62 L71 62" />
-      <path {...STROKE} d="M60 79 L71 79" />
-      <path {...STROKE} stroke="var(--accent)" d="M49 45 L51.5 48 L56 41" />
-      <path {...STROKE} stroke="var(--accent)" d="M49 62 L51.5 65 L56 58" />
-      <path {...STROKE} stroke="var(--accent)" d="M49 79 L51.5 82 L56 75" />
+      <path {...STROKE} d="M32 31 C32 28.5 34 27 36.5 27 L83.5 27 C86 27 88 28.5 88 31 L88 93 C88 95.5 86 97 83.5 97 L36.5 97 C34 97 32 95.5 32 93 Z" />
+      <path {...STROKE} d="M55 45 L80 45" />
+      <path {...STROKE} d="M55 62 L80 62" />
+      <path {...STROKE} d="M55 79 L80 79" />
+      <path {...STROKE} stroke="var(--accent)" d="M40 45 L43 48 L48.5 40" />
+      <path {...STROKE} stroke="var(--accent)" d="M40 62 L43 65 L48.5 57" />
+      <path {...STROKE} stroke="var(--accent)" d="M40 79 L43 82 L48.5 74" />
     </>
   ),
 };
