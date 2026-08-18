@@ -1,5 +1,11 @@
 # Changelog – Mijoté
 
+## v3.20.0 – Safran · Tout au pinceau
+
+### Interface
+- **Tous les croquis d'états vides redessinés au pinceau** : cocotte, panier, assiette, loupe, bocal et liste passent du contour d'épaisseur constante à un vrai trait à l'encre (formes pleines à épaisseur variable, lavis pour le volume, ondulation plus ample façon dessin à la main). Chaque scène se révèle par un balayage à l'apparition, puis sa touche chaude (le seul accent) vient se poser.
+- **Détails plus justes** : la cocotte fume désormais une vraie vapeur qui monte et se dissipe (au lieu d'un va-et-vient), avec un blanc d'air sous les volutes ; l'assiette accueille un œuf au plat (le jaune fait l'accent) encadré d'une fourchette et d'un couteau ; la loupe a un manche à la bonne échelle. Le tout respecte la réduction des animations.
+
 ## v3.19.6 – Safran · La cocotte accueille
 
 ### Interface

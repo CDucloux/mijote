@@ -231,31 +231,80 @@ body::after {
   }
 }
 
-/* Volutes de vapeur de la cocotte : une fois dessinées, elles montent et respirent
-   en boucle (le souffle « ça mijote »), la 2ᵉ décalée pour un rendu organique.
+/* Balayage de révélation pour les formes PLEINES (traits au pinceau) : le
+   `stroke-dashoffset` ne dessine que les tracés, pas les remplissages. On révèle
+   donc le groupe par un `clip-path` qui s'ouvre du bas vers le haut, comme si le
+   dessin était posé au pinceau. */
+@keyframes inkWipeUp {
+  from { clip-path: inset(100% 0 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+.ink-art > .ink-wipe-up {
+  /* Le groupe hérite du `stroke-dasharray` du cascade `.ink-art > *`, ce qui
+     rendrait ses traits pleins « en pointillé effacé » (invisibles) : on le coupe
+     pour que les tracés bold à l'intérieur s'affichent, révélés par le balayage. */
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  clip-path: inset(100% 0 0 0);
+  animation: inkWipeUp 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.15s both;
+}
+
+/* Accent d'un croquis (jaune d'oeuf, coches, brin, « ? »…) : il « pose » à la fin,
+   une fois le dessin balayé, avec un léger rebond. */
+@keyframes inkPop {
+  0%   { opacity: 0; transform: scale(0.55); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.ink-art > .ink-accent {
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: inkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.85s both;
+}
+
+/* Volutes de vapeur : elles montent et se dissipent (jamais de va-et-vient, qui
+   ferait « bobbing »). Chaque volute repart invisible en bas, donc aucun à-coup ;
+   la 2ᵉ est décalée d'une demi-période pour un filet continu sans clignotement.
    Coupé si l'utilisateur demande moins d'animations. */
-@keyframes inkSteam {
-  0%, 100% { opacity: 0.3; transform: translate(0, 3px); }
-  50% { opacity: 0.95; transform: translate(-1px, -4px); }
+@keyframes inkSteamRise {
+  0%   { opacity: 0;    transform: translateY(6px); }
+  22%  { opacity: 0.85; }
+  78%  { opacity: 0.5;  }
+  100% { opacity: 0;    transform: translateY(-9px); }
 }
 
 .ink-art > .ink-steam,
 .ink-art > .ink-steam2 {
-  animation:
-    inkDraw 0.8s cubic-bezier(0.65, 0, 0.35, 1) 0.55s forwards,
-    inkSteam 3s ease-in-out 1.5s infinite;
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  opacity: 0;
+  animation: inkSteamRise 2.6s ease-in-out 1s infinite;
 }
 
 .ink-art > .ink-steam2 {
-  animation-delay: 0.62s, 2.1s;
+  animation-delay: 2.3s;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ink-art > .ink-wipe-up {
+    animation: none;
+    clip-path: none;
+  }
+  .ink-art > .ink-accent {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
   .ink-art > .ink-steam,
   .ink-art > .ink-steam2 {
     animation: none;
     stroke-dasharray: none;
     stroke-dashoffset: 0;
+    opacity: 1;
   }
 }
 
