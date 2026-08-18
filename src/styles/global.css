@@ -231,27 +231,25 @@ body::after {
   }
 }
 
-/* Balayage de révélation pour les formes PLEINES (traits au pinceau) : le
-   `stroke-dashoffset` ne dessine que les tracés, pas les remplissages. On révèle
-   donc le groupe par un `clip-path` qui s'ouvre du bas vers le haut, comme si le
-   dessin était posé au pinceau. */
-@keyframes inkWipeUp {
-  from { clip-path: inset(100% 0 0 0); }
-  to   { clip-path: inset(0 0 0 0); }
+/* Corps d'un croquis au pinceau (formes PLEINES + traits bold) : il apparaît en
+   fondu doux, plutôt qu'un dessin qui se remplit du bas vers le haut, qui se
+   lisait mal. L'entrée soignée vient surtout du « pop » de l'accent ensuite. */
+@keyframes inkFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.ink-art > .ink-wipe-up {
+.ink-art > .ink-body {
   /* Le groupe hérite du `stroke-dasharray` du cascade `.ink-art > *`, ce qui
      rendrait ses traits pleins « en pointillé effacé » (invisibles) : on le coupe
-     pour que les tracés bold à l'intérieur s'affichent, révélés par le balayage. */
+     pour que les tracés bold à l'intérieur s'affichent. */
   stroke-dasharray: none;
   stroke-dashoffset: 0;
-  clip-path: inset(100% 0 0 0);
-  animation: inkWipeUp 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.15s both;
+  animation: inkFade 0.45s ease 0.05s both;
 }
 
 /* Accent d'un croquis (jaune d'oeuf, coches, brin, « ? »…) : il « pose » à la fin,
-   une fois le dessin balayé, avec un léger rebond. */
+   une fois le dessin apparu, avec un léger rebond. */
 @keyframes inkPop {
   0%   { opacity: 0; transform: scale(0.55); }
   100% { opacity: 1; transform: scale(1); }
@@ -263,7 +261,7 @@ body::after {
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
-  animation: inkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.85s both;
+  animation: inkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s both;
 }
 
 /* Volutes de vapeur : elles montent et se dissipent (jamais de va-et-vient, qui
@@ -290,9 +288,9 @@ body::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ink-art > .ink-wipe-up {
+  .ink-art > .ink-body {
     animation: none;
-    clip-path: none;
+    opacity: 1;
   }
   .ink-art > .ink-accent {
     animation: none;
