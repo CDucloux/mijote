@@ -86,7 +86,7 @@ export function NewRecipeButton({ onManual }) {
               autres feuilles retravaillées). */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
             <span style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
-              <Icon name="sparkle" size={20} color="var(--accent)" />
+              <Icon name="book" size={20} color="var(--accent)" />
             </span>
             <div style={{ minWidth: 0 }}>
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Nouvelle recette</h3>
