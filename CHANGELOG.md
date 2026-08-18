@@ -1,5 +1,10 @@
 # Changelog – Mijoté
 
+## v3.19.6 – Safran · La cocotte accueille
+
+### Interface
+- **Hero de connexion revu** : la page d'accueil affiche la cocotte à l'encre (avec sa vapeur qui monte) plutôt que la toque, plus fidèle à l'esprit Mijoté. Le doux flottement du logo est conservé.
+
 ## v3.19.5 – Safran · Bienvenue, chef
 
 ### Interface
