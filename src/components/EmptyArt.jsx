@@ -75,12 +75,25 @@ const ARTS = {
       <path {...STROKE} stroke="var(--accent)" d="M88 59 L88 60" />
     </>
   ),
+  // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
+  // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
+  liste: (
+    <>
+      <path {...STROKE} d="M44 30 C44 28 45.5 27 47.5 27 L72.5 27 C74.5 27 76 28 76 30 L76 94 C76 96 74.5 97 72.5 97 L47.5 97 C45.5 97 44 96 44 94 Z" />
+      <path {...STROKE} d="M60 45 L71 45" />
+      <path {...STROKE} d="M60 62 L71 62" />
+      <path {...STROKE} d="M60 79 L71 79" />
+      <path {...STROKE} stroke="var(--accent)" d="M49 45 L51.5 48 L56 41" />
+      <path {...STROKE} stroke="var(--accent)" d="M49 62 L51.5 65 L56 58" />
+      <path {...STROKE} stroke="var(--accent)" d="M49 79 L51.5 82 L56 75" />
+    </>
+  ),
 };
 
 /**
  * Illustration d'état vide au trait, avec le rendu « encre » commun.
  *
- * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`).
+ * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `liste`).
  * @param size Côté du carré de rendu en pixels (viewBox interne fixe).
  * @param style Styles complémentaires posés sur le `<svg>` (ex. marge basse).
  */
