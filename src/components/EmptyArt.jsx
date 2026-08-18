@@ -8,8 +8,12 @@ import { useId } from "react";
 // pinceau à tous les tracés, d'un écran à l'autre. Le trait suit `currentColor`
 // (donc le thème clair/sombre) ; un seul élément par croquis passe en accent
 // terracotta, la touche chaude de Mijoté, jamais le monochrome intégral.
-
-const STROKE = { fill: "none", stroke: "currentColor", strokeWidth: 2.3, strokeLinecap: "round", strokeLinejoin: "round" };
+//
+// Le trait est fait au « pinceau » : les marques principales sont des FORMES
+// PLEINES effilées (épaisseur variable), pas des `stroke` uniformes, épaulées de
+// lavis translucides pour le volume. Chaque croquis se révèle par un balayage
+// bas->haut (le corps, groupe `.ink-wipe-up`) puis l'accent qui pose à la fin
+// (`.ink-accent`), sauf la cocotte dont l'accent est la vapeur montante.
 
 // Croquis disponibles, indexés par nom. Chacun est un fragment de tracés dans un
 // viewBox 0 0 120 120 ; la déformation est ajoutée par le filtre en amont.
@@ -43,66 +47,87 @@ const ARTS = {
       <path className="ink-steam2" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M69 35 C74 29 64 25 69 18 C74 12 65 8 70 3" />
     </>
   ),
-  // Panier de marché vide, tressage suggéré, un brin d'herbe posé sur le bord (accent).
+  // Panier de marché vide : anse en arche pleine, panse au trait épaissi, rebord en
+  // lentille, lavis d'intérieur, deux fils de tressage, et un brin d'herbe (accent).
   panier: (
     <>
-      <path {...STROKE} d="M37 58 C40 27 80 27 83 58" />
-      <path {...STROKE} d="M28 58 L40 92 C52 97 68 97 80 92 L92 58" />
-      <path {...STROKE} d="M28 58 C45 64 75 64 92 58" />
-      <path {...STROKE} d="M28 58 C45 53 75 53 92 58" />
-      <path {...STROKE} d="M47 61 L50 90" />
-      <path {...STROKE} d="M60 62 L60 93" />
-      <path {...STROKE} d="M73 61 L70 90" />
-      <path {...STROKE} stroke="var(--accent)" d="M77 57 C79 51 79 47 77 43" />
-      <path {...STROKE} stroke="var(--accent)" d="M77 49 C74 47 72 48 71 50" />
-      <path {...STROKE} stroke="var(--accent)" d="M77 52 C80 50 82 51 83 53" />
+      <g className="ink-wipe-up" fill="currentColor">
+        <path opacity="0.09" d="M31 58 C45 63 75 63 89 58 C86 71 78 85 60 85 C42 85 34 71 31 58 Z" />
+        <path d="M37 56 C40 27 80 27 83 56 C79 33 41 33 37 56 Z" />
+        <path fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" d="M28 57 L40 91 C52 96 68 96 80 91 L92 57" />
+        <path d="M28 57 C45 63 75 63 92 57 C75 61 45 61 28 57 Z" />
+        <path fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M48 62 L51 89" />
+        <path fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M72 62 L69 89" />
+      </g>
+      <g className="ink-accent" fill="none" stroke="var(--accent)" strokeWidth="2.2" strokeLinecap="round">
+        <path d="M78 56 C80 48 80 43 78 38" />
+        <path d="M78 47 C74 45 72 46 71 48" />
+        <path d="M78 50 C81 48 83 49 84 51" />
+      </g>
     </>
   ),
-  // Assiette dressée, fourchette et couteau, un filet de vapeur (accent) : « prêt à cuisiner ».
+  // Assiette dressée : rebord en anneau plein, lavis de creux, fourchette et couteau
+  // de part et d'autre, un oeuf au plat dont le jaune est l'accent : « prêt à manger ».
   assiette: (
     <>
-      <ellipse {...STROKE} cx="60" cy="66" rx="27" ry="18" />
-      <ellipse {...STROKE} cx="60" cy="66" rx="17" ry="11" />
-      <path {...STROKE} d="M31 46 C30 62 31 80 33 90" />
-      <path {...STROKE} d="M27 44 L28 55" />
-      <path {...STROKE} d="M31 44 L31 55" />
-      <path {...STROKE} d="M35 44 L34 55" />
-      <path {...STROKE} d="M89 44 C90 62 89 80 87 90" />
-      <path {...STROKE} d="M89 44 C93 48 93 54 89 58" />
-      <path {...STROKE} stroke="var(--accent)" d="M60 50 C56 43 63 39 59 32" />
+      <g className="ink-wipe-up" fill="currentColor">
+        <ellipse cx="60" cy="86" rx="27" ry="3.5" opacity="0.1" />
+        <path fillRule="evenodd" d="M60 52 C75 52 87 59 87 68 C87 77 75 84 60 84 C45 84 33 77 33 68 C33 59 45 52 60 52 Z M60 58 C48 58 41 63 41 68 C41 73 48 78 60 78 C72 78 79 73 79 68 C79 63 72 58 60 58 Z" />
+        <ellipse cx="60" cy="68" rx="17" ry="10" opacity="0.08" />
+        <path fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" d="M22 63 L22 88" />
+        <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M18 50 L19 63" />
+        <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M22 50 L22 63" />
+        <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M26 50 L25 63" />
+        <path fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" d="M98 64 L98 88" />
+        <path fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" d="M98 50 C101 54 101 60 98 64" />
+        <path fillOpacity="0.06" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" d="M49 67 C47 61 53 57 60 59 C67 56 74 60 72 67 C75 72 68 76 61 74 C53 76 49 72 49 67 Z" />
+      </g>
+      <ellipse className="ink-accent" cx="62" cy="66" rx="5.4" ry="4.7" fill="var(--accent)" />
     </>
   ),
-  // Loupe avec un reflet (accent) : « rien trouvé », pour les recherches sans résultat.
+  // Loupe : lentille en anneau plein, verre en lavis, manche en tige pleine, un reflet
+  // (accent). « Rien trouvé », pour les recherches sans résultat.
   loupe: (
     <>
-      <ellipse {...STROKE} cx="53" cy="52" rx="24" ry="24" />
-      <path {...STROKE} d="M70 69 C78 77 83 82 90 90" />
-      <path {...STROKE} d="M67 72 C73 78 78 82 85 88" />
-      <path {...STROKE} stroke="var(--accent)" d="M44 42 C38 47 36 55 40 63" />
+      <g className="ink-wipe-up" fill="currentColor">
+        <circle cx="52" cy="50" r="19" opacity="0.07" />
+        <path fillRule="evenodd" d="M52 26 A25 25 0 1 0 52 76 A25 25 0 1 0 52 26 Z M52 32 A19 19 0 1 1 52 70 A19 19 0 1 1 52 32 Z" />
+        <path d="M67 68 L90 91 L94 87 L71 64 Z" />
+      </g>
+      <path className="ink-accent" fill="none" stroke="var(--accent)" strokeWidth="2.2" strokeLinecap="round" d="M43 42 C37 47 35 55 39 63" />
     </>
   ),
   // Bocal de placard vide + un « ? » (accent) posé à côté : l'ingrédient cherché
   // n'est pas au catalogue. Pour les recherches d'ingrédient sans résultat (stock).
   bocal: (
     <>
-      <path {...STROKE} d="M46 33 C46 30 72 30 72 33 L72 40 C72 43 46 43 46 40 Z" />
-      <path {...STROKE} d="M48 40 C48 47 42 48 42 56 L42 86 C42 92 47 96 53 96 L65 96 C71 96 76 92 76 86 L76 56 C76 48 70 47 70 40" />
-      <path {...STROKE} d="M47 67 C47 65 71 65 71 67 L71 80 C71 82 47 82 47 80 Z" />
-      <path {...STROKE} stroke="var(--accent)" d="M82 44 C81 37 95 36 94 45 C93 49 88 49 88 54" />
-      <path {...STROKE} stroke="var(--accent)" d="M88 59 L88 60" />
+      <g className="ink-wipe-up" fill="currentColor">
+        <path opacity="0.08" d="M42 45 L42 86 C42 90 45 92 49 92 L67 92 C71 92 74 90 74 86 L74 45 Z" />
+        <path d="M45 32 C45 30 46 29 48 29 L68 29 C70 29 71 30 71 32 L71 39 C71 41 70 42 68 42 L48 42 C46 42 45 41 45 39 Z" />
+        <path fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" d="M43 42 C43 49 40 51 40 59 L40 87 C40 92 44 95 49 95 L67 95 C72 95 76 92 76 87 L76 59 C76 51 73 49 73 42" />
+      </g>
+      <g className="ink-accent" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round">
+        <path d="M83 45 C82 38 96 37 95 46 C94 50 89 50 89 55" />
+        <path d="M89 60 L89 61" />
+      </g>
     </>
   ),
   // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
   // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
   liste: (
     <>
-      <path {...STROKE} d="M32 31 C32 28.5 34 27 36.5 27 L83.5 27 C86 27 88 28.5 88 31 L88 93 C88 95.5 86 97 83.5 97 L36.5 97 C34 97 32 95.5 32 93 Z" />
-      <path {...STROKE} d="M55 45 L80 45" />
-      <path {...STROKE} d="M55 62 L80 62" />
-      <path {...STROKE} d="M55 79 L80 79" />
-      <path {...STROKE} stroke="var(--accent)" d="M40 45 L43 48 L48.5 40" />
-      <path {...STROKE} stroke="var(--accent)" d="M40 62 L43 65 L48.5 57" />
-      <path {...STROKE} stroke="var(--accent)" d="M40 79 L43 82 L48.5 74" />
+      <g className="ink-wipe-up" fill="currentColor">
+        <path opacity="0.07" d="M34 30 L86 30 L86 96 L34 96 Z" />
+        <path fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" d="M34 32 C34 30 35 29 37 29 L83 29 C85 29 86 30 86 32 L86 92 C86 94 85 95 83 95 L37 95 C35 95 34 94 34 92 Z" />
+        <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M55 46 L79 46" />
+        <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M55 62 L79 62" />
+        <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M55 78 L79 78" />
+      </g>
+      <g className="ink-accent" fill="none" stroke="var(--accent)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M40 46 L44 50 L50 41" />
+        <path d="M40 62 L44 66 L50 57" />
+        <path d="M40 78 L44 82 L50 73" />
+      </g>
     </>
   ),
 };
@@ -125,8 +150,8 @@ export function EmptyArt({ name, size = 128, style }) {
       style={{ color: "var(--text2)", flexShrink: 0, ...style }}>
       <defs>
         <filter id={fid} x="-25%" y="-25%" width="150%" height="150%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.017" numOctaves="2" seed="7" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" xChannelSelector="R" yChannelSelector="G" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="7" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.3" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
       <g className="ink-art" filter={`url(#${fid})`}>{art}</g>
