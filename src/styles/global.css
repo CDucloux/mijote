@@ -202,6 +202,11 @@ body {
   margin: 0 auto;
   position: relative;
   overflow: hidden;
+  /* Edge-to-edge (Android 15+, coquille Capacitor) : la WebView peint sous la
+     barre de statut. On réserve l'inset haut pour que les en-têtes ne remontent
+     pas dedans (le bas est déjà géré : tab bar + body::after). box-sizing:border-box
+     → le padding est absorbé dans les 100svh, sans débordement. Nul hors natif. */
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Zone système du bas (barre de navigation Android / home indicator) peinte à la
@@ -2619,7 +2624,7 @@ select {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px;
+  padding: calc(32px + env(safe-area-inset-top)) 24px calc(32px + env(safe-area-inset-bottom));
   background: var(--bg);
   position: relative;
   overflow: hidden;
@@ -2739,7 +2744,7 @@ select {
 
 .login-theme-toggle {
   position: absolute;
-  top: 20px;
+  top: calc(20px + env(safe-area-inset-top));
   right: 20px;
   z-index: 10;
   display: flex;
