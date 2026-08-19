@@ -26,7 +26,7 @@ function SeasonFrieze({ months }) {
         <span style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600 }}>Sa saison</span>
         <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>{count} mois / an</span>
       </div>
-      <SeasonBar months={months} />
+      <SeasonBar months={months} from="var(--spice)" to="#dd7a2e" node="#c56b46" />
     </div>
   );
 }
@@ -70,7 +70,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
     <section style={{ marginBottom: 22 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 2px 12px" }}>
         {/* Pousse / jeune plant : distinct de l'étoile de « Découvrir », évoque le produit frais */}
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--spice)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 20v-7" />
           <path d="M12 13C12 9.7 9.5 8 6 8c0 3.5 2.5 5 6 5Z" />
           <path d="M12 11c0-3 2.5-4.6 6-4.6 0 3.4-2.5 4.6-6 4.6Z" />
@@ -134,7 +134,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
             <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "var(--text2)" }}>
               Personne n'a encore partagé de recette contenant cet ingrédient. <strong style={{ color: "var(--text)" }}>Et si tu ouvrais le bal ?</strong>
             </span>
-            {onPublish && <button className="btn btn-sm" style={{ marginLeft: "auto", flexShrink: 0, background: "var(--spice)", color: "#3a2a0e", border: "none", fontWeight: 700 }} onClick={onPublish}>Publier</button>}
+            {onPublish && <button className="btn btn-sm" style={{ marginLeft: "auto", flexShrink: 0, background: "#e8920a", color: "#fff", border: "none", fontWeight: 700 }} onClick={onPublish}>Publier</button>}
           </div>
         )}
       </article>

@@ -15,7 +15,7 @@ export function DesktopSidebar({ tab, setTab }) {
             <path d="M58 30 C60.5 45 59 60 53 74" strokeWidth="3.4" />
           </g>
         </svg>
-        <span className="wm">Cardamome<span className="dot">·</span></span>
+        <span className="wm">Cardam<span className="oh">o</span>me<span className="dot">·</span></span>
       </div>
       <nav style={{ flex: 1 }}>
         {TABS.map(t => {

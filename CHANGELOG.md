@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.0.3 – Cardamome · Le logo affûté
+
+### Interface
+- **Le « o » qui fait signe** : dans le mot Cardamome, la lettre « o » passe en couleur d'accent (un clin d'œil à la rondeur de la gousse), partout où le logo apparaît, de la barre latérale à l'écran de connexion.
+- **Nouveau favicon** : fond vert d'accent, gousse blanche posée en biais. Plus franc et plus lisible sur un écran d'accueil, en icône installée comme en onglet. Toutes les tailles (PWA, Apple, maskable) suivent.
+- **Ingrédient du moment, réglé** : la frise de saison s'affiche entièrement dans les tons chauds, l'icône de la section reste au vert de la marque, et le bouton Publier redevient lisible.
+
 ## v4.0.2 – Cardamome · Sarcelle & ambre
 
 ### Interface

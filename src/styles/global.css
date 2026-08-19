@@ -2063,7 +2063,8 @@ select {
     margin-top: -1px;
   }
 
-  .desktop-sidebar-logo .dot {
+  .desktop-sidebar-logo .dot,
+  .desktop-sidebar-logo .oh {
     color: var(--accent);
   }
 

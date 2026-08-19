@@ -5,7 +5,7 @@ export function LoadingPage({ isDark }) {
   return (
     <div className={`loading-root${isDark ? "" : " light"}`}>
       <div className="loading-card">
-        <div className="loading-logo">Cardamome<span>·</span></div>
+        <div className="loading-logo">Cardam<span className="oh">o</span>me<span>·</span></div>
         <div className="loading-spinner-wrap">
           <div className="loading-spinner-track" />
           <div className="loading-spinner" />
