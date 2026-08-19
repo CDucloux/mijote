@@ -23,7 +23,7 @@ function UtensilGrid({ list, selectedIds, onGridClick }) {
             display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
             padding: "14px 8px 10px",
             borderRadius: 14,
-            background: on ? "rgba(232,112,58,0.1)" : "var(--surface)",
+            background: on ? "rgba(var(--accent-rgb),0.1)" : "var(--surface)",
             border: `1.5px solid ${on ? "var(--accent)" : "var(--border)"}`,
             cursor: "pointer", position: "relative", transition: "all 0.15s",
           }}>
@@ -91,7 +91,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
             const db = utensilDB.find(d => d.id === u.dbId);
             const active = replacing === u.id;
             return (
-              <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: active ? "var(--accent)" : "rgba(232,112,58,0.12)", border: `1px solid ${active ? "var(--accent)" : "rgba(232,112,58,0.35)"}`, cursor: "pointer" }}
+              <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: active ? "var(--accent)" : "rgba(var(--accent-rgb),0.12)", border: `1px solid ${active ? "var(--accent)" : "rgba(var(--accent-rgb),0.35)"}`, cursor: "pointer" }}
                 onClick={() => setReplacing(active ? null : u.id)} title="Remplacer cet ustensile">
                 <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {db?.image
@@ -111,7 +111,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
       {/* Bandeau mode remplacement */}
       {replacing && (
         <div className="slide-up editor-col" style={{ marginTop: 12, padding: "0 20px", flexShrink: 0 }}>
-          <div style={{ padding: "9px 12px", borderRadius: 12, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ padding: "9px 12px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.3)", display: "flex", alignItems: "center", gap: 8 }}>
             <Icon name="swap" size={14} color="var(--accent)" />
             <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 500, flex: 1 }}>
               Choisis un ustensile pour remplacer <strong>{replacingName}</strong>

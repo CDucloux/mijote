@@ -71,7 +71,7 @@ function MouleTab({ onApply, onReset, applied }) {
       <PanForm title="Ton moule" pan={target} set={setTarget} />
 
       {factor != null && (
-        <div style={{ background: "linear-gradient(158deg, rgba(232,112,58,0.12), var(--surface2) 80%)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 14, padding: "13px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ background: "linear-gradient(158deg, rgba(var(--accent-rgb),0.12), var(--surface2) 80%)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: 14, padding: "13px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div>
             <div style={{ fontSize: 12, color: "var(--text3)", fontWeight: 600 }}>Facteur {useVolume ? "de volume" : "de surface"}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: "var(--accent)", fontFamily: "var(--ff-display)" }}>× {roundNice(factor)}</div>

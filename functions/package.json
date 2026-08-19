@@ -1,6 +1,6 @@
 {
   "name": "mijote-functions",
-  "description": "Cloud Functions pour Mijoté (import de recette, paiement Mijoté+)",
+  "description": "Cloud Functions pour Cardamome (import de recette, paiement Cardamome+)",
   "private": true,
   "engines": {
     "node": "22"

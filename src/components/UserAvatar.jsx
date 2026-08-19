@@ -55,7 +55,7 @@ export function UserAvatar() {
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
       <button ref={btnRef} className="ripple ripple-light" onClick={() => { if (open) { closeThen(); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }} aria-label="Mon compte">
-        {/* Anneau orange = abonné Mijoté+ (sinon bordure neutre). */}
+        {/* Anneau orange = abonné Cardamome+ (sinon bordure neutre). */}
         {user.photoURL
           ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: `2px solid ${isPlus ? "var(--accent)" : "var(--border)"}` }} />
           : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", border: `2px solid ${isPlus ? "var(--accent)" : "transparent"}` }}>{(user.displayName || "?")[0].toUpperCase()}</div>

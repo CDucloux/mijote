@@ -21,7 +21,7 @@ import { stripAiDashes } from "@/lib/format.js";
 const wordBtn = (active) => ({
   display: "inline", padding: "1px 4px", margin: "0 -1px", font: "inherit",
   color: "var(--accent)", fontWeight: 600,
-  background: active ? "rgba(232,112,58,0.28)" : "rgba(232,112,58,0.11)",
+  background: active ? "rgba(var(--accent-rgb),0.28)" : "rgba(var(--accent-rgb),0.11)",
   border: "none", borderRadius: 6, cursor: "pointer",
   lineHeight: "inherit", textAlign: "left",
   WebkitBoxDecorationBreak: "clone", boxDecorationBreak: "clone",

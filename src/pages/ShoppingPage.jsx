@@ -227,12 +227,12 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                     flexShrink: 0, display: "flex", alignItems: "center", gap: 6, height: 34, boxSizing: "border-box", padding: "0 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
                     background: allMode ? "var(--accent)" : "var(--surface)",
                     color: allMode ? "#fff" : "var(--accent)",
-                    border: `1px solid ${allMode ? "transparent" : "rgba(232,112,58,0.5)"}`
+                    border: `1px solid ${allMode ? "transparent" : "rgba(var(--accent-rgb),0.5)"}`
                   }}>
                   <Icon name="grid" size={12} color={allMode ? "#fff" : "var(--accent)"} />
                   Toutes les courses
                   {aggregated.length > 0 && (
-                    <span style={{ fontSize: 10, background: allMode ? "rgba(255,255,255,0.25)" : "rgba(232,112,58,0.14)", borderRadius: 10, padding: "1px 6px" }}>
+                    <span style={{ fontSize: 10, background: allMode ? "rgba(255,255,255,0.25)" : "rgba(var(--accent-rgb),0.14)", borderRadius: 10, padding: "1px 6px" }}>
                       {aggChecked}/{aggregated.length}
                     </span>
                   )}
@@ -365,7 +365,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           {/* FAB – absolute inside the list container */}
           {activeList.type === "free" && (
             <button onClick={() => { setShowAddModal(true); setListMode(false); setNewItemName(""); setPasteText(""); }}
-              style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+              style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(var(--accent-rgb),0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
               <Icon name="plus" size={22} color="#fff" />
             </button>
           )}
@@ -447,7 +447,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
         return (
         <SwipeableSheet onClose={close}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: "rgba(var(--accent-rgb),0.14)", display: "grid", placeItems: "center" }}>
               <Icon name={lm.type === "recipe" ? "book" : "shopping"} size={24} color="var(--accent)" />
             </div>
             <div style={{ minWidth: 0 }}>
@@ -522,7 +522,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
         <SwipeableSheet onClose={() => { setShowAddModal(false); setListMode(false); setNewItemName(""); setPasteText(""); }}>
           {/* En-tête : puce accent + titre display + nom de la liste */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
               <Icon name={listMode ? "list2" : "shopping"} size={21} color="var(--accent)" />
             </div>
             <div style={{ minWidth: 0 }}>
@@ -607,7 +607,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           {(close) => (<>
           {/* En-tête : pastille d'icône + titre + sous-titre contextuel */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <span style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
+            <span style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
               <Icon name="shopping" size={20} color="var(--accent)" />
             </span>
             <div style={{ minWidth: 0 }}>
@@ -627,9 +627,9 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
               {["Courses de la semaine", "Marché", "Épicerie", "Week-end", "Apéro"].map(s => (
                 <button key={s} onClick={() => setConfigList(p => ({ ...p, name: s }))} className="pressable"
                   style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 999, cursor: "pointer",
-                    background: configList.name === s ? "rgba(232,112,58,0.12)" : "var(--surface2)",
+                    background: configList.name === s ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
                     color: configList.name === s ? "var(--accent)" : "var(--text2)",
-                    border: `1px solid ${configList.name === s ? "rgba(232,112,58,0.4)" : "var(--border)"}` }}>{s}</button>
+                    border: `1px solid ${configList.name === s ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}` }}>{s}</button>
               ))}
             </div>
           )}

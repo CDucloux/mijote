@@ -1,6 +1,6 @@
-# Mijoté sur mobile (Capacitor) : build et publication
+# Cardamome sur mobile (Capacitor) : build et publication
 
-Ce document couvre l'empaquetage de la PWA Mijoté en application native via
+Ce document couvre l'empaquetage de la PWA Cardamome en application native via
 **Capacitor**, puis sa publication sur le **Google Play Store** (Internal testing,
 Closed testing, Production). L'App Store iOS est prévu plus tard (voir la fin).
 
@@ -87,7 +87,7 @@ Google échouera dans l'app installée (le code, lui, est prêt).
 ### Setup commun (une fois, avant tout envoi)
 
 - [ ] Créer un **compte Google Play Console** (25 $ une fois) + **vérification d'identité**.
-- [ ] Créer l'app dans la console (nom « Mijoté », langue, type « Application », gratuite).
+- [ ] Créer l'app dans la console (nom « Cardamome », langue, type « Application », gratuite).
 - [ ] Renseigner **App content / Contenu de l'app** :
   - [ ] **Politique de confidentialité** (URL hébergée : obligatoire, tu as des comptes utilisateurs / RGPD).
   - [ ] **Data safety / Sécurité des données** : déclarer les données collectées (Firebase Auth, Firestore : e-mail, contenu utilisateur…).

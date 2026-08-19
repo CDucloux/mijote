@@ -8,7 +8,7 @@ import { buildHeatmap } from "@/lib/planning/cookingActivity.js";
 const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 const DOW = ["Lun", "", "Mer", "", "Ven", "", "Dim"];
 const CELL = 12, GAP = 3;
-const LEVEL_COLOR = ["var(--surface2)", "rgba(232,112,58,0.30)", "rgba(232,112,58,0.52)", "rgba(232,112,58,0.76)", "var(--accent)"];
+const LEVEL_COLOR = ["var(--surface2)", "rgba(var(--accent-rgb),0.30)", "rgba(var(--accent-rgb),0.52)", "rgba(var(--accent-rgb),0.76)", "var(--accent)"];
 
 function Legend() {
   return (

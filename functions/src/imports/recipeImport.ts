@@ -2,7 +2,7 @@
  * Import de recette par IA (Cloud Functions).
  *
  * Deux points d'entrée `onCall`, tous deux réservés côté serveur (admin illimité,
- * abonné Mijoté+ avec quota, cf. {@link assertImportAllowed}), jamais en masquant
+ * abonné Cardamome+ avec quota, cf. {@link assertImportAllowed}), jamais en masquant
  * un simple bouton :
  * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 4.5) ;
  * - {@link importRecipeFromImages} : extraction depuis 1–2 photos de livre (Sonnet).

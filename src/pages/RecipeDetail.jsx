@@ -223,7 +223,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   // Lien PUBLIC de la recette (page communauté), jamais le lien privé. Le menu
   // « Partager » n'apparaît que lorsque la recette est publiée (cf. menus).
   const publicUrl = recipe.publicId ? `${window.location.origin}${DISCOVER_PREFIX}${encodeURIComponent(recipe.publicId)}` : "";
-  const shareText = `${recipe.name} – une recette à découvrir sur Mijoté`;
+  const shareText = `${recipe.name} – une recette à découvrir sur Cardamome`;
   const copyLink = async () => {
     try { await navigator.clipboard.writeText(publicUrl); notify?.("Lien copié dans le presse-papier"); }
     catch { notify?.("Copie impossible", "error"); }
@@ -248,7 +248,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   );
   const recipeVegan = useMemo(() => isRecipeVegan(recipe, seasonResolver, { recipes }), [recipe, seasonResolver, recipes]);
   const { techniques, isPlus } = useAppShell();
-  // Journal d'itérations = fonctionnalité Mijoté+ : en gratuit → page d'offre.
+  // Journal d'itérations = fonctionnalité Cardamome+ : en gratuit → page d'offre.
   const openJournal = () => isPlus ? setJournalOpen(true) : navigate("/plus");
   const difficulty = useMemo(() => computeDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
   const difficultyExplain = useMemo(() => explainDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
@@ -662,7 +662,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <button className="action-dock-close" title="Réduire" onClick={closeDock}><Icon name="close" size={15} /></button>
             </div>
           ) : (
-            <button className="fab-toggle" title="Actions" onClick={() => setActionsOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 26px -4px rgba(232,112,58,0.5)" }}>
+            <button className="fab-toggle" title="Actions" onClick={() => setActionsOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 26px -4px rgba(var(--accent-rgb),0.5)" }}>
               <Icon name="plus" size={24} color="#fff" />
             </button>
           )}
@@ -842,7 +842,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)", borderRadius: 14, padding: "12px 16px", marginBottom: 14, border: "1px solid var(--border)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>Portions</span>
-                  <button onClick={() => setShowCalc(true)} className="tap" title="Calculatrices (moule, conversions)" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, padding: "4px 9px", borderRadius: 999, border: "1px solid var(--border)", background: panFactor !== 1 ? "rgba(232,112,58,0.14)" : "var(--surface2)", color: panFactor !== 1 ? "var(--accent)" : "var(--text2)", cursor: "pointer" }}>
+                  <button onClick={() => setShowCalc(true)} className="tap" title="Calculatrices (moule, conversions)" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, padding: "4px 9px", borderRadius: 999, border: "1px solid var(--border)", background: panFactor !== 1 ? "rgba(var(--accent-rgb),0.14)" : "var(--surface2)", color: panFactor !== 1 ? "var(--accent)" : "var(--text2)", cursor: "pointer" }}>
                     <Icon name="sparkle" size={13} /> {panFactor !== 1 ? `Moule ×${(Math.round(panFactor * 100) / 100)}` : "Adapter"}
                   </button>
                 </div>
@@ -938,7 +938,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   </button>
                 )}
                 {baseSteps.map(comp => (
-                  <div key={comp.id} style={{ background: "rgba(232,112,58,0.05)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 14, padding: 14 }}>
+                  <div key={comp.id} style={{ background: "rgba(var(--accent-rgb),0.05)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: 14, padding: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                       <BaseIcon size={18} />
                       <span style={{ fontSize: 14, fontWeight: 700 }}>Préparer la {comp.name}</span>
@@ -1045,7 +1045,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                     <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (rc.comp) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
                       {rc.comp?.image
                         ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={48} cover />
-                        : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
+                        : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
                       <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                         <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
                         <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
@@ -1101,7 +1101,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
               {baseSteps.map(comp => (
-                <div key={comp.id} style={{ background: "rgba(232,112,58,0.05)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 12, padding: 16 }}>
+                <div key={comp.id} style={{ background: "rgba(var(--accent-rgb),0.05)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: 12, padding: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                     <BaseIcon size={18} />
                     <span style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 600 }}>Préparer la {comp.name}</span>
@@ -1159,7 +1159,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   // Timeline : nœud numéroté (dégradé) relié par un rail vertical, contenu à droite.
                   <div key={step.id} style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                      <span style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #f0894e)", color: "#fff", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 700, boxShadow: "0 3px 8px -2px rgba(232,112,58,0.5)", flexShrink: 0 }}>{num}</span>
+                      <span style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-strong))", color: "#fff", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 700, boxShadow: "0 3px 8px -2px rgba(var(--accent-rgb),0.5)", flexShrink: 0 }}>{num}</span>
                       {!lastInRun && <span style={{ flex: 1, width: 2, background: "var(--border)", borderRadius: 1, marginTop: 6, minHeight: 10 }} />}
                     </div>
                     <div style={{ flex: 1, minWidth: 0, paddingTop: 5, paddingBottom: lastInRun ? 2 : 28 }}>
@@ -1214,7 +1214,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       {showShoppingModal && (
         <SwipeableSheet onClose={() => setShowShoppingModal(false)} style={{ maxHeight: "85dvh" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)" }}>
+            <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)" }}>
               <Icon name="shopping" size={21} color="var(--accent)" />
             </span>
             <div style={{ minWidth: 0 }}>
@@ -1225,7 +1225,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{selectedIngs.length} / {flatIngs.length} sélectionné{selectedIngs.length > 1 ? "s" : ""}</span>
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => setSelectedIngs(flatIngs.map(fi => fi._fid))} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "rgba(232,112,58,0.10)", border: "1px solid rgba(232,112,58,0.28)", color: "var(--accent)" }}>Tout cocher</button>
+              <button onClick={() => setSelectedIngs(flatIngs.map(fi => fi._fid))} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "rgba(var(--accent-rgb),0.10)", border: "1px solid rgba(var(--accent-rgb),0.28)", color: "var(--accent)" }}>Tout cocher</button>
               <button onClick={() => setSelectedIngs([])} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text3)" }}>Tout décocher</button>
             </div>
           </div>
@@ -1239,8 +1239,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                   className="pressable"
                   style={{
                     display: "flex", alignItems: "center", gap: 12, padding: "10px 13px", borderRadius: 14,
-                    background: selected ? "rgba(232,112,58,0.10)" : "var(--surface2)",
-                    border: `1.5px solid ${selected ? "rgba(232,112,58,0.4)" : "var(--border)"}`,
+                    background: selected ? "rgba(var(--accent-rgb),0.10)" : "var(--surface2)",
+                    border: `1.5px solid ${selected ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`,
                     textAlign: "left", transition: "background 0.15s, border-color 0.15s"
                   }}>
                   <div style={{
@@ -1293,7 +1293,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       {showMealModal && (
         <SwipeableSheet onClose={() => setShowMealModal(false)}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)" }}>
+            <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)" }}>
               <Icon name="calendar" size={22} color="var(--accent)" />
             </span>
             <div style={{ minWidth: 0 }}>
@@ -1418,16 +1418,16 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           {(close) => (<>
           {/* En-tête : puce accent + titre display + contexte communauté. */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
               <Icon name="globe" size={21} color="var(--accent)" />
             </div>
             <div style={{ minWidth: 0 }}>
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Publier cette recette ?</h3>
-              <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>Communauté Mijoté</p>
+              <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>Communauté Cardamome</p>
             </div>
           </div>
           <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: recipe.source ? 16 : 12, lineHeight: 1.5 }}>
-            Elle rejoindra la communauté Mijoté : chacun pourra la découvrir et l'ajouter à ses recettes. Vous en restez l'auteur·e et pouvez la retirer à tout moment.
+            Elle rejoindra la communauté Cardamome : chacun pourra la découvrir et l'ajouter à ses recettes. Vous en restez l'auteur·e et pouvez la retirer à tout moment.
           </p>
           {recipe.source && (
             <div style={{ borderRadius: 16, background: "rgba(224,146,10,0.08)", border: "1px solid rgba(224,146,10,0.22)", padding: 16, marginBottom: 18 }}>
@@ -1443,9 +1443,9 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
           )}
           {componentDeps.length > 0 && (
-            <div style={{ borderRadius: 14, background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.22)", padding: "13px 14px", marginBottom: 20 }}>
+            <div style={{ borderRadius: 14, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.22)", padding: "13px 14px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: "rgba(232,112,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: "rgba(var(--accent-rgb),0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Icon name="import" size={14} color="var(--accent)" />
                 </span>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)" }}>
@@ -1480,7 +1480,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 600, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><Icon name="globe" size={11} color="var(--text3)" /> Recette publique · Mijoté</div>
+              <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}><Icon name="globe" size={11} color="var(--text3)" /> Recette publique · Cardamome</div>
             </div>
           </div>
 

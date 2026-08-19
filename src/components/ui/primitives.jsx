@@ -103,7 +103,7 @@ export function SectionLabel({ style, ...rest }) {
  * Pastille d'icône : carré arrondi centré, teinté accent par défaut. Reçoit
  * l'icône en `children`. `tint` change le fond, `size`/`radius` la géométrie.
  */
-export function IconChip({ size = 46, radius = 14, tint = "rgba(232,112,58,0.12)", as: Tag = "span", style, children, ...rest }) {
+export function IconChip({ size = 46, radius = 14, tint = "rgba(var(--accent-rgb),0.12)", as: Tag = "span", style, children, ...rest }) {
   return (
     <Tag
       style={{

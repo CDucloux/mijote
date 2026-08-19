@@ -1,6 +1,6 @@
-// ─── CONTRÔLE D'ACCÈS + QUOTAS MIJOTÉ+ (côté serveur) ────────────────────────
+// ─── CONTRÔLE D'ACCÈS + QUOTAS CARDAMOME+ (côté serveur) ────────────────────────
 // Les imports IA (coûteux) sont réservés à l'ADMIN (illimité) OU à un abonné
-// Mijoté+ ACTIF, avec des QUOTAS journaliers/mensuels pour les abonnés. Toute la
+// Cardamome+ ACTIF, avec des QUOTAS journaliers/mensuels pour les abonnés. Toute la
 // vérification est côté serveur (token d'auth + Firestore), jamais le client.
 // Source de vérité abonnement : `customers/{uid}/subscriptions` (webhook Stripe).
 // Compteurs d'usage : `aiUsage/{uid}` (écrit ici, en transaction).
@@ -39,7 +39,7 @@ export async function requireAccess(request: CallableRequest, adminEmail: string
     .where("status", "in", [...ACTIVE_STATUSES])
     .limit(1)
     .get();
-  if (snap.empty) throw new HttpsError("permission-denied", "Fonctionnalité réservée à Mijoté+.");
+  if (snap.empty) throw new HttpsError("permission-denied", "Fonctionnalité réservée à Cardamome+.");
   return { admin: false };
 }
 

@@ -100,7 +100,7 @@ function FoyerSection() {
   const { household, invites, loading } = useHousehold();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  // Foyer partagé = fonctionnalité Mijoté+ : en gratuit, la carte renvoie vers l'offre.
+  // Foyer partagé = fonctionnalité Cardamome+ : en gratuit, la carte renvoie vers l'offre.
   const openFoyer = () => isPlus ? setOpen(v => !v) : navigate("/plus");
   // Annuaire chargé à la demande, seulement s'il y a un foyer (avatars des membres).
   useEffect(() => { if (household || invites.length) loadDirectory?.(); }, [household, invites.length, loadDirectory]);
@@ -144,7 +144,7 @@ function FoyerSection() {
               </span>}
         </span>
         {/* Perforation verticale */}
-        <span aria-hidden="true" style={{ flexShrink: 0, width: 0, alignSelf: "stretch", margin: "12px 0", borderLeft: "2px dashed rgba(232,112,58,0.35)" }} />
+        <span aria-hidden="true" style={{ flexShrink: 0, width: 0, alignSelf: "stretch", margin: "12px 0", borderLeft: "2px dashed rgba(var(--accent-rgb),0.35)" }} />
         {/* Talon droit : titre + statut + action */}
         <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, padding: "16px 18px" }}>
           <span style={{ flex: 1, minWidth: 0 }}>
@@ -155,7 +155,7 @@ function FoyerSection() {
               {!household && (
                 !isPlus
                   ? <PlusBadge />
-                  : <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", color: "var(--accent)", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.3)", borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>
+                  : <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", color: "var(--accent)", background: "rgba(var(--accent-rgb),0.14)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>
                       {hasInvite ? "Invitation" : "Nouveau"}
                     </span>
               )}
@@ -164,7 +164,7 @@ function FoyerSection() {
               {summary}
             </span>
           </span>
-          <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.32)" }}>
+          <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(var(--accent-rgb),0.14)", border: "1px solid rgba(var(--accent-rgb),0.32)" }}>
             <Icon name={household ? "forward" : hasInvite ? "forward" : "plus"} size={16} color="var(--accent)" />
           </span>
         </span>
@@ -216,7 +216,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
             <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
-              Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 600, color: "var(--text2)" }}>Mijoté<span style={{ color: "var(--accent)" }}>·</span></span>
+              Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 600, color: "var(--text2)" }}>Cardamome<span style={{ color: "var(--accent)" }}>·</span></span>
             </span>
           </div>
           <UserAvatar />

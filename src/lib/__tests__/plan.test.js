@@ -9,7 +9,7 @@ describe("plan / quota recettes", () => {
     expect(recipeQuotaCount(recipes)).toBe(3);
   });
 
-  it("Mijoté+ : toujours autorisé", () => {
+  it("Cardamome+ : toujours autorisé", () => {
     expect(canAddRecipes(mk(FREE_RECIPE_LIMIT), true, 10)).toBe(true);
   });
 

@@ -35,7 +35,7 @@ export class ErrorBoundary extends React.Component {
         </p>
         <button
           onClick={() => window.location.reload()}
-          style={{ marginTop: 6, padding: "11px 22px", borderRadius: 12, border: "none", cursor: "pointer", background: "#e8703a", color: "#fff", fontSize: 14, fontWeight: 600 }}>
+          style={{ marginTop: 6, padding: "11px 22px", borderRadius: 12, border: "none", cursor: "pointer", background: "#6e9a3f", color: "#fff", fontSize: 14, fontWeight: 600 }}>
           Recharger
         </button>
       </div>

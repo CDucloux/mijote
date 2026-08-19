@@ -17,11 +17,11 @@ export function BaseInfoModal({ onClose }) {
       {/* Header – bandeau dégradé */}
       <div style={{
         margin: "-20px -20px 4px", padding: "26px 22px 22px",
-        background: "linear-gradient(135deg, rgba(232,112,58,0.16), rgba(232,112,58,0.04))",
+        background: "linear-gradient(135deg, rgba(var(--accent-rgb),0.16), rgba(var(--accent-rgb),0.04))",
         borderBottom: "1px solid var(--border)",
       }}>
         <Row gap={13}>
-          <IconChip size={48} radius={16} tint="linear-gradient(135deg, var(--accent), #d4622e)" style={{ boxShadow: "0 8px 20px -6px rgba(232,112,58,0.6)" }}>
+          <IconChip size={48} radius={16} tint="linear-gradient(135deg, var(--accent), var(--accent-strong))" style={{ boxShadow: "0 8px 20px -6px rgba(var(--accent-rgb),0.6)" }}>
             <BaseIcon size={24} color="#fff" />
           </IconChip>
           <div>
@@ -40,7 +40,7 @@ export function BaseInfoModal({ onClose }) {
         <Col gap={2}>
           {FAMILIES.map((it, j) => (
             <Row key={j} align="flex-start" gap={14} style={{ padding: "14px 0", borderTop: j === 0 ? "none" : "1px solid var(--border)" }}>
-              <IconChip size={28} radius={9} tint="rgba(232,112,58,0.1)" style={{ marginTop: 1, color: "var(--accent)", fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{j + 1}</IconChip>
+              <IconChip size={28} radius={9} tint="rgba(var(--accent-rgb),0.1)" style={{ marginTop: 1, color: "var(--accent)", fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{j + 1}</IconChip>
               <div>
                 <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em", marginBottom: 3 }}>{it.label}</div>
                 <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0 }}>{it.desc}</p>
@@ -49,18 +49,18 @@ export function BaseInfoModal({ onClose }) {
           ))}
         </Col>
 
-        {/* Dans Mijoté – carte accent */}
+        {/* Dans Cardamome – carte accent */}
         <div style={{
           marginTop: 24, padding: "16px 18px", borderRadius: 16,
-          background: "linear-gradient(135deg, rgba(232,112,58,0.13), rgba(232,112,58,0.05))",
-          border: "1px solid rgba(232,112,58,0.25)",
+          background: "linear-gradient(135deg, rgba(var(--accent-rgb),0.13), rgba(var(--accent-rgb),0.05))",
+          border: "1px solid rgba(var(--accent-rgb),0.25)",
         }}>
           <Row gap={7} style={{ marginBottom: 7 }}>
             <BaseIcon size={15} color="var(--accent)" />
-            <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--accent)", letterSpacing: "-0.01em" }}>Dans Mijoté</span>
+            <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--accent)", letterSpacing: "-0.01em" }}>Dans Cardamome</span>
           </Row>
           <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>
-            Une recette marquée « Base » peut être liée à une autre recette en tant qu'ingrédient. Quand tu cuisines la recette parente, Mijoté te propose de réaliser d'abord toutes ses bases avant de passer aux étapes principales.
+            Une recette marquée « Base » peut être liée à une autre recette en tant qu'ingrédient. Quand tu cuisines la recette parente, Cardamome te propose de réaliser d'abord toutes ses bases avant de passer aux étapes principales.
           </p>
         </div>
       </div>

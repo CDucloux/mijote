@@ -61,7 +61,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       onDragOver={e => { e.preventDefault(); onSetDropTarget(dropKey); }}
       onDragLeave={() => onSetDropTarget(null)}
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
-      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(232,112,58,0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
+      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(var(--accent-rgb),0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
       {(() => {
       const slotGroups = mealsForSlot(meals, recipesById);
       // La barre verticale ne distingue les repas que s'il y en a PLUSIEURS dans le
@@ -126,7 +126,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
   const { notify, user, isPlus } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
-  // vers l'offre Mijoté+ quand une fonctionnalité premium est verrouillée.
+  // vers l'offre Cardamome+ quand une fonctionnalité premium est verrouillée.
   const gotoRoute = useNavigate();
   const goPlus = () => gotoRoute("/plus");
   const { household } = useHousehold();
@@ -364,7 +364,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const blob = new Blob([lines.join(CRLF)], { type: "text/calendar;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "Mijoté - Planning repas.ics";
+    a.download = "Cardamome - Planning repas.ics";
     a.click();
     URL.revokeObjectURL(a.href);
     notify?.("Planning exporté dans ton calendrier");
@@ -390,7 +390,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {`${new Date(weekDays[0] + "T12:00").getDate()} – ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
           </span>
           <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
-          <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(232,112,58,0.15)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.3)", flexShrink: 0 }}>Auj.</button>
+          <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
           <button onClick={exportICS} title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
             <Icon name="calendar" size={13} color="var(--blue)" /> Agenda
           </button>
@@ -425,13 +425,13 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               const isToday = date === todayStr;
               const d = new Date(date + "T12:00");
               return (
-                <div key={date} className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(232,112,58,0.5)" : "var(--border)"}`, animationDelay: `${di * 0.04}s` }}>
+                <div key={date} className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, animationDelay: `${di * 0.04}s` }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: isToday ? "var(--accent)" : "var(--text)" }}>
                         {MP_DAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]} {d.getDate()}
                       </span>
-                      {isToday && <span style={{ fontSize: 10, background: "rgba(232,112,58,0.2)", color: "var(--accent)", padding: "2px 7px", borderRadius: 10 }}>Aujourd'hui</span>}
+                      {isToday && <span style={{ fontSize: 10, background: "rgba(var(--accent-rgb),0.2)", color: "var(--accent)", padding: "2px 7px", borderRadius: 10 }}>Aujourd'hui</span>}
                     </div>
                     <button onClick={() => openAdd(date, ["midi"])} className="mp-add-btn" title="Ajouter une recette au planning">
                       <span className="mp-add-label">Ajouter</span>
@@ -506,7 +506,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           return (<>
           {/* En-tête : puce calendrier + titre + date */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
               <Icon name="calendar" size={21} color="var(--accent)" />
             </div>
             <div style={{ minWidth: 0 }}>
@@ -570,7 +570,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   {/* (+) → ✓ vert : le + sort en pivotant, le ✓ surgit (keyframes,
                       pour un jeu fiable même juste avant la fermeture de la feuille). */}
                   <span className="complete-add" style={{ position: "relative", width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", overflow: "hidden",
-                    background: added ? "var(--green)" : "rgba(232,112,58,0.12)", color: added ? "#fff" : "var(--accent)",
+                    background: added ? "var(--green)" : "rgba(var(--accent-rgb),0.12)", color: added ? "#fff" : "var(--accent)",
                     transition: "background-color 0.3s ease",
                     animation: added ? "confirmBadgePop 0.34s cubic-bezier(0.34,1.56,0.64,1) forwards" : "none" }}>
                     <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center",
@@ -617,7 +617,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer",
                     padding: "11px 0", borderRadius: 13, fontSize: 14, fontWeight: 600,
                     color: active ? "var(--accent)" : "var(--text3)",
-                    background: active ? "rgba(232,112,58,0.12)" : "var(--surface2)",
+                    background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
                     border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
                   }}>
                     <span style={{ width: 18, height: 18, borderRadius: "50%", display: "grid", placeItems: "center", border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accent)" : "transparent" }}>
@@ -641,10 +641,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 <button key={o.id} onClick={() => setGenStyle(o.id)} className="pressable" style={{
                   display: "flex", alignItems: "center", gap: 13, width: "100%", textAlign: "left", cursor: "pointer",
                   padding: "13px 14px", borderRadius: 15,
-                  background: active ? "rgba(232,112,58,0.12)" : "var(--surface2)",
+                  background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
                   border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
                 }}>
-                  <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: active ? "rgba(232,112,58,0.2)" : "var(--surface3)" }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: active ? "rgba(var(--accent-rgb),0.2)" : "var(--surface3)" }}>
                     <Icon name={o.icon} size={19} color={active ? "var(--accent)" : "var(--text2)"} />
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
@@ -777,7 +777,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                     {cookingGroups.map(g => (
                       <div key={g.method} style={{ padding: "12px 14px", background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                          <span style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={14} color="var(--accent)" /></span>
+                          <span style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(var(--accent-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={14} color="var(--accent)" /></span>
                           <span style={{ fontSize: 13.5, fontWeight: 700 }}>{g.label}</span>
                           <span style={{ marginLeft: "auto", fontSize: 10.5, fontWeight: 600, color: "var(--text3)", background: "var(--surface2)", padding: "2px 8px", borderRadius: 999 }}>{g.dishes.length} plats</span>
                         </div>
@@ -817,7 +817,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                       <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{d.recipe.name}</div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{d.meals} repas</span>
-                        <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--accent)", background: "rgba(232,112,58,0.1)", borderRadius: 6, padding: "2px 7px" }}>{d.cookings} cuisson{d.cookings > 1 ? "s" : ""}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.1)", borderRadius: 6, padding: "2px 7px" }}>{d.cookings} cuisson{d.cookings > 1 ? "s" : ""}</span>
                         <span style={{ fontSize: 10.5, color: "var(--text3)", padding: "2px 0" }}>{d.servings} portions</span>
                       </div>
                     </div>
@@ -893,7 +893,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                         {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
                       </div>
                     </div>
-                    <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.12)", color: "var(--accent)" }}>
+                    <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>
                       <Icon name="plus" size={17} color="currentColor" />
                     </span>
                   </button>

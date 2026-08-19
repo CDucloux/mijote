@@ -39,13 +39,13 @@ function Index({ navigate }) {
   return (
     <>
       <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: "0 0 20px" }}>
-        Retrouvez ici les documents encadrant l'utilisation de Mijoté et le traitement de vos données.
+        Retrouvez ici les documents encadrant l'utilisation de Cardamome et le traitement de vos données.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {LEGAL_DOCS.map(d => (
           <button key={d.id} onClick={() => navigate(`/legal/${d.id}`)} className="legal-row"
             style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
-            <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", background: "rgba(232,112,58,0.14)", border: "1px solid rgba(232,112,58,0.3)" }}>
+            <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.14)", border: "1px solid rgba(var(--accent-rgb),0.3)" }}>
               <Icon name={d.icon} size={18} color="var(--accent)" />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>

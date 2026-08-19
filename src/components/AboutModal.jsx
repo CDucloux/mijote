@@ -38,7 +38,7 @@ export function AboutModal({ onClose }) {
         {/* En-tête */}
         <Col align="center" gap={8} style={{ paddingTop: 6 }}>
           <div style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>
-            Mijoté<span style={{ color: "var(--accent)" }}>·</span>
+            Cardamome<span style={{ color: "var(--accent)" }}>·</span>
           </div>
           <Pill style={{ padding: "3px 11px", background: "rgba(122, 155, 107, 0.18)", border: "1px solid rgba(122, 155, 107, 0.35)", color: "#8fba7a", fontSize: 12, fontWeight: 500, fontFamily: "var(--ff-body)" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#8fba7a", flexShrink: 0 }} />
@@ -54,9 +54,9 @@ export function AboutModal({ onClose }) {
         {/* Auteur */}
         <Section icon="leaf" title="Conçu & développé par">
           <Row as="a" justify="space-between" gap={10} href={GITHUB_URL} target="_blank" rel="noopener noreferrer"
-            style={{ padding: "11px 14px", borderRadius: 12, background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.18)", textDecoration: "none", transition: "border-color 0.15s, background 0.15s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(232,112,58,0.13)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(232,112,58,0.18)"; e.currentTarget.style.background = "rgba(232,112,58,0.07)"; }}>
+            style={{ padding: "11px 14px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", textDecoration: "none", transition: "border-color 0.15s, background 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.13)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.18)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.07)"; }}>
             <Col>
               <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>Corentin Ducloux</span>
               <span style={{ fontSize: 11, color: "var(--text3)" }}>@CDucloux · GitHub</span>
@@ -69,8 +69,8 @@ export function AboutModal({ onClose }) {
         <Section icon="sparkle" title="Construit avec">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 }}>
             {CREDITS.map(c => (
-              <Row key={c.label} gap={10} style={{ padding: "10px 12px", borderRadius: 12, background: "rgba(232,112,58,0.07)", border: "1px solid rgba(232,112,58,0.18)" }}>
-                <IconChip size={30} radius={9} tint="var(--surface)" style={{ border: "1px solid rgba(232,112,58,0.18)", fontSize: 15 }}>{c.glyph}</IconChip>
+              <Row key={c.label} gap={10} style={{ padding: "10px 12px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)" }}>
+                <IconChip size={30} radius={9} tint="var(--surface)" style={{ border: "1px solid rgba(var(--accent-rgb),0.18)", fontSize: 15 }}>{c.glyph}</IconChip>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", whiteSpace: "nowrap" }}>{c.label}</div>
                   <div style={{ fontSize: 10.5, color: "var(--text3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.detail}</div>
@@ -100,7 +100,7 @@ export function AboutModal({ onClose }) {
 
         {/* Copyright */}
         <div style={{ fontSize: 12, color: "var(--text3)", textAlign: "center" }}>
-          © {YEAR} Mijoté. Tous droits réservés.
+          © {YEAR} Cardamome. Tous droits réservés.
         </div>
       </Col>
     </SwipeableSheet>

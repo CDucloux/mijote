@@ -64,7 +64,7 @@ function YamlImport({ onText, warn }) {
         onDragLeave={() => setOver(false)}
         onDrop={e => { e.preventDefault(); setOver(false); read(Array.from(e.dataTransfer.files).find(f => /\.(ya?ml|txt)$/i.test(f.name))); }}
         onClick={() => ref.current.click()}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px", borderRadius: 12, border: `2px dashed ${over ? "var(--accent)" : "var(--border)"}`, background: over ? "rgba(232,112,58,0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px", borderRadius: 12, border: `2px dashed ${over ? "var(--accent)" : "var(--border)"}`, background: over ? "rgba(var(--accent-rgb),0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
         <Icon name="import" size={28} color={over ? "var(--accent)" : "var(--text3)"} />
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: over ? "var(--accent)" : "var(--text)" }}>Dépose un fichier YAML ici</div>
@@ -255,10 +255,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     });
     const header = `| ${ING_MD_COLUMNS.map(c => c.label).join(" | ")} |\n|${ING_MD_COLUMNS.map(() => "---").join("|")}|`;
     const body = rows.map(r => `| ${ING_MD_COLUMNS.map(c => cell(r, c)).join(" | ")} |`).join("\n");
-    const md = `# Base d'ingrédients Mijoté (${rows.length})\n\nValeurs nutritionnelles pour 100g. Oméga-3 inclus dans les lipides. \`Légume\` est recalculé depuis la catégorie à l'import.\n\n${header}\n${body}\n`;
+    const md = `# Base d'ingrédients Cardamome (${rows.length})\n\nValeurs nutritionnelles pour 100g. Oméga-3 inclus dans les lipides. \`Légume\` est recalculé depuis la catégorie à l'import.\n\n${header}\n${body}\n`;
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
-    a.download = "ingredients_mijote.md";
+    a.download = "ingredients_cardamome.md";
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -268,10 +268,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     const rows = [...utensilDB].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
     const header = `| Nom | dbid | Image |\n|---|---|---|`;
     const body = rows.map(r => `| ${esc(r.name)} | ${esc(r.id)} | ${esc(r.image)} |`).join("\n");
-    const md = `# Base d'ustensiles Mijoté (${rows.length})\n\n${header}\n${body}\n`;
+    const md = `# Base d'ustensiles Cardamome (${rows.length})\n\n${header}\n${body}\n`;
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
-    a.download = "ustensiles_mijote.md";
+    a.download = "ustensiles_cardamome.md";
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -362,7 +362,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     setMdInfo(`${created} créée${created > 1 ? "s" : ""}, ${updated} mise${updated > 1 ? "s" : ""} à jour.`);
   };
 
-  const exportTechniquesMarkdown = () => downloadText("techniques_mijote.md", formatTechniquesMarkdown(techniques), "text/markdown");
+  const exportTechniquesMarkdown = () => downloadText("techniques_cardamome.md", formatTechniquesMarkdown(techniques), "text/markdown");
 
   // Exports YAML réimportables (à committer dans data/). Aller-retour fidèle.
   const catOrder = sortedCategoryEntries(categories).map(([k]) => k);
@@ -748,7 +748,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       {/* FAB « + » flottant pour ajouter un ustensile (comme les listes de courses libres) */}
       {isAdmin && section === "ustensiles" && (
         <button onClick={() => setEditUt({ id: "", name: "", category: "divers", appliance: "", image: "" })} title="Nouvel ustensile" className="pressable"
-          style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,112,58,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+          style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(var(--accent-rgb),0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
           <Icon name="plus" size={22} color="#fff" />
         </button>
       )}

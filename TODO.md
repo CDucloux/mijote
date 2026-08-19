@@ -33,7 +33,7 @@
 
 - [x] Lien du mode courses avec le mode frigo (autres, condiments et épices, etc n'a rien à faire dans le frigo par exemple)
 
-- [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
+- [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Cardamome
 
 - [ ] Blabla sur le traitement des données ?
 
@@ -93,7 +93,7 @@
 - [x] Ecran de chargement + stylé, avec un spinner notamment
 - [x] Ecran fixe au niveau des recettees + gestion du bug UI sur le scroll down
 - [x] Retirer le mode planif "Mois"
-- [x] Animations quand on rentre sur toutes les pages de Mijoté
+- [x] Animations quand on rentre sur toutes les pages de Cardamome
 - [x] Approche + moderne sur l'ajout des ustensiles (icones, etc !) dans le formulaire crea et modif recete
 - [x] Bandeau "Mode Lecture" ou un truc un peu stylé analogue au bandeau master quand on est en lecture
 
@@ -198,7 +198,7 @@ DB:
 
 - [x] Attention pour le schéma JSON, si je veux en faire générer il va d'abord falloir l'envoyer + l'expliciter vraiment en détail (sur les parties raw ? etc etc).
 
-- [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Mijoté
+- [ ] Partage du planning repas en .ics ? c possible ? mais d'abord mise en place du partage directement dans Cardamome
 
 - [ ] Communauté de mijoteurs !
 

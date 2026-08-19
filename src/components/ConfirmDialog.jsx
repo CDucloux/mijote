@@ -23,7 +23,7 @@ export function ConfirmDialog({
   useEffect(() => { cancelRef.current?.focus(); }, []);
 
   const accent = tone === "danger" ? "var(--red)" : "var(--accent)";
-  const accentSoft = tone === "danger" ? "rgba(224,82,82,0.12)" : "rgba(232,112,58,0.12)";
+  const accentSoft = tone === "danger" ? "rgba(224,82,82,0.12)" : "rgba(var(--accent-rgb),0.12)";
 
   return createPortal(
     <div className={`alert-backdrop${closing ? " is-closing" : ""}`} onClick={busy ? undefined : () => beginClose()} style={zIndex != null ? { zIndex } : undefined}>

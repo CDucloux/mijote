@@ -167,27 +167,27 @@ function HouseIllustration() {
 
 const SLIDES = [
   {
-    illustration: PotIllustration, color: "#e8703a",
-    title: "Bienvenue sur Mijoté",
+    illustration: PotIllustration, color: "#6e9a3f",
+    title: "Bienvenue sur Cardamome",
     text: <>Bien plus qu'un carnet de recettes : une vraie base d'<em>ingrédients</em>, d'<em>ustensiles</em> et de <em>techniques</em> pour <strong>comprendre ce que tu cuisines</strong>, et progresser à chaque plat.</>,
   },
   {
-    illustration: ToqueIllustration, color: "#e8703a",
+    illustration: ToqueIllustration, color: "#c8912f",
     title: "Cuisine guidée, pas à pas",
     text: <>Lance le <strong>mode pas à pas</strong> et avance sereinement. Chaque <em>geste technique</em> s'explique au bon moment, pour réussir même ce que tu n'as jamais tenté.</>,
   },
   {
-    illustration: LeafIllustration, color: "#4caf7d",
+    illustration: LeafIllustration, color: "#5fb88a",
     title: "Difficulté, saison, Nutri-Score",
-    text: <>Mijoté lit tes recettes et fait le calcul : <strong>difficulté</strong> déduite des techniques, <em>saisonnalité</em> des ingrédients et <em>Nutri-Score</em>, sans rien à saisir.</>,
+    text: <>Cardamome lit tes recettes et fait le calcul : <strong>difficulté</strong> déduite des techniques, <em>saisonnalité</em> des ingrédients et <em>Nutri-Score</em>, sans rien à saisir.</>,
   },
   {
     illustration: PlanningIllustration, color: "#5b9cf6",
     title: "Ta semaine se planifie toute seule",
-    text: <>Génère une semaine complète en un tap : Mijoté compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Une <em>session batch</em> te dit quoi préparer d'avance, et tout s'exporte vers ton agenda.</>,
+    text: <>Génère une semaine complète en un tap : Cardamome compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Une <em>session batch</em> te dit quoi préparer d'avance, et tout s'exporte vers ton agenda.</>,
   },
   {
-    illustration: BasketIllustration, color: "#e8703a",
+    illustration: BasketIllustration, color: "#c8912f",
     title: "Courses et stock, synchronisés",
     text: <>Ta <strong>liste de courses</strong> se génère depuis ton planning et se coche à mesure. En face, ton <strong>stock</strong> se met à jour ingrédient par ingrédient.</>,
   },
@@ -197,7 +197,7 @@ const SLIDES = [
     text: <>Parcours les recettes de la communauté, filtre par <em>saison</em>, <em>type de cuisine</em> ou <em>Nutri-Score</em>, et publie les tiennes quand tu es prêt·e.</>,
   },
   {
-    illustration: HouseIllustration, color: "#e8703a",
+    illustration: HouseIllustration, color: "#6e9a3f",
     title: "La cuisine à plusieurs",
     text: <>Crée un <strong>foyer</strong> et partage recettes, planning, courses et stock <em>en temps réel</em>. À toi de jouer !</>,
   },

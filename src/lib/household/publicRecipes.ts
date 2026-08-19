@@ -55,10 +55,10 @@ export interface PublicDoc {
  * Synthétique (aucune connexion) → seul le script de seed (SDK Admin) l'écrit.
  */
 export const OFFICIAL_AUTHOR_UID = "mijote-official";
-export const OFFICIAL_AUTHOR_NAME = "Mijoté";
+export const OFFICIAL_AUTHOR_NAME = "Cardamome";
 
 /**
- * Indique si un uid est le compte officiel Mijoté.
+ * Indique si un uid est le compte officiel Cardamome.
  *
  * @param uid - Identifiant auteur à tester.
  * @returns `true` si `uid` est {@link OFFICIAL_AUTHOR_UID}.

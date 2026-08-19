@@ -41,7 +41,7 @@ export function DraggableIngredient({
   if (ing.recipeId) {
     const comp = (recipes || []).find(r => r.id === ing.recipeId);
     return (
-      <div {...rowProps} style={{ background: "rgba(232,112,58,0.06)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "rgba(232,112,58,0.4)"}`, transition: "border-color 0.15s, box-shadow 0.2s", display: "flex", alignItems: "center", gap: 10, ...dragStyle }}>
+      <div {...rowProps} style={{ background: "rgba(var(--accent-rgb),0.06)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "rgba(var(--accent-rgb),0.4)"}`, transition: "border-color 0.15s, box-shadow 0.2s", display: "flex", alignItems: "center", gap: 10, ...dragStyle }}>
         {handle}
         <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><BaseIcon size={20} /></span>
         <div style={{ flex: 1, minWidth: 0 }}>

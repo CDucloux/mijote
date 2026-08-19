@@ -67,7 +67,7 @@ export interface Intermediate {
   yield?: YieldDraft;
 }
 
-/** Ingrédient au schéma final Mijoté (id stable + texte éditable `_raw`). */
+/** Ingrédient au schéma final Cardamome (id stable + texte éditable `_raw`). */
 export interface RecipeIngredient {
   id: string;
   dbId: string;
@@ -297,7 +297,7 @@ export function filterUtensilsToKnown(utensils: DraftUtensil[], knownNames: stri
   });
 }
 
-// Assemble le brouillon FINAL au schéma Mijoté : ids stables sur ingrédients/
+// Assemble le brouillon FINAL au schéma Cardamome : ids stables sur ingrédients/
 // ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
 // fourni par le LLM, complété par détection dans le texte de l'étape).
 export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
@@ -373,12 +373,33 @@ function imgUrlFromTag(tag: string): string {
   return url;
 }
 
-// HTML → texte lisible (pour le LLM). Retire scripts/styles, et convertit les <img>
-// de contenu en marqueurs ⟦IMG:url⟧ (plafonnés) pour que le LLM puisse rattacher
-// une photo pertinente à une étape.
+// Ancres de DÉBUT de la section des commentaires de lecteurs (toujours placée
+// APRÈS la recette sur une page d'article). On vise des valeurs d'attribut id/class
+// EXACTES, jamais un simple « contient comment » : sinon un lien « 23 commentaires »
+// en tête d'article (class="comment-link"…) tronquerait la recette à tort.
+// Guillemets simples (Blogger) comme doubles (WordPress/Disqus) tolérés.
+const COMMENTS_ANCHOR = /<[a-z][\w-]*\b[^>]*\s(?:id|class)\s*=\s*["'](?:comments|comment-holder|comments-block|comments-area|comment-list|commentlist|disqus_thread|respond)["']/i;
+
+/**
+ * Coupe le HTML juste avant la section des commentaires de lecteurs, quand elle est
+ * détectée. Ces commentaires sont du bruit pur pour l'extraction : coûteux en tokens
+ * et surtout capables de rogner la fenêtre (plafond aval) réservée à la recette.
+ * Sans effet (HTML inchangé) si aucune section connue n'est trouvée.
+ *
+ * @param html - Le HTML brut de la page.
+ * @returns Le HTML tronqué à l'entrée des commentaires, ou inchangé.
+ */
+export function stripComments(html: string): string {
+  const m = html.match(COMMENTS_ANCHOR);
+  return m && m.index != null ? html.slice(0, m.index) : html;
+}
+
+// HTML → texte lisible (pour le LLM). Coupe d'abord la section des commentaires de
+// lecteurs (bruit coûteux), retire scripts/styles, et convertit les <img> de contenu
+// en marqueurs ⟦IMG:url⟧ (plafonnés) pour que le LLM rattache une photo à une étape.
 export function htmlToText(html: string, { maxImages = 15 }: { maxImages?: number } = {}): string {
   let count = 0;
-  return html
+  return stripComments(html)
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")

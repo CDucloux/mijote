@@ -5,11 +5,11 @@ title: Conditions générales d'utilisation
 order: 3
 ---
 
-Les présentes conditions générales d'utilisation (« CGU ») régissent l'utilisation de l'Application Mijoté. En vous connectant et en utilisant l'Application, vous les acceptez sans réserve. Si vous n'y consentez pas, vous devez cesser d'utiliser l'Application.
+Les présentes conditions générales d'utilisation (« CGU ») régissent l'utilisation de l'Application Cardamome. En vous connectant et en utilisant l'Application, vous les acceptez sans réserve. Si vous n'y consentez pas, vous devez cesser d'utiliser l'Application.
 
 ## Objet
 
-Mijoté est une application d'organisation culinaire : gestion de recettes, planning de repas, listes de courses et stock, avec synchronisation, partage au sein d'un foyer et possibilité de **publier** certains contenus sur l'espace public de l'Application.
+Cardamome est une application d'organisation culinaire : gestion de recettes, planning de repas, listes de courses et stock, avec synchronisation, partage au sein d'un foyer et possibilité de **publier** certains contenus sur l'espace public de l'Application.
 
 ## Accès au service
 
@@ -43,7 +43,7 @@ Vous garantissez l'éditeur contre toute réclamation, action, plainte ou demand
 
 ## Propriété intellectuelle de l'éditeur
 
-Vous conservez la propriété de vos contenus. L'éditeur conserve l'intégralité des droits sur l'Application elle-même (code, marque « Mijoté », design, textes et illustrations). Voir les [Mentions légales](/legal/legal-notice).
+Vous conservez la propriété de vos contenus. L'éditeur conserve l'intégralité des droits sur l'Application elle-même (code, marque « Cardamome », design, textes et illustrations). Voir les [Mentions légales](/legal/legal-notice).
 
 ## Limitation de responsabilité
 

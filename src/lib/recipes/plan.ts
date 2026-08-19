@@ -1,5 +1,5 @@
 /**
- * Quota de recettes du plan gratuit (Mijoté+ = illimité). Les préparations de base
+ * Quota de recettes du plan gratuit (Cardamome+ = illimité). Les préparations de base
  * (`isComponent`) ne comptent pas dans le quota : ce sont des briques, pas des recettes.
  *
  * @module plan
@@ -23,7 +23,7 @@ export function recipeQuotaCount(recipes: Recipe[]): number {
  * L'ajout de `adding` recette(s) reste-t-il dans le quota du plan ?
  *
  * @param recipes - La bibliothèque actuelle.
- * @param isPlus - L'utilisateur a-t-il l'offre Mijoté+ (quota illimité) ?
+ * @param isPlus - L'utilisateur a-t-il l'offre Cardamome+ (quota illimité) ?
  * @param adding - Nombre de recettes à ajouter (défaut 1).
  * @returns `true` si l'ajout est autorisé.
  */

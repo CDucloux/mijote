@@ -1,5 +1,5 @@
 /**
- * Abonnement Mijoté+, intégration Stripe MAISON (Cloud Functions, sans dépendre
+ * Abonnement Cardamome+, intégration Stripe MAISON (Cloud Functions, sans dépendre
  * de l'extension Firebase en fin de vie). Le front :
  *   • écoute `customers/{uid}/subscriptions` (statut renseigné par le webhook) ;
  *   • appelle `createStripeCheckout` pour obtenir l'URL de Stripe Checkout ;
@@ -14,7 +14,7 @@ import { db, firebaseApp } from "@/lib/firebase/firebase.js";
 
 /** Statuts Stripe considérés comme « abonné actif ». */
 const ACTIVE_STATUSES = ["trialing", "active"];
-/** Région des Cloud Functions Mijoté (surchargée via env si besoin). */
+/** Région des Cloud Functions Cardamome (surchargée via env si besoin). */
 const REGION = import.meta.env.VITE_STRIPE_EXT_REGION || "europe-west1";
 
 /**

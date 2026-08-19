@@ -1,4 +1,4 @@
-// ─── PAIEMENT MIJOTÉ+ (Stripe, intégration maison) ───────────────────────────
+// ─── PAIEMENT CARDAMOME+ (Stripe, intégration maison) ───────────────────────────
 // Trois fonctions, sans dépendre de l'extension Firebase (en fin de vie 2027) :
 //   • createStripeCheckout (callable) → URL de Stripe Checkout (abonnement) ;
 //   • createStripePortal   (callable) → URL du portail de facturation Stripe ;
@@ -7,7 +7,7 @@
 // Le lien uid Firebase ↔ client Stripe est stocké dans `customers/{uid}.stripeId`
 // et dupliqué en métadonnée Stripe (`firebaseUID`) pour retrouver l'uid dans le
 // webhook. L'abonnement actif est écrit dans `customers/{uid}/subscriptions/{id}`
-// (statut `active`/`trialing`), ce que le front écoute pour débloquer Mijoté+.
+// (statut `active`/`trialing`), ce que le front écoute pour débloquer Cardamome+.
 import * as logger from "firebase-functions/logger";
 import { onCall, onRequest, HttpsError, type CallableRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";

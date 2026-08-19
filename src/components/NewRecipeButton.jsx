@@ -7,8 +7,8 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── BOUTON « NOUVELLE » (choix : import IA par lien/photo, ou saisie manuelle) ─
 // Le sélecteur est visible par tous. Les imports IA sont une fonctionnalité
-// Mijoté+ : en plan gratuit ils portent un badge et renvoient vers /plus ; en
-// Mijoté+ ils ouvrent leur page dédiée (/recipes/import-from-url | -picture).
+// Cardamome+ : en plan gratuit ils portent un badge et renvoient vers /plus ; en
+// Cardamome+ ils ouvrent leur page dédiée (/recipes/import-from-url | -picture).
 
 // Pastille « IA » : pastille orange, anneau blanc fin (net dans les deux
 // thèmes) et un petit robot blanc (yeux évidés couleur pastille), centré.
@@ -36,12 +36,12 @@ function Choice({ icon, title, subtitle, onClick, accent, ai, badge }) {
     <button onClick={onClick} className={`pressable nr-choice${accent ? "" : " nr-neutral"}`} style={{
       display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
       padding: 14, borderRadius: 16,
-      background: accent ? "rgba(232,112,58,0.05)" : "var(--surface)",
-      border: `1px solid ${accent ? "rgba(232,112,58,0.32)" : "var(--border)"}`,
+      background: accent ? "rgba(var(--accent-rgb),0.05)" : "var(--surface)",
+      border: `1px solid ${accent ? "rgba(var(--accent-rgb),0.32)" : "var(--border)"}`,
       boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
     }}>
       <span style={{ position: "relative", flexShrink: 0 }}>
-        <span style={{ width: 46, height: 46, borderRadius: 14, display: "grid", placeItems: "center", background: accent ? "rgba(232,112,58,0.16)" : "var(--surface2)" }}>
+        <span style={{ width: 46, height: 46, borderRadius: 14, display: "grid", placeItems: "center", background: accent ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)" }}>
           <Icon name={icon} size={22} color={accent ? "var(--accent)" : "var(--text2)"} />
         </span>
         {ai && <AiBadge />}
@@ -66,7 +66,7 @@ export function NewRecipeButton({ onManual }) {
   const [open, setOpen] = useState(false);
 
   const goManual = () => { setOpen(false); onManual(); };
-  // Imports IA = fonctionnalité Mijoté+. En plan gratuit, on renvoie vers la page
+  // Imports IA = fonctionnalité Cardamome+. En plan gratuit, on renvoie vers la page
   // d'offre au lieu d'ouvrir l'import.
   const goImportOrPlus = (path) => { setOpen(false); navigate(isPlus ? path : "/plus"); };
   const plusBadge = !isPlus ? <PlusBadge /> : undefined;
@@ -85,7 +85,7 @@ export function NewRecipeButton({ onManual }) {
           {/* En-tête : pastille d'icône + titre + sous-titre (cohérent avec les
               autres feuilles retravaillées). */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <span style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: "rgba(232,112,58,0.12)", display: "grid", placeItems: "center" }}>
+            <span style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
               <Icon name="book" size={20} color="var(--accent)" />
             </span>
             <div style={{ minWidth: 0 }}>

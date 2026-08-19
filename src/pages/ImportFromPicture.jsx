@@ -17,12 +17,12 @@ const MAX_PHOTOS = 2;
 function AddPhoto({ label, hint, onClick, style }) {
   return (
     <button onClick={onClick} className="pressable" style={{
-      aspectRatio: "3/4", borderRadius: 16, border: "1.5px dashed rgba(232,112,58,0.4)",
-      background: "rgba(232,112,58,0.05)", padding: 12,
+      aspectRatio: "3/4", borderRadius: 16, border: "1.5px dashed rgba(var(--accent-rgb),0.4)",
+      background: "rgba(var(--accent-rgb),0.05)", padding: 12,
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer",
       ...style,
     }}>
-      <span style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(232,112,58,0.14)", display: "grid", placeItems: "center" }}>
+      <span style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(var(--accent-rgb),0.14)", display: "grid", placeItems: "center" }}>
         <Icon name="plus" size={24} color="var(--accent)" />
       </span>
       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>{label}</span>
@@ -89,7 +89,7 @@ export function ImportFromPicture() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560, margin: "0 auto" }}>
           {/* Intro */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-            <span style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(232,112,58,0.15)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+            <span style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(var(--accent-rgb),0.15)", display: "grid", placeItems: "center", flexShrink: 0 }}>
               <Icon name="photo" size={19} color="var(--accent)" />
             </span>
             <div>

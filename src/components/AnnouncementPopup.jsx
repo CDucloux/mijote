@@ -34,12 +34,12 @@ export function AnnouncementPopup() {
         }}
       >
         <div style={{
-          background: "linear-gradient(135deg, rgba(232,112,58,0.18), rgba(232,112,58,0.06))",
-          borderBottom: "1px solid rgba(232,112,58,0.25)",
+          background: "linear-gradient(135deg, rgba(var(--accent-rgb),0.18), rgba(var(--accent-rgb),0.06))",
+          borderBottom: "1px solid rgba(var(--accent-rgb),0.25)",
           padding: "20px 20px 16px",
           display: "flex", alignItems: "flex-start", gap: 14,
         }}>
-          <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 3px 10px rgba(232,112,58,0.45)" }}>
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 3px 10px rgba(var(--accent-rgb),0.45)" }}>
             <Icon name="sparkle" size={20} color="#fff" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>

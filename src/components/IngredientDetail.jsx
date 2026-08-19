@@ -132,7 +132,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           {editing ? (
             <>
               <button onClick={cancel} className="pressable fiche-hdr-btn" style={{ display: "inline-flex", alignItems: "center", height: 40, padding: "0 16px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>Annuler</button>
-              <button onClick={save} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 20px", borderRadius: 999, background: "var(--accent)", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 700, color: "#fff", boxShadow: "0 6px 16px -8px rgba(232,112,58,0.8)" }}>
+              <button onClick={save} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 20px", borderRadius: 999, background: "var(--accent)", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 700, color: "#fff", boxShadow: "0 6px 16px -8px rgba(var(--accent-rgb),0.8)" }}>
                 <Icon name="check" size={16} color="#fff" /> Enregistrer
               </button>
             </>
@@ -315,7 +315,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           <div className="slide-up" style={{ marginTop: 24 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500 }}>Tips utiles</div>
-              <button onClick={() => up({ tips: [...(draft.tips || []), { type: "prep", text: "" }] })} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "rgba(232,112,58,0.1)", border: "1px solid rgba(232,112,58,0.28)", borderRadius: 999, padding: "5px 12px", cursor: "pointer" }}>
+              <button onClick={() => up({ tips: [...(draft.tips || []), { type: "prep", text: "" }] })} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.28)", borderRadius: 999, padding: "5px 12px", cursor: "pointer" }}>
                 <Icon name="plus" size={13} color="var(--accent)" /> Ajouter
               </button>
             </div>

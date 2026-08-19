@@ -115,7 +115,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     : "";
 
   // Icône « base » (casserole) – SVG inline, cohérente avec l'app.
-  const baseIconSvg = (size = 16): string => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#e8703a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.5 9H7.5L6 8Z"/><line x1="5" y1="8" x2="19" y2="8"/><path d="M6 10H3.5a1.5 1.5 0 0 0 0 3H6"/><path d="M18 10h2.5a1.5 1.5 0 0 1 0 3H18"/><path d="M10 5c0-1 1-1 1-2"/><path d="M14 5c0-1 1-1 1-2"/></svg>`;
+  const baseIconSvg = (size = 16): string => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#6e9a3f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.5 9H7.5L6 8Z"/><line x1="5" y1="8" x2="19" y2="8"/><path d="M6 10H3.5a1.5 1.5 0 0 0 0 3H6"/><path d="M18 10h2.5a1.5 1.5 0 0 1 0 3H18"/><path d="M10 5c0-1 1-1 1-2"/><path d="M14 5c0-1 1-1 1-2"/></svg>`;
 
   const pill = (imgOrEmoji: string | null, name: string | undefined, qty: string, isComp = false): string => {
     const imgHtml = isComp
@@ -261,12 +261,12 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>${recipe.name} – Mijoté</title>
+  <title>${recipe.name} – Cardamome</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,300&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --accent: #e8703a; --text: #1a1714; --text2: #5a5250; --text3: #9a9490; --border: #e8e0d8; --surface: #f9f6f2; }
+    :root { --accent: #6e9a3f; --text: #23281d; --text2: #565b4c; --text3: #838872; --border: #e3e5d9; --surface: #f7f8f1; }
     body { font-family: 'Hanken Grotesk', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .hero-wrap { position: relative; margin-bottom: 24px; }
     .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; display: block; }
@@ -299,8 +299,8 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
     .group-title { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; color: var(--accent); margin: 4px 0 10px; }
     /* Sous-préparation d'étapes : bloc encadré, nettement séparé des autres */
-    .step-group { border: 1px solid rgba(232, 112, 58, 0.35); border-radius: 14px; padding: 16px 18px 2px; margin-bottom: 20px; background: rgba(232, 112, 58, 0.035); }
-    .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(232, 112, 58, 0.25); }
+    .step-group { border: 1px solid rgba(var(--accent-rgb), 0.35); border-radius: 14px; padding: 16px 18px 2px; margin-bottom: 20px; background: rgba(var(--accent-rgb), 0.035); }
+    .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(110, 154, 63, 0.28); }
     .step-group-ico { flex-shrink: 0; }
     .step-group .step:last-child { margin-bottom: 16px; }
     /* Intitulé des étapes hors section (« Préparation », « Montage »), même accent que
@@ -308,10 +308,10 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .step-loose-title { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--accent); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     /* Pills */
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
-    .pill-comp { border-color: rgba(232,112,58,0.4); background: rgba(232,112,58,0.06); }
+    .pill-comp { border-color: rgba(var(--accent-rgb),0.4); background: rgba(var(--accent-rgb),0.06); }
     .pill-img { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #fff; border: 1px solid var(--border); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
     .pill-img img { width: 100%; height: 100%; object-fit: contain; padding: 8%; box-sizing: border-box; }
-    .pill-comp-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(232,112,58,0.12); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .pill-comp-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(var(--accent-rgb),0.12); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
     .pill-name { font-weight: 500; color: var(--text); }
     .pill-comp .pill-name { color: var(--accent); }
     .pill-qty { color: var(--text3); font-weight: 500; }
@@ -331,7 +331,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .comp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .comp-icon { display: inline-flex; align-items: center; }
     .comp-name { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
-    .comp-yield { font-size: 12px; color: var(--text3); background: rgba(232,112,58,0.1); border-radius: 20px; padding: 3px 10px; }
+    .comp-yield { font-size: 12px; color: var(--text3); background: rgba(var(--accent-rgb),0.1); border-radius: 20px; padding: 3px 10px; }
     /* Footer */
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); }
     .footer-brand { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
@@ -389,7 +389,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   ${stepLines}` : ""}
 
   <div class="footer">
-    <span class="footer-brand">Mijoté<span class="dot">·</span></span>
+    <span class="footer-brand">Cardamome<span class="dot">·</span></span>
     <span class="footer-meta">
       <span class="footer-gen">Généré le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}${recipe.history?.length ? `<span class="version-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="14"/></svg>${recipe.history[recipe.history.length - 1].label}</span>` : ""}</span>
     </span>

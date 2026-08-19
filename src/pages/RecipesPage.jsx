@@ -284,7 +284,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 setCollections(prev => prev.map(c => c.id === editingSmartId ? { ...c, filters: { ...DEFAULT_FILTERS, ...filters }, search: search.trim() } : c));
                 close(() => { setFilterOpen(false); setEditingSmartId(null); });
               } else {
-                close(() => { setFilterOpen(false); setEditingSmartId(null); setNewCarnet({ name: "", color: "#e8703a", icon: "📓", smart: true, filters: { ...filters }, search }); });
+                close(() => { setFilterOpen(false); setEditingSmartId(null); setNewCarnet({ name: "", color: "#6e9a3f", icon: "📓", smart: true, filters: { ...filters }, search }); });
               }
             }} />
           )}
@@ -356,7 +356,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 );
               })}
               {/* Carte « ajouter un carnet » – même gabarit que les carnets */}
-              <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#e8703a", icon: "📓" })} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
+              <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#6e9a3f", icon: "📓" })} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
                 <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", border: "2px dashed var(--border)" }}>
                   <div style={{ position: "relative", aspectRatio: "1/1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text3)" }}>
                     <span className="notebook-add-plus" style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--surface2)", color: "var(--text2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="plus" size={20} color="currentColor" /></span>
@@ -550,7 +550,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 const inCol = (rec.collections || []).includes(col.id);
                 return (
                   <button key={col.id} onClick={() => onToggleCollection?.(rec.id, col.id)}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: inCol ? "rgba(232,112,58,0.10)" : "var(--surface2)", border: `1px solid ${inCol ? "rgba(232,112,58,0.4)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", transition: "background 0.15s, border-color 0.15s" }}>
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: inCol ? "rgba(var(--accent-rgb),0.10)" : "var(--surface2)", border: `1px solid ${inCol ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", transition: "background 0.15s, border-color 0.15s" }}>
                     <span style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: col.color + "33", display: "grid", placeItems: "center", fontSize: 18 }}>{col.icon || "📓"}</span>
                     <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{col.name}</span>
                     <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: inCol ? "var(--accent)" : "transparent", border: `2px solid ${inCol ? "var(--accent)" : "var(--border)"}`, display: "grid", placeItems: "center" }}>
@@ -667,7 +667,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
 
           <div className="field-label" style={{ marginBottom: 9 }}>Couleur</div>
           <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
-            {["#e8703a", "#f0c060", "#e05252", "#4caf7d", "#5b9cf6", "#c080e0", "#f0a875", "#9a9490"].map(c => {
+            {["#6e9a3f", "#f0c060", "#e05252", "#5fb88a", "#5b9cf6", "#c080e0", "#e0a23e", "#9a9490"].map(c => {
               const on = newCarnet.color === c;
               return (
                 <button key={c} onClick={() => setNewCarnet(p => ({ ...p, color: c }))} aria-label={`Couleur ${c}`} className="pressable"
@@ -710,7 +710,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 </div>
                 {chips.length ? (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 20, background: "rgba(232,112,58,0.12)", color: "var(--accent)", border: "1px solid rgba(232,112,58,0.28)" }}>{c}</span>)}
+                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 20, background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.28)" }}>{c}</span>)}
                   </div>
                 ) : (
                   <button onClick={editFilters} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 12px", borderRadius: 12, background: "var(--surface2)", border: "1px dashed var(--border)", color: "var(--text3)", fontSize: 12.5, cursor: "pointer", textAlign: "left" }}>

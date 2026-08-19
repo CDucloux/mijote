@@ -199,7 +199,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                     </span>
                   )}
                   {lowInCat > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(232,112,58,0.15)", color: "var(--accent)" }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)" }}>
                       {lowInCat} bientôt vide
                     </span>
                   )}
@@ -212,8 +212,8 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                     const low = lowSet.has(ing.id);
                     // Couleurs selon l'état : bientôt vide (orange) > en stock (vert) > absent
                     const accentCol = low ? "var(--accent)" : "var(--green)";
-                    const borderCol = low ? "rgba(232,112,58,0.6)" : has ? "rgba(76,175,125,0.6)" : "var(--border)";
-                    const bgCol = low ? "rgba(232,112,58,0.10)" : has ? "rgba(76,175,125,0.10)" : "var(--surface)";
+                    const borderCol = low ? "rgba(var(--accent-rgb),0.6)" : has ? "rgba(76,175,125,0.6)" : "var(--border)";
+                    const bgCol = low ? "rgba(var(--accent-rgb),0.10)" : has ? "rgba(76,175,125,0.10)" : "var(--surface)";
                     return (
                       <button
                         key={ing.id}

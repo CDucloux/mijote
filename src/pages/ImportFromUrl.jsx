@@ -87,7 +87,7 @@ export function ImportFromUrl() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560, margin: "0 auto" }}>
           {/* Intro */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-            <span style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(232,112,58,0.15)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+            <span style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(var(--accent-rgb),0.15)", display: "grid", placeItems: "center", flexShrink: 0 }}>
               <Icon name="link" size={19} color="var(--accent)" />
             </span>
             <div>
@@ -102,7 +102,7 @@ export function ImportFromUrl() {
           {clip && clip !== url && (
             <button onClick={() => { setUrl(clip); setError(""); }} className="pressable" style={{
               display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
-              padding: "13px 14px", borderRadius: 14, background: "rgba(232,112,58,0.08)", border: "1.5px dashed rgba(232,112,58,0.5)",
+              padding: "13px 14px", borderRadius: 14, background: "rgba(var(--accent-rgb),0.08)", border: "1.5px dashed rgba(var(--accent-rgb),0.5)",
             }}>
               <Icon name="copy" size={18} color="var(--accent)" />
               <span style={{ flex: 1, minWidth: 0 }}>
@@ -126,7 +126,7 @@ export function ImportFromUrl() {
 
           {/* Aides */}
           <HintCard icon="share" iconColor="var(--blue)" tint="rgba(91,156,246,0.14)">
-            Tu peux aussi <strong style={{ color: "var(--text)" }}>partager une page vers Mijoté</strong> depuis ton navigateur : la recette arrive directement ici.
+            Tu peux aussi <strong style={{ color: "var(--text)" }}>partager une page vers Cardamome</strong> depuis ton navigateur : la recette arrive directement ici.
           </HintCard>
         </div>
       </div>

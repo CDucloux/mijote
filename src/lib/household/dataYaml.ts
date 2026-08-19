@@ -184,7 +184,7 @@ export function formatTechniquesMarkdown(list: TechniqueRow[]): string {
   const body = rows.map(r =>
     `| ${esc(r.name)} | ${esc(TECHNIQUE_CATEGORIES[r.category || ""] || r.category)} | ${r.difficulty ? `${r.difficulty}/5` : "–"} | ${esc(r.definition)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.source)} |`
   ).join("\n");
-  return `# Glossaire des techniques Mijoté (${rows.length})\n\n${header}\n${body}\n`;
+  return `# Glossaire des techniques Cardamome (${rows.length})\n\n${header}\n${body}\n`;
 }
 
 /**
@@ -206,7 +206,7 @@ export function formatTechniquesYaml(list: TechniqueRow[]): string {
       if (t.source) o.source = t.source;
       return o;
     });
-  return dumpYaml(rows, `# Glossaire des techniques Mijoté (${rows.length}) – généré, réimportable.\n`);
+  return dumpYaml(rows, `# Glossaire des techniques Cardamome (${rows.length}) – généré, réimportable.\n`);
 }
 
 /** Ingrédient (forme minimale utilisée par l'export). */
@@ -260,7 +260,7 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
       }
       return o;
     });
-  return dumpYaml(rows, `# Base d'ingrédients Mijoté (${rows.length}) – généré, réimportable. Valeurs pour 100 g.\n`);
+  return dumpYaml(rows, `# Base d'ingrédients Cardamome (${rows.length}) – généré, réimportable. Valeurs pour 100 g.\n`);
 }
 
 /** Ustensile (forme minimale utilisée par l'export). */
@@ -277,7 +277,7 @@ export function formatUtensilsYaml(list: UtensilRow[]): string {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
     .map(d => { const o: Record<string, unknown> = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.category) o.category = d.category; if (d.appliance) o.appliance = d.appliance; if (d.image) o.image = d.image; return o; });
-  return dumpYaml(rows, `# Base d'ustensiles Mijoté (${rows.length}) – généré, réimportable.\n`);
+  return dumpYaml(rows, `# Base d'ustensiles Cardamome (${rows.length}) – généré, réimportable.\n`);
 }
 
 // ─── INGRÉDIENTS ──────────────────────────────────────────────────────────────

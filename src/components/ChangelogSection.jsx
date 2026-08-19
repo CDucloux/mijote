@@ -18,13 +18,13 @@ export function ChangelogSection() {
           <div key={entry.version} className="slide-up" style={{ display: "flex", gap: 0, animationDelay: `${i * 0.05}s` }}>
             {/* Timeline rail */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 36, flexShrink: 0 }}>
-              <div style={{ width: isLatest ? 13 : 9, height: isLatest ? 13 : 9, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--border)", border: isLatest ? "3px solid var(--accent)" : "2px solid var(--border)", boxShadow: isLatest ? "0 0 0 4px rgba(232,112,58,0.18)" : "none", marginTop: isLatest ? 14 : 16, zIndex: 1, flexShrink: 0 }} />
+              <div style={{ width: isLatest ? 13 : 9, height: isLatest ? 13 : 9, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--border)", border: isLatest ? "3px solid var(--accent)" : "2px solid var(--border)", boxShadow: isLatest ? "0 0 0 4px rgba(var(--accent-rgb),0.18)" : "none", marginTop: isLatest ? 14 : 16, zIndex: 1, flexShrink: 0 }} />
               {i < entries.length - 1 && <div style={{ flex: 1, width: 2, background: "var(--border)", marginTop: 4, marginBottom: 0 }} />}
             </div>
             {/* Card */}
             <div style={{ flex: 1, marginBottom: 16, marginLeft: 10 }}>
               <button onClick={() => !isLatest && toggle(entry.version)}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: isLatest ? "14px 16px 12px" : "12px 16px", background: isLatest ? "linear-gradient(135deg,rgba(232,112,58,0.10),rgba(232,112,58,0.03))" : "var(--surface)", border: isLatest ? "1px solid rgba(232,112,58,0.35)" : "1px solid var(--border)", borderRadius: isExpanded ? "14px 14px 0 0" : 14, cursor: isLatest ? "default" : "pointer", textAlign: "left", transition: "border-radius 0.2s" }}>
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: isLatest ? "14px 16px 12px" : "12px 16px", background: isLatest ? "linear-gradient(135deg,rgba(var(--accent-rgb),0.10),rgba(var(--accent-rgb),0.03))" : "var(--surface)", border: isLatest ? "1px solid rgba(var(--accent-rgb),0.35)" : "1px solid var(--border)", borderRadius: isExpanded ? "14px 14px 0 0" : 14, cursor: isLatest ? "default" : "pointer", textAlign: "left", transition: "border-radius 0.2s" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
                     <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, color: isLatest ? "var(--accent)" : "var(--text)" }}>v{entry.version}</span>
@@ -41,7 +41,7 @@ export function ChangelogSection() {
                 )}
               </button>
               {isExpanded && (
-                <div style={{ background: isLatest ? "linear-gradient(135deg,rgba(232,112,58,0.06),rgba(232,112,58,0.01))" : "var(--surface)", border: isLatest ? "1px solid rgba(232,112,58,0.35)" : "1px solid var(--border)", borderTop: "none", borderRadius: "0 0 14px 14px", padding: "10px 16px 14px", animation: "expandDown 0.2s ease", display: "flex", flexDirection: "column", gap: 7 }}>
+                <div style={{ background: isLatest ? "linear-gradient(135deg,rgba(var(--accent-rgb),0.06),rgba(var(--accent-rgb),0.01))" : "var(--surface)", border: isLatest ? "1px solid rgba(var(--accent-rgb),0.35)" : "1px solid var(--border)", borderTop: "none", borderRadius: "0 0 14px 14px", padding: "10px 16px 14px", animation: "expandDown 0.2s ease", display: "flex", flexDirection: "column", gap: 7 }}>
                   {entry.items.map((item, j) => (
                     <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
                       <div style={{ width: 4, height: 4, borderRadius: "50%", background: isLatest ? "var(--accent)" : "var(--border)", marginTop: 7, flexShrink: 0 }} />

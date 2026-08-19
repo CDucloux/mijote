@@ -1,4 +1,4 @@
-# Mijoté : Bibliothèque métier
+# Cardamome : Bibliothèque métier
 
 Cette documentation est générée automatiquement à partir des annotations **TSDoc**
 du dossier [`src/lib`](https://github.com/CDucloux/mijote/tree/main/src/lib) : le
