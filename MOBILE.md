@@ -47,11 +47,12 @@ Bundle**, choisir/creer la clé de signature, produire le fichier **`.aab`**.
 
 ## 4. `appId` : à verrouiller AVANT la première publication
 
-`capacitor.config.json` porte `"appId": "app.mijote"`. Cet identifiant est
-**IMMUABLE une fois l'app publiée sur Play** (il devient le `applicationId` Android).
+`capacitor.config.json` porte `"appId": "studio.cardamome"` (reverse-domain de
+`cardamome.studio`). Cet identifiant est **IMMUABLE une fois l'app publiée sur
+Play** (il devient le `applicationId` Android).
 
 - [ ] Confirmer l'`appId` en reverse-domain d'un domaine que tu contrôles
-      (ex. `app.mijote` si tu as `mijote.app`, `fr.mijote` si `mijote.fr`).
+      (ici `studio.cardamome` pour `cardamome.studio`).
       Le changer plus tard = nouvelle fiche Play, nouvelle app.
 
 ## 5. Auth Google native (Phase 2)
@@ -67,7 +68,7 @@ Il reste la **configuration native** (côté Firebase / Google, pas du code) :
 
 - [ ] Dans **Firebase Auth**, activer le fournisseur **Google** (crée le client OAuth
       « Web » dont le SDK natif a besoin pour obtenir un idToken).
-- [ ] Enregistrer l'app **Android** (`appId` = `app.mijote`) dans le projet Firebase,
+- [ ] Enregistrer l'app **Android** (`appId` = `studio.cardamome`) dans le projet Firebase,
       puis télécharger **`google-services.json`** et le déposer dans `android/app/`.
 - [ ] Enregistrer le **SHA-1** (et SHA-256) de ta clé de signature dans Firebase
       (Paramètres du projet > ton app Android > Empreintes). Avec **Play App Signing**,
