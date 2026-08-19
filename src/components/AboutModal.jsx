@@ -37,9 +37,19 @@ export function AboutModal({ onClose }) {
       <Col gap={22} style={{ padding: "4px 20px 24px" }}>
         {/* En-tête */}
         <Col align="center" gap={8} style={{ paddingTop: 6 }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>
-            Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span>
-          </div>
+          <Row gap={9} justify="center" style={{ alignItems: "center" }}>
+            <svg viewBox="15 15 70 70" width="40" height="40" fill="none" aria-hidden="true">
+              <path d="M50 15 C68 30 74 48 67 63 C62.5 74 55.5 80 50 85 C44.5 80 37.5 74 33 63 C26 48 32 30 50 15 Z" fill="var(--accent2)" />
+              <g stroke="var(--accent-strong)" strokeLinecap="round">
+                <path d="M50 24 C50 40 50 62 50 77" strokeWidth="4" />
+                <path d="M42 30 C39.5 45 41 60 47 74" strokeWidth="3.4" />
+                <path d="M58 30 C60.5 45 59 60 53 74" strokeWidth="3.4" />
+              </g>
+            </svg>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>
+              Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span>
+            </div>
+          </Row>
           <Pill style={{ padding: "3px 11px", background: "rgba(122, 155, 107, 0.18)", border: "1px solid rgba(122, 155, 107, 0.35)", color: "#8fba7a", fontSize: 12, fontWeight: 500, fontFamily: "var(--ff-body)" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#8fba7a", flexShrink: 0 }} />
             {`v${__APP_VERSION__}${codename ? ` – ${codename}` : ""}`}

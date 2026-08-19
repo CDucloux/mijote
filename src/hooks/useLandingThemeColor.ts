@@ -26,7 +26,7 @@ export function useLandingThemeColor(isDark: boolean): void {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) return;
     const css = getComputedStyle(document.documentElement);
-    const bg = css.getPropertyValue("--bg").trim() || (isDark ? "#0e0e0f" : "#f5f0eb");
+    const bg = css.getPropertyValue("--bg").trim() || (isDark ? "#0f110d" : "#f3f4ec");
     const accent = css.getPropertyValue("--accent").trim();
     meta.setAttribute("content", overlayHex(bg, accent, isDark ? TINT_DARK : TINT_LIGHT));
     return () => { meta.setAttribute("content", bg); };

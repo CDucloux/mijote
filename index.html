@@ -24,7 +24,7 @@
           var dark = localStorage.getItem("rf_theme") !== "light";
           if (!dark) document.documentElement.classList.add("light");
           var m = document.querySelector('meta[name="theme-color"]');
-          if (m) m.setAttribute("content", dark ? "#10120e" : "#f5f0eb");
+          if (m) m.setAttribute("content", dark ? "#0f110d" : "#f3f4ec");
         } catch (e) {}
       })();
     </script>
@@ -35,7 +35,7 @@
     <!-- Balise UNIQUE (sans media) pilotée par l'appli : la couleur des barres PWA
          suit le thème in-app, pas celui du système. Valeur par défaut = thème sombre
          (défaut de l'appli), ajustée très tôt par le script ci-dessus puis en direct. -->
-    <meta name="theme-color" content="#10120e" />
+    <meta name="theme-color" content="#0f110d" />
     <link rel="canonical" href="https://mijote-sand.vercel.app/" />
 
     <!-- Icônes -->

@@ -14,7 +14,7 @@ type ViewTransitionDocument = Document & {
 function applyThemeToDOM(dark: boolean): void {
   document.documentElement.classList.toggle("light", !dark);
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", dark ? "#0e0e0f" : "#f5f0eb");
+  if (meta) meta.setAttribute("content", dark ? "#0f110d" : "#f3f4ec");
 }
 
 /**
