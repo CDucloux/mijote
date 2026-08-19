@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.0.2 – Cardamome · Sarcelle & ambre
+
+### Interface
+- **Une couleur à part pour les validations** : coché, étape faite, « Terminé », en stock et minuteur écoulé quittent le vert pour une **sarcelle** franche. Le vert ne sert plus qu'au sens (saisonnalité, difficulté, vegan, score santé), ce qui lève la confusion des deux verts : dans le mode cuisine, l'étape en cours reste en vert d'accent, les étapes faites passent en sarcelle, deux rôles enfin lisibles d'un coup d'œil.
+- **L'« ingrédient du moment » se réchauffe** : le module éditorial passe à l'**ambre** (bandeau, encart, bouton Publier) pour sortir du tout-vert. Sa frise garde bien son dégradé de saison, qui reste une donnée.
+
 ## v4.0.1 – Cardamome · Couleurs affinées
 
 ### Interface
