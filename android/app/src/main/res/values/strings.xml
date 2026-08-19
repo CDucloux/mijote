@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cardamome</string>
+    <string name="title_activity_main">Cardamome</string>
+    <string name="package_name">studio.cardamome</string>
+    <string name="custom_url_scheme">studio.cardamome</string>
+</resources>
