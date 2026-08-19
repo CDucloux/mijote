@@ -84,8 +84,8 @@ export function PlusPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 560, margin: "0 auto" }}>
           {/* Hero : bandeau de confirmation vert si abonné, sinon pitch */}
           {isPlus ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, background: "rgba(76,175,125,0.1)", border: "1px solid rgba(76,175,125,0.4)" }}>
-              <span style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--green)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 5px 16px -5px rgba(76,175,125,0.65)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, background: "rgba(var(--green-rgb),0.1)", border: "1px solid rgba(var(--green-rgb),0.4)" }}>
+              <span style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--green)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 5px 16px -5px rgba(var(--green-rgb),0.65)" }}>
                 <Icon name="check" size={24} color="#fff" />
               </span>
               <div style={{ minWidth: 0 }}>

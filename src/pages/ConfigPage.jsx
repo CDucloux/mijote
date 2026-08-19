@@ -682,7 +682,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           if (!groups.length) {
             return (
               <div className="slide-up" style={{ minHeight: "46vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", color: "var(--text3)", gap: 12 }}>
-                <span style={{ width: 60, height: 60, borderRadius: 20, background: "rgba(76,175,125,0.12)", display: "grid", placeItems: "center" }}>
+                <span style={{ width: 60, height: 60, borderRadius: 20, background: "rgba(var(--green-rgb),0.12)", display: "grid", placeItems: "center" }}>
                   <Icon name="check" size={26} color="var(--green)" />
                 </span>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>Aucun signalement</div>

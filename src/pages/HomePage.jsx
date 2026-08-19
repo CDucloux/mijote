@@ -248,7 +248,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           ) : isCalm ? (
             <button className="slide-up pressable ripple" onClick={() => setTab?.("meal-plan")}
               style={{ animationDelay: "0.04s", display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
-              <span style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "rgba(76,175,125,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--green-rgb),0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Icon name="check" size={15} color="var(--green)" />
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

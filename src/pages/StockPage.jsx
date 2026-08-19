@@ -194,7 +194,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                   <span style={{ fontSize: 15 }}>{cat.icon}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)", letterSpacing: "0.01em" }}>{cat.label}</span>
                   {view === "all" && inStockInCat > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(76,175,125,0.15)", color: "var(--green)" }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(var(--green-rgb),0.15)", color: "var(--green)" }}>
                       {inStockInCat}/{ings.length}
                     </span>
                   )}
@@ -212,8 +212,8 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                     const low = lowSet.has(ing.id);
                     // Couleurs selon l'état : bientôt vide (orange) > en stock (vert) > absent
                     const accentCol = low ? "var(--accent)" : "var(--green)";
-                    const borderCol = low ? "rgba(var(--accent-rgb),0.6)" : has ? "rgba(76,175,125,0.6)" : "var(--border)";
-                    const bgCol = low ? "rgba(var(--accent-rgb),0.10)" : has ? "rgba(76,175,125,0.10)" : "var(--surface)";
+                    const borderCol = low ? "rgba(var(--accent-rgb),0.6)" : has ? "rgba(var(--green-rgb),0.6)" : "var(--border)";
+                    const bgCol = low ? "rgba(var(--accent-rgb),0.10)" : has ? "rgba(var(--green-rgb),0.10)" : "var(--surface)";
                     return (
                       <button
                         key={ing.id}

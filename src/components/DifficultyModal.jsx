@@ -8,7 +8,7 @@ import { Row, Col, IconChip } from "./ui/primitives.jsx";
 
 // Teintes douces dérivées de la couleur de difficulté (vert / ambre / rouge).
 function tints(color) {
-  if (color === "var(--green)") return { soft: "rgba(76,175,125,0.13)", line: "rgba(76,175,125,0.32)" };
+  if (color === "var(--green)") return { soft: "rgba(var(--green-rgb),0.13)", line: "rgba(var(--green-rgb),0.32)" };
   if (color === "var(--red)") return { soft: "rgba(224,82,82,0.13)", line: "rgba(224,82,82,0.32)" };
   return { soft: "rgba(232,146,10,0.13)", line: "rgba(232,146,10,0.32)" };
 }

@@ -391,8 +391,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </span>
           <button onClick={() => navigate(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={() => setCurrentDate(new Date())} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
-          <button onClick={exportICS} title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(91,156,246,0.15)", border: "1px solid rgba(91,156,246,0.35)", color: "var(--blue)", flexShrink: 0 }}>
-            <Icon name="calendar" size={13} color="var(--blue)" /> Agenda
+          <button onClick={exportICS} title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", flexShrink: 0 }}>
+            <Icon name="calendar" size={13} color="var(--text2)" /> Agenda
           </button>
         </div>
       </div>
@@ -408,7 +408,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               <button onClick={() => isPlus ? openBatch() : goPlus()} className="pressable"
                 style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
                   padding: "12px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
-                <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(76,175,125,0.18)" }}>
+                <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--green-rgb),0.18)" }}>
                   <Icon name="fire" size={19} color="var(--green)" />
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
@@ -556,7 +556,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               const added = addedId === r.id;
               return (
                 <button key={r.id} onClick={() => confirmAdd(r)} disabled={!!addedId} className="complete-row"
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(76,175,125,0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease", opacity: addedId && !added ? 0.55 : 1 }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--green-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease", opacity: addedId && !added ? 0.55 : 1 }}>
                   <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
@@ -662,10 +662,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           <button onClick={() => setGenBatch(v => !v)} className="pressable" style={{
             display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
             padding: "12px 14px", borderRadius: 14, marginBottom: 16,
-            background: genBatch ? "rgba(76,175,125,0.12)" : "var(--surface2)",
+            background: genBatch ? "rgba(var(--green-rgb),0.12)" : "var(--surface2)",
             border: `1.5px solid ${genBatch ? "var(--green)" : "var(--border)"}`,
           }}>
-            <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: genBatch ? "rgba(76,175,125,0.2)" : "var(--surface3)" }}>
+            <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: genBatch ? "rgba(var(--green-rgb),0.2)" : "var(--surface3)" }}>
               <Icon name="fire" size={18} color={genBatch ? "var(--green)" : "var(--text2)"} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
@@ -688,7 +688,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           {/* En-tête de page */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
             <button onClick={closeBatch} className="cook-close-btn" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
-            <span style={{ width: 34, height: 34, borderRadius: 11, background: "rgba(76,175,125,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={18} color="var(--green)" /></span>
+            <span style={{ width: 34, height: 34, borderRadius: 11, background: "rgba(var(--green-rgb),0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={18} color="var(--green)" /></span>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.15 }}>Session batch</div>
               <div style={{ fontSize: 11, color: "var(--text3)" }}>{`Semaine du ${new Date(weekDays[0] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[0] + "T12:00").getMonth()]}`}</div>
@@ -741,8 +741,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                             return (
                               <button key={it.key} onClick={() => togglePrep(it.key)} className="pressable" style={{
                                 display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", cursor: "pointer",
-                                padding: "10px 12px", borderRadius: 13, background: done ? "rgba(76,175,125,0.07)" : "var(--surface)",
-                                border: `1px solid ${done ? "rgba(76,175,125,0.35)" : "var(--border)"}`, boxShadow: done ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
+                                padding: "10px 12px", borderRadius: 13, background: done ? "rgba(var(--green-rgb),0.07)" : "var(--surface)",
+                                border: `1px solid ${done ? "rgba(var(--green-rgb),0.35)" : "var(--border)"}`, boxShadow: done ? "none" : "0 1px 2px rgba(0,0,0,0.04)",
                               }}>
                                 <span style={{ width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: "grid", placeItems: "center", border: `2px solid ${done ? "var(--green)" : "var(--border)"}`, background: done ? "var(--green)" : "transparent", transition: "background 0.15s, border-color 0.15s" }}>
                                   {done && <Icon name="check" size={13} color="#fff" />}
@@ -794,12 +794,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   {secHead("🧩", "À préparer d'avance", "Les bases partagées entre plusieurs plats.")}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {batch.bases.map(b => (
-                      <button key={b.recipe.id} onClick={() => { onSelectRecipe(b.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", background: b.shared ? "rgba(76,175,125,0.07)" : "var(--surface)", borderRadius: 14, border: `1px solid ${b.shared ? "rgba(76,175,125,0.35)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                      <button key={b.recipe.id} onClick={() => { onSelectRecipe(b.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", background: b.shared ? "rgba(var(--green-rgb),0.07)" : "var(--surface)", borderRadius: 14, border: `1px solid ${b.shared ? "rgba(var(--green-rgb),0.35)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, fontWeight: 700 }}>{b.recipe.name}</div>
                           <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Pour {b.usedBy.join(", ")}</div>
                         </div>
-                        {b.shared && <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.16)", padding: "3px 8px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0 }}>Partagé</span>}
+                        {b.shared && <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--green)", background: "rgba(var(--green-rgb),0.16)", padding: "3px 8px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0 }}>Partagé</span>}
                         <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>{b.amount} {b.unit}</span>
                       </button>
                     ))}

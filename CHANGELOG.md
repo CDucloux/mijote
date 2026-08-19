@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.0.1 – Cardamome · Couleurs affinées
+
+### Interface
+- **Planning en tons chauds** : les créneaux matin / midi / soir quittent l'orange/jaune/bleu (qui tournaient boueux en sombre) pour un arc de journée chaud, dans la famille cardamome : miel, ambre, terracotta. Teintes theme-aware, propres en sombre comme en clair. Le bouton « Agenda » passe en pastille neutre discrète.
+- **Vert de validation distinct** : le vert « coché / étape faite / Terminé / en stock » quitte le turquoise (qui se battait avec le vert de la marque) pour un vert franc, dé-turquoisé. Résultat : dans la fiche recette, ingrédients ET ustensiles d'une étape partagent enfin le même vert d'accent, et le vert de validation reste lisible comme un état à part.
+- **Un peu plus de couleur** : l'ambre de la graine s'invite sur les minuteurs (le temps a sa couleur), en écho à la saisonnalité.
+
 ## v4.0.0 – Cardamome · Nouvelle identité
 
 ### Identité
