@@ -120,7 +120,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   }, [intent]);
   // CTA d'ajout réutilisé (lecture seule d'une recette publique) → ouvre une confirmation.
   const keepCta = owned
-    ? <button className="btn btn-ghost" disabled style={{ width: "100%", borderRadius: 30, opacity: 0.85 }}><Icon name="check" size={15} color="var(--green)" /> Déjà dans tes recettes</button>
+    ? <button className="btn btn-ghost" disabled style={{ width: "100%", borderRadius: 30, opacity: 0.85 }}><Icon name="check" size={15} color="var(--ok)" /> Déjà dans tes recettes</button>
     : <button className="btn btn-primary" onClick={() => setConfirmClone(true)} style={{ width: "100%", borderRadius: 30 }}><Icon name="plus" size={15} /> Ajouter à mes recettes</button>;
   // Modération (mode public) : signalement (tous) + suppression admin.
   const [reportOpen, setReportOpen] = useState(false);
@@ -1219,7 +1219,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
             </span>
             <div style={{ minWidth: 0 }}>
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Ajouter aux courses</h3>
-              <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--green)" }}>en stock</span> sont décochés par défaut.</p>
+              <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--ok)" }}>en stock</span> sont décochés par défaut.</p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -1261,11 +1261,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
                           display: "inline-flex", alignItems: "center", gap: 5,
                           marginLeft: "auto", flexShrink: 0,
                           fontSize: 10, fontWeight: 600,
-                          color: low ? "var(--accent)" : "var(--green)",
+                          color: low ? "var(--accent)" : "var(--ok)",
                         }}>
                           <span style={{
                             width: 16, height: 16, borderRadius: "50%",
-                            background: low ? "var(--accent)" : "var(--green)",
+                            background: low ? "var(--accent)" : "var(--ok)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
                             <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />

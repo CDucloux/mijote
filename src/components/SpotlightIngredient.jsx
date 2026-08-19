@@ -70,7 +70,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
     <section style={{ marginBottom: 22 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 2px 12px" }}>
         {/* Pousse / jeune plant : distinct de l'étoile de « Découvrir », évoque le produit frais */}
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--spice)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 20v-7" />
           <path d="M12 13C12 9.7 9.5 8 6 8c0 3.5 2.5 5 6 5Z" />
           <path d="M12 11c0-3 2.5-4.6 6-4.6 0 3.4-2.5 4.6-6 4.6Z" />
@@ -80,7 +80,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
       </div>
 
       <article style={{ position: "relative", overflow: "hidden", borderRadius: 20, border: "1px solid var(--border)", background: "var(--surface)", padding: "16px 16px 14px", boxShadow: "0 10px 26px -16px rgba(120,70,30,0.22)" }}>
-        <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: "linear-gradient(90deg, var(--accent), #f4a05f)" }} />
+        <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: "linear-gradient(90deg, var(--spice), #c56b46)" }} />
 
         {/* En-tête cliquable → fiche ingrédient */}
         <button onClick={() => onOpenIngredient?.(ingredient)} onPointerDown={onHeaderPress} className="pressable" style={{ position: "relative", display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
@@ -127,14 +127,14 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
             ))}
           </div>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(var(--accent-rgb),0.06)", border: "1px dashed rgba(var(--accent-rgb),0.35)", borderRadius: 14, padding: "12px 13px" }}>
-            <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", display: "grid", placeItems: "center" }}>
-              <Icon name="plus" size={18} color="var(--accent)" />
+          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(var(--spice-rgb),0.07)", border: "1px dashed rgba(var(--spice-rgb),0.4)", borderRadius: 14, padding: "12px 13px" }}>
+            <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: "rgba(var(--spice-rgb),0.16)", color: "var(--spice)", display: "grid", placeItems: "center" }}>
+              <Icon name="plus" size={18} color="var(--spice)" />
             </span>
             <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "var(--text2)" }}>
               Personne n'a encore partagé de recette contenant cet ingrédient. <strong style={{ color: "var(--text)" }}>Et si tu ouvrais le bal ?</strong>
             </span>
-            {onPublish && <button className="btn btn-primary btn-sm" style={{ marginLeft: "auto", flexShrink: 0 }} onClick={onPublish}>Publier</button>}
+            {onPublish && <button className="btn btn-sm" style={{ marginLeft: "auto", flexShrink: 0, background: "var(--spice)", color: "#3a2a0e", border: "none", fontWeight: 700 }} onClick={onPublish}>Publier</button>}
           </div>
         )}
       </article>

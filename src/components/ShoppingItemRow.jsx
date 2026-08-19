@@ -52,7 +52,7 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
       transition: exiting ? "max-height 0.26s 0.14s ease, margin-bottom 0.26s 0.14s ease" : undefined,
     }}>
       {/* Fond vert révélé en swipe droite (j'achète) */}
-      <div style={{ position: "absolute", inset: 0, background: "var(--green)", display: "flex", alignItems: "center", paddingLeft: 18, opacity: dx > 0 ? 1 : 0, transition: dx > 0 ? "none" : "opacity 0.2s" }}>
+      <div style={{ position: "absolute", inset: 0, background: "var(--ok)", display: "flex", alignItems: "center", paddingLeft: 18, opacity: dx > 0 ? 1 : 0, transition: dx > 0 ? "none" : "opacity 0.2s" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + revealBuy * 0.3})`, opacity: revealBuy }}>
           <Icon name="check" size={18} color="#fff" />
           <span style={{ fontSize: 13, fontWeight: 700 }}>J'achète</span>
@@ -90,7 +90,7 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
         }}>
         <button onClick={() => onBuy(item)}
           style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
-          <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: struck ? "var(--green)" : "transparent", border: `2px solid ${struck ? "var(--green)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: struck ? "var(--ok)" : "transparent", border: `2px solid ${struck ? "var(--ok)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" }}>
             {struck && <Icon name="check" size={11} color="#fff" />}
           </div>
           <IngImage src={imageSrc} alt={item.name} size={40} />

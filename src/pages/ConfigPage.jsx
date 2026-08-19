@@ -106,7 +106,7 @@ function BaseImportExport({ count, noun, exportTitle = "Exporter la base", impor
 }
 
 // Niveau de difficulté d'un geste : 5 pastilles, colorées vert→ambre→rouge.
-const DIFFICULTY_COLOR = (lvl) => lvl <= 2 ? "var(--green)" : lvl === 3 ? "#e8920a" : "var(--red)";
+const DIFFICULTY_COLOR = (lvl) => lvl <= 2 ? "var(--ok)" : lvl === 3 ? "#e8920a" : "var(--red)";
 const DIFFICULTY_LABEL = { 1: "Très facile", 2: "Facile", 3: "Intermédiaire", 4: "Difficile", 5: "Expert" };
 function DifficultyPips({ level }) {
   if (!level) return null;
@@ -682,8 +682,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           if (!groups.length) {
             return (
               <div className="slide-up" style={{ minHeight: "46vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", color: "var(--text3)", gap: 12 }}>
-                <span style={{ width: 60, height: 60, borderRadius: 20, background: "rgba(var(--green-rgb),0.12)", display: "grid", placeItems: "center" }}>
-                  <Icon name="check" size={26} color="var(--green)" />
+                <span style={{ width: 60, height: 60, borderRadius: 20, background: "rgba(var(--ok-rgb),0.12)", display: "grid", placeItems: "center" }}>
+                  <Icon name="check" size={26} color="var(--ok)" />
                 </span>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>Aucun signalement</div>
                 <div style={{ fontSize: 12.5, maxWidth: 260, lineHeight: 1.5 }}>Rien à modérer pour l'instant. Les recettes signalées par la communauté apparaîtront ici.</div>

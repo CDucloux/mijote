@@ -253,8 +253,8 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
         {/* Enregistrer / mettre à jour la vue comme carnet (bibliothèque perso) */}
         {onSaveAsCarnet && nActive > 0 && (
           alreadySaved && !updatingCarnetName ? (
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "var(--green)", padding: "4px 0" }}>
-              <Icon name="check" size={15} color="var(--green)" /> Vue enregistrée comme carnet
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "var(--ok)", padding: "4px 0" }}>
+              <Icon name="check" size={15} color="var(--ok)" /> Vue enregistrée comme carnet
             </div>
           ) : (
             <button onClick={onSaveAsCarnet} className="pressable save-carnet-btn" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 11px", borderRadius: 16, cursor: "pointer", textAlign: "left" }}>
