@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.0.4 – Cardamome · La gousse bien calée
+
+### Interface
+- **La gousse dans « À propos »** : la fenêtre À propos affiche désormais la gousse à côté du mot Cardamome, comme la barre latérale. L'identité est la même partout.
+- **Logo un cran plus grand** : la gousse gagne en présence dans le cadre vert du favicon et des icônes installées (PWA, Apple, maskable), pour une icône plus franche à petite taille.
+- **Barre système raccord** : la couleur de la barre d'état (en haut du téléphone, en PWA installée) suit enfin le fond réel de l'app, sombre comme clair. Fini l'ancienne teinte qui traînait.
+
 ## v4.0.3 – Cardamome · Le logo affûté
 
 ### Interface
