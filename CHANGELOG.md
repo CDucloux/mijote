@@ -1,4 +1,15 @@
-# Changelog – Mijoté
+# Changelog – Cardamome
+
+## v4.0.0 – Cardamome · Nouvelle identité
+
+### Identité
+- **Mijoté devient Cardamome** : après avoir observé la concurrence, l'app change de nom pour quelque chose de plus rare et de plus net en bouche. Toute la marque suit, du wordmark aux mentions légales.
+- **Nouveau logo, la gousse** : le monogramme dégradé laisse place à une gousse de cardamome nervurée (fuseau symétrique, bec, trois nervures longitudinales), en aplat, sans dégradé ni brillance plastique. Favicon et icônes (PWA, Apple, maskable) régénérés, et la gousse s'affiche désormais à côté du mot dans la barre latérale.
+
+### Interface
+- **Nouvelle palette « gousse »** : l'orange cède la place au vert de la gousse comme couleur d'accent (un vert profond qui porte le texte blanc des boutons, plus vif sur le thème sombre), réchauffé d'un ambre de graine pour les touches gourmandes. Fonds et neutres légèrement verdis.
+- **Thème sombre moins délavé** : accent ravivé, surfaces et bordures plus franches pour que les cartes se détachent du fond, texte secondaire plus lisible. La profondeur vient du contraste, pas d'un glow.
+- **Accent unifié** : les dizaines de touches d'accent posées en dur (fonds actifs de la navigation, halos des boutons, pills, bordures) passent par un token unique et suivent enfin la couleur de la marque, sans résidu orange.
 
 ## v3.20.3 – Safran · Livres empilés
 
