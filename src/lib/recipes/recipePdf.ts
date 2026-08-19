@@ -54,7 +54,7 @@ export interface PdfDbs {
 }
 
 /** Couleur de difficulté en hex (le PDF n'a pas les variables CSS `--green`/`--red`). */
-const diffColorPdf = (lvl: number): string => (lvl <= 2 ? "#4caf7d" : lvl === 3 ? "#e8920a" : "#e05252");
+const diffColorPdf = (lvl: number): string => (lvl <= 2 ? "#3f9a54" : lvl === 3 ? "#e8920a" : "#e05252");
 
 const NUTRI_COLORS_PDF: Record<string, string> = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
 const num = (v: number | string | undefined): number => parseFloat(String(v).replace(",", ".")) || 0;
@@ -266,7 +266,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,300&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --accent: #6e9a3f; --text: #23281d; --text2: #565b4c; --text3: #838872; --border: #e3e5d9; --surface: #f7f8f1; }
+    :root { --accent: #6e9a3f; --green-rgb: 63, 154, 84; --text: #23281d; --text2: #565b4c; --text3: #838872; --border: #e3e5d9; --surface: #f7f8f1; }
     body { font-family: 'Hanken Grotesk', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .hero-wrap { position: relative; margin-bottom: 24px; }
     .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; display: block; }
@@ -275,7 +275,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .hbadge svg { width: 12px; height: 12px; }
     .hbadge .hb-emoji { font-size: 12px; line-height: 1; }
     .hbadge .hb-txt { font-size: 10px; font-weight: 700; color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
-    .hbadge-vegan { background: rgba(76,175,125,0.92); }
+    .hbadge-vegan { background: rgba(var(--green-rgb),0.92); }
     .hbadge-dark { background: rgba(20,18,16,0.58); }
     .hero-source { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 6px; max-width: 62%; padding: 5px 12px 5px 9px; border-radius: 20px; background: rgba(20,18,16,0.58); border: 1px solid rgba(255,255,255,0.35); box-shadow: 0 2px 8px rgba(0,0,0,0.28); text-decoration: none; }
     .hero-source svg { width: 12px; height: 12px; flex-shrink: 0; }
@@ -286,7 +286,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
     .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
     .tag-emoji { font-size: 13px; line-height: 1; }
-    .tag-vegan { color: #2f8f4e; background: rgba(76,175,125,0.12); border-color: rgba(76,175,125,0.4); }
+    .tag-vegan { color: #2f8f4e; background: rgba(var(--green-rgb),0.12); border-color: rgba(var(--green-rgb),0.4); }
     .meta { display: flex; gap: 38px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 0; }
     .meta-item { display: flex; flex-direction: column; }
     .meta-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }

@@ -23,8 +23,8 @@ function TodoCard({ icon, count, total, label, onClick }) {
   const done = count === 0;
   return (
     <button onClick={onClick} className="pressable" style={{ ...CARD, padding: "13px 15px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, width: "100%",
-      background: done ? "rgba(76,175,125,0.06)" : "var(--surface)", borderColor: done ? "rgba(76,175,125,0.3)" : "var(--border)" }}>
-      <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: done ? "rgba(76,175,125,0.14)" : "rgba(232,146,10,0.14)", display: "grid", placeItems: "center" }}>
+      background: done ? "rgba(var(--green-rgb),0.06)" : "var(--surface)", borderColor: done ? "rgba(var(--green-rgb),0.3)" : "var(--border)" }}>
+      <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: done ? "rgba(var(--green-rgb),0.14)" : "rgba(232,146,10,0.14)", display: "grid", placeItems: "center" }}>
         <Icon name={done ? "check" : icon} size={18} color={done ? "var(--green)" : "#e8920a"} />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -58,7 +58,7 @@ export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques =
       <div style={{ ...CARD, padding: 18 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 15 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-            <span style={{ width: 28, height: 28, borderRadius: 9, background: "rgba(76,175,125,0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="check" size={15} color="var(--green)" /></span>
+            <span style={{ width: 28, height: 28, borderRadius: 9, background: "rgba(var(--green-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="check" size={15} color="var(--green)" /></span>
             <span style={{ fontSize: 14.5, fontWeight: 700 }}>Avancement des ingrédients</span>
           </div>
           <span style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, color: "var(--green)", fontVariantNumeric: "tabular-nums" }}>{pct}%</span>
@@ -82,7 +82,7 @@ export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques =
       <div>
         <Label>Bases master</Label>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-          <StatTile icon="leaf" tint="rgba(76,175,125,0.14)" color="var(--green)" value={ing} label="Ingrédients" onClick={() => onGoto?.("ingredients")} />
+          <StatTile icon="leaf" tint="rgba(var(--green-rgb),0.14)" color="var(--green)" value={ing} label="Ingrédients" onClick={() => onGoto?.("ingredients")} />
           <StatTile icon="utensils" tint="rgba(91,156,246,0.14)" color="#5b9cf6" value={ust} label="Ustensiles" onClick={() => onGoto?.("ustensiles")} />
           <StatTile icon="list2" tint="rgba(var(--accent-rgb),0.14)" color="var(--accent)" value={tech} label="Techniques" onClick={() => onGoto?.("techniques")} />
         </div>

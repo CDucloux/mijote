@@ -667,7 +667,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
 
           <div className="field-label" style={{ marginBottom: 9 }}>Couleur</div>
           <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
-            {["#6e9a3f", "#f0c060", "#e05252", "#5fb88a", "#5b9cf6", "#c080e0", "#e0a23e", "#9a9490"].map(c => {
+            {["#6e9a3f", "#f0c060", "#e05252", "#46ab5f", "#5b9cf6", "#c080e0", "#e0a23e", "#9a9490"].map(c => {
               const on = newCarnet.color === c;
               return (
                 <button key={c} onClick={() => setNewCarnet(p => ({ ...p, color: c }))} aria-label={`Couleur ${c}`} className="pressable"

@@ -469,7 +469,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ingrédients</span>
                         {checkedIngIds.size > 0 && (
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.12)", borderRadius: 999, padding: "1px 8px" }}>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--green)", background: "rgba(var(--green-rgb),0.12)", borderRadius: 999, padding: "1px 8px" }}>
                             {checkedIngIds.size}/{overviewIngs.length}
                           </span>
                         )}
@@ -505,7 +505,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ustensiles</span>
                         {checkedUtIds.size > 0 && (
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--green)", background: "rgba(76,175,125,0.12)", borderRadius: 999, padding: "1px 8px" }}>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--green)", background: "rgba(var(--green-rgb),0.12)", borderRadius: 999, padding: "1px 8px" }}>
                             {checkedUtIds.size}/{overviewUts.length}
                           </span>
                         )}
@@ -515,7 +515,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                           const gathered = checkedUtIds.has(u.id);
                           return (
                             <button key={u.id} type="button" onClick={() => toggleUtChecked(u.id)} className="pressable"
-                              style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: gathered ? "rgba(76,175,125,0.12)" : "var(--surface2)", border: `1px solid ${gathered ? "rgba(76,175,125,0.35)" : "transparent"}`, borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: gathered ? "var(--green)" : "var(--text)", cursor: "pointer", textDecoration: gathered ? "line-through" : "none" }}>
+                              style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: gathered ? "rgba(var(--green-rgb),0.12)" : "var(--surface2)", border: `1px solid ${gathered ? "rgba(var(--green-rgb),0.35)" : "transparent"}`, borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: gathered ? "var(--green)" : "var(--text)", cursor: "pointer", textDecoration: gathered ? "line-through" : "none" }}>
                               <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0, opacity: gathered ? 0.6 : 1 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
                               {gathered && <Icon name="check" size={11} color="var(--green)" />}
                               {u.name}
@@ -538,7 +538,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {pendingComponents.map(({ line, comp, nestedMult }) => (
-                      <div key={comp.id} style={{ background: "var(--surface)", border: `1.5px solid ${doneComponents.has(comp.id) ? "rgba(76,175,125,0.45)" : "rgba(var(--accent-rgb),0.3)"}`, borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 14, transition: "border-color 0.25s" }}>
+                      <div key={comp.id} style={{ background: "var(--surface)", border: `1.5px solid ${doneComponents.has(comp.id) ? "rgba(var(--green-rgb),0.45)" : "rgba(var(--accent-rgb),0.3)"}`, borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 14, transition: "border-color 0.25s" }}>
                         {comp.image
                           ? <Img src={comp.image} alt={comp.name} style={{ width: 52, height: 52, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
                           : <span style={{ width: 52, height: 52, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={28} /></span>
@@ -585,8 +585,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
                       {stepDurations.map(d => (
                         <button key={d.minutes} onClick={() => addTimer(d)} className="pressable"
-                          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(var(--accent-rgb),0.1)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.35)" }}>
-                          <Icon name="clock" size={14} color="var(--accent)" /> Minuteur {d.label}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(var(--spice-rgb),0.13)", color: "var(--spice)", border: "1px solid rgba(var(--spice-rgb),0.38)" }}>
+                          <Icon name="clock" size={14} color="var(--spice)" /> Minuteur {d.label}
                         </button>
                       ))}
                     </div>

@@ -21,5 +21,5 @@ export function OverlayBadge({ icon, label, bg, title, glass = false }) {
   );
 }
 
-export const VeganBadge = (p) => <OverlayBadge icon="leaf" label="Vegan" bg="rgba(76,175,125,0.92)" {...p} />;
+export const VeganBadge = (p) => <OverlayBadge icon="leaf" label="Vegan" bg="rgba(var(--green-rgb),0.92)" {...p} />;
 export const SeasonBadge = (p) => <OverlayBadge icon="sun" label="De saison" bg="rgba(232,146,10,0.92)" title="De saison ce mois-ci" {...p} />;

@@ -31,7 +31,7 @@ export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node
     <div>
       <div style={{ position: "relative", height: trackHeight, borderRadius: 999, background: "var(--surface2)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.06)" }}>
         {runs.map(([s, e], i) => (
-          <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: pct(s - 1), width: pct(e - s + 1), borderRadius: 999, background: `linear-gradient(90deg, ${from}, ${to})`, boxShadow: `0 2px 9px -2px ${from === "var(--green)" ? "rgba(76,175,125,0.6)" : "rgba(var(--accent-rgb),0.6)"}` }} />
+          <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: pct(s - 1), width: pct(e - s + 1), borderRadius: 999, background: `linear-gradient(90deg, ${from}, ${to})`, boxShadow: `0 2px 9px -2px ${from === "var(--green)" ? "rgba(var(--green-rgb),0.6)" : "rgba(var(--accent-rgb),0.6)"}` }} />
         ))}
         <span aria-hidden="true" title="Ce mois-ci" style={{ position: "absolute", top: "50%", left: pct(now - 0.5), transform: "translate(-50%,-50%)", width: trackHeight + 3, height: trackHeight + 3, borderRadius: "50%", background: "var(--surface)", border: `2.5px solid ${node}`, boxShadow: "0 2px 7px rgba(60,50,30,0.3)", zIndex: 2 }} />
       </div>

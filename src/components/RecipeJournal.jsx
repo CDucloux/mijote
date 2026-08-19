@@ -30,7 +30,7 @@ const VersionBadge = ({ label }) => (
 
 // Couleurs des trois états de diff.
 const DIFF = {
-  added: { bg: "rgba(76,175,125,0.12)", border: "var(--green)", text: "var(--green)", sign: "+" },
+  added: { bg: "rgba(var(--green-rgb),0.12)", border: "var(--green)", text: "var(--green)", sign: "+" },
   removed: { bg: "rgba(224,82,82,0.1)", border: "var(--red)", text: "var(--red)", sign: "−" },
   changed: { bg: "rgba(240,153,42,0.12)", border: "var(--orange)", text: "var(--orange)", sign: "~" },
 };
