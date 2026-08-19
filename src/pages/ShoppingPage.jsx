@@ -344,8 +344,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                         <span>Acheté</span>
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                        <button style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(var(--green-rgb),0.14)", color: "var(--green)", border: "1px solid rgba(var(--green-rgb),0.35)", cursor: "pointer" }} onClick={() => setConfirmClearId(ALL_ID)} title="Confirme l'achat sur toutes les listes – les produits de placard rejoignent ton stock">
-                          <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
+                        <button style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(var(--ok-rgb),0.14)", color: "var(--ok)", border: "1px solid rgba(var(--ok-rgb),0.35)", cursor: "pointer" }} onClick={() => setConfirmClearId(ALL_ID)} title="Confirme l'achat sur toutes les listes – les produits de placard rejoignent ton stock">
+                          <Icon name="shopping" size={12} color="var(--ok)" /> Valider l'achat
                         </button>
                       </div>
                       {done.slice().sort(byName).map(renderAgg)}
@@ -424,8 +424,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                         <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{done.length}</span>
                         <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
                         {!activeList.hideClear && (
-                          <button style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(var(--green-rgb),0.14)", color: "var(--green)", border: "1px solid rgba(var(--green-rgb),0.35)", cursor: "pointer" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat – les produits de placard rejoignent ton stock">
-                            <Icon name="shopping" size={12} color="var(--green)" /> Valider l'achat
+                          <button style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(var(--ok-rgb),0.14)", color: "var(--ok)", border: "1px solid rgba(var(--ok-rgb),0.35)", cursor: "pointer" }} onClick={() => setConfirmClearId(activeList.id)} title="Confirme l'achat – les produits de placard rejoignent ton stock">
+                            <Icon name="shopping" size={12} color="var(--ok)" /> Valider l'achat
                           </button>
                         )}
                       </div>
@@ -489,8 +489,8 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           <SwipeableSheet onClose={() => setConfirmClearId(null)}>
             {(close) => (<>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(var(--green-rgb),0.14)", border: "1px solid rgba(var(--green-rgb),0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="shopping" size={20} color="var(--green)" />
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(var(--ok-rgb),0.14)", border: "1px solid rgba(var(--ok-rgb),0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="shopping" size={20} color="var(--ok)" />
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 600 }}>Valider l'achat ?</h3>
             </div>
@@ -502,7 +502,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
-              <button className="btn btn-primary" style={{ flex: 1, background: "var(--green)", borderColor: "var(--green)" }} onClick={() => close(() => {
+              <button className="btn btn-primary" style={{ flex: 1, background: "var(--ok)", borderColor: "var(--ok)" }} onClick={() => close(() => {
                 setConfirmClearId(null); // sinon le sheet reste monté (close(cb) shunte onClose)
                 if (isAll) clearAllChecked(); else clearChecked(confirmClearId);
                 // Un toast de succès par produit ajouté au stock, en cascade (dédupliqués).
@@ -588,7 +588,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
                     {p.amount && <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {p.amount}</span>}
                     {p.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {p.unit}</span>}
                     {p.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{p.name}</span>}
-                    {match ? <span style={{ fontSize: 11, background: "rgba(var(--green-rgb),0.15)", color: "var(--green)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Reconnu</span>
+                    {match ? <span style={{ fontSize: 11, background: "rgba(var(--ok-rgb),0.15)", color: "var(--ok)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Reconnu</span>
                       : p.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px" }}>Non référencé</span> : null}
                   </div>
                 );

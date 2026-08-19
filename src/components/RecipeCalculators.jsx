@@ -138,7 +138,7 @@ function ConvertTab({ ingredients }) {
           {knownIngs.map(i => <option key={i.id || i.name} value={i.name}>{i.name}</option>)}
         </select>
         {ingName && (density != null
-          ? <span style={{ fontSize: 11, color: "var(--green)", marginTop: 4, display: "block" }}>Densité ≈ {density} g/ml</span>
+          ? <span style={{ fontSize: 11, color: "var(--ok)", marginTop: 4, display: "block" }}>Densité ≈ {density} g/ml</span>
           : <span style={{ fontSize: 11, color: "var(--accent)", marginTop: 4, display: "block" }}>Densité inconnue : conversion masse/volume indisponible.</span>)}
       </label>
 

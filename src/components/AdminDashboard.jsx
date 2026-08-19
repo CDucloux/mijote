@@ -23,12 +23,12 @@ function TodoCard({ icon, count, total, label, onClick }) {
   const done = count === 0;
   return (
     <button onClick={onClick} className="pressable" style={{ ...CARD, padding: "13px 15px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, width: "100%",
-      background: done ? "rgba(var(--green-rgb),0.06)" : "var(--surface)", borderColor: done ? "rgba(var(--green-rgb),0.3)" : "var(--border)" }}>
-      <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: done ? "rgba(var(--green-rgb),0.14)" : "rgba(232,146,10,0.14)", display: "grid", placeItems: "center" }}>
-        <Icon name={done ? "check" : icon} size={18} color={done ? "var(--green)" : "#e8920a"} />
+      background: done ? "rgba(var(--ok-rgb),0.06)" : "var(--surface)", borderColor: done ? "rgba(var(--ok-rgb),0.3)" : "var(--border)" }}>
+      <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: done ? "rgba(var(--ok-rgb),0.14)" : "rgba(232,146,10,0.14)", display: "grid", placeItems: "center" }}>
+        <Icon name={done ? "check" : icon} size={18} color={done ? "var(--ok)" : "#e8920a"} />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: done ? "var(--green)" : "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: done ? "var(--ok)" : "var(--text)", fontVariantNumeric: "tabular-nums" }}>
           {done ? "Complet" : count}{!done && <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text3)" }}> / {total}</span>}
         </div>
         <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 1 }}>{label}</div>
@@ -58,17 +58,17 @@ export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques =
       <div style={{ ...CARD, padding: 18 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 15 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-            <span style={{ width: 28, height: 28, borderRadius: 9, background: "rgba(var(--green-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="check" size={15} color="var(--green)" /></span>
+            <span style={{ width: 28, height: 28, borderRadius: 9, background: "rgba(var(--ok-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="check" size={15} color="var(--ok)" /></span>
             <span style={{ fontSize: 14.5, fontWeight: 700 }}>Avancement des ingrédients</span>
           </div>
-          <span style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, color: "var(--green)", fontVariantNumeric: "tabular-nums" }}>{pct}%</span>
+          <span style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, color: "var(--ok)", fontVariantNumeric: "tabular-nums" }}>{pct}%</span>
         </div>
         <div style={{ height: 10, borderRadius: 999, background: "var(--surface2)", overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${pct}%`, borderRadius: 999, background: "linear-gradient(90deg, #4caf7d, #7ccf9f)", transition: "width 0.5s ease" }} />
         </div>
         <div style={{ display: "flex", gap: 20, marginTop: 13 }}>
           <button onClick={() => onGoto?.("ingredients", "validated")} className="pressable" style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--green)" }} />
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--ok)" }} />
             <span style={{ fontSize: 12.5, color: "var(--text2)" }}><strong style={{ color: "var(--text)" }}>{validated}</strong> validés</span>
           </button>
           <button onClick={() => onGoto?.("ingredients", "draft")} className="pressable" style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
@@ -82,7 +82,7 @@ export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques =
       <div>
         <Label>Bases master</Label>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-          <StatTile icon="leaf" tint="rgba(var(--green-rgb),0.14)" color="var(--green)" value={ing} label="Ingrédients" onClick={() => onGoto?.("ingredients")} />
+          <StatTile icon="leaf" tint="rgba(var(--ok-rgb),0.14)" color="var(--ok)" value={ing} label="Ingrédients" onClick={() => onGoto?.("ingredients")} />
           <StatTile icon="utensils" tint="rgba(91,156,246,0.14)" color="#5b9cf6" value={ust} label="Ustensiles" onClick={() => onGoto?.("ustensiles")} />
           <StatTile icon="list2" tint="rgba(var(--accent-rgb),0.14)" color="var(--accent)" value={tech} label="Techniques" onClick={() => onGoto?.("techniques")} />
         </div>

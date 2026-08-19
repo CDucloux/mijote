@@ -50,7 +50,7 @@ export function UserAvatar() {
   const offline = !online;
   const syncLabel = offline ? "Hors ligne"
     : syncStatus === "syncing" ? "Synchronisation…" : syncStatus === "synced" ? "✓ Synchronisé" : syncStatus === "error" ? "⚠ Erreur sync" : null;
-  const syncColor = offline ? "var(--orange)" : syncStatus === "synced" ? "var(--green)" : syncStatus === "error" ? "var(--red)" : "var(--text3)";
+  const syncColor = offline ? "var(--orange)" : syncStatus === "synced" ? "var(--ok)" : syncStatus === "error" ? "var(--red)" : "var(--text3)";
   const showDot = offline || syncStatus !== "idle";
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>

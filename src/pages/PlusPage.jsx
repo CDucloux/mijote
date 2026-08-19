@@ -36,7 +36,7 @@ function Cell({ value, accent }) {
     return <span style={{ fontSize: 12.5, fontWeight: 700, color: accent ? "var(--accent)" : "var(--text2)" }}>{value}</span>;
   }
   return value
-    ? <Icon name="check" size={17} color="var(--green)" />
+    ? <Icon name="check" size={17} color="var(--ok)" />
     : <Icon name="close" size={14} color="var(--red)" />;
 }
 
@@ -84,8 +84,8 @@ export function PlusPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 560, margin: "0 auto" }}>
           {/* Hero : bandeau de confirmation vert si abonné, sinon pitch */}
           {isPlus ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, background: "rgba(var(--green-rgb),0.1)", border: "1px solid rgba(var(--green-rgb),0.4)" }}>
-              <span style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--green)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 5px 16px -5px rgba(var(--green-rgb),0.65)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, background: "rgba(var(--ok-rgb),0.1)", border: "1px solid rgba(var(--ok-rgb),0.4)" }}>
+              <span style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--ok)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 5px 16px -5px rgba(var(--ok-rgb),0.65)" }}>
                 <Icon name="check" size={24} color="#fff" />
               </span>
               <div style={{ minWidth: 0 }}>
@@ -139,7 +139,7 @@ export function PlusPage() {
                     boxShadow: billing === key ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
                   }}>
                     {label}
-                    {key === "yearly" && <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: "var(--green)", borderRadius: 999, padding: "1px 6px" }}>-37%</span>}
+                    {key === "yearly" && <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: "var(--ok)", borderRadius: 999, padding: "1px 6px" }}>-37%</span>}
                   </button>
                 ))}
               </div>
@@ -147,7 +147,7 @@ export function PlusPage() {
                 <span style={{ fontFamily: "var(--ff-display)", fontSize: 34, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>{price.amount}</span>
                 <span style={{ fontSize: 14, color: "var(--text3)", fontWeight: 500 }}>{price.per}</span>
               </div>
-              {price.note && <div style={{ fontSize: 12, color: "var(--green)", fontWeight: 600, marginTop: 4 }}>{price.note}</div>}
+              {price.note && <div style={{ fontSize: 12, color: "var(--ok)", fontWeight: 600, marginTop: 4 }}>{price.note}</div>}
             </div>
           )}
 

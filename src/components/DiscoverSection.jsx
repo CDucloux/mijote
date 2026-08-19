@@ -54,7 +54,7 @@ function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, vegan, 
               ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
               : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
           <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
-          {owned && <Icon name="check" size={12} color="var(--green)" />}
+          {owned && <Icon name="check" size={12} color="var(--ok)" />}
         </button>
         {!owned && onAdd ? (
           <button onClick={e => { e.stopPropagation(); onAdd(); }}
