@@ -203,10 +203,14 @@ body {
   position: relative;
   overflow: hidden;
   /* Edge-to-edge (Android 15+, coquille Capacitor) : la WebView peint sous la
-     barre de statut. On réserve l'inset haut pour que les en-têtes ne remontent
-     pas dedans (le bas est déjà géré : tab bar + body::after). box-sizing:border-box
-     → le padding est absorbé dans les 100svh, sans débordement. Nul hors natif. */
-  padding-top: env(safe-area-inset-top);
+     barre de statut ; on réserve l'inset haut pour que les en-têtes ne remontent
+     pas dedans (le bas est déjà géré : tab bar + body::after). Les en-têtes de page
+     portent DÉJÀ ~18-20px de padding haut : on ne réserve donc que le RESTE de
+     l'inset (moins 14px), sinon les deux s'empilent et le gap paraît trop grand.
+     `max(…, 0)` : nul en clair/desktop (inset 0) ; box-sizing:border-box → absorbé
+     dans les 100svh, sans débordement. La barre reste toujours dégagée (padding
+     page + ce reste >= inset). */
+  padding-top: max(env(safe-area-inset-top) - 14px, 0px);
 }
 
 /* Zone système du bas (barre de navigation Android / home indicator) peinte à la
