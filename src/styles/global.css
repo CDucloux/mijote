@@ -21,6 +21,13 @@
   --accent2: #a7c97c;        /* vert gousse clair : accents décoratifs, texte d'accent sur fond sombre */
   --accent-strong: #5c8235;  /* vert profond : CTA pressé */
   --spice: #e0a23e;          /* ambre graine : emphase chaude, gourmandise (dosé) */
+  /* Créneaux repas : arc de la journée en tons chauds (miel -> ambre -> terracotta) */
+  --slot-matin: rgba(217, 180, 92, 0.15);
+  --slot-midi: rgba(224, 162, 62, 0.16);
+  --slot-soir: rgba(197, 107, 70, 0.17);
+  --slot-matin-text: #e6c27e;
+  --slot-midi-text: #ecb057;
+  --slot-soir-text: #e59275;
   --text: #eef1e7;
   --text2: #a7ac9c;
   --text3: #6b7061;
@@ -51,6 +58,12 @@ html.light,
   --accent-rgb: 110, 154, 63;
   --accent2: #8bb257;
   --spice: #c67f1f;          /* ambre assombri pour le contraste sur clair */
+  --slot-matin: rgba(217, 180, 92, 0.22);
+  --slot-midi: rgba(224, 162, 62, 0.20);
+  --slot-soir: rgba(197, 107, 70, 0.16);
+  --slot-matin-text: #a9781a;
+  --slot-midi-text: #b06d12;
+  --slot-soir-text: #b0492b;
   --text: #23281d;
   --text2: #565b4c;
   --text3: #838872;
