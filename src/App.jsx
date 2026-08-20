@@ -27,6 +27,7 @@ import { useAccount } from "./hooks/useAccount.js";
 import { useRecipeCrud } from "./hooks/useRecipeCrud.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
+import { useAndroidBackButton } from "./hooks/useAndroidBackButton.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
 import { PullToRefresh } from "./components/PullToRefresh.jsx";
 import { Icon } from "./components/Icon.jsx";
@@ -377,6 +378,11 @@ function AppInner({ user, isDark, toggleTheme }) {
     document.title = `Cardamome | ${recipeName || ingName || routeName || TAB_TITLES[tab] || "Accueil"}`;
   }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB, plusRoute]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
+
+  // Bouton retour Android (matériel / geste) : navigation interne plutôt que sortie
+  // de l'app. En cours d'édition, on réutilise la garde d'abandon (comme la TabBar)
+  // en visant l'onglet courant, pour ne pas perdre les modifications non sauvées.
+  useAndroidBackButton({ isEditing, onLeaveEditor: () => setPendingTab(tab) });
 
   // Navigate with guard: if editing, show confirm dialog first
   const requestTab = (newTab) => {
