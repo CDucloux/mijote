@@ -62,7 +62,7 @@
    toujours cet inset et remontait la barre trop haut (le plancher etait sans effet).
    Une valeur fixe cale les onglets tout en bas, a un petit cran du bord. */
 html.is-capacitor {
-  --tab-pad-b: 8px;
+  --tab-pad-b: 12px;
 }
 
 /* ── LIGHT THEME ── */
