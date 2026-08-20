@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.2.3 – Cardamome · Au ras du réel
+
+### Interface & tactile
+- **Intro plus fluide** : la première transition entre les slides de bienvenue ne saccade plus. Le carrousel ne prépare désormais que la slide affichée et ses voisines immédiates (au lieu des sept d'un coup), et son fond s'allège, pour un glissement net dès le premier geste.
+- **Écran d'ouverture, version navigateur** : dans un simple onglet (bureau ou web), plus aucun écran d'ouverture, la page de chargement prend directement le relais. L'écran d'ouverture animé (logo + onde) reste réservé à l'app installée (PWA) et à l'app native.
+- **Barre d'onglets calée tout en bas** : sur l'app native Android, la rangée d'icônes se pose franchement en bas de l'écran, avec une petite marge fixe, sans remonter à cause de la zone de gestes système.
+
+### App native Android
+- **Icône Cardamome** : l'app native arbore enfin la gousse de cardamome comme icône de lanceur, à la place de l'icône Capacitor par défaut. La gousse est recentrée et redimensionnée pour rester nette dans le masque circulaire de l'écran de lancement, dans la continuité du logo d'ouverture.
+
 ## v4.2.2 – Cardamome · Onde à sa place
 
 ### Interface & tactile
