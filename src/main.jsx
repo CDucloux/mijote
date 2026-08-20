@@ -33,3 +33,8 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         </ErrorBoundary>
     </React.StrictMode>
 )
+
+// Splash d'ouverture (logo + onde, cf. index.html) : retiré une fois l'app montée,
+// après un court temps de visibilité pour que l'animation soit perçue. Le fond du
+// splash rejoint celui de la page de chargement, la transition est donc continue.
+requestAnimationFrame(() => setTimeout(() => window.__hideBootSplash?.(), 550))

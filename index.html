@@ -40,6 +40,8 @@
 
     <!-- Icônes -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Logo préchargé pour le splash d'ouverture (peint avant le bundle). -->
+    <link rel="preload" as="image" href="/pwa-512.png" />
     <!-- iOS n'accepte que du PNG pour l'icône d'écran d'accueil (le SVG rendait flou) -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -62,8 +64,91 @@
     <meta name="twitter:title" content="Cardamome, l'atelier de tes recettes" />
     <meta name="twitter:description" content="Crée, affine et partage tes recettes. Journal d'itérations, Nutri-Score, saisonnalité, planning et courses." />
     <meta name="twitter:image" content="https://mijote-sand.vercel.app/pwa-512.png" />
+
+    <!-- Splash d'ouverture (logo + onde) : peint au TOUT PREMIER rendu, avant le
+         chargement du bundle React et donc avant la page de connexion / chargement.
+         Styles inline (le global.css n'est pas encore là), fonds calés sur le thème
+         déjà résolu par le script plus haut (classe .light sur <html>), retrait par
+         main.jsx une fois l'app montée. C'est cette couche web qui porte l'onde :
+         les splashs OS (PWA, natif Capacitor) ne sont pas animables. -->
+    <style>
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0f110d;
+        opacity: 1;
+        transition: opacity 0.45s ease;
+      }
+      html.light #boot-splash { background: #f3f4ec; }
+      #boot-splash.is-hidden { opacity: 0; pointer-events: none; }
+      .boot-splash__mark {
+        position: relative;
+        width: 116px;
+        height: 116px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .boot-splash__logo {
+        position: relative;
+        z-index: 1;
+        width: 116px;
+        height: 116px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+        animation: bootBreathe 2.6s ease-in-out infinite;
+      }
+      /* Onde concentrique qui irradie du cercle : deux anneaux décalés pour un
+         rythme continu. C'est un indicateur d'ouverture (statut), pas un halo déco. */
+      .boot-splash__pulse {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid #75a63f;
+        opacity: 0;
+        animation: bootPulse 2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+      }
+      html.light .boot-splash__pulse { border-color: #6e9a3f; }
+      .boot-splash__pulse.delay { animation-delay: 1s; }
+      @keyframes bootPulse {
+        0%   { transform: scale(0.86); opacity: 0.5; }
+        70%  { opacity: 0; }
+        100% { transform: scale(1.7); opacity: 0; }
+      }
+      @keyframes bootBreathe {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.035); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-splash__logo { animation: none; }
+        .boot-splash__pulse { animation: none; opacity: 0; }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-splash" aria-hidden="true">
+      <div class="boot-splash__mark">
+        <span class="boot-splash__pulse"></span>
+        <span class="boot-splash__pulse delay"></span>
+        <img class="boot-splash__logo" src="/pwa-512.png" width="116" height="116" alt="" />
+      </div>
+    </div>
+    <script>
+      // Retrait du splash : appelé par main.jsx une fois l'app montée ; filet de
+      // sécurité pour ne jamais rester bloqué dessus si le bundle échoue à charger.
+      window.__hideBootSplash = function () {
+        var s = document.getElementById("boot-splash");
+        if (!s || s.classList.contains("is-hidden")) return;
+        s.classList.add("is-hidden");
+        setTimeout(function () { if (s && s.parentNode) s.parentNode.removeChild(s); }, 500);
+      };
+      setTimeout(function () { window.__hideBootSplash(); }, 8000);
+    </script>
     <div id="app"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
