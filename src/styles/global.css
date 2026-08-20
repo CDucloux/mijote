@@ -3146,6 +3146,21 @@ select {
    doit se lire dans la couleur d'accent (ex. pastille d'onglet actif de la tab bar). */
 .ripple-accent > .ripple-ink { background: rgba(var(--accent-rgb), 0.32); }
 
+/* Généralisation aux boutons et pilules : tout `.btn` et tout `.pressable` reçoit
+   l'onde au même titre que l'opt-in `.ripple` (cf. RIPPLE_SELECTOR côté JS). Réservé
+   au tactile : on borne l'onde au rayon du bouton et on neutralise le flash
+   d'opacité `:active` hérité de `pressable`, c'est l'onde qui fait le retour tactile
+   (le léger scale d'appui, lui, reste). Desktop intact (hover/active classiques). */
+@media (hover: none) {
+  .btn,
+  .pressable {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn:active,
+  .pressable:active { opacity: 1 !important; }
+}
+
 .tap-row .tap-chevron {
   transition: transform 0.38s cubic-bezier(0.33, 1, 0.68, 1);
 }
