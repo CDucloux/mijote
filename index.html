@@ -17,8 +17,9 @@
           if (vp) vp.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover");
         }
         // Contexte « app » (PWA installée / coquille Capacitor) vs simple onglet de
-        // navigateur : l'onde du splash d'ouverture n'est jouée que dans ce contexte
-        // (cf. .boot-splash), pas sur desktop / web.
+        // navigateur : le splash d'ouverture (logo + onde, cf. #boot-splash) n'est
+        // peint que dans ce contexte. Sur desktop / web, pas de splash du tout, la
+        // page de chargement post-login prend le relais.
         if (standalone || window.Capacitor) document.documentElement.classList.add("app-shell");
         // Applique le thème AVANT le premier rendu (pas de flash) et surtout : cale la
         // couleur des barres système (statut / navigation) sur le thème de l'appli,
@@ -74,9 +75,13 @@
          Styles inline (le global.css n'est pas encore là), fonds calés sur le thème
          déjà résolu par le script plus haut (classe .light sur <html>), retrait par
          main.jsx une fois l'app montée. C'est cette couche web qui porte l'onde :
-         les splashs OS (PWA, natif Capacitor) ne sont pas animables. -->
+         les splashs OS (PWA, natif Capacitor) ne sont pas animables.
+         Réservé au contexte « app » (PWA installée / Capacitor, classe app-shell
+         posée par le script d'en-tête) : dans un onglet de navigateur (desktop / web),
+         aucun splash n'est peint, la page de chargement post-login prend le relais. -->
     <style>
-      #boot-splash {
+      #boot-splash { display: none; }
+      html.app-shell #boot-splash {
         position: fixed;
         inset: 0;
         z-index: 2147483647;
@@ -87,8 +92,8 @@
         opacity: 1;
         transition: opacity 0.45s ease;
       }
-      html.light #boot-splash { background: #f3f4ec; }
-      #boot-splash.is-hidden { opacity: 0; pointer-events: none; }
+      html.app-shell.light #boot-splash { background: #f3f4ec; }
+      html.app-shell #boot-splash.is-hidden { opacity: 0; pointer-events: none; }
       .boot-splash__mark {
         position: relative;
         width: 116px;
@@ -107,10 +112,7 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
       }
       /* Onde concentrique qui irradie du cercle : deux anneaux décalés pour un
-         rythme continu. C'est un indicateur d'ouverture (statut), pas un halo déco.
-         Réservée au contexte « app » (PWA installée / Capacitor, classe app-shell
-         posée par le script d'en-tête) : dans un onglet de navigateur (desktop / web),
-         le logo reste statique, sans onde. */
+         rythme continu. C'est un indicateur d'ouverture (statut), pas un halo déco. */
       .boot-splash__pulse {
         position: absolute;
         inset: 0;
@@ -119,9 +121,9 @@
         opacity: 0;
       }
       html.light .boot-splash__pulse { border-color: #6e9a3f; }
-      html.app-shell .boot-splash__logo { animation: bootBreathe 2.6s ease-in-out infinite; }
-      html.app-shell .boot-splash__pulse { animation: bootPulse 2s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
-      html.app-shell .boot-splash__pulse.delay { animation-delay: 1s; }
+      .boot-splash__logo { animation: bootBreathe 2.6s ease-in-out infinite; }
+      .boot-splash__pulse { animation: bootPulse 2s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+      .boot-splash__pulse.delay { animation-delay: 1s; }
       @keyframes bootPulse {
         0%   { transform: scale(0.86); opacity: 0.5; }
         70%  { opacity: 0; }
@@ -132,8 +134,8 @@
         50%      { transform: scale(1.035); }
       }
       @media (prefers-reduced-motion: reduce) {
-        html.app-shell .boot-splash__logo,
-        html.app-shell .boot-splash__pulse { animation: none; }
+        .boot-splash__logo,
+        .boot-splash__pulse { animation: none; }
         .boot-splash__pulse { opacity: 0; }
       }
     </style>
