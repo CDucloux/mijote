@@ -60,7 +60,7 @@
    sous la zone de gestes systeme (barre trop basse). On la remonte d'un cran, avec
    un plancher fixe car la safe-area n'est pas fiable dans ce WebView (pas d'edge-to-edge). */
 html.is-capacitor {
-  --tab-pad-b: max(env(safe-area-inset-bottom), 16px);
+  --tab-pad-b: max(env(safe-area-inset-bottom), 8px);
 }
 
 /* ── LIGHT THEME ── */

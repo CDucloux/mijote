@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Couche avant de l'icone adaptative : gousse de cardamome blanche (reprise du
      favicon.svg), nervures dans le vert du fond pour l'effet « creux ». Coordonnees
-     d'origine en 0..100 (favicon), mises a l'echelle 1.08 pour remplir le canvas
-     108x108 de l'icone adaptative ; le pod garde sa marge, il reste dans la zone sure. -->
+     d'origine en 0..100 (favicon). Un seul groupe cale l'art au centre du canvas
+     108x108 (translate 4,4 : centre 50 -> 54) et le reduit a 0.9, pour que les
+     pointes de la gousse (a 35 du centre) restent DANS la zone sure de l'icone
+     adaptative (rayon ~33). C'est ce qui evite que la gousse paraisse surdimensionnee
+     et rognee sur l'ecran de lancement Android 12+ (masque circulaire), et cale sa
+     taille sur celle du logo du splash web (pwa-512) pour un enchainement continu. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group android:scaleX="1.08" android:scaleY="1.08">
+    <group
+        android:pivotX="50"
+        android:pivotY="50"
+        android:scaleX="0.9"
+        android:scaleY="0.9"
+        android:translateX="4"
+        android:translateY="4">
         <group android:rotation="45" android:pivotX="50" android:pivotY="50">
             <path
                 android:fillColor="#FFFFFF"
