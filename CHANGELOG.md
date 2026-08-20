@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.2.2 – Cardamome · Onde à sa place
+
+### Interface & tactile
+- **Onde d'ouverture réservée à l'app** : l'onde animée du logo au démarrage ne se joue plus que là où elle a du sens, dans l'app installée (PWA) et l'app native. Dans un onglet de navigateur (bureau ou web), l'écran d'ouverture affiche un logo net et statique, sans animation.
+
 ## v4.2.1 – Cardamome · Aperçu réparé
 
 ### Correctifs

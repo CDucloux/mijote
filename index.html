@@ -16,6 +16,10 @@
           var vp = document.querySelector('meta[name="viewport"]');
           if (vp) vp.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover");
         }
+        // Contexte « app » (PWA installée / coquille Capacitor) vs simple onglet de
+        // navigateur : l'onde du splash d'ouverture n'est jouée que dans ce contexte
+        // (cf. .boot-splash), pas sur desktop / web.
+        if (standalone || window.Capacitor) document.documentElement.classList.add("app-shell");
         // Applique le thème AVANT le premier rendu (pas de flash) et surtout : cale la
         // couleur des barres système (statut / navigation) sur le thème de l'appli,
         // et non sur celui du système. La balise theme-color unique ci-dessous est
@@ -101,20 +105,23 @@
         border-radius: 50%;
         object-fit: cover;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
-        animation: bootBreathe 2.6s ease-in-out infinite;
       }
       /* Onde concentrique qui irradie du cercle : deux anneaux décalés pour un
-         rythme continu. C'est un indicateur d'ouverture (statut), pas un halo déco. */
+         rythme continu. C'est un indicateur d'ouverture (statut), pas un halo déco.
+         Réservée au contexte « app » (PWA installée / Capacitor, classe app-shell
+         posée par le script d'en-tête) : dans un onglet de navigateur (desktop / web),
+         le logo reste statique, sans onde. */
       .boot-splash__pulse {
         position: absolute;
         inset: 0;
         border-radius: 50%;
         border: 2px solid #75a63f;
         opacity: 0;
-        animation: bootPulse 2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
       }
       html.light .boot-splash__pulse { border-color: #6e9a3f; }
-      .boot-splash__pulse.delay { animation-delay: 1s; }
+      html.app-shell .boot-splash__logo { animation: bootBreathe 2.6s ease-in-out infinite; }
+      html.app-shell .boot-splash__pulse { animation: bootPulse 2s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+      html.app-shell .boot-splash__pulse.delay { animation-delay: 1s; }
       @keyframes bootPulse {
         0%   { transform: scale(0.86); opacity: 0.5; }
         70%  { opacity: 0; }
@@ -125,8 +132,9 @@
         50%      { transform: scale(1.035); }
       }
       @media (prefers-reduced-motion: reduce) {
-        .boot-splash__logo { animation: none; }
-        .boot-splash__pulse { animation: none; opacity: 0; }
+        html.app-shell .boot-splash__logo,
+        html.app-shell .boot-splash__pulse { animation: none; }
+        .boot-splash__pulse { opacity: 0; }
       }
     </style>
   </head>
