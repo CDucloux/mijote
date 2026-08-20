@@ -11,7 +11,7 @@ Informations relatives à l'éditeur et à l'hébergeur du service Cardamome, en
 
 Le service Cardamome (ci-après « l'Application ») est édité par **[nom de l'éditeur à compléter]**, *particulier* [ou statut à préciser : auto-entrepreneur / société].
 
-Contact : **contact-mijote@gmail.com**
+Contact : **contact.cardamome@gmail.com**
 
 ## Directeur de la publication
 
@@ -38,4 +38,4 @@ L'éditeur met tout en œuvre pour assurer l'exactitude et la mise à jour des i
 
 ## Contact
 
-Pour toute question, réclamation ou signalement relatif à l'Application, vous pouvez écrire à **contact-mijote@gmail.com**.
+Pour toute question, réclamation ou signalement relatif à l'Application, vous pouvez écrire à **contact.cardamome@gmail.com**.

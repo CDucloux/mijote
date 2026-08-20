@@ -9,7 +9,7 @@ Cette politique explique quelles données personnelles Cardamome traite, pourquo
 
 ## Responsable du traitement
 
-Le responsable du traitement est l'éditeur de l'Application (voir les [Mentions légales](/legal/legal-notice)). Contact : **contact-mijote@gmail.com**.
+Le responsable du traitement est l'éditeur de l'Application (voir les [Mentions légales](/legal/legal-notice)). Contact : **contact.cardamome@gmail.com**.
 
 ## Données que nous traitons
 
@@ -48,7 +48,7 @@ Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation
 
 - **Rectification et effacement partiel** : directement depuis l'Application (profil, édition de vos contenus).
 - **Effacement global** : bouton « Tout effacer » dans votre profil.
-- **Autres droits** : écrivez à **contact-mijote@gmail.com**.
+- **Autres droits** : écrivez à **contact.cardamome@gmail.com**.
 
 ## Réclamation
 
