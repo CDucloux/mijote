@@ -51,14 +51,18 @@
   /* Marge sous la rangee d'onglets = zone systeme du bas. En PWA / navigateur, la
      barre de navigation de l'OS mange ces pixels : on l'egale a la safe-area pour
      que le fond de la TabBar prenne la couleur de l'appli. Dans la coquille
-     Capacitor (voir html.is-capacitor), l'app possede toute la hauteur : on annule
-     cette marge pour caler les onglets tout en bas. */
+     Capacitor (voir html.is-capacitor), la marge est calee sur un plancher fixe
+     pour que les onglets restent au-dessus de la zone de gestes systeme. */
   --tab-pad-b: env(safe-area-inset-bottom);
 }
 
-/* App native Android (Capacitor) uniquement : les onglets descendent au ras du bas. */
+/* App native Android (Capacitor) uniquement : marge basse FIXE, sans la safe-area.
+   En edge-to-edge (Android 15+), env(safe-area-inset-bottom) renvoie l'inset des
+   gestes systeme (souvent 24-48px) ; un max(safe-area, plancher) retenait donc
+   toujours cet inset et remontait la barre trop haut (le plancher etait sans effet).
+   Une valeur fixe cale les onglets tout en bas, a un petit cran du bord. */
 html.is-capacitor {
-  --tab-pad-b: 0px;
+  --tab-pad-b: 12px;
 }
 
 /* ── LIGHT THEME ── */

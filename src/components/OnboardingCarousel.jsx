@@ -262,20 +262,31 @@ export function OnboardingCarousel() {
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden",
-      background: `radial-gradient(125% 80% at 50% 16%, rgba(255,255,255,0.16), transparent 55%), ${SLIDES[active].color}`,
-      transition: "background 0.4s ease, opacity 0.3s", opacity: closing ? 0 : 1 }}
+      background: SLIDES[active].color,
+      transition: "background-color 0.4s ease, opacity 0.3s", opacity: closing ? 0 : 1 }}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+
+      {/* Voile radial FIXE, peint une seule fois : la profondeur ne dépend plus de
+          la transition. Seule la COULEUR de fond change d'une slide à l'autre
+          (background-color, repaint plat) plutôt qu'un dégradé animé plein écran,
+          bien plus coûteux et qui n'interpole pas proprement. */}
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none",
+        background: "radial-gradient(125% 80% at 50% 16%, rgba(255,255,255,0.16), transparent 55%)" }} />
 
       {/* Passer (sauf dernière slide) */}
       {!last && (
         <button onClick={finish} style={{ position: "absolute", top: "calc(14px + env(safe-area-inset-top))", right: 18, zIndex: 3, background: "none", border: "none", color: "rgba(255,255,255,0.85)", fontSize: 13.5, fontWeight: 600, cursor: "pointer", padding: 6 }}>Passer</button>
       )}
 
-      {/* Piste plein écran : une slide occupe toute la fenêtre */}
-      <div style={{ display: "flex", height: "100%", width: `${N * 100}%`, transform: `translateX(-${active * (100 / N)}%)`, transition: "transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
-        {SLIDES.map((s, n) => (
-          <div key={n} style={{ width: `${100 / N}%`, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
-            {/* Clé liée à `active` : l'animation d'entrée rejoue à chaque slide affichée */}
+      {/* Piste plein écran, FENÊTRÉE : seules la slide active et ses voisines
+          immédiates sont montées (position absolue à leur index), pour ne jamais
+          rasteriser les 7 écrans d'un coup. La voisine étant déjà peinte avant le
+          swipe, le premier passage ne paie plus le coût unique de mise en cache de
+          la piste géante (cause du lag 1re -> 2e slide). */}
+      <div style={{ position: "absolute", inset: 0, transform: `translateX(-${active * 100}%)`, transition: "transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)", willChange: "transform" }}>
+        {SLIDES.map((s, n) => (Math.abs(n - active) <= 1 ? (
+          <div key={n} style={{ position: "absolute", top: 0, left: `${n * 100}%`, width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
+            {/* Clé liée à `active` : l'animation d'entrée rejoue quand la slide devient active */}
             <div key={n === active ? `on-${active}` : `off-${n}`} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ width: 164, height: 164, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center", marginBottom: 44, boxShadow: "0 0 0 12px rgba(255,255,255,0.16), 0 16px 44px -18px rgba(0,0,0,0.4)", animation: n === active ? "onbPop 0.5s ease-out both" : "none" }}>
                 {s.illustration
@@ -286,7 +297,7 @@ export function OnboardingCarousel() {
               <p style={{ fontSize: 15.5, lineHeight: 1.55, color: "rgba(255,255,255,0.92)", margin: 0, maxWidth: 440, animation: n === active ? "onbRise 0.5s 0.2s both" : "none" }}>{s.text}</p>
             </div>
           </div>
-        ))}
+        ) : null))}
       </div>
 
       {/* Bas : barre de progression + indice/CTA */}

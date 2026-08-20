@@ -9,7 +9,8 @@ export function TabBar({ tab, setTab }) {
   // pilotée par `--tab-pad-b` (source unique, cf. global.css) : en PWA / navigateur,
   // elle vaut la safe-area et le fond `--surface` s'y étend pour prendre la couleur
   // de l'appli plutôt que celle du système ; dans la coquille Capacitor, elle est
-  // annulée pour caler les onglets tout en bas. La rangée garde sa hauteur `--tab-h`.
+  // calée sur un plancher fixe pour garder les onglets au-dessus de la zone de
+  // gestes système. La rangée garde sa hauteur `--tab-h`.
   return (
     <div style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0, paddingBottom: "var(--tab-pad-b)" }}>
       <div style={{ height: "var(--tab-h)", display: "flex", alignItems: "center" }}>
