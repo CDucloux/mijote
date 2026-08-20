@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.1.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.2.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -79,8 +79,10 @@ toujours avec vous.
   ce que vous avez déjà.
 - 🏡 **Foyer** : partage temps réel des recettes, du planning et des courses
   entre les membres d'un même foyer (invitation par e-mail).
-- 🧭 **Découvrir** : recettes publiées par la communauté, filtrables et
-  clonables en un geste ; publication depuis vos propres recettes.
+- 🧭 **Découvrir & partager** : recettes publiées par la communauté, filtrables
+  et clonables en un geste ; publication depuis vos propres recettes. Le partage
+  d'une recette publique génère un lien à l'**aperçu riche** (photo + titre, rendu
+  côté serveur pour WhatsApp / iMessage…), lisible même sans compte.
 - 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable
   (regroupable par catégorie), photos et astuces d'étape incluses.
 - 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
@@ -208,6 +210,10 @@ npx firebase deploy --only firestore:rules,storage:rules,functions
 > **App Check** : renseignez `VITE_FIREBASE_RECAPTCHA_SITE_KEY` et déployez le
 > front *avant* d'activer le mode *Enforce* (console Firebase → App Check) sur
 > Firestore / Functions / Storage, sinon vous bloqueriez vos propres requêtes.
+> L'aperçu riche des liens partagés lit une recette publique **sans
+> authentification** (côté serveur, pour les robots de prévisualisation) : garder
+> Firestore en mode *monitor*, ou prévoir un endpoint dédié si vous passez en
+> *Enforce*.
 
 ## 🔖 Versionner
 
@@ -244,6 +250,7 @@ src/
 ├── pages/           # Écrans (Home, MealPlan, Shopping, Recipes, Profile…)
 └── styles/          # global.css
 
+api/                 # Fonctions serverless Vercel (aperçu Open Graph des liens partagés)
 functions/           # Cloud Functions (import IA, paiement Stripe), extraction pure testée à part
 data/                # Base d'ingrédients (YAML, source Ciqual)
 scripts/             # Outils (seed de la base de référence)

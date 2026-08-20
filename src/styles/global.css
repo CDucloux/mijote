@@ -48,6 +48,17 @@
   --ff-body: 'Hanken Grotesk', sans-serif;
   --tab-h: 72px;
   --page-pad-b: 24px;        /* respiration en bas des pages a onglet, au-dessus de la TabBar (source unique) */
+  /* Marge sous la rangee d'onglets = zone systeme du bas. En PWA / navigateur, la
+     barre de navigation de l'OS mange ces pixels : on l'egale a la safe-area pour
+     que le fond de la TabBar prenne la couleur de l'appli. Dans la coquille
+     Capacitor (voir html.is-capacitor), l'app possede toute la hauteur : on annule
+     cette marge pour caler les onglets tout en bas. */
+  --tab-pad-b: env(safe-area-inset-bottom);
+}
+
+/* App native Android (Capacitor) uniquement : les onglets descendent au ras du bas. */
+html.is-capacitor {
+  --tab-pad-b: 0px;
 }
 
 /* ── LIGHT THEME ── */

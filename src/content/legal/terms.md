@@ -35,7 +35,7 @@ Vous vous interdisez notamment de copier ou reproduire, sans autorisation, des r
 
 ## Signalement et retrait
 
-Tout contenu peut être signalé à **contact-mijote@gmail.com**. L'éditeur se réserve le droit, à sa seule discrétion et sans préavis, de **retirer tout contenu**, de suspendre la publication ou de résilier un compte en cas de contenu manifestement illicite, de violation des présentes CGU ou d'atteinte aux droits d'un tiers, sans que cela ouvre droit à une quelconque indemnité.
+Tout contenu peut être signalé à **contact.cardamome@gmail.com**. L'éditeur se réserve le droit, à sa seule discrétion et sans préavis, de **retirer tout contenu**, de suspendre la publication ou de résilier un compte en cas de contenu manifestement illicite, de violation des présentes CGU ou d'atteinte aux droits d'un tiers, sans que cela ouvre droit à une quelconque indemnité.
 
 ## Garantie et indemnisation
 

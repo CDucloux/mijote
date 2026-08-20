@@ -22,6 +22,12 @@ markNativeFeel(
   window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true,
 )
 
+// Marqueur plateforme : coquille Capacitor (Android natif) UNIQUEMENT, distinct du
+// feel natif ci-dessus (qui couvre aussi la PWA standalone). L'app native possède
+// toute la hauteur de l'écran → la tab bar peut descendre au ras du bas (cf. la
+// variable --tab-pad-b dans global.css), ce que la PWA ne permet pas proprement.
+document.documentElement.classList.toggle('is-capacitor', Capacitor.isNativePlatform())
+
 registerSW({ immediate: true })
 
 ReactDOM.createRoot(document.getElementById('app')).render(
@@ -33,3 +39,8 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         </ErrorBoundary>
     </React.StrictMode>
 )
+
+// Splash d'ouverture (logo + onde, cf. index.html) : retiré une fois l'app montée,
+// après un court temps de visibilité pour que l'animation soit perçue. Le fond du
+// splash rejoint celui de la page de chargement, la transition est donc continue.
+requestAnimationFrame(() => setTimeout(() => window.__hideBootSplash?.(), 550))

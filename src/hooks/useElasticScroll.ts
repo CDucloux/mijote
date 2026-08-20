@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { trackFlingPeak, bounceImpact } from "@/lib/ui/flingVelocity.js";
 
 /**
  * Overscroll vertical « stretch » au BAS d'un conteneur scrollable : arrivé en bas,
@@ -118,19 +119,25 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
 
     // ── Suivi de vélocité pour le rebond d'inertie ───────────────────────────
     // Le fling après le doigt est géré nativement par le navigateur (pas de
-    // touchmove) : on lit la vitesse via `scroll` et, à l'instant où l'inertie
-    // percute le bas, on rejoue un rebond proportionnel à cette vitesse.
-    let lastY = el.scrollTop, lastT = performance.now(), vy = 0;
+    // touchmove) : on lit la vitesse via `scroll`. On ne mesure PAS la vitesse au
+    // contact du bas (là, `scrollTop` se fige et l'instantané retombe à ~0 pile au
+    // mauvais moment → le rebond « ne se déclenchait pas toujours ») : on retient
+    // un PIC amorti de la vitesse d'approche (cf. trackFlingPeak), puis on joue le
+    // rebond au tout premier frame où l'inertie franchit la butée.
+    const FLING_MIN = 0.3; // px/ms : en-deçà, défilement trop mou pour un rebond
+    let lastY = el.scrollTop, lastT = performance.now(), peak = 0, wasBottom = false;
     const onScroll = (): void => {
       const now = performance.now(), y = el.scrollTop, dt = now - lastT;
-      if (dt > 0) vy = (y - lastY) / dt; // px/ms, > 0 = vers le bas
+      peak = trackFlingPeak(peak, dt > 0 ? (y - lastY) / dt : 0);
       lastY = y; lastT = now;
-      // Filtres BON MARCHÉ d'abord (aucune lecture de layout) : ce n'est qu'une fois
-      // la vitesse résiduelle suffisante que l'on paie `scrollable()`/`atBottom()`,
-      // pour ne pas forcer un reflow à chaque frame de défilement (source de lag).
-      if (dragging || pull || bounce || vy <= 0.35) return;
-      if (!scrollable() || !atBottom()) return;
-      playBounce(Math.min(max, vy * 13));
+      // Filtre BON MARCHÉ d'abord (aucune lecture de layout) : tant que l'élan reste
+      // faible, on ne paie pas `scrollable()`/`atBottom()`, pour ne pas forcer un
+      // reflow à chaque frame de défilement (source de lag).
+      if (dragging || pull || bounce || peak <= FLING_MIN) { wasBottom = false; return; }
+      const nowBottom = scrollable() && atBottom();
+      // Un seul rebond, au FRANCHISSEMENT de la butée (transition), pas en boucle.
+      if (nowBottom && !wasBottom) playBounce(bounceImpact(peak, max));
+      wasBottom = nowBottom;
     };
 
     el.addEventListener("touchstart", onDown, { passive: true });

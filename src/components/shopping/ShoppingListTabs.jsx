@@ -15,7 +15,7 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
       {hasAgg && (() => {
         const aggChecked = aggregated.filter(a => a.checked).length;
         return (
-          <button onClick={onSelectAll} className="slide-up"
+          <button onClick={onSelectAll} className="slide-up ripple"
             style={{
               flexShrink: 0, display: "flex", alignItems: "center", gap: 6, height: 34, boxSizing: "border-box", padding: "0 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
               background: allMode ? "var(--accent)" : "var(--surface)",
@@ -36,7 +36,7 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
         const isActive = !allMode && effectiveId === l.id;
         const lChecked = l.items.filter(i => i.checked).length;
         return (
-          <div key={l.id} role="button" tabIndex={0} className="slide-up"
+          <div key={l.id} role="button" tabIndex={0} className="slide-up ripple"
             onClick={() => { if (wasLongPress()) return; onSelect(l.id); }}
             onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(l.id); } }}
             onPointerDown={e => startLongPress(e, () => onOpenMenu(l))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
