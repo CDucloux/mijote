@@ -22,6 +22,12 @@ markNativeFeel(
   window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true,
 )
 
+// Marqueur plateforme : coquille Capacitor (Android natif) UNIQUEMENT, distinct du
+// feel natif ci-dessus (qui couvre aussi la PWA standalone). L'app native possède
+// toute la hauteur de l'écran → la tab bar peut descendre au ras du bas (cf. la
+// variable --tab-pad-b dans global.css), ce que la PWA ne permet pas proprement.
+document.documentElement.classList.toggle('is-capacitor', Capacitor.isNativePlatform())
+
 registerSW({ immediate: true })
 
 ReactDOM.createRoot(document.getElementById('app')).render(
