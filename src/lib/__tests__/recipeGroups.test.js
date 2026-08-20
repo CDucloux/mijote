@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupBy, hasGroups, groupOrder, relabelGroup, moveWithinGroup, moveAcrossGroups, sectionRuns, moveWithAdopt } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, hasGroups, groupOrder, relabelGroup, moveWithinGroup, moveAcrossGroups, sectionRuns, moveWithAdopt, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
 
 describe("recipeGroups", () => {
   it("returns a single main section (group null) when nothing is grouped", () => {
@@ -107,6 +107,19 @@ describe("recipeGroups", () => {
     out = moveWithAdopt(items, 2, 0);
     expect(out[0].id).toBe("c");
     expect(out[0].group || "").toBe("");
+  });
+
+  it("looseRunLabel: named run keeps its label, ungrouped runs become Préparation/Montage", () => {
+    // Recette sans section → aucun en-tête.
+    expect(looseRunLabel({ group: null }, false, false)).toBeNull();
+    expect(looseRunLabel({ group: null }, true, false)).toBeNull();
+    // Recette sectionnée : un run nommé garde son libellé.
+    expect(looseRunLabel({ group: "Caramel" }, false, true)).toBe("Caramel");
+    // Un run hors-section : « Montage » si dernier, « Préparation » sinon.
+    expect(looseRunLabel({ group: null }, true, true)).toBe("Montage");
+    expect(looseRunLabel({ group: null }, false, true)).toBe("Préparation");
+    // Un run nommé garde son libellé même quand il est le dernier.
+    expect(looseRunLabel({ group: "Pâte" }, true, true)).toBe("Pâte");
   });
 
   it("moveAcrossGroups appends when toLocal is out of range (drop on empty zone)", () => {

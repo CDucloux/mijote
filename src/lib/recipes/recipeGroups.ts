@@ -74,6 +74,23 @@ export function hasGroups(items: readonly { group?: string }[] | undefined): boo
 }
 
 /**
+ * Libellé d'en-tête pour un run d'ÉTAPES hors-section (`group` absent) au sein d'une
+ * recette qui possède par ailleurs des sections nommées. Un run nommé garde son propre
+ * libellé ; un run hors-section devient « Montage » s'il termine la recette (assemblage
+ * final) et « Préparation » sinon. Retourne `null` quand la recette n'a aucune section
+ * (aucun en-tête à afficher, iso-rendu de l'ancien comportement inline).
+ *
+ * @param run - Le run considéré (seul son `group` est lu).
+ * @param isLast - `true` si c'est le dernier run de la liste.
+ * @param hasSections - `true` si la recette comporte au moins une section nommée.
+ */
+export function looseRunLabel(run: { group?: string | null }, isLast: boolean, hasSections: boolean): string | null {
+  if (run.group) return run.group;
+  if (!hasSections) return null;
+  return isLast ? "Montage" : "Préparation";
+}
+
+/**
  * Libellés de groupes d'une recette, dans l'ordre de première apparition (ingrédients
  * puis étapes). Utile pour proposer les groupes existants dans l'éditeur.
  */
