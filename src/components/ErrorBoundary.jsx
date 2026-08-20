@@ -1,5 +1,6 @@
 import React from "react";
 import { reportError } from "../lib/observability/observability.js";
+import { CONTACT_EMAIL, CONTACT_MAILTO } from "../constants/contact.js";
 
 // ─── ERROR BOUNDARY ───────────────────────────────────────────────────────────
 // Filet de sécurité global : un throw au render ne doit pas laisser un écran
@@ -38,6 +39,10 @@ export class ErrorBoundary extends React.Component {
           style={{ marginTop: 6, padding: "11px 22px", borderRadius: 12, border: "none", cursor: "pointer", background: "#6e9a3f", color: "#fff", fontSize: 14, fontWeight: 600 }}>
           Recharger
         </button>
+        <p style={{ fontSize: 12.5, opacity: 0.55, margin: "10px 0 0", lineHeight: 1.5 }}>
+          Le problème persiste ? Écris-nous à{" "}
+          <a href={CONTACT_MAILTO} style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>{CONTACT_EMAIL}</a>
+        </p>
       </div>
     );
   }

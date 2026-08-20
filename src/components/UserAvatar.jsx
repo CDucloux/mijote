@@ -7,6 +7,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { AboutModal } from "./AboutModal.jsx";
 import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useModalExit } from "../hooks/useModalExit.js";
+import { CONTACT_MAILTO } from "../constants/contact.js";
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
 export function UserAvatar() {
@@ -112,6 +113,12 @@ export function UserAvatar() {
               onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
               <Icon name="fileText" size={13} color="currentColor" /> Informations légales
             </button>
+            <a href={CONTACT_MAILTO} onClick={() => closeThen()}
+              style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", textDecoration: "none", cursor: "pointer", transition: "color 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--text3)"}>
+              <Icon name="mail" size={13} color="currentColor" /> Nous contacter
+            </a>
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
             <button onClick={() => closeThen(() => setConfirmSignOut(true))}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
