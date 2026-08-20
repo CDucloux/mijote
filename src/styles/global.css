@@ -56,11 +56,13 @@
   --tab-pad-b: env(safe-area-inset-bottom);
 }
 
-/* App native Android (Capacitor) uniquement : au ras du bas, la rangee tombait
-   sous la zone de gestes systeme (barre trop basse). On la remonte d'un cran, avec
-   un plancher fixe car la safe-area n'est pas fiable dans ce WebView (pas d'edge-to-edge). */
+/* App native Android (Capacitor) uniquement : marge basse FIXE, sans la safe-area.
+   En edge-to-edge (Android 15+), env(safe-area-inset-bottom) renvoie l'inset des
+   gestes systeme (souvent 24-48px) ; un max(safe-area, plancher) retenait donc
+   toujours cet inset et remontait la barre trop haut (le plancher etait sans effet).
+   Une valeur fixe cale les onglets tout en bas, a un petit cran du bord. */
 html.is-capacitor {
-  --tab-pad-b: max(env(safe-area-inset-bottom), 8px);
+  --tab-pad-b: 8px;
 }
 
 /* ── LIGHT THEME ── */
