@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.2.1 – Cardamome · Aperçu réparé
+
+### Correctifs
+- **Aperçu de partage rétabli** : la fonction serveur qui fabrique la carte de lien (photo + titre de la recette) plantait à l'invocation. Le partage affiche de nouveau un aperçu riche.
+
 ## v4.2.0 – Cardamome · À portée de lien
 
 ### Partage

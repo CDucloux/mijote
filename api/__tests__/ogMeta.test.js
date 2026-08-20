@@ -5,7 +5,7 @@ import {
   injectMetaTags,
   DEFAULT_TITLE,
   DEFAULT_DESCRIPTION,
-} from "../ogMeta.ts";
+} from "../_ogMeta.js";
 
 const IMG = "https://firebasestorage.googleapis.com/v0/b/x/o/guac.jpg?alt=media";
 

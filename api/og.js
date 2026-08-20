@@ -1,7 +1,7 @@
-// Import sans extension : la fonction est bundlée par esbuild (@vercel/node), qui
-// résout ../src/lib/share/ogMeta vers le .ts (extensions par défaut). La logique
-// pure vit et est testée dans src/lib ; ici, uniquement l'I/O.
-import { parseFirestoreDoc, buildShareMeta, injectMetaTags } from "../src/lib/share/ogMeta";
+// Helper colocalisé en JS simple (préfixe `_` = non exposé comme endpoint) : la
+// fonction se charge sans bundling ni résolution TypeScript à l'exécution (une
+// version .ts importée ici faisait planter l'invocation, FUNCTION_INVOCATION_FAILED).
+import { parseFirestoreDoc, buildShareMeta, injectMetaTags } from "./_ogMeta.js";
 
 // ─── OPEN GRAPH SSR (fonction Vercel) ────────────────────────────────────────
 // Rendu côté serveur des balises de partage pour /discover/:id. Les crawlers de
