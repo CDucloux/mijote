@@ -1,5 +1,25 @@
 # Changelog – Cardamome
 
+## v4.2.0 – Cardamome · À portée de lien
+
+### Partage
+- **La carte qui donne envie** : quand tu partages une recette (WhatsApp, iMessage, Discord…), l'aperçu du lien affiche enfin la vraie photo de la recette, son titre et un résumé, au lieu du logo générique. Les aperçus sont fabriqués côté serveur pour les robots de prévisualisation, qui ne voient pas l'app.
+- **Un lien qui s'ouvre pour tout le monde** : une recette publiée est désormais lisible par son lien, y compris par un destinataire sans compte (lecture d'une recette publique ouverte ; le feed Découverte, lui, reste réservé aux comptes).
+- **Feuille de partage revue** : aperçu plus net, une touche de couleur sur l'action « Copier le lien », WhatsApp et SMS relevés dans leur propre teinte. Plus lisible, mieux hiérarchisé.
+
+### Interface & tactile
+- **Écran d'ouverture soigné** : à l'ouverture de l'app (installée comme en PWA), le logo Cardamome s'affiche avec une onde qui irradie, le temps que tout se charge. La transition rejoint l'écran de connexion sans à-coup.
+- **Retour Android naturel** : sur l'app native, le bouton retour (et le geste de retour) revient à l'écran précédent dans l'app, au lieu de la quitter d'un coup. En pleine édition, la garde d'abandon reste respectée.
+- **L'onde là où elle manquait** : les pastilles de sélection de liste et les cartes d'articles des Courses reçoivent enfin l'onde tactile. Le petit rebond élastique en bas des listes se déclenche désormais de façon fiable après un défilement lancé.
+- **Nous contacter, à portée** : une entrée « Nous contacter » dans le menu du profil et un lien sur l'écran d'erreur, pour joindre l'équipe en un geste.
+- **Planning plus net** : les flèches de navigation et la pastille Agenda passent en surface claire, plus franches que l'ancien gris.
+- **Barre d'onglets au ras du bas** : sur l'app native, les onglets se calent tout en bas de l'écran, sans marge superflue.
+
+### Sous le capot
+- **Adresse de contact réelle** dans les mentions légales, la politique de confidentialité et les CGU.
+- **Logique pure et testée** ajoutée pour le rebond élastique (mesure d'élan) et les métadonnées de partage (parsing, construction, injection), avec leurs cas limites.
+- **Règles Firestore** : lecture publique d'une recette publiée (nécessaire au partage par lien et aux aperçus), le feed Découverte restant borné aux comptes vérifiés.
+
 ## v4.1.0 – Cardamome · Le geste natif
 
 ### Interface & tactile
