@@ -1,5 +1,18 @@
 # Changelog – Cardamome
 
+## v4.1.0 – Cardamome · Le geste natif
+
+### Interface & tactile
+- **L'onde sur tous les boutons** : le retour tactile « à la Android » (une onde qui naît sous le doigt) s'étend maintenant à tous les boutons et pilules de l'app, plus seulement à quelques-uns. Onde un cran plus lente et plus ample, pour un geste mieux ressenti au toucher. Sur mobile uniquement, le bureau garde ses états de survol.
+- **Un vrai feel d'app dans l'appli installée** : dans l'application native (et la PWA installée), le texte ne se sélectionne plus par mégarde au long-press, comme dans une vraie app. Le WebView de l'app mobile laissait jusqu'ici sélectionner le texte comme sur une page web, ce qui cassait l'illusion. Les champs de saisie restent bien sûr sélectionnables.
+- **Marges du bas homogènes** : toutes les pages principales (Accueil, Recettes, Planning, Courses, Stock, Profil…) respirent désormais pareil en bas, au-dessus de la barre d'onglets. Fini les écarts qui variaient d'un écran à l'autre.
+
+### Sous le capot
+- **Grosses pages découpées** : les écrans Fiche recette et Courses, devenus tentaculaires, sont scindés en logique pure (testée), orchestration (hooks) et petits composants d'affichage. Comportement et rendu strictement identiques, dette technique en forte baisse.
+- **Espacement bas centralisé** : un seul réglage (`--page-pad-b`) pilote la marge basse de toutes les pages, au lieu d'être recopié cinq fois avec cinq valeurs différentes.
+- **Onde tactile généralisée à la source** : plutôt que de taguer chaque bouton, l'onde s'applique à tout `.btn` / `.pressable` via la délégation globale ; les futurs boutons en héritent automatiquement.
+- Tests unitaires ajoutés (onde tactile, feel natif, liste de courses, repli du hero de fiche recette).
+
 ## v4.0.4 – Cardamome · La gousse bien calée
 
 ### Interface

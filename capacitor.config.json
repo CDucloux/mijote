@@ -1,9 +1,9 @@
 {
-  "appId": "app.mijote",
+  "appId": "studio.cardamome",
   "appName": "Cardamome",
   "webDir": "dist",
   "android": {
-    "backgroundColor": "#10120e"
+    "backgroundColor": "#0f110d"
   },
   "plugins": {
     "FirebaseAuthentication": {

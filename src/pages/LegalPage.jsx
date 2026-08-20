@@ -26,7 +26,7 @@ export function LegalPage() {
         </h1>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 40px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px var(--page-pad-b)" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           {doc ? <Document doc={doc} /> : <Index navigate={navigate} />}
         </div>
