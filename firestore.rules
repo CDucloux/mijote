@@ -100,21 +100,23 @@ service cloud.firestore {
     }
 
     // ── Recettes publiques (communauté) ───────────────────────────────────────
-    // Lecture par tout utilisateur connecté (découverte). Écriture/suppression
-    // réservées à l'auteur : on exige que `authorUid` soit l'uid courant ET que
-    // l'identifiant du doc soit préfixé « {uid}__ » (défense en profondeur, cohérent
-    // avec publicId() côté client). Les composants publiés suivent les mêmes règles.
+    // Écriture/suppression réservées à l'auteur : on exige que `authorUid` soit
+    // l'uid courant ET que l'identifiant du doc soit préfixé « {uid}__ » (défense en
+    // profondeur, cohérent avec publicId() côté client). Les composants publiés
+    // suivent les mêmes règles.
     match /publicRecipes/{pubId} {
       function ownsDoc() {
         return hasVerifiedEmail()
                && request.auth.uid == request.resource.data.authorUid
                && pubId.split('__')[0] == request.auth.uid;
       }
-      // Lecture : email vérifié requis. `get` (voir une recette publique / cloner
-      // un composant par pubId) libre ; `list` (feed Découverte) borné à 120 pour
-      // interdire l'aspiration de toute la collection en une requête, aligné sur
-      // fetchPublicRecipes(max = 120). Une requête sans limite est refusée.
-      allow get: if hasVerifiedEmail();
+      // Lecture d'UN doc (`get`) : PUBLIQUE. Une recette publiée est destinée à être
+      // partagée par lien, y compris à des destinataires sans compte, et lue côté
+      // serveur (rendu Open Graph, cf. api/og) par les crawlers de liens (WhatsApp,
+      // iMessage...) qui ne sont pas authentifiés. Le `list` (feed Découverte) reste
+      // réservé aux comptes vérifiés et borné à 120 pour interdire l'aspiration de
+      // toute la collection en une requête ; une requête sans limite est refusée.
+      allow get: if true;
       allow list: if hasVerifiedEmail() && request.query.limit <= 120;
       allow create, update: if ownsDoc();
       // Suppression : l'auteur (dépublication) OU l'admin (modération). L'admin

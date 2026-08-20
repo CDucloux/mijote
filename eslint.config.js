@@ -67,6 +67,16 @@ export default defineConfig([
     },
   },
   {
+    // Fonctions serverless Vercel (api/) : code Node ESM (process, fetch...), pas
+    // le navigateur. Le Fast Refresh ne s'y applique pas.
+    files: ['api/**/*.js'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: { ...globals.node, fetch: 'readonly' },
+    },
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
     // Fichiers de tests : ESM (Vitest) + globals Node. Doit passer après l'override
     // functions/ pour rétablir sourceType: module sur les .test.js de functions/.
     files: ['**/*.test.{js,jsx}'],
