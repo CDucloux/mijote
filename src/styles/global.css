@@ -166,26 +166,27 @@ body {
   overscroll-behavior: none;
 }
 
-/* Feel « app native » : uniquement en PWA installée (standalone). Pas de sélection
-   de texte ni de menu callout iOS au long-press… sauf dans les champs de saisie,
-   où l'édition et la sélection restent nécessaires. Dans le navigateur classique,
-   la sélection reste disponible (accessibilité). */
-@media (display-mode: standalone) {
-  body {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-  }
+/* Feel « app native » : coquille Capacitor OU PWA installée (standalone). Le flag
+   `.native-feel` est posé sur <html> au démarrage (cf. shouldUseNativeFeel), ce qui
+   couvre d'un seul jeu de règles les deux coquilles (le WebView Capacitor ne rapporte
+   pas `display-mode: standalone`, d'où la sélection qui restait active). Pas de
+   sélection de texte ni de menu callout iOS au long-press… sauf dans les champs de
+   saisie, où l'édition et la sélection restent nécessaires. Dans le navigateur
+   classique (onglet), la sélection reste disponible (accessibilité). */
+html.native-feel body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
 
-  input,
-  textarea,
-  select,
-  [contenteditable="true"],
-  [contenteditable="true"] * {
-    -webkit-user-select: text;
-    user-select: text;
-    -webkit-touch-callout: default;
-  }
+html.native-feel input,
+html.native-feel textarea,
+html.native-feel select,
+html.native-feel [contenteditable="true"],
+html.native-feel [contenteditable="true"] * {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 #root {
@@ -3116,9 +3117,9 @@ select {
   background: rgba(120, 110, 100, 0.18);
   transform: scale(0);
   opacity: 0.85;
-  /* Onde plus posée : expansion plus lente et fondu plus doux (l'onde « trop rapide »
-     paraissait sèche). ~0.8 s pour un ressenti Material moderne. */
-  animation: rippleInk 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  /* Onde posée : expansion lente et fondu doux (l'onde « trop rapide » paraissait
+     sèche). ~1.1 s pour une propagation ample, bien lisible, à la Material moderne. */
+  animation: rippleInk 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes rippleInk {
   to { transform: scale(1); opacity: 0; }
