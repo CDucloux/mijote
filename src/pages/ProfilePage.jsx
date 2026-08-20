@@ -76,7 +76,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
         <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Profil</h1>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 32px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px var(--page-pad-b)" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 620, margin: "0 auto" }}>
 
           {/* ── Carte identité ── */}

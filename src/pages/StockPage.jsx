@@ -149,7 +149,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       </div>
 
       {/* Corps scrollable */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px var(--page-pad-b)" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
         {ingredientDB.length === 0 && loading ? (
           // Base pas encore hydratée : spinner plutôt que « Base d'ingrédients vide ».

@@ -18,7 +18,7 @@ export function ShoppingAggregateView({ aggregated, categories, pending, uncheck
   );
   return (
     <div key="__all__" className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "12px 20px 32px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "12px 20px var(--page-pad-b)" }}>
         <div ref={contentRef} style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
           {aggregated.length === 0 ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, textAlign: "center" }}>

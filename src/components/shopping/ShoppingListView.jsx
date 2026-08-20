@@ -32,7 +32,7 @@ export function ShoppingListView({
       )}
 
       {/* Liste – pleine largeur, défilante */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: `12px 20px ${activeList.type === "free" ? 76 : 20}px` }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: `12px 20px ${activeList.type === "free" ? "calc(var(--page-pad-b) + 52px)" : "var(--page-pad-b)"}` }}>
         <div ref={contentRef} style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
 
           {activeList.items.length === 0 && activeList.type !== "free" && (

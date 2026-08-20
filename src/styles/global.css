@@ -47,6 +47,7 @@
   --ff-display: 'Fraunces', serif;
   --ff-body: 'Hanken Grotesk', sans-serif;
   --tab-h: 72px;
+  --page-pad-b: 24px;        /* respiration en bas des pages a onglet, au-dessus de la TabBar (source unique) */
 }
 
 /* ── LIGHT THEME ── */

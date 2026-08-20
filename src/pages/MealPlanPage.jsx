@@ -397,7 +397,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         </div>
       </div>
 
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 12px 16px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 12px var(--page-pad-b)" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
         {loading ? <LoadingSpinner /> : viewMode === "week" && (
           <div key={`week-${weekDays[0]}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>

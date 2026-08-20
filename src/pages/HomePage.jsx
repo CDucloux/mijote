@@ -224,7 +224,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
       </div>
 
       {/* Corps défilant */}
-      <ElasticScroll style={{ flex: 1, padding: "0 20px 24px" }}>
+      <ElasticScroll style={{ flex: 1, padding: "0 20px var(--page-pad-b)" }}>
         {/* ── Mon foyer (en tête d'accueil) ───────────────────────────────── */}
         <FoyerSection />
 

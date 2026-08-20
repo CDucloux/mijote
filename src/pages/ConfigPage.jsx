@@ -422,7 +422,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         })()}
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--page-pad-b)" }}>
         {section === "dashboard" && (
           <AdminDashboard ingredientDB={ingredientDB} utensilDB={utensilDB} techniques={techniques} onGoto={gotoSection} />
         )}
