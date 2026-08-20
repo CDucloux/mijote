@@ -102,6 +102,26 @@ greffe directement sur `ingredientDB`.
   le back-timing depuis l'heure de service : « service à 20h -> pâte à 17h30,
   bouillon à 18h ». Extension naturelle du cook mode.
 
+## Refonte de l'existant (déjà là, mais perfectible)
+
+Deux features déjà livrées qui méritent clairement une passe d'amélioration.
+
+- [ ] **Refonte du mode batch cooking.** La base est solide (`batchSession.ts` :
+  vue dérivée du planning + graphe de sous-recettes, plats regroupés, cuissons
+  mutualisées, bases partagées avec quantité totale, mise en place, groupes de
+  cuisson), mais l'expérience reste perfectible. Pistes : ordonnancement / back-
+  timing des sessions (jonction avec la timeline mise en place), regroupement des
+  cuissons par méthode et température (tout ce qui passe au four à 180° ensemble),
+  conseils de conservation et d'étiquetage par préparation (portions, congélation,
+  DLC maison), état d'avancement coché et persistant, et un rendu plus lisible /
+  guidé de la session.
+- [ ] **Refonte du carnet d'itération.** Le versionnage par recette existe
+  (`history.ts` + `RecipeJournal.jsx` : note /10, notes libres, snapshot complet,
+  diff entre versions, restauration), à pousser plus loin. Pistes : comparaison de
+  plus de deux versions, photos par itération, notes de dégustation structurées
+  (ce qui a changé -> le résultat obtenu), tendances dans le temps (la courbe des
+  notes), mise en avant du carnet dans la fiche, et partage d'une itération.
+
 ## Import IA & bases de données
 
 - [ ] **Paramètres de fonctionnement des ustensiles.** Enrichir la base ustensiles
