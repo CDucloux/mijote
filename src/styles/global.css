@@ -1320,6 +1320,71 @@ select {
   50% { box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.4), 0 0 0 6px rgba(var(--ok-rgb), 0); }
 }
 
+/* Transition d'étape du cook mode : le contenu « pousse » dans le sens de la
+   navigation, le même geste d'expansion de texte que les pages à onglet.
+   En avant (Suivant) → le texte monte depuis le bas ; en arrière (Précédent) →
+   il descend depuis le haut. Rejoué à chaque changement (clé React = stepIdx). */
+.cook-step-rise { animation: cookStepRise 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.cook-step-drop { animation: cookStepDrop 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
+@keyframes cookStepRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cookStepDrop {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cook-step-rise, .cook-step-drop { animation: none; }
+}
+
+/* Pile de minuteurs repliable, ancrée à droite au-dessus de la barre de nav. */
+.cook-timers { position: absolute; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; z-index: 5; width: 234px; max-width: calc(100% - 24px); }
+
+/* Pilule d'en-tête : replie / déplie la pile, porte le compteur. */
+.cook-timers-toggle {
+  display: inline-flex; align-items: center; gap: 8px; align-self: stretch;
+  padding: 9px 12px; border-radius: 999px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.45);
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.cook-timers-toggle:active { transform: scale(0.98); }
+.cook-timers-count {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; background: var(--accent);
+}
+.cook-timers-count.is-done { background: var(--ok); }
+.cook-timers-chevron { margin-left: auto; display: inline-flex; transition: transform 0.22s ease; }
+.cook-timers-chevron.open { transform: rotate(180deg); }
+
+/* Rangée compacte (replié) : un aperçu par minuteur, l'étape source visible. */
+.cook-timer-chip {
+  display: flex; align-items: center; gap: 8px; align-self: stretch;
+  padding: 7px 11px; border-radius: 12px; cursor: pointer; text-align: left;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: 0 6px 18px -12px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.cook-timer-chip:active { transform: scale(0.98); }
+.cook-timer-chip .t { font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+.cook-timer-chip .s { margin-left: auto; font-size: 10.5px; font-weight: 600; color: var(--text3); flex-shrink: 0; }
+
+/* Chip « étape source » cliquable dans la carte dépliée : ramène à l'étape. */
+.cook-timer-step {
+  display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+  padding: 2px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
+  color: var(--accent); background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
+  transition: background 0.15s ease;
+}
+.cook-timer-step:active { background: rgba(var(--accent-rgb), 0.2); }
+
 @keyframes popIn {
   0% {
     transform: scale(0) rotate(-10deg);

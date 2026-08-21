@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/Icon.jsx";
 import { parseDurations, fmtCountdown } from "@/lib/planning/stepTimers.js";
+import { startTimer, remainingSecs, hasElapsed, markDone, pauseTimer, resumeTimer, resetTimer as resetTimerState, hasActiveDuration } from "@/lib/planning/cookTimers.js";
+import { ensureTimerNotificationPermission, scheduleTimerNotification, cancelTimerNotification, deriveNotifId } from "@/lib/notifications/localNotifications.js";
 import { StepTip } from "../components/StepTip.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
@@ -71,15 +73,52 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const [iterOpen, setIterOpen] = useState(false);
   const [iterRating, setIterRating] = useState(null);
   const [iterNotes, setIterNotes] = useState("");
-  // Minuteurs déclenchés depuis les mentions de temps de l'étape.
-  const [timers, setTimers] = useState([]); // { id, label, total, remaining, running, done }
+  // Minuteurs déclenchés depuis les mentions de temps de l'étape. Base horodatée
+  // (cf. `cookTimers`) : le restant se dérive de l'horloge, donc reste juste après
+  // un passage en arrière-plan. En natif, une notification OS est planifiée à
+  // l'échéance pour sonner même écran verrouillé (cf. `localNotifications`).
+  const [timers, setTimers] = useState([]);
+  const [timersOpen, setTimersOpen] = useState(true);
+  const [now, setNow] = useState(() => Date.now());
+  const [navDir, setNavDir] = useState(1); // sens de navigation (animation d'étape)
   const notifiedRef = useRef(new Set());
-  const addTimer = (d) => setTimers(prev => prev.some(t => t.id.startsWith(`${d.minutes}-`) && !t.done && t.running)
-    ? prev
-    : [...prev, { id: `${d.minutes}-${Date.now()}`, label: d.label, total: d.minutes * 60, remaining: d.minutes * 60, running: true, done: false }]);
-  const toggleTimer = (id) => setTimers(prev => prev.map(t => t.id === id && !t.done ? { ...t, running: !t.running } : t));
-  const resetTimer = (id) => { notifiedRef.current.delete(id); setTimers(prev => prev.map(t => t.id === id ? { ...t, remaining: t.total, running: true, done: false } : t)); };
-  const removeTimer = (id) => { notifiedRef.current.delete(id); setTimers(prev => prev.filter(t => t.id !== id)); };
+  const permAskedRef = useRef(false);
+  const timerNotifBody = (t) => `${t.label}${t.stepLabel ? `, ${t.stepLabel.toLowerCase()}` : ""}`;
+  const armNotif = async (t) => {
+    if (t.endAt == null) return;
+    // Permission demandée à la volée au premier minuteur (Android 13+), avant de planifier.
+    if (!permAskedRef.current) { permAskedRef.current = true; await ensureTimerNotificationPermission(); }
+    scheduleTimerNotification({ notifId: deriveNotifId(t.id), title: "Minuteur terminé", body: timerNotifBody(t), at: new Date(t.endAt) });
+  };
+  const cancelNotif = (t) => cancelTimerNotification(deriveNotifId(t.id));
+  const addTimer = (d) => {
+    if (hasActiveDuration(timers, d.minutes)) return;
+    const stepLabel = realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases";
+    const t = startTimer({ minutes: d.minutes, label: d.label, stepIdx, stepLabel }, Date.now());
+    setTimers(prev => hasActiveDuration(prev, d.minutes) ? prev : [...prev, t]);
+    setTimersOpen(true);
+    armNotif(t);
+  };
+  const toggleTimer = (id) => {
+    const t = timers.find(x => x.id === id);
+    if (!t || t.done) return;
+    const clock = Date.now();
+    setTimers(prev => prev.map(x => x.id === id ? (x.running ? pauseTimer(x, clock) : resumeTimer(x, clock)) : x));
+    if (t.running) cancelNotif(t); else armNotif(resumeTimer(t, clock));
+  };
+  const restartTimer = (id) => {
+    const t = timers.find(x => x.id === id);
+    const clock = Date.now();
+    notifiedRef.current.delete(id);
+    setTimers(prev => prev.map(x => x.id === id ? resetTimerState(x, clock) : x));
+    if (t) armNotif(resetTimerState(t, clock));
+  };
+  const removeTimer = (id) => {
+    const t = timers.find(x => x.id === id);
+    if (t) cancelNotif(t);
+    notifiedRef.current.delete(id);
+    setTimers(prev => prev.filter(x => x.id !== id));
+  };
   const canIterate = !isNested && !!onUpdateRecipe;
   const saveIteration = () => {
     onUpdateRecipe(addVersion(recipe, { label: nextVersionLabel(recipe.history), rating: iterRating, notes: iterNotes }));
@@ -144,21 +183,42 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     .filter(({ comp }) => comp.steps?.length > 0)
     .every(({ comp }) => doneComponents.has(comp.id));
 
+  // Navigation entre pages, en mémorisant le sens pour l'animation d'expansion :
+  // en avant le contenu monte depuis le bas, en arrière il descend depuis le haut.
+  const goTo = (idx) => {
+    const next = Math.max(0, Math.min(totalSteps - 1, idx));
+    if (next === stepIdx) return;
+    if (isBases && next > stepIdx && !allComponentsDone) return; // bases à finir avant d'avancer
+    setNavDir(next >= stepIdx ? 1 : -1);
+    setStepIdx(next);
+  };
+  const goNext = () => { if (stepIdx < totalSteps - 1) goTo(stepIdx + 1); };
+  const goPrev = () => goTo(stepIdx - 1);
+
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
   const progress = ((stepIdx + 1) / totalSteps) * 100;
 
-  // Décompte : 1 tick/s tant qu'un minuteur tourne. Passe à done à 0.
+  // Battement d'horloge tant qu'un minuteur tourne : on avance `now` (le restant
+  // s'en dérive) et on bascule à « terminé » les échéances dépassées. Un recalage
+  // immédiat au retour au premier plan rattrape ce qui a expiré en arrière-plan,
+  // où les timers JS sont gelés par l'OS.
   useEffect(() => {
-    if (!timers.some(t => t.running && t.remaining > 0)) return;
-    const iv = setInterval(() => {
-      setTimers(prev => prev.map(t => {
-        if (!t.running || t.remaining <= 0) return t;
-        const rem = t.remaining - 1;
-        return rem <= 0 ? { ...t, remaining: 0, running: false, done: true } : { ...t, remaining: rem };
-      }));
-    }, 1000);
-    return () => clearInterval(iv);
+    if (!timers.some(t => t.running && !t.done)) return;
+    const sync = () => {
+      const n = Date.now();
+      setNow(n);
+      setTimers(prev => {
+        let changed = false;
+        const next = prev.map(t => { if (hasElapsed(t, n)) { changed = true; return markDone(t); } return t; });
+        return changed ? next : prev;
+      });
+    };
+    const iv = setInterval(sync, 1000);
+    const onWake = () => { if (document.visibilityState === "visible") sync(); };
+    document.addEventListener("visibilitychange", onWake);
+    window.addEventListener("focus", onWake);
+    return () => { clearInterval(iv); document.removeEventListener("visibilitychange", onWake); window.removeEventListener("focus", onWake); };
   }, [timers]);
 
   // Alarme quand un minuteur se termine (une seule fois, compatible StrictMode).
@@ -183,10 +243,13 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
             setTimeout(() => ctx.close?.(), 1200);
           }
         } catch { /* audio indisponible */ }
+        // L'alarme premier plan a joué : on annule la notif OS encore en attente
+        // pour éviter une bannière redondante quand le minuteur échoit app ouverte.
+        cancelNotif(t);
         notify?.(`Minuteur terminé, ${t.label}`);
       }
     }
-  }, [timers, notify]);
+  }, [timers, notify]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Navigation au clavier (desktop) : ← précédent, → suivant (ou terminer).
   useEffect(() => {
@@ -194,10 +257,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     const onKey = (e) => {
       if (e.defaultPrevented || e.target?.closest?.("input, textarea, [contenteditable=true]")) return;
       if (e.key === "ArrowRight") {
-        if (stepIdx < totalSteps - 1) { if (!(isBases && !allComponentsDone)) setStepIdx(i => i + 1); }
+        if (stepIdx < totalSteps - 1) goNext();
         else setDone(true);
       } else if (e.key === "ArrowLeft") {
-        setStepIdx(i => Math.max(0, i - 1));
+        goPrev();
       } else return;
       e.preventDefault();
     };
@@ -259,8 +322,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       dragging = false;
       if (axis === "x") {
         const dx = e.changedTouches[0].clientX - x0;
-        if (dx < -50) { if (stepIdx < totalSteps - 1 && !(isBases && !allComponentsDone)) setStepIdx(i => i + 1); }
-        else if (dx > 50) setStepIdx(i => Math.max(0, i - 1));
+        if (dx < -50) goNext();
+        else if (dx > 50) goPrev();
       }
       if (edge === "top" || edge === "bottom") springBack();
       else { const p = stepElasticRef.current; if (p) p.style.willChange = ""; } // pas de ressort → on retire la couche GPU tout de suite
@@ -353,7 +416,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       )}
 
       {done && !subCook && (
-        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: 32, textAlign: "center" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: "calc(32px + env(safe-area-inset-top)) 32px calc(32px + env(safe-area-inset-bottom))", textAlign: "center" }}>
           {["🍽️", "✨", "🎉", "👨‍🍳", "⭐", "🥳"].map((e, i) => (
             <span key={i} style={{ position: "absolute", fontSize: 28 + i * 4, animation: `floatUp ${1.2 + i * 0.3}s ease forwards`, animationDelay: `${i * 0.15}s`, left: `${10 + i * 14}%`, top: `${60 + Math.sin(i) * 15}%`, pointerEvents: "none" }}>{e}</span>
           ))}
@@ -400,7 +463,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(16px + env(safe-area-inset-top)) 20px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
           <button className="cook-close-btn" onClick={requestClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon name={isNested ? "back" : "close"} size={18} />
           </button>
@@ -437,7 +500,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
               const dotBg = active ? "var(--accent)" : passed ? "var(--ok)" : "var(--surface2)";
               const dotFg = active || passed ? "#fff" : "var(--text3)";
               return (
-                <button key={pg.kind === "step" ? pg.step.id : pg.kind} onClick={() => setStepIdx(idx)}
+                <button key={pg.kind === "step" ? pg.step.id : pg.kind} onClick={() => goTo(idx)}
                   style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", background: active ? "rgba(var(--accent-rgb),0.1)" : "none", borderLeft: `3px solid ${active ? "var(--accent)" : "transparent"}`, textAlign: "left", transition: "all 0.15s" }}>
                   <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: dotBg, color: dotFg }}>
                     {passed ? <Icon name="check" size={11} color="#fff" />
@@ -454,6 +517,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           {/* Step content */}
           <div ref={stepScrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
             <div ref={stepElasticRef} style={{ maxWidth: 640, margin: "0 auto" }}>
+              <div key={stepIdx} className={navDir >= 0 ? "cook-step-rise" : "cook-step-drop"}>
               {isOverview ? (
                 /* ── Aperçu (mise en place) : tous les ingrédients + ustensiles ── */
                 <>
@@ -626,30 +690,44 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   )}
                 </>
               )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Minuteurs actifs, pile flottante au-dessus de la barre de navigation */}
+        {/* Minuteurs actifs : pile repliable ancrée à droite, au-dessus de la nav.
+            Repliée, chaque minuteur reste visible en aperçu avec son étape source ;
+            un tap sur l'aperçu ramène à l'étape et déplie la carte complète. */}
         {timers.length > 0 && (
-          <div style={{ position: "absolute", right: 14, bottom: 78, display: "flex", flexDirection: "column", gap: 8, zIndex: 5, width: 218, maxWidth: "calc(100% - 28px)" }}>
-            {timers.map(t => {
-              const pct = t.total ? (1 - t.remaining / t.total) * 100 : 0;
+          <div className="cook-timers" style={{ bottom: "calc(80px + env(safe-area-inset-bottom))" }}>
+            <button type="button" className="cook-timers-toggle" onClick={() => setTimersOpen(o => !o)}
+              title={timersOpen ? "Replier les minuteurs" : "Déplier les minuteurs"}>
+              <Icon name="clock" size={15} color="var(--accent)" />
+              <span>Minuteur{timers.length > 1 ? "s" : ""}</span>
+              <span className={`cook-timers-count${timers.some(t => t.done) ? " is-done" : ""}`}>{timers.length}</span>
+              <span className={`cook-timers-chevron${timersOpen ? " open" : ""}`}><Icon name="chevronDown" size={15} color="var(--text3)" /></span>
+            </button>
+
+            {timersOpen ? timers.map(t => {
+              const rem = remainingSecs(t, now);
+              const pct = t.totalSec ? Math.min(100, (1 - rem / t.totalSec) * 100) : 0;
               return (
-                <div key={t.id} className="slide-up" style={{ background: "var(--surface)", border: `1px solid ${t.done ? "var(--ok)" : "var(--border)"}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 8px 22px -10px rgba(0,0,0,0.4)", animation: t.done ? "timerPulse 1s ease-in-out infinite" : undefined }}>
+                <div key={t.id} className="slide-up" style={{ alignSelf: "stretch", background: "var(--surface)", border: `1px solid ${t.done ? "var(--ok)" : "var(--border)"}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 8px 22px -10px rgba(0,0,0,0.4)", animation: t.done ? "timerPulse 1s ease-in-out infinite" : undefined }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Icon name="clock" size={15} color={t.done ? "var(--ok)" : "var(--accent)"} />
                     <span style={{ flex: 1, fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, letterSpacing: "0.02em", color: t.done ? "var(--ok)" : "var(--text)" }}>
-                      {t.done ? "Terminé !" : fmtCountdown(t.remaining)}
+                      {t.done ? "Terminé !" : fmtCountdown(rem)}
                     </span>
-                    <span style={{ fontSize: 11, color: "var(--text3)", flexShrink: 0 }}>{t.label}</span>
+                    <button type="button" className="cook-timer-step" onClick={() => goTo(t.stepIdx)} title={`Aller à ${t.stepLabel}`}>
+                      <Icon name="layers" size={11} color="var(--accent)" /> {t.stepLabel}
+                    </button>
                   </div>
                   <div style={{ height: 3, borderRadius: 2, background: "var(--surface2)", margin: "8px 0", overflow: "hidden" }}>
                     <div style={{ height: "100%", width: `${pct}%`, background: t.done ? "var(--ok)" : "var(--accent)", transition: "width 0.9s linear" }} />
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
                     {t.done
-                      ? <button className="timer-btn timer-btn-accent" onClick={() => resetTimer(t.id)}>
+                      ? <button className="timer-btn timer-btn-accent" onClick={() => restartTimer(t.id)}>
                           <Icon name="history" size={14} color="var(--accent)" /> Relancer
                         </button>
                       : <button className="timer-btn" onClick={() => toggleTimer(t.id)}>
@@ -661,20 +739,31 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   </div>
                 </div>
               );
+            }) : timers.map(t => {
+              const rem = remainingSecs(t, now);
+              return (
+                <button type="button" key={t.id} className="cook-timer-chip" onClick={() => { goTo(t.stepIdx); setTimersOpen(true); }}
+                  title={`${t.stepLabel}, ${t.done ? "terminé" : fmtCountdown(rem)}`}
+                  style={t.done ? { borderColor: "var(--ok)", animation: "timerPulse 1s ease-in-out infinite" } : undefined}>
+                  <Icon name="clock" size={14} color={t.done ? "var(--ok)" : "var(--accent)"} />
+                  <span className="t" style={{ color: t.done ? "var(--ok)" : "var(--text)" }}>{t.done ? "Terminé !" : fmtCountdown(rem)}</span>
+                  <span className="s">{t.stepLabel}</span>
+                </button>
+              );
             })}
           </div>
         )}
 
         {/* Bottom nav */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => setStepIdx(i => Math.max(0, i - 1))} disabled={stepIdx === 0} title="Précédent (flèche ←)">
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px calc(14px + env(safe-area-inset-bottom))", background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={goPrev} disabled={stepIdx === 0} title="Précédent (flèche ←)">
             <Icon name="back" size={16} /> Précédent
           </button>
           <span style={{ fontSize: 12, color: "var(--text3)", minWidth: 60, textAlign: "center" }}>
             {isOverview ? "Aperçu" : isBases ? "Bases" : `${realIdx + 1} / ${realStepCount}`}
           </span>
           {stepIdx < totalSteps - 1
-            ? <button className="btn btn-primary btn-pill" style={{ flex: 1 }} onClick={() => setStepIdx(i => i + 1)} disabled={isBases && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
+            ? <button className="btn btn-primary btn-pill" style={{ flex: 1 }} onClick={goNext} disabled={isBases && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
             : <button className="btn btn-primary btn-pill" style={{ flex: 1, background: "var(--ok)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
           }
         </div>

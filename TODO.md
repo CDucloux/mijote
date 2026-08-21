@@ -24,9 +24,14 @@ Depuis que Cardamome tourne aussi en app native, tout un pan « feel natif » et
 - [ ] **Notifications push locales.** Rappels de planning (« ce soir : blanquette,
   lance le riz à 19h ») et de batch cooking, via les notifications locales
   Capacitor. Opt-in, réglable dans le profil.
-- [ ] **Minuteurs natifs dans le cook mode.** Plusieurs minuteurs simultanés
+- [x] **Minuteurs natifs dans le cook mode.** Plusieurs minuteurs simultanés
   (une étape = un timer), qui survivent à la mise en arrière-plan et sonnent même
-  écran verrouillé. Extension directe du mode pas à pas.
+  écran verrouillé. Fait côté code : minuteurs en base horodatée (`cookTimers`,
+  justes au retour d'arrière-plan) plus une notification OS planifiée à l'échéance
+  via `@capacitor/local-notifications` (`localNotifications`, son écran verrouillé).
+  **Activation : rebuild natif requis** (`npm run cap:sync` + Android Studio) pour
+  embarquer le plugin ; la permission de notification est demandée à la volée au
+  premier minuteur.
 - [ ] **Scan code-barres vers le stock.** Ajouter un produit au frigo en scannant
   son code-barres (plugin caméra / barcode).
 
