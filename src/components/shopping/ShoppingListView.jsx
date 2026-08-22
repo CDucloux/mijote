@@ -4,6 +4,7 @@ import { ShoppingItemRow } from "../ShoppingItemRow.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { buildShoppingSections } from "@/lib/food/shoppingList.js";
 import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.jsx";
+import { useElasticScroll } from "../../hooks/useElasticScroll.js";
 
 /**
  * Vue d'une liste de courses active : FAB d'ajout (listes libres), états vides
@@ -13,8 +14,12 @@ import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.
  */
 export function ShoppingListView({
   activeList, categories, ingredientDB, catOf, pending, unchecking,
-  onBuy, onDeleteItem, onClear, onDeleteList, onOpenAdd, scrollRef, contentRef,
+  onBuy, onDeleteItem, onClear, onDeleteList, onOpenAdd,
 }) {
+  // Élastique instancié DANS la vue : comme ce conteneur remonte à chaque
+  // changement de liste (clé = activeList.id), les listeners se réarment pour
+  // CHAQUE liste (le hook au niveau page restait collé à la première).
+  const { scrollRef, contentRef } = useElasticScroll();
   const renderItem = item => (
     <ShoppingItemRow key={item.id} item={item} striking={pending.has(item.id)} unstriking={unchecking.has(item.id)}
       imageSrc={item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""}

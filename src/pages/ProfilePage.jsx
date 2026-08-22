@@ -109,7 +109,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   onFocus={() => { if (!editing) setNameInput(currentName); }}
                   onKeyDown={e => { if (e.key === "Enter" && nameDirty) saveName(); }} />
                 {editing && (
-                  <button className="btn btn-primary btn-pill" style={{ flexShrink: 0, opacity: nameDirty ? 1 : 0.5, pointerEvents: nameDirty ? "auto" : "none" }} onClick={saveName}>Enregistrer</button>
+                  <button className="btn btn-primary btn-pill" style={{ flexShrink: 0, opacity: nameDirty ? 1 : 0.5, pointerEvents: nameDirty ? "auto" : "none" }} onClick={saveName}><Icon name="save" size={15} /> Enregistrer</button>
                 )}
               </div>
               <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 7 }}>Utilisé dans l'interface (accueil, foyer).</div>
@@ -309,7 +309,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                 : "Ces données seront définitivement effacées. Cette action est irréversible."}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
               <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => close(() => onPurge?.(purgeScope.scope))}>Effacer</button>
             </div>
           </>)}

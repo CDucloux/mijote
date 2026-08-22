@@ -5,7 +5,6 @@ import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { useLongPress } from "../hooks/useLongPress.js";
-import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { useShopping, ALL_ID } from "../hooks/useShopping.js";
@@ -34,9 +33,6 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
   const shop = useShopping(shoppingLists, setShoppingLists, ingredientDB, { setStock, setLowStock });
   const { activeList, allMode, aggregated } = shop;
-
-  const { scrollRef: aggScrollRef, contentRef: aggContentRef } = useElasticScroll();   // vue « Toutes les courses »
-  const { scrollRef: listScrollRef, contentRef: listContentRef } = useElasticScroll(); // vue d'une liste
 
   const openNewList = () => setConfigList({ isNew: true, name: "", type: "free", hideClear: false });
 
@@ -98,8 +94,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       {allMode && (
         <ShoppingAggregateView
           aggregated={aggregated} categories={categories} pending={shop.pending} unchecking={shop.unchecking}
-          onBuy={shop.buyAggregate} onClear={() => setConfirmClearId(ALL_ID)}
-          scrollRef={aggScrollRef} contentRef={aggContentRef} />
+          onBuy={shop.buyAggregate} onClear={() => setConfirmClearId(ALL_ID)} />
       )}
 
       {activeList && (
@@ -107,8 +102,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           activeList={activeList} categories={categories} ingredientDB={ingredientDB} catOf={shop.catOf}
           pending={shop.pending} unchecking={shop.unchecking}
           onBuy={shop.buyItem} onDeleteItem={shop.deleteItem} onClear={() => setConfirmClearId(activeList.id)}
-          onDeleteList={shop.deleteList} onOpenAdd={() => setShowAddModal(true)}
-          scrollRef={listScrollRef} contentRef={listContentRef} />
+          onDeleteList={shop.deleteList} onOpenAdd={() => setShowAddModal(true)} />
       )}
 
       {/* Menu d'une liste (⋯ de la pastille active / appui long) */}

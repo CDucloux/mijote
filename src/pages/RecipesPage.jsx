@@ -721,7 +721,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             );
           })()}
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
               if (!newCarnet.name.trim()) return;
               if (newCarnet.editing) {
@@ -736,7 +736,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 : { ...base, kind: "manual", count: 0 };
               setCollections(prev => [...prev, col]);
               setNewCarnet(null);
-            }}>{newCarnet.editing ? "Enregistrer" : newCarnet.smart ? "Enregistrer" : "Créer"}</button>
+            }}><Icon name={newCarnet.editing || newCarnet.smart ? "save" : "plus"} size={15} /> {newCarnet.editing ? "Enregistrer" : newCarnet.smart ? "Enregistrer" : "Créer"}</button>
           </div>
           </>)}
         </SwipeableSheet>

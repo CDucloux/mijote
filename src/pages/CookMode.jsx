@@ -416,7 +416,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       )}
 
       {done && !subCook && (
-        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: "calc(32px + env(safe-area-inset-top)) 32px calc(32px + env(safe-area-inset-bottom))", textAlign: "center" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: "calc(32px + max(env(safe-area-inset-top) - 8px, 0px)) 32px calc(32px + max(env(safe-area-inset-bottom) - 8px, 0px))", textAlign: "center" }}>
           {["🍽️", "✨", "🎉", "👨‍🍳", "⭐", "🥳"].map((e, i) => (
             <span key={i} style={{ position: "absolute", fontSize: 28 + i * 4, animation: `floatUp ${1.2 + i * 0.3}s ease forwards`, animationDelay: `${i * 0.15}s`, left: `${10 + i * 14}%`, top: `${60 + Math.sin(i) * 15}%`, pointerEvents: "none" }}>{e}</span>
           ))}
@@ -456,14 +456,14 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           <div className="field-label">Notes de dégustation</div>
           <AutoResizeTextarea className="field-input" value={iterNotes} onChange={e => setIterNotes(e.target.value)} placeholder="ex : -10 g de sucre, +zeste de citron vert, cuit 4 min de moins → meilleur" style={{ marginBottom: 18 }} />
           <button className="btn btn-primary" style={{ width: "100%" }} onClick={saveIteration}>
-            <Icon name="check" size={15} /> Enregistrer l'itération
+            <Icon name="save" size={15} /> Enregistrer l'itération
           </button>
         </SwipeableSheet>
       )}
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(16px + env(safe-area-inset-top)) 20px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(16px + max(env(safe-area-inset-top) - 8px, 0px)) 20px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
           <button className="cook-close-btn" onClick={requestClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon name={isNested ? "back" : "close"} size={18} />
           </button>
@@ -699,7 +699,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
             Repliée, chaque minuteur reste visible en aperçu avec son étape source ;
             un tap sur l'aperçu ramène à l'étape et déplie la carte complète. */}
         {timers.length > 0 && (
-          <div className="cook-timers" style={{ bottom: "calc(80px + env(safe-area-inset-bottom))" }}>
+          <div className="cook-timers" style={{ bottom: "calc(80px + max(env(safe-area-inset-bottom) - 8px, 0px))" }}>
             <button type="button" className="cook-timers-toggle" onClick={() => setTimersOpen(o => !o)}
               title={timersOpen ? "Replier les minuteurs" : "Déplier les minuteurs"}>
               <Icon name="clock" size={15} color="var(--accent)" />
@@ -755,7 +755,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         )}
 
         {/* Bottom nav */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px calc(14px + env(safe-area-inset-bottom))", background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px calc(14px + max(env(safe-area-inset-bottom) - 8px, 0px))", background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
           <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={goPrev} disabled={stepIdx === 0} title="Précédent (flèche ←)">
             <Icon name="back" size={16} /> Précédent
           </button>

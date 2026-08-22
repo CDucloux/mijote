@@ -2,13 +2,18 @@ import { EmptyArt } from "../EmptyArt.jsx";
 import { ShoppingItemRow } from "../ShoppingItemRow.jsx";
 import { buildShoppingSections } from "@/lib/food/shoppingList.js";
 import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.jsx";
+import { useElasticScroll } from "../../hooks/useElasticScroll.js";
 
 /**
  * Vue agrégée « Toutes les courses » : les articles de toutes les listes,
  * dédupliqués et regroupés par catégorie, avec l'animation d'achat propagée à
  * chaque liste d'origine. Cocher/valider est piloté au-dessus par `useShopping`.
  */
-export function ShoppingAggregateView({ aggregated, categories, pending, unchecking, onBuy, onClear, scrollRef, contentRef }) {
+export function ShoppingAggregateView({ aggregated, categories, pending, unchecking, onBuy, onClear }) {
+  // Élastique instancié DANS la vue : ses listeners se (r)attachent à chaque
+  // montage de ce conteneur (retour sur « Toutes les courses »), là où un hook
+  // appelé au niveau de la page ne se relançait jamais après un démontage.
+  const { scrollRef, contentRef } = useElasticScroll();
   const { sections, done } = buildShoppingSections(aggregated, categories, a => a.category);
   const renderAgg = agg => (
     <ShoppingItemRow key={agg.key} disableDelete striking={pending.has(agg.key)} unstriking={unchecking.has(agg.key)}

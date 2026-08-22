@@ -54,8 +54,8 @@ export function ListConfigSheet({ configList, setConfigList, focusNoScroll, onCl
         </button>
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
-          <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!configList.name.trim()} onClick={() => close(onSave)}>{configList.isNew ? "Créer la liste" : "Enregistrer"}</button>
+          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
+          <button className="btn btn-primary btn-pill" style={{ flex: 1.4 }} disabled={!configList.name.trim()} onClick={() => close(onSave)}><Icon name={configList.isNew ? "plus" : "save"} size={15} /> {configList.isNew ? "Créer la liste" : "Enregistrer"}</button>
         </div>
       </>)}
     </SwipeableSheet>

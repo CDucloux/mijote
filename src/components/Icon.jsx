@@ -15,6 +15,7 @@ export const Icon = ({ name, size = 20, color = "currentColor" }) => {
     clock: <svg {...p}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
     fire: <svg {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>,
     check: <svg {...p} strokeWidth="2.2"><polyline points="20 6 9 17 4 12" /></svg>,
+    save: <svg {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>,
     back: <svg {...p}><polyline points="15 18 9 12 15 6" /></svg>,
     forward: <svg {...p}><polyline points="9 18 15 12 9 6" /></svg>,
     undo: <svg {...p}><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H10" /></svg>,

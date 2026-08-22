@@ -283,7 +283,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
           <AutoResizeTextarea className="field-input" value={notes} onChange={e => setNotes(e.target.value)} placeholder="ex : -10 g de sucre, +zeste de citron vert, cuit 4 min de moins → meilleur" style={{ marginBottom: 18 }} />
 
           <button className="btn btn-primary" style={{ width: "100%" }} onClick={saveVersion}>
-            <Icon name="check" size={15} /> Enregistrer la version
+            <Icon name="save" size={15} /> Enregistrer la version
           </button>
         </SwipeableSheet>
       )}
