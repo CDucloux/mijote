@@ -144,6 +144,15 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   // Appui long générique (carnets ET cartes recettes) : ouvre un menu après un
   // délai, s'annule au moindre mouvement (scroll / pull-to-refresh).
   const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
+  // Onde tactile sur une carte carnet : la face est opaque, l'onde est donc posée
+  // sur un calque dédié PLACÉ AU-DESSUS du contenu (`.carnet-ripple`), sinon elle
+  // resterait masquée derrière la page lignée. Tactile uniquement (le desktop
+  // garde son léger soulèvement au survol).
+  const rippleCarnet = (e) => {
+    if (e.pointerType === "mouse") return;
+    const host = e.currentTarget.querySelector(".carnet-ripple");
+    if (host) spawnRipple({ currentTarget: host, clientX: e.clientX, clientY: e.clientY });
+  };
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
   });
@@ -324,7 +333,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 return (
                 <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined}
                   onClick={() => { if (wasLongPress()) return; openCarnet(col); }}
-                  onPointerDown={(e) => startLongPress(e, () => setCarnetMenu(col))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+                  onPointerDown={(e) => { rippleCarnet(e); startLongPress(e, () => setCarnetMenu(col)); }} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   onContextMenu={(e) => { e.preventDefault(); setCarnetMenu(col); }}
                   draggable
                   onDragStart={() => { cancelLongPress(); setDragCarnetId(col.id); }}
@@ -351,12 +360,14 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                       <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{col.name}</div>
                       <div style={{ fontSize: 11, color: count ? "var(--text2)" : "var(--text3)", textAlign: "left", marginTop: 1 }}>{count === 0 ? "Vide" : `${count} recette${count > 1 ? "s" : ""}`}</div>
                     </div>
+                    {/* Calque d'onde tactile au-dessus de la face opaque du carnet */}
+                    <span className="carnet-ripple" aria-hidden="true" style={{ position: "absolute", inset: 0, borderRadius: 14, overflow: "hidden", pointerEvents: "none", zIndex: 5 }} />
                   </div>
                 </button>
                 );
               })}
               {/* Carte « ajouter un carnet » – même gabarit que les carnets */}
-              <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#6e9a3f", icon: "📓" })} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
+              <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#6e9a3f", icon: "📓" })} onPointerDown={rippleCarnet} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
                 <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", border: "2px dashed var(--border)" }}>
                   <div style={{ position: "relative", aspectRatio: "1/1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text3)" }}>
                     <span className="notebook-add-plus" style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--surface2)", color: "var(--text2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="plus" size={20} color="currentColor" /></span>
@@ -365,6 +376,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                     <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", color: "var(--text2)" }}>Nouveau</div>
                     <div style={{ fontSize: 11, color: "var(--text3)", textAlign: "left", marginTop: 1 }}>Créer un carnet</div>
                   </div>
+                  <span className="carnet-ripple" aria-hidden="true" style={{ position: "absolute", inset: 0, borderRadius: 14, overflow: "hidden", pointerEvents: "none", zIndex: 5 }} />
                 </div>
               </button>
             </OverscrollRow>
