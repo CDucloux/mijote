@@ -236,13 +236,13 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                               boxShadow: `inset 0 0 0 1.5px rgba(var(${stateRgb}),0.12)`,
                             } : undefined}
                           >
-                            <IngImage src={ing.image} alt={ing.name} size={36} />
+                            <IngImage src={ing.image} alt={ing.name} size={60} />
                             <span className="jar-label"><span>{ing.name}</span></span>
                           </span>
                           {/* Pastille d'état : ⚠ bientôt vide / ✓ en stock */}
                           {has && (
                             <span className="jar-badge" style={{ background: accentCol }}>
-                              <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
+                              <Icon name={low ? "warning" : "check"} size={low ? 12 : 11} color="#fff" />
                             </span>
                           )}
                         </span>
