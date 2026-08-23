@@ -1,16 +1,103 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback, memo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { EmptyArt } from "../components/EmptyArt.jsx";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
-import { IngImage } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
-// Gestion binaire du stock (placards / étagères) : j'en ai / j'en ai pas.
-// Chaque ingrédient de la base est listable ; le stock = tableau d'IDs.
+// Gestion binaire du stock présentée en « mur d'étagères » : chaque ingrédient est
+// un bocal en verre posé sur une planche. La SIGNATURE : le niveau de remplissage
+// du bocal EST l'état (vide = à racheter, quart = bientôt vide, plein = en stock).
+// Le modèle de données reste un simple tableau d'IDs ; seul le rendu change.
+
+// Palette de contenus (fond du bocal quand l'image est absente/transparente) :
+// tons chauds « garde-manger », choisis déterministiquement par ingrédient.
+const STK_FILL = ["#cdb98a", "#c9a15c", "#b98c4a", "#a6743a", "#8f6b3f", "#7d5a34", "#c7b552", "#9aa15a", "#b5773f", "#d3a86a"];
+
+/** Couleur de contenu stable pour un ingrédient (hash simple -> palette chaude). */
+function stkFillColor(seed) {
+  const s = String(seed || "");
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return STK_FILL[h % STK_FILL.length];
+}
+
+const STATE_LABEL = { full: "en stock", low: "bientôt vide", empty: "à racheter" };
+
+/** Découpe un tableau en rangées de `n` éléments (une rangée = une planche). */
+function chunk(arr, n) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}
+
+/**
+ * Un bocal. Mémoïsé sur `(ing, state, onCycle)` : toggler un bocal ne re-rend que
+ * lui, pas les 139. Le niveau de remplissage est piloté en CSS par `data-state`.
+ */
+const Jar = memo(function Jar({ ing, state, onCycle }) {
+  const [imgErr, setImgErr] = useState(false);
+  return (
+    <button
+      className="stk-jar"
+      data-state={state}
+      onClick={() => onCycle(ing.id)}
+      style={{ "--fill": stkFillColor(ing.dbId || ing.id) }}
+      aria-label={`${ing.name} — ${STATE_LABEL[state]}`}
+    >
+      <span className="stk-lid" aria-hidden="true" />
+      <span className="stk-glass">
+        <span className="stk-fill">
+          {ing.image && !imgErr && (
+            <img className="stk-fill-img" src={ing.image} alt="" loading="lazy" decoding="async"
+              referrerPolicy="no-referrer" onError={() => setImgErr(true)} />
+          )}
+        </span>
+        <span className="stk-gloss" aria-hidden="true" />
+        <span className="stk-label"><span>{ing.name}</span></span>
+      </span>
+      {state !== "empty" && (
+        <span className="stk-badge" data-state={state}>
+          <Icon name={state === "low" ? "warning" : "check"} size={state === "low" ? 12 : 11} color="#fff" />
+        </span>
+      )}
+    </button>
+  );
+}, (a, b) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle);
+
+/** Équerre en fer (support de planche), décalée du bord (cf. .stk-bracket). */
+function ShelfBracket({ side }) {
+  return (
+    <svg className={`stk-bracket ${side}`} viewBox="0 0 26 32" fill="none" aria-hidden="true">
+      <path d="M2 1h13a1 1 0 0 1 .8 1.6L3.6 30.4A1 1 0 0 1 1.7 30V2a1 1 0 0 1 1-1Z" fill="var(--iron)" />
+      <path d="M4 4h8L4 22V4Z" fill="rgba(255,255,255,.06)" />
+      <circle cx="6" cy="5.5" r="1.1" fill="var(--iron-hi)" />
+    </svg>
+  );
+}
+
+/** Fioriture unique : un brin d'eucalyptus en bout de rayon (décoratif). */
+function ShelfSprig() {
+  return (
+    <svg className="stk-sprig" viewBox="0 0 54 78" aria-hidden="true">
+      <path d="M40 78 C36 55 34 40 33 22" stroke="#5a7d3e" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      <g fill="#7fa155">
+        <ellipse cx="26" cy="30" rx="8" ry="4.6" transform="rotate(-32 26 30)" />
+        <ellipse cx="41" cy="34" rx="8" ry="4.6" transform="rotate(28 41 34)" />
+        <ellipse cx="24" cy="44" rx="7.5" ry="4.4" transform="rotate(-30 24 44)" />
+        <ellipse cx="40" cy="49" rx="7.5" ry="4.4" transform="rotate(26 40 49)" />
+        <ellipse cx="27" cy="59" rx="6.6" ry="4" transform="rotate(-26 27 59)" />
+      </g>
+      <g fill="#9cbb73">
+        <ellipse cx="24" cy="24" rx="5.5" ry="3.2" transform="rotate(-34 24 24)" />
+        <ellipse cx="34" cy="19" rx="5" ry="3" transform="rotate(-4 34 19)" />
+      </g>
+    </svg>
+  );
+}
 
 /**
  * État vide centré et soigné (titre + texte + action), calqué sur l'état
@@ -42,9 +129,15 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
 
-  // Cycle à 3 états : pas en stock → en stock → bientôt vide → pas en stock
-  const cycle = (id) => {
-    const inStock = stockSet.has(id), isLow = lowSet.has(id);
+  // Cycle à 3 états : pas en stock → en stock → bientôt vide → pas en stock.
+  // Lecture de l'état courant via refs pour garder `cycle` stable (mémoïsation des
+  // bocaux) ; comportement identique à un accès direct à stock/lowStock.
+  const stockRef = useRef(stock);
+  const lowRef = useRef(lowStock);
+  useEffect(() => { stockRef.current = stock; lowRef.current = lowStock; }, [stock, lowStock]);
+  const cycle = useCallback((id) => {
+    const inStock = stockRef.current.includes(id);
+    const isLow = lowRef.current.includes(id);
     if (!inStock) {
       setStock(prev => [...prev, id]);                       // → en stock
     } else if (!isLow) {
@@ -53,7 +146,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       setStock(prev => prev.filter(x => x !== id));          // → pas en stock
       setLowStock(prev => prev.filter(x => x !== id));
     }
-  };
+  }, [setStock, setLowStock]);
 
   // Tous les ingrédients stockables (catégories non-périssables, avec nom)
   const stockable = useMemo(() =>
@@ -89,14 +182,36 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   const inStockCount = stock.length;
   const { scrollRef, contentRef } = useElasticScroll();
 
+  // Largeur utile du mur -> nombre de bocaux par planche (une planche = une rangée).
+  const [wallW, setWallW] = useState(0);
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect?.width;
+      if (w) setWallW(w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [contentRef]);
+
+  const perRow = useMemo(() => {
+    const vw = typeof window !== "undefined" ? window.innerWidth : 1000;
+    const mobile = vw <= 620;
+    const jarW = mobile ? 96 : 116;
+    const gap = mobile ? 14 : 22;
+    const sidePad = mobile ? 8 : 14; // padding horizontal de .stk-jars
+    const inner = (wallW || vw - 40) - sidePad * 2;
+    return Math.max(1, Math.floor((inner + gap - 2) / (jarW + gap)));
+  }, [wallW]);
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* En-tête */}
+      {/* En-tête (sur le fond crème, hors du mur) */}
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em" }}>Mon Stock</h1>
-            
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <UserAvatar />
@@ -148,9 +263,9 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
         </div>
       </div>
 
-      {/* Corps scrollable */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px var(--page-pad-b)" }}>
-        <div ref={contentRef} style={{ minHeight: "100%" }}>
+      {/* Corps scrollable : le mur de briques est le fond de ce conteneur */}
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+        <div ref={contentRef} className="stk-wall" style={{ minHeight: "100%" }}>
         {ingredientDB.length === 0 && loading ? (
           // Base pas encore hydratée : spinner plutôt que « Base d'ingrédients vide ».
           <LoadingSpinner />
@@ -187,69 +302,35 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
             const cat = categories[catKey] || DEFAULT_CATEGORIES.other;
             const inStockInCat = ings.filter(i => stockSet.has(i.id)).length;
             const lowInCat = ings.filter(i => lowSet.has(i.id)).length;
+            const rows = chunk(ings, perRow);
             return (
-              <div key={catKey} style={{ marginBottom: 24 }}>
-                {/* En-tête catégorie */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "4px 0" }}>
-                  <span style={{ fontSize: 15 }}>{cat.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)", letterSpacing: "0.01em" }}>{cat.label}</span>
-                  {view === "all" && inStockInCat > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(var(--ok-rgb),0.15)", color: "var(--ok)" }}>
-                      {inStockInCat}/{ings.length}
-                    </span>
-                  )}
-                  {lowInCat > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)" }}>
-                      {lowInCat} bientôt vide
-                    </span>
-                  )}
+              <div key={catKey} className="stk-group">
+                {/* Étiquette de rayon */}
+                <div className="stk-tag">
+                  <span className="ico">{cat.icon}</span>
+                  {cat.label}
+                  {view === "all" && inStockInCat > 0 && <span className="cnt">{inStockInCat}/{ings.length}</span>}
+                  {lowInCat > 0 && <span className="cnt low">{lowInCat} bientôt vide</span>}
                 </div>
 
-                {/* Grille d'ingrédients : chaque rangée repose sur une étagère (cf. .stock-shelf-grid) */}
-                <div className="stock-shelf-grid">
-                  {ings.map((ing, i) => {
-                    const has = stockSet.has(ing.id);
-                    const low = lowSet.has(ing.id);
-                    // État = teinte du bocal (rebord + halo interne) + pastille, jamais un fond
-                    // pleine carte : bientôt vide (accent) > en stock (sarcelle) > absent (verre nu).
-                    const stateRgb = low ? "--accent-rgb" : "--ok-rgb";
-                    const accentCol = low ? "var(--accent)" : "var(--ok)";
-                    return (
-                      <button
-                        key={ing.id}
-                        onClick={() => cycle(ing.id)}
-                        className="jar-tile"
-                        style={{
-                          // Arrivée échelonnée des bocaux (plafonnée pour rester fluide) ; fill
-                          // `backwards` (et non `both`) pour libérer `transform` après l'entrée,
-                          // sinon l'animation figerait le dip au toucher (.jar-tile:active).
-                          animation: "stockCardIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94) backwards",
-                          animationDelay: `${Math.min(i, 14) * 0.025}s`,
-                        }}
-                      >
-                        <span className="jar">
-                          <span className="jar-lid" aria-hidden="true" />
-                          <span
-                            className="jar-glass"
-                            style={has ? {
-                              borderColor: `rgba(var(${stateRgb}),0.5)`,
-                              boxShadow: `inset 0 0 0 1.5px rgba(var(${stateRgb}),0.12)`,
-                            } : undefined}
-                          >
-                            <IngImage src={ing.image} alt={ing.name} size={60} />
-                            <span className="jar-label"><span>{ing.name}</span></span>
-                          </span>
-                          {/* Pastille d'état : ⚠ bientôt vide / ✓ en stock */}
-                          {has && (
-                            <span className="jar-badge" style={{ background: accentCol }}>
-                              <Icon name={low ? "warning" : "check"} size={low ? 12 : 11} color="#fff" />
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {rows.map((row, ri) => {
+                  const roomForSprig = ri === rows.length - 1 && row.length < perRow;
+                  return (
+                    <div key={ri} className="stk-shelf">
+                      <div className="stk-jars">
+                        {row.map(ing => {
+                          const state = lowSet.has(ing.id) ? "low" : stockSet.has(ing.id) ? "full" : "empty";
+                          return <Jar key={ing.id} ing={ing} state={state} onCycle={cycle} />;
+                        })}
+                      </div>
+                      {roomForSprig && <ShelfSprig />}
+                      <div className="stk-board">
+                        <ShelfBracket side="l" />
+                        <ShelfBracket side="r" />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             );
           })

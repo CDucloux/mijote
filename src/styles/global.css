@@ -44,20 +44,22 @@
   --admin-rgb: 139, 111, 240;
   --radius: 16px;
   --radius-sm: 10px;
-  /* Étagère + bocaux du Stock (sombre). Planche bois deux tons (dessus éclairé +
-     chant plus sombre) et verre translucide teinté clair. */
-  --shelf-lip: rgba(224, 162, 62, 0.16);
-  --shelf-top: #37311f;
-  --shelf-face: #262114;
-  --shelf-edge: #16120a;
-  --shelf-cast: rgba(0, 0, 0, 0.42);
-  --shelf-item-cast: rgba(0, 0, 0, 0.42);
-  --jar-glass-hi: rgba(255, 255, 255, 0.13);
-  --jar-glass-lo: rgba(255, 255, 255, 0.03);
-  --jar-rim: rgba(255, 255, 255, 0.16);
-  --jar-lid: #c9a35a;
-  --jar-lid-hi: #e2c483;
-  --jar-lid-edge: #9c7838;
+  /* Étagères du Stock : matériaux (sombre). Bois noyer, mur ardoise chaude, fer mat,
+     papier kraft sombre, lignes de verre remontées. */
+  --oak-hi: #8a6a45;
+  --oak-top: #6f5133;
+  --oak: #5c4228;
+  --oak-edge: #4a341f;
+  --oak-edge2: #382614;
+  --iron: #1c1b18;
+  --iron-hi: #3a382f;
+  --wall: #20241c;
+  --wall-2: #191d15;
+  --mortar: #2a2f24;
+  --paper: #3a3529;
+  --paper-2: #2e2a20;
+  --paper-ink: #cabfa5;
+  --glass-line: rgba(255, 255, 255, 0.14);
   --ff-display: 'Cormorant Garamond', serif;
   --ff-body: 'Hanken Grotesk', sans-serif;
   --ff-hand: 'Caveat', 'Segoe Print', cursive;
@@ -107,20 +109,21 @@ html.light,
   --text: #23281d;
   --text2: #565b4c;
   --text3: #838872;
-  /* Étagère + bocaux du Stock (clair). Planche bois plus soutenue que le crème pour
-     se détacher, verre laiteux clair. */
-  --shelf-lip: rgba(255, 255, 255, 0.75);
-  --shelf-top: #e4d1ae;
-  --shelf-face: #cbae7f;
-  --shelf-edge: #ac8c5a;
-  --shelf-cast: rgba(120, 95, 60, 0.22);
-  --shelf-item-cast: rgba(120, 95, 60, 0.24);
-  --jar-glass-hi: rgba(255, 255, 255, 0.88);
-  --jar-glass-lo: rgba(226, 232, 219, 0.5);
-  --jar-rim: rgba(0, 0, 0, 0.10);
-  --jar-lid: #c9a35a;
-  --jar-lid-hi: #e6c684;
-  --jar-lid-edge: #a5803f;
+  /* Étagères du Stock : matériaux (clair). Chêne clair, mur plâtre chaud, fer, papier. */
+  --oak-hi: #ecd3ac;
+  --oak-top: #dcbb8d;
+  --oak: #c8a06f;
+  --oak-edge: #b58f61;
+  --oak-edge2: #9a744c;
+  --iron: #34332e;
+  --iron-hi: #54524a;
+  --wall: #ece7db;
+  --wall-2: #e6e0d2;
+  --mortar: #dad3c3;
+  --paper: #f4ecda;
+  --paper-2: #e8dcc3;
+  --paper-ink: #4a4638;
+  --glass-line: rgba(255, 255, 255, 0.6);
 }
 
 html.light,
@@ -1442,187 +1445,322 @@ select {
   }
 }
 
-@keyframes stockCardIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
+/* ══ ÉTAGÈRES DU STOCK ════════════════════════════════════════════════════════
+   Un mur de briques (fond du conteneur scrollable) portant des planches en chêne
+   avec équerres fer ; sur chaque planche, une rangée de bocaux. La SIGNATURE : le
+   niveau de remplissage du bocal (--lvl) EST l'état de stock (vide / quart / plein),
+   contenu vu à travers le verre. Textures 100% CSS, source de lumière haut-gauche.
+   Une planche = une rangée (découpe JS selon la largeur, cf. StockPage). */
 
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* ── ÉTAGÈRE + BOCAUX DU STOCK ────────────────────────────────────────────────
-   Chaque rangée de bocaux repose sur une planche : le fond de la grille dessine
-   une étagère (crête éclairée + dessus + chant plus sombre + ombre portée) qui se
-   répète pile sous chaque rangée. La hauteur de carte est fixée pour que la période
-   du motif tombe au pied des bocaux. Deux tons (dessus/chant) donnent l'épaisseur du
-   bois plutôt qu'une bande plate. */
-.stock-shelf-grid {
-  /* card-h + shelf-h DOIT valoir 154 : les SVG de supports (brackets) sont dessinés
-     à cette hauteur de tuile pour que leur répétition tombe pile sous chaque planche.
-     Si tu changes ces valeurs, ajuste aussi height='154' et le y des brackets. */
-  --stock-card-h: 128px;
-  --stock-shelf-h: 26px;
-  --stock-period: calc(var(--stock-card-h) + var(--stock-shelf-h));
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* mobile : 3 bocaux max par rangée */
-  grid-auto-rows: var(--stock-period);
-  column-gap: 8px;
-  row-gap: 0;
-  align-items: start;
-  /* Deux supports (SVG, dessinés PAR-DESSUS la planche pour rester visibles) + la
-     planche (dégradé deux tons). Les brackets sont dessinés à y 138..154 dans un
-     tuile haute de 154 = la période, donc ils tombent pile sous chaque planche. */
+.stk-wall {
+  position: relative;
+  padding: 20px 20px 40px;
+  --bw: 82px;
+  --bh: 29px;
+  --m: 2px;
+  background-color: var(--mortar);
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='154'%3E%3Cpath d='M3 138H18L3 154Z' fill='%234a443a'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='154'%3E%3Cpath d='M19 138H4L19 154Z' fill='%234a443a'/%3E%3C/svg%3E"),
-    linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent var(--stock-card-h),
-      var(--shelf-lip) var(--stock-card-h),
-      var(--shelf-lip) calc(var(--stock-card-h) + 1.5px),
-      var(--shelf-top) calc(var(--stock-card-h) + 1.5px),
-      var(--shelf-top) calc(var(--stock-card-h) + 7px),
-      var(--shelf-face) calc(var(--stock-card-h) + 7px),
-      var(--shelf-face) calc(var(--stock-card-h) + 15px),
-      var(--shelf-edge) calc(var(--stock-card-h) + 15px),
-      var(--shelf-edge) calc(var(--stock-card-h) + 16px),
-      var(--shelf-cast) calc(var(--stock-card-h) + 16px),
-      transparent calc(var(--stock-card-h) + 23px),
-      transparent var(--stock-period)
-    );
-  background-repeat: repeat-y, repeat-y, repeat-y;
-  background-position: left 20px top, right 20px top, left top;
-  background-size: 22px var(--stock-period), 22px var(--stock-period), 100% var(--stock-period);
+    linear-gradient(var(--mortar) var(--m), transparent var(--m)),
+    linear-gradient(90deg, var(--mortar) var(--m), transparent var(--m)),
+    linear-gradient(90deg, var(--mortar) var(--m), transparent var(--m)),
+    linear-gradient(180deg, var(--wall), var(--wall-2));
+  background-size:
+    var(--bw) var(--bh),
+    var(--bw) calc(var(--bh) * 2),
+    var(--bw) calc(var(--bh) * 2),
+    100% 100%;
+  background-position: 0 0, 0 0, calc(var(--bw) / 2) var(--bh), 0 0;
 }
 
-@media (min-width: 480px) {
-  .stock-shelf-grid {
-    /* au-delà du mobile : bocaux plus larges, densité maîtrisée (pas d'entassement). */
-    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-  }
+/* Lumière douce haut-gauche + grain plâtre discret. */
+.stk-wall::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 12% -10%, rgba(255, 255, 255, 0.5), transparent 55%),
+    radial-gradient(90% 60% at 100% 120%, rgba(90, 70, 40, 0.06), transparent 60%);
 }
 
-/* Tuile = un bocal, sans fond ni bordure (le verre porte la forme). Sa hauteur
-   égale celle du bocal pour que la base se pose pile sur la planche. */
-.jar-tile {
-  height: var(--stock-card-h);
+.stk-group { position: relative; margin-bottom: 30px; }
+.stk-group:last-child { margin-bottom: 0; }
+
+/* Étiquette de rayon, posée sur le mur. */
+.stk-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 4px;
+  padding: 5px 12px 5px 10px;
+  background: linear-gradient(180deg, var(--paper), var(--paper-2));
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(50, 40, 20, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--paper-ink);
+}
+.stk-tag .ico { font-size: 14px; line-height: 1; }
+.stk-tag .cnt {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(var(--ok-rgb), 0.16);
+  color: var(--ok);
+}
+.stk-tag .cnt.low {
+  background: rgba(var(--spice-rgb), 0.18);
+  color: var(--spice);
+}
+
+/* Une planche = une rangée. */
+.stk-shelf { position: relative; margin-bottom: 22px; }
+.stk-shelf:last-child { margin-bottom: 0; }
+
+.stk-jars {
+  display: flex;
+  gap: 22px;
+  justify-content: flex-start;
+  align-items: flex-end;
+  padding: 0 14px;
+  position: relative;
+  z-index: 2;
+}
+
+/* La planche (élévation nette : lèvre lumineuse + chant boisé + ombre portée). */
+.stk-board {
+  position: relative;
+  height: 17px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg,
+    var(--oak-hi) 0, var(--oak-top) 2px,
+    var(--oak) 3px, var(--oak-edge) 60%, var(--oak-edge2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 4px 7px rgba(60, 45, 25, 0.22),
+    0 16px 24px -12px rgba(40, 30, 15, 0.3);
+}
+/* Veinage discret du chant. */
+.stk-board::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.45;
+  background: repeating-linear-gradient(93deg, rgba(120, 80, 40, 0.1) 0 2px, transparent 2px 13px);
+  mix-blend-mode: multiply;
+}
+
+/* Équerres fer (SVG net), décalées des bords, suspendues sous le chant. */
+.stk-bracket {
+  position: absolute;
+  top: 100%;
+  width: 26px;
+  height: 32px;
+  filter: drop-shadow(0 4px 4px rgba(30, 20, 10, 0.28));
+}
+.stk-bracket.l { left: 13%; }
+.stk-bracket.r { right: 13%; }
+
+/* ── Le BOCAL ────────────────────────────────────────────────────────────── */
+.stk-jar {
+  --w: 116px;
+  --h: 150px;
+  --fill: #cdb98a;
+  --lvl: 66%;
+  position: relative;
+  width: var(--w);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 8px 4px 0;
+  padding: 0;
   background: none;
   border: none;
   cursor: pointer;
-  transition: transform 0.14s ease;
+  -webkit-tap-highlight-color: transparent;
 }
+.stk-jar[data-state="empty"] { --lvl: 0%; }
+.stk-jar[data-state="low"] { --lvl: 24%; }
 
-.jar-tile:active { transform: translateY(2px); }
-
-.jar {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Ombre de contact épousant la silhouette du bocal, posée sur la planche. */
-  filter: drop-shadow(0 4px 3px var(--shelf-item-cast));
-}
-
-/* Couvercle laiton, légèrement plus étroit que le col, avec crête lumineuse. */
-.jar-lid {
-  width: 58px;
-  height: 14px;
+/* Couvercle chêne + jonc laiton. */
+.stk-lid {
+  width: calc(var(--w) * 0.6);
+  height: 19px;
   border-radius: 7px 7px 4px 4px;
-  margin-bottom: -3px;
-  z-index: 2;
-  background: linear-gradient(to bottom, var(--jar-lid-hi), var(--jar-lid) 55%, var(--jar-lid-edge));
-  border: 1px solid var(--jar-lid-edge);
-}
-
-/* Corps en verre : produit (contenu) en haut, étiquette collée sur le ventre. */
-.jar-glass {
+  background: linear-gradient(180deg, var(--oak-hi), var(--oak) 55%, var(--oak-edge2));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 5px rgba(60, 40, 15, 0.22), 0 2px 3px rgba(0, 0, 0, 0.16);
   position: relative;
-  width: 92px;
-  height: 108px;
-  border-radius: 14px 14px 22px 22px;
-  background: linear-gradient(158deg, var(--jar-glass-hi), var(--jar-glass-lo));
-  border: 1px solid var(--jar-rim);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 12px;
-  overflow: hidden;
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  z-index: 3;
+  margin-bottom: -5px;
 }
-
-/* Reflet vertical diagonal : la signature « verre ». */
-.jar-glass::after {
+.stk-lid::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 12%;
-  width: 18%;
-  height: 60%;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
-  transform: skewX(-11deg);
-  opacity: 0.4;
+  left: 7%;
+  right: 7%;
+  bottom: -3px;
+  height: 4px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #d8b46b, #b78c45);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
+}
+
+/* Corps en verre. */
+.stk-glass {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  border-radius: 16px 16px 26px 26px / 12px 12px 34px 34px;
+  border: 1px solid var(--glass-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 32%, rgba(255, 255, 255, 0.07));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset -9px 0 15px -9px rgba(70, 55, 30, 0.22),
+    inset 9px 0 15px -11px rgba(255, 255, 255, 0.5),
+    0 7px 16px -9px rgba(40, 35, 20, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Contenu (vu À TRAVERS le verre), masqué au niveau de remplissage. */
+.stk-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--lvl);
+  overflow: hidden;
+  background-color: var(--fill);
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(0, 0, 0, 0.16) 0 1.2px, transparent 1.6px),
+    radial-gradient(circle at 70% 55%, rgba(0, 0, 0, 0.13) 0 1.1px, transparent 1.5px),
+    radial-gradient(circle at 45% 80%, rgba(255, 255, 255, 0.18) 0 1.1px, transparent 1.5px);
+  background-size: 9px 9px, 11px 11px, 8px 8px;
+  box-shadow: inset 0 7px 11px -7px rgba(0, 0, 0, 0.4);
+  border-radius: 0 0 24px 24px / 0 0 30px 30px;
+  transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Image réelle de l'ingrédient : ancrée en bas, révélée jusqu'au niveau. */
+.stk-fill-img {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--h);
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+/* Reflet spéculaire du verre, PAR-DESSUS le contenu. */
+.stk-gloss {
+  position: absolute;
+  inset: 0;
   pointer-events: none;
   z-index: 1;
+  background:
+    linear-gradient(116deg, transparent 32%, rgba(255, 255, 255, 0.18) 43%, rgba(255, 255, 255, 0.45) 47%, transparent 54%),
+    radial-gradient(130% 55% at 28% -5%, rgba(255, 255, 255, 0.3), transparent 62%);
 }
 
-/* Étiquette blanche, écriture manuscrite (marqueur sur bocal). */
-.jar-label {
+/* Étiquette collée sur le verre : papier, écriture manuscrite. */
+.stk-label {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 9px;
-  min-height: 34px;
-  padding: 3px 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  left: 9%;
+  right: 9%;
+  bottom: 15%;
   z-index: 2;
-  border-radius: 6px;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
-}
-
-.jar-label span {
-  font-family: var(--ff-hand);
-  font-size: 14.5px;
-  font-weight: 700;
-  line-height: 0.98;
-  color: #3a352c;
+  background: linear-gradient(180deg, var(--paper), var(--paper-2));
+  border-radius: 4px;
+  padding: 4px 4px;
   text-align: center;
+  box-shadow: 0 1px 2px rgba(30, 20, 10, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.stk-label span {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-family: var(--ff-hand);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 0.95;
+  color: var(--paper-ink);
 }
 
-/* Pastille d'état posée sur l'épaule du bocal. */
-.jar-badge {
+/* Ombre de contact sous le bocal, sur la planche. */
+.stk-jar::after {
+  content: "";
   position: absolute;
-  top: 8px;
-  right: 16px;
+  left: 12%;
+  right: 12%;
+  bottom: -7px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(50% 100% at 50% 0%, rgba(40, 30, 15, 0.3), transparent 75%);
+  z-index: 0;
+}
+
+/* Badge d'état (hors overflow du verre). */
+.stk-badge {
+  position: absolute;
+  top: 24px;
+  right: 8px;
   width: 20px;
   height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
-  animation: popIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  z-index: 4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  animation: popIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.stk-badge[data-state="full"] { background: var(--ok); }
+.stk-badge[data-state="low"] { background: var(--spice); }
+
+/* Verre vide (à racheter) : discret mais soigné. */
+.stk-jar[data-state="empty"] .stk-glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.08));
+}
+.stk-jar[data-state="empty"] .stk-label { opacity: 0.9; }
+
+/* Survol/focus : pas de lift, on révèle le verre + anneau accent. */
+.stk-jar:focus-visible { outline: none; }
+.stk-jar:hover .stk-glass,
+.stk-jar:focus-visible .stk-glass {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset -9px 0 15px -9px rgba(70, 55, 30, 0.22),
+    inset 9px 0 15px -11px rgba(255, 255, 255, 0.6),
+    0 8px 20px -8px rgba(40, 35, 20, 0.34),
+    0 0 0 2px rgba(var(--accent-rgb), 0.32);
+}
+
+/* Fioriture unique : un brin d'eucalyptus en bout de rayon (décoratif). */
+.stk-sprig {
+  position: absolute;
+  right: 20px;
+  bottom: 0;
+  width: 50px;
+  height: 74px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+@media (max-width: 620px) {
+  .stk-wall { padding-left: 14px; padding-right: 14px; }
+  .stk-jars { gap: 14px; padding: 0 8px; }
+  .stk-jar { --w: 96px; --h: 126px; }
+  .stk-lid { height: 16px; }
+  .stk-bracket { width: 22px; height: 27px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jar-tile:active { transform: none; }
+  .stk-fill { transition: none; }
 }
 
 .drag-over {
