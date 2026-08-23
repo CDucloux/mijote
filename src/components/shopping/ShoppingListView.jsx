@@ -43,7 +43,7 @@ export function ShoppingListView({
           {activeList.items.length === 0 && activeList.type !== "free" && (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
               <EmptyArt name="assiette" size={128} style={{ marginBottom: 8 }} />
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Tout est acheté&nbsp;!</h3>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>Tout est acheté&nbsp;!</h3>
               <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
                 Tous les ingrédients de cette liste ont été cochés.
               </p>
@@ -56,7 +56,7 @@ export function ShoppingListView({
           {activeList.items.length === 0 && activeList.type === "free" && (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, textAlign: "center" }}>
               <EmptyArt name="panier" size={104} />
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em" }}>Liste vide</h3>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em" }}>Liste vide</h3>
               <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, maxWidth: 240 }}>
                 Appuie sur le bouton <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%", background: "var(--accent)", verticalAlign: "middle" }}><Icon name="plus" size={11} color="#fff" /></span> en bas à droite pour ajouter des articles.
               </div>

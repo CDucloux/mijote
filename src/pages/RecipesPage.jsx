@@ -241,7 +241,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mes Recettes</h1></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em" }}>Mes Recettes</h1></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <NewRecipeButton onManual={onNewRecipe} />
             <UserAvatar />
@@ -357,7 +357,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                     </div>
                     {/* Tranche basse blanche */}
                     <div style={{ padding: "9px 11px 11px", background: "var(--surface)", borderTop: `1px solid ${col.color}22` }}>
-                      <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{col.name}</div>
+                      <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, textAlign: "left", letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{col.name}</div>
                       <div style={{ fontSize: 11, color: count ? "var(--text2)" : "var(--text3)", textAlign: "left", marginTop: 1 }}>{count === 0 ? "Vide" : `${count} recette${count > 1 ? "s" : ""}`}</div>
                     </div>
                     {/* Calque d'onde tactile au-dessus de la face opaque du carnet */}
@@ -373,7 +373,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                     <span className="notebook-add-plus" style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--surface2)", color: "var(--text2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="plus" size={20} color="currentColor" /></span>
                   </div>
                   <div style={{ padding: "9px 11px 11px", background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-                    <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", color: "var(--text2)" }}>Nouveau</div>
+                    <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, textAlign: "left", letterSpacing: "-0.01em", color: "var(--text2)" }}>Nouveau</div>
                     <div style={{ fontSize: 11, color: "var(--text3)", textAlign: "left", marginTop: 1 }}>Créer un carnet</div>
                   </div>
                   <span className="carnet-ripple" aria-hidden="true" style={{ position: "absolute", inset: 0, borderRadius: 14, overflow: "hidden", pointerEvents: "none", zIndex: 5 }} />
@@ -387,7 +387,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           // ── Première connexion : 0 recette, c'est normal → on invite, sans afficher « Carnets » ni « Recettes (0) » ──
           <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 420, margin: "0 auto" }}>
             <EmptyArt name="bibliotheque" size={140} style={{ marginBottom: 10 }} />
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta bibliothèque</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta bibliothèque</h3>
             <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
               Elle est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
             </p>
@@ -433,7 +433,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           return (
           <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
             <EmptyArt name="loupe" size={116} style={{ marginBottom: 6 }} />
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
             <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
               {q
                 ? <>Rien ne correspond à « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans ta bibliothèque.<br />Cherche-la dans la communauté ou crée-la.</>
@@ -522,7 +522,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
               {rm.image ? <img src={rm.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (isComp ? "🧩" : "🍽️")}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rm.name}</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rm.name}</div>
               <div style={{ fontSize: 13, color: "var(--text3)" }}>{isComp ? "Préparation de base" : "Recette"}</div>
             </div>
           </div>
@@ -552,7 +552,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
         const manual = collections.filter(c => !isSmart(c));
         return (
         <SwipeableSheet onClose={() => setCarnetPickFor(null)}>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, marginBottom: 4 }}>Ajouter à un carnet</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, marginBottom: 4 }}>Ajouter à un carnet</h3>
           <p style={{ fontSize: 13, color: "var(--text3)", marginBottom: 16 }}>« {rec.name} »</p>
           {manual.length === 0 ? (
             <div style={{ textAlign: "center", padding: "8px 0 12px", color: "var(--text3)", fontSize: 13.5 }}>Aucun carnet manuel pour l'instant.</div>
@@ -595,7 +595,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
             <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: cm.color + "33", display: "grid", placeItems: "center", fontSize: 26 }}>{cm.icon || "📓"}</div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cm.name}</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cm.name}</div>
               <div style={{ fontSize: 13, color: "var(--text3)" }}>{smart ? "Carnet intelligent" : "Carnet"} - {n} recette{n > 1 ? "s" : ""}</div>
             </div>
           </div>
@@ -632,7 +632,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
       {newCarnet && (
         <SwipeableSheet onClose={() => setNewCarnet(null)}>
           {(close) => (<>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 16 }}>{newCarnet.editing ? "Modifier le carnet" : newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 16 }}>{newCarnet.editing ? "Modifier le carnet" : newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
 
           {/* Aperçu live : le vrai visuel « livre » qui se met à jour en direct */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
@@ -645,7 +645,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 <span style={{ fontSize: 40, lineHeight: 1, filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.18))" }}>{newCarnet.icon}</span>
               </div>
               <div style={{ padding: "8px 10px 10px", background: "var(--surface)", borderTop: `1px solid ${newCarnet.color}22` }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: newCarnet.name.trim() ? "var(--text)" : "var(--text3)" }}>{newCarnet.name.trim() || "Mon carnet"}</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: newCarnet.name.trim() ? "var(--text)" : "var(--text3)" }}>{newCarnet.name.trim() || "Mon carnet"}</div>
                 <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>{(newCarnet.smart || newCarnet.kind === "smart") ? "Intelligent" : "Manuel"}</div>
               </div>
             </div>

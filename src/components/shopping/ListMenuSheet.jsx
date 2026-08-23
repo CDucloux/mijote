@@ -15,7 +15,7 @@ export function ListMenuSheet({ list, onClose, onSettings, onDelete }) {
           <Icon name={list.type === "recipe" ? "book" : "shopping"} size={24} color="var(--accent)" />
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{list.name}</div>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{list.name}</div>
           <div style={{ fontSize: 13, color: "var(--text3)" }}>{list.type === "recipe" ? "Depuis une recette" : "Liste libre"} · {list.items.length} article{list.items.length > 1 ? "s" : ""}</div>
         </div>
       </div>

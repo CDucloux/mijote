@@ -90,7 +90,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
             <IngImage src={ingredient.image} alt={ingredient.name} size={74} />
           </span>
           <span style={{ position: "relative", zIndex: 1, minWidth: 0, flex: 1 }}>
-            <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 6, color: "var(--text)" }}>{ingredient.name}</span>
+            <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 6, color: "var(--text)" }}>{ingredient.name}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(232,146,10,0.95)", color: "#fff", fontWeight: 700, fontSize: 10, padding: "3px 9px 3px 7px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <Icon name="sun" size={11} color="#fff" /> De saison

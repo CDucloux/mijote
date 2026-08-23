@@ -80,7 +80,7 @@ export function HouseholdPanel({ onClose }) {
         /* ── Pas de foyer : en créer un ── */
         card(
           <>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Créer un foyer</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Créer un foyer</div>
             <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 14 }}>Tu en seras le propriétaire et pourras inviter {MAX_HOUSEHOLD - 1} personne{MAX_HOUSEHOLD - 1 > 1 ? "s" : ""}.</div>
             <input className="field-input" placeholder="Nom du foyer (ex. Maison Dupont)" value={name} maxLength={40} onChange={e => setName(e.target.value)} style={{ marginBottom: 12 }} />
             <button className="btn btn-primary" onClick={async () => { if (await actions.create(name)) setName(""); }} style={{ width: "100%" }}>
@@ -94,7 +94,7 @@ export function HouseholdPanel({ onClose }) {
           {card(
             <>
               <Row justify="space-between" style={{ marginBottom: 14 }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600 }}>{household.name}</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>{household.name}</div>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>{peopleCount(household)}/{MAX_HOUSEHOLD}</span>
               </Row>
               <Col gap={10}>

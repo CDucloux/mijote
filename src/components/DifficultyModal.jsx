@@ -42,7 +42,7 @@ export function DifficultyModal({ data, onClose }) {
         <Row align="flex-start" justify="space-between" gap={12}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 700, color: "var(--text3)", marginBottom: 6 }}>Niveau de difficulté</div>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 27, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{label}</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 27, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{label}</div>
           </div>
           <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "baseline", gap: 1, padding: "7px 13px", borderRadius: 999, background: "var(--surface)", border: `1.5px solid ${color}`, color, fontWeight: 800, fontSize: 16, fontVariantNumeric: "tabular-nums" }}>
             {data.score}<span style={{ fontSize: 11, fontWeight: 700, opacity: 0.65 }}>/5</span>

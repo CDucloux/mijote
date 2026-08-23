@@ -375,7 +375,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <SwipeableSheet onClose={() => setJournalOpen(false)} style={{ maxHeight: "88dvh" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <Icon name="history" size={20} color="var(--accent)" />
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Journal d'itérations</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)" }}>Journal d'itérations</h3>
           </div>
           <RecipeJournal recipe={recipe} onUpdateRecipe={onUpdateRecipe} />
         </SwipeableSheet>

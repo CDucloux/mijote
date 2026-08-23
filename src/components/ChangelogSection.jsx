@@ -27,7 +27,7 @@ export function ChangelogSection() {
                 style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: isLatest ? "14px 16px 12px" : "12px 16px", background: isLatest ? "linear-gradient(135deg,rgba(var(--accent-rgb),0.10),rgba(var(--accent-rgb),0.03))" : "var(--surface)", border: isLatest ? "1px solid rgba(var(--accent-rgb),0.35)" : "1px solid var(--border)", borderRadius: isExpanded ? "14px 14px 0 0" : 14, cursor: isLatest ? "default" : "pointer", textAlign: "left", transition: "border-radius 0.2s" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
-                    <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, color: isLatest ? "var(--accent)" : "var(--text)" }}>v{entry.version}</span>
+                    <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, color: isLatest ? "var(--accent)" : "var(--text)" }}>v{entry.version}</span>
                     {isLatest
                       ? <span style={{ fontSize: 9, fontWeight: 800, color: "#fff", background: "var(--accent)", borderRadius: 6, padding: "2px 8px", letterSpacing: "0.06em" }}>DERNIÈRE VERSION</span>
                       : <span style={{ fontSize: 11, color: "var(--text3)" }}>{entry.label}</span>}

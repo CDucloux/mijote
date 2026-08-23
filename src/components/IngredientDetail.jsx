@@ -172,9 +172,9 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
             <div style={{ flex: 1, minWidth: 0 }}>
               {editing ? (
                 <input value={draft.name} onChange={e => up({ name: e.target.value })} placeholder="Nom de l'ingrédient" autoFocus={!draft.name}
-                  style={{ width: "100%", fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, color: "var(--text)", background: "transparent", border: "none", borderBottom: "2px solid var(--accent)", padding: "0 0 3px", marginBottom: 9, outline: "none" }} />
+                  style={{ width: "100%", fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, color: "var(--text)", background: "transparent", border: "none", borderBottom: "2px solid var(--accent)", padding: "0 0 3px", marginBottom: 9, outline: "none" }} />
               ) : (
-                <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 25, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8 }}>{ingredient.name}</h1>
+                <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 25, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8 }}>{ingredient.name}</h1>
               )}
               {editing ? (
                 <select value={draft.category || "other"} onChange={e => up({ category: e.target.value })}
@@ -239,7 +239,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
 
         {/* ── Valeurs nutritionnelles (éditables en place) ── */}
         <div className="slide-up" style={{ animationDelay: "0.2s" }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "18px 0 12px" }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, margin: "18px 0 12px" }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
 
           {(editing || hasNutrition) ? (
             <>
@@ -314,7 +314,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
         {editing ? (
           <div className="slide-up" style={{ marginTop: 24 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500 }}>Tips utiles</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600 }}>Tips utiles</div>
               <button onClick={() => up({ tips: [...(draft.tips || []), { type: "prep", text: "" }] })} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.28)", borderRadius: 999, padding: "5px 12px", cursor: "pointer" }}>
                 <Icon name="plus" size={13} color="var(--accent)" /> Ajouter
               </button>
@@ -336,7 +336,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           </div>
         ) : Array.isArray(ingredient.tips) && ingredient.tips.length > 0 && (
           <div className="slide-up" style={{ animationDelay: "0.26s" }}>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "28px 0 12px" }}>Tips utiles</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, margin: "28px 0 12px" }}>Tips utiles</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[...ingredient.tips].sort((a, b) => TIP_ORDER.indexOf(a.type) - TIP_ORDER.indexOf(b.type)).map((tip, i) => {
                 const t = TIP_TYPES[tip.type] || TIP_TYPES.prep;

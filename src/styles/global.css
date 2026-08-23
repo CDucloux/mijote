@@ -878,7 +878,7 @@ select {
   .rotate-guard__title {
     font-family: var(--ff-display);
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.01em;
   }
 
@@ -1572,7 +1572,7 @@ select {
 .legal-md h2 {
   font-family: var(--ff-display);
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent);
   margin: 26px 0 8px;
 }
@@ -1875,7 +1875,7 @@ select {
 .onb-title {
   font-family: var(--ff-display);
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.015em;
   line-height: 1.15;
   margin: 0 0 12px;
@@ -2143,7 +2143,7 @@ select {
     gap: 4px;
     font-family: var(--ff-display);
     font-size: 22px;
-    font-weight: 500;
+    font-weight: 600;
     padding: 0 22px 28px;
     letter-spacing: -0.02em;
     color: var(--text);
@@ -2627,7 +2627,7 @@ select {
 .loading-logo {
   font-family: var(--ff-display);
   font-size: 28px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--text);
   margin-bottom: 32px;
@@ -2744,7 +2744,7 @@ select {
 .login-tagline {
   font-family: var(--ff-display);
   font-size: 26px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.15;
   color: var(--text);

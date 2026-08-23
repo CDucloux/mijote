@@ -51,7 +51,7 @@ export function RecipeHeroMobile({
       )}
       {/* Titre + source + tags, départ étagé piloté par le hook (refs). */}
       <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
-        <h1 ref={titleRef} style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff", transformOrigin: "left bottom", willChange: "transform, opacity" }}>{recipe.name}</h1>
+        <h1 ref={titleRef} style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff", transformOrigin: "left bottom", willChange: "transform, opacity" }}>{recipe.name}</h1>
         {attribution && <div ref={attribRef} style={{ willChange: "transform, opacity" }}>{attribution}</div>}
         {!publicMode && recipe.source && (
           <a ref={srcRef} href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source} target="_blank" rel="noopener noreferrer"

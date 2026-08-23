@@ -48,7 +48,7 @@ function NutriCalcView({ breakdown }) {
   const { negatives, N, positives, P, ns, letter } = breakdown;
   const stat = (val, label, color) => (
     <Col align="center" gap={1} style={{ minWidth: 0 }}>
-      <span style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, color, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{val}</span>
+      <span style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, color, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{val}</span>
       <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{label}</span>
     </Col>
   );
@@ -96,7 +96,7 @@ function CalcLocked({ onUpgrade }) {
       <span style={{ width: 46, height: 46, borderRadius: 14, background: "var(--accent)", display: "inline-grid", placeItems: "center", boxShadow: "0 6px 16px -6px rgba(var(--accent-rgb),0.6)", marginBottom: 12 }}>
         <Icon name="shield" size={22} color="#fff" />
       </span>
-      <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Le détail du calcul</div>
+      <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Le détail du calcul</div>
       <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.55, maxWidth: 300, margin: "0 auto 16px" }}>
         Vois exactement d'où vient la note, points négatifs, points positifs et l'équation qui aboutit à la lettre. Réservé à <PlusBadge />.
       </div>
@@ -162,7 +162,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
       <Row gap={14} style={{ marginBottom: 4 }}>
         <NutriScoreBadge letter={letter} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500 }}>Analyse nutritionnelle</div>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600 }}>Analyse nutritionnelle</div>
           {letter && <div style={{ fontSize: 12, color: "var(--text3)" }}>{NUTRI_LETTER_DESC[letter]}</div>}
         </div>
       </Row>

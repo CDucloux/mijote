@@ -73,7 +73,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
       {/* En-tête */}
       <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={() => navigate(-1)} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}><Icon name="back" size={17} /></button>
-        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Profil</h1>
+        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>Profil</h1>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px var(--page-pad-b)" }}>
@@ -88,7 +88,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   : <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "grid", placeItems: "center", fontSize: 26, fontWeight: 700, border: "3px solid var(--surface)" }}>{(currentName || "?")[0].toUpperCase()}</div>}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentName || "Sans nom"}</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentName || "Sans nom"}</div>
                 {user?.email && <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{user.email}</div>}
                 <Row wrap gap={6} style={{ marginTop: 8 }}>
                   {isAdmin && <AdminBadge />}

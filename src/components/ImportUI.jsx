@@ -93,7 +93,7 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
             <EmptyArt name="casserole" size={84} />
           </div>
         </div>
-        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, margin: "0 0 6px" }}>On mijote ta recette…</h3>
+        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, margin: "0 0 6px" }}>On mijote ta recette…</h3>
         <div style={{ fontSize: 13.5, color: "var(--accent)", fontWeight: 600, minHeight: 20 }}>{LOADING_STEPS[stepIdx]} · {pct}%</div>
         <div style={{ display: "inline-flex", gap: 4, margin: "12px 0 14px" }}>
           {[0, 1, 2].map(d => <span key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", animation: `importDots 1.2s ${d * 0.16}s ease-in-out infinite` }} />)}
@@ -198,7 +198,7 @@ export function ImportHeader({ title, onBack }) {
       <button onClick={onBack} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
         <Icon name="back" size={17} />
       </button>
-      <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
+      <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
     </div>
   );
 }

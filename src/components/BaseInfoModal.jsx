@@ -25,7 +25,7 @@ export function BaseInfoModal({ onClose }) {
             <BaseIcon size={24} color="#fff" />
           </IconChip>
           <div>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>Préparation de base</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text)" }}>Préparation de base</div>
             <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>Principes de composition</div>
           </div>
         </Row>

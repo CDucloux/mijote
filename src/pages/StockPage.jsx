@@ -28,7 +28,7 @@ function StockEmpty({ icon, art, title, body, action }) {
           <Icon name={icon} size={30} color="var(--accent)" />
         </div>
       )}
-      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>{title}</h3>
+      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>{title}</h3>
       <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: action ? 22 : 0 }}>{body}</p>
       {action}
     </div>
@@ -95,7 +95,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mon Stock</h1>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em" }}>Mon Stock</h1>
             
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

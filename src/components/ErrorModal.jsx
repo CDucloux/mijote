@@ -15,7 +15,7 @@ export function ErrorModal({ title = "Une erreur est survenue", message, code, o
         <div style={{ width: 56, height: 56, borderRadius: "50%", margin: "0 auto 16px", background: "rgba(224,82,82,0.12)", border: "1px solid rgba(224,82,82,0.3)", display: "grid", placeItems: "center" }}>
           <Icon name="warning" size={28} color="var(--red)" />
         </div>
-        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 8px", textAlign: "center" }}>{title}</h3>
+        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 8px", textAlign: "center" }}>{title}</h3>
         <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.55, margin: "0 0 14px", textAlign: "center" }}>{message}</p>
         {code && (
           <div style={{ textAlign: "center" }}>

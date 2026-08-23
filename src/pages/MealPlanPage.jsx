@@ -376,7 +376,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Planning</h1></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em" }}>Planning</h1></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {undoKey === weekDays[0]
               ? <button onClick={handleUndo} className="btn btn-ghost btn-pill" style={{ padding: "8px 14px", fontSize: 13, background: "var(--surface)" }}><Icon name="undo" size={15} /> Annuler</button>
@@ -510,7 +510,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               <Icon name="calendar" size={21} color="var(--accent)" />
             </div>
             <div style={{ minWidth: 0 }}>
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Ajouter une recette</h3>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Ajouter une recette</h3>
               <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
               </div>
@@ -602,7 +602,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       {/* Sous-menu de génération : choix du style de repas */}
       {genOpen && (
         <SwipeableSheet onClose={() => setGenOpen(false)} style={{ maxHeight: "82dvh" }}>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>
           <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Quel style de repas veux-tu pour les créneaux vides&nbsp;?</p>
 
           {/* Créneaux à remplir : par défaut midi + soir. Décocher « Midi » quand on
@@ -690,7 +690,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             <button onClick={closeBatch} className="cook-close-btn" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
             <span style={{ width: 34, height: 34, borderRadius: 11, background: "rgba(var(--ok-rgb),0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="fire" size={18} color="var(--ok)" /></span>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.15 }}>Session batch</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.15 }}>Session batch</div>
               <div style={{ fontSize: 11, color: "var(--text3)" }}>{`Semaine du ${new Date(weekDays[0] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[0] + "T12:00").getMonth()]}`}</div>
             </div>
           </div>
@@ -847,7 +847,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 {base?.image ? <Img src={base.image} alt={base.name} style={{ width: "100%", height: "100%" }} /> : <Icon name="plus" size={20} color="var(--accent)" />}
               </div>
               <div style={{ minWidth: 0 }}>
-                <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Compléter le repas</h3>
+                <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Compléter le repas</h3>
                 {base && <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Autour de <strong style={{ color: "var(--text2)" }}>{base.name}</strong></div>}
               </div>
             </div>

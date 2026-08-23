@@ -89,7 +89,7 @@ export function NewRecipeButton({ onManual }) {
               <Icon name="book" size={20} color="var(--accent)" />
             </span>
             <div style={{ minWidth: 0 }}>
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Nouvelle recette</h3>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Nouvelle recette</h3>
               <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Comment veux-tu la créer ?</p>
             </div>
           </div>

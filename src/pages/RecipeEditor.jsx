@@ -39,7 +39,7 @@ function SectionCard({ name, onRename, onDelete, onZoneDrop, children }) {
             onBlur={commit} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
             style={{ marginBottom: 0, flex: 1, minWidth: 0, height: 32, fontSize: 13.5, fontWeight: 600 }} />
         ) : (
-          <button type="button" onClick={() => setEditing(true)} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
+          <button type="button" onClick={() => setEditing(true)} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
         )}
         <button type="button" onClick={onDelete} title="Dissoudre la section" onMouseEnter={() => setEraseHover(true)} onMouseLeave={() => setEraseHover(false)}
           style={{ flexShrink: 0, width: 32, height: 32, borderRadius: "50%", background: eraseHover ? "var(--surface2)" : "transparent", border: "none", display: "grid", placeItems: "center", cursor: "pointer", transition: "background 0.15s" }}>
@@ -69,7 +69,7 @@ function EditorSectionHeader({ name, onRename, onDelete }) {
           onBlur={commit} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
           style={{ marginBottom: 0, flex: 1, minWidth: 0, height: 32, fontSize: 14, fontWeight: 600 }} />
       ) : (
-        <button type="button" onClick={() => setEditing(true)} style={{ minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
+        <button type="button" onClick={() => setEditing(true)} style={{ minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
       )}
       <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
       <button type="button" onClick={onDelete} title="Dissoudre la section" onMouseEnter={() => setEraseHover(true)} onMouseLeave={() => setEraseHover(false)}
@@ -103,7 +103,7 @@ function NewSectionButton({ onAdd }) {
         boxShadow: hover ? "0 6px 18px -10px rgba(var(--accent-rgb),0.6)" : "none", transition: "background 0.15s, box-shadow 0.2s" }}>
       {chip}
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nouvelle section</span>
+        <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nouvelle section</span>
         <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>Regrouper en sous-préparation</span>
       </span>
       <Icon name="plus" size={17} color="var(--accent)" />
@@ -113,7 +113,7 @@ function NewSectionButton({ onAdd }) {
     <div style={{ padding: 12, borderRadius: 16, border: "1px solid rgba(var(--accent-rgb),0.45)", background: "rgba(var(--accent-rgb),0.07)", display: "flex", flexDirection: "column", gap: 11 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {chip}
-        <span style={{ flex: 1, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nommer la section</span>
+        <span style={{ flex: 1, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nommer la section</span>
         <button type="button" onClick={close} aria-label="Annuler" style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: "transparent", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text3)" /></button>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -345,7 +345,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           <button onClick={onCancel} className="cook-close-btn" style={{ flexShrink: 0, width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer" }}><Icon name="close" size={14} /></button>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>{recipe.id ? "Modifier la recette" : "Nouvelle recette"}</div>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>{form.name.trim() || "Sans titre"}</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>{form.name.trim() || "Sans titre"}</div>
           </div>
           <button className="btn btn-primary btn-pill" style={{ flexShrink: 0 }} onClick={handleSave}><Icon name="save" size={15} /> Enregistrer</button>
         </div>

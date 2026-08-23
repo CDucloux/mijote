@@ -40,7 +40,7 @@ export function HouseholdWelcome() {
         <div style={{ width: 64, height: 64, borderRadius: "50%", margin: "0 auto 16px", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(167,201,124,0.4)", animation: "popIn 0.6s 0.1s both cubic-bezier(0.34,1.56,0.64,1)" }}>
           <span style={{ fontSize: 32, lineHeight: 1 }}>🏡</span>
         </div>
-        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 600, letterSpacing: "-0.02em", margin: "0 0 8px", animation: "popIn 0.5s 0.2s both ease" }}>
+        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 8px", animation: "popIn 0.5s 0.2s both ease" }}>
           Bienvenue dans le foyer !
         </h2>
         <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 22px" }}>

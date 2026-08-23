@@ -16,7 +16,7 @@ export function PublishSheet({ recipe, componentDeps, onClose, onPublish }) {
             <Icon name="globe" size={21} color="var(--accent)" />
           </div>
           <div style={{ minWidth: 0 }}>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Publier cette recette ?</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Publier cette recette ?</h3>
             <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>Communauté Cardamome</p>
           </div>
         </div>

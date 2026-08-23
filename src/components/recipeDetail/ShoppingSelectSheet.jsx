@@ -16,7 +16,7 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
           <Icon name="shopping" size={21} color="var(--accent)" />
         </span>
         <div style={{ minWidth: 0 }}>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Ajouter aux courses</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Ajouter aux courses</h3>
           <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--ok)" }}>en stock</span> sont décochés par défaut.</p>
         </div>
       </div>

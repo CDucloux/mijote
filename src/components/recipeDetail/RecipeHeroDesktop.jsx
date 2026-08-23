@@ -39,7 +39,7 @@ export function RecipeHeroDesktop({ recipe, handleBack, publicMode, onEdit, onEx
       </div>
       )}
       <div style={{ position: "absolute", bottom: 14, left: 20, right: 20 }}>
-        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2 }}>{recipe.name}</h1>
+        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2 }}>{recipe.name}</h1>
         {attribution}
         {!publicMode && recipe.source && (
           <a href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source}

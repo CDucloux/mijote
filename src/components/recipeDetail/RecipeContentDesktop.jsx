@@ -21,7 +21,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
       <div style={{ width: 300, minWidth: 300, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", minHeight: 34, marginBottom: 16 }}>
-            <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
+            <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {groupBy(recipe.ingredients).map(section => (
@@ -64,7 +64,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
         </div>
         {recipe.utensils && recipe.utensils.length > 0 && (
           <div>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {recipe.utensils.map(u => (
                 <div key={u.id} className="ut-pill-desktop" style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
@@ -80,7 +80,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
       {/* Right col: étapes (card) */}
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 34, marginBottom: 16 }}>
-          <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
+          <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
           {recipe.steps && recipe.steps.length > 0 && (
             <button className="btn btn-primary btn-sm" style={{ gap: 7, borderRadius: 999, padding: "8px 18px" }} onClick={() => setCookMode(true)}>
               <Icon name="fire" size={13} /> Mode pas à pas
@@ -92,7 +92,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
             <div key={comp.id} style={{ background: "rgba(var(--accent-rgb),0.05)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: 12, padding: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <BaseIcon size={18} />
-                <span style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 600 }}>Préparer la {comp.name}</span>
+                <span style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 700 }}>Préparer la {comp.name}</span>
                 <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -130,7 +130,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
             </div>
           ))}
           {baseSteps.length > 0 && recipe.steps?.length > 0 && (
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
           )}
           {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
           const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
