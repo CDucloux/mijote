@@ -1,4 +1,4 @@
-/* Polices Fraunces + Hanken Grotesk : chargées via <link> dans index.html (plus
+/* Polices Cormorant Garamond + Hanken Grotesk : chargées via <link> dans index.html (plus
    fiable que @import, notamment sur mobile/iOS). Ne pas remettre d'@import ici. */
 
 *,
@@ -44,7 +44,7 @@
   --admin-rgb: 139, 111, 240;
   --radius: 16px;
   --radius-sm: 10px;
-  --ff-display: 'Fraunces', serif;
+  --ff-display: 'Cormorant Garamond', serif;
   --ff-body: 'Hanken Grotesk', sans-serif;
   --tab-h: 72px;
   --page-pad-b: 24px;        /* respiration en bas des pages a onglet, au-dessus de la TabBar (source unique) */

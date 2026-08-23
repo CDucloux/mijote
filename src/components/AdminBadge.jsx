@@ -3,7 +3,7 @@ import { BADGE_SIZES } from "./PlusBadge.jsx";
 
 /** Badge « Admin » (pastille violette + bouclier). Signale un compte administrateur
  *, notamment que les quotas (imports IA, limite de recettes…) ne s'appliquent pas.
- *  Même gabarit/hauteur que {@link PlusBadge}, mais en police de CORPS (pas Fraunces).
+ *  Même gabarit/hauteur que {@link PlusBadge}, mais en police de CORPS (pas la police d'affichage).
  *  `size` : "sm" (en ligne) ou "lg" (hero). */
 export function AdminBadge({ size = "sm" }) {
   const s = BADGE_SIZES[size] || BADGE_SIZES.sm;

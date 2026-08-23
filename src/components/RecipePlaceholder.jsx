@@ -1,6 +1,6 @@
 // ─── PLACEHOLDER DE RECETTE SANS PHOTO ───────────────────────────────────────
 // Fond très sombre (quasi noir chaud) avec un halo terracotta ou vert en bas,
-// et l'initiale en Fraunces (var(--ff-display)) façon titre de livre. La teinte
+// et l'initiale en police d'affichage (var(--ff-display)) façon titre de livre. La teinte
 // du halo est dérivée du nom pour rester stable d'un rendu à l'autre.
 
 const HALOS = [

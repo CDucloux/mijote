@@ -22,7 +22,7 @@ export function DesktopSidebar({ tab, setTab }) {
           const active = tab === t.id;
           return (
             <button key={t.id} className={`desktop-nav-item${active ? " active" : ""}`} onClick={() => setTab(t.id)}>
-              <Icon name={t.icon} size={18} color={active ? "var(--accent)" : "var(--text2)"} />
+              <Icon name={t.icon} size={20} weight="duotone" color={active ? "var(--accent)" : "var(--text2)"} />
               {t.label}
             </button>
           );
