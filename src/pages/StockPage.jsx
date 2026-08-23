@@ -263,7 +263,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
         </div>
       </div>
 
-      {/* Corps scrollable : le mur de briques est le fond de ce conteneur */}
+      {/* Corps scrollable : le fond chaud du mur est le fond de ce conteneur */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         <div ref={contentRef} className="stk-wall" style={{ minHeight: "100%" }}>
         {ingredientDB.length === 0 && loading ? (

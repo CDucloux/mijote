@@ -55,7 +55,6 @@
   --iron-hi: #3a382f;
   --wall: #20241c;
   --wall-2: #191d15;
-  --mortar: #2a2f24;
   --paper: #3a3529;
   --paper-2: #2e2a20;
   --paper-ink: #cabfa5;
@@ -119,7 +118,6 @@ html.light,
   --iron-hi: #54524a;
   --wall: #ece7db;
   --wall-2: #e6e0d2;
-  --mortar: #dad3c3;
   --paper: #f4ecda;
   --paper-2: #e8dcc3;
   --paper-ink: #4a4638;
@@ -1455,21 +1453,8 @@ select {
 .stk-wall {
   position: relative;
   padding: 20px 20px 40px;
-  --bw: 82px;
-  --bh: 29px;
-  --m: 2px;
-  background-color: var(--mortar);
-  background-image:
-    linear-gradient(var(--mortar) var(--m), transparent var(--m)),
-    linear-gradient(90deg, var(--mortar) var(--m), transparent var(--m)),
-    linear-gradient(90deg, var(--mortar) var(--m), transparent var(--m)),
-    linear-gradient(180deg, var(--wall), var(--wall-2));
-  background-size:
-    var(--bw) var(--bh),
-    var(--bw) calc(var(--bh) * 2),
-    var(--bw) calc(var(--bh) * 2),
-    100% 100%;
-  background-position: 0 0, 0 0, calc(var(--bw) / 2) var(--bh), 0 0;
+  background-color: var(--wall);
+  background-image: linear-gradient(180deg, var(--wall), var(--wall-2));
 }
 
 /* Lumière douce haut-gauche + grain plâtre discret. */
