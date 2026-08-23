@@ -205,8 +205,8 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                   )}
                 </div>
 
-                {/* Grille d'ingrédients */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 8 }}>
+                {/* Grille d'ingrédients : chaque rangée repose sur une étagère (cf. .stock-shelf-grid) */}
+                <div className="stock-shelf-grid">
                   {ings.map((ing, i) => {
                     const has = stockSet.has(ing.id);
                     const low = lowSet.has(ing.id);
@@ -218,6 +218,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                       <button
                         key={ing.id}
                         onClick={() => cycle(ing.id)}
+                        className="stock-shelf-item"
                         style={{
                           display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
                           padding: "10px 6px 8px",
@@ -225,10 +226,11 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                           border: `1.5px solid ${borderCol}`,
                           background: bgCol,
                           cursor: "pointer",
-                          transition: "background 0.55s cubic-bezier(0.4,0,0.2,1), border-color 0.55s cubic-bezier(0.4,0,0.2,1), color 0.35s ease",
                           position: "relative",
-                          // Arrivée échelonnée des cards (plafonnée pour rester fluide)
-                          animation: "stockCardIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94) both",
+                          // Arrivée échelonnée des cards (plafonnée pour rester fluide) ; fill
+                          // `backwards` (et non `both`) pour libérer `transform` après l'entrée,
+                          // sinon l'animation figerait le dip au toucher (.stock-shelf-item:active).
+                          animation: "stockCardIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94) backwards",
                           animationDelay: `${Math.min(i, 14) * 0.025}s`,
                         }}
                       >

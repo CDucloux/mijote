@@ -44,6 +44,12 @@
   --admin-rgb: 139, 111, 240;
   --radius: 16px;
   --radius-sm: 10px;
+  /* Étagère du Stock : planche bois chaude sous chaque rangée (sombre). */
+  --shelf-lip: rgba(224, 162, 62, 0.20);
+  --shelf-board: #2b2d22;
+  --shelf-edge: #1c1e14;
+  --shelf-cast: rgba(0, 0, 0, 0.34);
+  --shelf-item-cast: rgba(0, 0, 0, 0.30);
   --ff-display: 'Cormorant Garamond', serif;
   --ff-body: 'Hanken Grotesk', sans-serif;
   --tab-h: 72px;
@@ -92,6 +98,12 @@ html.light,
   --text: #23281d;
   --text2: #565b4c;
   --text3: #838872;
+  /* Étagère du Stock : planche bois clair, chaude sur le fond crème. */
+  --shelf-lip: rgba(255, 255, 255, 0.9);
+  --shelf-board: #e6dcc7;
+  --shelf-edge: #d0c3a6;
+  --shelf-cast: rgba(120, 100, 70, 0.22);
+  --shelf-item-cast: rgba(120, 100, 70, 0.18);
 }
 
 html.light,
@@ -1423,6 +1435,57 @@ select {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* ── ÉTAGÈRE DU STOCK ─────────────────────────────────────────────────────────
+   Chaque rangée de produits repose sur une planche : le fond de la grille dessine
+   une étagère (liseré chaud en crête + corps de planche + chant + ombre portée)
+   qui se répète pile sous chaque rangée. La hauteur de carte est fixée pour que la
+   période du motif tombe exactement au pied des cartes ; les cartes portent une
+   ombre de contact et s'enfoncent légèrement au toucher (produit qu'on repose). */
+.stock-shelf-grid {
+  --stock-card-h: 102px;
+  --stock-shelf-h: 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  grid-auto-rows: calc(var(--stock-card-h) + var(--stock-shelf-h));
+  column-gap: 8px;
+  row-gap: 0;
+  align-items: start;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent var(--stock-card-h),
+    var(--shelf-lip) var(--stock-card-h),
+    var(--shelf-lip) calc(var(--stock-card-h) + 2px),
+    var(--shelf-board) calc(var(--stock-card-h) + 2px),
+    var(--shelf-board) calc(var(--stock-card-h) + 12px),
+    var(--shelf-edge) calc(var(--stock-card-h) + 12px),
+    var(--shelf-edge) calc(var(--stock-card-h) + 14px),
+    var(--shelf-cast) calc(var(--stock-card-h) + 14px),
+    transparent calc(var(--stock-card-h) + 20px),
+    transparent calc(var(--stock-card-h) + var(--stock-shelf-h))
+  );
+}
+
+.stock-shelf-item {
+  height: var(--stock-card-h);
+  box-shadow: 0 5px 9px -5px var(--shelf-item-cast);
+  transition:
+    background 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.35s ease,
+    transform 0.14s ease,
+    box-shadow 0.14s ease;
+}
+
+.stock-shelf-item:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 5px -3px var(--shelf-item-cast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stock-shelf-item:active { transform: none; }
 }
 
 .drag-over {
