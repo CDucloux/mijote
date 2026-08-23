@@ -210,51 +210,42 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                   {ings.map((ing, i) => {
                     const has = stockSet.has(ing.id);
                     const low = lowSet.has(ing.id);
-                    // Couleurs selon l'état : bientôt vide (orange) > en stock (vert) > absent
+                    // État = teinte du bocal (rebord + halo interne) + pastille, jamais un fond
+                    // pleine carte : bientôt vide (accent) > en stock (sarcelle) > absent (verre nu).
+                    const stateRgb = low ? "--accent-rgb" : "--ok-rgb";
                     const accentCol = low ? "var(--accent)" : "var(--ok)";
-                    const borderCol = low ? "rgba(var(--accent-rgb),0.6)" : has ? "rgba(var(--ok-rgb),0.6)" : "var(--border)";
-                    const bgCol = low ? "rgba(var(--accent-rgb),0.10)" : has ? "rgba(var(--ok-rgb),0.10)" : "var(--surface)";
                     return (
                       <button
                         key={ing.id}
                         onClick={() => cycle(ing.id)}
-                        className="stock-shelf-item"
+                        className="jar-tile"
                         style={{
-                          display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                          padding: "10px 6px 8px",
-                          borderRadius: 14,
-                          border: `1.5px solid ${borderCol}`,
-                          background: bgCol,
-                          cursor: "pointer",
-                          position: "relative",
-                          // Arrivée échelonnée des cards (plafonnée pour rester fluide) ; fill
+                          // Arrivée échelonnée des bocaux (plafonnée pour rester fluide) ; fill
                           // `backwards` (et non `both`) pour libérer `transform` après l'entrée,
-                          // sinon l'animation figerait le dip au toucher (.stock-shelf-item:active).
+                          // sinon l'animation figerait le dip au toucher (.jar-tile:active).
                           animation: "stockCardIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94) backwards",
                           animationDelay: `${Math.min(i, 14) * 0.025}s`,
                         }}
                       >
-                        {/* Badge d'état : ⚠ bientôt vide / ✓ en stock */}
-                        {has && (
-                          <span style={{
-                            position: "absolute", top: 6, right: 6,
-                            width: 16, height: 16, borderRadius: "50%",
-                            background: accentCol, display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "background 0.55s cubic-bezier(0.4,0,0.2,1)",
-                            animation: "popIn 0.32s cubic-bezier(0.25,0.46,0.45,0.94) both",
-                          }}>
-                            <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
+                        <span className="jar">
+                          <span className="jar-lid" aria-hidden="true" />
+                          <span
+                            className="jar-glass"
+                            style={has ? {
+                              borderColor: `rgba(var(${stateRgb}),0.55)`,
+                              boxShadow: `inset 0 0 0 2px rgba(var(${stateRgb}),0.15)`,
+                            } : undefined}
+                          >
+                            <IngImage src={ing.image} alt={ing.name} size={42} />
                           </span>
-                        )}
-                        <IngImage src={ing.image} alt={ing.name} size={44} style={{ borderRadius: 10, opacity: has ? 1 : 0.65, transition: "opacity 0.35s ease" }} />
-                        <span style={{
-                          fontSize: 11, fontWeight: 400,
-                          color: has ? accentCol : "var(--text2)",
-                          textAlign: "center", lineHeight: 1.3,
-                          height: "2.6em", // 2 lignes réservées : hauteur constante quel que soit le poids
-                          transition: "color 0.35s ease",
-                          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-                        }}>
+                          {/* Pastille d'état : ⚠ bientôt vide / ✓ en stock */}
+                          {has && (
+                            <span className="jar-badge" style={{ background: accentCol }}>
+                              <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
+                            </span>
+                          )}
+                        </span>
+                        <span className="jar-name" style={{ color: has ? accentCol : "var(--text2)", fontWeight: has ? 600 : 400 }}>
                           {ing.name}
                         </span>
                       </button>

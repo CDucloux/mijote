@@ -44,12 +44,20 @@
   --admin-rgb: 139, 111, 240;
   --radius: 16px;
   --radius-sm: 10px;
-  /* Étagère du Stock : planche bois chaude sous chaque rangée (sombre). */
-  --shelf-lip: rgba(224, 162, 62, 0.20);
-  --shelf-board: #2b2d22;
-  --shelf-edge: #1c1e14;
-  --shelf-cast: rgba(0, 0, 0, 0.34);
-  --shelf-item-cast: rgba(0, 0, 0, 0.30);
+  /* Étagère + bocaux du Stock (sombre). Planche bois deux tons (dessus éclairé +
+     chant plus sombre) et verre translucide teinté clair. */
+  --shelf-lip: rgba(224, 162, 62, 0.16);
+  --shelf-top: #37311f;
+  --shelf-face: #262114;
+  --shelf-edge: #16120a;
+  --shelf-cast: rgba(0, 0, 0, 0.42);
+  --shelf-item-cast: rgba(0, 0, 0, 0.42);
+  --jar-glass-hi: rgba(255, 255, 255, 0.13);
+  --jar-glass-lo: rgba(255, 255, 255, 0.03);
+  --jar-rim: rgba(255, 255, 255, 0.16);
+  --jar-lid: #c9a35a;
+  --jar-lid-hi: #e2c483;
+  --jar-lid-edge: #9c7838;
   --ff-display: 'Cormorant Garamond', serif;
   --ff-body: 'Hanken Grotesk', sans-serif;
   --tab-h: 72px;
@@ -98,12 +106,20 @@ html.light,
   --text: #23281d;
   --text2: #565b4c;
   --text3: #838872;
-  /* Étagère du Stock : planche bois clair, chaude sur le fond crème. */
-  --shelf-lip: rgba(255, 255, 255, 0.9);
-  --shelf-board: #e6dcc7;
-  --shelf-edge: #d0c3a6;
-  --shelf-cast: rgba(120, 100, 70, 0.22);
-  --shelf-item-cast: rgba(120, 100, 70, 0.18);
+  /* Étagère + bocaux du Stock (clair). Planche bois plus soutenue que le crème pour
+     se détacher, verre laiteux clair. */
+  --shelf-lip: rgba(255, 255, 255, 0.75);
+  --shelf-top: #e4d1ae;
+  --shelf-face: #cbae7f;
+  --shelf-edge: #ac8c5a;
+  --shelf-cast: rgba(120, 95, 60, 0.22);
+  --shelf-item-cast: rgba(120, 95, 60, 0.24);
+  --jar-glass-hi: rgba(255, 255, 255, 0.88);
+  --jar-glass-lo: rgba(226, 232, 219, 0.5);
+  --jar-rim: rgba(0, 0, 0, 0.10);
+  --jar-lid: #c9a35a;
+  --jar-lid-hi: #e6c684;
+  --jar-lid-edge: #a5803f;
 }
 
 html.light,
@@ -1437,19 +1453,19 @@ select {
   }
 }
 
-/* ── ÉTAGÈRE DU STOCK ─────────────────────────────────────────────────────────
-   Chaque rangée de produits repose sur une planche : le fond de la grille dessine
-   une étagère (liseré chaud en crête + corps de planche + chant + ombre portée)
-   qui se répète pile sous chaque rangée. La hauteur de carte est fixée pour que la
-   période du motif tombe exactement au pied des cartes ; les cartes portent une
-   ombre de contact et s'enfoncent légèrement au toucher (produit qu'on repose). */
+/* ── ÉTAGÈRE + BOCAUX DU STOCK ────────────────────────────────────────────────
+   Chaque rangée de bocaux repose sur une planche : le fond de la grille dessine
+   une étagère (crête éclairée + dessus + chant plus sombre + ombre portée) qui se
+   répète pile sous chaque rangée. La hauteur de carte est fixée pour que la période
+   du motif tombe au pied des bocaux. Deux tons (dessus/chant) donnent l'épaisseur du
+   bois plutôt qu'une bande plate. */
 .stock-shelf-grid {
   --stock-card-h: 102px;
-  --stock-shelf-h: 22px;
+  --stock-shelf-h: 20px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
   grid-auto-rows: calc(var(--stock-card-h) + var(--stock-shelf-h));
-  column-gap: 8px;
+  column-gap: 6px;
   row-gap: 0;
   align-items: start;
   background: repeating-linear-gradient(
@@ -1457,35 +1473,115 @@ select {
     transparent 0,
     transparent var(--stock-card-h),
     var(--shelf-lip) var(--stock-card-h),
-    var(--shelf-lip) calc(var(--stock-card-h) + 2px),
-    var(--shelf-board) calc(var(--stock-card-h) + 2px),
-    var(--shelf-board) calc(var(--stock-card-h) + 12px),
-    var(--shelf-edge) calc(var(--stock-card-h) + 12px),
+    var(--shelf-lip) calc(var(--stock-card-h) + 1.5px),
+    var(--shelf-top) calc(var(--stock-card-h) + 1.5px),
+    var(--shelf-top) calc(var(--stock-card-h) + 6px),
+    var(--shelf-face) calc(var(--stock-card-h) + 6px),
+    var(--shelf-face) calc(var(--stock-card-h) + 13px),
+    var(--shelf-edge) calc(var(--stock-card-h) + 13px),
     var(--shelf-edge) calc(var(--stock-card-h) + 14px),
     var(--shelf-cast) calc(var(--stock-card-h) + 14px),
-    transparent calc(var(--stock-card-h) + 20px),
+    transparent calc(var(--stock-card-h) + 19px),
     transparent calc(var(--stock-card-h) + var(--stock-shelf-h))
   );
 }
 
-.stock-shelf-item {
+/* Tuile = bocal + libellé, sans fond ni bordure (le verre porte la forme). */
+.jar-tile {
   height: var(--stock-card-h);
-  box-shadow: 0 5px 9px -5px var(--shelf-item-cast);
-  transition:
-    background 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.35s ease,
-    transform 0.14s ease,
-    box-shadow 0.14s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 6px 4px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.14s ease;
 }
 
-.stock-shelf-item:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 5px -3px var(--shelf-item-cast);
+.jar-tile:active { transform: translateY(2px); }
+
+.jar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Ombre de contact épousant la silhouette du bocal. */
+  filter: drop-shadow(0 4px 3px var(--shelf-item-cast));
+}
+
+/* Couvercle laiton, légèrement plus étroit que le col, avec crête lumineuse. */
+.jar-lid {
+  width: 34px;
+  height: 9px;
+  border-radius: 5px 5px 3px 3px;
+  margin-bottom: -2px;
+  z-index: 2;
+  background: linear-gradient(to bottom, var(--jar-lid-hi), var(--jar-lid) 55%, var(--jar-lid-edge));
+  border: 1px solid var(--jar-lid-edge);
+}
+
+/* Corps en verre : translucide, rebord fin, base plus arrondie que l'épaule. */
+.jar-glass {
+  position: relative;
+  width: 52px;
+  height: 54px;
+  border-radius: 9px 9px 14px 14px;
+  background: linear-gradient(158deg, var(--jar-glass-hi), var(--jar-glass-lo));
+  border: 1px solid var(--jar-rim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Reflet vertical diagonal : la signature « verre ». */
+.jar-glass::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14%;
+  width: 22%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  transform: skewX(-11deg);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Pastille d'état posée sur l'épaule du bocal. */
+.jar-badge {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  animation: popIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.jar-name {
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+  height: 2.5em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.35s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stock-shelf-item:active { transform: none; }
+  .jar-tile:active { transform: none; }
 }
 
 .drag-over {
