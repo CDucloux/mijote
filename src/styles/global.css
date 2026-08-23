@@ -1460,7 +1460,7 @@ select {
    du motif tombe au pied des bocaux. Deux tons (dessus/chant) donnent l'épaisseur du
    bois plutôt qu'une bande plate. */
 .stock-shelf-grid {
-  --stock-card-h: 102px;
+  --stock-card-h: 84px;
   --stock-shelf-h: 20px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
@@ -1486,15 +1486,15 @@ select {
   );
 }
 
-/* Tuile = bocal + libellé, sans fond ni bordure (le verre porte la forme). */
+/* Tuile = un bocal, sans fond ni bordure (le verre porte la forme). Sa hauteur
+   égale celle du bocal pour que la base se pose pile sur la planche. */
 .jar-tile {
   height: var(--stock-card-h);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 4px;
-  padding: 6px 4px 0;
+  padding: 5px 4px 0;
   background: none;
   border: none;
   cursor: pointer;
@@ -1508,13 +1508,13 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* Ombre de contact épousant la silhouette du bocal. */
-  filter: drop-shadow(0 4px 3px var(--shelf-item-cast));
+  /* Ombre de contact épousant la silhouette du bocal, posée sur la planche. */
+  filter: drop-shadow(0 3px 2px var(--shelf-item-cast));
 }
 
 /* Couvercle laiton, légèrement plus étroit que le col, avec crête lumineuse. */
 .jar-lid {
-  width: 34px;
+  width: 38px;
   height: 9px;
   border-radius: 5px 5px 3px 3px;
   margin-bottom: -2px;
@@ -1523,17 +1523,18 @@ select {
   border: 1px solid var(--jar-lid-edge);
 }
 
-/* Corps en verre : translucide, rebord fin, base plus arrondie que l'épaule. */
+/* Corps en verre : produit (contenu) en haut, étiquette kraft collée sur le ventre. */
 .jar-glass {
   position: relative;
-  width: 52px;
-  height: 54px;
-  border-radius: 9px 9px 14px 14px;
+  width: 60px;
+  height: 70px;
+  border-radius: 10px 10px 15px 15px;
   background: linear-gradient(158deg, var(--jar-glass-hi), var(--jar-glass-lo));
   border: 1px solid var(--jar-rim);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 6px;
   overflow: hidden;
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
@@ -1543,20 +1544,51 @@ select {
   content: "";
   position: absolute;
   top: 0;
-  left: 14%;
-  width: 22%;
-  height: 100%;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  left: 13%;
+  width: 20%;
+  height: 62%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
   transform: skewX(-11deg);
-  opacity: 0.45;
+  opacity: 0.4;
   pointer-events: none;
+  z-index: 1;
+}
+
+/* Étiquette kraft collée sur le ventre du bocal (papier clair dans les deux thèmes). */
+.jar-label {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 6px;
+  min-height: 26px;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  border-radius: 4px;
+  background: linear-gradient(#f7efdc, #eee2c6);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(120, 95, 55, 0.16);
+}
+
+.jar-label span {
+  font-size: 8.8px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: #5a4a2f;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Pastille d'état posée sur l'épaule du bocal. */
 .jar-badge {
   position: absolute;
-  top: 5px;
-  right: 8px;
+  top: 4px;
+  right: 9px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -1566,18 +1598,6 @@ select {
   z-index: 3;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
   animation: popIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-}
-
-.jar-name {
-  font-size: 10px;
-  line-height: 1.25;
-  text-align: center;
-  height: 2.5em;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  transition: color 0.35s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -232,11 +232,12 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                           <span
                             className="jar-glass"
                             style={has ? {
-                              borderColor: `rgba(var(${stateRgb}),0.55)`,
-                              boxShadow: `inset 0 0 0 2px rgba(var(${stateRgb}),0.15)`,
+                              borderColor: `rgba(var(${stateRgb}),0.5)`,
+                              boxShadow: `inset 0 0 0 1.5px rgba(var(${stateRgb}),0.12)`,
                             } : undefined}
                           >
-                            <IngImage src={ing.image} alt={ing.name} size={42} />
+                            <IngImage src={ing.image} alt={ing.name} size={36} />
+                            <span className="jar-label"><span>{ing.name}</span></span>
                           </span>
                           {/* Pastille d'état : ⚠ bientôt vide / ✓ en stock */}
                           {has && (
@@ -244,9 +245,6 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                               <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
                             </span>
                           )}
-                        </span>
-                        <span className="jar-name" style={{ color: has ? accentCol : "var(--text2)", fontWeight: has ? 600 : 400 }}>
-                          {ing.name}
                         </span>
                       </button>
                     );
