@@ -114,9 +114,9 @@ export function TechniqueText({ text, index: indexProp }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
                   <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 20, background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}>{c.emoji}</span>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>{pop.tech.name}</div>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>{pop.tech.name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4 }}>
-                      <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.color, background: `color-mix(in srgb, ${c.color} 14%, transparent)`, padding: "2px 8px", borderRadius: 999 }}>{catLabel}</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: c.color, background: `color-mix(in srgb, ${c.color} 14%, transparent)`, padding: "2px 8px", borderRadius: 999 }}>{catLabel}</span>
                       {diff > 0 && (
                         <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 2.5, alignItems: "center" }}>
                           {[1, 2, 3, 4, 5].map(i => (

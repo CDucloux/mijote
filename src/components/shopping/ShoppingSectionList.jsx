@@ -7,7 +7,7 @@ import { Icon } from "../Icon.jsx";
  */
 export function ShoppingGroupHeader({ icon, label, count, action }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 7, margin: "14px 2px 8px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 7, margin: "14px 2px 8px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)" }}>
       {icon && <span style={{ fontSize: 13 }}>{icon}</span>}
       <span>{label}</span>
       {count != null && <span style={{ fontSize: 10, background: "var(--surface3)", borderRadius: 10, padding: "1px 7px", color: "var(--text2)" }}>{count}</span>}

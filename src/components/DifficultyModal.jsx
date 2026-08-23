@@ -26,7 +26,7 @@ function Gauge({ level, color, height = 7 }) {
 
 // Libellé de section (petite étiquette accent).
 function SectionLabel({ children }) {
-  return <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 2px 11px" }}>{children}</div>;
+  return <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 2px 11px" }}>{children}</div>;
 }
 
 export function DifficultyModal({ data, onClose }) {
@@ -41,11 +41,11 @@ export function DifficultyModal({ data, onClose }) {
       <div style={{ borderRadius: 20, padding: "17px 18px 19px", background: `linear-gradient(150deg, ${t.soft}, transparent 88%)`, border: `1px solid ${t.line}`, marginBottom: 22 }}>
         <Row align="flex-start" justify="space-between" gap={12}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 700, color: "var(--text3)", marginBottom: 6 }}>Niveau de difficulté</div>
+            <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, color: "var(--text3)", marginBottom: 6 }}>Niveau de difficulté</div>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 27, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{label}</div>
           </div>
           <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "baseline", gap: 1, padding: "7px 13px", borderRadius: 999, background: "var(--surface)", border: `1.5px solid ${color}`, color, fontWeight: 800, fontSize: 16, fontVariantNumeric: "tabular-nums" }}>
-            {data.score}<span style={{ fontSize: 11, fontWeight: 700, opacity: 0.65 }}>/5</span>
+            {data.score}<span style={{ fontSize: 11, fontWeight: 600, opacity: 0.65 }}>/5</span>
           </span>
         </Row>
         <div style={{ marginTop: 16 }}><Gauge level={data.score} color={color} height={8} /></div>
@@ -68,8 +68,8 @@ export function DifficultyModal({ data, onClose }) {
           <SectionLabel>Le geste le plus exigeant</SectionLabel>
           <div style={{ padding: "14px 15px", borderRadius: 16, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 24 }}>
             <Row justify="space-between" gap={10} style={{ marginBottom: 11 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{data.drivers.join(", ")}</div>
-              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, color: difficultyColor(data.base), fontVariantNumeric: "tabular-nums" }}>niveau {data.base}</span>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{data.drivers.join(", ")}</div>
+              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 600, color: difficultyColor(data.base), fontVariantNumeric: "tabular-nums" }}>niveau {data.base}</span>
             </Row>
             <Gauge level={data.base} color={difficultyColor(data.base)} height={6} />
           </div>

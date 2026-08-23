@@ -19,7 +19,7 @@ export function RecipeCompactBar({ barRef, barInnerRef, recipeName, publicMode, 
         opacity: 0, willChange: "opacity, transform",
       }}>
         <button onClick={onBack} className="tap" style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={16} color="var(--text)" /></button>
-        <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipeName}</span>
+        <span style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, flex: 1, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "0 8px", color: "var(--text)" }}>{recipeName}</span>
         <div style={{ display: "flex", gap: 6 }}>
           {!publicMode && <button onClick={onOpenShopping} className="tap" style={{ height: 32, padding: "0 12px", borderRadius: 20, background: "var(--accent)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, border: "none", cursor: "pointer" }}><Icon name="shopping" size={13} color="#fff" /> Courses</button>}
         </div>

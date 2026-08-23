@@ -163,7 +163,7 @@ export function QuotaMeter({ label, rem, unlimited }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
           <span style={{ fontSize: 10.5, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{tag}</span>
-          <span style={{ fontSize: 12.5, fontWeight: 700, color }}>{left}<span style={{ color: "var(--text3)", fontWeight: 500 }}> / {limit}</span></span>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color }}>{left}<span style={{ color: "var(--text3)", fontWeight: 500 }}> / {limit}</span></span>
         </div>
         <div style={{ height: 6, borderRadius: 999, background: "var(--surface3)", overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${frac * 100}%`, borderRadius: 999, background: color, transition: "width 0.3s ease" }} />
@@ -176,7 +176,7 @@ export function QuotaMeter({ label, rem, unlimited }) {
     <div style={{ padding: "13px 15px", borderRadius: 16, background: "var(--surface)", border: `1px solid ${rem.blocked ? "rgba(224,82,82,0.35)" : "var(--border)"}`, boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
         <Icon name={rem.blocked ? "warning" : "sparkle"} size={13} color={rem.blocked ? "var(--red)" : "var(--accent)"} />
-        <span style={{ fontSize: 11.5, fontWeight: 700, color: rem.blocked ? "var(--red)" : "var(--text2)" }}>
+        <span style={{ fontSize: 11.5, fontWeight: 600, color: rem.blocked ? "var(--red)" : "var(--text2)" }}>
           {rem.blocked ? "Limite atteinte" : "Imports restants"}
         </span>
         {/* Type d'import en pastille (pas de séparateur « · ») */}
@@ -198,7 +198,7 @@ export function ImportHeader({ title, onBack }) {
       <button onClick={onBack} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
         <Icon name="back" size={17} />
       </button>
-      <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
+      <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
     </div>
   );
 }

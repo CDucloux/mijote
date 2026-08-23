@@ -39,7 +39,7 @@ function TodoCard({ icon, count, total, label, onClick }) {
 }
 
 function Label({ children }) {
-  return <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 2px 11px" }}>{children}</div>;
+  return <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 2px 11px" }}>{children}</div>;
 }
 
 export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques = [], onGoto }) {
@@ -59,7 +59,7 @@ export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques =
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 15 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
             <span style={{ width: 28, height: 28, borderRadius: 9, background: "rgba(var(--ok-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="check" size={15} color="var(--ok)" /></span>
-            <span style={{ fontSize: 14.5, fontWeight: 700 }}>Avancement des ingrédients</span>
+            <span style={{ fontSize: 14.5, fontWeight: 600 }}>Avancement des ingrédients</span>
           </div>
           <span style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, color: "var(--ok)", fontVariantNumeric: "tabular-nums" }}>{pct}%</span>
         </div>

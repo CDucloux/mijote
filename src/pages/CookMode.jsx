@@ -423,7 +423,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           <div style={{ animation: "popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)", marginBottom: 24 }}>
             <div style={{ fontSize: 72, lineHeight: 1 }}>🍳</div>
           </div>
-          <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em", marginBottom: 12, animation: "popIn 0.6s 0.2s both cubic-bezier(0.34,1.56,0.64,1)" }}>
+          <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 12, animation: "popIn 0.6s 0.2s both cubic-bezier(0.34,1.56,0.64,1)" }}>
             {isNested ? "Base terminée !" : "Félicitations !"}
           </h1>
           <p style={{ fontSize: 16, color: "var(--text2)", lineHeight: 1.6, marginBottom: 32, maxWidth: 300, animation: "popIn 0.5s 0.35s both ease" }}>
@@ -480,7 +480,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           {!isNested && (
             <div title="Temps écoulé depuis le lancement" style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 11px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontVariantNumeric: "tabular-nums" }}>
               <Icon name="clock" size={14} color="var(--accent)" />
-              <span style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: "0.02em", color: "var(--text)" }}>{fmtElapsed(elapsed)}</span>
+              <span style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: "0.02em", color: "var(--text)" }}>{fmtElapsed(elapsed)}</span>
             </div>
           )}
         </div>
@@ -502,7 +502,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
               return (
                 <button key={pg.kind === "step" ? pg.step.id : pg.kind} onClick={() => goTo(idx)}
                   style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", background: active ? "rgba(var(--accent-rgb),0.1)" : "none", borderLeft: `3px solid ${active ? "var(--accent)" : "transparent"}`, textAlign: "left", transition: "all 0.15s" }}>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: dotBg, color: dotFg }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, background: dotBg, color: dotFg }}>
                     {passed ? <Icon name="check" size={11} color="#fff" />
                       : pg.kind === "step" ? pg.realIdx + 1
                       : pg.kind === "bases" ? <BaseIcon size={12} color={active ? "#fff" : "var(--text3)"} />
@@ -523,7 +523,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                     <div key="head-overview" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="fileText" size={19} color="#fff" /></div>
-                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600 }}>Mise en place</h2>
+                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700 }}>Mise en place</h2>
                   </div>
                   <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
                     Rassemble tous les ingrédients aux bonnes quantités et sors les ustensiles nécessaires avant de te lancer.
@@ -533,7 +533,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ingrédients</span>
                         {checkedIngIds.size > 0 && (
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--ok)", background: "rgba(var(--ok-rgb),0.12)", borderRadius: 999, padding: "1px 8px" }}>
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--ok)", background: "rgba(var(--ok-rgb),0.12)", borderRadius: 999, padding: "1px 8px" }}>
                             {checkedIngIds.size}/{overviewIngs.length}
                           </span>
                         )}
@@ -549,7 +549,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                             <div key={g.key}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                                 <span style={{ fontSize: 13 }}>{g.icon}</span>
-                                <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{g.label}</span>
+                                <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{g.label}</span>
                               </div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                                 {g.items.map(renderOverviewIngRow)}
@@ -569,7 +569,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ustensiles</span>
                         {checkedUtIds.size > 0 && (
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--ok)", background: "rgba(var(--ok-rgb),0.12)", borderRadius: 999, padding: "1px 8px" }}>
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--ok)", background: "rgba(var(--ok-rgb),0.12)", borderRadius: 999, padding: "1px 8px" }}>
                             {checkedUtIds.size}/{overviewUts.length}
                           </span>
                         )}
@@ -595,7 +595,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                     <div key="head-bases" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={20} color="#fff" /></div>
-                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600 }}>Bases</h2>
+                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700 }}>Bases</h2>
                   </div>
                   <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
                     Réalise ces préparations de base avant de commencer la recette principale.
@@ -608,7 +608,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                           : <span style={{ width: 52, height: 52, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={28} /></span>
                         }
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>{comp.name}</div>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 3 }}>{comp.name}</div>
                           <div style={{ fontSize: 13, color: "var(--text3)" }}>
                             {fmtQtyUnit(line.amount * (mult || 1), line.unit)}
                             {comp.steps?.length ? ` · ${comp.steps.length} étape${comp.steps.length > 1 ? "s" : ""}` : ""}
@@ -635,13 +635,13 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                 /* ── Étape normale ── */
                 <>
                   {step.group && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8, fontFamily: "var(--ff-display)", fontSize: 14.5, fontWeight: 600, color: "var(--accent)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8, fontFamily: "var(--ff-display)", fontSize: 14.5, fontWeight: 700, color: "var(--accent)" }}>
                       <Icon name="layers" size={14} color="var(--accent)" /> {step.group}
                     </div>
                   )}
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                    <div key="head-step" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
-                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600 }}>Étape {realIdx + 1}</h2>
+                    <div key="head-step" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
+                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700 }}>Étape {realIdx + 1}</h2>
                   </div>
                   <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: stepDurations.length ? 14 : 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
 
@@ -715,7 +715,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                 <div key={t.id} className="slide-up" style={{ alignSelf: "stretch", background: "var(--surface)", border: `1px solid ${t.done ? "var(--ok)" : "var(--border)"}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 8px 22px -10px rgba(0,0,0,0.4)", animation: t.done ? "timerPulse 1s ease-in-out infinite" : undefined }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Icon name="clock" size={15} color={t.done ? "var(--ok)" : "var(--accent)"} />
-                    <span style={{ flex: 1, fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, letterSpacing: "0.02em", color: t.done ? "var(--ok)" : "var(--text)" }}>
+                    <span style={{ flex: 1, fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 600, letterSpacing: "0.02em", color: t.done ? "var(--ok)" : "var(--text)" }}>
                       {t.done ? "Terminé !" : fmtCountdown(rem)}
                     </span>
                     <button type="button" className="cook-timer-step" onClick={() => goTo(t.stepIdx)} title={`Aller à ${t.stepLabel}`}>

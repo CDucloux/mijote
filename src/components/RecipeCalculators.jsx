@@ -31,7 +31,7 @@ function PanForm({ title, pan, set }) {
   return (
     <div style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", padding: 14 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
-        <span style={{ fontSize: 13, fontWeight: 700 }}>{title}</span>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>{title}</span>
         <div style={{ display: "flex", gap: 4, background: "var(--surface2)", borderRadius: 9, padding: 3 }}>
           {[["round", "Rond"], ["rect", "Rectangle"]].map(([s, lbl]) => (
             <button key={s} onClick={() => upd("shape", s)} style={{

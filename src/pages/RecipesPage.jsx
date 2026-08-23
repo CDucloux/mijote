@@ -241,7 +241,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em" }}>Mes Recettes</h1></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em" }}>Mes Recettes</h1></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <NewRecipeButton onManual={onNewRecipe} />
             <UserAvatar />
@@ -260,7 +260,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
-            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
+            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
           {/* Pilule + flèche accolées : clic sur la pilule = critère suivant,
               clic sur la flèche = inverser le sens. */}
@@ -268,7 +268,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
               <Icon name="updown" size={15} color="currentColor" />
               <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
-              <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
+              <strong style={{ fontWeight: 600 }}>{sortOption(sortBy).label}</strong>
             </button>
             <button className="toolbar-pill sort-dir" onClick={toggleSortDir}
               aria-label={`Sens : ${dirLabel(sortBy, sortDir)}`} title={`Sens : ${dirLabel(sortBy, sortDir)} (inverser)`}>
@@ -351,7 +351,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                         {[0, 1, 2].map(d => <span key={d} style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.85)" }} />)}
                       </div>
                       {/* Pastille compteur */}
-                      <div style={{ position: "absolute", top: 8, right: 8, minWidth: 22, height: 22, borderRadius: 11, background: count ? col.color : "var(--surface3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: count ? "#fff" : "var(--text3)", padding: "0 6px", boxShadow: count ? `0 2px 6px -1px ${col.color}99` : "none" }}>{count}</div>
+                      <div style={{ position: "absolute", top: 8, right: 8, minWidth: 22, height: 22, borderRadius: 11, background: count ? col.color : "var(--surface3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: count ? "#fff" : "var(--text3)", padding: "0 6px", boxShadow: count ? `0 2px 6px -1px ${col.color}99` : "none" }}>{count}</div>
                       {/* Icône */}
                       <span className="notebook-card-icon" style={{ fontSize: 34, lineHeight: 1, filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.18))" }}>{col.icon || "📓"}</span>
                     </div>
@@ -607,7 +607,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 <span style={{ flex: 1 }}>Position</span>
                 <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 999, border: "1px solid var(--border)", padding: "2px 4px", flexShrink: 0 }}>
                   <button disabled={idx <= 0} onClick={() => moveCarnet(cm.id, -1)} style={stepBtn(idx <= 0)} aria-label="Reculer"><Icon name="back" size={15} color="currentColor" /></button>
-                  <span style={{ fontSize: 13.5, fontWeight: 700, minWidth: 42, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{idx + 1} / {total}</span>
+                  <span style={{ fontSize: 13.5, fontWeight: 600, minWidth: 42, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{idx + 1} / {total}</span>
                   <button disabled={idx >= total - 1} onClick={() => moveCarnet(cm.id, 1)} style={stepBtn(idx >= total - 1)} aria-label="Avancer"><Icon name="forward" size={15} color="currentColor" /></button>
                 </div>
               </div>
@@ -655,7 +655,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             const nCrit = activeFilterCount(newCarnet.filters) + (newCarnet.search?.trim() ? 1 : 0);
             const nRec = recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0);
             const pill = { display: "inline-flex", alignItems: "baseline", gap: 6, padding: "7px 14px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 12.5, fontWeight: 600, color: "var(--text3)" };
-            const val = { fontSize: 15, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" };
+            const val = { fontSize: 15, fontWeight: 600, color: "var(--text)", fontVariantNumeric: "tabular-nums" };
             return (
               <div style={{ marginTop: -6, marginBottom: 20 }}>
                 {/* Légende centrée, alignée sur le preview → composition équilibrée */}

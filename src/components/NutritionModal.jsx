@@ -32,7 +32,7 @@ function CalcRow({ c, color }) {
         <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
           {c.label} <span style={{ fontSize: 11.5, fontWeight: 500, color: "var(--text3)" }}>{fmtVal(c.value)} {c.unit}{c.key === "fruitveg" ? "" : "/100 g"}</span>
         </span>
-        <span style={{ fontSize: 12.5, fontWeight: 700, color, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
           {dim ? "non compté" : `${c.pts} pt${c.pts > 1 ? "s" : ""}`}
         </span>
       </Row>
@@ -55,8 +55,8 @@ function NutriCalcView({ breakdown }) {
   const op = (s) => <span style={{ fontSize: 16, fontWeight: 400, color: "var(--text3)" }}>{s}</span>;
   const sectionLabel = (txt, total, color) => (
     <Row justify="space-between" style={{ margin: "18px 2px 11px" }}>
-      <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{txt}</span>
-      <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: color, borderRadius: 999, padding: "2px 9px", fontVariantNumeric: "tabular-nums" }}>{total} pt{total > 1 ? "s" : ""}</span>
+      <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{txt}</span>
+      <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", background: color, borderRadius: 999, padding: "2px 9px", fontVariantNumeric: "tabular-nums" }}>{total} pt{total > 1 ? "s" : ""}</span>
     </Row>
   );
   return (
@@ -162,7 +162,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
       <Row gap={14} style={{ marginBottom: 4 }}>
         <NutriScoreBadge letter={letter} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600 }}>Analyse nutritionnelle</div>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>Analyse nutritionnelle</div>
           {letter && <div style={{ fontSize: 12, color: "var(--text3)" }}>{NUTRI_LETTER_DESC[letter]}</div>}
         </div>
       </Row>

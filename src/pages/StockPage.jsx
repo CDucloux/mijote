@@ -95,7 +95,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em" }}>Mon Stock</h1>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em" }}>Mon Stock</h1>
             
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -192,7 +192,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                 {/* En-tête catégorie */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "4px 0" }}>
                   <span style={{ fontSize: 15 }}>{cat.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)", letterSpacing: "0.01em" }}>{cat.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)", letterSpacing: "0.01em" }}>{cat.label}</span>
                   {view === "all" && inStockInCat > 0 && (
                     <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: "rgba(var(--ok-rgb),0.15)", color: "var(--ok)" }}>
                       {inStockInCat}/{ings.length}

@@ -21,7 +21,7 @@ function Group({ title, summary, defaultOpen = false, first = false, children })
   return (
     <div style={{ borderTop: first ? "none" : "1px solid var(--border)", padding: first ? "3px 0 15px" : "15px 0" }}>
       <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>{title}</span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{title}</span>
         {!open && summary && <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{summary}</span>}
         <span style={{ marginLeft: (!open && summary) ? 8 : "auto", display: "inline-flex", transition: "transform 0.2s ease", transform: open ? "rotate(180deg)" : "none" }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -262,7 +262,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
                 <Icon name={updatingCarnetName ? "check" : "book"} size={17} color="#fff" />
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 14, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
+                <span style={{ display: "block", fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
                 <span style={{ display: "block", fontSize: 11.5, color: "var(--text2)", marginTop: 1 }}>{updatingCarnetName ? "Remplacer les filtres du carnet" : "Retrouve cette sélection en un tap"}</span>
               </span>
               <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.14)" }}>

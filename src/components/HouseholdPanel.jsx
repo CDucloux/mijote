@@ -11,7 +11,7 @@ function Avatar({ photo, label, size = 34, dim = false }) {
   const ini = (label || "?").trim()[0]?.toUpperCase() || "?";
   return photo
     ? <img src={photo} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, objectFit: "cover", border: "1px solid var(--border)" }} />
-    : <span style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 700, color: "#fff", background: dim ? "var(--text3)" : "var(--accent)" }}>{ini}</span>;
+    : <span style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 600, color: "#fff", background: dim ? "var(--text3)" : "var(--accent)" }}>{ini}</span>;
 }
 
 // ─── PANNEAU FOYER ────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ export function HouseholdPanel({ onClose }) {
                         <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nm || e}{mine ? " (toi)" : ""}</div>
                         {nm && <div style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>}
                       </div>
-                      {household.ownerUid && ((mine && owner) || (!mine && nm && false)) && <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
+                      {household.ownerUid && ((mine && owner) || (!mine && nm && false)) && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
                     </Row>
                   );
                 })}

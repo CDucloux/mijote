@@ -55,14 +55,14 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
       <div style={{ position: "absolute", inset: 0, background: "var(--ok)", display: "flex", alignItems: "center", paddingLeft: 18, opacity: dx > 0 ? 1 : 0, transition: dx > 0 ? "none" : "opacity 0.2s" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + revealBuy * 0.3})`, opacity: revealBuy }}>
           <Icon name="check" size={18} color="#fff" />
-          <span style={{ fontSize: 13, fontWeight: 700 }}>J'achète</span>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>J'achète</span>
         </div>
       </div>
       {/* Fond rouge révélé en swipe gauche (supprimer) */}
       <div style={{ position: "absolute", inset: 0, background: "var(--red)", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 18, opacity: dx < 0 ? 1 : 0, transition: dx < 0 ? "none" : "opacity 0.2s" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", transform: `scale(${0.7 + revealDel * 0.3})`, opacity: revealDel }}>
           <Icon name="trash" size={17} color="#fff" />
-          <span style={{ fontSize: 13, fontWeight: 700 }}>Supprimer</span>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>Supprimer</span>
         </div>
       </div>
       {/* Avant-plan : la ligne elle-même. `.ripple` : onde tactile au toucher (feel

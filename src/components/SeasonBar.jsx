@@ -42,7 +42,7 @@ export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node
           if (onToggle) {
             return (
               <button key={i} onClick={() => onToggle(month)} title="Marquer / retirer ce mois"
-                style={{ padding: "6px 0", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                style={{ padding: "6px 0", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
                   background: active ? from : "var(--surface2)", color: active ? "#fff" : "var(--text3)",
                   border: `1px solid ${active ? "transparent" : "var(--border)"}`, transition: "background 0.12s, color 0.12s" }}>{m}</button>
             );

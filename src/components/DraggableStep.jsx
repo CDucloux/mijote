@@ -55,7 +55,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           {isDraggable && <span {...handleProps} style={{ ...handleProps.style, display: "flex", color: "var(--text3)" }}><Icon name="drag" size={16} color="var(--text3)" /></span>}
-          <span style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-strong))", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", boxShadow: "0 2px 6px -1px rgba(var(--accent-rgb),0.5)", flexShrink: 0 }}>{index + 1}</span>
+          <span style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-strong))", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: "#fff", boxShadow: "0 2px 6px -1px rgba(var(--accent-rgb),0.5)", flexShrink: 0 }}>{index + 1}</span>
           {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -166,7 +166,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
             <div key={u.id} style={{ marginTop: 12, background: "var(--surface2)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <UtImage src={utImg(u)} alt={u.name} size={22} border />
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text2)" }}>{u.name}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text2)" }}>{u.name}</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>· réglages</span>
               </div>
               <ApplianceParamsEditor appliance={utDbRow(u)?.appliance} values={step.utensilParams?.[u.id]} onChange={vals => setUtParams(u.id, vals)} />

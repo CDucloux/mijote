@@ -42,7 +42,7 @@ export function QuantityConvertSheet({ ing, onClose }) {
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, color: "var(--text)", lineHeight: 1.15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(ing.name || "Ingrédient")}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.12)", padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.12)", padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
               {fmtQty(ing.amount, ing.unit)} {pluralizeUnit(ing.amount, ing.unit)}
             </span>
             <span style={{ fontSize: 13, color: "var(--text3)", fontWeight: 500 }}>en cuillères</span>
