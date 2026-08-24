@@ -53,8 +53,6 @@
   --oak-edge2: #382614;
   --iron: #1c1b18;
   --iron-hi: #3a382f;
-  --wall: #20241c;
-  --wall-2: #191d15;
   --paper: #3a3529;
   --paper-2: #2e2a20;
   --paper-ink: #cabfa5;
@@ -116,8 +114,6 @@ html.light,
   --oak-edge2: #9a744c;
   --iron: #34332e;
   --iron-hi: #54524a;
-  --wall: #ece7db;
-  --wall-2: #e6e0d2;
   --paper: #f4ecda;
   --paper-2: #e8dcc3;
   --paper-ink: #4a4638;
@@ -1453,7 +1449,25 @@ select {
 .stk-wall {
   position: relative;
   padding: 20px 20px 40px;
-  background-color: var(--wall);
+  background-color: var(--bg);
+}
+
+/* Squelette du mur : bocaux et étiquettes fantômes le temps que les données
+   Firestore de l'utilisateur (stock, base d'ingrédients) arrivent. Calqué sur la
+   géométrie réelle (mêmes .stk-shelf / .stk-jars / .stk-board) pour éviter tout
+   saut de layout à la révélation. */
+.stk-skel-lid {
+  width: calc(var(--w) * 0.6);
+  height: 19px;
+  border-radius: 7px 7px 4px 4px;
+  margin-bottom: -5px;
+  position: relative;
+  z-index: 3;
+}
+.stk-skel-glass {
+  width: var(--w);
+  height: var(--h);
+  border-radius: 16px 16px 26px 26px / 12px 12px 34px 34px;
 }
 
 .stk-group { position: relative; margin-bottom: 30px; }
