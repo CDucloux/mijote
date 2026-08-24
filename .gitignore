@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Bundle web copié dans la coquille native par `npx cap sync` (généré, jamais committé)
+android/app/src/main/assets/public
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

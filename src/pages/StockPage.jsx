@@ -46,7 +46,7 @@ const Jar = memo(function Jar({ ing, state, onCycle }) {
       data-state={state}
       onClick={() => onCycle(ing.id)}
       style={{ "--fill": stkFillColor(ing.dbId || ing.id) }}
-      aria-label={`${ing.name} — ${STATE_LABEL[state]}`}
+      aria-label={`${ing.name} : ${STATE_LABEL[state]}`}
     >
       <span className="stk-lid" aria-hidden="true" />
       <span className="stk-glass ripple ripple-accent">
