@@ -28,7 +28,7 @@ function SectionTitle({ icon, children, color = "var(--accent)", tint = "rgba(va
       <span style={{ width: 26, height: 26, borderRadius: 8, background: tint, display: "grid", placeItems: "center", flexShrink: 0 }}>
         <Icon name={icon} size={15} color={color} />
       </span>
-      <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>{children}</h3>
+      <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0, letterSpacing: "-0.01em" }}>{children}</h3>
     </div>
   );
 }
@@ -73,7 +73,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
       {/* En-tête */}
       <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={() => navigate(-1)} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}><Icon name="back" size={17} /></button>
-        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Profil</h1>
+        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>Profil</h1>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px var(--page-pad-b)" }}>
@@ -85,16 +85,16 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
               <div style={{ position: "relative", flexShrink: 0, borderRadius: "50%", padding: 3, background: isPlus ? "linear-gradient(135deg, var(--accent), #f0c060)" : "var(--border)" }}>
                 {user?.photoURL
                   ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", display: "block", border: "3px solid var(--surface)" }} />
-                  : <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "grid", placeItems: "center", fontSize: 26, fontWeight: 700, border: "3px solid var(--surface)" }}>{(currentName || "?")[0].toUpperCase()}</div>}
+                  : <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "grid", placeItems: "center", fontSize: 26, fontWeight: 600, border: "3px solid var(--surface)" }}>{(currentName || "?")[0].toUpperCase()}</div>}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentName || "Sans nom"}</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentName || "Sans nom"}</div>
                 {user?.email && <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{user.email}</div>}
                 <Row wrap gap={6} style={{ marginTop: 8 }}>
                   {isAdmin && <AdminBadge />}
                   {isPlus
                     ? <PlusBadge />
-                    : <span style={{ display: "inline-flex", alignItems: "center", fontSize: 11, fontWeight: 700, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 999, padding: "3px 10px" }}>Plan gratuit</span>}
+                    : <span style={{ display: "inline-flex", alignItems: "center", fontSize: 11, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 999, padding: "3px 10px" }}>Plan gratuit</span>}
                 </Row>
               </div>
             </div>
@@ -109,7 +109,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   onFocus={() => { if (!editing) setNameInput(currentName); }}
                   onKeyDown={e => { if (e.key === "Enter" && nameDirty) saveName(); }} />
                 {editing && (
-                  <button className="btn btn-primary btn-pill" style={{ flexShrink: 0, opacity: nameDirty ? 1 : 0.5, pointerEvents: nameDirty ? "auto" : "none" }} onClick={saveName}>Enregistrer</button>
+                  <button className="btn btn-primary btn-pill" style={{ flexShrink: 0, opacity: nameDirty ? 1 : 0.5, pointerEvents: nameDirty ? "auto" : "none" }} onClick={saveName}><Icon name="save" size={15} /> Enregistrer</button>
                 )}
               </div>
               <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 7 }}>Utilisé dans l'interface (accueil, foyer).</div>
@@ -123,7 +123,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
               ...(isPlus ? { background: "linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(240,192,96,0.06))", borderColor: "rgba(var(--accent-rgb),0.3)" } : {}) }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 15.5, fontWeight: 700, color: "var(--text)" }}>{isPlus ? "Cardamome+" : "Plan gratuit"}</span>
+                  <span style={{ fontSize: 15.5, fontWeight: 600, color: "var(--text)" }}>{isPlus ? "Cardamome+" : "Plan gratuit"}</span>
                   {isPlus && <PlusBadge />}
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 4, lineHeight: 1.4 }}>
@@ -290,7 +290,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   <strong style={{ color: "var(--text)" }}>Supprimer mon compte</strong> : efface ton compte et toutes tes données (recettes, carnets, planning, courses, stock, préférences). Définitif.
                 </div>
                 <button onClick={() => setConfirmDelete(true)} className="pressable"
-                  style={{ width: isDesktop ? "auto" : "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 18px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: "var(--red)", color: "#fff", border: "none" }}>
+                  style={{ width: isDesktop ? "auto" : "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 18px", borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "var(--red)", color: "#fff", border: "none" }}>
                   <Icon name="trash" size={15} color="#fff" /> Supprimer mon compte
                 </button>
               </>
@@ -309,7 +309,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                 : "Ces données seront définitivement effacées. Cette action est irréversible."}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
               <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => close(() => onPurge?.(purgeScope.scope))}>Effacer</button>
             </div>
           </>)}

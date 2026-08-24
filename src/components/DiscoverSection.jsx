@@ -320,13 +320,13 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
           <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
-            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
+            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
           <div className="sort-control">
             <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
               <Icon name="updown" size={15} color="currentColor" />
               <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
-              <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
+              <strong style={{ fontWeight: 600 }}>{sortOption(sortBy).label}</strong>
             </button>
             <button className="toolbar-pill sort-dir" onClick={toggleSortDir}
               aria-label={`Sens : ${dirLabel(sortBy, sortDir)}`} title={`Sens : ${dirLabel(sortBy, sortDir)} (inverser)`}>
@@ -403,7 +403,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         return (
         <div style={{ minHeight: "40vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
           <EmptyArt name="loupe" size={116} style={{ marginBottom: 6 }} />
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
           <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
             {q
               ? <>Personne n'a encore partagé « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans la communauté.<br />Élargis ta recherche ou crée-la toi-même.</>

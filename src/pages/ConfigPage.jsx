@@ -392,7 +392,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(var(--admin-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
               <Icon name="terminal" size={16} color="var(--admin)" />
             </span>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Console admin</h1>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>Console admin</h1>
           </div>
           <UserAvatar />
         </div>
@@ -401,7 +401,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             <button key={s} onClick={() => gotoSection(s)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: section === s ? "var(--accent)" : "var(--surface)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
               <Icon name={ic} size={13} color="currentColor" /> {label}
               {s === "modération" && reports.length > 0 && (
-                <span style={{ fontSize: 10, fontWeight: 700, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: section === s ? "rgba(255,255,255,0.28)" : "var(--red)", color: "#fff" }}>{reports.length}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: section === s ? "rgba(255,255,255,0.28)" : "var(--red)", color: "#fff" }}>{reports.length}</span>
               )}
             </button>
           ))}
@@ -554,7 +554,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
               return (
                 <div key={catKey} className="slide-up" style={{ animationDelay: `${ci * 0.04}s` }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8, margin: "2px 2px 10px" }}>
-                    <span style={{ fontSize: 14, fontWeight: 700 }}>{catLabel}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>{catLabel}</span>
                     <span style={{ fontSize: 11, color: "var(--text3)" }}>{list.length}</span>
                     <code style={{ fontSize: 10, color: "var(--text3)", background: "var(--surface2)", borderRadius: 4, padding: "1px 5px" }}>{catKey}</code>
                   </div>
@@ -608,7 +608,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                 <div key={catKey} style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px" }}>
                     <button onClick={() => toggleTechCat(catKey)} style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
-                      <div style={{ flex: 1, fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      <div style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                         {TECHNIQUE_CATEGORIES[catKey]} <span style={{ color: "var(--text3)", opacity: 0.7 }}>· {list.length}</span>
                       </div>
                       <span style={{
@@ -717,7 +717,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                       <div key={r.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 15px", borderTop: i ? "1px solid var(--border)" : "none" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: r.note ? 5 : 0 }}>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--red)", background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.28)", borderRadius: 7, padding: "2px 8px" }}>{r.reason}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--red)", background: "rgba(224,82,82,0.1)", border: "1px solid rgba(224,82,82,0.28)", borderRadius: 7, padding: "2px 8px" }}>{r.reason}</span>
                             {r.createdAtMs && <span style={{ fontSize: 11, color: "var(--text3)" }}>{fmtDate(r.createdAtMs)}</span>}
                           </div>
                           {r.note && <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "0 0 4px", wordBreak: "break-word" }}>« {r.note} »</p>}
@@ -734,7 +734,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                   {/* Action destructive */}
                   <div style={{ padding: "12px 15px", borderTop: "1px solid var(--border)", background: "rgba(224,82,82,0.03)" }}>
                     <button onClick={() => setConfirmMod({ pubId: g.pubId, name: g.name })} disabled={busy} className="pressable"
-                      style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 700, background: "rgba(224,82,82,0.12)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.4)", cursor: "pointer", opacity: busy ? 0.6 : 1 }}>
+                      style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, background: "rgba(224,82,82,0.12)", color: "var(--red)", border: "1px solid rgba(224,82,82,0.4)", cursor: "pointer", opacity: busy ? 0.6 : 1 }}>
                       <Icon name="trash" size={14} color="var(--red)" /> Supprimer la recette de la communauté
                     </button>
                   </div>
@@ -773,7 +773,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
               const on = editTech.difficulty === n;
               return (
                 <button key={n} onClick={() => setEditTech(p => ({ ...p, difficulty: p.difficulty === n ? undefined : n }))}
-                  style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
                     background: on ? DIFFICULTY_COLOR(n) : "var(--surface2)", color: on ? "#fff" : "var(--text2)",
                     border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{n}</button>
               );
@@ -789,8 +789,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <div className="field-label">Source (optionnel)</div>
           <input className="field-input" placeholder="ex: Escoffier, Le Guide Culinaire" value={editTech.source || ""} onChange={e => setEditTech(p => ({ ...p, source: e.target.value }))} style={{ marginBottom: 16 }} />
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveTech(editTech)}>Sauvegarder</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveTech(editTech)}><Icon name="save" size={15} /> Sauvegarder</button>
           </div>
           </>)}
         </SwipeableSheet>
@@ -839,8 +839,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <div className="field-label">Photo</div>
           <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} pathPrefix={isAdmin ? "master/utensils" : "utensils"} />
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}>Sauvegarder</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}><Icon name="save" size={15} /> Sauvegarder</button>
           </div>
           </>)}
         </SwipeableSheet>

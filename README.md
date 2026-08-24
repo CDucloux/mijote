@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.2.3-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.3.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -74,9 +74,10 @@ toujours avec vous.
   **session batch** (préparations à cuisiner d'avance) et export `.ics`.
 - 🛒 **Listes de courses** : ajout par collage, tri par rayon, gestes de swipe
   (→ j'achète, ← je supprime).
-- 📦 **Stock** : inventaire « en stock / bientôt vide » ; les achats non
-  périssables rejoignent automatiquement le stock, et la fiche recette signale
-  ce que vous avez déjà.
+- 📦 **Stock** : inventaire présenté en **mur d'étagères**, chaque ingrédient
+  un bocal en verre dont le niveau de remplissage dit l'état (en stock / bientôt
+  vide / à racheter) ; les achats non périssables rejoignent automatiquement le
+  stock, et la fiche recette signale ce que vous avez déjà.
 - 🏡 **Foyer** : partage temps réel des recettes, du planning et des courses
   entre les membres d'un même foyer (invitation par e-mail).
 - 🧭 **Découvrir & partager** : recettes publiées par la communauté, filtrables
@@ -84,7 +85,8 @@ toujours avec vous.
   d'une recette publique génère un lien à l'**aperçu riche** (photo + titre, rendu
   côté serveur pour WhatsApp / iMessage…), lisible même sans compte.
 - 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable
-  (regroupable par catégorie), photos et astuces d'étape incluses.
+  (regroupable par catégorie), photos et astuces d'étape incluses, et
+  **minuteurs à notification native** (l'alerte sonne même écran verrouillé).
 - 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
   coupées, badges vegan / cuisine / difficulté) et JSON (import / export).
 - 👤 **Profil** : nom d'affichage, heatmap d'activité cuisine façon GitHub, et

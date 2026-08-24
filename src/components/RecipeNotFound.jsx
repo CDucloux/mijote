@@ -5,7 +5,7 @@ export function RecipeNotFound({ onBack }) {
     <div className="editor-enter" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: "40px 32px", textAlign: "center" }}>
       <div style={{ fontSize: 64, lineHeight: 1 }}>🍽️</div>
       <div>
-        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginBottom: 8 }}>Recette introuvable</h2>
+        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 8 }}>Recette introuvable</h2>
         <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, maxWidth: 280 }}>
           Ce lien ne correspond à aucune recette de tes carnets. Elle a peut-être été supprimée.
         </p>

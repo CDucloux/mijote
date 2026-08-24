@@ -23,7 +23,7 @@ export function CloneConfirmSheet({ componentDeps, onClose, onClone }) {
           </div>
         )}
         <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 6 }}>
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => { onClose(); onClone?.(); })}>Ajouter</button>
         </div>
       </>)}

@@ -1,6 +1,6 @@
 // ─── PLACEHOLDER DE RECETTE SANS PHOTO ───────────────────────────────────────
 // Fond très sombre (quasi noir chaud) avec un halo terracotta ou vert en bas,
-// et l'initiale en Fraunces (var(--ff-display)) façon titre de livre. La teinte
+// et l'initiale en police d'affichage (var(--ff-display)) façon titre de livre. La teinte
 // du halo est dérivée du nom pour rester stable d'un rendu à l'autre.
 
 const HALOS = [
@@ -20,7 +20,7 @@ export function RecipePlaceholder({ name, style, fontSize = 54 }) {
   const initial = ((name || "").trim()[0] || "?").toUpperCase();
   return (
     <div style={{ background: haloFor(name), display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", ...style }}>
-      <span style={{ fontFamily: "var(--ff-display)", fontSize, fontWeight: 500, lineHeight: 1, color: "rgba(255,255,255,0.9)", letterSpacing: "-0.02em", textShadow: "0 3px 16px rgba(0,0,0,0.45)" }}>{initial}</span>
+      <span style={{ fontFamily: "var(--ff-display)", fontSize, fontWeight: 700, lineHeight: 1, color: "rgba(255,255,255,0.9)", letterSpacing: "-0.02em", textShadow: "0 3px 16px rgba(0,0,0,0.45)" }}>{initial}</span>
     </div>
   );
 }

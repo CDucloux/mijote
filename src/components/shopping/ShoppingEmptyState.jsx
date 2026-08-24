@@ -9,7 +9,7 @@ export function ShoppingEmptyState({ onCreate, onBrowseRecipes }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
       <EmptyArt name="panier" size={128} style={{ marginBottom: 8 }} />
-      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune liste de courses</h3>
+      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune liste de courses</h3>
       <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
         Crée une liste libre pour noter tes achats,<br />ou envoie une recette aux courses depuis sa fiche.
       </p>

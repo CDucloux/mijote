@@ -23,7 +23,7 @@ export function ConfirmClearSheet({ stockCount, onClose, onConfirm }) {
             : <> Aucun produit de placard à ajouter au stock (uniquement des produits frais).</>}
         </p>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
           <button className="btn btn-primary" style={{ flex: 1, background: "var(--ok)", borderColor: "var(--ok)" }} onClick={() => close(onConfirm)}>
             <Icon name="check" size={15} color="#fff" /> Valider
           </button>

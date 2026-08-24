@@ -12,7 +12,7 @@ export function RatingPicker({ value, onChange }) {
           <button key={n} type="button"
             onClick={() => onChange(value === n ? null : n)}
             style={{
-              width: 30, height: 30, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer",
+              width: 30, height: 30, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
               background: active ? ratingColor(value) : "var(--surface2)",
               color: active ? "#fff" : "var(--text3)",
               border: `1px solid ${active ? ratingColor(value) : "var(--border)"}`,

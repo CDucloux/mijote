@@ -33,7 +33,7 @@ const FEATURES = [
 
 function Cell({ value, accent }) {
   if (typeof value === "string") {
-    return <span style={{ fontSize: 12.5, fontWeight: 700, color: accent ? "var(--accent)" : "var(--text2)" }}>{value}</span>;
+    return <span style={{ fontSize: 12.5, fontWeight: 600, color: accent ? "var(--accent)" : "var(--text2)" }}>{value}</span>;
   }
   return value
     ? <Icon name="check" size={17} color="var(--ok)" />
@@ -77,7 +77,7 @@ export function PlusPage() {
         <button onClick={() => navigate(-1)} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
         </button>
-        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", margin: 0 }}>Cardamome+</h1>
+        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>Cardamome+</h1>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "22px 20px 24px" }}>
@@ -89,7 +89,7 @@ export function PlusPage() {
                 <Icon name="check" size={24} color="#fff" />
               </span>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   Tu es abonné·e à Cardamome+ <PlusBadge />
                 </div>
                 <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "3px 0 0" }}>
@@ -100,7 +100,7 @@ export function PlusPage() {
           ) : (
             <div style={{ textAlign: "center" }}>
               <div style={{ display: "inline-flex", marginBottom: 12 }}><PlusBadge size="lg" /></div>
-              <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+              <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
                 Passe à la vitesse supérieure
               </h2>
               <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0, maxWidth: 420, marginInline: "auto" }}>
@@ -115,7 +115,7 @@ export function PlusPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)" }}>Fonctionnalité</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />gratuit</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Cardamome+</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Cardamome+</span>
             </div>
             {FEATURES.map((f, i) => (
               <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(var(--accent-rgb),0.04)" : "transparent" }}>
@@ -144,7 +144,7 @@ export function PlusPage() {
                 ))}
               </div>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6 }}>
-                <span style={{ fontFamily: "var(--ff-display)", fontSize: 34, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>{price.amount}</span>
+                <span style={{ fontFamily: "var(--ff-display)", fontSize: 34, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>{price.amount}</span>
                 <span style={{ fontSize: 14, color: "var(--text3)", fontWeight: 500 }}>{price.per}</span>
               </div>
               {price.note && <div style={{ fontSize: 12, color: "var(--ok)", fontWeight: 600, marginTop: 4 }}>{price.note}</div>}

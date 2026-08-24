@@ -16,7 +16,7 @@ export function PublishSheet({ recipe, componentDeps, onClose, onPublish }) {
             <Icon name="globe" size={21} color="var(--accent)" />
           </div>
           <div style={{ minWidth: 0 }}>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Publier cette recette ?</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Publier cette recette ?</h3>
             <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>Communauté Cardamome</p>
           </div>
         </div>
@@ -57,7 +57,7 @@ export function PublishSheet({ recipe, componentDeps, onClose, onPublish }) {
           </div>
         )}
         <div style={{ display: "flex", gap: 10, marginTop: componentDeps.length > 0 ? 0 : 8 }}>
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => { onClose(); onPublish?.(recipe); })}>Publier</button>
         </div>
       </>)}

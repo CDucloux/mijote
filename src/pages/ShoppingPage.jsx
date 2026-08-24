@@ -5,7 +5,6 @@ import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { useLongPress } from "../hooks/useLongPress.js";
-import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { useShopping, ALL_ID } from "../hooks/useShopping.js";
@@ -34,9 +33,6 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
   const shop = useShopping(shoppingLists, setShoppingLists, ingredientDB, { setStock, setLowStock });
   const { activeList, allMode, aggregated } = shop;
-
-  const { scrollRef: aggScrollRef, contentRef: aggContentRef } = useElasticScroll();   // vue « Toutes les courses »
-  const { scrollRef: listScrollRef, contentRef: listContentRef } = useElasticScroll(); // vue d'une liste
 
   const openNewList = () => setConfigList({ isNew: true, name: "", type: "free", hideClear: false });
 
@@ -71,7 +67,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       <div style={{ padding: "20px 20px 0", flexShrink: 0, position: "relative", zIndex: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Courses</h1>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em" }}>Courses</h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button className="btn btn-primary btn-pill" onClick={openNewList}><Icon name="plus" size={16} /> Nouvelle liste</button>
@@ -98,8 +94,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       {allMode && (
         <ShoppingAggregateView
           aggregated={aggregated} categories={categories} pending={shop.pending} unchecking={shop.unchecking}
-          onBuy={shop.buyAggregate} onClear={() => setConfirmClearId(ALL_ID)}
-          scrollRef={aggScrollRef} contentRef={aggContentRef} />
+          onBuy={shop.buyAggregate} onClear={() => setConfirmClearId(ALL_ID)} />
       )}
 
       {activeList && (
@@ -107,8 +102,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           activeList={activeList} categories={categories} ingredientDB={ingredientDB} catOf={shop.catOf}
           pending={shop.pending} unchecking={shop.unchecking}
           onBuy={shop.buyItem} onDeleteItem={shop.deleteItem} onClear={() => setConfirmClearId(activeList.id)}
-          onDeleteList={shop.deleteList} onOpenAdd={() => setShowAddModal(true)}
-          scrollRef={listScrollRef} contentRef={listContentRef} />
+          onDeleteList={shop.deleteList} onOpenAdd={() => setShowAddModal(true)} />
       )}
 
       {/* Menu d'une liste (⋯ de la pastille active / appui long) */}

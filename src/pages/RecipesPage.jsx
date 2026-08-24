@@ -144,6 +144,15 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   // Appui long générique (carnets ET cartes recettes) : ouvre un menu après un
   // délai, s'annule au moindre mouvement (scroll / pull-to-refresh).
   const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
+  // Onde tactile sur une carte carnet : la face est opaque, l'onde est donc posée
+  // sur un calque dédié PLACÉ AU-DESSUS du contenu (`.carnet-ripple`), sinon elle
+  // resterait masquée derrière la page lignée. Tactile uniquement (le desktop
+  // garde son léger soulèvement au survol).
+  const rippleCarnet = (e) => {
+    if (e.pointerType === "mouse") return;
+    const host = e.currentTarget.querySelector(".carnet-ripple");
+    if (host) spawnRipple({ currentTarget: host, clientX: e.clientX, clientY: e.clientY });
+  };
   const [hideCarnets, setHideCarnets] = useState(() => {
     try { return localStorage.getItem("mijote_hideCarnets") === "1"; } catch { return false; }
   });
@@ -232,7 +241,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>Mes Recettes</h1></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}><h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em" }}>Mes Recettes</h1></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <NewRecipeButton onManual={onNewRecipe} />
             <UserAvatar />
@@ -251,7 +260,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
-            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
+            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
           </button>
           {/* Pilule + flèche accolées : clic sur la pilule = critère suivant,
               clic sur la flèche = inverser le sens. */}
@@ -259,7 +268,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
               <Icon name="updown" size={15} color="currentColor" />
               <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
-              <strong style={{ fontWeight: 700 }}>{sortOption(sortBy).label}</strong>
+              <strong style={{ fontWeight: 600 }}>{sortOption(sortBy).label}</strong>
             </button>
             <button className="toolbar-pill sort-dir" onClick={toggleSortDir}
               aria-label={`Sens : ${dirLabel(sortBy, sortDir)}`} title={`Sens : ${dirLabel(sortBy, sortDir)} (inverser)`}>
@@ -324,7 +333,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 return (
                 <button key={col.id} className="notebook-card" data-active={active ? "1" : undefined}
                   onClick={() => { if (wasLongPress()) return; openCarnet(col); }}
-                  onPointerDown={(e) => startLongPress(e, () => setCarnetMenu(col))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
+                  onPointerDown={(e) => { rippleCarnet(e); startLongPress(e, () => setCarnetMenu(col)); }} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   onContextMenu={(e) => { e.preventDefault(); setCarnetMenu(col); }}
                   draggable
                   onDragStart={() => { cancelLongPress(); setDragCarnetId(col.id); }}
@@ -342,29 +351,32 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                         {[0, 1, 2].map(d => <span key={d} style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.85)" }} />)}
                       </div>
                       {/* Pastille compteur */}
-                      <div style={{ position: "absolute", top: 8, right: 8, minWidth: 22, height: 22, borderRadius: 11, background: count ? col.color : "var(--surface3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: count ? "#fff" : "var(--text3)", padding: "0 6px", boxShadow: count ? `0 2px 6px -1px ${col.color}99` : "none" }}>{count}</div>
+                      <div style={{ position: "absolute", top: 8, right: 8, minWidth: 22, height: 22, borderRadius: 11, background: count ? col.color : "var(--surface3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: count ? "#fff" : "var(--text3)", padding: "0 6px", boxShadow: count ? `0 2px 6px -1px ${col.color}99` : "none" }}>{count}</div>
                       {/* Icône */}
                       <span className="notebook-card-icon" style={{ fontSize: 34, lineHeight: 1, filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.18))" }}>{col.icon || "📓"}</span>
                     </div>
                     {/* Tranche basse blanche */}
                     <div style={{ padding: "9px 11px 11px", background: "var(--surface)", borderTop: `1px solid ${col.color}22` }}>
-                      <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{col.name}</div>
+                      <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, textAlign: "left", letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{col.name}</div>
                       <div style={{ fontSize: 11, color: count ? "var(--text2)" : "var(--text3)", textAlign: "left", marginTop: 1 }}>{count === 0 ? "Vide" : `${count} recette${count > 1 ? "s" : ""}`}</div>
                     </div>
+                    {/* Calque d'onde tactile au-dessus de la face opaque du carnet */}
+                    <span className="carnet-ripple" aria-hidden="true" style={{ position: "absolute", inset: 0, borderRadius: 14, overflow: "hidden", pointerEvents: "none", zIndex: 5 }} />
                   </div>
                 </button>
                 );
               })}
               {/* Carte « ajouter un carnet » – même gabarit que les carnets */}
-              <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#6e9a3f", icon: "📓" })} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
+              <button className="notebook-card notebook-card-add" onClick={() => setNewCarnet({ name: "", color: "#6e9a3f", icon: "📓" })} onPointerDown={rippleCarnet} style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "pointer", borderRadius: 14 }}>
                 <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", border: "2px dashed var(--border)" }}>
                   <div style={{ position: "relative", aspectRatio: "1/1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text3)" }}>
                     <span className="notebook-add-plus" style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--surface2)", color: "var(--text2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="plus" size={20} color="currentColor" /></span>
                   </div>
                   <div style={{ padding: "9px 11px 11px", background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-                    <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 600, textAlign: "left", letterSpacing: "-0.01em", color: "var(--text2)" }}>Nouveau</div>
+                    <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, textAlign: "left", letterSpacing: "-0.01em", color: "var(--text2)" }}>Nouveau</div>
                     <div style={{ fontSize: 11, color: "var(--text3)", textAlign: "left", marginTop: 1 }}>Créer un carnet</div>
                   </div>
+                  <span className="carnet-ripple" aria-hidden="true" style={{ position: "absolute", inset: 0, borderRadius: 14, overflow: "hidden", pointerEvents: "none", zIndex: 5 }} />
                 </div>
               </button>
             </OverscrollRow>
@@ -375,7 +387,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           // ── Première connexion : 0 recette, c'est normal → on invite, sans afficher « Carnets » ni « Recettes (0) » ──
           <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 420, margin: "0 auto" }}>
             <EmptyArt name="bibliotheque" size={140} style={{ marginBottom: 10 }} />
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta bibliothèque</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 8 }}>Bienvenue dans ta bibliothèque</h3>
             <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 24 }}>
               Elle est encore vide. Crée ta première recette ou pioche l'inspiration parmi les recettes partagées par la communauté.
             </p>
@@ -421,7 +433,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           return (
           <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
             <EmptyArt name="loupe" size={116} style={{ marginBottom: 6 }} />
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>Aucune recette trouvée</h3>
             <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: 22 }}>
               {q
                 ? <>Rien ne correspond à « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans ta bibliothèque.<br />Cherche-la dans la communauté ou crée-la.</>
@@ -510,7 +522,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
               {rm.image ? <img src={rm.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (isComp ? "🧩" : "🍽️")}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rm.name}</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rm.name}</div>
               <div style={{ fontSize: 13, color: "var(--text3)" }}>{isComp ? "Préparation de base" : "Recette"}</div>
             </div>
           </div>
@@ -540,7 +552,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
         const manual = collections.filter(c => !isSmart(c));
         return (
         <SwipeableSheet onClose={() => setCarnetPickFor(null)}>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, marginBottom: 4 }}>Ajouter à un carnet</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, marginBottom: 4 }}>Ajouter à un carnet</h3>
           <p style={{ fontSize: 13, color: "var(--text3)", marginBottom: 16 }}>« {rec.name} »</p>
           {manual.length === 0 ? (
             <div style={{ textAlign: "center", padding: "8px 0 12px", color: "var(--text3)", fontSize: 13.5 }}>Aucun carnet manuel pour l'instant.</div>
@@ -583,7 +595,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
             <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: cm.color + "33", display: "grid", placeItems: "center", fontSize: 26 }}>{cm.icon || "📓"}</div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cm.name}</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cm.name}</div>
               <div style={{ fontSize: 13, color: "var(--text3)" }}>{smart ? "Carnet intelligent" : "Carnet"} - {n} recette{n > 1 ? "s" : ""}</div>
             </div>
           </div>
@@ -595,7 +607,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 <span style={{ flex: 1 }}>Position</span>
                 <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 999, border: "1px solid var(--border)", padding: "2px 4px", flexShrink: 0 }}>
                   <button disabled={idx <= 0} onClick={() => moveCarnet(cm.id, -1)} style={stepBtn(idx <= 0)} aria-label="Reculer"><Icon name="back" size={15} color="currentColor" /></button>
-                  <span style={{ fontSize: 13.5, fontWeight: 700, minWidth: 42, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{idx + 1} / {total}</span>
+                  <span style={{ fontSize: 13.5, fontWeight: 600, minWidth: 42, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{idx + 1} / {total}</span>
                   <button disabled={idx >= total - 1} onClick={() => moveCarnet(cm.id, 1)} style={stepBtn(idx >= total - 1)} aria-label="Avancer"><Icon name="forward" size={15} color="currentColor" /></button>
                 </div>
               </div>
@@ -620,7 +632,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
       {newCarnet && (
         <SwipeableSheet onClose={() => setNewCarnet(null)}>
           {(close) => (<>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 16 }}>{newCarnet.editing ? "Modifier le carnet" : newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 16 }}>{newCarnet.editing ? "Modifier le carnet" : newCarnet.smart ? "Enregistrer la vue" : "Nouveau carnet"}</h3>
 
           {/* Aperçu live : le vrai visuel « livre » qui se met à jour en direct */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
@@ -633,7 +645,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 <span style={{ fontSize: 40, lineHeight: 1, filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.18))" }}>{newCarnet.icon}</span>
               </div>
               <div style={{ padding: "8px 10px 10px", background: "var(--surface)", borderTop: `1px solid ${newCarnet.color}22` }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: newCarnet.name.trim() ? "var(--text)" : "var(--text3)" }}>{newCarnet.name.trim() || "Mon carnet"}</div>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: newCarnet.name.trim() ? "var(--text)" : "var(--text3)" }}>{newCarnet.name.trim() || "Mon carnet"}</div>
                 <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 1 }}>{(newCarnet.smart || newCarnet.kind === "smart") ? "Intelligent" : "Manuel"}</div>
               </div>
             </div>
@@ -643,7 +655,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             const nCrit = activeFilterCount(newCarnet.filters) + (newCarnet.search?.trim() ? 1 : 0);
             const nRec = recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0);
             const pill = { display: "inline-flex", alignItems: "baseline", gap: 6, padding: "7px 14px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 12.5, fontWeight: 600, color: "var(--text3)" };
-            const val = { fontSize: 15, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" };
+            const val = { fontSize: 15, fontWeight: 600, color: "var(--text)", fontVariantNumeric: "tabular-nums" };
             return (
               <div style={{ marginTop: -6, marginBottom: 20 }}>
                 {/* Légende centrée, alignée sur le preview → composition équilibrée */}
@@ -721,7 +733,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             );
           })()}
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
               if (!newCarnet.name.trim()) return;
               if (newCarnet.editing) {
@@ -736,7 +748,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 : { ...base, kind: "manual", count: 0 };
               setCollections(prev => [...prev, col]);
               setNewCarnet(null);
-            }}>{newCarnet.editing ? "Enregistrer" : newCarnet.smart ? "Enregistrer" : "Créer"}</button>
+            }}><Icon name={newCarnet.editing || newCarnet.smart ? "save" : "plus"} size={15} /> {newCarnet.editing ? "Enregistrer" : newCarnet.smart ? "Enregistrer" : "Créer"}</button>
           </div>
           </>)}
         </SwipeableSheet>

@@ -35,7 +35,7 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
         )}
       </div>
       <div style={{ padding: "10px 12px 12px" }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, lineHeight: 1.3, letterSpacing: "-0.01em", height: "2.6em", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, lineHeight: 1.3, letterSpacing: "-0.01em", height: "2.6em", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 11, color: "var(--text2)", display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>

@@ -1,5 +1,24 @@
 # Changelog – Cardamome
 
+## v4.3.0 – Cardamome · Sur l'étagère
+
+### Mon Stock
+- **Un vrai garde-manger** : le Stock se présente désormais comme un mur d'étagères en bois. Chaque ingrédient est un bocal en verre posé sur sa planche, avec sa vignette ronde et son étiquette manuscrite. Le niveau de remplissage du bocal dit tout de suite l'état des stocks : plein quand tu l'as, à moitié quand il est bientôt vide, vide quand il faut le racheter.
+- **Un geste, trois états** : tape un bocal pour le faire passer d'« en stock » à « bientôt vide » puis à « à racheter ». Sur mobile, une onde tactile part sous le doigt à chaque tape.
+
+### Cuisine
+- **Minuteurs qui te suivent** : en mode cuisson, les minuteurs déclenchent une vraie notification du téléphone quand le temps est écoulé, même appli en arrière-plan ou écran verrouillé (app native Android).
+- **Cuisson plus posée** : marges calées sur les zones sûres de l'écran, transitions d'étape adoucies et pile des étapes repliable pour garder l'œil sur l'étape en cours.
+
+### Interface & tactile
+- **Nouvelle typographie** : les titres passent à Source Serif 4, un serif élégant et chaleureux qui affirme le caractère de Cardamome, tandis que le corps de texte reste net et discret.
+- **Jeu d'icônes unifié** : toute l'interface adopte une même famille d'icônes, cohérente en poids et en taille. Les icônes de navigation passent en duotone pour un repère visuel plus doux.
+- **Onde tactile élargie** : le retour tactile « à la goutte d'eau » se généralise aux carnets, aux lignes des fenêtres de planning et aux bocaux du stock.
+
+### Courses
+- **Élastique par liste** : le rebond en fin de défilement se règle liste par liste, sans se propager d'un onglet à l'autre.
+- **Actions plus claires** : les boutons « Annuler » et « Enregistrer » portent enfin leur icône.
+
 ## v4.2.3 – Cardamome · Au ras du réel
 
 ### Interface & tactile

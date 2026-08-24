@@ -38,7 +38,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn, error }) {
       <div className="login-card">
         <div className="login-emoji-wrap"><span className="login-emoji"><EmptyArt name="casserole" size={180} /></span></div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 10, width: "100%" }}>
-          <span style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)", whiteSpace: "nowrap", flexShrink: 0 }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
+          <span style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", whiteSpace: "nowrap", flexShrink: 0 }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
           <div style={{ width: 1.5, alignSelf: "stretch", background: "var(--border)", borderRadius: 1, flexShrink: 0 }} />
           <h1 className="login-tagline" style={{ marginBottom: 0 }}>Cuisine mieux,<br /><em>organise moins.</em></h1>
         </div>

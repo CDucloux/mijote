@@ -31,7 +31,7 @@ export function ShareSheet({ recipe, publicUrl, shareText, onCopyLink, onNativeS
   return (
     <SwipeableSheet onClose={onClose}>
       <div style={{ marginBottom: 16 }}>
-        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 600, margin: 0, letterSpacing: "-0.01em" }}>Partager</h3>
+        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>Partager</h3>
         <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "3px 0 0" }}>Envoie cette recette à qui tu veux.</p>
       </div>
 
@@ -41,7 +41,7 @@ export function ShareSheet({ recipe, publicUrl, shareText, onCopyLink, onNativeS
           <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={30} style={{ width: "100%", height: "100%" }} />} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 600, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 700, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>
           <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}><Icon name="globe" size={11} color="var(--text3)" /> Recette publique · Cardamome</div>
         </div>
       </div>

@@ -6,7 +6,10 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // `dist` : build web. `android` : coquille native Capacitor (projet Gradle +
+  // bundle web généré par `cap sync` dans assets/public/) : ce n'est pas du code
+  // source de l'app, eslint n'a rien à y faire.
+  globalIgnores(['dist', 'android']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

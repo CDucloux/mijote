@@ -34,7 +34,7 @@ export function ConfirmDialog({
         <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, textAlign: "center" }}>{title}</h3>
         <div style={{ color: "var(--text2)", fontSize: 14, marginBottom: 22, lineHeight: 1.55, textAlign: "center" }}>{children}</div>
         <Row gap={10}>
-          <button ref={cancelRef} className="btn btn-ghost" style={{ flex: 1 }} disabled={busy} onClick={() => beginClose()}>Annuler</button>
+          <button ref={cancelRef} className="btn btn-ghost" style={{ flex: 1 }} disabled={busy} onClick={() => beginClose()}><Icon name="back" size={15} /> Annuler</button>
           <button className={`btn ${tone === "danger" ? "btn-danger" : "btn-primary"}`} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }} disabled={busy} onClick={onConfirm}>
             {busy && <span style={{ width: 15, height: 15, border: "2px solid rgba(255,255,255,0.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />}
             {busy ? busyLabel : confirmLabel}

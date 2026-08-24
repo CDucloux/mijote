@@ -21,7 +21,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
       <div style={{ width: 300, minWidth: 300, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", minHeight: 34, marginBottom: 16 }}>
-            <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
+            <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {groupBy(recipe.ingredients).map(section => (
@@ -35,12 +35,12 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                     ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={48} cover />
                     : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
                   <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
+                    <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
                     <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                   </div>
                   <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>
                     {capitalize(rc.comp ? rc.comp.name : (ing.name || "Base"))}
-                    <span style={{ fontSize: 10, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: rc.missing ? "var(--red)" : "var(--accent)", marginLeft: 6 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>
                   </div>
                 </div>
               );
@@ -51,7 +51,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                   {convOf(ing, ing.amount * mult) && <ConvertBadge onClick={() => openConvert(ing, ing.amount * mult)} />}
                 </span>
                 <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
+                  <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
                   <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                 </div>
                 <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.unit ? ing.name : pluralizeName(ing.amount * mult, ing.name))}</div>
@@ -64,7 +64,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
         </div>
         {recipe.utensils && recipe.utensils.length > 0 && (
           <div>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {recipe.utensils.map(u => (
                 <div key={u.id} className="ut-pill-desktop" style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
@@ -80,7 +80,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
       {/* Right col: étapes (card) */}
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: 20, background: "var(--surface)", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 34, marginBottom: 16 }}>
-          <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
+          <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
           {recipe.steps && recipe.steps.length > 0 && (
             <button className="btn btn-primary btn-sm" style={{ gap: 7, borderRadius: 999, padding: "8px 18px" }} onClick={() => setCookMode(true)}>
               <Icon name="fire" size={13} /> Mode pas à pas
@@ -92,8 +92,8 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
             <div key={comp.id} style={{ background: "rgba(var(--accent-rgb),0.05)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: 12, padding: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <BaseIcon size={18} />
-                <span style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 600 }}>Préparer la {comp.name}</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
+                <span style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 700 }}>Préparer la {comp.name}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {comp.steps.map((cstep, ci) => {
@@ -101,7 +101,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                   const cUts = (comp.utensils || []).filter(u => cstep.utensils?.includes(u.id));
                   return (
                   <div key={cstep.id}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>Étape {ci + 1}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", marginBottom: 4 }}>Étape {ci + 1}</div>
                     {cstep.text && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 8px", wordBreak: "break-word", overflowWrap: "break-word" }}>{cstep.text}</p>}
                     {(cIngs.length > 0 || cUts.length > 0) && (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -130,7 +130,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
             </div>
           ))}
           {baseSteps.length > 0 && recipe.steps?.length > 0 && (
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
           )}
           {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
           const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
@@ -147,7 +147,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
               // Timeline : nœud numéroté (dégradé) relié par un rail vertical, contenu à droite.
               <div key={step.id} style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                  <span style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-strong))", color: "#fff", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 700, boxShadow: "0 3px 8px -2px rgba(var(--accent-rgb),0.5)", flexShrink: 0 }}>{num}</span>
+                  <span style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-strong))", color: "#fff", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 600, boxShadow: "0 3px 8px -2px rgba(var(--accent-rgb),0.5)", flexShrink: 0 }}>{num}</span>
                   {!lastInRun && <span style={{ flex: 1, width: 2, background: "var(--border)", borderRadius: 1, marginTop: 6, minHeight: 10 }} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0, paddingTop: 5, paddingBottom: lastInRun ? 2 : 28 }}>

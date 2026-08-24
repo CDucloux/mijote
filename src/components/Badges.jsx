@@ -4,7 +4,7 @@ import { Icon } from "./Icon.jsx";
 // Badge pastille blanc sur fond coloré, décliné en « glass » (flou + ombre, posé
 // sur une image) ou plat. Extrait des styles inline répétés (RecipeCard, fiche).
 
-const LABEL = { fontSize: 9.5, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" };
+const LABEL = { fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" };
 // NB : pas de `backdrop-filter` ici. Le flou d'arrière-plan est recalculé à chaque
 // frame de scroll pour CHAQUE badge → dans la grille de recettes (des dizaines de
 // cartes), c'était la cause n°1 des saccades sur mobile. Le fond est déjà ~92 %

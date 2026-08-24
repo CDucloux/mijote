@@ -26,7 +26,7 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
           <Icon name={listMode ? "list2" : "shopping"} size={21} color="var(--accent)" />
         </div>
         <div style={{ minWidth: 0 }}>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>{listMode ? "Coller une liste" : "Ajouter un article"}</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>{listMode ? "Coller une liste" : "Ajouter un article"}</h3>
           <p style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeList.name}</p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-/* Polices Fraunces + Hanken Grotesk : chargées via <link> dans index.html (plus
+/* Polices Source Serif 4 + Hanken Grotesk : chargées via <link> dans index.html (plus
    fiable que @import, notamment sur mobile/iOS). Ne pas remettre d'@import ici. */
 
 *,
@@ -44,8 +44,24 @@
   --admin-rgb: 139, 111, 240;
   --radius: 16px;
   --radius-sm: 10px;
-  --ff-display: 'Fraunces', serif;
+  /* Étagères du Stock : matériaux (sombre). Bois noyer, mur ardoise chaude, fer mat,
+     papier kraft sombre, lignes de verre remontées. */
+  --oak-hi: #8a6a45;
+  --oak-top: #6f5133;
+  --oak: #5c4228;
+  --oak-edge: #4a341f;
+  --oak-edge2: #382614;
+  --iron: #1c1b18;
+  --iron-hi: #3a382f;
+  --wall: #20241c;
+  --wall-2: #191d15;
+  --paper: #3a3529;
+  --paper-2: #2e2a20;
+  --paper-ink: #cabfa5;
+  --glass-line: rgba(255, 255, 255, 0.14);
+  --ff-display: 'Source Serif 4', Georgia, serif;
   --ff-body: 'Hanken Grotesk', sans-serif;
+  --ff-hand: 'Caveat', 'Segoe Print', cursive;
   --tab-h: 72px;
   --page-pad-b: 24px;        /* respiration en bas des pages a onglet, au-dessus de la TabBar (source unique) */
   /* Marge sous la rangee d'onglets = zone systeme du bas. En PWA / navigateur, la
@@ -92,6 +108,20 @@ html.light,
   --text: #23281d;
   --text2: #565b4c;
   --text3: #838872;
+  /* Étagères du Stock : matériaux (clair). Chêne clair, mur plâtre chaud, fer, papier. */
+  --oak-hi: #ecd3ac;
+  --oak-top: #dcbb8d;
+  --oak: #c8a06f;
+  --oak-edge: #b58f61;
+  --oak-edge2: #9a744c;
+  --iron: #34332e;
+  --iron-hi: #54524a;
+  --wall: #ece7db;
+  --wall-2: #e6e0d2;
+  --paper: #f4ecda;
+  --paper-2: #e8dcc3;
+  --paper-ink: #4a4638;
+  --glass-line: rgba(255, 255, 255, 0.6);
 }
 
 html.light,
@@ -878,7 +908,7 @@ select {
   .rotate-guard__title {
     font-family: var(--ff-display);
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.01em;
   }
 
@@ -1320,6 +1350,71 @@ select {
   50% { box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.4), 0 0 0 6px rgba(var(--ok-rgb), 0); }
 }
 
+/* Transition d'étape du cook mode : le contenu « pousse » dans le sens de la
+   navigation, le même geste d'expansion de texte que les pages à onglet.
+   En avant (Suivant) → le texte monte depuis le bas ; en arrière (Précédent) →
+   il descend depuis le haut. Rejoué à chaque changement (clé React = stepIdx). */
+.cook-step-rise { animation: cookStepRise 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.cook-step-drop { animation: cookStepDrop 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
+@keyframes cookStepRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cookStepDrop {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cook-step-rise, .cook-step-drop { animation: none; }
+}
+
+/* Pile de minuteurs repliable, ancrée à droite au-dessus de la barre de nav. */
+.cook-timers { position: absolute; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; z-index: 5; width: 234px; max-width: calc(100% - 24px); }
+
+/* Pilule d'en-tête : replie / déplie la pile, porte le compteur. */
+.cook-timers-toggle {
+  display: inline-flex; align-items: center; gap: 8px; align-self: stretch;
+  padding: 9px 12px; border-radius: 999px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.45);
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.cook-timers-toggle:active { transform: scale(0.98); }
+.cook-timers-count {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: #fff; background: var(--accent);
+}
+.cook-timers-count.is-done { background: var(--ok); }
+.cook-timers-chevron { margin-left: auto; display: inline-flex; transition: transform 0.22s ease; }
+.cook-timers-chevron.open { transform: rotate(180deg); }
+
+/* Rangée compacte (replié) : un aperçu par minuteur, l'étape source visible. */
+.cook-timer-chip {
+  display: flex; align-items: center; gap: 8px; align-self: stretch;
+  padding: 7px 11px; border-radius: 12px; cursor: pointer; text-align: left;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: 0 6px 18px -12px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.cook-timer-chip:active { transform: scale(0.98); }
+.cook-timer-chip .t { font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+.cook-timer-chip .s { margin-left: auto; font-size: 10.5px; font-weight: 600; color: var(--text3); flex-shrink: 0; }
+
+/* Chip « étape source » cliquable dans la carte dépliée : ramène à l'étape. */
+.cook-timer-step {
+  display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+  padding: 2px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
+  color: var(--accent); background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
+  transition: background 0.15s ease;
+}
+.cook-timer-step:active { background: rgba(var(--accent-rgb), 0.2); }
+
 @keyframes popIn {
   0% {
     transform: scale(0) rotate(-10deg);
@@ -1348,16 +1443,322 @@ select {
   }
 }
 
-@keyframes stockCardIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
+/* ══ ÉTAGÈRES DU STOCK ════════════════════════════════════════════════════════
+   Un mur de briques (fond du conteneur scrollable) portant des planches en chêne
+   avec équerres fer ; sur chaque planche, une rangée de bocaux. La SIGNATURE : le
+   niveau de remplissage du bocal (--lvl) EST l'état de stock (vide / quart / plein),
+   contenu vu à travers le verre. Textures 100% CSS, source de lumière haut-gauche.
+   Une planche = une rangée (découpe JS selon la largeur, cf. StockPage). */
 
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.stk-wall {
+  position: relative;
+  padding: 20px 20px 40px;
+  background-color: var(--wall);
+}
+
+.stk-group { position: relative; margin-bottom: 30px; }
+.stk-group:last-child { margin-bottom: 0; }
+
+/* Étiquette de rayon, posée sur le mur. */
+.stk-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 4px;
+  padding: 5px 12px 5px 10px;
+  background: linear-gradient(180deg, var(--paper), var(--paper-2));
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(50, 40, 20, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--paper-ink);
+}
+.stk-tag .ico { font-size: 14px; line-height: 1; }
+.stk-tag .cnt {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(var(--ok-rgb), 0.16);
+  color: var(--ok);
+}
+.stk-tag .cnt.low {
+  background: rgba(var(--spice-rgb), 0.18);
+  color: var(--spice);
+}
+
+/* Une planche = une rangée. Marge basse généreuse : les équerres (~32px) pendent
+   sous le chant sans jamais toucher les bocaux de la rangée suivante. */
+.stk-shelf { position: relative; margin-bottom: 54px; }
+.stk-shelf:last-child { margin-bottom: 0; }
+
+.stk-jars {
+  display: flex;
+  gap: 22px;
+  justify-content: flex-start;
+  align-items: flex-end;
+  padding: 0 14px;
+  position: relative;
+  z-index: 2;
+}
+
+/* La planche (élévation nette : lèvre lumineuse + chant boisé + ombre portée). */
+.stk-board {
+  position: relative;
+  height: 17px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg,
+    var(--oak-hi) 0, var(--oak-top) 2px,
+    var(--oak) 3px, var(--oak-edge) 60%, var(--oak-edge2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 4px 7px rgba(60, 45, 25, 0.22),
+    0 16px 24px -12px rgba(40, 30, 15, 0.3);
+}
+/* Veinage discret du chant. */
+.stk-board::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.45;
+  background: repeating-linear-gradient(93deg, rgba(120, 80, 40, 0.1) 0 2px, transparent 2px 13px);
+  mix-blend-mode: multiply;
+}
+
+/* Équerres fer (SVG net), décalées des bords, suspendues sous le chant. */
+.stk-bracket {
+  position: absolute;
+  top: 100%;
+  width: 26px;
+  height: 32px;
+  filter: drop-shadow(0 4px 4px rgba(30, 20, 10, 0.28));
+}
+.stk-bracket.l { left: 13%; }
+.stk-bracket.r { right: 13%; }
+
+/* ── Le BOCAL ────────────────────────────────────────────────────────────── */
+.stk-jar {
+  --w: 116px;
+  --h: 150px;
+  --photo: 58px;
+  --fill: #cdb98a;
+  --lvl: 66%;
+  position: relative;
+  width: var(--w);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.stk-jar[data-state="empty"] { --lvl: 0%; }
+.stk-jar[data-state="low"] { --lvl: 24%; }
+
+/* Couvercle chêne + jonc laiton. */
+.stk-lid {
+  width: calc(var(--w) * 0.6);
+  height: 19px;
+  border-radius: 7px 7px 4px 4px;
+  background: linear-gradient(180deg, var(--oak-hi), var(--oak) 55%, var(--oak-edge2));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 5px rgba(60, 40, 15, 0.22), 0 2px 3px rgba(0, 0, 0, 0.16);
+  position: relative;
+  z-index: 3;
+  margin-bottom: -5px;
+}
+.stk-lid::after {
+  content: "";
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  bottom: -3px;
+  height: 4px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #d8b46b, #b78c45);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
+}
+
+/* Corps en verre. */
+.stk-glass {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  border-radius: 16px 16px 26px 26px / 12px 12px 34px 34px;
+  border: 1px solid var(--glass-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 32%, rgba(255, 255, 255, 0.07));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset -9px 0 15px -9px rgba(70, 55, 30, 0.22),
+    inset 9px 0 15px -11px rgba(255, 255, 255, 0.5),
+    0 7px 16px -9px rgba(40, 35, 20, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Contenu (vu À TRAVERS le verre) : niveau de remplissage = état de stock. Teinte
+   « garde-manger » + grain léger ; la HAUTEUR pilotée par --lvl porte l'information. */
+.stk-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--lvl);
+  overflow: hidden;
+  background-color: var(--fill);
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(0, 0, 0, 0.16) 0 1.2px, transparent 1.6px),
+    radial-gradient(circle at 70% 55%, rgba(0, 0, 0, 0.13) 0 1.1px, transparent 1.5px),
+    radial-gradient(circle at 45% 80%, rgba(255, 255, 255, 0.18) 0 1.1px, transparent 1.5px);
+  background-size: 9px 9px, 11px 11px, 8px 8px;
+  box-shadow: inset 0 7px 11px -7px rgba(0, 0, 0, 0.4);
+  border-radius: 0 0 24px 24px / 0 0 30px 30px;
+  transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Vignette ronde de l'ingrédient, posée dans le bocal au-dessus de l'étiquette
+   (léger, contenu réel sans coût de rendu d'une image plein cadre). */
+.stk-photo {
+  position: absolute;
+  left: 50%;
+  top: 13%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: var(--photo);
+  height: var(--photo);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(120, 90, 50, 0.28);
+  box-shadow: 0 2px 6px rgba(40, 30, 15, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stk-photo img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+}
+
+/* Reflet spéculaire du verre, PAR-DESSUS le contenu. */
+.stk-gloss {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(116deg, transparent 32%, rgba(255, 255, 255, 0.18) 43%, rgba(255, 255, 255, 0.45) 47%, transparent 54%),
+    radial-gradient(130% 55% at 28% -5%, rgba(255, 255, 255, 0.3), transparent 62%);
+}
+
+/* Étiquette collée sur le verre : papier, écriture manuscrite. */
+.stk-label {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  bottom: 15%;
+  z-index: 2;
+  background: linear-gradient(180deg, var(--paper), var(--paper-2));
+  border-radius: 4px;
+  padding: 4px 4px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(30, 20, 10, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.stk-label span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--ff-hand);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 0.95;
+  color: var(--paper-ink);
+}
+
+/* Ombre de contact sous le bocal, sur la planche. */
+.stk-jar::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -7px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(50% 100% at 50% 0%, rgba(40, 30, 15, 0.3), transparent 75%);
+  z-index: 0;
+}
+
+/* Badge d'état (hors overflow du verre). */
+.stk-badge {
+  position: absolute;
+  top: 24px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  animation: popIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.stk-badge[data-state="full"] { background: var(--ok); }
+.stk-badge[data-state="low"] { background: var(--spice); }
+
+/* Verre vide (à racheter) : discret mais soigné. */
+.stk-jar[data-state="empty"] .stk-glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.08));
+}
+.stk-jar[data-state="empty"] .stk-label { opacity: 0.9; }
+/* Bocal vide (à racheter) : la vignette se désature, appuyant l'état « manquant ». */
+.stk-jar[data-state="empty"] .stk-photo { opacity: 0.5; filter: grayscale(0.4); }
+
+/* Onde tactile (mobile) bornée au verre : l'ink, inséré en 1er enfant, remonte
+   AU-DESSUS du contenu (fill/vignette/étiquette) pour rester lisible au toucher. */
+.stk-glass > .ripple-ink { z-index: 3; }
+
+/* Survol/focus : pas de lift, on révèle le verre + anneau accent. */
+.stk-jar:focus-visible { outline: none; }
+.stk-jar:hover .stk-glass,
+.stk-jar:focus-visible .stk-glass {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset -9px 0 15px -9px rgba(70, 55, 30, 0.22),
+    inset 9px 0 15px -11px rgba(255, 255, 255, 0.6),
+    0 8px 20px -8px rgba(40, 35, 20, 0.34),
+    0 0 0 2px rgba(var(--accent-rgb), 0.32);
+}
+
+/* Fioriture unique : un brin d'eucalyptus en bout de rayon (décoratif). */
+.stk-sprig {
+  position: absolute;
+  right: 20px;
+  bottom: 0;
+  width: 50px;
+  height: 74px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+@media (max-width: 620px) {
+  .stk-wall { padding-left: 14px; padding-right: 14px; }
+  .stk-jars { gap: 14px; padding: 0 8px; }
+  .stk-jar { --w: 96px; --h: 126px; --photo: 46px; }
+  .stk-lid { height: 16px; }
+  .stk-bracket { width: 22px; height: 27px; }
+  .stk-shelf { margin-bottom: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stk-fill { transition: none; }
 }
 
 .drag-over {
@@ -1507,7 +1908,7 @@ select {
 .legal-md h2 {
   font-family: var(--ff-display);
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent);
   margin: 26px 0 8px;
 }
@@ -1810,7 +2211,7 @@ select {
 .onb-title {
   font-family: var(--ff-display);
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.015em;
   line-height: 1.15;
   margin: 0 0 12px;
@@ -2078,7 +2479,7 @@ select {
     gap: 4px;
     font-family: var(--ff-display);
     font-size: 22px;
-    font-weight: 500;
+    font-weight: 700;
     padding: 0 22px 28px;
     letter-spacing: -0.02em;
     color: var(--text);
@@ -2562,7 +2963,7 @@ select {
 .loading-logo {
   font-family: var(--ff-display);
   font-size: 28px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text);
   margin-bottom: 32px;
@@ -2679,7 +3080,7 @@ select {
 .login-tagline {
   font-family: var(--ff-display);
   font-size: 26px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.15;
   color: var(--text);

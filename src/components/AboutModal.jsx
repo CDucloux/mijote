@@ -24,7 +24,7 @@ function Section({ icon, title, children }) {
     <Col gap={8}>
       <Row gap={8}>
         <Icon name={icon} size={15} color="var(--accent)" />
-        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text3)" }}>{title}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text3)" }}>{title}</span>
       </Row>
       {children}
     </Col>
@@ -46,7 +46,7 @@ export function AboutModal({ onClose }) {
                 <path d="M58 30 C60.5 45 59 60 53 74" strokeWidth="3.4" />
               </g>
             </svg>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)" }}>
               Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span>
             </div>
           </Row>

@@ -46,7 +46,7 @@ function NumField({ value, onChange, step = 0.1, width = 62, suffix }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", gap: 3 }}>
       <input type="number" min="0" step={step} value={value ?? ""} placeholder="0" onChange={e => onChange(e.target.value)}
-        style={{ width, textAlign: "right", fontSize: 13, fontWeight: 700, color: "var(--text)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "3px 7px", outline: "none", fontFamily: "var(--ff-body)" }} />
+        style={{ width, textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--text)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "3px 7px", outline: "none", fontFamily: "var(--ff-body)" }} />
       {suffix && <span style={{ fontSize: 11, color: "var(--text3)" }}>{suffix}</span>}
     </span>
   );
@@ -131,9 +131,9 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
         <div className="slide-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, animationDelay: "0.04s" }}>
           {editing ? (
             <>
-              <button onClick={cancel} className="pressable fiche-hdr-btn" style={{ display: "inline-flex", alignItems: "center", height: 40, padding: "0 16px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>Annuler</button>
-              <button onClick={save} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 20px", borderRadius: 999, background: "var(--accent)", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 700, color: "#fff", boxShadow: "0 6px 16px -8px rgba(var(--accent-rgb),0.8)" }}>
-                <Icon name="check" size={16} color="#fff" /> Enregistrer
+              <button onClick={cancel} className="pressable fiche-hdr-btn" style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 40, padding: "0 16px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}><Icon name="back" size={15} color="var(--text2)" /> Annuler</button>
+              <button onClick={save} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 20px", borderRadius: 999, background: "var(--accent)", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "#fff", boxShadow: "0 6px 16px -8px rgba(var(--accent-rgb),0.8)" }}>
+                <Icon name="save" size={16} color="#fff" /> Enregistrer
               </button>
             </>
           ) : (
@@ -172,9 +172,9 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
             <div style={{ flex: 1, minWidth: 0 }}>
               {editing ? (
                 <input value={draft.name} onChange={e => up({ name: e.target.value })} placeholder="Nom de l'ingrédient" autoFocus={!draft.name}
-                  style={{ width: "100%", fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, color: "var(--text)", background: "transparent", border: "none", borderBottom: "2px solid var(--accent)", padding: "0 0 3px", marginBottom: 9, outline: "none" }} />
+                  style={{ width: "100%", fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, color: "var(--text)", background: "transparent", border: "none", borderBottom: "2px solid var(--accent)", padding: "0 0 3px", marginBottom: 9, outline: "none" }} />
               ) : (
-                <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 25, fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8 }}>{ingredient.name}</h1>
+                <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 25, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8 }}>{ingredient.name}</h1>
               )}
               {editing ? (
                 <select value={draft.category || "other"} onChange={e => up({ category: e.target.value })}
@@ -203,7 +203,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
             <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "var(--text2)", background: "var(--surface2)", borderRadius: 999, padding: "6px 13px", marginTop: 14, width: "fit-content" }}>
               <Icon name="portions" size={14} color="var(--accent)" /> 1 pièce ≈
               <input type="number" min="0" step="1" value={draft.gramsPerPiece ?? ""} placeholder="-" onChange={e => up({ gramsPerPiece: e.target.value === "" ? undefined : +e.target.value })}
-                style={{ width: 50, textAlign: "right", fontSize: 12, fontWeight: 700, color: "var(--text)", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 7, padding: "2px 6px", outline: "none" }} /> g
+                style={{ width: 50, textAlign: "right", fontSize: 12, fontWeight: 600, color: "var(--text)", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 7, padding: "2px 6px", outline: "none" }} /> g
             </div>
           ) : ingredient.gramsPerPiece != null && (
             <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "var(--text2)", background: "var(--surface2)", borderRadius: 999, padding: "6px 13px", marginTop: 14, width: "fit-content" }}>
@@ -224,13 +224,13 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <span style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(232,146,10,0.16)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name="calendar" size={15} color="#e8920a" /></span>
-                <span style={{ fontSize: 14, fontWeight: 700 }}>Saisonnalité</span>
+                <span style={{ fontSize: 14, fontWeight: 600 }}>Saisonnalité</span>
               </div>
               {editing
                 ? (monthsSet.size > 0 && <button onClick={() => up({ months: undefined })} style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>Effacer</button>)
                 : isIngredientInSeason(ingredient)
                   ? <SeasonBadge />
-                  : <span style={{ display: "inline-flex", alignItems: "center", borderRadius: 20, padding: "3px 11px", background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text3)" }}>Hors saison</span>}
+                  : <span style={{ display: "inline-flex", alignItems: "center", borderRadius: 20, padding: "3px 11px", background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 9.5, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text3)" }}>Hors saison</span>}
             </div>
             <SeasonBar months={dispMonths} onToggle={editing ? toggleMonth : undefined} />
             {editing && <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 9 }}>{monthsSet.size === 0 ? "Touche un mois pour le marquer « de saison » (aucun = toute l'année)." : `De saison : ${formatMonths([...monthsSet])}.`}</div>}
@@ -239,7 +239,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
 
         {/* ── Valeurs nutritionnelles (éditables en place) ── */}
         <div className="slide-up" style={{ animationDelay: "0.2s" }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "18px 0 12px" }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, margin: "18px 0 12px" }}>Valeurs nutritionnelles <span style={{ fontSize: 12, fontFamily: "var(--ff-body)", color: "var(--text3)", fontWeight: 400 }}>· pour 100 g</span></div>
 
           {(editing || hasNutrition) ? (
             <>
@@ -261,7 +261,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                       {editing
                         ? <NumField value={n[seg.key]} suffix="g" onChange={v => setNut(seg.key, v)} />
                         : <>
-                          <span style={{ fontSize: 12.5, fontWeight: 700 }}>{fmt(seg.grams)}</span>
+                          <span style={{ fontSize: 12.5, fontWeight: 600 }}>{fmt(seg.grams)}</span>
                           <span style={{ fontSize: 11, color: "var(--text3)", width: 34, textAlign: "right" }}>{Math.round(seg.value / macroTot * 100)}%</span>
                         </>}
                     </div>
@@ -314,7 +314,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
         {editing ? (
           <div className="slide-up" style={{ marginTop: 24 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500 }}>Tips utiles</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>Tips utiles</div>
               <button onClick={() => up({ tips: [...(draft.tips || []), { type: "prep", text: "" }] })} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.28)", borderRadius: 999, padding: "5px 12px", cursor: "pointer" }}>
                 <Icon name="plus" size={13} color="var(--accent)" /> Ajouter
               </button>
@@ -336,7 +336,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           </div>
         ) : Array.isArray(ingredient.tips) && ingredient.tips.length > 0 && (
           <div className="slide-up" style={{ animationDelay: "0.26s" }}>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, margin: "28px 0 12px" }}>Tips utiles</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, margin: "28px 0 12px" }}>Tips utiles</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[...ingredient.tips].sort((a, b) => TIP_ORDER.indexOf(a.type) - TIP_ORDER.indexOf(b.type)).map((tip, i) => {
                 const t = TIP_TYPES[tip.type] || TIP_TYPES.prep;
@@ -344,7 +344,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                   <div key={i} style={{ ...CARD, display: "flex", gap: 13, padding: "13px 15px", alignItems: "flex-start" }}>
                     <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 11, background: t.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{t.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: t.color, marginBottom: 3, letterSpacing: "0.01em" }}>{t.label}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: t.color, marginBottom: 3, letterSpacing: "0.01em" }}>{t.label}</div>
                       <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>{tip.text}</div>
                     </div>
                   </div>
@@ -362,7 +362,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
               <Icon name="leaf" size={16} color="#fff" />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text)", letterSpacing: "0.01em" }}>Ciqual 2025</div>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text)", letterSpacing: "0.01em" }}>Ciqual 2025</div>
               <div style={{ fontSize: 10, color: "var(--text3)", lineHeight: 1.4, marginTop: 1 }}>Table de composition nutritionnelle · Anses</div>
             </div>
             <Icon name="externalLink" size={13} color="var(--text3)" />

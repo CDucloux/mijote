@@ -48,7 +48,7 @@ function Choice({ icon, title, subtitle, onClick, accent, ai, badge }) {
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{title}</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{title}</span>
           {badge}
         </span>
         <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.45, marginTop: 3 }}>{subtitle}</span>
@@ -89,7 +89,7 @@ export function NewRecipeButton({ onManual }) {
               <Icon name="book" size={20} color="var(--accent)" />
             </span>
             <div style={{ minWidth: 0 }}>
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 600, letterSpacing: "-0.01em", margin: 0 }}>Nouvelle recette</h3>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Nouvelle recette</h3>
               <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Comment veux-tu la créer ?</p>
             </div>
           </div>

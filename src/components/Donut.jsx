@@ -19,7 +19,7 @@ export const Donut = ({ segments, size = 130, stroke = 18, centerLabel, centerSu
         })}
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 22, fontWeight: 700, lineHeight: 1 }}>{centerLabel}</span>
+        <span style={{ fontSize: 22, fontWeight: 600, lineHeight: 1 }}>{centerLabel}</span>
         {centerSub && <span style={{ fontSize: 10, color: "var(--text3)", marginTop: 3 }}>{centerSub}</span>}
       </div>
     </div>

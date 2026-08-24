@@ -17,7 +17,7 @@ function MiniAvatar({ user, size = 28 }) {
   if (!user) return null;
   return user.photoURL
     ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, border: "1.5px solid var(--border)" }} />
-    : <div style={{ width: size, height: size, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{(user.displayName || "?")[0].toUpperCase()}</div>;
+    : <div style={{ width: size, height: size, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 600, color: "#fff", flexShrink: 0 }}>{(user.displayName || "?")[0].toUpperCase()}</div>;
 }
 
 const VersionBadge = ({ label }) => (
@@ -44,7 +44,7 @@ const DiffRow = ({ sign, text, bg, border, children }) => (
 
 const DiffSection = ({ title, children }) => (
   <div>
-    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{title}</div>
+    <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{title}</div>
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{children}</div>
   </div>
 );
@@ -67,7 +67,7 @@ function DiffView({ diff, baseLabel }) {
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{s.label} : </span>
                 <span style={{ fontSize: 13, color: "var(--text3)", textDecoration: "line-through" }}>{s.from}</span>
                 <span style={{ fontSize: 13, color: "var(--text3)" }}> → </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{s.to}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: c.text }}>{s.to}</span>
               </DiffRow>
             );
           })}
@@ -84,7 +84,7 @@ function DiffView({ diff, baseLabel }) {
                 {ing.type === "changed" ? (
                   <span> <span style={{ fontSize: 12, color: "var(--text3)", textDecoration: "line-through" }}>{ing.from || "–"}</span>
                   <span style={{ fontSize: 12, color: "var(--text3)" }}> → </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{ing.to || "–"}</span></span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: c.text }}>{ing.to || "–"}</span></span>
                 ) : ing.qty ? <span style={{ fontSize: 12, color: "var(--text3)", marginLeft: 6 }}>{ing.qty}</span> : null}
               </DiffRow>
             );
@@ -111,7 +111,7 @@ function DiffView({ diff, baseLabel }) {
             const c = DIFF[step.type];
             return (
               <DiffRow key={i} sign={c.sign} text={c.text} bg={c.bg} border={c.border}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>Étape {step.index + 1}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: c.text }}>Étape {step.index + 1}</span>
                 {step.type === "changed" ? (
                   <div style={{ marginTop: 4 }}>
                     <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0, textDecoration: "line-through", lineHeight: 1.5 }}>{step.from}</p>
@@ -153,7 +153,7 @@ function VersionDiff({ entry, recipe, onClose }) {
         <VersionBadge label={entry.label} />
         <span style={{ fontSize: 12, color: "var(--text3)" }}>{fmtDate(entry.createdAt)}</span>
         {entry.rating != null && (
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
         )}
       </div>
 
@@ -240,7 +240,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <VersionBadge label={entry.label} />
                       {entry.rating != null && (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", background: ratingColor(entry.rating), borderRadius: 8, padding: "2px 8px" }}>{entry.rating}/10</span>
                       )}
                       {entry.notes && (
                         <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 2 }}>
@@ -283,7 +283,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
           <AutoResizeTextarea className="field-input" value={notes} onChange={e => setNotes(e.target.value)} placeholder="ex : -10 g de sucre, +zeste de citron vert, cuit 4 min de moins → meilleur" style={{ marginBottom: 18 }} />
 
           <button className="btn btn-primary" style={{ width: "100%" }} onClick={saveVersion}>
-            <Icon name="check" size={15} /> Enregistrer la version
+            <Icon name="save" size={15} /> Enregistrer la version
           </button>
         </SwipeableSheet>
       )}

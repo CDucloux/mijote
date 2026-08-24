@@ -264,4 +264,19 @@ Pièges rencontrés lors du premier build/run, avec le fix qui marche.
   `env(safe-area-inset-bottom)` sur la tab bar et les pieds d'écran. Ces valeurs sont
   **nulles hors natif/PWA** (aucun impact web). Si un **nouvel écran** remonte sous une
   barre système, réserver l'inset correspondant sur son conteneur racine (pas au cas par
-  cas dans le contenu).
+  cas dans le contenu). Le **cook mode** (overlay plein écran `position: fixed`) réserve
+  ces insets sur son en-tête et son pied de nav pour ne pas percuter la barre d'état.
+
+### Minuteurs du cook mode (notifications locales)
+
+- Le cook mode planifie une **notification OS** à l'échéance de chaque minuteur via
+  `@capacitor/local-notifications` : elle sonne **app en arrière-plan / écran verrouillé**
+  (le décompte à l'écran, lui, est en base horodatée, donc juste au retour). Tout est
+  **no-op hors natif** (le web garde son alarme premier plan : bip + vibration).
+- Le plugin apporte lui-même ses permissions (`POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`,
+  `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED`) et ses receivers, **fusionnés automatiquement au
+  manifeste** par `cap sync` : **rien à ajouter à la main** dans `AndroidManifest.xml`.
+- **Après un `npm install`** (le plugin est dans `package.json`), un **`npm run cap:sync`
+  puis un rebuild Android Studio** sont nécessaires pour embarquer le code natif du plugin.
+- La **permission de notification** (Android 13+) est demandée **à la volée au premier
+  minuteur** ; refusée, les minuteurs fonctionnent quand même en premier plan.

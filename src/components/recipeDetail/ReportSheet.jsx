@@ -22,7 +22,7 @@ export function ReportSheet({ reportReason, setReportReason, reportNote, setRepo
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
           <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: "rgba(224,82,82,0.14)", display: "grid", placeItems: "center" }}><Icon name="flag" size={19} color="var(--red)" /></span>
           <div>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, margin: 0 }}>Signaler cette recette</h3>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, margin: 0 }}>Signaler cette recette</h3>
             <p style={{ fontSize: 12, color: "var(--text3)", margin: "2px 0 0" }}>Pourquoi ne respecte-t-elle pas les conditions ?</p>
           </div>
         </div>
@@ -44,7 +44,7 @@ export function ReportSheet({ reportReason, setReportReason, reportNote, setRepo
         <textarea value={reportNote} onChange={e => setReportNote(e.target.value)} rows={2} maxLength={400}
           placeholder="Précisions (optionnel)…" className="field-input" style={{ resize: "none", marginBottom: 14 }} />
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}>Annuler</button>
+          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
           <button className="btn btn-danger btn-pill" style={{ flex: 1.3 }} disabled={!reportReason}
             onClick={() => close(() => { onClose(); onReport?.(reportReason, reportNote.trim()); })}>
             <Icon name="flag" size={14} /> Envoyer le signalement

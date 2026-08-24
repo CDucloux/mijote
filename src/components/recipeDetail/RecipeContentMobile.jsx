@@ -35,7 +35,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               <button onClick={() => { setServings(s => Math.max(1, s - 1)); setBump(b => b + 1); }} className="tap tap-stepper" style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", border: "none", cursor: "pointer" }}>
                 <svg width="11" height="2" viewBox="0 0 11 2"><rect x="0" y="0" width="11" height="2" rx="1" fill="currentColor"/></svg>
               </button>
-              <span key={bump} className="tap-bump" style={{ fontSize: 18, fontWeight: 700, minWidth: 24, textAlign: "center", display: "inline-block" }}>{servings}</span>
+              <span key={bump} className="tap-bump" style={{ fontSize: 18, fontWeight: 600, minWidth: 24, textAlign: "center", display: "inline-block" }}>{servings}</span>
               <button onClick={() => { setServings(s => Math.min(24, s + 1)); setBump(b => b + 1); }} className="tap tap-stepper" style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", border: "none", cursor: "pointer" }}>
                 <svg width="11" height="11" viewBox="0 0 11 11"><rect x="4.5" y="0" width="2" height="11" rx="1" fill="currentColor"/><rect x="0" y="4.5" width="11" height="2" rx="1" fill="currentColor"/></svg>
               </button>
@@ -83,7 +83,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(!isComp && !ing.unit ? pluralizeName(ing.amount * mult, name) : name)}</span>
-                      {isComp && <span style={{ fontSize: 9.5, fontWeight: 700, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
+                      {isComp && <span style={{ fontSize: 9.5, fontWeight: 600, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
                     </div>
                     {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name={badge.icon} size={12} color={badge.color} />{badge.text}</div>}
                   </div>
@@ -126,8 +126,8 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               <div key={comp.id} style={{ background: "rgba(var(--accent-rgb),0.05)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: 14, padding: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                   <BaseIcon size={18} />
-                  <span style={{ fontSize: 14, fontWeight: 700 }}>Préparer la {comp.name}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>Préparer la {comp.name}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {comp.steps.map((cstep, ci) => {
@@ -135,7 +135,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
                     const cUts = (comp.utensils || []).filter(u => cstep.utensils?.includes(u.id));
                     return (
                     <div key={cstep.id}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)" }}>Étape {ci + 1}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>Étape {ci + 1}</span>
                       {cstep.text && <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }}>{cstep.text}</p>}
                       {(cIngs.length > 0 || cUts.length > 0) && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 8 }}>
@@ -157,7 +157,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               </div>
             ))}
             {baseSteps.length > 0 && recipe.steps?.length > 0 && (
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
             )}
             {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
             const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
@@ -172,8 +172,8 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               return (
                 <div key={step.id} className="tap tap-soft" style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: (step.text || step.image || step.tip || hasPills) ? 8 : 0 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{num}</div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Étape {num}</span>
+                    <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{num}</div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>Étape {num}</span>
                   </div>
                   {step.text && (
                     <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: (step.tip || hasPills || step.image) ? 10 : 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{step.text}</p>

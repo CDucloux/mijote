@@ -145,7 +145,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
           <button className="toolbar-pill" onClick={cycleSort} title="Changer le tri">
             <Icon name="updown" size={15} color="currentColor" />
             <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
-            <strong style={{ fontWeight: 700 }}>{sortLabel}</strong>
+            <strong style={{ fontWeight: 600 }}>{sortLabel}</strong>
           </button>
         </div>
       </div>
@@ -163,7 +163,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
               if (list.length === 0) return null;
               return (
                 <div key={catKey}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text3)", margin: "0 2px 8px", letterSpacing: "0.02em" }}>{catLabel}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)", margin: "0 2px 8px", letterSpacing: "0.02em" }}>{catLabel}</div>
                   <UtensilGrid list={list} selectedIds={selectedIds} onGridClick={onGridClick} />
                 </div>
               );

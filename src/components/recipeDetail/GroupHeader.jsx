@@ -9,7 +9,7 @@ export function GroupHeader({ label, showIcon = false, style }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>
       {showIcon && <Icon name="layers" size={15} color="var(--accent)" />}
-      <span style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--accent)", flexShrink: 0 }}>{label}</span>
+      <span style={{ fontFamily: "var(--ff-display)", fontSize: 15.5, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--accent)", flexShrink: 0 }}>{label}</span>
       <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
     </div>
   );

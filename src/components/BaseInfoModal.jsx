@@ -25,7 +25,7 @@ export function BaseInfoModal({ onClose }) {
             <BaseIcon size={24} color="#fff" />
           </IconChip>
           <div>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--text)" }}>Préparation de base</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)" }}>Préparation de base</div>
             <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>Principes de composition</div>
           </div>
         </Row>
@@ -36,13 +36,13 @@ export function BaseInfoModal({ onClose }) {
         <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.65, margin: "0 0 26px" }}>{INTRO}</p>
 
         {/* Les grandes familles – liste épurée numérotée */}
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Les grandes familles</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Les grandes familles</div>
         <Col gap={2}>
           {FAMILIES.map((it, j) => (
             <Row key={j} align="flex-start" gap={14} style={{ padding: "14px 0", borderTop: j === 0 ? "none" : "1px solid var(--border)" }}>
-              <IconChip size={28} radius={9} tint="rgba(var(--accent-rgb),0.1)" style={{ marginTop: 1, color: "var(--accent)", fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{j + 1}</IconChip>
+              <IconChip size={28} radius={9} tint="rgba(var(--accent-rgb),0.1)" style={{ marginTop: 1, color: "var(--accent)", fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{j + 1}</IconChip>
               <div>
-                <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em", marginBottom: 3 }}>{it.label}</div>
+                <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", marginBottom: 3 }}>{it.label}</div>
                 <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0 }}>{it.desc}</p>
               </div>
             </Row>
@@ -57,7 +57,7 @@ export function BaseInfoModal({ onClose }) {
         }}>
           <Row gap={7} style={{ marginBottom: 7 }}>
             <BaseIcon size={15} color="var(--accent)" />
-            <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--accent)", letterSpacing: "-0.01em" }}>Dans Cardamome</span>
+            <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--accent)", letterSpacing: "-0.01em" }}>Dans Cardamome</span>
           </Row>
           <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>
             Une recette marquée « Base » peut être liée à une autre recette en tant qu'ingrédient. Quand tu cuisines la recette parente, Cardamome te propose de réaliser d'abord toutes ses bases avant de passer aux étapes principales.

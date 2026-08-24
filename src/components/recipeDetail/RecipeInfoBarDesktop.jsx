@@ -14,7 +14,7 @@ export function RecipeInfoBarDesktop({ recipe, nutriLetter, servings, setServing
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3 }}>
             <Icon name="clock" size={12} color="var(--text3)" />
-            <span style={{ fontSize: 14, fontWeight: 700 }}>{fmtTime(recipe.prepTime)}</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtTime(recipe.prepTime)}</span>
           </div>
           <span style={{ fontSize: 10, color: "var(--text3)", marginTop: 3 }}>Prép.</span>
         </div>
@@ -23,7 +23,7 @@ export function RecipeInfoBarDesktop({ recipe, nutriLetter, servings, setServing
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3 }}>
             <Icon name="fire" size={12} color="var(--text3)" />
-            <span style={{ fontSize: 14, fontWeight: 700 }}>{fmtTime(recipe.cookTime)}</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtTime(recipe.cookTime)}</span>
           </div>
           <span style={{ fontSize: 10, color: "var(--text3)", marginTop: 3 }}>Cuisson</span>
         </div>
@@ -42,7 +42,7 @@ export function RecipeInfoBarDesktop({ recipe, nutriLetter, servings, setServing
             <button onClick={() => setServings(s => Math.max(1, s - 1))} style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", border: "none", cursor: "pointer", lineHeight: 1 }}>
               <svg width="10" height="2" viewBox="0 0 10 2"><rect x="0" y="0" width="10" height="2" rx="1" fill="currentColor"/></svg>
             </button>
-            <span style={{ fontSize: 14, fontWeight: 700, minWidth: 18, textAlign: "center" }}>{servings}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, minWidth: 18, textAlign: "center" }}>{servings}</span>
             <button onClick={() => setServings(s => Math.min(24, s + 1))} style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", border: "none", cursor: "pointer", lineHeight: 1 }}>
               <svg width="10" height="10" viewBox="0 0 10 10"><rect x="4" y="0" width="2" height="10" rx="1" fill="currentColor"/><rect x="0" y="4" width="10" height="2" rx="1" fill="currentColor"/></svg>
             </button>

@@ -45,7 +45,7 @@ export function AnnouncementPopup() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
               <span style={{ fontSize: 14, fontWeight: 800, color: "var(--accent)", letterSpacing: "0.03em" }}>NOUVEAUTÉS</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", background: "var(--accent)", borderRadius: 6, padding: "2px 7px" }}>v{latest.version}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: "#fff", background: "var(--accent)", borderRadius: 6, padding: "2px 7px" }}>v{latest.version}</span>
             </div>
             <p style={{ margin: 0, fontSize: 13, color: "var(--text2)", lineHeight: 1.4 }}>Voici ce qui a changé dans cette version :</p>
           </div>
@@ -61,13 +61,13 @@ export function AnnouncementPopup() {
         <div style={{ padding: "12px 20px 18px", display: "flex", gap: 10 }}>
           <button
             onClick={() => { close(); window.dispatchEvent(new Event("mijote:show-about")); }}
-            style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+            style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
           >
             Voir les détails
           </button>
           <button
             onClick={close}
-            style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+            style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
           >
             Fermer
           </button>
