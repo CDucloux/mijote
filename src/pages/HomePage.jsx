@@ -149,7 +149,7 @@ function FoyerSection() {
         <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12, padding: "16px 18px" }}>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {household ? household.name : "Mon foyer"}
               </span>
               {!household && (
@@ -171,7 +171,7 @@ function FoyerSection() {
       </button>
       {open && (
         <SwipeableSheet onClose={() => setOpen(false)} style={{ maxHeight: "88dvh" }}>
-          <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, margin: "0 0 16px" }}>Foyer</h2>
+          <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: "0 0 16px" }}>Foyer</h2>
           <HouseholdPanel onClose={() => setOpen(false)} />
         </SwipeableSheet>
       )}
@@ -214,7 +214,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
       <div style={{ padding: "20px 20px 8px", flexShrink: 0, position: "relative", zIndex: 1, background: "var(--bg)" }}>
         <div className="slide-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
             <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
               Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color: "var(--text2)" }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
             </span>
