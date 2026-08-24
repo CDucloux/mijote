@@ -15,11 +15,11 @@ import "../styles/landing.css";
 // écran d'accueil), donc fidèles au produit, theme-aware, sans aucun asset externe
 // ni image générée. Elles montrent l'app sans rien inventer.
 
-// Ancres de la barre collante : sauts vers les sections clés. Peu nombreuses,
+// Ancres de la barre de navigation : sauts vers les sections clés. Peu nombreuses,
 // pour rester lisibles et ne pas transformer la nav en menu fourre-tout.
 const NAV_LINKS = [
   { label: "Le problème", id: "probleme" },
-  { label: "L'import IA", id: "import" },
+  { label: "Import intelligent", id: "import" },
   { label: "L'offre", id: "offre" },
 ];
 
@@ -44,7 +44,7 @@ const PLAN_FREE = [
 ];
 const PLAN_PLUS = [
   ["Recettes illimitées", true],
-  ["Import par IA, depuis un lien ou une photo de livre", true],
+  ["Import intelligent, depuis un lien ou une photo de livre", true],
   ["Foyer partagé", false],
   ["Journal d'itérations", false],
   ["Génération de planning et batch cooking", false],
@@ -253,7 +253,7 @@ function SceneStructured() {
   );
 }
 
-/** Démo animée de l'import IA : une source (lien / photo) que Cardamome lit et
+/** Démo animée de l'import intelligent : une source (lien / photo) que Cardamome lit et
  *  transforme en recette structurée. Un faisceau balaie la source en continu ;
  *  la sortie s'assemble par petites touches. 100% CSS, coupé si mouvement réduit. */
 function SceneImport() {
@@ -489,11 +489,11 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         {slideDown()}
       </section>
 
-      {/* 5. Import IA : la démonstration mise en avant, demo à droite */}
+      {/* 5. Import intelligent : la démonstration mise en avant, demo à droite */}
       <section id="import" className="lp-wrap lp-section lp-slide">
         <div className="lp-split lp-split--wide">
           <div>
-            <span className="lp-eyebrow">L'import par IA</span>
+            <span className="lp-eyebrow">L'import intelligent</span>
             <h2 className="lp-h2 lp-h2--wide">Les autres extraient du texte. Cardamome comprend ta recette.</h2>
             <p className="lp-p">
               Extraire, c'est recopier des mots dans des cases. Comprendre, c'est savoir ce que ces
@@ -575,7 +575,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <span className="lp-eyebrow">L'offre</span>
         <h2 className="lp-h2 lp-h2--wide">Cardamome, et Cardamome+.</h2>
         <p className="lp-p">
-          Commence sans rien débourser. Passe à Cardamome+ le jour où tu veux l'import par IA et
+          Commence sans rien débourser. Passe à Cardamome+ le jour où tu veux l'import intelligent et
           le reste. Pas de pub, jamais. Tes données ne se revendent pas.
         </p>
         <div className="lp-plans">
@@ -588,11 +588,12 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <p className="lp-plan__hint">De quoi cuisiner pour de vrai, sans carte bleue.</p>
             <ul className="lp-plan__list">
               {PLAN_FREE.map((f) => (
-                <li key={f}><span className="lp-plan__check"><Icon name="check" size={16} /></span>{f}</li>
+                <li key={f}><span className="lp-plan__check"><Icon name="check" size={13} weight="bold" /></span>{f}</li>
               ))}
             </ul>
           </div>
           <div className="lp-plan lp-plan--plus">
+            <span className="lp-plan__flag">Recommandé</span>
             <h3 className="lp-plan__name">Cardamome+ <span className="lp-plan__badge">+</span></h3>
             <div className="lp-plan__price">
               <span className="lp-plan__amount">3,99 €</span>
@@ -601,7 +602,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <p className="lp-plan__hint lp-plan__hint--save">ou 29,99 €/an, soit 2,50 €/mois.</p>
             <ul className="lp-plan__list">
               {PLAN_PLUS.map(([f, strong]) => (
-                <li key={f}><span className="lp-plan__check"><Icon name="check" size={16} /></span>{strong ? <strong>{f}</strong> : f}</li>
+                <li key={f}><span className="lp-plan__check"><Icon name="check" size={13} weight="bold" /></span>{strong ? <strong>{f}</strong> : f}</li>
               ))}
             </ul>
           </div>
@@ -632,7 +633,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <nav className="lp-footer__col">
             <span className="lp-footer__h">L'app</span>
             <a href="#probleme" onClick={scrollToId("probleme")}>Le problème</a>
-            <a href="#import" onClick={scrollToId("import")}>L'import par IA</a>
+            <a href="#import" onClick={scrollToId("import")}>Import intelligent</a>
             <a href="#offre" onClick={scrollToId("offre")}>L'offre</a>
           </nav>
           <nav className="lp-footer__col">
