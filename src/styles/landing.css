@@ -16,6 +16,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   scroll-snap-type: y proximity;
+  scroll-padding-top: 64px;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   -webkit-font-smoothing: antialiased;
@@ -31,21 +32,7 @@
   padding-inline: clamp(20px, 4.5vw, 48px);
 }
 
-/* ── Barre haute ─────────────────────────────────────────────────────────── */
-/* En-tête posé PAR-DESSUS le hero (absolu) : ainsi le hero remplit tout le premier
-   écran (slide), et l'en-tête défile naturellement quand on descend, la barre
-   collante prenant le relais. */
-.lp-nav {
-  position: absolute;
-  inset: 0 0 auto 0;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-top: max(18px, env(safe-area-inset-top));
-  padding-bottom: 14px;
-}
+/* ── Marque + éléments partagés de la barre ──────────────────────────────── */
 .lp-brandmark {
   display: inline-flex;
   align-items: center;
@@ -66,22 +53,17 @@
 .lp-brand__dot { color: var(--accent); }
 .lp-nav__right { display: flex; align-items: center; gap: 12px; }
 
-/* ── Barre collante : n'apparaît qu'après le hero (JS toggle .is-visible) ──── */
+/* ── Barre de navigation : fixe et présente sur toutes les slides ──────────── */
 .lp-navbar {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 40;
   background: var(--bg);
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
   backdrop-filter: saturate(1.4) blur(12px);
   border-bottom: 1px solid var(--border);
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease;
 }
-.lp-navbar.is-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
 .lp-navbar__inner {
   display: flex;
   align-items: center;
@@ -171,7 +153,7 @@
 }
 
 /* ── Rythme des sections ─────────────────────────────────────────────────── */
-.lp-section { padding-block: clamp(56px, 9vw, 104px); scroll-margin-top: 76px; }
+.lp-section { padding-block: clamp(56px, 9vw, 104px); }
 .lp-section--tight { padding-block: clamp(40px, 6vw, 68px); }
 
 .lp-eyebrow {
@@ -222,7 +204,9 @@
 /* ── Hero ─────────────────────────────────────────────────────────────────────
    Cadré pour tenir dans la hauteur d'un écran de portable : titre plus mesuré,
    marges resserrées, colonne texte à gauche + maquette d'app à droite. */
-.lp-hero { padding-top: clamp(20px, 3.5vw, 40px); padding-bottom: clamp(28px, 5vw, 56px); }
+/* padding-top généreux : dégage la barre de navigation fixe pour que le titre et
+   la maquette téléphone ne passent jamais dessous (chevauchement initial). */
+.lp-hero { padding-top: clamp(84px, 13vh, 124px); padding-bottom: clamp(28px, 5vw, 56px); }
 .lp-hero__grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -260,10 +244,15 @@
   max-width: 30ch;
 }
 
-/* Maquette d'app à droite du hero (le garde-manger en réduction). */
+/* Maquette d'app à droite du hero (l'écran d'accueil). Sa hauteur est bornée au
+   viewport pour tenir sous la barre fixe sans déborder sur écran court. */
 .lp-hero__art {
   display: flex;
   justify-content: center;
+}
+.lp-hero__art .lp-device {
+  height: min(540px, 62vh);
+  width: auto;
 }
 
 /* ── Slides : chaque section occupe un écran, flèche « suivant » en bas ─────── */
@@ -275,10 +264,6 @@
   justify-content: center;
   position: relative;
 }
-/* Sentinelle : marqueur invisible juste après le hero. Sa sortie du conteneur de
-   défilement (vers le haut) fait apparaître la barre collante. */
-.lp-sentinel { height: 1px; margin: 0; pointer-events: none; }
-
 /* Flèche de descente : pastille discrète ancrée en bas de chaque slide, défile
    vers la section suivante. Respiration douce, coupée en mouvement réduit. */
 .lp-next {
@@ -514,24 +499,61 @@
 /* ── Pied de page ────────────────────────────────────────────────────────── */
 .lp-footer {
   border-top: 1px solid var(--border);
-  padding-block: 28px;
+  background: var(--surface);
+  padding-top: clamp(40px, 6vw, 64px);
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 .lp-footer__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(28px, 5vw, 52px);
+}
+.lp-footer__mark { display: inline-flex; align-items: center; gap: 9px; }
+.lp-footer__mark .lp-brand { font-size: 22px; }
+.lp-footer__tag {
+  margin: 14px 0 18px;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text2);
+  max-width: 36ch;
+}
+.lp-footer__col { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.lp-footer__h {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 2px;
+}
+.lp-footer a {
+  font-size: 0.95rem;
+  color: var(--text2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+@media (hover: hover) { .lp-footer a:hover { color: var(--accent); } }
+.lp-footer__base {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
+  margin-top: clamp(30px, 5vw, 48px);
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
 }
-.lp-footer__links { display: flex; flex-wrap: wrap; gap: 18px; }
-.lp-footer a {
-  font-size: 0.9rem;
-  color: var(--text2);
-  text-decoration: none;
-  transition: color 0.16s ease;
-}
-@media (hover: hover) { .lp-footer a:hover { color: var(--text); } }
 .lp-footer__meta { font-size: 0.82rem; color: var(--text3); }
+.lp-footer__made {
+  font-family: var(--ff-hand);
+  font-size: 1.2rem;
+  color: var(--accent2);
+  transform: rotate(-1.5deg);
+}
+@media (min-width: 720px) {
+  .lp-footer__inner { grid-template-columns: 1.7fr 1fr 1fr; gap: clamp(32px, 5vw, 72px); }
+}
 
 /* ── Entrée du hero (chargement) : douce, coupée si mouvement réduit ──────── */
 @keyframes lpRise {

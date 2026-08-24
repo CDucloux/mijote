@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
@@ -340,26 +340,7 @@ function StoreButtons() {
 export function LandingPage({ user, isDark, toggleTheme }) {
   const navigate = useNavigate();
   const primary = landingPrimaryCta(user);
-  const [scrolled, setScrolled] = useState(false);
   const rootRef = useRef(null);
-  const sentinelRef = useRef(null);
-
-  // La landing défile dans SON conteneur (#root est figé en 100vh/overflow:hidden,
-  // la fenêtre ne scrolle jamais) : window.scrollY est donc inutilisable. Un
-  // observateur sur une sentinelle posée après le hero fait apparaître la barre
-  // collante dès qu'on quitte le premier écran, quel que soit l'élément qui scrolle.
-  // On garde le sens du défilement (top < 0 = sentinelle passée au-dessus) pour ne
-  // pas déclencher tant que la sentinelle est encore sous le pli au chargement.
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setScrolled(!entry.isIntersecting && entry.boundingClientRect.top < 0),
-      { root: rootRef.current, threshold: 0 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
 
   const scrollToId = (id) => (e) => {
     e?.preventDefault?.();
@@ -400,10 +381,11 @@ export function LandingPage({ user, isDark, toggleTheme }) {
 
   return (
     <div className="lp-root" id="top" ref={rootRef}>
-      {/* Barre collante (apparaît après le hero) : marque + ancres + thème + CTA */}
-      <div className={`lp-navbar${scrolled ? " is-visible" : ""}`} aria-hidden={!scrolled}>
+      {/* Barre de navigation : PRÉSENTE sur toutes les slides. Fixe en haut, le
+          contenu défile dessous. Marque + ancres (#) + thème + CTA. */}
+      <header className="lp-navbar">
         <div className="lp-wrap lp-navbar__inner">
-          {brand(23)}
+          {brand(24)}
           <nav className="lp-navbar__links">
             {NAV_LINKS.map((l) => (
               <a key={l.id} href={`#${l.id}`} onClick={scrollToId(l.id)}>{l.label}</a>
@@ -416,16 +398,6 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             {primaryCta(true)}
           </div>
         </div>
-      </div>
-
-      <header className="lp-wrap lp-nav">
-        {brand(27)}
-        <div className="lp-nav__right">
-          <button className="lp-theme" onClick={toggleTheme} aria-label={isDark ? "Passer en clair" : "Passer en sombre"}>
-            <Icon name={isDark ? "sun" : "moon"} size={17} />
-          </button>
-          {primaryCta(true)}
-        </div>
       </header>
 
       {/* 1. Coup de poing */}
@@ -437,11 +409,10 @@ export function LandingPage({ user, isDark, toggleTheme }) {
               Des milliers de recettes. Des doublons. Du contenu moyen. Et toi, toujours planté
               devant ton frigo à te demander <strong>quoi faire à manger</strong>.
             </p>
+            <p className="lp-hero__note">Avec Cardamome, on a décidé de faire autrement.</p>
             <div className="lp-hero__actions lp-cta-row">
-              {primaryCta()}
               <StoreButtons />
             </div>
-            <p className="lp-hero__note">Avec Cardamome, on a décidé de faire autrement.</p>
           </div>
           <div className="lp-hero__art">
             <PhoneFrame label="Aperçu de Cardamome : l'écran d'accueil"><SceneHome /></PhoneFrame>
@@ -449,7 +420,6 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         </div>
         {slideDown()}
       </section>
-      <div ref={sentinelRef} className="lp-sentinel" aria-hidden="true" />
 
       {/* 2. Situation vécue */}
       <section id="probleme" className="lp-wrap lp-section lp-slide">
@@ -649,14 +619,32 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <p className="lp-sign">Fait par des gens qui cuisinent pour de vrai, pas par un algorithme qui remplit des cases.</p>
       </section>
 
-      <footer className="lp-wrap lp-footer">
-        <div className="lp-footer__inner">
-          <div className="lp-footer__links">
+      <footer className="lp-footer">
+        <div className="lp-wrap lp-footer__inner">
+          <div className="lp-footer__brand">
+            <div className="lp-footer__mark">
+              <LogoPod size={30} />
+              <span className="lp-brand">Cardam<span className="lp-brand__dot">o</span>me<span className="lp-brand__dot">·</span></span>
+            </div>
+            <p className="lp-footer__tag">Cuisine, chaleur, gourmandise. L'app qui t'aide à cuisiner pour de vrai, pas à collectionner des recettes.</p>
+            <StoreButtons />
+          </div>
+          <nav className="lp-footer__col">
+            <span className="lp-footer__h">L'app</span>
+            <a href="#probleme" onClick={scrollToId("probleme")}>Le problème</a>
+            <a href="#import" onClick={scrollToId("import")}>L'import par IA</a>
+            <a href="#offre" onClick={scrollToId("offre")}>L'offre</a>
+          </nav>
+          <nav className="lp-footer__col">
+            <span className="lp-footer__h">Légal</span>
             <a href="/legal/terms">CGU</a>
             <a href="/legal/privacy">Confidentialité</a>
             <a href="/legal">Informations légales</a>
-          </div>
+          </nav>
+        </div>
+        <div className="lp-wrap lp-footer__base">
           <span className="lp-footer__meta">© 2026 Cardamome · v{__APP_VERSION__}</span>
+          <span className="lp-footer__made">Fait avec soin, pas à la chaîne.</span>
         </div>
       </footer>
     </div>
