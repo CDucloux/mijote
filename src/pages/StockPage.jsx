@@ -1,7 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback, memo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { EmptyArt } from "../components/EmptyArt.jsx";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
@@ -119,6 +118,48 @@ function StockEmpty({ icon, art, title, body, action }) {
       <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>{title}</h3>
       <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: action ? 22 : 0 }}>{body}</p>
       {action}
+    </div>
+  );
+}
+
+/** Une planche « fantôme » : `n` bocaux squelette posés sur un vrai rayon. */
+function SkelShelf({ n }) {
+  return (
+    <div className="stk-shelf">
+      <div className="stk-jars">
+        {Array.from({ length: n }).map((_, i) => (
+          <div key={i} className="stk-jar" aria-hidden="true">
+            <span className="stk-skel-lid skeleton" />
+            <span className="stk-skel-glass skeleton" />
+          </div>
+        ))}
+      </div>
+      <div className="stk-board">
+        <ShelfBracket side="l" />
+        <ShelfBracket side="r" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Squelette du mur affiché pendant l'hydratation : deux rayons peuplés, un dernier
+ * partiel, pour donner d'emblée la forme de l'étagère plutôt qu'un écran vide.
+ */
+function StockWallSkeleton({ perRow }) {
+  const p = Math.max(1, perRow);
+  const partial = Math.max(2, Math.min(p, Math.round(p * 0.6)));
+  return (
+    <div aria-hidden="true" aria-busy="true">
+      <div className="stk-group">
+        <div className="skeleton" style={{ width: 150, height: 28, borderRadius: 8, margin: "0 0 12px 4px" }} />
+        <SkelShelf n={p} />
+        <SkelShelf n={p} />
+      </div>
+      <div className="stk-group">
+        <div className="skeleton" style={{ width: 104, height: 28, borderRadius: 8, margin: "0 0 12px 4px" }} />
+        <SkelShelf n={partial} />
+      </div>
     </div>
   );
 }
@@ -267,9 +308,10 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
       {/* Corps scrollable : le fond chaud du mur est le fond de ce conteneur */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         <div ref={contentRef} className="stk-wall" style={{ minHeight: "100%" }}>
-        {ingredientDB.length === 0 && loading ? (
-          // Base pas encore hydratée : spinner plutôt que « Base d'ingrédients vide ».
-          <LoadingSpinner />
+        {loading ? (
+          // Données pas encore hydratées : squelette d'étagères (forme immédiate,
+          // pas d'écran vide) plutôt que « Base d'ingrédients vide » prématuré.
+          <StockWallSkeleton perRow={perRow} />
         ) : ingredientDB.length === 0 ? (
           <StockEmpty icon="box" title="Base d'ingrédients vide"
             body={<>Importe-la dans <strong style={{ color: "var(--text)", fontWeight: 600 }}>Config → Ingrédients</strong>.</>} />

@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.3.1 – Cardamome · Étagère rangée
+
+### Mon Stock
+- **Fond raccord** : le mur d'étagères prend enfin la même teinte que son en-tête. La couture de couleur qui traînait en haut de l'écran a disparu.
+- **Chargement en douceur** : au premier affichage, une étagère « fantôme » se dessine tout de suite (bocaux et étiquettes esquissés) le temps que tes stocks arrivent, à la place de l'écran vide suivi d'un remplissage brusque.
+
+### Interface
+- **Titres mieux dosés** : les grands titres en Source Serif 4 (bonjour, nom du foyer, ingrédient du moment) s'allègent d'un cran, plus fins et posés, sans rien perdre de leur caractère.
+
 ## v4.3.0 – Cardamome · Sur l'étagère
 
 ### Mon Stock
