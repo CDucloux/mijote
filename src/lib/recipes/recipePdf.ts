@@ -263,7 +263,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   <meta charset="UTF-8" />
   <title>${recipe.name} – Cardamome</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,300&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --accent: #6e9a3f; --green-rgb: 63, 154, 84; --text: #23281d; --text2: #565b4c; --text3: #838872; --border: #e3e5d9; --surface: #f7f8f1; }
@@ -281,7 +281,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .hero-source svg { width: 12px; height: 12px; flex-shrink: 0; }
     .hero-source .hs-txt { font-size: 10.5px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .header { padding-bottom: 4px; margin-bottom: 12px; }
-    h1 { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
+    h1 { font-family: 'Source Serif 4', Georgia, serif; font-size: 38px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
     .title-rule { width: 48px; height: 4px; border-radius: 4px; background: var(--accent); margin-bottom: 18px; }
     .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
     .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
@@ -296,16 +296,16 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .diff-dots { display: inline-flex; align-items: center; gap: 4px; }
     .dd { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .nl { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; line-height: 1; }
-    .section-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-    .group-title { font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 700; color: var(--accent); margin: 4px 0 10px; }
+    .section-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .group-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 14px; font-weight: 700; color: var(--accent); margin: 4px 0 10px; }
     /* Sous-préparation d'étapes : bloc encadré, nettement séparé des autres */
     .step-group { border: 1px solid rgba(var(--accent-rgb), 0.35); border-radius: 14px; padding: 16px 18px 2px; margin-bottom: 20px; background: rgba(var(--accent-rgb), 0.035); }
-    .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 700; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(110, 154, 63, 0.28); }
+    .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Source Serif 4', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(110, 154, 63, 0.28); }
     .step-group-ico { flex-shrink: 0; }
     .step-group .step:last-child { margin-bottom: 16px; }
     /* Intitulé des étapes hors section (« Préparation », « Montage »), même accent que
        les sections (l'encadré distingue déjà les vraies sous-préparations) */
-    .step-loose-title { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 700; color: var(--accent); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .step-loose-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; font-weight: 700; color: var(--accent); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     /* Pills */
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
     .pill-comp { border-color: rgba(var(--accent-rgb),0.4); background: rgba(var(--accent-rgb),0.06); }
@@ -330,11 +330,11 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .comp-block { margin-bottom: 28px; padding: 16px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
     .comp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .comp-icon { display: inline-flex; align-items: center; }
-    .comp-name { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 700; color: var(--text); flex: 1; }
+    .comp-name { font-family: 'Source Serif 4', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--text); flex: 1; }
     .comp-yield { font-size: 12px; color: var(--text3); background: rgba(var(--accent-rgb),0.1); border-radius: 20px; padding: 3px 10px; }
     /* Footer */
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); }
-    .footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .footer-brand { font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
     .footer-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; text-align: right; }
     .footer-brand .dot { color: var(--accent); }
     .footer-gen { display: inline-flex; align-items: center; gap: 8px; }

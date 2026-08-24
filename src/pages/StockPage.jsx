@@ -49,12 +49,13 @@ const Jar = memo(function Jar({ ing, state, onCycle }) {
       aria-label={`${ing.name} — ${STATE_LABEL[state]}`}
     >
       <span className="stk-lid" aria-hidden="true" />
-      <span className="stk-glass">
-        <span className="stk-fill">
-          {ing.image && !imgErr && (
-            <img className="stk-fill-img" src={ing.image} alt="" loading="lazy" decoding="async"
-              referrerPolicy="no-referrer" onError={() => setImgErr(true)} />
-          )}
+      <span className="stk-glass ripple ripple-accent">
+        <span className="stk-fill" />
+        <span className="stk-photo" aria-hidden="true">
+          {ing.image && !imgErr
+            ? <img src={ing.image} alt="" loading="lazy" decoding="async"
+                referrerPolicy="no-referrer" onError={() => setImgErr(true)} />
+            : <Icon name="photo" size={22} color="#b3afaa" />}
         </span>
         <span className="stk-gloss" aria-hidden="true" />
         <span className="stk-label"><span>{ing.name}</span></span>

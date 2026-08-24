@@ -1,4 +1,4 @@
-/* Polices Cormorant Garamond + Hanken Grotesk : chargées via <link> dans index.html (plus
+/* Polices Source Serif 4 + Hanken Grotesk : chargées via <link> dans index.html (plus
    fiable que @import, notamment sur mobile/iOS). Ne pas remettre d'@import ici. */
 
 *,
@@ -59,7 +59,7 @@
   --paper-2: #2e2a20;
   --paper-ink: #cabfa5;
   --glass-line: rgba(255, 255, 255, 0.14);
-  --ff-display: 'Cormorant Garamond', serif;
+  --ff-display: 'Source Serif 4', Georgia, serif;
   --ff-body: 'Hanken Grotesk', sans-serif;
   --ff-hand: 'Caveat', 'Segoe Print', cursive;
   --tab-h: 72px;
@@ -1454,18 +1454,6 @@ select {
   position: relative;
   padding: 20px 20px 40px;
   background-color: var(--wall);
-  background-image: linear-gradient(180deg, var(--wall), var(--wall-2));
-}
-
-/* Lumière douce haut-gauche + grain plâtre discret. */
-.stk-wall::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 80% at 12% -10%, rgba(255, 255, 255, 0.5), transparent 55%),
-    radial-gradient(90% 60% at 100% 120%, rgba(90, 70, 40, 0.06), transparent 60%);
 }
 
 .stk-group { position: relative; margin-bottom: 30px; }
@@ -1500,8 +1488,9 @@ select {
   color: var(--spice);
 }
 
-/* Une planche = une rangée. */
-.stk-shelf { position: relative; margin-bottom: 22px; }
+/* Une planche = une rangée. Marge basse généreuse : les équerres (~32px) pendent
+   sous le chant sans jamais toucher les bocaux de la rangée suivante. */
+.stk-shelf { position: relative; margin-bottom: 54px; }
 .stk-shelf:last-child { margin-bottom: 0; }
 
 .stk-jars {
@@ -1554,6 +1543,7 @@ select {
 .stk-jar {
   --w: 116px;
   --h: 150px;
+  --photo: 58px;
   --fill: #cdb98a;
   --lvl: 66%;
   position: relative;
@@ -1610,7 +1600,8 @@ select {
   transition: box-shadow 0.3s ease;
 }
 
-/* Contenu (vu À TRAVERS le verre), masqué au niveau de remplissage. */
+/* Contenu (vu À TRAVERS le verre) : niveau de remplissage = état de stock. Teinte
+   « garde-manger » + grain léger ; la HAUTEUR pilotée par --lvl porte l'information. */
 .stk-fill {
   position: absolute;
   left: 0;
@@ -1628,15 +1619,30 @@ select {
   border-radius: 0 0 24px 24px / 0 0 30px 30px;
   transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* Image réelle de l'ingrédient : ancrée en bas, révélée jusqu'au niveau. */
-.stk-fill-img {
+
+/* Vignette ronde de l'ingrédient, posée dans le bocal au-dessus de l'étiquette
+   (léger, contenu réel sans coût de rendu d'une image plein cadre). */
+.stk-photo {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: var(--h);
-  object-fit: cover;
-  object-position: center 42%;
+  left: 50%;
+  top: 13%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: var(--photo);
+  height: var(--photo);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(120, 90, 50, 0.28);
+  box-shadow: 0 2px 6px rgba(40, 30, 15, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stk-photo img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
 }
 
 /* Reflet spéculaire du verre, PAR-DESSUS le contenu. */
@@ -1711,6 +1717,12 @@ select {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.08));
 }
 .stk-jar[data-state="empty"] .stk-label { opacity: 0.9; }
+/* Bocal vide (à racheter) : la vignette se désature, appuyant l'état « manquant ». */
+.stk-jar[data-state="empty"] .stk-photo { opacity: 0.5; filter: grayscale(0.4); }
+
+/* Onde tactile (mobile) bornée au verre : l'ink, inséré en 1er enfant, remonte
+   AU-DESSUS du contenu (fill/vignette/étiquette) pour rester lisible au toucher. */
+.stk-glass > .ripple-ink { z-index: 3; }
 
 /* Survol/focus : pas de lift, on révèle le verre + anneau accent. */
 .stk-jar:focus-visible { outline: none; }
@@ -1739,9 +1751,10 @@ select {
 @media (max-width: 620px) {
   .stk-wall { padding-left: 14px; padding-right: 14px; }
   .stk-jars { gap: 14px; padding: 0 8px; }
-  .stk-jar { --w: 96px; --h: 126px; }
+  .stk-jar { --w: 96px; --h: 126px; --photo: 46px; }
   .stk-lid { height: 16px; }
   .stk-bracket { width: 22px; height: 27px; }
+  .stk-shelf { margin-bottom: 46px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
