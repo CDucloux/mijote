@@ -15,7 +15,9 @@ import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "@/lib/household/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useLS } from "../hooks/useLS.js";
-import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide } from "@/lib/planning/composedMeal.js";
+import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide, moveMealItem } from "@/lib/planning/composedMeal.js";
+import { useLongPress } from "../hooks/useLongPress.js";
+import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
@@ -53,7 +55,7 @@ function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T
 function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").join("\\,").split(";").join("\\;"); }
 
 // SlotZone lifted out + memoised → never re-created on parent re-render
-const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete }) {
+const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOpenItemMenu, startLongPress, cancelLongPress, moveLongPress, wasLongPress }) {
   const dropKey = date + ":" + slot;
   const isOver = dropTarget === dropKey;
   return (
@@ -95,11 +97,14 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
               const label = composed ? roleLabel(role) : MP_SLOT_LABEL[slot];
               return (
                 <div key={globalIdx} draggable
-                  onDragStart={() => onSetDragInfo({ date, idx: globalIdx, slot })}
+                  onDragStart={() => { cancelLongPress(); onSetDragInfo({ date, idx: globalIdx, slot }); }}
                   onDragEnd={() => onSetDragInfo(null)}
+                  onContextMenu={e => { e.preventDefault(); onOpenItemMenu({ date, idx: globalIdx, slot, recipeId: item.recipeId }); }}
+                  onPointerDown={e => startLongPress(e, () => onOpenItemMenu({ date, idx: globalIdx, slot, recipeId: item.recipeId }))}
+                  onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   style={{ display: "flex", alignItems: "center", gap: 8, cursor: "grab" }}>
                   <div style={{ width: composed ? 38 : 46, height: composed ? 38 : 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                  <button onClick={() => onSelectRecipe(r.id)} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                  <button onClick={() => { if (wasLongPress()) return; onSelectRecipe(r.id); }} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
                     <div style={{ fontSize: 9.5, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{label}</div>
                     {item.portions > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{item.portions}</div>}
@@ -137,6 +142,13 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const [addModal, setAddModal] = useState(null);
   const [searchQ, setSearchQ] = useState("");
   const [addedId, setAddedId] = useState(null); // recette en cours de confirmation (+→✓)
+  // Menu contextuel d'un repas planifié (clic droit / appui long) et sa feuille
+  // de replanification. `itemMenu` / `moveFor` = { date, idx, slot, recipeId }.
+  const [itemMenu, setItemMenu] = useState(null);
+  const [moveFor, setMoveFor] = useState(null);
+  const [moveWeekRef, setMoveWeekRef] = useState(new Date());
+  const [moveTarget, setMoveTarget] = useState({ date: null, slot: null });
+  const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
 
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -268,21 +280,25 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const getMeals = useCallback((date, slot) => (mealPlan[date] || []).filter(m => m.slot === slot), [mealPlan]);
 
   const removeMeal = useCallback((date, idx) => setMealPlan(prev => { const arr = [...(prev[date] || [])]; arr.splice(idx, 1); return { ...prev, [date]: arr }; }), [setMealPlan]);
-  const moveMeal = useCallback((fromDate, fromIdx, toDate, toSlot) => setMealPlan(prev => {
-    const from = [...(prev[fromDate] || [])];
-    const [orig] = from.splice(fromIdx, 1);
-    if (!orig) return prev;
-    const toArr = fromDate === toDate ? from : [...(prev[toDate] || [])];
-    // Rattache l'item au repas déjà présent sur le créneau cible (même groupId) :
-    // sinon il apparaissait comme un nouveau repas orphelin sous l'existant.
-    // Aucun repas cible → il forme son propre repas (midi/soir), matin = sans groupe.
-    const targetGroup = toArr.find(m => m.slot === toSlot && m.groupId)?.groupId
-      || (toSlot === "matin" ? undefined : newGroupId());
-    const moved = { ...orig, slot: toSlot };
-    if (targetGroup) moved.groupId = targetGroup; else delete moved.groupId;
-    toArr.push(moved);
-    return fromDate === toDate ? { ...prev, [fromDate]: toArr } : { ...prev, [fromDate]: from, [toDate]: toArr };
-  }), [setMealPlan]);
+  // Déplacement d'un item (drag-and-drop ET replanification) : règle de
+  // rattachement au repas cible factorisée dans `moveMealItem` (pur, testé).
+  const moveMeal = useCallback((fromDate, fromIdx, toDate, toSlot) =>
+    setMealPlan(prev => moveMealItem(prev, fromDate, fromIdx, toDate, toSlot)), [setMealPlan]);
+
+  const openItemMenu = useCallback((info) => setItemMenu(info), []);
+  // « Replanifier » : ouvre la feuille de choix (semaine visible → celle de l'item).
+  const openReschedule = useCallback((info) => {
+    setItemMenu(null);
+    setMoveFor(info);
+    setMoveWeekRef(new Date(info.date + "T12:00"));
+    setMoveTarget({ date: info.date, slot: info.slot });
+  }, []);
+  const confirmReschedule = useCallback(() => {
+    if (!moveFor || !moveTarget.date) return;
+    moveMeal(moveFor.date, moveFor.idx, moveTarget.date, moveTarget.slot);
+    setMoveFor(null);
+    notify("Repas replanifié");
+  }, [moveFor, moveTarget, moveMeal, notify]);
   const navigate = useCallback(dir => setCurrentDate(prev => {
     const d = new Date(prev);
     if (viewMode === "week") d.setDate(d.getDate() + dir * 7); else d.setMonth(d.getMonth() + dir);
@@ -440,7 +456,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {MEAL_SLOTS.filter(s => s.id !== "matin" || getMeals(date, s.id).length).map(s => (
-                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} />
+                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOpenItemMenu={openItemMenu} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
                     ))}
                   </div>
                 </div>
@@ -598,6 +614,104 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           }}
         </SwipeableSheet>
       )}
+
+      {/* Menu contextuel d'un repas planifié (clic droit / appui long) */}
+      {itemMenu && (() => {
+        const it = itemMenu;
+        const r = recipesById.get(it.recipeId);
+        const close = () => setItemMenu(null);
+        const slotLabel = SLOT_BY_ID[it.slot]?.label || "Repas";
+        return (
+        <SwipeableSheet onClose={close}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 24 }}>
+              {r?.image ? <img src={r.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🍽️"}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r?.name || "Recette supprimée"}</div>
+              <div style={{ fontSize: 13, color: "var(--text3)" }}>{slotLabel} · {new Date(it.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {r && (
+              <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { onSelectRecipe(r.id); close(); }}>
+                <Icon name="forward" size={19} color="var(--text2)" /> Ouvrir
+              </button>
+            )}
+            <button className="menu-row" onPointerDown={spawnRipple} onClick={() => openReschedule(it)}>
+              <Icon name="calendar" size={19} color="var(--text2)" /> Replanifier
+            </button>
+            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onPointerDown={spawnRipple} onClick={() => { removeMeal(it.date, it.idx); close(); notify("Repas retiré du planning"); }}>
+              <Icon name="trash" size={19} color="var(--red)" /> Supprimer du calendrier
+            </button>
+          </div>
+        </SwipeableSheet>
+        );
+      })()}
+
+      {/* Replanifier : choisir un autre jour (navigable de semaine en semaine) + créneau */}
+      {moveFor && (() => {
+        const r = recipesById.get(moveFor.recipeId);
+        const close = () => setMoveFor(null);
+        const days = mpGetWeekDays(moveWeekRef);
+        const shiftWeek = (dir) => setMoveWeekRef(prev => { const d = new Date(prev); d.setDate(d.getDate() + dir * 7); return d; });
+        return (
+        <SwipeableSheet onClose={close} style={{ maxHeight: "82dvh" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
+              <Icon name="calendar" size={21} color="var(--accent)" />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Replanifier</h3>
+              <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>« {r?.name || "cette recette"} »</div>
+            </div>
+          </div>
+
+          {/* Navigation de semaine */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <button onClick={() => shiftWeek(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={15} /></button>
+            <span style={{ flex: 1, textAlign: "center", fontSize: 13.5, fontWeight: 600 }}>
+              {`${new Date(days[0] + "T12:00").getDate()} – ${new Date(days[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(days[6] + "T12:00").getMonth()]}`}
+            </span>
+            <button onClick={() => shiftWeek(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={15} /></button>
+          </div>
+
+          {/* Jours de la semaine : pastilles sélectionnables */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 16 }}>
+            {days.map(dstr => {
+              const d = new Date(dstr + "T12:00");
+              const active = moveTarget.date === dstr;
+              return (
+                <button key={dstr} onClick={() => setMoveTarget(t => ({ ...t, date: dstr }))} className="pressable"
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 0", borderRadius: 12, cursor: "pointer",
+                    background: active ? "var(--accent)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "#fff" : "var(--text2)" }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.9 }}>{MP_DAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700 }}>{d.getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Créneau cible */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            {MEAL_SLOTS.map(s => {
+              const active = moveTarget.slot === s.id;
+              return (
+                <button key={s.id} onClick={() => setMoveTarget(t => ({ ...t, slot: s.id }))} className="pressable"
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 4px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                    background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "var(--accent)" : "var(--text3)" }}>
+                  <span style={{ fontSize: 15 }}>{s.emoji}</span>{s.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} disabled={!moveTarget.date || !moveTarget.slot} onClick={confirmReschedule}>
+            <Icon name="check" size={16} /> Déplacer ici
+          </button>
+        </SwipeableSheet>
+        );
+      })()}
 
       {/* Sous-menu de génération : choix du style de repas */}
       {genOpen && (

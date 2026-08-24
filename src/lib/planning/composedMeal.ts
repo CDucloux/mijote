@@ -8,7 +8,7 @@
  * @module composedMeal
  */
 import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
-import type { MealItem } from "@/lib/types.js";
+import type { MealItem, MealPlan } from "@/lib/types.js";
 
 export type { MealItem };
 
@@ -142,6 +142,46 @@ export function mealsForSlot(
     .map((item, idx) => ({ item, idx }))
     .sort((a, b) => roleOrder(roleOf(a.item)) - roleOrder(roleOf(b.item)));
   return [{ groupId: rep.groupId || null, items }];
+}
+
+/**
+ * Déplace UN item de planning d'un créneau vers un autre (jour et/ou créneau),
+ * potentiellement dans une autre semaine. Sert au drag-and-drop ET à la
+ * « replanification » depuis le menu contextuel : même règle de rattachement.
+ *
+ * L'item rejoint le repas déjà présent sur le créneau cible (il en reprend le
+ * `groupId`) ; à défaut il fonde son propre repas (nouveau `groupId`), sauf sur
+ * le créneau du matin qui reste non composé (aucun `groupId`). Purement
+ * fonctionnel : renvoie un nouveau `MealPlan`, sans muter l'entrée.
+ *
+ * @param plan - Le planning courant (indexé par date ISO).
+ * @param fromDate - Date source de l'item.
+ * @param fromIdx - Index de l'item dans le tableau de la date source.
+ * @param toDate - Date cible.
+ * @param toSlot - Créneau cible (`matin` / `midi` / `soir`).
+ * @param makeGroupId - Fabrique d'id de groupe (injectable pour les tests).
+ * @returns Un nouveau planning ; le `plan` d'origine si l'index est hors bornes.
+ */
+export function moveMealItem(
+  plan: MealPlan,
+  fromDate: string,
+  fromIdx: number,
+  toDate: string,
+  toSlot: string,
+  makeGroupId: () => string = newGroupId,
+): MealPlan {
+  const from = [...(plan[fromDate] || [])];
+  const [orig] = from.splice(fromIdx, 1);
+  if (!orig) return plan;
+  const toArr = fromDate === toDate ? from : [...(plan[toDate] || [])];
+  const targetGroup = toArr.find(m => m.slot === toSlot && m.groupId)?.groupId
+    || (toSlot === "matin" ? undefined : makeGroupId());
+  const moved: MealItem = { ...orig, slot: toSlot };
+  if (targetGroup) moved.groupId = targetGroup; else delete moved.groupId;
+  toArr.push(moved);
+  return fromDate === toDate
+    ? { ...plan, [fromDate]: toArr }
+    : { ...plan, [fromDate]: from, [toDate]: toArr };
 }
 
 /**
