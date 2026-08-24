@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roleForCategory, itemRole, groupSlotMeals, mealsForSlot, newGroupId, platNeedsSide } from "@/lib/planning/composedMeal.js";
+import { roleForCategory, itemRole, groupSlotMeals, mealsForSlot, newGroupId, platNeedsSide, moveMealItem } from "@/lib/planning/composedMeal.js";
 
 describe("roleForCategory", () => {
   it("mappe le type vers un rôle", () => {
@@ -95,5 +95,46 @@ describe("mealsForSlot", () => {
   });
   it("créneau vide → aucun repas", () => {
     expect(mealsForSlot([], DB)).toEqual([]);
+  });
+});
+
+describe("moveMealItem", () => {
+  const gid = () => "gNEW";
+
+  it("déplace vers une autre semaine (autre date) et rattache au repas cible existant", () => {
+    const plan = {
+      "2026-08-24": [{ recipeId: "boeuf", slot: "soir", groupId: "g1", role: "plat" }],
+      "2026-08-31": [{ recipeId: "riz", slot: "soir", groupId: "g2", role: "plat" }],
+    };
+    const next = moveMealItem(plan, "2026-08-24", 0, "2026-08-31", "soir", gid);
+    expect(next["2026-08-24"]).toEqual([]); // source vidée
+    expect(next["2026-08-31"]).toHaveLength(2);
+    // L'item déplacé reprend le groupId du repas déjà présent sur le créneau cible.
+    expect(next["2026-08-31"][1]).toMatchObject({ recipeId: "boeuf", slot: "soir", groupId: "g2" });
+  });
+
+  it("créneau cible vide → l'item fonde un nouveau repas (groupId neuf)", () => {
+    const plan = { "2026-08-24": [{ recipeId: "boeuf", slot: "midi", groupId: "g1" }] };
+    const next = moveMealItem(plan, "2026-08-24", 0, "2026-08-25", "soir", gid);
+    expect(next["2026-08-25"][0]).toMatchObject({ recipeId: "boeuf", slot: "soir", groupId: "gNEW" });
+  });
+
+  it("créneau du matin → repas non composé (pas de groupId)", () => {
+    const plan = { "2026-08-24": [{ recipeId: "boeuf", slot: "soir", groupId: "g1" }] };
+    const next = moveMealItem(plan, "2026-08-24", 0, "2026-08-24", "matin", gid);
+    expect(next["2026-08-24"][0]).toMatchObject({ recipeId: "boeuf", slot: "matin" });
+    expect(next["2026-08-24"][0].groupId).toBeUndefined();
+  });
+
+  it("index hors bornes → planning inchangé (même référence)", () => {
+    const plan = { "2026-08-24": [{ recipeId: "boeuf", slot: "midi" }] };
+    expect(moveMealItem(plan, "2026-08-24", 5, "2026-08-25", "soir", gid)).toBe(plan);
+  });
+
+  it("ne mute pas le planning d'origine", () => {
+    const plan = { "2026-08-24": [{ recipeId: "boeuf", slot: "midi", groupId: "g1" }] };
+    const snapshot = JSON.parse(JSON.stringify(plan));
+    moveMealItem(plan, "2026-08-24", 0, "2026-08-25", "soir", gid);
+    expect(plan).toEqual(snapshot);
   });
 });
