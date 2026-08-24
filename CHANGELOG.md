@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.5.0 – Cardamome · La vitrine
+
+### Page d'accueil publique
+- **Une vraie vitrine** : la racine du site (avant connexion) devient une landing manifeste. Elle dit ce qu'on pense des apps de recettes devenues des poubelles, ce que fait Cardamome, pour qui, et à quel prix, d'une seule voix assumée.
+- **Navigation en slides** : chaque section occupe un écran plein, avec une barre de navigation présente en permanence (marque, ancres vers le problème, l'import intelligent et l'offre, thème, essai) et une flèche pour descendre de section en section.
+- **L'app en aperçu, sans triche** : des maquettes vivantes bâties sur les vrais composants et les tokens de l'app (écran d'accueil, cartes recette, recette structurée, étagère de livres) montrent Cardamome sans aucune capture ni image générée, et suivent le thème clair/sombre.
+- **Import intelligent mis en avant** : une démonstration animée montre un lien ou une photo de page qui devient une recette structurée, prête à cuisiner. Le mot « IA » cède la place à « import intelligent », plus fidèle à l'esprit maison.
+- **Un parti pris assumé** : un manifeste pleine largeur affirme que Cardamome est faite pour les amateurs motivés qui veulent vraiment cuisiner, pas pour tout le monde, et le revendique.
+- **Bientôt sur mobile** : des boutons Android et iOS en « à venir » annoncent l'app native (en cours via Capacitor), sans lien inventé.
+
 ## v4.4.0 – Cardamome · Repas nomades
 
 ### Planning

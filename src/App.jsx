@@ -52,6 +52,7 @@ import { LoginPage } from "./pages/LoginPage.jsx";
 import { ImportFromUrl } from "./pages/ImportFromUrl.jsx";
 import { ImportFromPicture } from "./pages/ImportFromPicture.jsx";
 import { PlusPage } from "./pages/PlusPage.jsx";
+import { LandingPage } from "./pages/LandingPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent,
@@ -637,7 +638,12 @@ export default function App() {
           l'origine, après une brève transition « Connexion en cours… » (postLogin)
           pour que l'écran de chargement soit visible même quand le login est instantané. */}
       <Route path="/login" element={user === undefined || postLogin ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={onSignIn} error={signInError} />} />
-      <Route path="/" element={<Navigate to="/home" replace />} />
+      {/* La racine « / » sert la landing publique (marketing), consultable connectée
+          ou non : seul le CTA principal s'adapte à l'état d'auth. L'app garde ses
+          routes plates (/home, /recipes…) intactes, aucune migration transversale.
+          Le start_url du manifest pointe sur /home : la PWA installée ouvre l'app,
+          pas la landing. */}
+      <Route path="/" element={<LandingPage user={user} isDark={isDark} toggleTheme={toggleTheme} />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout
           remontage (et donc le flicker de l'écran de chargement) lors de la navigation. */}

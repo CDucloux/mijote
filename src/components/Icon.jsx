@@ -12,6 +12,7 @@ import {
   Star, User, Lightbulb, ArrowSquareOut, Leaf, FileText, EnvelopeSimple, Package,
   WifiSlash, ClockCounterClockwise, Eraser, ArrowsLeftRight, ArrowsDownUp, Pause, Play,
   Stop, DotsThreeVertical, DotsThree, Info, Eye, EyeSlash, Heart, Globe, Lock, Scales,
+  AndroidLogo, AppleLogo, Camera,
 } from "@phosphor-icons/react";
 
 // name métier -> composant Phosphor.
@@ -82,6 +83,9 @@ const ICONS = {
   heart: Heart,
   globe: Globe,
   lock: Lock,
+  android: AndroidLogo,
+  apple: AppleLogo,
+  camera: Camera,
 };
 
 // Poids par défaut : la plupart des icônes vivent en `regular` (trait épuré) ;
