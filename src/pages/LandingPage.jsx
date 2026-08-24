@@ -290,27 +290,6 @@ function SceneImport() {
   );
 }
 
-/** Semaine de planning : grille de jours, quelques repas posés. */
-function ScenePlanning() {
-  const days = ["L", "M", "M", "J", "V", "S", "D"];
-  const filled = { 0: "midi", 1: "soir", 3: "midi", 4: "soir", 5: "midi" };
-  return (
-    <div className="lp-scene lp-scene--plan" aria-hidden="true">
-      <div className="lp-scene__bar"><span className="lp-scene__title">Ma semaine</span></div>
-      <div className="lp-pl__grid">
-        {days.map((d, i) => (
-          <div className="lp-pl__day" key={i}>
-            <span className="lp-pl__dname">{d}</span>
-            <span className={`lp-pl__slot${filled[i] ? " lp-pl__slot--on" : ""}`} />
-            <span className={`lp-pl__slot${filled[i] === "soir" ? " lp-pl__slot--on" : ""}`} />
-          </div>
-        ))}
-      </div>
-      <div className="lp-pl__gen"><Icon name="sparkle" size={13} color="var(--accent)" /> Générer ma semaine</div>
-    </div>
-  );
-}
-
 /** Boutons « stores » : l'app native arrive (Capacitor), rien de public encore.
  *  États « à venir » NON cliquables : on n'invente aucun lien de téléchargement. */
 function StoreButtons() {
@@ -534,22 +513,20 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         {slideDown()}
       </section>
 
-      {/* 7. Manifeste */}
-      <section className="lp-wrap lp-section lp-slide">
-        <div className="lp-split lp-split--reverse">
-          <div className="lp-split__media">
-            <PhoneFrame label="Le planning de la semaine dans Cardamome"><ScenePlanning /></PhoneFrame>
-          </div>
-          <div>
-            <span className="lp-eyebrow">Le manifeste</span>
-            <h2 className="lp-h2">Oui, on a des opinions.</h2>
-            <div className="lp-manifesto">
-              <p>Plus de contenu ne rend pas une app <em>meilleure.</em></p>
-              <p>Une recette sauvegardée <span className="lp-mute">n'est pas</span> une recette cuisinée.</p>
-              <p>Le doublon n'est pas un choix, c'est du <span className="lp-mute">remplissage.</span></p>
-              <p>Ce qui compte tient dans une assiette, <em>pas dans un compteur.</em></p>
-            </div>
-          </div>
+      {/* 7. Manifeste : pleine largeur, prise de position assumée */}
+      <section id="manifeste" className="lp-wrap lp-section lp-slide lp-manifest">
+        <span className="lp-eyebrow">Le manifeste</span>
+        <h2 className="lp-manifest__lead">On n'est pas pour tout le monde. <em>Et on l'assume.</em></h2>
+        <p className="lp-manifest__sub">
+          Cardamome est faite pour celles et ceux qui veulent <strong>vraiment cuisiner</strong> : les
+          amateurs motivés, pas les collectionneurs de recettes qu'ils ne feront jamais. On préfère
+          servir à fond quelques passionnés que satisfaire mollement tout le monde.
+        </p>
+        <div className="lp-manifest__grid">
+          <p><span className="lp-manifest__n">01</span>Plus de contenu ne rend pas une app <em>meilleure.</em></p>
+          <p><span className="lp-manifest__n">02</span>Une recette sauvegardée <span className="lp-mute">n'est pas</span> une recette cuisinée.</p>
+          <p><span className="lp-manifest__n">03</span>Le doublon n'est pas un choix, c'est du <span className="lp-mute">remplissage.</span></p>
+          <p><span className="lp-manifest__n">04</span>Ce qui compte tient dans une assiette, <em>pas dans un compteur.</em></p>
         </div>
         {slideDown()}
       </section>
