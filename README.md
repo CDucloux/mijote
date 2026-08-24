@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.4.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.5.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -53,7 +53,7 @@ toujours avec vous.
 - 🧩 **Préparations de base** : une recette peut consommer une « base »
   réutilisable (sauce, pâte, appareil) avec un rendement ; les courses éclatent
   automatiquement la base en ingrédients bruts.
-- 🤖 **Import par IA** : importez une recette depuis une **URL** ou **1 à 2
+- 🤖 **Import intelligent** : importez une recette depuis une **URL** ou **1 à 2
   photos** d'un livre : extraction, structuration et liaison des ingrédients /
   ustensiles par Claude, qui **détecte aussi les préparations de base** (caramel,
   pâte, fond…) et leur rendement estimé (réservé aux abonnés **Cardamome+**, quotas
@@ -94,6 +94,9 @@ toujours avec vous.
   zone de danger (purge ciblée, **suppression de compte** RGPD).
 - 📜 **Informations légales** : mentions légales, confidentialité, CGU et
   cookies (Markdown), consultables même déconnecté.
+- 🪧 **Vitrine publique** : la racine du site présente Cardamome avant toute
+  connexion (manifeste, aperçus vivants de l'app, import intelligent, offre) en
+  slides plein écran, barre de navigation à ancres, thème clair / sombre.
 - ☁️ **Synchro cloud** : persistance Firestore hors-ligne (IndexedDB), base de
   référence partagée synchronisée **en temps réel**, connexion Google.
 - 🔒 **Anti-abus** : attestation d'origine (Firebase App Check) et règles
@@ -101,7 +104,7 @@ toujours avec vous.
 - 🌗 **Thème clair / sombre** et interface responsive mobile + desktop (PWA
   installable), avec onboarding illustré.
 - 💳 **Cardamome+** : abonnement (mensuel ou annuel, paiement Stripe) qui débloque
-  l'import IA, le générateur de semaine, la session batch, le foyer partagé, le
+  l'import intelligent, le générateur de semaine, la session batch, le foyer partagé, le
   détail du calcul Nutri-Score et les recettes illimitées (50 en plan gratuit).
 
 ## 🛠️ Stack technique
