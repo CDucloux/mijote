@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
@@ -10,8 +11,17 @@ import "../styles/landing.css";
 //
 // Les visuels « app » (scènes ci-dessous) ne sont PAS des captures : ce sont des
 // maquettes vivantes bâties sur les mêmes tokens de design que l'app (accent, oak,
-// wall, spice, ff-display/ff-hand…), donc fidèles au produit, theme-aware, sans
-// aucun asset externe ni image générée. Elles montrent l'app sans rien inventer.
+// wall, spice, ff-display/ff-hand…) et sur les mêmes composants (carte recette,
+// écran d'accueil), donc fidèles au produit, theme-aware, sans aucun asset externe
+// ni image générée. Elles montrent l'app sans rien inventer.
+
+// Ancres de la barre collante : sauts vers les sections clés. Peu nombreuses,
+// pour rester lisibles et ne pas transformer la nav en menu fourre-tout.
+const NAV_LINKS = [
+  { label: "Le problème", id: "probleme" },
+  { label: "L'import IA", id: "import" },
+  { label: "L'offre", id: "offre" },
+];
 
 // Preuves d'usage : chaque item est une capacité réelle, décrite par ce qu'elle
 // change au quotidien (jamais « fonctionnalité X »). Icônes d'un set cohérent.
@@ -40,7 +50,22 @@ const PLAN_PLUS = [
   ["Génération de planning et batch cooking", false],
 ];
 
-// ─── Maquettes vivantes (tokens de l'app, aucun asset) ────────────────────────
+// ─── Maquettes vivantes (tokens + composants de l'app, aucun asset) ───────────
+
+/** Marque : la gousse de cardamome (même tracé que la sidebar de l'app) suivie du
+ *  mot-symbole. Le pod prend les tokens d'accent, donc suit le thème. */
+function LogoPod({ size = 27 }) {
+  return (
+    <svg className="lp-pod" viewBox="15 15 70 70" width={size} height={size} fill="none" aria-hidden="true">
+      <path d="M50 15 C68 30 74 48 67 63 C62.5 74 55.5 80 50 85 C44.5 80 37.5 74 33 63 C26 48 32 30 50 15 Z" fill="var(--accent2)" />
+      <g stroke="var(--accent-strong)" strokeLinecap="round">
+        <path d="M50 24 C50 40 50 62 50 77" strokeWidth="4" />
+        <path d="M42 30 C39.5 45 41 60 47 74" strokeWidth="3.4" />
+        <path d="M58 30 C60.5 45 59 60 53 74" strokeWidth="3.4" />
+      </g>
+    </svg>
+  );
+}
 
 /** Châssis « téléphone » qui encadre une scène d'app. Purement décoratif. */
 function PhoneFrame({ children, label }) {
@@ -52,51 +77,155 @@ function PhoneFrame({ children, label }) {
   );
 }
 
-/** Mini garde-manger : la signature « mur d'étagères » du Stock, en réduction. */
-function SceneShelf() {
-  const rows = [
-    [{ n: "Farine", s: "full" }, { n: "Sucre", s: "full" }, { n: "Cumin", s: "low" }],
-    [{ n: "Riz", s: "full" }, { n: "Miel", s: "empty" }, { n: "Sel", s: "full" }],
+/** Aperçu de l'accueil : reproduit l'écran d'accueil réel (dashboard) en réduction.
+ *  Données neutres, aucune identité réelle : « Bonjour ! », foyer « Mon Foyer »,
+ *  avatars réduits à une initiale. Fait le lien direct hero <-> produit. */
+function SceneHome() {
+  const months = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+  const nav = [
+    ["home", "Accueil", true], ["book", "Recettes", false], ["calendar", "Planning", false],
+    ["shopping", "Courses", false], ["box", "Stock", false],
   ];
   return (
-    <div className="lp-scene lp-scene--shelf" aria-hidden="true">
-      <div className="lp-scene__bar"><span className="lp-scene__title">Mon garde-manger</span></div>
-      {rows.map((row, i) => (
-        <div className="lp-shelf" key={i}>
-          <div className="lp-shelf__jars">
-            {row.map((j) => (
-              <span className={`lp-jar lp-jar--${j.s}`} key={j.n}>
-                <span className="lp-jar__lid" />
-                <span className="lp-jar__glass">
-                  <span className="lp-jar__fill" />
-                  <span className="lp-jar__label">{j.n}</span>
-                </span>
-              </span>
+    <div className="lp-scene lp-hs" aria-hidden="true">
+      <div className="lp-hs__scroll">
+        <div className="lp-hs__head">
+          <div>
+            <div className="lp-hs__hi">Bonjour&nbsp;!</div>
+            <div className="lp-hs__sub">Bienvenue sur <b>Cardam<span>o</span>me<span>·</span></b></div>
+          </div>
+          <span className="lp-hs__me">C</span>
+        </div>
+
+        <div className="lp-hs__foyer">
+          <span className="lp-hs__foyerbar" />
+          <span className="lp-hs__avs"><i>C</i><i>M</i></span>
+          <span className="lp-hs__foyertxt">
+            <b>Mon Foyer</b>
+            <small>2 membres · partage actif</small>
+          </span>
+          <span className="lp-hs__chev"><Icon name="forward" size={12} color="#fff" /></span>
+        </div>
+
+        <div className="lp-hs__label">Aujourd'hui</div>
+        <div className="lp-hs__row">
+          <span className="lp-hs__rowic"><Icon name="shopping" size={15} color="var(--accent)" /></span>
+          <span className="lp-hs__rowtxt"><b>12 articles à acheter</b><small>Ta liste de courses t'attend</small></span>
+          <Icon name="forward" size={12} color="var(--text3)" />
+        </div>
+
+        <div className="lp-hs__label lp-hs__label--row">
+          <span className="lp-hs__labelic"><Icon name="leaf" size={12} color="var(--accent)" /> L'ingrédient du moment</span>
+          <small>chaque semaine</small>
+        </div>
+        <div className="lp-hs__ing">
+          <span className="lp-hs__ingbar" />
+          <div className="lp-hs__inghead">
+            <span className="lp-hs__ingphoto"><Icon name="leaf" size={19} color="var(--accent)" /></span>
+            <div>
+              <div className="lp-hs__ingname">Artichaut</div>
+              <div className="lp-hs__ingtags">
+                <span className="lp-hs__season"><Icon name="sun" size={9} color="#fff" /> De saison</span>
+                <small>Légume</small>
+              </div>
+            </div>
+          </div>
+          <div className="lp-hs__months">
+            {months.map((m, i) => (
+              <span key={i} className={i >= 4 && i <= 8 ? "on" : ""}>{m}</span>
             ))}
           </div>
-          <div className="lp-shelf__plank" />
         </div>
+      </div>
+      <div className="lp-hs__nav">
+        {nav.map(([ic, lb, on]) => (
+          <span key={lb} className={on ? "on" : ""}>
+            <Icon name={ic} size={16} weight={on ? "fill" : "regular"} color={on ? "var(--accent)" : "var(--text3)"} />
+            {lb}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Une carte recette fidèle au composant réel de l'app (RecipeCard) : vignette à
+ *  halo, badge « de saison » en verre, titre sur deux lignes, méta temps + ingr.,
+ *  pastille Nutri-Score. Sert la pile ci-dessous. */
+function RecipeCardMock({ name, time, ings, nutri, season, halo, className, style }) {
+  const initial = (name.trim()[0] || "?").toUpperCase();
+  return (
+    <div className={`lp-rcard${className ? " " + className : ""}`} style={style}>
+      <div className={`lp-rcard__thumb lp-rcard__thumb--${halo}`}>
+        <span className="lp-rcard__initial">{initial}</span>
+        {season && (
+          <span className="lp-rcard__season"><Icon name="sun" size={10} color="#fff" /> De saison</span>
+        )}
+      </div>
+      <div className="lp-rcard__body">
+        <div className="lp-rcard__title">{name}</div>
+        <div className="lp-rcard__meta">
+          <span className="lp-rcard__metaL">
+            <Icon name="clock" size={11} color="var(--text3)" /> {time}
+            <i className="lp-rcard__sep" /> {ings} ingr.
+          </span>
+          <span className="lp-rcard__nutri" data-n={nutri}>{nutri}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Pile de recettes « sauvegardées » : le trop-plein rendu visible. Doublons,
+// captures, favoris jamais rouverts. Éventail volontairement en désordre.
+const PILE = [
+  { name: "Tarte au citron meringuée", time: "45 min", ings: 9, nutri: "B", season: true, halo: "warm", s: { left: "2%", top: "16%", rotate: "-7deg", zIndex: 1 } },
+  { name: "Poulet rôti au citron", time: "1 h 10", ings: 7, nutri: "C", season: false, halo: "green", s: { left: "24%", top: "0%", rotate: "5deg", zIndex: 3 } },
+  { name: "Curry de lentilles corail", time: "30 min", ings: 12, nutri: "A", season: false, halo: "warm", s: { left: "12%", top: "40%", rotate: "-2deg", zIndex: 2 } },
+];
+
+/** Pile de cartes recette : plusieurs vraies cartes en désordre, pour donner à
+ *  voir « tu croules dessous » plutôt qu'une carte isolée. */
+function SceneCardPile() {
+  return (
+    <div className="lp-cardpile" aria-hidden="true">
+      {PILE.map((c) => (
+        <RecipeCardMock
+          key={c.name}
+          {...c}
+          className="lp-cardpile__card"
+          style={{ left: c.s.left, top: c.s.top, transform: `rotate(${c.s.rotate})`, zIndex: c.s.zIndex }}
+        />
       ))}
     </div>
   );
 }
 
-/** Fiche recette « propre » : le résultat rangé. Flotte hors châssis (asymétrie). */
-function SceneRecipeCard() {
+/** Étagère de livres de cuisine : ce que tu aimes déjà. Tons chauds (oak/spice),
+ *  un marque-page. Illustre « Tu as 15 livres de cuisine. Tu les aimes ». */
+function SceneBooks() {
+  const books = [
+    { t: "Le grand classique", tone: "oak", h: 148, lean: "-2deg" },
+    { t: "Pâtisserie", tone: "spice", h: 168, mark: true },
+    { t: "Cuisine de saison", tone: "accent", h: 138 },
+    { t: "Carnet de famille", tone: "ink", h: 158, lean: "1.5deg" },
+    { t: "Basiques", tone: "oak2", h: 130 },
+  ];
   return (
-    <div className="lp-scene lp-scene--card" aria-hidden="true">
-      <div className="lp-rc__photo">
-        <span className="lp-rc__nutri">A</span>
-        <span className="lp-rc__season"><Icon name="leaf" size={12} color="#fff" /> De saison</span>
+    <div className="lp-books" aria-hidden="true">
+      <div className="lp-books__row">
+        {books.map((b) => (
+          <span
+            key={b.t}
+            className={`lp-book lp-book--${b.tone}`}
+            style={{ height: b.h, transform: b.lean ? `rotate(${b.lean})` : undefined }}
+          >
+            {b.mark && <i className="lp-book__mark" />}
+            <span className="lp-book__t">{b.t}</span>
+          </span>
+        ))}
       </div>
-      <div className="lp-rc__body">
-        <div className="lp-rc__title">Tarte au citron meringuée</div>
-        <div className="lp-rc__meta">
-          <span><Icon name="user" size={12} /> 4 pers.</span>
-          <span><Icon name="clock" size={12} /> 45 min</span>
-          <span><Icon name="fire" size={12} /> Moyen</span>
-        </div>
-      </div>
+      <div className="lp-books__plank" />
     </div>
   );
 }
@@ -161,7 +290,7 @@ function SceneImport() {
   );
 }
 
-/** Semaine de planning : grille de jours, quelques repos posés. */
+/** Semaine de planning : grille de jours, quelques repas posés. */
 function ScenePlanning() {
   const days = ["L", "M", "M", "J", "V", "S", "D"];
   const filled = { 0: "midi", 1: "soir", 3: "midi", 4: "soir", 5: "midi" };
@@ -211,22 +340,64 @@ function StoreButtons() {
 export function LandingPage({ user, isDark, toggleTheme }) {
   const navigate = useNavigate();
   const primary = landingPrimaryCta(user);
-  const scrollTo = (id) => () => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const [scrolled, setScrolled] = useState(false);
 
-  // Fonction de rendu (et non composant déclaré au render) : le CTA principal
-  // apparaît plusieurs fois, on factorise sans remonter un sous-composant qui
-  // réinitialiserait son état à chaque render.
+  // La barre collante n'apparaît qu'une fois le hero dépassé : au repos en haut
+  // de page, on laisse respirer le grand titre sans doublon de navigation.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 440);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToId = (id) => (e) => {
+    e?.preventDefault?.();
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const scrollTop = (e) => {
+    e?.preventDefault?.();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Fonctions de rendu (et non composants déclarés au render) : CTA et marque
+  // apparaissent plusieurs fois. On factorise sans remonter de sous-composant qui
+  // réinitialiserait un état à chaque render.
   const primaryCta = (small = false) => (
     <button className={`lp-cta${small ? " lp-cta--sm" : ""}`} onClick={() => navigate(primary.to)}>
       {primary.label}
       <Icon name="forward" size={small ? 15 : 17} color="#fff" />
     </button>
   );
+  const brand = (size = 27) => (
+    <a href="#top" className="lp-brandmark" onClick={scrollTop} aria-label="Cardamome, revenir en haut">
+      <LogoPod size={size} />
+      <span className="lp-brand">Cardam<span className="lp-brand__dot">o</span>me<span className="lp-brand__dot">·</span></span>
+    </a>
+  );
 
   return (
-    <div className="lp-root">
+    <div className="lp-root" id="top">
+      {/* Barre collante (apparaît après le hero) : marque + ancres + thème + CTA */}
+      <div className={`lp-navbar${scrolled ? " is-visible" : ""}`} aria-hidden={!scrolled}>
+        <div className="lp-wrap lp-navbar__inner">
+          {brand(23)}
+          <nav className="lp-navbar__links">
+            {NAV_LINKS.map((l) => (
+              <a key={l.id} href={`#${l.id}`} onClick={scrollToId(l.id)}>{l.label}</a>
+            ))}
+          </nav>
+          <div className="lp-nav__right">
+            <button className="lp-theme" onClick={toggleTheme} aria-label={isDark ? "Passer en clair" : "Passer en sombre"}>
+              <Icon name={isDark ? "sun" : "moon"} size={17} />
+            </button>
+            {primaryCta(true)}
+          </div>
+        </div>
+      </div>
+
       <header className="lp-wrap lp-nav">
-        <span className="lp-brand">Cardam<span className="lp-brand__dot">o</span>me<span className="lp-brand__dot">·</span></span>
+        {brand(27)}
         <div className="lp-nav__right">
           <button className="lp-theme" onClick={toggleTheme} aria-label={isDark ? "Passer en clair" : "Passer en sombre"}>
             <Icon name={isDark ? "sun" : "moon"} size={17} />
@@ -251,20 +422,20 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <p className="lp-hero__note">on avait envie de le dire tout haut.</p>
           </div>
           <div className="lp-hero__art">
-            <PhoneFrame label="Aperçu de Cardamome : le garde-manger en bocaux"><SceneShelf /></PhoneFrame>
+            <PhoneFrame label="Aperçu de Cardamome : l'écran d'accueil"><SceneHome /></PhoneFrame>
           </div>
         </div>
-        <button className="lp-scrollcue" onClick={scrollTo("lp-livres")} aria-label="Lire pourquoi">
+        <button className="lp-scrollcue" onClick={scrollToId("lp-livres")} aria-label="Lire pourquoi">
           <span>Pourquoi on dit ça</span>
           <Icon name="chevronDown" size={15} />
         </button>
       </section>
 
       {/* 2. Situation vécue */}
-      <section className="lp-wrap lp-section">
+      <section id="probleme" className="lp-wrap lp-section">
         <div className="lp-split lp-split--reverse">
           <div className="lp-split__media">
-            <SceneRecipeCard />
+            <SceneCardPile />
           </div>
           <div>
             <span className="lp-eyebrow">Le vrai problème</span>
@@ -285,20 +456,27 @@ export function LandingPage({ user, isDark, toggleTheme }) {
 
       {/* 3. Tes livres */}
       <section id="lp-livres" className="lp-wrap lp-section">
-        <span className="lp-eyebrow">Tes livres</span>
-        <h2 className="lp-h2">Tu as 15 livres de cuisine. Tu les aimes.</h2>
-        <p className="lp-p">
-          Nous aussi. Un livre, ça se tache, ça s'annote, ça se transmet. Le livre n'est pas
-          le problème. Le problème, c'est tout ce qu'il y a autour.
-        </p>
-        <p className="lp-refrain">Quel livre ?<span>Quelle page&nbsp;?</span></p>
-        <ul className="lp-situations">
-          <li>Recopier les ingrédients à la main.</li>
-          <li>Convertir les quantités pour quatre.</li>
-          <li>Refaire la liste de courses à chaque fois.</li>
-          <li>Garder la page ouverte sans la couvrir de gras.</li>
-          <li>Te souvenir de ce que tu avais changé la dernière fois.</li>
-        </ul>
+        <div className="lp-split">
+          <div>
+            <span className="lp-eyebrow">Tes livres</span>
+            <h2 className="lp-h2">Tu as 15 livres de cuisine. Tu les aimes.</h2>
+            <p className="lp-p">
+              Nous aussi. Un livre, ça se tache, ça s'annote, ça se transmet. Le livre n'est pas
+              le problème. Le problème, c'est tout ce qu'il y a autour.
+            </p>
+            <p className="lp-refrain">Quel livre ?<span>Quelle page&nbsp;?</span></p>
+            <ul className="lp-situations">
+              <li>Recopier les ingrédients à la main.</li>
+              <li>Convertir les quantités pour quatre.</li>
+              <li>Refaire la liste de courses à chaque fois.</li>
+              <li>Garder la page ouverte sans la couvrir de gras.</li>
+              <li>Te souvenir de ce que tu avais changé la dernière fois.</li>
+            </ul>
+          </div>
+          <div className="lp-split__media">
+            <SceneBooks />
+          </div>
+        </div>
       </section>
 
       {/* 4. La réponse : garde tes livres */}
@@ -323,7 +501,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
       <hr className="lp-wrap lp-rule" />
 
       {/* 5. Import IA : la démonstration mise en vedette */}
-      <section className="lp-wrap lp-section lp-feature">
+      <section id="import" className="lp-wrap lp-section lp-feature">
         <span className="lp-eyebrow">L'import par IA</span>
         <h2 className="lp-h2 lp-h2--wide">Les autres extraient du texte. Cardamome comprend ta recette.</h2>
         <div className="lp-feature__grid">
@@ -404,7 +582,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
       </section>
 
       {/* 9. Cardamome et Cardamome+ */}
-      <section className="lp-wrap lp-section">
+      <section id="offre" className="lp-wrap lp-section">
         <span className="lp-eyebrow">L'offre</span>
         <h2 className="lp-h2 lp-h2--wide">Cardamome, et Cardamome+.</h2>
         <p className="lp-p">
