@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.3.1-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.4.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -69,7 +69,8 @@ toujours avec vous.
   estimée.
 - 🌿 **Saisonnalité** : déduite des ingrédients ; badge « De saison » et filtre
   dédié.
-- 📅 **Planning repas** : semainier glisser-déposer, **générateur de semaine**
+- 📅 **Planning repas** : semainier glisser-déposer, menu contextuel par repas
+  (ouvrir, replanifier vers une autre semaine, retirer), **générateur de semaine**
   (styles facile / équilibré / aventureux, repas composés, affinité de saison),
   **session batch** (préparations à cuisiner d'avance) et export `.ics`.
 - 🛒 **Listes de courses** : ajout par collage, tri par rayon, gestes de swipe

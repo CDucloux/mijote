@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.4.0 – Cardamome · Repas nomades
+
+### Planning
+- **Un repas se déplace en deux gestes** : clic droit (ou appui long sur mobile) sur une recette du planning ouvre un menu d'actions, comme sur une fiche recette. Tu peux l'ouvrir, la replanifier ou la retirer du calendrier sans quitter la semaine.
+- **Replanifier vers une autre semaine** : la replanification propose une feuille où tu navigues de semaine en semaine, choisis le jour puis le créneau, et déposes le repas là où il te convient, même à quinze jours de distance.
+
 ## v4.3.1 – Cardamome · Étagère rangée
 
 ### Mon Stock
