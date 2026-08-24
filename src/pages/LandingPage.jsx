@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
@@ -341,14 +341,24 @@ export function LandingPage({ user, isDark, toggleTheme }) {
   const navigate = useNavigate();
   const primary = landingPrimaryCta(user);
   const [scrolled, setScrolled] = useState(false);
+  const rootRef = useRef(null);
+  const sentinelRef = useRef(null);
 
-  // La barre collante n'apparaît qu'une fois le hero dépassé : au repos en haut
-  // de page, on laisse respirer le grand titre sans doublon de navigation.
+  // La landing défile dans SON conteneur (#root est figé en 100vh/overflow:hidden,
+  // la fenêtre ne scrolle jamais) : window.scrollY est donc inutilisable. Un
+  // observateur sur une sentinelle posée après le hero fait apparaître la barre
+  // collante dès qu'on quitte le premier écran, quel que soit l'élément qui scrolle.
+  // On garde le sens du défilement (top < 0 = sentinelle passée au-dessus) pour ne
+  // pas déclencher tant que la sentinelle est encore sous le pli au chargement.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 440);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setScrolled(!entry.isIntersecting && entry.boundingClientRect.top < 0),
+      { root: rootRef.current, threshold: 0 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   const scrollToId = (id) => (e) => {
@@ -357,8 +367,20 @@ export function LandingPage({ user, isDark, toggleTheme }) {
   };
   const scrollTop = (e) => {
     e?.preventDefault?.();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    rootRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
+  // « Slide » suivante : la flèche descend d'une section à la suivante. scrollIntoView
+  // cible automatiquement le bon conteneur de défilement, sans dépendre de window.
+  const goNext = (e) => {
+    let n = e.currentTarget.closest("section")?.nextElementSibling;
+    while (n && n.tagName !== "SECTION") n = n.nextElementSibling;
+    n?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const slideDown = () => (
+    <button className="lp-next" onClick={goNext} aria-label="Section suivante">
+      <Icon name="chevronDown" size={20} />
+    </button>
+  );
 
   // Fonctions de rendu (et non composants déclarés au render) : CTA et marque
   // apparaissent plusieurs fois. On factorise sans remonter de sous-composant qui
@@ -377,7 +399,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
   );
 
   return (
-    <div className="lp-root" id="top">
+    <div className="lp-root" id="top" ref={rootRef}>
       {/* Barre collante (apparaît après le hero) : marque + ancres + thème + CTA */}
       <div className={`lp-navbar${scrolled ? " is-visible" : ""}`} aria-hidden={!scrolled}>
         <div className="lp-wrap lp-navbar__inner">
@@ -407,7 +429,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
       </header>
 
       {/* 1. Coup de poing */}
-      <section className="lp-wrap lp-hero">
+      <section className="lp-wrap lp-hero lp-slide">
         <div className="lp-hero__grid">
           <div className="lp-hero__copy">
             <h1 className="lp-hero__title">Les apps de recettes sont devenues des poubelles.</h1>
@@ -419,20 +441,18 @@ export function LandingPage({ user, isDark, toggleTheme }) {
               {primaryCta()}
               <StoreButtons />
             </div>
-            <p className="lp-hero__note">on avait envie de le dire tout haut.</p>
+            <p className="lp-hero__note">Avec Cardamome, on a décidé de faire autrement.</p>
           </div>
           <div className="lp-hero__art">
             <PhoneFrame label="Aperçu de Cardamome : l'écran d'accueil"><SceneHome /></PhoneFrame>
           </div>
         </div>
-        <button className="lp-scrollcue" onClick={scrollToId("lp-livres")} aria-label="Lire pourquoi">
-          <span>Pourquoi on dit ça</span>
-          <Icon name="chevronDown" size={15} />
-        </button>
+        {slideDown()}
       </section>
+      <div ref={sentinelRef} className="lp-sentinel" aria-hidden="true" />
 
       {/* 2. Situation vécue */}
-      <section id="probleme" className="lp-wrap lp-section">
+      <section id="probleme" className="lp-wrap lp-section lp-slide">
         <div className="lp-split lp-split--reverse">
           <div className="lp-split__media">
             <SceneCardPile />
@@ -450,12 +470,11 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </p>
           </div>
         </div>
+        {slideDown()}
       </section>
 
-      <hr className="lp-wrap lp-rule" />
-
       {/* 3. Tes livres */}
-      <section id="lp-livres" className="lp-wrap lp-section">
+      <section id="lp-livres" className="lp-wrap lp-section lp-slide">
         <div className="lp-split">
           <div>
             <span className="lp-eyebrow">Tes livres</span>
@@ -477,10 +496,11 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <SceneBooks />
           </div>
         </div>
+        {slideDown()}
       </section>
 
       {/* 4. La réponse : garde tes livres */}
-      <section className="lp-wrap lp-section">
+      <section className="lp-wrap lp-section lp-slide">
         <div className="lp-split">
           <div>
             <span className="lp-eyebrow">Ce que fait Cardamome</span>
@@ -496,16 +516,15 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <PhoneFrame label="Une recette rangée par Cardamome : ingrédients, étapes, base reliée"><SceneStructured /></PhoneFrame>
           </div>
         </div>
+        {slideDown()}
       </section>
 
-      <hr className="lp-wrap lp-rule" />
-
-      {/* 5. Import IA : la démonstration mise en vedette */}
-      <section id="import" className="lp-wrap lp-section lp-feature">
-        <span className="lp-eyebrow">L'import par IA</span>
-        <h2 className="lp-h2 lp-h2--wide">Les autres extraient du texte. Cardamome comprend ta recette.</h2>
-        <div className="lp-feature__grid">
-          <div className="lp-feature__copy">
+      {/* 5. Import IA : la démonstration mise en avant, demo à droite */}
+      <section id="import" className="lp-wrap lp-section lp-slide">
+        <div className="lp-split lp-split--wide">
+          <div>
+            <span className="lp-eyebrow">L'import par IA</span>
+            <h2 className="lp-h2 lp-h2--wide">Les autres extraient du texte. Cardamome comprend ta recette.</h2>
             <p className="lp-p">
               Extraire, c'est recopier des mots dans des cases. Comprendre, c'est savoir ce que ces
               mots veulent dire quand tu passes en cuisine. Un lien, une photo de page : quelques
@@ -519,16 +538,15 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </ul>
             <p className="lp-punch">D'un lien collé à une recette qui se cuisine. <em>Sans recopier une ligne.</em></p>
           </div>
-          <div className="lp-feature__media">
+          <div className="lp-split__media">
             <SceneImport />
           </div>
         </div>
+        {slideDown()}
       </section>
 
-      <hr className="lp-wrap lp-rule" />
-
       {/* 6. Prise de position sur le catalogue */}
-      <section className="lp-wrap lp-section">
+      <section className="lp-wrap lp-section lp-slide">
         <span className="lp-eyebrow">Notre parti pris</span>
         <h2 className="lp-h2 lp-h2--wide">On pourrait te donner 15 000 recettes. Mais à quoi bon ?</h2>
         <p className="lp-p">
@@ -543,10 +561,11 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           Il y a bien un espace pour découvrir des recettes publiées par d'autres et les cloner
           d'un geste. Choisi, pas entassé.
         </p>
+        {slideDown()}
       </section>
 
       {/* 7. Manifeste */}
-      <section className="lp-wrap lp-section">
+      <section className="lp-wrap lp-section lp-slide">
         <div className="lp-split lp-split--reverse">
           <div className="lp-split__media">
             <PhoneFrame label="Le planning de la semaine dans Cardamome"><ScenePlanning /></PhoneFrame>
@@ -562,12 +581,11 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </div>
           </div>
         </div>
+        {slideDown()}
       </section>
 
-      <hr className="lp-wrap lp-rule" />
-
       {/* 8. Preuves d'usage */}
-      <section className="lp-wrap lp-section">
+      <section className="lp-wrap lp-section lp-slide">
         <span className="lp-eyebrow">Au quotidien</span>
         <h2 className="lp-h2">Concrètement, ça change quoi ?</h2>
         <div className="lp-proof">
@@ -579,10 +597,11 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </div>
           ))}
         </div>
+        {slideDown()}
       </section>
 
       {/* 9. Cardamome et Cardamome+ */}
-      <section id="offre" className="lp-wrap lp-section">
+      <section id="offre" className="lp-wrap lp-section lp-slide">
         <span className="lp-eyebrow">L'offre</span>
         <h2 className="lp-h2 lp-h2--wide">Cardamome, et Cardamome+.</h2>
         <p className="lp-p">
@@ -617,10 +636,11 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </ul>
           </div>
         </div>
+        {slideDown()}
       </section>
 
       {/* 10. Conclusion */}
-      <section className="lp-wrap lp-section lp-final">
+      <section className="lp-wrap lp-section lp-final lp-slide">
         <h2 className="lp-final__title">Pas la plus grosse app. Celle que tu ouvres vraiment.</h2>
         <div className="lp-final__actions lp-cta-row">
           {primaryCta()}

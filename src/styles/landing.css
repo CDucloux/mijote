@@ -7,11 +7,17 @@
    pas d'effets décoratifs (aucun glow / dégradé violet / carte imbriquée). */
 
 .lp-root {
+  position: relative;
+  height: 100%;
   min-height: 100dvh;
   background: var(--bg);
   color: var(--text);
   font-family: var(--ff-body);
+  overflow-y: auto;
   overflow-x: hidden;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
   -webkit-font-smoothing: antialiased;
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -26,7 +32,13 @@
 }
 
 /* ── Barre haute ─────────────────────────────────────────────────────────── */
+/* En-tête posé PAR-DESSUS le hero (absolu) : ainsi le hero remplit tout le premier
+   écran (slide), et l'en-tête défile naturellement quand on descend, la barre
+   collante prenant le relais. */
 .lp-nav {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -162,9 +174,6 @@
 .lp-section { padding-block: clamp(56px, 9vw, 104px); scroll-margin-top: 76px; }
 .lp-section--tight { padding-block: clamp(40px, 6vw, 68px); }
 
-/* Filet de séparation discret, seulement là où deux blocs denses se suivent. */
-.lp-rule { border: 0; border-top: 1px solid var(--border); margin: 0; }
-
 .lp-eyebrow {
   display: inline-block;
   font-size: 12px;
@@ -257,31 +266,48 @@
   justify-content: center;
 }
 
-/* Indice de défilement discret : remplace l'ancien bouton fantôme « Voir pourquoi ».
-   Un lien texte + chevron qui respire, aligné à gauche sous le hero. */
-.lp-scrollcue {
+/* ── Slides : chaque section occupe un écran, flèche « suivant » en bas ─────── */
+.lp-slide {
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+/* Sentinelle : marqueur invisible juste après le hero. Sa sortie du conteneur de
+   défilement (vers le haut) fait apparaître la barre collante. */
+.lp-sentinel { height: 1px; margin: 0; pointer-events: none; }
+
+/* Flèche de descente : pastille discrète ancrée en bas de chaque slide, défile
+   vers la section suivante. Respiration douce, coupée en mouvement réduit. */
+.lp-next {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(16px, 3.5vh, 34px);
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-top: clamp(20px, 4vw, 40px);
-  padding: 0;
-  background: none;
-  border: none;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
   cursor: pointer;
-  font-family: var(--ff-body);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text3);
-  transition: color 0.16s ease;
+  z-index: 5;
+  animation: lpNudge 1.9s ease-in-out infinite;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
 }
-.lp-scrollcue svg { animation: lpNudge 1.8s ease-in-out infinite; }
-@media (hover: hover) { .lp-scrollcue:hover { color: var(--text); } }
+@media (hover: hover) {
+  .lp-next:hover { color: var(--text); background: var(--surface3); border-color: var(--text3); }
+}
 @keyframes lpNudge {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(3px); }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(4px); }
 }
-@media (prefers-reduced-motion: reduce) { .lp-scrollcue svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .lp-next { animation: none; } }
 
 /* ── Situations vécues (liste) ───────────────────────────────────────────── */
 .lp-situations {
@@ -542,9 +568,9 @@
   .lp-hero__grid { grid-template-columns: 1.08fr 0.92fr; }
   .lp-hero__art { justify-content: flex-end; }
   .lp-split { grid-template-columns: 1.1fr 0.9fr; }
+  .lp-split--wide { grid-template-columns: 0.82fr 1.18fr; }
   .lp-split__media { justify-content: flex-end; }
   .lp-split--reverse .lp-split__media { order: -1; justify-content: flex-start; }
-  .lp-feature__grid { grid-template-columns: 0.95fr 1.05fr; align-items: center; }
 }
 @media (min-width: 960px) {
   .lp-proof { grid-template-columns: repeat(3, 1fr); }
@@ -926,9 +952,7 @@
 }
 .lp-st__line { height: 6px; border-radius: 3px; background: var(--surface3); }
 
-/* ── Scène vedette : la démo d'import IA (panneau large, animé) ─────────────── */
-.lp-feature__grid { display: grid; grid-template-columns: 1fr; gap: clamp(30px, 5vw, 52px); margin-top: 10px; }
-.lp-feature__media { display: flex; justify-content: center; }
+/* ── Scène : la démo d'import IA (panneau animé, placé à droite du texte) ───── */
 .lp-scene--import {
   display: grid;
   gap: 13px;
