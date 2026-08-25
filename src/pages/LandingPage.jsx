@@ -230,25 +230,62 @@ function SceneBooks() {
   );
 }
 
-/** Recette structurée : ingrédients séparés des étapes, base reliée. */
-function SceneStructured() {
-  const ings = ["Citron", "Œufs", "Sucre", "Beurre"];
+/** Éditeur de nouvelle recette : reproduit l'écran réel de création (onglets
+ *  Infos / Ingrédients / Ustensiles / Étapes, sélecteur de photo, champs). Les
+ *  champs se remplissent en cascade (nom tapé au clavier puis portions, temps,
+ *  catégorie), pour montrer une recette qui prend forme. 100% CSS, coupé si
+ *  mouvement réduit. Illustre « ta recette devient un objet structuré ». */
+function SceneEditor() {
+  const tabs = [["info", "Infos", true], ["leaf", "Ingrédients", false], ["utensils", "Ustensiles", false], ["list2", "Étapes", false]];
   return (
-    <div className="lp-scene lp-scene--struct" aria-hidden="true">
-      <div className="lp-scene__bar"><span className="lp-scene__title">Tarte au citron</span></div>
-      <div className="lp-st__group">Ingrédients</div>
-      <div className="lp-st__ings">
-        {ings.map((n) => (
-          <span className="lp-st__ing" key={n}><span className="lp-st__dot" />{n}</span>
-        ))}
-        <span className="lp-st__ing lp-st__ing--base"><span className="lp-st__dot" /><Icon name="utensils" size={11} /> Pâte sablée</span>
+    <div className="lp-scene lp-ed" aria-hidden="true">
+      <div className="lp-ed__top">
+        <span className="lp-ed__x"><Icon name="close" size={11} color="var(--text2)" /></span>
+        <div className="lp-ed__titles">
+          <span className="lp-ed__kicker">Nouvelle recette</span>
+          <span className="lp-ed__name">
+            <span className="lp-ed__name-ph">Sans titre</span>
+            <span className="lp-ed__name-real">Tarte Tatin</span>
+          </span>
+        </div>
+        <span className="lp-ed__save"><Icon name="save" size={11} color="#fff" /></span>
       </div>
-      <div className="lp-st__group">Étapes</div>
-      <ol className="lp-st__steps">
-        <li><b>1</b><span className="lp-st__line" style={{ width: "92%" }} /></li>
-        <li><b>2</b><span className="lp-st__line" style={{ width: "78%" }} /></li>
-        <li><b>3</b><span className="lp-st__line" style={{ width: "85%" }} /></li>
-      </ol>
+      <div className="lp-ed__tabs">
+        {tabs.map(([ic, lb, on]) => (
+          <span key={lb} className={`lp-ed__tab${on ? " lp-ed__tab--on" : ""}`}>
+            <Icon name={ic} size={13} weight={on ? "fill" : "regular"} color={on ? "var(--accent)" : "var(--text3)"} />
+            {lb}
+          </span>
+        ))}
+      </div>
+      <div className="lp-ed__body">
+        <div className="lp-ed__photo">
+          <Icon name="photo" size={19} color="var(--text3)" />
+          <span>Choisir une photo</span>
+          <small>Galerie ou appareil photo</small>
+        </div>
+        <div className="lp-ed__field">
+          <label>Nom</label>
+          <div className="lp-ed__input">
+            <span className="lp-ed__typed">Tarte Tatin</span>
+            <i className="lp-ed__caret" />
+          </div>
+        </div>
+        <div className="lp-ed__row2">
+          <div className="lp-ed__field lp-ed__fill lp-ed__fill--a">
+            <label>Portions</label>
+            <div className="lp-ed__input lp-ed__input--sm"><Icon name="portions" size={11} color="var(--text3)" /> 4 pers.</div>
+          </div>
+          <div className="lp-ed__field lp-ed__fill lp-ed__fill--b">
+            <label>Temps</label>
+            <div className="lp-ed__input lp-ed__input--sm"><Icon name="clock" size={11} color="var(--text3)" /> 45 min</div>
+          </div>
+        </div>
+        <div className="lp-ed__chips lp-ed__fill lp-ed__fill--c">
+          <span className="lp-ed__chip">Dessert</span>
+          <span className="lp-ed__chip">De saison</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -444,23 +481,23 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         {slideDown()}
       </section>
 
-      {/* 4. La réponse : garde tes livres */}
+      {/* 4. Ce que fait Cardamome : la recette devient un objet structuré et vivant */}
       <section className="lp-wrap lp-section lp-slide">
         <div className="lp-split">
           <div>
             <span className="lp-eyebrow">Ce que fait Cardamome</span>
-            <h2 className="lp-h2 lp-h2--wide">Garde tes livres. Oublie les tracas autour.</h2>
+            <h2 className="lp-h2 lp-h2--wide">Une recette n'est pas un texte. C'est un plan de travail.</h2>
             <p className="lp-p">
-              Photographie une page, ou colle un lien. Cardamome lit la recette, sépare les
-              ingrédients des étapes, relie les ustensiles, et repère même les <strong>préparations
-              de base</strong> avec leur rendement.
+              Chaque recette est <strong>structurée</strong> : ingrédients, ustensiles, étapes,
+              portions, saison. Une fois entrée, elle alimente ton planning, remplit les courses
+              par rayon et dialogue avec ton stock.
             </p>
             <p className="lp-punch">
-              Tu relis, tu ranges, le livre retourne sur l'étagère. <em>Ta recette, elle, est prête.</em>
+              Tu ne remplis pas une fiche. <em>Tu poses la brique d'une semaine qui s'organise seule.</em>
             </p>
           </div>
           <div className="lp-split__media">
-            <PhoneFrame label="Une recette rangée par Cardamome : ingrédients, étapes, base reliée"><SceneStructured /></PhoneFrame>
+            <PhoneFrame label="L'éditeur de recette de Cardamome : les champs se remplissent"><SceneEditor /></PhoneFrame>
           </div>
         </div>
         {slideDown()}

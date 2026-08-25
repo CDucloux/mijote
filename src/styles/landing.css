@@ -724,8 +724,6 @@
 
 .lp-scene { display: flex; flex-direction: column; font-family: var(--ff-body); }
 .lp-device__screen > .lp-scene { height: 100%; }
-.lp-scene__bar { padding: 15px 14px 9px; }
-.lp-scene__title { font-family: var(--ff-display); font-weight: 700; font-size: 15px; color: var(--text); }
 
 /* ── Scène : écran d'accueil (dashboard réel en réduction) ─────────────────── */
 .lp-hs { height: 100%; background: var(--bg); }
@@ -1018,47 +1016,191 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 12px -5px rgba(40, 30, 15, 0.5);
 }
 
-/* ── Scène : recette structurée (résultat rangé) ───────────────────────────── */
-.lp-scene--struct { background: var(--bg); }
-.lp-st__group {
-  margin: 6px 14px 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.lp-st__ings { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 14px; }
-.lp-st__ing {
-  display: inline-flex;
+/* ── Scène : éditeur de nouvelle recette (les champs se remplissent) ─────────── */
+.lp-ed { height: 100%; background: var(--bg); }
+.lp-ed__top {
+  display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text2);
+  gap: 8px;
+  padding: 13px 12px 10px;
+  border-bottom: 1px solid var(--border);
 }
-.lp-st__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-.lp-st__ing--base { background: rgba(var(--accent-rgb), 0.1); border-color: rgba(var(--accent-rgb), 0.38); color: var(--accent); }
-.lp-st__ing--base .lp-st__dot { background: var(--spice); }
-.lp-st__steps { list-style: none; margin: 4px 0 0; padding: 0 14px 14px; display: grid; gap: 9px; }
-.lp-st__steps li { display: flex; align-items: center; gap: 9px; }
-.lp-st__steps li b {
-  flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+.lp-ed__x {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
 }
-.lp-st__line { height: 6px; border-radius: 3px; background: var(--surface3); }
+.lp-ed__titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lp-ed__kicker {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+/* Titre d'en-tête : « Sans titre » (état vide) cède la place au nom une fois le
+   champ tapé. Deux calques superposés, l'un s'efface, l'autre apparaît. */
+.lp-ed__name { position: relative; display: block; height: 14px; }
+.lp-ed__name-ph,
+.lp-ed__name-real {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.lp-ed__name-ph { color: var(--text3); animation: lpNamePh 6.5s ease infinite; }
+.lp-ed__name-real { color: var(--text); opacity: 0; animation: lpNameReal 6.5s ease infinite; }
+@keyframes lpNamePh {
+  0%, 24% { opacity: 1; }
+  32%, 90% { opacity: 0; }
+  97%, 100% { opacity: 1; }
+}
+@keyframes lpNameReal {
+  0%, 28% { opacity: 0; }
+  36%, 90% { opacity: 1; }
+  96%, 100% { opacity: 0; }
+}
+.lp-ed__save {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 3px 9px -3px rgba(var(--accent-rgb), 0.8);
+}
+.lp-ed__tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.lp-ed__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px;
+  border-radius: 10px;
+  font-size: 7.5px;
+  font-weight: 600;
+  color: var(--text3);
+}
+.lp-ed__tab--on { color: var(--accent); background: rgba(var(--accent-rgb), 0.12); }
+.lp-ed__body { padding: 12px; display: flex; flex-direction: column; gap: 11px; }
+.lp-ed__photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 18px 12px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--border);
+  background: var(--surface);
+}
+.lp-ed__photo span { font-size: 11px; font-weight: 600; color: var(--text2); }
+.lp-ed__photo small { font-size: 8.5px; color: var(--text3); }
+.lp-ed__field { display: flex; flex-direction: column; gap: 5px; }
+.lp-ed__field > label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.lp-ed__input {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text);
+}
+.lp-ed__input--sm { min-height: 26px; font-size: 11px; }
+/* Effet machine à écrire : le nom se tape (largeur révélée par paliers), puis un
+   curseur clignote. overflow:hidden + white-space:nowrap = révélation propre. */
+.lp-ed__typed {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  max-width: 0;
+  animation: lpType 6.5s steps(11, end) infinite;
+}
+.lp-ed__caret {
+  flex-shrink: 0;
+  width: 1.5px;
+  height: 15px;
+  background: var(--accent);
+  animation: lpCaret 0.9s step-end infinite;
+}
+/* Cycle complet (6,5 s) : le nom se tape, tient, puis s'efface avant de repartir,
+   pour que l'animation soit toujours visible quand on arrive sur la slide. */
+@keyframes lpType {
+  0%, 6% { max-width: 0; }
+  30%, 90% { max-width: 6.5em; }
+  96%, 100% { max-width: 0; }
+}
+@keyframes lpCaret { 50% { opacity: 0; } }
+.lp-ed__row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.lp-ed__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lp-ed__chip {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.32);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+/* Champs qui se remplissent en cascade : chacun surgit après le nom (a puis b
+   puis c), tient, puis disparaît en fin de cycle avant de repartir. Le décalage
+   est inscrit dans les keyframes (et non via un délai, qui ne se répète pas en
+   boucle) pour rester synchronisé à chaque tour. */
+.lp-ed__fill { opacity: 0; }
+.lp-ed__fill--a { animation: lpFillA 6.5s ease infinite; }
+.lp-ed__fill--b { animation: lpFillB 6.5s ease infinite; }
+.lp-ed__fill--c { animation: lpFillC 6.5s ease infinite; }
+@keyframes lpFillA {
+  0%, 32% { opacity: 0; transform: translateY(6px); }
+  40%, 90% { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(6px); }
+}
+@keyframes lpFillB {
+  0%, 38% { opacity: 0; transform: translateY(6px); }
+  46%, 90% { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(6px); }
+}
+@keyframes lpFillC {
+  0%, 46% { opacity: 0; transform: translateY(6px); }
+  54%, 90% { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-ed__typed { animation: none; max-width: none; }
+  .lp-ed__caret { animation: none; opacity: 0; }
+  .lp-ed__fill { animation: none; opacity: 1; transform: none; }
+  .lp-ed__name-ph { display: none; }
+  .lp-ed__name-real { animation: none; opacity: 1; }
+}
 
 /* ── Scène : la démo d'import IA (panneau animé, placé à droite du texte) ───── */
 .lp-scene--import {
