@@ -483,7 +483,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
 
       {/* 4. Ce que fait Cardamome : la recette devient un objet structuré et vivant */}
       <section className="lp-wrap lp-section lp-slide">
-        <div className="lp-split">
+        <div className="lp-split lp-split--reverse">
           <div>
             <span className="lp-eyebrow">Ce que fait Cardamome</span>
             <h2 className="lp-h2 lp-h2--wide">Une recette n'est pas un texte. C'est un plan de travail.</h2>
@@ -497,7 +497,10 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </p>
           </div>
           <div className="lp-split__media">
-            <PhoneFrame label="L'éditeur de recette de Cardamome : les champs se remplissent"><SceneEditor /></PhoneFrame>
+            <div className="lp-dock">
+              <PhoneFrame label="L'éditeur de recette de Cardamome : les champs se remplissent"><SceneEditor /></PhoneFrame>
+              <span className="lp-dock__bar" aria-hidden="true" />
+            </div>
           </div>
         </div>
         {slideDown()}

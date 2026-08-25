@@ -722,6 +722,32 @@
   border: 1px solid var(--border);
 }
 
+/* ── Socle : téléphone tronqué qui « sort » d'une barre ─────────────────────────
+   On ne montre que le haut du téléphone (le contenu de l'éditeur se termine à une
+   hauteur fixe, ~382px, car il est mis en page en px) : une hauteur bornée +
+   overflow:hidden masquent le bas vide, et une barre ferme la coupe. Évite un
+   téléphone trop haut sans le redimensionner (ce qui l'écraserait). */
+.lp-dock {
+  position: relative;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: 434px;
+  padding: 10px 24px 0;
+  overflow: hidden;
+}
+.lp-dock__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  background: linear-gradient(180deg, var(--surface3), var(--surface2));
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 -18px 30px -20px rgba(0, 0, 0, 0.55);
+  z-index: 3;
+}
+
 .lp-scene { display: flex; flex-direction: column; font-family: var(--ff-body); }
 .lp-device__screen > .lp-scene { height: 100%; }
 
