@@ -19,7 +19,7 @@ import "../styles/landing.css";
 // pour rester lisibles et ne pas transformer la nav en menu fourre-tout.
 const NAV_LINKS = [
   { label: "Le problème", id: "probleme" },
-  { label: "Import intelligent", id: "import" },
+  { label: "Les fonctionnalités", id: "fonctionnalites" },
   { label: "L'offre", id: "offre" },
 ];
 
@@ -572,8 +572,8 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         </div>
       </section>
 
-      {/* 8. Preuves d'usage */}
-      <section className="lp-wrap lp-section lp-slide">
+      {/* 8. Preuves d'usage (cible de l'ancre « Les fonctionnalités ») */}
+      <section id="fonctionnalites" className="lp-wrap lp-section lp-slide">
         <span className="lp-eyebrow">Au quotidien</span>
         <h2 className="lp-h2">Concrètement, ça change quoi ?</h2>
         <div className="lp-proof">
@@ -650,7 +650,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <nav className="lp-footer__col">
             <span className="lp-footer__h">L'app</span>
             <a href="#probleme" onClick={scrollToId("probleme")}>Le problème</a>
-            <a href="#import" onClick={scrollToId("import")}>Import intelligent</a>
+            <a href="#fonctionnalites" onClick={scrollToId("fonctionnalites")}>Les fonctionnalités</a>
             <a href="#offre" onClick={scrollToId("offre")}>L'offre</a>
           </nav>
           <nav className="lp-footer__col">
