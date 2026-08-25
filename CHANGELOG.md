@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.6.2 – Cardamome · Minuteurs justes, titres au diapason
+
+### Mode pas à pas
+- **Minuteurs enfin justes au démarrage** : un minuteur lancé après un temps de préparation partait faux (5:00 s'affichait 5:02, 40:00 s'affichait 41:02), puis se recalait d'un coup à la bonne valeur la seconde suivante. L'horloge d'affichage se resynchronise désormais à l'instant même où le minuteur démarre, reprend ou repart de zéro.
+
+### Interface
+- **Titres de page au diapason de l'accueil** : les en-têtes (Recettes, Planning, Courses, Stock, Profil, Console admin, Cardamome+, mentions légales, écrans d'import) partagent maintenant le poids et la taille du titre d'accueil, pour une hiérarchie homogène d'un écran à l'autre.
+
+### Page d'accueil publique
+- **Menu plus parlant** : la deuxième ancre de la barre annonce « Les fonctionnalités » plutôt que le seul import intelligent.
+- **Mobile soigné** : de fines barres de séparation, estompées aux extrémités et ponctuées d'un losange d'accent, ponctuent le défilement entre les sections, et l'illustration de chaque slide passe systématiquement sous le texte sur téléphone.
+
 ## v4.6.1 – Cardamome · Vitrine, retouches
 
 ### Référencement et partage

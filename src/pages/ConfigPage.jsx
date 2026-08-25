@@ -392,7 +392,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(var(--admin-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
               <Icon name="terminal" size={16} color="var(--admin)" />
             </span>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>Console admin</h1>
+            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>Console admin</h1>
           </div>
           <UserAvatar />
         </div>

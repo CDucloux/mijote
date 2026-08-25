@@ -1029,6 +1029,39 @@
   /* La flèche « suivant » n'a de sens que quand une slide fait pile un écran. */
   .lp-next { display: none; }
 
+  /* La scène (colonne de gauche/droite en desktop) passe TOUJOURS sous le texte,
+     quel que soit son ordre dans le DOM : certaines slides placent la scène avant
+     la copie pour la porter à gauche en grand écran (order:-1). On neutralise ça
+     en la renvoyant en dernier dans la colonne mobile unique. */
+  .lp-split__media { order: 2; }
+
+  /* Barre de séparation entre sections empilées : une règle fine qui s'estompe aux
+     extrémités (pas de trait dur bord à bord), ponctuée d'un losange d'accent
+     centré, comme un repère de coupe éditorial. À partir de la 2ᵉ slide seulement,
+     le hero n'en porte pas. Le halo couleur-fond « ouvre » la règle autour du
+     losange pour qu'elle ne le traverse pas. */
+  .lp-slide + .lp-slide::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: clamp(20px, 4.5vw, 48px);
+    right: clamp(20px, 4.5vw, 48px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border) 22%, var(--border) 78%, transparent);
+  }
+  .lp-slide + .lp-slide::after {
+    content: "";
+    position: absolute;
+    top: -3.5px;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    transform: translateX(-50%) rotate(45deg);
+    background: var(--accent);
+    border-radius: 1.5px;
+    box-shadow: 0 0 0 5px var(--bg);
+  }
+
   .lp-section { padding-block: clamp(52px, 12vw, 74px); }
   .lp-hero {
     padding-top: clamp(80px, 22vw, 108px);

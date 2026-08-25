@@ -94,8 +94,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const addTimer = (d) => {
     if (hasActiveDuration(timers, d.minutes)) return;
     const stepLabel = realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases";
-    const t = startTimer({ minutes: d.minutes, label: d.label, stepIdx, stepLabel }, Date.now());
+    const clock = Date.now();
+    const t = startTimer({ minutes: d.minutes, label: d.label, stepIdx, stepLabel }, clock);
     setTimers(prev => hasActiveDuration(prev, d.minutes) ? prev : [...prev, t]);
+    setNow(clock); // recale l'horloge d'affichage sur le même instant que l'échéance, sinon le restant part faux d'un `now` gelé (voir battement)
     setTimersOpen(true);
     armNotif(t);
   };
@@ -104,6 +106,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     if (!t || t.done) return;
     const clock = Date.now();
     setTimers(prev => prev.map(x => x.id === id ? (x.running ? pauseTimer(x, clock) : resumeTimer(x, clock)) : x));
+    setNow(clock);
     if (t.running) cancelNotif(t); else armNotif(resumeTimer(t, clock));
   };
   const restartTimer = (id) => {
@@ -111,6 +114,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     const clock = Date.now();
     notifiedRef.current.delete(id);
     setTimers(prev => prev.map(x => x.id === id ? resetTimerState(x, clock) : x));
+    setNow(clock);
     if (t) armNotif(resetTimerState(t, clock));
   };
   const removeTimer = (id) => {
