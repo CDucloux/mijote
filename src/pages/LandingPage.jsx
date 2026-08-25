@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
@@ -40,6 +40,7 @@ const PLAN_FREE = [
   "Jusqu'à 50 recettes",
   "Planning repas et liste de courses",
   "Nutri-Score et saisonnalité",
+  "Recettes publiques à cloner",
   "Mode hors-ligne",
 ];
 const PLAN_PLUS = [
@@ -77,74 +78,60 @@ function PhoneFrame({ children, label }) {
   );
 }
 
-/** Aperçu de l'accueil : reproduit l'écran d'accueil réel (dashboard) en réduction.
- *  Données neutres, aucune identité réelle : « Bonjour ! », foyer « Mon Foyer »,
- *  avatars réduits à une initiale. Fait le lien direct hero <-> produit. */
-function SceneHome() {
-  const months = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-  const nav = [
-    ["home", "Accueil", true], ["book", "Recettes", false], ["calendar", "Planning", false],
-    ["shopping", "Courses", false], ["box", "Stock", false],
-  ];
+/** Scène du hero : un frigo ouvert, presque vide, et un « ? » qui flotte. Écho
+ *  direct au visiteur « planté devant son frigo à se demander quoi faire à
+ *  manger » : ce n'est pas l'app, c'est le PROBLÈME que l'app résout. 100% CSS
+ *  (formes + tokens), aucun asset, theme-aware, le « ? » respire (coupé si
+ *  mouvement réduit). */
+function SceneFridge() {
   return (
-    <div className="lp-scene lp-hs" aria-hidden="true">
-      <div className="lp-hs__scroll">
-        <div className="lp-hs__head">
-          <div>
-            <div className="lp-hs__hi">Bonjour&nbsp;!</div>
-            <div className="lp-hs__sub">Bienvenue sur <b>Cardam<span>o</span>me<span>·</span></b></div>
+    <div className="lp-fridge" aria-hidden="true">
+      <div className="lp-fridge__body">
+        <span className="lp-fridge__light" />
+        <div className="lp-fridge__inside">
+          <div className="lp-fridge__shelf">
+            <span className="lp-fr lp-fr--milk" />
+            <span className="lp-fr lp-fr--jar" />
+            <span className="lp-fr lp-fr--bottle lp-fr--push" />
           </div>
-          <span className="lp-hs__me">C</span>
-        </div>
-
-        <div className="lp-hs__foyer">
-          <span className="lp-hs__foyerbar" />
-          <span className="lp-hs__avs"><i>C</i><i>M</i></span>
-          <span className="lp-hs__foyertxt">
-            <b>Mon Foyer</b>
-            <small>2 membres · partage actif</small>
-          </span>
-          <span className="lp-hs__chev"><Icon name="forward" size={12} color="#fff" /></span>
-        </div>
-
-        <div className="lp-hs__label">Aujourd'hui</div>
-        <div className="lp-hs__row">
-          <span className="lp-hs__rowic"><Icon name="shopping" size={15} color="var(--accent)" /></span>
-          <span className="lp-hs__rowtxt"><b>12 articles à acheter</b><small>Ta liste de courses t'attend</small></span>
-          <Icon name="forward" size={12} color="var(--text3)" />
-        </div>
-
-        <div className="lp-hs__label lp-hs__label--row">
-          <span className="lp-hs__labelic"><Icon name="leaf" size={12} color="var(--accent)" /> L'ingrédient du moment</span>
-          <small>chaque semaine</small>
-        </div>
-        <div className="lp-hs__ing">
-          <span className="lp-hs__ingbar" />
-          <div className="lp-hs__inghead">
-            <span className="lp-hs__ingphoto"><Icon name="leaf" size={19} color="var(--accent)" /></span>
-            <div>
-              <div className="lp-hs__ingname">Artichaut</div>
-              <div className="lp-hs__ingtags">
-                <span className="lp-hs__season"><Icon name="sun" size={9} color="#fff" /> De saison</span>
-                <small>Légume</small>
-              </div>
-            </div>
+          <div className="lp-fridge__shelf">
+            <span className="lp-fr lp-fr--eggbox" />
+            <span className="lp-fr lp-fr--butter" />
+            <span className="lp-fr lp-fr--lemon lp-fr--push" />
+            <span className="lp-fr lp-fr--tomato" />
           </div>
-          <div className="lp-hs__months">
-            {months.map((m, i) => (
-              <span key={i} className={i >= 4 && i <= 8 ? "on" : ""}>{m}</span>
-            ))}
+          <div className="lp-fridge__shelf">
+            <span className="lp-fr lp-fr--cheese" />
+            <span className="lp-fr lp-fr--bowl lp-fr--push" />
+            <span className="lp-fr lp-fr--bottle2" />
+          </div>
+          <div className="lp-fridge__crisper">
+            <span className="lp-veg lp-veg--carrot" />
+            <span className="lp-veg lp-veg--greens" />
+            <span className="lp-fridge__cripanel" />
           </div>
         </div>
       </div>
-      <div className="lp-hs__nav">
-        {nav.map(([ic, lb, on]) => (
-          <span key={lb} className={on ? "on" : ""}>
-            <Icon name={ic} size={16} weight={on ? "fill" : "regular"} color={on ? "var(--accent)" : "var(--text3)"} />
-            {lb}
-          </span>
-        ))}
-      </div>
+      <span className="lp-fridge__handle" />
+      <span className="lp-fridge__q">?</span>
+    </div>
+  );
+}
+
+/** Scène de la slide « Notre parti pris » : une nuée de vignettes de recettes
+ *  ternes (le catalogue pléthorique) et UNE SEULE mise en avant. Illustre « on
+ *  pourrait t'en donner 15 000, mais tu en veux une, la bonne ». Pas un
+ *  téléphone : une composition abstraite, en tokens. */
+function SceneChosen() {
+  const total = 24;
+  const pick = 9;
+  return (
+    <div className="lp-chosen" aria-hidden="true">
+      {Array.from({ length: total }).map((_, i) => (
+        <span key={i} className={`lp-chosen__t${i === pick ? " lp-chosen__t--on" : ""}`}>
+          {i === pick && <Icon name="check" size={15} weight="bold" color="#fff" />}
+        </span>
+      ))}
     </div>
   );
 }
@@ -230,25 +217,62 @@ function SceneBooks() {
   );
 }
 
-/** Recette structurée : ingrédients séparés des étapes, base reliée. */
-function SceneStructured() {
-  const ings = ["Citron", "Œufs", "Sucre", "Beurre"];
+/** Éditeur de nouvelle recette : reproduit l'écran réel de création (onglets
+ *  Infos / Ingrédients / Ustensiles / Étapes, sélecteur de photo, champs). Les
+ *  champs se remplissent en cascade (nom tapé au clavier puis portions, temps,
+ *  catégorie), pour montrer une recette qui prend forme. 100% CSS, coupé si
+ *  mouvement réduit. Illustre « ta recette devient un objet structuré ». */
+function SceneEditor() {
+  const tabs = [["info", "Infos", true], ["leaf", "Ingrédients", false], ["utensils", "Ustensiles", false], ["list2", "Étapes", false]];
   return (
-    <div className="lp-scene lp-scene--struct" aria-hidden="true">
-      <div className="lp-scene__bar"><span className="lp-scene__title">Tarte au citron</span></div>
-      <div className="lp-st__group">Ingrédients</div>
-      <div className="lp-st__ings">
-        {ings.map((n) => (
-          <span className="lp-st__ing" key={n}><span className="lp-st__dot" />{n}</span>
-        ))}
-        <span className="lp-st__ing lp-st__ing--base"><span className="lp-st__dot" /><Icon name="utensils" size={11} /> Pâte sablée</span>
+    <div className="lp-scene lp-ed" aria-hidden="true">
+      <div className="lp-ed__top">
+        <span className="lp-ed__x"><Icon name="close" size={11} color="var(--text2)" /></span>
+        <div className="lp-ed__titles">
+          <span className="lp-ed__kicker">Nouvelle recette</span>
+          <span className="lp-ed__name">
+            <span className="lp-ed__name-ph">Sans titre</span>
+            <span className="lp-ed__name-real">Tarte Tatin</span>
+          </span>
+        </div>
+        <span className="lp-ed__save"><Icon name="save" size={11} color="#fff" /></span>
       </div>
-      <div className="lp-st__group">Étapes</div>
-      <ol className="lp-st__steps">
-        <li><b>1</b><span className="lp-st__line" style={{ width: "92%" }} /></li>
-        <li><b>2</b><span className="lp-st__line" style={{ width: "78%" }} /></li>
-        <li><b>3</b><span className="lp-st__line" style={{ width: "85%" }} /></li>
-      </ol>
+      <div className="lp-ed__tabs">
+        {tabs.map(([ic, lb, on]) => (
+          <span key={lb} className={`lp-ed__tab${on ? " lp-ed__tab--on" : ""}`}>
+            <Icon name={ic} size={13} weight={on ? "fill" : "regular"} color={on ? "var(--accent)" : "var(--text3)"} />
+            {lb}
+          </span>
+        ))}
+      </div>
+      <div className="lp-ed__body">
+        <div className="lp-ed__photo">
+          <Icon name="photo" size={19} color="var(--text3)" />
+          <span>Choisir une photo</span>
+          <small>Galerie ou appareil photo</small>
+        </div>
+        <div className="lp-ed__field">
+          <label>Nom</label>
+          <div className="lp-ed__input">
+            <span className="lp-ed__typed">Tarte Tatin</span>
+            <i className="lp-ed__caret" />
+          </div>
+        </div>
+        <div className="lp-ed__row2">
+          <div className="lp-ed__field lp-ed__fill lp-ed__fill--a">
+            <label>Portions</label>
+            <div className="lp-ed__input lp-ed__input--sm"><Icon name="portions" size={11} color="var(--text3)" /> 4 pers.</div>
+          </div>
+          <div className="lp-ed__field lp-ed__fill lp-ed__fill--b">
+            <label>Temps</label>
+            <div className="lp-ed__input lp-ed__input--sm"><Icon name="clock" size={11} color="var(--text3)" /> 45 min</div>
+          </div>
+        </div>
+        <div className="lp-ed__chips lp-ed__fill lp-ed__fill--c">
+          <span className="lp-ed__chip">Dessert</span>
+          <span className="lp-ed__chip">De saison</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -329,18 +353,35 @@ export function LandingPage({ user, isDark, toggleTheme }) {
     e?.preventDefault?.();
     rootRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
-  // « Slide » suivante : la flèche descend d'une section à la suivante. scrollIntoView
-  // cible automatiquement le bon conteneur de défilement, sans dépendre de window.
-  const goNext = (e) => {
-    let n = e.currentTarget.closest("section")?.nextElementSibling;
-    while (n && n.tagName !== "SECTION") n = n.nextElementSibling;
-    n?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Chevron « suivant » : un SEUL bouton flottant (position fixe), toujours au même
+  // endroit à l'écran (les slides n'ont pas exactement la même hauteur, un bouton
+  // par slide tombait donc à des positions légèrement différentes). Il descend vers
+  // la première section dont le haut est encore sous le haut du viewport.
+  const nextRef = useRef(null);
+  const goNext = () => {
+    const secs = rootRef.current?.querySelectorAll("section.lp-slide");
+    if (!secs) return;
+    for (const s of secs) {
+      if (s.getBoundingClientRect().top > 8) {
+        s.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+    }
   };
-  const slideDown = () => (
-    <button className="lp-next" onClick={goNext} aria-label="Section suivante">
-      <Icon name="chevronDown" size={20} />
-    </button>
-  );
+  // Masque le chevron une fois la dernière slide atteinte (getBoundingClientRect
+  // suffit : indépendant du conteneur de défilement, window ou .lp-root).
+  useEffect(() => {
+    const secs = rootRef.current?.querySelectorAll("section.lp-slide");
+    const last = secs && secs[secs.length - 1];
+    const btn = nextRef.current;
+    if (!last || !btn) return;
+    const io = new IntersectionObserver(
+      ([entry]) => btn.classList.toggle("lp-next--hidden", entry.isIntersecting),
+      { threshold: 0.4 },
+    );
+    io.observe(last);
+    return () => io.disconnect();
+  }, []);
 
   // Fonctions de rendu (et non composants déclarés au render) : CTA et marque
   // apparaissent plusieurs fois. On factorise sans remonter de sous-composant qui
@@ -379,6 +420,12 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         </div>
       </header>
 
+      {/* Chevron « suivant » unique et flottant : position fixe, donc toujours au
+          même endroit à l'écran quelle que soit la hauteur de la slide courante. */}
+      <button ref={nextRef} className="lp-next" onClick={goNext} aria-label="Section suivante">
+        <Icon name="chevronDown" size={20} />
+      </button>
+
       {/* 1. Coup de poing */}
       <section className="lp-wrap lp-hero lp-slide">
         <div className="lp-hero__grid">
@@ -394,10 +441,9 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </div>
           </div>
           <div className="lp-hero__art">
-            <PhoneFrame label="Aperçu de Cardamome : l'écran d'accueil"><SceneHome /></PhoneFrame>
+            <SceneFridge />
           </div>
         </div>
-        {slideDown()}
       </section>
 
       {/* 2. Situation vécue */}
@@ -419,7 +465,6 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </p>
           </div>
         </div>
-        {slideDown()}
       </section>
 
       {/* 3. Tes livres */}
@@ -427,45 +472,44 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <div className="lp-split">
           <div>
             <span className="lp-eyebrow">Tes livres</span>
-            <h2 className="lp-h2">Tu as 15 livres de cuisine. Tu les aimes.</h2>
+            <h2 className="lp-h2 lp-h2--wide">Tu as 15 livres de cuisine. Tu les aimes.</h2>
             <p className="lp-p">
-              Nous aussi. Un livre, ça se tache, ça s'annote, ça se transmet. Le livre n'est pas
-              le problème. Le problème, c'est tout ce qu'il y a autour.
+              Nous aussi. Un livre, ça se tache, ça s'annote, ça se transmet. Le livre n'a jamais
+              été le problème. Ce qui l'est, c'est tout ce qu'il y a autour : recopier, convertir
+              les quantités, refaire la liste, retrouver la bonne page.
             </p>
-            <p className="lp-refrain">Quel livre ?<span>Quelle page&nbsp;?</span></p>
-            <ul className="lp-situations">
-              <li>Recopier les ingrédients à la main.</li>
-              <li>Convertir les quantités pour quatre.</li>
-              <li>Refaire la liste de courses à chaque fois.</li>
-              <li>Garder la page ouverte sans la couvrir de gras.</li>
-              <li>Te souvenir de ce que tu avais changé la dernière fois.</li>
-            </ul>
+            <p className="lp-punch">
+              Le livre, tu l'ouvres avec plaisir. <em>Le reste t'épuise avant l'assiette.</em>
+            </p>
           </div>
           <div className="lp-split__media">
             <SceneBooks />
           </div>
         </div>
-        {slideDown()}
       </section>
 
-      {/* 4. La réponse : garde tes livres */}
+      {/* 4. Ce que fait Cardamome : la recette devient un objet structuré et vivant */}
       <section className="lp-wrap lp-section lp-slide">
-        <div className="lp-split">
+        <div className="lp-split lp-split--reverse">
           <div>
             <span className="lp-eyebrow">Ce que fait Cardamome</span>
-            <h2 className="lp-h2 lp-h2--wide">Garde tes livres. Oublie les tracas autour.</h2>
+            <h2 className="lp-h2 lp-h2--wide">Une recette n'est pas juste du texte. Cardamome le sait.</h2>
             <p className="lp-p">
-              Photographie une ou deux pages, ou colle un lien. Cardamome lit la recette, sépare les
-              ingrédients des étapes, relie les ustensiles, et repère même les <strong>préparations de
-              base</strong> (la sauce, la pâte, le caramel) avec leur rendement.
+              Chaque recette est <strong>structurée</strong> : ingrédients, ustensiles, étapes. Et le
+              mode pas à pas t'accompagne sur les <strong>gestes techniques</strong>, saisir,
+              émulsionner, monter, pile au moment où tu les réalises.
             </p>
-            <p className="lp-punch">Tu relis, tu ranges. Le livre retourne sur l'étagère, <em>propre.</em></p>
+            <p className="lp-punch">
+              Tu n'exécutes pas naïvement. <em>Tu apprends quelque chose de nouveau à chaque recette.</em>
+            </p>
           </div>
           <div className="lp-split__media">
-            <PhoneFrame label="Une recette rangée par Cardamome : ingrédients, étapes, base reliée"><SceneStructured /></PhoneFrame>
+            <div className="lp-dock">
+              <PhoneFrame label="L'éditeur de recette de Cardamome : les champs se remplissent"><SceneEditor /></PhoneFrame>
+              <span className="lp-dock__bar" aria-hidden="true" />
+            </div>
           </div>
         </div>
-        {slideDown()}
       </section>
 
       {/* 5. Import intelligent : la démonstration mise en avant, demo à droite */}
@@ -473,62 +517,60 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <div className="lp-split lp-split--wide">
           <div>
             <span className="lp-eyebrow">L'import intelligent</span>
-            <h2 className="lp-h2 lp-h2--wide">Les autres extraient du texte. Cardamome comprend ta recette.</h2>
+            <h2 className="lp-h2 lp-h2--wide">Les autres recopient. Cardamome comprend ta recette.</h2>
             <p className="lp-p">
-              Extraire, c'est recopier des mots dans des cases. Comprendre, c'est savoir ce que ces
-              mots veulent dire quand tu passes en cuisine. Un lien, une photo de page : quelques
-              secondes plus tard, la recette est structurée, prête à cuisiner.
+              Extraire, c'est ranger des mots dans des cases. Comprendre, c'est savoir ce qu'ils
+              veulent dire une fois en cuisine : les portions ajustent les quantités, la saison et
+              le Nutri-Score arrivent tout seuls.
             </p>
-            <ul className="lp-situations">
-              <li>Tu changes le nombre de portions : les quantités suivent.</li>
-              <li>Un ingrédient reconnu porte sa saison et son Nutri-Score.</li>
-              <li>Une préparation de base éclate toute seule dans les courses.</li>
-              <li>Une quantité te donne son équivalent en cuillères, sans balance.</li>
-            </ul>
-            <p className="lp-punch">D'un lien collé à une recette qui se cuisine. <em>Sans recopier une ligne.</em></p>
+            <p className="lp-punch">
+              Un lien collé, une photo de page, une recette qui se cuisine. <em>Sans recopier une ligne.</em>
+            </p>
           </div>
           <div className="lp-split__media">
             <SceneImport />
           </div>
         </div>
-        {slideDown()}
       </section>
 
       {/* 6. Prise de position sur le catalogue */}
       <section className="lp-wrap lp-section lp-slide">
-        <span className="lp-eyebrow">Notre parti pris</span>
-        <h2 className="lp-h2 lp-h2--wide">On pourrait te donner 15 000 recettes. Mais à quoi bon ?</h2>
-        <p className="lp-p">
-          Tu n'as pas besoin de 47 recettes de carbonara. Tu en veux une. La bonne. Celle que tu
-          réussis, et que tu recuisines.
-        </p>
-        <p className="lp-punch">
-          Une bonne app de cuisine ne t'occupe pas pendant que tu cherches quoi faire.
-          <em> Elle t'aide à cuisiner.</em>
-        </p>
-        <p className="lp-p">
-          Il y a bien un espace pour découvrir des recettes publiées par d'autres et les cloner
-          d'un geste. Choisi, pas entassé.
-        </p>
-        {slideDown()}
+        <div className="lp-split lp-split--reverse">
+          <div className="lp-split__media">
+            <SceneChosen />
+          </div>
+          <div>
+            <span className="lp-eyebrow">Notre parti pris</span>
+            <h2 className="lp-h2 lp-h2--wide">On pourrait te donner des milliers de recettes. À quoi bon ?</h2>
+            <p className="lp-p">
+              Tu n'as pas besoin de 47 carbonara. Tu en veux une : la bonne, celle que tu réussis et
+              que tu recuisines. Découvrir les recettes des autres reste possible, et se cloner d'un
+              geste. Choisi, pas entassé.
+            </p>
+            <p className="lp-punch">
+              Une bonne app ne t'occupe pas pendant que tu cherches quoi faire. <em>Elle t'aide à cuisiner.</em>
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* 7. Manifeste : pleine largeur, prise de position assumée */}
       <section id="manifeste" className="lp-wrap lp-section lp-slide lp-manifest">
         <span className="lp-eyebrow">Le manifeste</span>
-        <h2 className="lp-manifest__lead">On n'est pas pour tout le monde. <em>Et on l'assume.</em></h2>
-        <p className="lp-manifest__sub">
-          Cardamome est faite pour celles et ceux qui veulent <strong>vraiment cuisiner</strong> : les
-          amateurs motivés, pas les collectionneurs de recettes qu'ils ne feront jamais. On préfère
-          servir à fond quelques passionnés que satisfaire mollement tout le monde.
-        </p>
+        <div className="lp-manifest__head">
+          <h2 className="lp-manifest__lead">On n'est pas pour tout le monde. <em>Et on l'assume.</em></h2>
+          <p className="lp-manifest__sub">
+            Cardamome est faite pour celles et ceux qui veulent <strong>vraiment cuisiner</strong> : les
+            amateurs motivés, pas les collectionneurs de recettes qu'ils ne feront jamais. On préfère
+            servir à fond quelques passionnés que satisfaire mollement tout le monde.
+          </p>
+        </div>
         <div className="lp-manifest__grid">
           <p><span className="lp-manifest__n">01</span>Plus de contenu ne rend pas une app <em>meilleure.</em></p>
-          <p><span className="lp-manifest__n">02</span>Une recette sauvegardée <span className="lp-mute">n'est pas</span> une recette cuisinée.</p>
-          <p><span className="lp-manifest__n">03</span>Le doublon n'est pas un choix, c'est du <span className="lp-mute">remplissage.</span></p>
-          <p><span className="lp-manifest__n">04</span>Ce qui compte tient dans une assiette, <em>pas dans un compteur.</em></p>
+          <p><span className="lp-manifest__n">02</span>Une recette n'existe vraiment qu'une fois <em>cuisinée.</em></p>
+          <p><span className="lp-manifest__n">03</span>Le temps passé ici, c'est du temps <span className="lp-mute">volé à ta cuisine.</span></p>
+          <p><span className="lp-manifest__n">04</span>On te veut meilleur cuisinier, <span className="lp-mute">pas meilleur client.</span></p>
         </div>
-        {slideDown()}
       </section>
 
       {/* 8. Preuves d'usage */}
@@ -544,7 +586,6 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </div>
           ))}
         </div>
-        {slideDown()}
       </section>
 
       {/* 9. Cardamome et Cardamome+ */}
@@ -584,7 +625,6 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </ul>
           </div>
         </div>
-        {slideDown()}
       </section>
 
       {/* 10. Conclusion */}

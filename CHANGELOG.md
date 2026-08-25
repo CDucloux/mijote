@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.6.0 – Cardamome · La vitrine, au propre
+
+### Page d'accueil publique
+- **Mobile enfin d'aplomb** : la landing se parcourt vraiment sur téléphone. Le défilement, qui restait bloqué, est réparé, et le format « slides » plein écran laisse place à un défilement vertical naturel, taillé pour les petits écrans.
+- **Des slides au même souffle** : les sections narratives suivent désormais un même rythme éditorial (titre, constat, explication, chute), calées sur une longueur de texte homogène, pour des écrans réguliers plutôt que déséquilibrés.
+- **Des scènes qui parlent** : le hero montre un frigo garni mais sans rien d'évident à cuisiner (le problème, pas l'app), la section « ce que fait Cardamome » montre l'éditeur de recette dont les champs se remplissent, et le parti pris affiche une nuée de recettes ternes dont une seule ressort.
+- **Le manifeste au cordeau** : titre puis description en pleine largeur, et quatre convictions plus tranchées.
+- **Navigation posée** : une seule flèche de descente, flottante et toujours au même endroit, plutôt qu'une par section qui dansait d'un écran à l'autre.
+- **Offre alignée** : les deux formules affichent le même nombre de lignes, et le dégradé vert de la formule recommandée laisse place à un fond plat, plus net.
+
 ## v4.5.0 – Cardamome · La vitrine
 
 ### Page d'accueil publique

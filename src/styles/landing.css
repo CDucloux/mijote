@@ -8,9 +8,11 @@
 
 .lp-root {
   position: relative;
-  /* Hauteur calée sur #root (et non dvh) : sur desktop #root est mis à l'échelle
-     via transform:scale(--page-zoom), donc dvh ne correspond PAS au viewport réel.
-     Tout se dimensionne en % pour que chaque slide fasse pile un écran visible. */
+  /* Desktop : #app n'a pas de hauteur définie et body est en overflow:auto, donc
+     .lp-root prend la hauteur de son contenu et c'est la FENÊTRE qui défile (les
+     slides restent à hauteur de contenu, rendu validé). Sur mobile, body est en
+     overflow:hidden : .lp-root doit alors devenir son propre conteneur de
+     défilement à hauteur d'écran (cf. le breakpoint mobile plus bas). */
   height: 100%;
   background: var(--bg);
   color: var(--text);
@@ -249,18 +251,385 @@
   max-width: 30ch;
 }
 
-/* Maquette d'app à droite du hero (l'écran d'accueil). Sa hauteur est bornée au
-   viewport pour tenir sous la barre fixe sans déborder sur écran court. */
+/* Scène à droite du hero : le frigo (le problème, pas l'app). */
 .lp-hero__art {
   display: flex;
   justify-content: center;
 }
-.lp-hero__art .lp-device {
-  height: min(560px, 66vh);
-  width: auto;
+
+/* ── Scène du hero : frigo ouvert, garni mais sans rien d'évident à cuisiner ────
+   Étroit et haut, poignée verticale, clayettes (chaque étagère est une rangée
+   flex alignée en bas → les aliments REPOSENT dessus), bacs à légumes en bas, et
+   un « ? » ambre bien détaché. 100% CSS + tokens, aucun asset. */
+.lp-fridge {
+  position: relative;
+  width: min(190px, 56%);
+  margin-right: clamp(30px, 6vw, 56px);
+}
+.lp-fridge__body {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 40 / 72;
+  border-radius: 20px;
+  background: var(--bg);
+  border: 7px solid var(--surface2);
+  box-shadow: 0 44px 74px -42px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+.lp-fridge__light {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 38%);
+  pointer-events: none;
+  z-index: 4;
+}
+.lp-fridge__inside {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 9px;
+  gap: 8px;
+}
+/* Étagère = rangée alignée en bas, refermée par un trait (la vitre) : les aliments
+   posent leur base pile sur ce trait, ils ne flottent plus. justify-content à
+   flex-start + une pièce poussée (--push) donne une répartition non uniforme. */
+.lp-fridge__shelf {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 0 4px;
+  border-bottom: 3px solid var(--surface3);
+  box-shadow: 0 3px 5px -3px rgba(0, 0, 0, 0.5);
+}
+.lp-fr--push { margin-left: auto; }
+/* Bac à légumes : UN seul, pleine largeur, sous la dernière clayette. Légumes
+   entrevus derrière une façade translucide + encoche de préhension. */
+.lp-fridge__crisper {
+  position: relative;
+  height: 23%;
+  border-radius: 4px 4px 8px 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface3);
+  overflow: hidden;
+}
+.lp-veg { position: absolute; bottom: 5px; z-index: 1; }
+.lp-veg--carrot {
+  left: 20%;
+  width: 11px;
+  height: 30px;
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  background: linear-gradient(100deg, #d98a4a, #b56a28);
+}
+.lp-veg--greens {
+  left: 46%;
+  width: 30px;
+  height: 22px;
+  border-radius: 45% 45% 32% 32%;
+  background: radial-gradient(circle at 38% 28%, #78a24a, #3f5f28);
+}
+.lp-fridge__cripanel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(150, 160, 140, 0.13));
+}
+.lp-fridge__cripanel::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface3);
+}
+/* ── Aliments (bases posées sur la clayette, dégradés de volume, détails) ────── */
+.lp-fr { position: relative; flex-shrink: 0; z-index: 1; }
+/* Brique de lait : pignon, bouchon, bandeau d'étiquette. */
+.lp-fr--milk {
+  width: 20px;
+  height: 46px;
+  border-radius: 2px 2px 3px 3px;
+  background: linear-gradient(100deg, #e7e0ce, #d3cbb4 58%, #b9b19a);
+}
+.lp-fr--milk::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  background: linear-gradient(100deg, #e7e0ce, #c7bfa8);
+}
+.lp-fr--milk::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: 0;
+  right: 0;
+  height: 11px;
+  background: rgba(var(--accent-rgb), 0.6);
+}
+/* Bocal de confiture : couvercle ambre + étiquette claire. */
+.lp-fr--jar {
+  width: 25px;
+  height: 32px;
+  border-radius: 4px 4px 6px 6px;
+  background: linear-gradient(100deg, rgba(150, 142, 122, 0.5), rgba(84, 78, 66, 0.55));
+  border: 1px solid var(--border);
+}
+.lp-fr--jar::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -1px;
+  right: -1px;
+  height: 7px;
+  border-radius: 3px;
+  background: linear-gradient(100deg, #e6ac48, #b97e22);
+}
+.lp-fr--jar::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 3px;
+  right: 3px;
+  height: 15px;
+  border-radius: 2px;
+  background: #d3cbb4;
+}
+/* Bouteille (huile/vin) : goulot + capsule, étiquette. */
+.lp-fr--bottle {
+  width: 13px;
+  height: 52px;
+  border-radius: 2px 2px 4px 4px;
+  background: linear-gradient(100deg, #6f9a45, #4e7030 62%, #385124);
+}
+.lp-fr--bottle::before {
+  content: "";
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 15px;
+  border-radius: 2px;
+  border-top: 3px solid var(--spice);
+  background: linear-gradient(#3c5626, #2e4420);
+}
+.lp-fr--bottle::after {
+  content: "";
+  position: absolute;
+  bottom: 9px;
+  left: -1px;
+  right: -1px;
+  height: 15px;
+  background: #d9d1bb;
+}
+/* Petite bouteille de condiment (ambre). */
+.lp-fr--bottle2 {
+  width: 13px;
+  height: 30px;
+  border-radius: 2px 2px 4px 4px;
+  background: linear-gradient(100deg, #d98a4a, #a85f27);
+}
+.lp-fr--bottle2::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 10px;
+  border-radius: 2px;
+  background: #7a4a1e;
+}
+/* Barquette de beurre : couvercle et bandeau. */
+.lp-fr--butter {
+  width: 36px;
+  height: 17px;
+  border-radius: 3px;
+  background: linear-gradient(100deg, #ece3c8, #d4cbac);
+}
+.lp-fr--butter::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.16);
+}
+.lp-fr--butter::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  right: 7px;
+  bottom: 3px;
+  border-radius: 2px;
+  background: rgba(var(--spice-rgb), 0.5);
+}
+/* Boîte d'oeufs : boîte + deux oeufs qui dépassent. */
+.lp-fr--eggbox {
+  width: 34px;
+  height: 13px;
+  border-radius: 3px;
+  background: linear-gradient(100deg, #b9b09a, #948d79);
+}
+.lp-fr--eggbox::before,
+.lp-fr--eggbox::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50% 50% 46% 46%;
+  background: radial-gradient(circle at 38% 30%, #efe7d2, #d8ceb4);
+}
+.lp-fr--eggbox::before { left: 3px; }
+.lp-fr--eggbox::after { right: 3px; }
+/* Citron : dégradé + petit pédoncule. */
+.lp-fr--lemon {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #f6d271, #dfa62c);
+}
+.lp-fr--lemon::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #6f8a3a;
+}
+/* Tomate : dégradé chaud + pédoncule vert. */
+.lp-fr--tomato {
+  width: 22px;
+  height: 20px;
+  border-radius: 50% 50% 48% 48%;
+  background: radial-gradient(circle at 35% 30%, #cf6a48, #a2402a);
+}
+.lp-fr--tomato::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 5px;
+  border-radius: 2px;
+  background: #5f7d38;
+}
+/* Part de fromage : coin + trou. */
+.lp-fr--cheese {
+  width: 30px;
+  height: 20px;
+  clip-path: polygon(0 100%, 100% 100%, 0 0);
+  background: linear-gradient(100deg, #e6cd76, #d0b148);
+}
+.lp-fr--cheese::before {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 6px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+}
+/* Reste couvert : bol + bouton de couvercle. */
+.lp-fr--bowl {
+  width: 30px;
+  height: 20px;
+  border-radius: 13px 13px 5px 5px;
+  background: linear-gradient(100deg, #3a4034, #2b3027);
+  border: 1px solid var(--border);
+}
+.lp-fr--bowl::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface3);
+}
+/* Poignée : longue barre verticale sur le montant droit (soeur du corps). */
+.lp-fridge__handle {
+  position: absolute;
+  top: 24%;
+  right: -2px;
+  width: 5px;
+  height: 42%;
+  border-radius: 4px;
+  background: var(--surface3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  z-index: 3;
+}
+/* Le « ? » : la question qui reste. Détaché, ambre, il respire doucement. */
+.lp-fridge__q {
+  position: absolute;
+  top: -12%;
+  right: -22%;
+  font-family: var(--ff-display);
+  font-weight: 800;
+  font-size: clamp(3.4rem, 8vw, 5rem);
+  line-height: 1;
+  color: var(--spice);
+  transform: rotate(9deg);
+  text-shadow: 0 6px 18px rgba(var(--spice-rgb), 0.35);
+  animation: lpQ 3s ease-in-out infinite;
+}
+@keyframes lpQ {
+  0%, 100% { opacity: 0.7; transform: rotate(9deg) translateY(0); }
+  50% { opacity: 1; transform: rotate(9deg) translateY(-6px); }
+}
+@media (prefers-reduced-motion: reduce) { .lp-fridge__q { animation: none; opacity: 0.95; } }
+
+/* ── Scène « Notre parti pris » : la nuée ternie, un seul choix ──────────────── */
+.lp-chosen {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 9px;
+  width: min(330px, 90%);
+}
+/* Vignettes bien VISIBLES (fond de surface plein + bord net) : la distinction
+   avec la case choisie vient de la COULEUR, pas d'une opacité qui les effaçait. */
+.lp-chosen__t {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--surface3);
+}
+/* Variation tonale douce pour un rendu vivant, jamais mécaniquement uniforme. */
+.lp-chosen__t:nth-child(3n) { background: var(--surface); }
+.lp-chosen__t:nth-child(4n) { background: var(--surface3); }
+.lp-chosen__t:nth-child(7n) { background: var(--surface); }
+/* La seule qui compte : accent, cochée, légèrement en avant. Double classe pour
+   battre la spécificité des règles :nth-child de fond ci-dessus. */
+.lp-chosen__t.lp-chosen__t--on {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.14);
+  box-shadow: 0 12px 26px -10px rgba(var(--accent-rgb), 0.85);
+  z-index: 1;
 }
 
-/* ── Slides : chaque section occupe un écran, flèche « suivant » en bas ─────── */
+/* ── Slides : chaque section occupe un écran ───────────────────────────────── */
 .lp-slide {
   min-height: 100%;
   scroll-snap-align: start;
@@ -269,12 +638,14 @@
   justify-content: center;
   position: relative;
 }
-/* Flèche de descente : pastille discrète ancrée en bas de chaque slide, défile
-   vers la section suivante. Respiration douce, coupée en mouvement réduit. */
+/* Chevron de descente : un SEUL bouton, flottant (position fixe) au bas-centre du
+   viewport, donc toujours au même endroit quelle que soit la hauteur de la slide.
+   Le nudge vit sur l'icône pour que le centrage (translateX) du bouton reste
+   stable. Se masque en douceur sur la dernière slide (classe --hidden). */
 .lp-next {
-  position: absolute;
+  position: fixed;
   left: 50%;
-  bottom: clamp(16px, 3.5vh, 34px);
+  bottom: clamp(16px, 3.5vh, 30px);
   transform: translateX(-50%);
   width: 44px;
   height: 44px;
@@ -283,49 +654,24 @@
   justify-content: center;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--surface2);
+  background: color-mix(in srgb, var(--surface2) 90%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   color: var(--text2);
   cursor: pointer;
-  z-index: 5;
-  animation: lpNudge 1.9s ease-in-out infinite;
-  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+  z-index: 30;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, opacity 0.3s ease;
 }
+.lp-next svg { animation: lpNudge 1.9s ease-in-out infinite; }
+.lp-next--hidden { opacity: 0; pointer-events: none; }
 @media (hover: hover) {
   .lp-next:hover { color: var(--text); background: var(--surface3); border-color: var(--text3); }
 }
 @keyframes lpNudge {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(4px); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
 }
-@media (prefers-reduced-motion: reduce) { .lp-next { animation: none; } }
-
-/* ── Situations vécues (liste) ───────────────────────────────────────────── */
-.lp-situations {
-  list-style: none;
-  margin: 26px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-  max-width: 56ch;
-}
-.lp-situations li {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  font-size: clamp(1rem, 1.1vw, 1.08rem);
-  line-height: 1.5;
-  color: var(--text2);
-}
-.lp-situations li::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 7px;
-  height: 7px;
-  margin-top: 8px;
-  border-radius: 2px;
-  background: var(--accent);
-  transform: rotate(45deg);
-}
+@media (prefers-reduced-motion: reduce) { .lp-next svg { animation: none; } }
 
 /* Section à deux colonnes : texte + maquette d'app, en asymétrie. */
 .lp-split {
@@ -339,43 +685,33 @@
   justify-content: center;
 }
 
-/* Répétition intentionnelle « Quel livre ? Quelle page ? » en gros serif. */
-.lp-refrain {
-  font-family: var(--ff-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  font-size: clamp(1.5rem, 4vw, 2.2rem);
-  color: var(--text);
-  margin: 0 0 6px;
+/* ── Manifeste (pleine largeur, prise de position) ───────────────────────────
+   Titre puis description, EMPILÉS et pleine largeur, calés sur la largeur de la
+   grille numérotée dessous (bord à bord dans la gouttière). */
+.lp-manifest__head {
+  margin-bottom: clamp(30px, 4.5vw, 52px);
 }
-.lp-refrain span { color: var(--text3); display: block; }
-
-/* ── Manifeste (pleine largeur, prise de position) ───────────────────────── */
 .lp-manifest__lead {
   font-family: var(--ff-display);
   font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.04;
+  line-height: 1.06;
   color: var(--text);
-  font-size: clamp(2rem, 5vw, 3.3rem);
+  font-size: clamp(1.8rem, 3.8vw, 2.7rem);
   margin: 0;
-  max-width: 20ch;
 }
 .lp-manifest__lead em { color: var(--accent); font-style: normal; }
 .lp-manifest__sub {
-  font-size: clamp(1.02rem, 1.35vw, 1.22rem);
+  font-size: clamp(1.02rem, 1.3vw, 1.18rem);
   line-height: 1.6;
   color: var(--text2);
-  max-width: 62ch;
-  margin: 20px 0 0;
+  margin: clamp(16px, 2vw, 22px) 0 0;
 }
 .lp-manifest__sub strong { color: var(--text); font-weight: 600; }
 .lp-manifest__grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: clamp(20px, 3vw, 30px) clamp(32px, 5vw, 68px);
-  margin-top: clamp(30px, 4.5vw, 52px);
 }
 .lp-manifest__grid p {
   position: relative;
@@ -456,8 +792,7 @@
 }
 .lp-plan--plus {
   border-color: rgba(var(--accent-rgb), 0.55);
-  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.09), rgba(var(--accent-rgb), 0.03));
-  box-shadow: 0 20px 44px -26px rgba(var(--accent-rgb), 0.85);
+  background: rgba(var(--accent-rgb), 0.05);
 }
 /* Étiquette « Recommandé » posée sur le bord haut-droit de la carte Plus. */
 .lp-plan__flag {
@@ -669,6 +1004,55 @@
   .lp-proof { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* ── Mobile (téléphone) ──────────────────────────────────────────────────────
+   Le paradigme « slide = un écran » est une convention desktop : sur un petit
+   écran, du contenu à deux colonnes ne tient jamais en une hauteur de viewport.
+   On repasse donc en défilement vertical franc : sections de hauteur naturelle
+   alignées en haut (aucun centrage qui rogne), pas de snap ni de flèche de
+   descente, rythme resserré, et maquette d'accueil dimensionnée à la largeur. */
+@media (max-width: 767px) {
+  /* body est en overflow:hidden sur mobile : sans hauteur d'écran définie ici,
+     .lp-root prendrait la hauteur de tout son contenu et RIEN ne défilerait (le
+     dépassement serait coupé par body). On lui donne donc une hauteur d'écran
+     explicite pour qu'il soit lui-même le conteneur scrollable. svh = small
+     viewport height (barres du navigateur affichées), avec vh en repli. */
+  .lp-root {
+    height: 100vh;
+    height: 100svh;
+    scroll-snap-type: none;
+    scroll-padding-top: 60px;
+  }
+  .lp-slide {
+    min-height: 0;
+    justify-content: flex-start;
+  }
+  /* La flèche « suivant » n'a de sens que quand une slide fait pile un écran. */
+  .lp-next { display: none; }
+
+  .lp-section { padding-block: clamp(52px, 12vw, 74px); }
+  .lp-hero {
+    padding-top: clamp(80px, 22vw, 108px);
+    padding-bottom: 8px;
+  }
+  .lp-hero__grid { gap: clamp(26px, 7vw, 40px); }
+  .lp-hero__note { font-size: 1.18rem; }
+
+  /* Scène frigo : bornée à la largeur de la colonne sur téléphone. */
+  .lp-fridge { width: clamp(180px, 56vw, 232px); }
+
+  /* Barre : resserrée pour tenir marque + thème + CTA sur les écrans étroits. */
+  .lp-navbar__inner { gap: 10px; }
+  .lp-nav__right { gap: 8px; }
+  .lp-theme { width: 34px; height: 34px; }
+  .lp-navbar .lp-cta--sm { padding: 8px 15px; font-size: 13px; gap: 7px; }
+}
+
+/* Très petits écrans : le wordmark de la BARRE cède la place, on garde le pod
+   (le mot-symbole complet reste présent juste dessous, dans le hero). */
+@media (max-width: 379px) {
+  .lp-navbar .lp-brand { display: none; }
+}
+
 /* ═══ MAQUETTES D'APP (scènes) ════════════════════════════════════════════════
    Aperçus vivants de l'app, bâtis sur les tokens de design (accent, oak/wall,
    spice, ff-display/ff-hand…). Ce ne sont PAS des captures : ni asset externe,
@@ -707,174 +1091,34 @@
   border: 1px solid var(--border);
 }
 
+/* ── Socle : téléphone tronqué qui « sort » d'une barre ─────────────────────────
+   On ne montre que le haut du téléphone (le contenu de l'éditeur se termine à une
+   hauteur fixe, ~382px, car il est mis en page en px) : une hauteur bornée +
+   overflow:hidden masquent le bas vide, et une barre ferme la coupe. Évite un
+   téléphone trop haut sans le redimensionner (ce qui l'écraserait). */
+.lp-dock {
+  position: relative;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: 434px;
+  padding: 10px 24px 0;
+  overflow: hidden;
+}
+.lp-dock__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  background: linear-gradient(180deg, var(--surface3), var(--surface2));
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 -18px 30px -20px rgba(0, 0, 0, 0.55);
+  z-index: 3;
+}
+
 .lp-scene { display: flex; flex-direction: column; font-family: var(--ff-body); }
 .lp-device__screen > .lp-scene { height: 100%; }
-.lp-scene__bar { padding: 15px 14px 9px; }
-.lp-scene__title { font-family: var(--ff-display); font-weight: 700; font-size: 15px; color: var(--text); }
-
-/* ── Scène : écran d'accueil (dashboard réel en réduction) ─────────────────── */
-.lp-hs { height: 100%; background: var(--bg); }
-.lp-hs__scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  padding: 13px 12px 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-}
-.lp-hs__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.lp-hs__hi { font-family: var(--ff-display); font-weight: 700; font-size: 19px; letter-spacing: -0.02em; color: var(--text); line-height: 1; }
-.lp-hs__sub { font-size: 10px; color: var(--text3); margin-top: 4px; }
-.lp-hs__sub b { font-family: var(--ff-display); font-weight: 700; color: var(--text2); }
-.lp-hs__sub b span { color: var(--accent); }
-.lp-hs__me {
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--ff-display);
-  font-weight: 700;
-  font-size: 14px;
-  color: #fff;
-  background: var(--accent);
-  box-shadow: 0 2px 6px -2px rgba(var(--accent-rgb), 0.7);
-}
-.lp-hs__foyer {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 10px 11px 10px 14px;
-  border-radius: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.lp-hs__foyerbar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
-.lp-hs__avs { display: inline-flex; flex-shrink: 0; }
-.lp-hs__avs i {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-style: normal;
-  font-weight: 700;
-  font-size: 10px;
-  color: #fff;
-  border: 1.5px solid var(--surface);
-}
-.lp-hs__avs i:first-child { background: var(--accent-strong); }
-.lp-hs__avs i:last-child { background: var(--spice); margin-left: -8px; }
-.lp-hs__foyertxt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.lp-hs__foyertxt b { font-size: 12.5px; font-weight: 700; color: var(--text); }
-.lp-hs__foyertxt small { font-size: 9.5px; color: var(--text3); }
-.lp-hs__chev {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--accent);
-}
-.lp-hs__label { font-family: var(--ff-display); font-weight: 700; font-size: 13px; color: var(--text); }
-.lp-hs__label--row { display: flex; align-items: baseline; justify-content: space-between; }
-.lp-hs__labelic { display: inline-flex; align-items: center; gap: 5px; }
-.lp-hs__label--row small { font-size: 9px; color: var(--text3); }
-.lp-hs__row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 11px;
-  border-radius: 13px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-.lp-hs__rowic {
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(var(--accent-rgb), 0.12);
-}
-.lp-hs__rowtxt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.lp-hs__rowtxt b { font-size: 12px; font-weight: 700; color: var(--text); }
-.lp-hs__rowtxt small { font-size: 9.5px; color: var(--text3); }
-.lp-hs__ing {
-  position: relative;
-  border-radius: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 12px 12px 13px;
-  overflow: hidden;
-}
-.lp-hs__ingbar { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--spice), var(--accent)); }
-.lp-hs__inghead { display: flex; align-items: center; gap: 10px; }
-.lp-hs__ingphoto {
-  flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(var(--accent-rgb), 0.12);
-  border: 1px solid var(--border);
-}
-.lp-hs__ingname { font-family: var(--ff-display); font-weight: 700; font-size: 15px; color: var(--text); line-height: 1; }
-.lp-hs__ingtags { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
-.lp-hs__season {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: #fff;
-  background: var(--spice);
-  border-radius: 999px;
-  padding: 2px 6px;
-}
-.lp-hs__ingtags small { font-size: 9.5px; color: var(--text3); }
-.lp-hs__months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; margin-top: 11px; }
-.lp-hs__months span {
-  text-align: center;
-  font-size: 8px;
-  font-weight: 700;
-  color: var(--text3);
-  padding: 3px 0;
-  border-radius: 3px;
-}
-.lp-hs__months span.on { color: #fff; background: var(--spice); }
-.lp-hs__nav {
-  flex-shrink: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  padding: 7px 4px calc(7px + env(safe-area-inset-bottom));
-}
-.lp-hs__nav span {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  font-size: 8px;
-  font-weight: 600;
-  color: var(--text3);
-}
-.lp-hs__nav span.on { color: var(--accent); }
 
 /* ── Scène : pile de cartes recette (le trop-plein rendu visible) ──────────── */
 .lp-cardpile {
@@ -1003,47 +1247,191 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 12px -5px rgba(40, 30, 15, 0.5);
 }
 
-/* ── Scène : recette structurée (résultat rangé) ───────────────────────────── */
-.lp-scene--struct { background: var(--bg); }
-.lp-st__group {
-  margin: 6px 14px 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.lp-st__ings { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 14px; }
-.lp-st__ing {
-  display: inline-flex;
+/* ── Scène : éditeur de nouvelle recette (les champs se remplissent) ─────────── */
+.lp-ed { height: 100%; background: var(--bg); }
+.lp-ed__top {
+  display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text2);
+  gap: 8px;
+  padding: 13px 12px 10px;
+  border-bottom: 1px solid var(--border);
 }
-.lp-st__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-.lp-st__ing--base { background: rgba(var(--accent-rgb), 0.1); border-color: rgba(var(--accent-rgb), 0.38); color: var(--accent); }
-.lp-st__ing--base .lp-st__dot { background: var(--spice); }
-.lp-st__steps { list-style: none; margin: 4px 0 0; padding: 0 14px 14px; display: grid; gap: 9px; }
-.lp-st__steps li { display: flex; align-items: center; gap: 9px; }
-.lp-st__steps li b {
-  flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+.lp-ed__x {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
 }
-.lp-st__line { height: 6px; border-radius: 3px; background: var(--surface3); }
+.lp-ed__titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lp-ed__kicker {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+/* Titre d'en-tête : « Sans titre » (état vide) cède la place au nom une fois le
+   champ tapé. Deux calques superposés, l'un s'efface, l'autre apparaît. */
+.lp-ed__name { position: relative; display: block; height: 14px; }
+.lp-ed__name-ph,
+.lp-ed__name-real {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.lp-ed__name-ph { color: var(--text3); animation: lpNamePh 6.5s ease infinite; }
+.lp-ed__name-real { color: var(--text); opacity: 0; animation: lpNameReal 6.5s ease infinite; }
+@keyframes lpNamePh {
+  0%, 24% { opacity: 1; }
+  32%, 90% { opacity: 0; }
+  97%, 100% { opacity: 1; }
+}
+@keyframes lpNameReal {
+  0%, 28% { opacity: 0; }
+  36%, 90% { opacity: 1; }
+  96%, 100% { opacity: 0; }
+}
+.lp-ed__save {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 3px 9px -3px rgba(var(--accent-rgb), 0.8);
+}
+.lp-ed__tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.lp-ed__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px;
+  border-radius: 10px;
+  font-size: 7.5px;
+  font-weight: 600;
+  color: var(--text3);
+}
+.lp-ed__tab--on { color: var(--accent); background: rgba(var(--accent-rgb), 0.12); }
+.lp-ed__body { padding: 12px; display: flex; flex-direction: column; gap: 11px; }
+.lp-ed__photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 18px 12px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--border);
+  background: var(--surface);
+}
+.lp-ed__photo span { font-size: 11px; font-weight: 600; color: var(--text2); }
+.lp-ed__photo small { font-size: 8.5px; color: var(--text3); }
+.lp-ed__field { display: flex; flex-direction: column; gap: 5px; }
+.lp-ed__field > label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.lp-ed__input {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text);
+}
+.lp-ed__input--sm { min-height: 26px; font-size: 11px; }
+/* Effet machine à écrire : le nom se tape (largeur révélée par paliers), puis un
+   curseur clignote. overflow:hidden + white-space:nowrap = révélation propre. */
+.lp-ed__typed {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  max-width: 0;
+  animation: lpType 6.5s steps(11, end) infinite;
+}
+.lp-ed__caret {
+  flex-shrink: 0;
+  width: 1.5px;
+  height: 15px;
+  background: var(--accent);
+  animation: lpCaret 0.9s step-end infinite;
+}
+/* Cycle complet (6,5 s) : le nom se tape, tient, puis s'efface avant de repartir,
+   pour que l'animation soit toujours visible quand on arrive sur la slide. */
+@keyframes lpType {
+  0%, 6% { max-width: 0; }
+  30%, 90% { max-width: 6.5em; }
+  96%, 100% { max-width: 0; }
+}
+@keyframes lpCaret { 50% { opacity: 0; } }
+.lp-ed__row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.lp-ed__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lp-ed__chip {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.32);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+/* Champs qui se remplissent en cascade : chacun surgit après le nom (a puis b
+   puis c), tient, puis disparaît en fin de cycle avant de repartir. Le décalage
+   est inscrit dans les keyframes (et non via un délai, qui ne se répète pas en
+   boucle) pour rester synchronisé à chaque tour. */
+.lp-ed__fill { opacity: 0; }
+.lp-ed__fill--a { animation: lpFillA 6.5s ease infinite; }
+.lp-ed__fill--b { animation: lpFillB 6.5s ease infinite; }
+.lp-ed__fill--c { animation: lpFillC 6.5s ease infinite; }
+@keyframes lpFillA {
+  0%, 32% { opacity: 0; transform: translateY(6px); }
+  40%, 90% { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(6px); }
+}
+@keyframes lpFillB {
+  0%, 38% { opacity: 0; transform: translateY(6px); }
+  46%, 90% { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(6px); }
+}
+@keyframes lpFillC {
+  0%, 46% { opacity: 0; transform: translateY(6px); }
+  54%, 90% { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-ed__typed { animation: none; max-width: none; }
+  .lp-ed__caret { animation: none; opacity: 0; }
+  .lp-ed__fill { animation: none; opacity: 1; transform: none; }
+  .lp-ed__name-ph { display: none; }
+  .lp-ed__name-real { animation: none; opacity: 1; }
+}
 
 /* ── Scène : la démo d'import IA (panneau animé, placé à droite du texte) ───── */
 .lp-scene--import {
