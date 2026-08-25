@@ -263,13 +263,13 @@
    un « ? » ambre bien détaché. 100% CSS + tokens, aucun asset. */
 .lp-fridge {
   position: relative;
-  width: min(224px, 66%);
-  margin-right: clamp(28px, 6vw, 52px);
+  width: min(190px, 56%);
+  margin-right: clamp(30px, 6vw, 56px);
 }
 .lp-fridge__body {
   position: relative;
   width: 100%;
-  aspect-ratio: 43 / 68;
+  aspect-ratio: 40 / 72;
   border-radius: 20px;
   background: var(--bg);
   border: 7px solid var(--surface2);
@@ -279,170 +279,299 @@
 .lp-fridge__light {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 40%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 38%);
   pointer-events: none;
-  z-index: 2;
+  z-index: 4;
 }
 .lp-fridge__inside {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  padding: 11px 11px 10px;
-  gap: 9px;
+  padding: 10px 10px 9px;
+  gap: 8px;
 }
 /* Étagère = rangée alignée en bas, refermée par un trait (la vitre) : les aliments
-   posent leur base pile sur ce trait, ils ne flottent plus. */
+   posent leur base pile sur ce trait, ils ne flottent plus. justify-content à
+   flex-start + une pièce poussée (--push) donne une répartition non uniforme. */
 .lp-fridge__shelf {
   flex: 1;
   display: flex;
   align-items: flex-end;
-  justify-content: space-around;
-  gap: 6px;
-  padding: 0 3px;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 0 4px;
   border-bottom: 3px solid var(--surface3);
   box-shadow: 0 3px 5px -3px rgba(0, 0, 0, 0.5);
 }
-.lp-fridge__shelf--last { border-bottom: none; box-shadow: none; }
-.lp-fridge__drawers {
-  display: flex;
-  gap: 7px;
-  height: 22%;
-  padding-top: 2px;
-}
-.lp-fridge__drawer {
-  flex: 1;
-  border-radius: 5px 5px 7px 7px;
+.lp-fr--push { margin-left: auto; }
+/* Bac à légumes : UN seul, pleine largeur, sous la dernière clayette. Légumes
+   entrevus derrière une façade translucide + encoche de préhension. */
+.lp-fridge__crisper {
+  position: relative;
+  height: 23%;
+  border-radius: 4px 4px 8px 8px;
   background: var(--surface);
   border: 1px solid var(--surface3);
-  position: relative;
+  overflow: hidden;
 }
-.lp-fridge__drawer::before {
+.lp-veg { position: absolute; bottom: 5px; z-index: 1; }
+.lp-veg--carrot {
+  left: 20%;
+  width: 11px;
+  height: 30px;
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  background: linear-gradient(100deg, #d98a4a, #b56a28);
+}
+.lp-veg--greens {
+  left: 46%;
+  width: 30px;
+  height: 22px;
+  border-radius: 45% 45% 32% 32%;
+  background: radial-gradient(circle at 38% 28%, #78a24a, #3f5f28);
+}
+.lp-fridge__cripanel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(150, 160, 140, 0.13));
+}
+.lp-fridge__cripanel::before {
   content: "";
   position: absolute;
   top: 7px;
   left: 50%;
   transform: translateX(-50%);
-  width: 42%;
+  width: 40%;
   height: 3px;
   border-radius: 2px;
   background: var(--surface3);
 }
-/* Aliments : bases posées sur la clayette (align-items:flex-end), hauteurs variées. */
-.lp-fr { position: relative; flex-shrink: 0; }
+/* ── Aliments (bases posées sur la clayette, dégradés de volume, détails) ────── */
+.lp-fr { position: relative; flex-shrink: 0; z-index: 1; }
+/* Brique de lait : pignon, bouchon, bandeau d'étiquette. */
 .lp-fr--milk {
-  width: 21px;
-  height: 44px;
-  border-radius: 3px 3px 4px 4px;
-  background: var(--paper-ink);
+  width: 20px;
+  height: 46px;
+  border-radius: 2px 2px 3px 3px;
+  background: linear-gradient(100deg, #e7e0ce, #d3cbb4 58%, #b9b19a);
 }
 .lp-fr--milk::before {
   content: "";
   position: absolute;
-  top: -8px;
+  top: -9px;
   left: 0;
   right: 0;
-  height: 9px;
+  height: 10px;
   clip-path: polygon(0 100%, 50% 0, 100% 100%);
-  background: var(--paper-ink);
+  background: linear-gradient(100deg, #e7e0ce, #c7bfa8);
 }
+.lp-fr--milk::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: 0;
+  right: 0;
+  height: 11px;
+  background: rgba(var(--accent-rgb), 0.6);
+}
+/* Bocal de confiture : couvercle ambre + étiquette claire. */
 .lp-fr--jar {
   width: 25px;
-  height: 33px;
-  border-radius: 5px;
-  background: var(--surface3);
+  height: 32px;
+  border-radius: 4px 4px 6px 6px;
+  background: linear-gradient(100deg, rgba(150, 142, 122, 0.5), rgba(84, 78, 66, 0.55));
   border: 1px solid var(--border);
 }
 .lp-fr--jar::before {
   content: "";
   position: absolute;
   top: -5px;
+  left: -1px;
+  right: -1px;
+  height: 7px;
+  border-radius: 3px;
+  background: linear-gradient(100deg, #e6ac48, #b97e22);
+}
+.lp-fr--jar::after {
+  content: "";
+  position: absolute;
+  top: 9px;
   left: 3px;
   right: 3px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--spice);
+  height: 15px;
+  border-radius: 2px;
+  background: #d3cbb4;
 }
+/* Bouteille (huile/vin) : goulot + capsule, étiquette. */
 .lp-fr--bottle {
-  width: 14px;
-  height: 50px;
-  border-radius: 3px 3px 5px 5px;
-  background: rgba(var(--accent-rgb), 0.55);
-  border: 1px solid var(--border);
+  width: 13px;
+  height: 52px;
+  border-radius: 2px 2px 4px 4px;
+  background: linear-gradient(100deg, #6f9a45, #4e7030 62%, #385124);
 }
 .lp-fr--bottle::before {
   content: "";
   position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 15px;
+  border-radius: 2px;
+  border-top: 3px solid var(--spice);
+  background: linear-gradient(#3c5626, #2e4420);
+}
+.lp-fr--bottle::after {
+  content: "";
+  position: absolute;
+  bottom: 9px;
+  left: -1px;
+  right: -1px;
+  height: 15px;
+  background: #d9d1bb;
+}
+/* Petite bouteille de condiment (ambre). */
+.lp-fr--bottle2 {
+  width: 13px;
+  height: 30px;
+  border-radius: 2px 2px 4px 4px;
+  background: linear-gradient(100deg, #d98a4a, #a85f27);
+}
+.lp-fr--bottle2::before {
+  content: "";
+  position: absolute;
   top: -8px;
-  left: 4px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 6px;
   height: 10px;
   border-radius: 2px;
-  background: rgba(var(--accent-rgb), 0.55);
+  background: #7a4a1e;
 }
-.lp-fr--tub {
-  width: 38px;
-  height: 19px;
-  border-radius: 4px;
-  background: var(--paper-ink);
-  border: 1px solid var(--border);
+/* Barquette de beurre : couvercle et bandeau. */
+.lp-fr--butter {
+  width: 36px;
+  height: 17px;
+  border-radius: 3px;
+  background: linear-gradient(100deg, #ece3c8, #d4cbac);
 }
-.lp-fr--tub::before {
+.lp-fr--butter::before {
   content: "";
   position: absolute;
-  top: -3px;
+  top: 4px;
   left: 0;
   right: 0;
-  height: 4px;
-  border-radius: 3px;
-  background: var(--spice);
+  height: 1px;
+  background: rgba(0, 0, 0, 0.16);
 }
-.lp-fr--egg {
-  width: 21px;
-  height: 26px;
-  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
-  background: #e7ddc6;
-  box-shadow: inset -3px -3px 6px rgba(0, 0, 0, 0.16);
+.lp-fr--butter::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  right: 7px;
+  bottom: 3px;
+  border-radius: 2px;
+  background: rgba(var(--spice-rgb), 0.5);
 }
-.lp-fr--lemon {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--yellow);
-  box-shadow: inset -3px -3px 6px rgba(0, 0, 0, 0.18);
-}
-.lp-fr--herb {
-  display: inline-flex;
-  align-items: flex-end;
-  height: 30px;
-  opacity: 0.7;
-  transform: rotate(-8deg);
-}
-.lp-fr--leftover {
+/* Boîte d'oeufs : boîte + deux oeufs qui dépassent. */
+.lp-fr--eggbox {
   width: 34px;
-  height: 24px;
-  border-radius: 50% 50% 6px 6px;
-  background: var(--surface3);
-  border: 1px solid var(--border);
+  height: 13px;
+  border-radius: 3px;
+  background: linear-gradient(100deg, #b9b09a, #948d79);
 }
-.lp-fr--leftover::before {
+.lp-fr--eggbox::before,
+.lp-fr--eggbox::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50% 50% 46% 46%;
+  background: radial-gradient(circle at 38% 30%, #efe7d2, #d8ceb4);
+}
+.lp-fr--eggbox::before { left: 3px; }
+.lp-fr--eggbox::after { right: 3px; }
+/* Citron : dégradé + petit pédoncule. */
+.lp-fr--lemon {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #f6d271, #dfa62c);
+}
+.lp-fr--lemon::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #6f8a3a;
+}
+/* Tomate : dégradé chaud + pédoncule vert. */
+.lp-fr--tomato {
+  width: 22px;
+  height: 20px;
+  border-radius: 50% 50% 48% 48%;
+  background: radial-gradient(circle at 35% 30%, #cf6a48, #a2402a);
+}
+.lp-fr--tomato::before {
   content: "";
   position: absolute;
   top: -3px;
-  left: -1px;
-  right: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
   height: 5px;
-  border-radius: 4px;
-  background: var(--surface2);
+  border-radius: 2px;
+  background: #5f7d38;
+}
+/* Part de fromage : coin + trou. */
+.lp-fr--cheese {
+  width: 30px;
+  height: 20px;
+  clip-path: polygon(0 100%, 100% 100%, 0 0);
+  background: linear-gradient(100deg, #e6cd76, #d0b148);
+}
+.lp-fr--cheese::before {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 6px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+}
+/* Reste couvert : bol + bouton de couvercle. */
+.lp-fr--bowl {
+  width: 30px;
+  height: 20px;
+  border-radius: 13px 13px 5px 5px;
+  background: linear-gradient(100deg, #3a4034, #2b3027);
   border: 1px solid var(--border);
+}
+.lp-fr--bowl::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface3);
 }
 /* Poignée : longue barre verticale sur le montant droit (soeur du corps). */
 .lp-fridge__handle {
   position: absolute;
-  top: 26%;
+  top: 24%;
   right: -2px;
   width: 5px;
-  height: 46%;
+  height: 42%;
   border-radius: 4px;
   background: var(--surface3);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
