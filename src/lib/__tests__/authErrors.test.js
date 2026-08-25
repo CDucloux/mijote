@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isCancelledSignIn } from "@/lib/firebase/authErrors.js";
+import { isCancelledSignIn, classifySignInError } from "@/lib/firebase/authErrors.js";
 
 describe("isCancelledSignIn", () => {
   it("reconnaît les annulations Firebase (web)", () => {
@@ -23,5 +23,30 @@ describe("isCancelledSignIn", () => {
     expect(isCancelledSignIn(undefined)).toBe(false);
     expect(isCancelledSignIn("boom")).toBe(false);
     expect(isCancelledSignIn({})).toBe(false);
+  });
+});
+
+describe("classifySignInError", () => {
+  it("détecte les défauts réseau (code ou message)", () => {
+    expect(classifySignInError({ code: "auth/network-request-failed" })).toBe("network");
+    expect(classifySignInError({ code: "auth/timeout" })).toBe("network");
+    expect(classifySignInError(new Error("Network error while contacting Google"))).toBe("network");
+    expect(classifySignInError({ message: "Appareil hors ligne" })).toBe("network");
+  });
+
+  it("détecte les défauts de configuration (projet Firebase / OAuth)", () => {
+    expect(classifySignInError({ code: "auth/operation-not-allowed" })).toBe("config");
+    expect(classifySignInError({ code: "auth/unauthorized-domain" })).toBe("config");
+    expect(classifySignInError({ code: "auth/invalid-api-key" })).toBe("config");
+    expect(classifySignInError({ code: "auth/configuration-not-found" })).toBe("config");
+    expect(classifySignInError({ code: "auth/internal-error" })).toBe("config");
+  });
+
+  it("retombe sur generic pour un échec quelconque", () => {
+    expect(classifySignInError(new Error("Jeton Google absent lors de la connexion native."))).toBe("generic");
+    expect(classifySignInError({ code: "auth/some-new-code" })).toBe("generic");
+    expect(classifySignInError(null)).toBe("generic");
+    expect(classifySignInError(undefined)).toBe("generic");
+    expect(classifySignInError("boom")).toBe("generic");
   });
 });

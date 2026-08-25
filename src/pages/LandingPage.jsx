@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { ThemeToggle } from "../components/ThemeToggle.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
 import "../styles/landing.css";
 
@@ -412,9 +413,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             ))}
           </nav>
           <div className="lp-nav__right">
-            <button className="lp-theme" onClick={toggleTheme} aria-label={isDark ? "Passer en clair" : "Passer en sombre"}>
-              <Icon name={isDark ? "sun" : "moon"} size={17} />
-            </button>
+            <ThemeToggle isDark={isDark} onToggle={toggleTheme} className="lp-theme" />
             {primaryCta(true)}
           </div>
         </div>

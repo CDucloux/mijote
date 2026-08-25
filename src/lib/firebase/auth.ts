@@ -9,7 +9,9 @@
 import { signInWithRedirect, signOut, type User } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase/firebase.js";
 import { googleSignIn } from "@/lib/firebase/googleAuth.js";
-import { isCancelledSignIn } from "@/lib/firebase/authErrors.js";
+import { isCancelledSignIn, classifySignInError, type SignInOutcome } from "@/lib/firebase/authErrors.js";
+
+export type { SignInOutcome } from "@/lib/firebase/authErrors.js";
 
 /** E-mail autorisé à se connecter (app perso). Vide/absent = aucune restriction. */
 export const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
@@ -27,21 +29,33 @@ export function isAllowedUser(user: User | null | undefined): boolean {
 /**
  * Connexion Google. Le canal (popup web ou SDK natif) est choisi selon la plateforme
  * par `googleSignIn`. Filtre l'e-mail autorisé (déconnecte sinon) et retombe sur la
- * redirection si la popup web est bloquée. Les annulations volontaires sont silencieuses.
+ * redirection si la popup web est bloquée.
  *
- * @param onError - Rappel optionnel invoqué avec un message lisible en cas d'échec.
- * @returns Une promesse résolue une fois la tentative terminée.
+ * Renvoie un résultat DISCRIMINÉ plutôt qu'un callback d'erreur : l'UI choisit seule
+ * le message et le ton (cf. `signInFeedback`), sans jamais toucher au SDK. La
+ * prévention du double-clic reste à la charge de l'appelant (bouton désarmé).
+ *
+ * @returns L'issue de la tentative : succès, annulation, redirection en cours, ou
+ *   erreur qualifiée.
  */
-export async function signInWithGoogle(onError?: (msg: string) => void): Promise<void> {
+export async function signInWithGoogle(): Promise<SignInOutcome> {
   try {
     const result = await googleSignIn();
     if (!isAllowedUser(result.user)) {
       await signOut(auth);
-      onError?.("Accès non autorisé pour ce compte.");
+      return { status: "error", reason: "unauthorized" };
     }
+    return { status: "success" };
   } catch (e) {
-    if ((e as { code?: string })?.code === "auth/popup-blocked") signInWithRedirect(auth, provider);
-    else if (!isCancelledSignIn(e)) onError?.("Connexion échouée. Réessaie.");
+    // Popup bloquée : on bascule sur une redirection plein écran. La page va se
+    // recharger (résultat repris par l'écouteur d'auth au retour), donc aucun
+    // message : on signale juste que la bascule est en cours.
+    if ((e as { code?: string })?.code === "auth/popup-blocked") {
+      try { await signInWithRedirect(auth, provider); } catch { /* la navigation prend le relais */ }
+      return { status: "redirect" };
+    }
+    if (isCancelledSignIn(e)) return { status: "cancelled" };
+    return { status: "error", reason: classifySignInError(e) };
   }
 }
 

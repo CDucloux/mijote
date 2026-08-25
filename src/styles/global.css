@@ -1889,29 +1889,6 @@ select {
   }
 }
 
-.login-consent-link {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-size: inherit;
-  font-family: var(--ff-body);
-  color: var(--accent);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  border-radius: 4px;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-
-@media (hover: hover) {
-  .login-consent-link:hover {
-    color: var(--accent-strong, #d1541f);
-    background: rgba(var(--accent-rgb), 0.12);
-    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
-  }
-}
-
 /* Rendu Markdown des documents légaux */
 .legal-md {
   font-size: 14px;
@@ -3028,259 +3005,303 @@ select {
   letter-spacing: 0.01em;
 }
 
-/* ── LOGIN SCREEN ── */
-@keyframes loginFloat {
-
-  0%,
-  100% {
-    transform: translateY(0) rotate(-2deg);
-  }
-
-  50% {
-    transform: translateY(-10px) rotate(2deg);
-  }
+/* ── ÉCRAN DE CONNEXION ────────────────────────────────────────────────────────
+   Deux panneaux (pitch marketing + zone d'auth) sur desktop, colonne compacte sur
+   mobile. Réutilise les tokens partagés (surfaces, accent, typo, rayons, --red) :
+   aucun design system dédié, aucun doublon de celui de la landing. */
+@keyframes authFadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes loginFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.login-root {
+.auth {
   min-height: 100dvh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: calc(32px + env(safe-area-inset-top)) 24px calc(32px + env(safe-area-inset-bottom));
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 1fr;
   background: var(--bg);
+  color: var(--text);
   position: relative;
   overflow: hidden;
 }
 
-.login-card {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
+/* Bascule thème : pastille en surface, cible tactile >= 44px, dans la safe-area. */
+.auth__theme {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top));
+  right: calc(14px + env(safe-area-inset-right));
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
   align-items: center;
-  gap: 0;
-  max-width: 360px;
-  width: 100%;
-  animation: loginFadeUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-}
-
-.login-emoji-wrap {
-  display: flex;
   justify-content: center;
-  margin-bottom: 28px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.auth__theme:hover { color: var(--text); border-color: var(--accent); }
+
+/* ── Panneau pitch (porte l'unique h1) ── */
+.auth__pitch {
+  display: flex;
+  align-items: center;
+  padding: calc(clamp(30px, 7vw, 56px) + env(safe-area-inset-top)) clamp(22px, 5vw, 56px) clamp(16px, 4vw, 36px);
+}
+.auth__pitch-inner {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  animation: authFadeUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
-.login-emoji {
-  font-size: 72px;
-  line-height: 1;
-  animation: loginFloat 4s ease-in-out infinite;
-  display: block;
-}
-
-.login-tagline {
+.auth__brand {
   font-family: var(--ff-display);
-  font-size: 26px;
+  font-size: clamp(18px, 2.4vw, 22px);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+  letter-spacing: -0.02em;
   color: var(--text);
-  text-align: center;
-  margin-bottom: 10px;
+  white-space: nowrap;
 }
+.auth__brand-dot { color: var(--accent); }
 
-.login-tagline em {
-  font-style: italic;
+.auth__eyebrow {
+  margin: clamp(20px, 4vw, 34px) 0 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--accent);
 }
 
-.login-sub {
-  font-size: 16px;
+.auth__title {
   font-family: var(--ff-display);
-  font-style: italic;
-  font-weight: 300;
-  color: var(--text2);
-  text-align: center;
-  line-height: 1.65;
-  margin-bottom: 20px;
-  width: 100%;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: var(--text);
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  margin: 0;
 }
 
-.login-google-btn {
+.auth__desc {
+  margin: clamp(14px, 2vw, 22px) 0 0;
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  line-height: 1.6;
+  color: var(--text2);
+  max-width: 36ch;
+}
+
+.auth__aside {
+  margin: clamp(18px, 2.4vw, 26px) 0 0;
+  padding-left: 14px;
+  border-left: 2px solid rgba(var(--accent-rgb), 0.5);
+  font-family: var(--ff-display);
+  font-style: italic;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  color: var(--text3);
+}
+
+.auth__art {
+  margin-top: clamp(26px, 4vw, 44px);
+  display: flex;
+  justify-content: flex-start;
+  opacity: 0.96;
+}
+
+/* ── Panneau d'authentification ── */
+.auth__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: clamp(24px, 5vw, 48px) clamp(22px, 5vw, 48px) calc(clamp(22px, 4vw, 40px) + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.auth__form {
+  width: 100%;
+  max-width: 440px;
+  animation: authFadeUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s both;
+}
+
+.auth__form-title {
+  font-family: var(--ff-display);
+  font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 0 8px;
+  text-align: center;
+}
+.auth__form-sub {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--text2);
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.auth__google {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   width: 100%;
-  padding: 16px 24px;
-  border-radius: 16px;
+  min-height: 52px;
+  padding: 14px 22px;
+  border-radius: var(--radius, 16px);
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--bg);
   color: var(--text);
   font-size: 15px;
   font-family: var(--ff-body);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
-  transition: all 0.18s;
-  margin-bottom: 16px;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+.auth__google:hover:not(:disabled) { border-color: var(--accent); background: var(--surface2); }
+.auth__google:active:not(:disabled) { transform: translateY(1px); }
+.auth__google:disabled { cursor: default; opacity: 0.85; }
+
+.auth__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
-.login-google-btn:hover {
-  background: var(--surface2);
+.auth__hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--text3);
+  text-align: center;
 }
 
-.login-divider {
+.auth__feedback {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: center;
+}
+.auth__feedback--error { color: var(--red, #d1544f); }
+.auth__feedback--info { color: var(--text2); }
+.auth__feedback--ok { color: var(--accent); }
+
+.auth__reassure {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.login-divider-line {
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-.login-feats {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
   flex-wrap: wrap;
-  margin-top: 20px;
+  justify-content: center;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text3);
+}
+.auth__reassure li { display: inline-flex; align-items: center; }
+.auth__reassure li + li::before {
+  content: "·";
+  margin: 0 8px;
+  color: var(--border);
 }
 
-.login-feat {
+.auth__consent {
+  margin: 20px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text3);
+  text-align: center;
+}
+.auth__consent a {
+  color: var(--text2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.auth__consent a:hover { color: var(--accent); }
+
+.auth__discover {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 500;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text3);
-}
-
-.login-theme-toggle {
-  position: absolute;
-  top: calc(20px + env(safe-area-inset-top));
-  right: 20px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 30px;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: 12px;
+  gap: 6px;
+  margin: 22px auto 0;
+  padding: 8px 4px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text2);
-  transition: background 0.2s, border-color 0.2s;
+  text-decoration: none;
+  width: -moz-fit-content;
+  width: fit-content;
 }
+.auth__discover:hover { color: var(--accent); }
+.auth__discover svg { flex-shrink: 0; }
 
-.login-theme-toggle:hover {
-  border-color: var(--accent);
-  color: var(--text);
-}
-
-.login-toggle-track {
-  width: 32px;
-  height: 18px;
-  border-radius: 9px;
-  background: var(--surface3);
-  position: relative;
-  transition: background 0.25s;
-  flex-shrink: 0;
-}
-
-.login-toggle-track.dark {
-  background: var(--accent);
-}
-
-.login-toggle-thumb {
-  position: absolute;
-  top: 3px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #fff;
-  transition: left 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* Nom de transition dédié : pendant la bascule de thème (view-transition), le
-     navigateur ANIME la position du curseur (vrai glissement) au lieu de le fondre
-     avec le reste de la page. Hors view-transition, la `transition: left` ci-dessus
-     assure le glissement. */
-  view-transition-name: theme-toggle-thumb;
-}
-
-.login-toggle-thumb.dark {
-  left: 17px;
-}
-
-.login-toggle-thumb.light {
-  left: 3px;
-}
-
-.login-footer {
-  position: absolute;
-  bottom: 14px;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding: 0 20px;
-}
-
-.login-consent {
+.auth__legalline {
+  margin: 0;
   font-size: 10.5px;
-  color: var(--text3);
-  line-height: 1.5;
-  text-align: center;
-  max-width: 320px;
-  margin: 4px auto 0;
-  opacity: 0.9;
-}
-
-.login-footer-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.login-copyright {
-  font-size: 10.5px;
-  color: var(--text3);
-  line-height: 1.4;
-  text-align: right;
-  opacity: 0.65;
-}
-
-.login-version {
-  font-size: 10px;
-  color: var(--text3);
-  opacity: 0.55;
   letter-spacing: 0.02em;
+  color: var(--text3);
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* Un seul h1 dans le DOM : la copie desktop/mobile bascule par span, jamais par un
+   second titre masqué. Défaut = mobile ; le desktop prend le relais au breakpoint. */
+.auth__only-desktop { display: none; }
+.auth__only-mobile { display: inline; }
+
+/* ── Desktop : deux panneaux côte à côte (pitch ~57%, auth ~43%) ── */
+@media (min-width: 860px) {
+  .auth { grid-template-columns: 57fr 43fr; }
+  .auth__pitch { padding: 56px clamp(48px, 5vw, 88px); }
+  .auth__panel {
+    border-top: none;
+    border-left: 1px solid var(--border);
+    justify-content: space-between;
+  }
+  .auth__form { margin: auto 0; }
+  .auth__form-title,
+  .auth__form-sub,
+  .auth__hint,
+  .auth__feedback,
+  .auth__consent { text-align: left; }
+  .auth__reassure { justify-content: flex-start; }
+  .auth__discover { margin-left: 0; margin-right: auto; }
+  .auth__legalline { text-align: left; }
+  .auth__only-desktop { display: inline; }
+  .auth__only-mobile { display: none; }
+}
+
+/* ── Adaptations mobile : pitch resserré, illustration effacée si l'écran est court,
+   phrase secondaire réservée au desktop pour que le bouton reste prioritaire. ── */
+@media (max-width: 859px) {
+  .auth__eyebrow,
+  .auth__aside { display: none; }
+}
+@media (max-height: 720px) {
+  .auth__art { display: none; }
+}
+
+/* Focus visible homogène sur les cibles interactives de l'écran. */
+.auth a:focus-visible,
+.auth button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth__pitch-inner,
+  .auth__form { animation: none; }
+  .auth__spinner { animation-duration: 1.4s; }
 }
 
 /* ─── MEAL PLAN : bouton d'ajout extensible (desktop) ──────────────────────── */

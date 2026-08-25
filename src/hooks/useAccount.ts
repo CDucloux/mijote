@@ -2,6 +2,7 @@ import { signOut, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase/firebase.js";
 import { deleteAllUserData } from "@/lib/firebase/firestore.js";
 import { signInWithGoogle } from "@/lib/firebase/auth.js";
+import { signInFeedback } from "@/lib/firebase/signInFeedback.js";
 import { googleSignIn } from "@/lib/firebase/googleAuth.js";
 
 /** Portée d'une purge de données depuis le profil. */
@@ -29,8 +30,12 @@ export interface AccountDeps {
  * @returns `{ handleSignIn, handleSignOut, purgeData, deleteAccount }`.
  */
 export function useAccount({ user, setUser, notify, setMealPlan, setShoppingLists, setStock, setLowStock, setRecipes, setCollections }: AccountDeps) {
-  // Connexion déléguée au point d'entrée unique (allowlist + native-aware).
-  const handleSignIn = (): Promise<void> => signInWithGoogle(msg => notify(msg, "error"));
+  // Connexion déléguée au point d'entrée unique (allowlist + native-aware) ; seuls
+  // les échecs réels remontent une notification (annulation volontaire silencieuse).
+  const handleSignIn = async (): Promise<void> => {
+    const feedback = signInFeedback(await signInWithGoogle());
+    if (feedback?.tone === "error") notify(feedback.message, "error");
+  };
   const handleSignOut = (): void => { signOut(auth); setUser(null); };
 
   // Purge de données (depuis le profil). Vide l'état local ; la synchro propage
