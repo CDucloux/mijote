@@ -510,7 +510,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
               émulsionner, monter, pile au moment où tu les réalises.
             </p>
             <p className="lp-punch">
-              Tu ne remplis pas une fiche. <em>Tu gagnes un geste de plus à chaque recette.</em>
+              Tu n'exécutes pas naïvement. <em>Tu apprends quelque chose de nouveau à chaque recette.</em>
             </p>
           </div>
           <div className="lp-split__media">
@@ -557,17 +557,19 @@ export function LandingPage({ user, isDark, toggleTheme }) {
       {/* 7. Manifeste : pleine largeur, prise de position assumée */}
       <section id="manifeste" className="lp-wrap lp-section lp-slide lp-manifest">
         <span className="lp-eyebrow">Le manifeste</span>
-        <h2 className="lp-manifest__lead">On n'est pas pour tout le monde. <em>Et on l'assume.</em></h2>
-        <p className="lp-manifest__sub">
-          Cardamome est faite pour celles et ceux qui veulent <strong>vraiment cuisiner</strong> : les
-          amateurs motivés, pas les collectionneurs de recettes qu'ils ne feront jamais. On préfère
-          servir à fond quelques passionnés que satisfaire mollement tout le monde.
-        </p>
+        <div className="lp-manifest__head">
+          <h2 className="lp-manifest__lead">On n'est pas pour tout le monde. <em>Et on l'assume.</em></h2>
+          <p className="lp-manifest__sub">
+            Cardamome est faite pour celles et ceux qui veulent <strong>vraiment cuisiner</strong> : les
+            amateurs motivés, pas les collectionneurs de recettes qu'ils ne feront jamais. On préfère
+            servir à fond quelques passionnés que satisfaire mollement tout le monde.
+          </p>
+        </div>
         <div className="lp-manifest__grid">
           <p><span className="lp-manifest__n">01</span>Plus de contenu ne rend pas une app <em>meilleure.</em></p>
-          <p><span className="lp-manifest__n">02</span>Une recette sauvegardée <span className="lp-mute">n'est pas</span> une recette cuisinée.</p>
-          <p><span className="lp-manifest__n">03</span>Le doublon n'est pas un choix, c'est du <span className="lp-mute">remplissage.</span></p>
-          <p><span className="lp-manifest__n">04</span>Ce qui compte tient dans une assiette, <em>pas dans un compteur.</em></p>
+          <p><span className="lp-manifest__n">02</span>Une recette n'existe vraiment qu'une fois <em>cuisinée.</em></p>
+          <p><span className="lp-manifest__n">03</span>Le temps passé ici, c'est du temps <span className="lp-mute">volé à ta cuisine.</span></p>
+          <p><span className="lp-manifest__n">04</span>Cuisiner, ça s'apprend. <span className="lp-mute">Collectionner, non.</span></p>
         </div>      </section>
 
       {/* 8. Preuves d'usage */}

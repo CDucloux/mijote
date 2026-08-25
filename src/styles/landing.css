@@ -318,31 +318,41 @@
   justify-content: center;
 }
 
-/* ── Manifeste (pleine largeur, prise de position) ───────────────────────── */
+/* ── Manifeste (pleine largeur, prise de position) ───────────────────────────
+   Masthead : le lead et la description occupent toute la largeur, côte à côte au
+   large (lead à gauche, description à droite), pour un bloc équilibré plutôt
+   qu'un texte coincé sur la moitié gauche. */
+.lp-manifest__head {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(18px, 3vw, 28px);
+  margin-bottom: clamp(30px, 4.5vw, 52px);
+}
 .lp-manifest__lead {
   font-family: var(--ff-display);
   font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.04;
+  line-height: 1.06;
   color: var(--text);
-  font-size: clamp(2rem, 5vw, 3.3rem);
+  font-size: clamp(1.8rem, 3.8vw, 2.7rem);
   margin: 0;
-  max-width: 20ch;
 }
 .lp-manifest__lead em { color: var(--accent); font-style: normal; }
 .lp-manifest__sub {
-  font-size: clamp(1.02rem, 1.35vw, 1.22rem);
+  font-size: clamp(1.02rem, 1.3vw, 1.18rem);
   line-height: 1.6;
   color: var(--text2);
-  max-width: 62ch;
-  margin: 20px 0 0;
+  margin: 0;
 }
 .lp-manifest__sub strong { color: var(--text); font-weight: 600; }
+@media (min-width: 860px) {
+  .lp-manifest__head { grid-template-columns: 1.25fr 1fr; align-items: end; gap: clamp(44px, 6vw, 84px); }
+  .lp-manifest__sub { padding-bottom: 4px; }
+}
 .lp-manifest__grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: clamp(20px, 3vw, 30px) clamp(32px, 5vw, 68px);
-  margin-top: clamp(30px, 4.5vw, 52px);
 }
 .lp-manifest__grid p {
   position: relative;
