@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.7.0 – Cardamome · L'écran de connexion, repensé
+
+### Écran de connexion
+- **Refonte complète** : deux panneaux sur desktop (un pitch éditorial à gauche, la connexion à droite), colonne compacte et fond uni sur mobile. Le ton reprend celui de la vitrine, sans en refaire une seconde landing.
+- **Un slogan qui a du caractère** : « Donne du caractère à tes recettes » remplace « l'atelier de tes recettes », sur l'écran comme dans le titre du site et les aperçus de partage.
+- **Une seule voix pour la connexion** : un message clair à chaque étape (ouverture de Google, atelier retrouvé, connexion annulée, souci réseau, indisponibilité momentanée), un bouton protégé du double-clic, et un retour vers la vitrine (« Retourner à la page de présentation ») proposé seulement dans un navigateur.
+- **Détails soignés** : la marque retrouve sa gousse à gauche, une trame de points discrète habille le pitch, et l'écran respecte les zones sûres, la navigation au clavier et la réduction des animations.
+
+### Sous le capot
+- **Contexte d'exécution reconnu** (navigateur, PWA installée, app iOS, app Android) : la vitrine ne s'ouvre plus jamais comme un écran interne de l'app, et les éléments propres au web s'effacent dans l'app.
+- **Barre système alignée sur le thème** au démarrage, au changement de thème et à la reprise de l'application.
+
 ## v4.6.2 – Cardamome · Minuteurs justes, titres au diapason
 
 ### Mode pas à pas

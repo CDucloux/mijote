@@ -6,7 +6,7 @@
 // réécriture du <head>. Testé dans api/__tests__/ogMeta.test.js.
 
 /** Titre par défaut (aligné sur le <title> statique) quand la recette manque. */
-export const DEFAULT_TITLE = "Cardamome, l'atelier de tes recettes";
+export const DEFAULT_TITLE = "Cardamome, donne du caractère à tes recettes";
 /** Description par défaut, ton produit, sans placeholder. */
 export const DEFAULT_DESCRIPTION = "Crée, affine et partage tes recettes sur Cardamome.";
 

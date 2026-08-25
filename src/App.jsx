@@ -17,6 +17,8 @@ import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useOverlayThemeColor } from "./hooks/useOverlayThemeColor.js";
+import { useStatusBarSync } from "./hooks/useStatusBarSync.js";
+import { getRuntimeContext, isAppContext } from "./lib/ui/runtimeContext.js";
 import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
@@ -628,22 +630,25 @@ export default function App() {
   // et l'app (protégée), sans doublon d'instance.
   const { isDark, toggleTheme } = useTheme();
   useOverlayThemeColor(); // voile la barre système PWA tant qu'une modale est ouverte
+  useStatusBarSync(isDark); // aligne la barre système sur le thème (boot, bascule, reprise)
+  // La landing « / » est une vitrine PUBLIQUE (navigateur) : en app (PWA installée ou
+  // coquille Capacitor, qui charge la racine), elle ne doit jamais s'afficher comme un
+  // écran interne. On y renvoie vers l'app, qui bascule ensuite vers /login si besoin.
+  const appContext = useMemo(() => isAppContext(getRuntimeContext()), []);
   const { user, postLogin } = useAuthUser();
-  const [signInError, setSignInError] = useState("");
-  const onSignIn = useCallback(() => { setSignInError(""); return signInWithGoogle(setSignInError); }, []);
 
   return (
     <Routes>
       {/* Écran de connexion : route publique dédiée. Déjà connecté → retour à
           l'origine, après une brève transition « Connexion en cours… » (postLogin)
           pour que l'écran de chargement soit visible même quand le login est instantané. */}
-      <Route path="/login" element={user === undefined || postLogin ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={onSignIn} error={signInError} />} />
+      <Route path="/login" element={user === undefined || postLogin ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={signInWithGoogle} />} />
       {/* La racine « / » sert la landing publique (marketing), consultable connectée
           ou non : seul le CTA principal s'adapte à l'état d'auth. L'app garde ses
           routes plates (/home, /recipes…) intactes, aucune migration transversale.
           Le start_url du manifest pointe sur /home : la PWA installée ouvre l'app,
           pas la landing. */}
-      <Route path="/" element={<LandingPage user={user} isDark={isDark} toggleTheme={toggleTheme} />} />
+      <Route path="/" element={appContext ? <Navigate to="/home" replace /> : <LandingPage user={user} isDark={isDark} toggleTheme={toggleTheme} />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout
           remontage (et donc le flicker de l'écran de chargement) lors de la navigation. */}

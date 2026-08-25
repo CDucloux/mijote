@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { ThemeToggle } from "../components/ThemeToggle.jsx";
+import { LogoPod } from "../components/LogoPod.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
 import "../styles/landing.css";
 
@@ -55,19 +57,6 @@ const PLAN_PLUS = [
 
 /** Marque : la gousse de cardamome (même tracé que la sidebar de l'app) suivie du
  *  mot-symbole. Le pod prend les tokens d'accent, donc suit le thème. */
-function LogoPod({ size = 27 }) {
-  return (
-    <svg className="lp-pod" viewBox="15 15 70 70" width={size} height={size} fill="none" aria-hidden="true">
-      <path d="M50 15 C68 30 74 48 67 63 C62.5 74 55.5 80 50 85 C44.5 80 37.5 74 33 63 C26 48 32 30 50 15 Z" fill="var(--accent2)" />
-      <g stroke="var(--accent-strong)" strokeLinecap="round">
-        <path d="M50 24 C50 40 50 62 50 77" strokeWidth="4" />
-        <path d="M42 30 C39.5 45 41 60 47 74" strokeWidth="3.4" />
-        <path d="M58 30 C60.5 45 59 60 53 74" strokeWidth="3.4" />
-      </g>
-    </svg>
-  );
-}
-
 /** Châssis « téléphone » qui encadre une scène d'app. Purement décoratif. */
 function PhoneFrame({ children, label }) {
   return (
@@ -412,9 +401,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             ))}
           </nav>
           <div className="lp-nav__right">
-            <button className="lp-theme" onClick={toggleTheme} aria-label={isDark ? "Passer en clair" : "Passer en sombre"}>
-              <Icon name={isDark ? "sun" : "moon"} size={17} />
-            </button>
+            <ThemeToggle isDark={isDark} onToggle={toggleTheme} className="lp-theme" />
             {primaryCta(true)}
           </div>
         </div>
