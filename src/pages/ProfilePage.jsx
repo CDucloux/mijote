@@ -73,7 +73,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
       {/* En-tête */}
       <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={() => navigate(-1)} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}><Icon name="back" size={17} /></button>
-        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>Profil</h1>
+        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>Profil</h1>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px var(--page-pad-b)" }}>

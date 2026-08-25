@@ -198,7 +198,7 @@ export function ImportHeader({ title, onBack }) {
       <button onClick={onBack} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
         <Icon name="back" size={17} />
       </button>
-      <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
+      <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
     </div>
   );
 }
