@@ -257,120 +257,216 @@
   justify-content: center;
 }
 
-/* ── Scène du hero : frigo ouvert, presque vide, et un « ? » ─────────────────── */
+/* ── Scène du hero : frigo ouvert, garni mais sans rien d'évident à cuisiner ────
+   Étroit et haut, poignée verticale, clayettes (chaque étagère est une rangée
+   flex alignée en bas → les aliments REPOSENT dessus), bacs à légumes en bas, et
+   un « ? » ambre bien détaché. 100% CSS + tokens, aucun asset. */
 .lp-fridge {
   position: relative;
-  width: min(272px, 78%);
+  width: min(224px, 66%);
+  margin-right: clamp(28px, 6vw, 52px);
 }
 .lp-fridge__body {
   position: relative;
   width: 100%;
-  aspect-ratio: 5 / 7;
-  border-radius: 22px;
+  aspect-ratio: 43 / 68;
+  border-radius: 20px;
   background: var(--bg);
-  border: 10px solid var(--surface2);
-  box-shadow: 0 40px 72px -40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 7px solid var(--surface2);
+  box-shadow: 0 44px 74px -42px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
-/* Lumière froide du frigo : dégradé doux du haut, pas un halo décoratif. */
 .lp-fridge__light {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 42%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 40%);
   pointer-events: none;
+  z-index: 2;
 }
-.lp-fridge__shelf {
+.lp-fridge__inside {
   position: absolute;
-  left: 7%;
-  right: 7%;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 11px 11px 10px;
+  gap: 9px;
+}
+/* Étagère = rangée alignée en bas, refermée par un trait (la vitre) : les aliments
+   posent leur base pile sur ce trait, ils ne flottent plus. */
+.lp-fridge__shelf {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 6px;
+  padding: 0 3px;
+  border-bottom: 3px solid var(--surface3);
+  box-shadow: 0 3px 5px -3px rgba(0, 0, 0, 0.5);
+}
+.lp-fridge__shelf--last { border-bottom: none; box-shadow: none; }
+.lp-fridge__drawers {
+  display: flex;
+  gap: 7px;
+  height: 22%;
+  padding-top: 2px;
+}
+.lp-fridge__drawer {
+  flex: 1;
+  border-radius: 5px 5px 7px 7px;
+  background: var(--surface);
+  border: 1px solid var(--surface3);
+  position: relative;
+}
+.lp-fridge__drawer::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 42%;
   height: 3px;
   border-radius: 2px;
   background: var(--surface3);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
-.lp-fridge__it { position: absolute; }
-.lp-fridge__jar {
-  top: 8%;
-  left: 17%;
-  width: 30px;
-  height: 40px;
-  border-radius: 6px;
+/* Aliments : bases posées sur la clayette (align-items:flex-end), hauteurs variées. */
+.lp-fr { position: relative; flex-shrink: 0; }
+.lp-fr--milk {
+  width: 21px;
+  height: 44px;
+  border-radius: 3px 3px 4px 4px;
+  background: var(--paper-ink);
+}
+.lp-fr--milk::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 9px;
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  background: var(--paper-ink);
+}
+.lp-fr--jar {
+  width: 25px;
+  height: 33px;
+  border-radius: 5px;
   background: var(--surface3);
   border: 1px solid var(--border);
 }
-.lp-fridge__jar::before {
+.lp-fr--jar::before {
   content: "";
   position: absolute;
   top: -5px;
-  left: 4px;
-  right: 4px;
+  left: 3px;
+  right: 3px;
   height: 6px;
   border-radius: 3px;
   background: var(--spice);
 }
-.lp-fridge__bottle {
-  top: 2%;
-  right: 20%;
-  width: 18px;
-  height: 62px;
-  border-radius: 4px 4px 7px 7px;
-  background: rgba(var(--accent-rgb), 0.4);
+.lp-fr--bottle {
+  width: 14px;
+  height: 50px;
+  border-radius: 3px 3px 5px 5px;
+  background: rgba(var(--accent-rgb), 0.55);
   border: 1px solid var(--border);
 }
-.lp-fridge__bottle::before {
+.lp-fr--bottle::before {
   content: "";
   position: absolute;
-  top: -9px;
-  left: 5px;
-  width: 7px;
-  height: 11px;
+  top: -8px;
+  left: 4px;
+  width: 6px;
+  height: 10px;
   border-radius: 2px;
-  background: rgba(var(--accent-rgb), 0.4);
+  background: rgba(var(--accent-rgb), 0.55);
 }
-.lp-fridge__egg {
-  top: 35%;
-  left: 26%;
-  width: 25px;
-  height: 30px;
-  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+.lp-fr--tub {
+  width: 38px;
+  height: 19px;
+  border-radius: 4px;
   background: var(--paper-ink);
+  border: 1px solid var(--border);
+}
+.lp-fr--tub::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 3px;
+  background: var(--spice);
+}
+.lp-fr--egg {
+  width: 21px;
+  height: 26px;
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: #e7ddc6;
+  box-shadow: inset -3px -3px 6px rgba(0, 0, 0, 0.16);
+}
+.lp-fr--lemon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--yellow);
   box-shadow: inset -3px -3px 6px rgba(0, 0, 0, 0.18);
 }
-.lp-fridge__herb {
-  top: 60%;
-  right: 25%;
+.lp-fr--herb {
   display: inline-flex;
-  opacity: 0.75;
+  align-items: flex-end;
+  height: 30px;
+  opacity: 0.7;
+  transform: rotate(-8deg);
 }
-/* Poignée : posée sur le montant droit (hors cavité, donc soeur du corps). */
+.lp-fr--leftover {
+  width: 34px;
+  height: 24px;
+  border-radius: 50% 50% 6px 6px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+}
+.lp-fr--leftover::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -1px;
+  right: -1px;
+  height: 5px;
+  border-radius: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+/* Poignée : longue barre verticale sur le montant droit (soeur du corps). */
 .lp-fridge__handle {
   position: absolute;
-  top: 32%;
-  right: 4%;
+  top: 26%;
+  right: -2px;
   width: 5px;
-  height: 62px;
-  border-radius: 3px;
+  height: 46%;
+  border-radius: 4px;
   background: var(--surface3);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  z-index: 3;
 }
-/* Le « ? » : la question qui reste. Discret, respire doucement. */
+/* Le « ? » : la question qui reste. Détaché, ambre, il respire doucement. */
 .lp-fridge__q {
   position: absolute;
-  top: -7%;
-  right: -6%;
+  top: -12%;
+  right: -22%;
   font-family: var(--ff-display);
-  font-weight: 700;
-  font-size: clamp(3rem, 7vw, 4.4rem);
+  font-weight: 800;
+  font-size: clamp(3.4rem, 8vw, 5rem);
   line-height: 1;
-  color: var(--text3);
-  transform: rotate(8deg);
-  animation: lpQ 3.2s ease-in-out infinite;
+  color: var(--spice);
+  transform: rotate(9deg);
+  text-shadow: 0 6px 18px rgba(var(--spice-rgb), 0.35);
+  animation: lpQ 3s ease-in-out infinite;
 }
 @keyframes lpQ {
-  0%, 100% { opacity: 0.35; transform: rotate(8deg) translateY(0); }
-  50% { opacity: 0.62; transform: rotate(8deg) translateY(-5px); }
+  0%, 100% { opacity: 0.7; transform: rotate(9deg) translateY(0); }
+  50% { opacity: 1; transform: rotate(9deg) translateY(-6px); }
 }
-@media (prefers-reduced-motion: reduce) { .lp-fridge__q { animation: none; opacity: 0.5; } }
+@media (prefers-reduced-motion: reduce) { .lp-fridge__q { animation: none; opacity: 0.95; } }
 
 /* ── Scène « Notre parti pris » : la nuée ternie, un seul choix ──────────────── */
 .lp-chosen {

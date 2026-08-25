@@ -87,13 +87,26 @@ function SceneFridge() {
     <div className="lp-fridge" aria-hidden="true">
       <div className="lp-fridge__body">
         <span className="lp-fridge__light" />
-        <span className="lp-fridge__shelf" style={{ top: "27%" }} />
-        <span className="lp-fridge__shelf" style={{ top: "53%" }} />
-        <span className="lp-fridge__shelf" style={{ top: "79%" }} />
-        <span className="lp-fridge__it lp-fridge__jar" />
-        <span className="lp-fridge__it lp-fridge__bottle" />
-        <span className="lp-fridge__it lp-fridge__egg" />
-        <span className="lp-fridge__it lp-fridge__herb"><Icon name="leaf" size={15} color="var(--text3)" /></span>
+        <div className="lp-fridge__inside">
+          <div className="lp-fridge__shelf">
+            <span className="lp-fr lp-fr--milk" />
+            <span className="lp-fr lp-fr--jar" />
+            <span className="lp-fr lp-fr--bottle" />
+          </div>
+          <div className="lp-fridge__shelf">
+            <span className="lp-fr lp-fr--tub" />
+            <span className="lp-fr lp-fr--egg" />
+            <span className="lp-fr lp-fr--lemon" />
+          </div>
+          <div className="lp-fridge__shelf lp-fridge__shelf--last">
+            <span className="lp-fr lp-fr--herb"><Icon name="leaf" size={17} color="var(--text3)" /></span>
+            <span className="lp-fr lp-fr--leftover" />
+          </div>
+          <div className="lp-fridge__drawers">
+            <span className="lp-fridge__drawer" />
+            <span className="lp-fridge__drawer" />
+          </div>
+        </div>
       </div>
       <span className="lp-fridge__handle" />
       <span className="lp-fridge__q">?</span>
