@@ -427,19 +427,15 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <div className="lp-split">
           <div>
             <span className="lp-eyebrow">Tes livres</span>
-            <h2 className="lp-h2">Tu as 15 livres de cuisine. Tu les aimes.</h2>
+            <h2 className="lp-h2 lp-h2--wide">Tu as 15 livres de cuisine. Tu les aimes.</h2>
             <p className="lp-p">
-              Nous aussi. Un livre, ça se tache, ça s'annote, ça se transmet. Le livre n'est pas
-              le problème. Le problème, c'est tout ce qu'il y a autour.
+              Nous aussi. Un livre, ça se tache, ça s'annote, ça se transmet. Le livre n'a jamais
+              été le problème. Ce qui l'est, c'est tout ce qu'il y a autour : recopier, convertir
+              les quantités, refaire la liste, retrouver la bonne page.
             </p>
-            <p className="lp-refrain">Quel livre ?<span>Quelle page&nbsp;?</span></p>
-            <ul className="lp-situations">
-              <li>Recopier les ingrédients à la main.</li>
-              <li>Convertir les quantités pour quatre.</li>
-              <li>Refaire la liste de courses à chaque fois.</li>
-              <li>Garder la page ouverte sans la couvrir de gras.</li>
-              <li>Te souvenir de ce que tu avais changé la dernière fois.</li>
-            </ul>
+            <p className="lp-punch">
+              Le livre, tu l'ouvres avec plaisir. <em>Le reste t'épuise avant l'assiette.</em>
+            </p>
           </div>
           <div className="lp-split__media">
             <SceneBooks />
@@ -455,11 +451,13 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <span className="lp-eyebrow">Ce que fait Cardamome</span>
             <h2 className="lp-h2 lp-h2--wide">Garde tes livres. Oublie les tracas autour.</h2>
             <p className="lp-p">
-              Photographie une ou deux pages, ou colle un lien. Cardamome lit la recette, sépare les
-              ingrédients des étapes, relie les ustensiles, et repère même les <strong>préparations de
-              base</strong> (la sauce, la pâte, le caramel) avec leur rendement.
+              Photographie une page, ou colle un lien. Cardamome lit la recette, sépare les
+              ingrédients des étapes, relie les ustensiles, et repère même les <strong>préparations
+              de base</strong> avec leur rendement.
             </p>
-            <p className="lp-punch">Tu relis, tu ranges. Le livre retourne sur l'étagère, <em>propre.</em></p>
+            <p className="lp-punch">
+              Tu relis, tu ranges, le livre retourne sur l'étagère. <em>Ta recette, elle, est prête.</em>
+            </p>
           </div>
           <div className="lp-split__media">
             <PhoneFrame label="Une recette rangée par Cardamome : ingrédients, étapes, base reliée"><SceneStructured /></PhoneFrame>
@@ -473,19 +471,15 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <div className="lp-split lp-split--wide">
           <div>
             <span className="lp-eyebrow">L'import intelligent</span>
-            <h2 className="lp-h2 lp-h2--wide">Les autres extraient du texte. Cardamome comprend ta recette.</h2>
+            <h2 className="lp-h2 lp-h2--wide">Les autres recopient. Cardamome comprend ta recette.</h2>
             <p className="lp-p">
-              Extraire, c'est recopier des mots dans des cases. Comprendre, c'est savoir ce que ces
-              mots veulent dire quand tu passes en cuisine. Un lien, une photo de page : quelques
-              secondes plus tard, la recette est structurée, prête à cuisiner.
+              Extraire, c'est ranger des mots dans des cases. Comprendre, c'est savoir ce qu'ils
+              veulent dire une fois en cuisine : les portions ajustent les quantités, la saison et
+              le Nutri-Score arrivent tout seuls.
             </p>
-            <ul className="lp-situations">
-              <li>Tu changes le nombre de portions : les quantités suivent.</li>
-              <li>Un ingrédient reconnu porte sa saison et son Nutri-Score.</li>
-              <li>Une préparation de base éclate toute seule dans les courses.</li>
-              <li>Une quantité te donne son équivalent en cuillères, sans balance.</li>
-            </ul>
-            <p className="lp-punch">D'un lien collé à une recette qui se cuisine. <em>Sans recopier une ligne.</em></p>
+            <p className="lp-punch">
+              Un lien collé, une photo de page, une recette qui se cuisine. <em>Sans recopier une ligne.</em>
+            </p>
           </div>
           <div className="lp-split__media">
             <SceneImport />
@@ -497,18 +491,14 @@ export function LandingPage({ user, isDark, toggleTheme }) {
       {/* 6. Prise de position sur le catalogue */}
       <section className="lp-wrap lp-section lp-slide">
         <span className="lp-eyebrow">Notre parti pris</span>
-        <h2 className="lp-h2 lp-h2--wide">On pourrait te donner 15 000 recettes. Mais à quoi bon ?</h2>
+        <h2 className="lp-h2 lp-h2--wide">On pourrait te donner 15 000 recettes. À quoi bon ?</h2>
         <p className="lp-p">
-          Tu n'as pas besoin de 47 recettes de carbonara. Tu en veux une. La bonne. Celle que tu
-          réussis, et que tu recuisines.
+          Tu n'as pas besoin de 47 carbonara. Tu en veux une : la bonne, celle que tu réussis et que
+          tu recuisines. Découvrir les recettes des autres reste possible, et se cloner d'un geste.
+          Choisi, pas entassé.
         </p>
         <p className="lp-punch">
-          Une bonne app de cuisine ne t'occupe pas pendant que tu cherches quoi faire.
-          <em> Elle t'aide à cuisiner.</em>
-        </p>
-        <p className="lp-p">
-          Il y a bien un espace pour découvrir des recettes publiées par d'autres et les cloner
-          d'un geste. Choisi, pas entassé.
+          Une bonne app ne t'occupe pas pendant que tu cherches quoi faire. <em>Elle t'aide à cuisiner.</em>
         </p>
         {slideDown()}
       </section>

@@ -301,34 +301,6 @@
 }
 @media (prefers-reduced-motion: reduce) { .lp-next { animation: none; } }
 
-/* ── Situations vécues (liste) ───────────────────────────────────────────── */
-.lp-situations {
-  list-style: none;
-  margin: 26px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-  max-width: 56ch;
-}
-.lp-situations li {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  font-size: clamp(1rem, 1.1vw, 1.08rem);
-  line-height: 1.5;
-  color: var(--text2);
-}
-.lp-situations li::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 7px;
-  height: 7px;
-  margin-top: 8px;
-  border-radius: 2px;
-  background: var(--accent);
-  transform: rotate(45deg);
-}
-
 /* Section à deux colonnes : texte + maquette d'app, en asymétrie. */
 .lp-split {
   display: grid;
@@ -340,18 +312,6 @@
   display: flex;
   justify-content: center;
 }
-
-/* Répétition intentionnelle « Quel livre ? Quelle page ? » en gros serif. */
-.lp-refrain {
-  font-family: var(--ff-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  font-size: clamp(1.5rem, 4vw, 2.2rem);
-  color: var(--text);
-  margin: 0 0 6px;
-}
-.lp-refrain span { color: var(--text3); display: block; }
 
 /* ── Manifeste (pleine largeur, prise de position) ───────────────────────── */
 .lp-manifest__lead {
