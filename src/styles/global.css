@@ -3015,14 +3015,18 @@ select {
 }
 
 .auth {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100vh;
+  height: 100svh;
   display: grid;
   grid-template-columns: 1fr;
   background: var(--bg);
   color: var(--text);
   position: relative;
-  overflow: hidden;
+  /* Rendu sous #app (sans hauteur) et body en overflow:hidden : .auth doit être son
+     PROPRE conteneur de défilement, sinon un contenu plus haut que l'écran (mobile)
+     serait coupé et le bouton deviendrait inatteignable. */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Bascule thème : pastille en surface, cible tactile >= 44px, dans la safe-area. */
@@ -3157,7 +3161,9 @@ select {
   padding: 14px 22px;
   border-radius: var(--radius, 16px);
   border: 1px solid var(--border);
-  background: var(--bg);
+  /* Surface légèrement surélevée : contraste à la fois avec le fond mobile (uni) et
+     le panneau desktop (surface), donc le bouton reste toujours lisible. */
+  background: var(--surface2);
   color: var(--text);
   font-size: 15px;
   font-family: var(--ff-body);
@@ -3165,7 +3171,7 @@ select {
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
 }
-.auth__google:hover:not(:disabled) { border-color: var(--accent); background: var(--surface2); }
+.auth__google:hover:not(:disabled) { border-color: var(--accent); background: var(--surface3); }
 .auth__google:active:not(:disabled) { transform: translateY(1px); }
 .auth__google:disabled { cursor: default; opacity: 0.85; }
 
@@ -3197,25 +3203,8 @@ select {
 .auth__feedback--info { color: var(--text2); }
 .auth__feedback--ok { color: var(--accent); }
 
-.auth__reassure {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin: 24px 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: 12px;
-  color: var(--text3);
-}
-.auth__reassure li { display: inline-flex; align-items: center; }
-.auth__reassure li + li::before {
-  content: "·";
-  margin: 0 8px;
-  color: var(--border);
-}
-
 .auth__consent {
-  margin: 20px 0 0;
+  margin: 22px 0 0;
   font-size: 11.5px;
   line-height: 1.5;
   color: var(--text3);
@@ -3273,7 +3262,6 @@ select {
   .auth__hint,
   .auth__feedback,
   .auth__consent { text-align: left; }
-  .auth__reassure { justify-content: flex-start; }
   .auth__discover { margin-left: 0; margin-right: auto; }
   .auth__legalline { text-align: left; }
   .auth__only-desktop { display: inline; }
@@ -3285,8 +3273,16 @@ select {
 @media (max-width: 859px) {
   .auth__eyebrow,
   .auth__aside { display: none; }
+  /* Fond UNI sur petit écran : la bichromie pitch/auth n'a de sens que pour la mise
+     en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. */
+  .auth__panel { background: transparent; border-top: none; }
+  /* Marmite resserrée pour rester présente sans repousser le bouton hors de vue. */
+  .auth__art { margin-top: clamp(16px, 4vw, 26px); }
+  .auth__art svg { width: clamp(112px, 32vw, 148px); height: auto; }
 }
-@media (max-height: 720px) {
+/* La marmite n'est masquée qu'en paysage / écran vraiment court : en portrait, elle
+   reste le point chaud de l'écran. */
+@media (max-height: 560px) {
   .auth__art { display: none; }
 }
 

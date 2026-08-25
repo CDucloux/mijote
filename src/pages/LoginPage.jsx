@@ -136,12 +136,6 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
             </p>
           )}
 
-          <ul className="auth__reassure">
-            <li>Gratuit pour commencer</li>
-            <li>Sans publicité</li>
-            <li>Données non revendues</li>
-          </ul>
-
           <p className="auth__consent">
             En continuant, tu acceptes les{" "}
             <a href="/legal/terms" target="_blank" rel="noopener noreferrer">CGU</a>
