@@ -379,21 +379,21 @@
   gap: 9px;
   width: min(330px, 90%);
 }
+/* Vignettes bien VISIBLES (fond de surface plein + bord net) : la distinction
+   avec la case choisie vient de la COULEUR, pas d'une opacité qui les effaçait. */
 .lp-chosen__t {
   aspect-ratio: 1;
   border-radius: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  opacity: 0.4;
+  background: var(--surface2);
+  border: 1px solid var(--surface3);
 }
-/* Un peu de vie : quelques vignettes plus ou moins présentes, jamais uniforme. */
-.lp-chosen__t:nth-child(3n) { opacity: 0.28; }
-.lp-chosen__t:nth-child(4n) { opacity: 0.5; }
-.lp-chosen__t:nth-child(7n) { opacity: 0.22; }
-/* La seule qui compte : nette, accent, cochée, légèrement en avant. Double classe
-   pour battre la spécificité des règles :nth-child d'opacité ci-dessus. */
+/* Variation tonale douce pour un rendu vivant, jamais mécaniquement uniforme. */
+.lp-chosen__t:nth-child(3n) { background: var(--surface); }
+.lp-chosen__t:nth-child(4n) { background: var(--surface3); }
+.lp-chosen__t:nth-child(7n) { background: var(--surface); }
+/* La seule qui compte : accent, cochée, légèrement en avant. Double classe pour
+   battre la spécificité des règles :nth-child de fond ci-dessus. */
 .lp-chosen__t.lp-chosen__t--on {
-  opacity: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -461,13 +461,9 @@
 }
 
 /* ── Manifeste (pleine largeur, prise de position) ───────────────────────────
-   Masthead : le lead et la description occupent toute la largeur, côte à côte au
-   large (lead à gauche, description à droite), pour un bloc équilibré plutôt
-   qu'un texte coincé sur la moitié gauche. */
+   Titre puis description, EMPILÉS et pleine largeur, calés sur la largeur de la
+   grille numérotée dessous (bord à bord dans la gouttière). */
 .lp-manifest__head {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: clamp(18px, 3vw, 28px);
   margin-bottom: clamp(30px, 4.5vw, 52px);
 }
 .lp-manifest__lead {
@@ -484,13 +480,9 @@
   font-size: clamp(1.02rem, 1.3vw, 1.18rem);
   line-height: 1.6;
   color: var(--text2);
-  margin: 0;
+  margin: clamp(16px, 2vw, 22px) 0 0;
 }
 .lp-manifest__sub strong { color: var(--text); font-weight: 600; }
-@media (min-width: 860px) {
-  .lp-manifest__head { grid-template-columns: 1.25fr 1fr; align-items: end; gap: clamp(44px, 6vw, 84px); }
-  .lp-manifest__sub { padding-bottom: 4px; }
-}
 .lp-manifest__grid {
   display: grid;
   grid-template-columns: 1fr;

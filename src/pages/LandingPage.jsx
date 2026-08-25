@@ -524,7 +524,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           </div>
           <div>
             <span className="lp-eyebrow">Notre parti pris</span>
-            <h2 className="lp-h2 lp-h2--wide">On pourrait te donner 15 000 recettes. À quoi bon ?</h2>
+            <h2 className="lp-h2 lp-h2--wide">On pourrait te donner des milliers de recettes. À quoi bon ?</h2>
             <p className="lp-p">
               Tu n'as pas besoin de 47 carbonara. Tu en veux une : la bonne, celle que tu réussis et
               que tu recuisines. Découvrir les recettes des autres reste possible, et se cloner d'un
@@ -552,7 +552,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <p><span className="lp-manifest__n">01</span>Plus de contenu ne rend pas une app <em>meilleure.</em></p>
           <p><span className="lp-manifest__n">02</span>Une recette n'existe vraiment qu'une fois <em>cuisinée.</em></p>
           <p><span className="lp-manifest__n">03</span>Le temps passé ici, c'est du temps <span className="lp-mute">volé à ta cuisine.</span></p>
-          <p><span className="lp-manifest__n">04</span>Cuisiner, ça s'apprend. <span className="lp-mute">Collectionner, non.</span></p>
+          <p><span className="lp-manifest__n">04</span>On te veut meilleur cuisinier, <span className="lp-mute">pas meilleur client.</span></p>
         </div>
       </section>
 
