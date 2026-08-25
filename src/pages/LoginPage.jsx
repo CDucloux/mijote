@@ -93,6 +93,14 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
     <div className={`auth${isDark ? "" : " auth--light"}`} data-context={ctx}>
       <ThemeToggle isDark={isDark} onToggle={onToggleTheme} className="auth__theme" />
 
+      {/* Retour vers la vitrine : uniquement dans un navigateur (jamais en PWA /
+          Capacitor, ou la landing n'est pas un ecran interne). */}
+      {showsDiscoverLink(ctx) && (
+        <a className="auth__back" href="/">
+          <Icon name="back" size={16} /> Retourner à la page de présentation
+        </a>
+      )}
+
       {/* Panneau pitch : porte l'unique h1 de la page. */}
       <section className="auth__pitch">
         <div className="auth__pitch-inner">
@@ -145,12 +153,6 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
             {" "}et la{" "}
             <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">Politique de confidentialité</a>.
           </p>
-
-          {showsDiscoverLink(ctx) && (
-            <a className="auth__discover" href="/">
-              <Icon name="externalLink" size={14} /> Découvrir Cardamome
-            </a>
-          )}
         </div>
         <p className="auth__legalline">© 2026 Cardamome · v{__APP_VERSION__}</p>
       </section>
