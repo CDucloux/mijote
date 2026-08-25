@@ -108,7 +108,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
             <LogoPod size={26} />
             <span className="auth__wordmark">Cardam<span className="auth__brand-dot">o</span>me<span className="auth__brand-dot">·</span></span>
           </span>
-          <p className="auth__eyebrow">L'atelier de tes recettes</p>
+          <p className="auth__eyebrow">Donne du caractère à tes recettes</p>
           <h1 className="auth__title">
             <span className="auth__only-desktop">Pas un nouveau catalogue. Ton atelier.</span>
             <span className="auth__only-mobile">Moins chercher. Plus cuisiner.</span>

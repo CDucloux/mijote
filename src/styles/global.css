@@ -3084,7 +3084,7 @@ select {
 .auth__brand-dot { color: var(--accent); }
 
 .auth__eyebrow {
-  margin: clamp(20px, 4vw, 34px) 0 12px;
+  margin: clamp(12px, 2.4vw, 18px) 0 12px;
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.08em;

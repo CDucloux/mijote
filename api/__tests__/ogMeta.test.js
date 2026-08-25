@@ -96,7 +96,7 @@ describe("buildShareMeta", () => {
 
 describe("injectMetaTags", () => {
   const baseHtml = `<!doctype html><html><head>
-<title>Cardamome, l'atelier de tes recettes</title>
+<title>Cardamome, donne du caractère à tes recettes</title>
 <meta name="description" content="desc statique" />
 <meta property="og:title" content="Cardamome" />
 <meta property="og:description" content="og desc" />
