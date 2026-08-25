@@ -8,9 +8,11 @@
 
 .lp-root {
   position: relative;
-  /* Hauteur calée sur #root (et non dvh) : sur desktop #root est mis à l'échelle
-     via transform:scale(--page-zoom), donc dvh ne correspond PAS au viewport réel.
-     Tout se dimensionne en % pour que chaque slide fasse pile un écran visible. */
+  /* Desktop : #app n'a pas de hauteur définie et body est en overflow:auto, donc
+     .lp-root prend la hauteur de son contenu et c'est la FENÊTRE qui défile (les
+     slides restent à hauteur de contenu, rendu validé). Sur mobile, body est en
+     overflow:hidden : .lp-root doit alors devenir son propre conteneur de
+     défilement à hauteur d'écran (cf. le breakpoint mobile plus bas). */
   height: 100%;
   background: var(--bg);
   color: var(--text);
@@ -676,7 +678,14 @@
    alignées en haut (aucun centrage qui rogne), pas de snap ni de flèche de
    descente, rythme resserré, et maquette d'accueil dimensionnée à la largeur. */
 @media (max-width: 767px) {
+  /* body est en overflow:hidden sur mobile : sans hauteur d'écran définie ici,
+     .lp-root prendrait la hauteur de tout son contenu et RIEN ne défilerait (le
+     dépassement serait coupé par body). On lui donne donc une hauteur d'écran
+     explicite pour qu'il soit lui-même le conteneur scrollable. svh = small
+     viewport height (barres du navigateur affichées), avec vh en repli. */
   .lp-root {
+    height: 100vh;
+    height: 100svh;
     scroll-snap-type: none;
     scroll-padding-top: 60px;
   }
