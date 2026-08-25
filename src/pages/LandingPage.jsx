@@ -560,9 +560,8 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <div className="lp-manifest__head">
           <h2 className="lp-manifest__lead">On n'est pas pour tout le monde. <em>Et on l'assume.</em></h2>
           <p className="lp-manifest__sub">
-            Cardamome est faite pour celles et ceux qui veulent <strong>vraiment cuisiner</strong> : les
-            amateurs motivés, pas les collectionneurs de recettes qu'ils ne feront jamais. On préfère
-            servir à fond quelques passionnés que satisfaire mollement tout le monde.
+            Cardamome est faite pour celles et ceux qui veulent transformer leurs recettes
+            sauvegardées en <strong>plats réellement cuisinés</strong>.
           </p>
         </div>
         <div className="lp-manifest__grid">
@@ -593,8 +592,9 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <span className="lp-eyebrow">L'offre</span>
         <h2 className="lp-h2 lp-h2--wide">Cardamome, et Cardamome+.</h2>
         <p className="lp-p">
-          Commence sans rien débourser. Passe à Cardamome+ le jour où tu veux l'import intelligent et
-          le reste. Pas de pub, jamais. Tes données ne se revendent pas.
+          Commence sans rien débourser. Passe à Cardamome+ lorsque tu veux importer tes recettes
+          depuis un lien ou une photo, les conserver sans limite et partager ton organisation avec
+          ton foyer. Pas de pub, jamais. Tes données ne se revendent pas.
         </p>
         <div className="lp-plans">
           <div className="lp-plan">

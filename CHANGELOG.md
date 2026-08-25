@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.6.1 – Cardamome · Vitrine, retouches
+
+### Référencement et partage
+- **Domaine unifié** : les balises canonical, `og:url`, `og:image` et `twitter:image` pointaient encore vers l'ancien domaine `mijote-sand`. Elles sont recalées sur `cardamome.vercel.app`, pour une indexation cohérente et des aperçus de partage qui renvoient au bon endroit.
+
+### Page d'accueil publique
+- **Manifeste adouci** : la formule sur « pour qui » est reformulée, plus positive : Cardamome aide à transformer les recettes sauvegardées en plats réellement cuisinés.
+- **Offre plus explicite** : le passage à Cardamome+ dit désormais concrètement ce qu'il apporte (import depuis un lien ou une photo, recettes sans limite, foyer partagé).
+
 ## v4.6.0 – Cardamome · La vitrine, au propre
 
 ### Page d'accueil publique
