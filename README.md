@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.6.2-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.7.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -97,7 +97,9 @@ toujours avec vous.
 - 🪧 **Vitrine publique** : la racine du site présente Cardamome avant toute
   connexion (manifeste, scènes vivantes en CSS, import intelligent, offre) en
   slides plein écran sur desktop et défilement naturel sur mobile, barre de
-  navigation à ancres, thème clair / sombre.
+  navigation à ancres, thème clair / sombre. Elle se prolonge par un écran de
+  connexion assorti (deux panneaux sur desktop, colonne épurée sur mobile,
+  connexion Google en un geste).
 - ☁️ **Synchro cloud** : persistance Firestore hors-ligne (IndexedDB), base de
   référence partagée synchronisée **en temps réel**, connexion Google.
 - 🔒 **Anti-abus** : attestation d'origine (Firebase App Check) et règles
