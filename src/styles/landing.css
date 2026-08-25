@@ -669,6 +669,52 @@
   .lp-proof { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* ── Mobile (téléphone) ──────────────────────────────────────────────────────
+   Le paradigme « slide = un écran » est une convention desktop : sur un petit
+   écran, du contenu à deux colonnes ne tient jamais en une hauteur de viewport.
+   On repasse donc en défilement vertical franc : sections de hauteur naturelle
+   alignées en haut (aucun centrage qui rogne), pas de snap ni de flèche de
+   descente, rythme resserré, et maquette d'accueil dimensionnée à la largeur. */
+@media (max-width: 767px) {
+  .lp-root {
+    scroll-snap-type: none;
+    scroll-padding-top: 60px;
+  }
+  .lp-slide {
+    min-height: 0;
+    justify-content: flex-start;
+  }
+  /* La flèche « suivant » n'a de sens que quand une slide fait pile un écran. */
+  .lp-next { display: none; }
+
+  .lp-section { padding-block: clamp(52px, 12vw, 74px); }
+  .lp-hero {
+    padding-top: clamp(80px, 22vw, 108px);
+    padding-bottom: 8px;
+  }
+  .lp-hero__grid { gap: clamp(26px, 7vw, 40px); }
+  .lp-hero__note { font-size: 1.18rem; }
+
+  /* Maquette d'accueil : bornée à la LARGEUR de la colonne (et non à 66vh, qui
+     la rendait démesurée en hauteur sur téléphone). */
+  .lp-hero__art .lp-device {
+    height: auto;
+    width: clamp(206px, 58vw, 244px);
+  }
+
+  /* Barre : resserrée pour tenir marque + thème + CTA sur les écrans étroits. */
+  .lp-navbar__inner { gap: 10px; }
+  .lp-nav__right { gap: 8px; }
+  .lp-theme { width: 34px; height: 34px; }
+  .lp-navbar .lp-cta--sm { padding: 8px 15px; font-size: 13px; gap: 7px; }
+}
+
+/* Très petits écrans : le wordmark de la BARRE cède la place, on garde le pod
+   (le mot-symbole complet reste présent juste dessous, dans le hero). */
+@media (max-width: 379px) {
+  .lp-navbar .lp-brand { display: none; }
+}
+
 /* ═══ MAQUETTES D'APP (scènes) ════════════════════════════════════════════════
    Aperçus vivants de l'app, bâtis sur les tokens de design (accent, oak/wall,
    spice, ff-display/ff-hand…). Ce ne sont PAS des captures : ni asset externe,
