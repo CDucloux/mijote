@@ -40,6 +40,7 @@ const PLAN_FREE = [
   "Jusqu'à 50 recettes",
   "Planning repas et liste de courses",
   "Nutri-Score et saisonnalité",
+  "Recettes publiques à cloner",
   "Mode hors-ligne",
 ];
 const PLAN_PLUS = [

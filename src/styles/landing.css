@@ -792,8 +792,7 @@
 }
 .lp-plan--plus {
   border-color: rgba(var(--accent-rgb), 0.55);
-  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.09), rgba(var(--accent-rgb), 0.03));
-  box-shadow: 0 20px 44px -26px rgba(var(--accent-rgb), 0.85);
+  background: rgba(var(--accent-rgb), 0.05);
 }
 /* Étiquette « Recommandé » posée sur le bord haut-droit de la carte Plus. */
 .lp-plan__flag {
