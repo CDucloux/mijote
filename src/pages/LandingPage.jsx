@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
@@ -366,18 +366,35 @@ export function LandingPage({ user, isDark, toggleTheme }) {
     e?.preventDefault?.();
     rootRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
-  // « Slide » suivante : la flèche descend d'une section à la suivante. scrollIntoView
-  // cible automatiquement le bon conteneur de défilement, sans dépendre de window.
-  const goNext = (e) => {
-    let n = e.currentTarget.closest("section")?.nextElementSibling;
-    while (n && n.tagName !== "SECTION") n = n.nextElementSibling;
-    n?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Chevron « suivant » : un SEUL bouton flottant (position fixe), toujours au même
+  // endroit à l'écran (les slides n'ont pas exactement la même hauteur, un bouton
+  // par slide tombait donc à des positions légèrement différentes). Il descend vers
+  // la première section dont le haut est encore sous le haut du viewport.
+  const nextRef = useRef(null);
+  const goNext = () => {
+    const secs = rootRef.current?.querySelectorAll("section.lp-slide");
+    if (!secs) return;
+    for (const s of secs) {
+      if (s.getBoundingClientRect().top > 8) {
+        s.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+    }
   };
-  const slideDown = () => (
-    <button className="lp-next" onClick={goNext} aria-label="Section suivante">
-      <Icon name="chevronDown" size={20} />
-    </button>
-  );
+  // Masque le chevron une fois la dernière slide atteinte (getBoundingClientRect
+  // suffit : indépendant du conteneur de défilement, window ou .lp-root).
+  useEffect(() => {
+    const secs = rootRef.current?.querySelectorAll("section.lp-slide");
+    const last = secs && secs[secs.length - 1];
+    const btn = nextRef.current;
+    if (!last || !btn) return;
+    const io = new IntersectionObserver(
+      ([entry]) => btn.classList.toggle("lp-next--hidden", entry.isIntersecting),
+      { threshold: 0.4 },
+    );
+    io.observe(last);
+    return () => io.disconnect();
+  }, []);
 
   // Fonctions de rendu (et non composants déclarés au render) : CTA et marque
   // apparaissent plusieurs fois. On factorise sans remonter de sous-composant qui
@@ -416,6 +433,12 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         </div>
       </header>
 
+      {/* Chevron « suivant » unique et flottant : position fixe, donc toujours au
+          même endroit à l'écran quelle que soit la hauteur de la slide courante. */}
+      <button ref={nextRef} className="lp-next" onClick={goNext} aria-label="Section suivante">
+        <Icon name="chevronDown" size={20} />
+      </button>
+
       {/* 1. Coup de poing */}
       <section className="lp-wrap lp-hero lp-slide">
         <div className="lp-hero__grid">
@@ -433,9 +456,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <div className="lp-hero__art">
             <PhoneFrame label="Aperçu de Cardamome : l'écran d'accueil"><SceneHome /></PhoneFrame>
           </div>
-        </div>
-        {slideDown()}
-      </section>
+        </div>      </section>
 
       {/* 2. Situation vécue */}
       <section id="probleme" className="lp-wrap lp-section lp-slide">
@@ -455,9 +476,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
               <em> pas une assiette.</em>
             </p>
           </div>
-        </div>
-        {slideDown()}
-      </section>
+        </div>      </section>
 
       {/* 3. Tes livres */}
       <section id="lp-livres" className="lp-wrap lp-section lp-slide">
@@ -477,23 +496,21 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <div className="lp-split__media">
             <SceneBooks />
           </div>
-        </div>
-        {slideDown()}
-      </section>
+        </div>      </section>
 
       {/* 4. Ce que fait Cardamome : la recette devient un objet structuré et vivant */}
       <section className="lp-wrap lp-section lp-slide">
         <div className="lp-split lp-split--reverse">
           <div>
             <span className="lp-eyebrow">Ce que fait Cardamome</span>
-            <h2 className="lp-h2 lp-h2--wide">Une recette n'est pas un texte. C'est un plan de travail.</h2>
+            <h2 className="lp-h2 lp-h2--wide">Une recette n'est pas juste du texte. Cardamome le sait.</h2>
             <p className="lp-p">
-              Chaque recette est <strong>structurée</strong> : ingrédients, ustensiles, étapes,
-              portions, saison. Une fois entrée, elle alimente ton planning, remplit les courses
-              par rayon et dialogue avec ton stock.
+              Chaque recette est <strong>structurée</strong> : ingrédients, ustensiles, étapes. Et le
+              mode pas à pas t'accompagne sur les <strong>gestes techniques</strong>, saisir,
+              émulsionner, monter, pile au moment où tu les réalises.
             </p>
             <p className="lp-punch">
-              Tu ne remplis pas une fiche. <em>Tu poses la brique d'une semaine qui s'organise seule.</em>
+              Tu ne remplis pas une fiche. <em>Tu gagnes un geste de plus à chaque recette.</em>
             </p>
           </div>
           <div className="lp-split__media">
@@ -502,9 +519,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
               <span className="lp-dock__bar" aria-hidden="true" />
             </div>
           </div>
-        </div>
-        {slideDown()}
-      </section>
+        </div>      </section>
 
       {/* 5. Import intelligent : la démonstration mise en avant, demo à droite */}
       <section id="import" className="lp-wrap lp-section lp-slide">
@@ -524,9 +539,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <div className="lp-split__media">
             <SceneImport />
           </div>
-        </div>
-        {slideDown()}
-      </section>
+        </div>      </section>
 
       {/* 6. Prise de position sur le catalogue */}
       <section className="lp-wrap lp-section lp-slide">
@@ -539,9 +552,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         </p>
         <p className="lp-punch">
           Une bonne app ne t'occupe pas pendant que tu cherches quoi faire. <em>Elle t'aide à cuisiner.</em>
-        </p>
-        {slideDown()}
-      </section>
+        </p>      </section>
 
       {/* 7. Manifeste : pleine largeur, prise de position assumée */}
       <section id="manifeste" className="lp-wrap lp-section lp-slide lp-manifest">
@@ -557,9 +568,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <p><span className="lp-manifest__n">02</span>Une recette sauvegardée <span className="lp-mute">n'est pas</span> une recette cuisinée.</p>
           <p><span className="lp-manifest__n">03</span>Le doublon n'est pas un choix, c'est du <span className="lp-mute">remplissage.</span></p>
           <p><span className="lp-manifest__n">04</span>Ce qui compte tient dans une assiette, <em>pas dans un compteur.</em></p>
-        </div>
-        {slideDown()}
-      </section>
+        </div>      </section>
 
       {/* 8. Preuves d'usage */}
       <section className="lp-wrap lp-section lp-slide">
@@ -573,9 +582,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
               <p className="lp-proof__desc">{f.desc}</p>
             </div>
           ))}
-        </div>
-        {slideDown()}
-      </section>
+        </div>      </section>
 
       {/* 9. Cardamome et Cardamome+ */}
       <section id="offre" className="lp-wrap lp-section lp-slide">
@@ -613,9 +620,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
               ))}
             </ul>
           </div>
-        </div>
-        {slideDown()}
-      </section>
+        </div>      </section>
 
       {/* 10. Conclusion */}
       <section className="lp-wrap lp-section lp-final lp-slide">

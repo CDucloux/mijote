@@ -262,7 +262,7 @@
   width: auto;
 }
 
-/* ── Slides : chaque section occupe un écran, flèche « suivant » en bas ─────── */
+/* ── Slides : chaque section occupe un écran ───────────────────────────────── */
 .lp-slide {
   min-height: 100%;
   scroll-snap-align: start;
@@ -271,12 +271,14 @@
   justify-content: center;
   position: relative;
 }
-/* Flèche de descente : pastille discrète ancrée en bas de chaque slide, défile
-   vers la section suivante. Respiration douce, coupée en mouvement réduit. */
+/* Chevron de descente : un SEUL bouton, flottant (position fixe) au bas-centre du
+   viewport, donc toujours au même endroit quelle que soit la hauteur de la slide.
+   Le nudge vit sur l'icône pour que le centrage (translateX) du bouton reste
+   stable. Se masque en douceur sur la dernière slide (classe --hidden). */
 .lp-next {
-  position: absolute;
+  position: fixed;
   left: 50%;
-  bottom: clamp(16px, 3.5vh, 34px);
+  bottom: clamp(16px, 3.5vh, 30px);
   transform: translateX(-50%);
   width: 44px;
   height: 44px;
@@ -285,21 +287,24 @@
   justify-content: center;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--surface2);
+  background: color-mix(in srgb, var(--surface2) 90%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   color: var(--text2);
   cursor: pointer;
-  z-index: 5;
-  animation: lpNudge 1.9s ease-in-out infinite;
-  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+  z-index: 30;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, opacity 0.3s ease;
 }
+.lp-next svg { animation: lpNudge 1.9s ease-in-out infinite; }
+.lp-next--hidden { opacity: 0; pointer-events: none; }
 @media (hover: hover) {
   .lp-next:hover { color: var(--text); background: var(--surface3); border-color: var(--text3); }
 }
 @keyframes lpNudge {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(4px); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
 }
-@media (prefers-reduced-motion: reduce) { .lp-next { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .lp-next svg { animation: none; } }
 
 /* Section à deux colonnes : texte + maquette d'app, en asymétrie. */
 .lp-split {
