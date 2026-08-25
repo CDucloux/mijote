@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { EmptyArt } from "../components/EmptyArt.jsx";
 import { ThemeToggle } from "../components/ThemeToggle.jsx";
+import { LogoPod } from "../components/LogoPod.jsx";
 import { getRuntimeContext, showsDiscoverLink } from "../lib/ui/runtimeContext.js";
 import { signInFeedback, SIGN_IN_LOADING_MESSAGE } from "../lib/firebase/signInFeedback.js";
 
@@ -95,7 +96,10 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
       {/* Panneau pitch : porte l'unique h1 de la page. */}
       <section className="auth__pitch">
         <div className="auth__pitch-inner">
-          <span className="auth__brand">Cardam<span className="auth__brand-dot">o</span>me<span className="auth__brand-dot">·</span></span>
+          <span className="auth__brand">
+            <LogoPod size={26} />
+            <span className="auth__wordmark">Cardam<span className="auth__brand-dot">o</span>me<span className="auth__brand-dot">·</span></span>
+          </span>
           <p className="auth__eyebrow">L'atelier de tes recettes</p>
           <h1 className="auth__title">
             <span className="auth__only-desktop">Pas un nouveau catalogue. Ton atelier.</span>
@@ -105,7 +109,6 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
             <span className="auth__only-desktop">Importe les recettes que tu aimes, améliore-les à chaque essai et retrouve-les prêtes à cuisiner.</span>
             <span className="auth__only-mobile">Retrouve tes recettes, améliore-les et passe en cuisine.</span>
           </p>
-          <p className="auth__aside">Une recette sauvegardée n'est pas encore une recette cuisinée.</p>
           <div className="auth__art" aria-hidden="true">
             <EmptyArt name="casserole" size={168} />
           </div>

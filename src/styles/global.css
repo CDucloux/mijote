@@ -3063,6 +3063,12 @@ select {
 }
 
 .auth__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.auth__brand svg { display: block; flex-shrink: 0; }
+.auth__wordmark {
   font-family: var(--ff-display);
   font-size: clamp(18px, 2.4vw, 22px);
   font-weight: 700;
@@ -3097,17 +3103,6 @@ select {
   line-height: 1.6;
   color: var(--text2);
   max-width: 36ch;
-}
-
-.auth__aside {
-  margin: clamp(18px, 2.4vw, 26px) 0 0;
-  padding-left: 14px;
-  border-left: 2px solid rgba(var(--accent-rgb), 0.5);
-  font-family: var(--ff-display);
-  font-style: italic;
-  font-size: 1.02rem;
-  line-height: 1.5;
-  color: var(--text3);
 }
 
 .auth__art {
@@ -3257,13 +3252,10 @@ select {
     justify-content: space-between;
   }
   .auth__form { margin: auto 0; }
+  /* En-tête aligné à gauche (structure), le reste du flux sous le bouton reste centré
+     comme la maquette de référence : lecture nette, pas d'alignements qui se battent. */
   .auth__form-title,
-  .auth__form-sub,
-  .auth__hint,
-  .auth__feedback,
-  .auth__consent { text-align: left; }
-  .auth__discover { margin-left: 0; margin-right: auto; }
-  .auth__legalline { text-align: left; }
+  .auth__form-sub { text-align: left; }
   .auth__only-desktop { display: inline; }
   .auth__only-mobile { display: none; }
 }
@@ -3271,8 +3263,7 @@ select {
 /* ── Adaptations mobile : pitch resserré, illustration effacée si l'écran est court,
    phrase secondaire réservée au desktop pour que le bouton reste prioritaire. ── */
 @media (max-width: 859px) {
-  .auth__eyebrow,
-  .auth__aside { display: none; }
+  .auth__eyebrow { display: none; }
   /* Fond UNI sur petit écran : la bichromie pitch/auth n'a de sens que pour la mise
      en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. */
   .auth__panel { background: transparent; border-top: none; }
