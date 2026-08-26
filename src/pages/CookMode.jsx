@@ -15,6 +15,8 @@ import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { consumptionFraction } from "@/lib/recipes/recipeComponents.js";
 import { formatParamSummary } from "@/lib/utensils/appliances.js";
 import { capitalize, fmtQtyUnit } from "../lib/format.js";
+import { spoonConversions } from "@/lib/food/calculators.js";
+import { QuantityConvertSheet, ConvertBadge } from "../components/QuantityConvertSheet.jsx";
 import { AutoResizeTextarea } from "../components/AutoResizeTextarea.jsx";
 import { RatingPicker } from "../components/RatingPicker.jsx";
 import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
@@ -27,6 +29,20 @@ function fmtElapsed(s) {
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
   const pad = (n) => String(n).padStart(2, "0");
   return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
+// Interrupteur animé (piste + pastille glissante) : remplace un bouton plain là où
+// l'état est un vrai on/off. La pastille glisse avec un léger ressort à l'activation.
+function ToggleSwitch({ checked, onChange, label, title }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} onClick={onChange} className="pressable" title={title}
+      style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 9, background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: checked ? "var(--accent)" : "var(--text3)", transition: "color 0.2s" }}>{label}</span>
+      <span aria-hidden="true" style={{ position: "relative", width: 40, height: 23, borderRadius: 999, flexShrink: 0, background: checked ? "var(--accent)" : "var(--surface3)", transition: "background 0.25s ease", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.14)" }}>
+        <span style={{ position: "absolute", top: 2.5, left: 2.5, width: 18, height: 18, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.28)", transform: checked ? "translateX(17px)" : "translateX(0)", transition: "transform 0.28s cubic-bezier(0.34,1.5,0.64,1)" }} />
+      </span>
+    </button>
+  );
 }
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
@@ -66,6 +82,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const [checkedUtIds, setCheckedUtIds] = useState(() => new Set());
   const toggleIngChecked = (id) => setCheckedIngIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   const toggleUtChecked = (id) => setCheckedUtIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  // Conversion d'une quantité en cuillères (feuille), depuis la mise en place.
+  const [convIng, setConvIng] = useState(null);
   // Préférence d'affichage (liste / par catégorie) : persistée, elle reste valable
   // d'une recette à l'autre.
   const [groupByCategory, setGroupByCategory] = useLS("rf_cookModeGroupByCategory", false);
@@ -201,6 +219,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
+  // Équivalent cuillères d'un ingrédient (null si non convertible : sert de garde
+  // d'affichage du badge ET de payload d'ouverture de la feuille).
+  const convOf = (ing, amount) => spoonConversions(amount, ing.unit, ing.name);
+  const openConvert = (ing, amount) => setConvIng({ name: ing.name, image: getIngImage(ing.dbId, ing.name), amount, unit: ing.unit, spoons: convOf(ing, amount) });
   const progress = ((stepIdx + 1) / totalSteps) * 100;
 
   // Battement d'horloge tant qu'un minuteur tourne : on avance `now` (le restant
@@ -382,23 +404,30 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     const displayName = isComp ? (comp?.name || ing.name || "Préparation introuvable") : ing.name;
     const imgSrc = isComp ? (comp?.image || "") : getIngImage(ing.dbId, ing.name);
     const gathered = checkedIngIds.has(ing.id);
+    const amount = ing.amount * (mult || 1);
+    // Rangée = <div role="button"> (et non <button>) car elle contient le badge de
+    // conversion, lui-même bouton : deux boutons imbriqués seraient du HTML invalide.
+    const toggle = () => toggleIngChecked(ing.id);
     return (
-      <button key={ing.id} type="button" onClick={() => toggleIngChecked(ing.id)} className="pressable"
-        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", borderRadius: 10 }}>
+      <div key={ing.id} role="button" tabIndex={0} onClick={toggle}
+        onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
+        className="pressable"
+        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", cursor: "pointer", borderRadius: 10 }}>
         <span style={{ width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: "grid", placeItems: "center", border: `2px solid ${gathered ? "var(--ok)" : "var(--border)"}`, background: gathered ? "var(--ok)" : "transparent", transition: "background 0.15s, border-color 0.15s" }}>
           {gathered && <Icon name="check" size={13} color="#fff" />}
         </span>
-        <span style={{ flexShrink: 0, opacity: gathered ? 0.5 : 1, transition: "opacity 0.15s" }}>
+        <span style={{ position: "relative", flexShrink: 0, display: "inline-flex", opacity: gathered ? 0.5 : 1, transition: "opacity 0.15s" }}>
           {isComp
             ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", border: "1.5px solid rgba(var(--accent-rgb),0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
             : <IngImage src={imgSrc} alt={displayName} size={42} />
           }
+          {!isComp && !gathered && convOf(ing, amount) && <ConvertBadge onClick={() => openConvert(ing, amount)} size={18} />}
         </span>
         <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400, textDecoration: gathered ? "line-through" : "none", opacity: gathered ? 0.55 : 1, transition: "opacity 0.15s" }}>{capitalize(displayName)}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", opacity: gathered ? 0.55 : 1, transition: "opacity 0.15s" }}>
-          {fmtQtyUnit(ing.amount * (mult || 1), ing.unit)}
+          {fmtQtyUnit(amount, ing.unit)}
         </span>
-      </button>
+      </div>
     );
   };
 
@@ -541,21 +570,20 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                             {checkedIngIds.size}/{overviewIngs.length}
                           </span>
                         )}
-                        <button type="button" onClick={() => setGroupByCategory(v => !v)} className="pressable"
-                          title={groupByCategory ? "Afficher en liste" : "Regrouper par catégorie"}
-                          style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: groupByCategory ? "var(--accent)" : "var(--text3)", background: groupByCategory ? "rgba(var(--accent-rgb),0.1)" : "var(--surface2)", border: `1px solid ${groupByCategory ? "rgba(var(--accent-rgb),0.3)" : "var(--border)"}`, borderRadius: 999, padding: "5px 11px", cursor: "pointer", flexShrink: 0 }}>
-                          <Icon name="grid" size={12} color={groupByCategory ? "var(--accent)" : "var(--text3)"} /> Catégories
-                        </button>
+                        <ToggleSwitch checked={groupByCategory} onChange={() => setGroupByCategory(v => !v)} label="Catégories"
+                          title={groupByCategory ? "Afficher en liste" : "Regrouper par catégorie"} />
                       </div>
                       {groupByCategory ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                           {overviewIngGroups.map(g => (
-                            <div key={g.key}>
+                            <div key={g.key} style={{ paddingLeft: 8 }}>
+                              {/* Décalage + ↳ : la catégorie se lit comme une sous-branche des « Ingrédients ». */}
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                                <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1, color: "var(--text3)", marginRight: 1, transform: "translateY(-1px)" }}>↳</span>
                                 <span style={{ fontSize: 13 }}>{g.icon}</span>
                                 <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{g.label}</span>
                               </div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingLeft: 14 }}>
                                 {g.items.map(renderOverviewIngRow)}
                               </div>
                             </div>
@@ -772,6 +800,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           }
         </div>
       </div>
+
+      {convIng && <QuantityConvertSheet ing={convIng} onClose={() => setConvIng(null)} />}
     </>,
     document.body
   );

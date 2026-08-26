@@ -15,8 +15,21 @@ import {
   AndroidLogo, AppleLogo, Camera,
 } from "@phosphor-icons/react";
 
+// Cuillère (à café / à soupe) : Phosphor n'en fournit pas. Silhouette pleine dans
+// le repère 256 de Phosphor pour épouser le poids « regular » du reste du set.
+// Volontairement une CUILLÈRE (cuilleron ovale + manche fin), pas une louche.
+function Spoon({ size = 20, color = "currentColor", weight, ...rest }) {
+  void weight; // le prop de poids Phosphor n'a pas de sens pour ce tracé unique
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
+      <path d="M128 24c-28 0-50 27-50 62 0 27 13 49 33 58v76a17 17 0 0 0 34 0v-76c20-9 33-31 33-58 0-35-22-62-50-62Z" />
+    </svg>
+  );
+}
+
 // name métier -> composant Phosphor.
 const ICONS = {
+  spoon: Spoon,
   home: House,
   search: MagnifyingGlass,
   calendar: CalendarBlank,

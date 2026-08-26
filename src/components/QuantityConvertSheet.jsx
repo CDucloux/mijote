@@ -4,9 +4,9 @@ import { IngImage } from "./Img.jsx";
 import { fmtQty, pluralizeUnit, capitalize } from "../lib/format.js";
 
 // ─── FEUILLE DE CONVERSION EN CUILLÈRES ───────────────────────────────────────
-// Ouverte via un petit badge « flèches » posé en bas À DROITE de la vignette d'un
-// ingrédient (fiche recette). Aide qui ne pèse pas : « 160 g → ≈ 12 ½ c. à soupe ».
-// Les équivalents sont calculés en amont (lib `spoonConversions`) ; ici on affiche.
+// Ouverte via un petit badge « cuillère » posé en bas À DROITE de la vignette d'un
+// ingrédient (fiche recette, mise en place). Aide qui ne pèse pas : « 160 g → ≈ 12 ½
+// c. à soupe ». Les équivalents sont calculés en amont (lib `spoonConversions`).
 
 // Contenance de référence d'une cuillère (pour la ligne secondaire de chaque rangée).
 const SPOON_ML = { "cuillère à soupe": 15, "cuillère à café": 5 };
@@ -21,7 +21,7 @@ export function ConvertBadge({ onClick, size = 19 }) {
         width: size, height: size, borderRadius: "50%", background: "var(--accent)",
         border: "2px solid var(--surface)", display: "grid", placeItems: "center",
         cursor: "pointer", padding: 0, boxShadow: "0 2px 7px -1px rgba(var(--accent-rgb),0.6)" }}>
-      <Icon name="swap" size={size - 8} color="#fff" />
+      <Icon name="spoon" size={size - 7} color="#fff" />
     </button>
   );
 }
@@ -38,7 +38,7 @@ export function QuantityConvertSheet({ ing, onClose }) {
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
         {ing.image
           ? <IngImage src={ing.image} alt={ing.name} size={52} />
-          : <span style={{ width: 52, height: 52, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}><Icon name="swap" size={22} color="var(--accent)" /></span>}
+          : <span style={{ width: 52, height: 52, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}><Icon name="spoon" size={24} color="var(--accent)" /></span>}
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, color: "var(--text)", lineHeight: 1.15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(ing.name || "Ingrédient")}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
@@ -56,7 +56,7 @@ export function QuantityConvertSheet({ ing, onClose }) {
         {ing.spoons.map((s, i) => (
           <div key={s.unit} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderTop: i ? "1px solid var(--border)" : "none" }}>
             <span style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.13)", display: "grid", placeItems: "center" }}>
-              <Icon name="utensils" size={19} color="var(--accent)" />
+              <Icon name="spoon" size={20} color="var(--accent)" />
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 15, fontWeight: 650, color: "var(--text)", lineHeight: 1.2 }}>{capitalize(pluralizeUnit(s.value, s.unit))}</div>
