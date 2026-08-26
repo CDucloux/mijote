@@ -84,6 +84,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const toggleUtChecked = (id) => setCheckedUtIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   // Conversion d'une quantité en cuillères (feuille), depuis la mise en place.
   const [convIng, setConvIng] = useState(null);
+  // Unité d'affichage choisie par ingrédient (cuillère à soupe / à café), pour qui
+  // préfère mesurer que peser. Propre à la session, appliquée partout dans le cook mode.
+  const [spoonUnitByIng, setSpoonUnitByIng] = useState(() => new Map());
+  const setSpoonUnit = (ingId, unit) => setSpoonUnitByIng(prev => { const m = new Map(prev); unit ? m.set(ingId, unit) : m.delete(ingId); return m; });
   // Préférence d'affichage (liste / par catégorie) : persistée, elle reste valable
   // d'une recette à l'autre.
   const [groupByCategory, setGroupByCategory] = useLS("rf_cookModeGroupByCategory", false);
@@ -222,7 +226,17 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   // Équivalent cuillères d'un ingrédient (null si non convertible : sert de garde
   // d'affichage du badge ET de payload d'ouverture de la feuille).
   const convOf = (ing, amount) => spoonConversions(amount, ing.unit, ing.name);
-  const openConvert = (ing, amount) => setConvIng({ name: ing.name, image: getIngImage(ing.dbId, ing.name), amount, unit: ing.unit, spoons: convOf(ing, amount) });
+  const openConvert = (ing, amount) => setConvIng({ id: ing.id, name: ing.name, image: getIngImage(ing.dbId, ing.name), amount, unit: ing.unit, spoons: convOf(ing, amount) });
+  // Quantité affichée d'un ingrédient : en cuillères si l'utilisateur a choisi une
+  // unité pour lui (et qu'elle reste convertible à cette quantité), sinon l'unité d'origine.
+  const displayQty = (ing, amount) => {
+    const chosen = spoonUnitByIng.get(ing.id);
+    if (chosen) {
+      const match = convOf(ing, amount)?.find(s => s.unit === chosen);
+      if (match) return fmtQtyUnit(match.value, match.unit);
+    }
+    return fmtQtyUnit(amount, ing.unit);
+  };
   const progress = ((stepIdx + 1) / totalSteps) * 100;
 
   // Battement d'horloge tant qu'un minuteur tourne : on avance `now` (le restant
@@ -390,7 +404,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         }
         <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{capitalize(displayName)}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: isComp ? "var(--accent)" : "var(--accent)" }}>
-          {fmtQtyUnit(ing.amount * (mult || 1), ing.unit)}
+          {displayQty(ing, ing.amount * (mult || 1))}
         </span>
       </div>
     );
@@ -425,7 +439,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         </span>
         <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400, textDecoration: gathered ? "line-through" : "none", opacity: gathered ? 0.55 : 1, transition: "opacity 0.15s" }}>{capitalize(displayName)}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", opacity: gathered ? 0.55 : 1, transition: "opacity 0.15s" }}>
-          {fmtQtyUnit(amount, ing.unit)}
+          {displayQty(ing, amount)}
         </span>
       </div>
     );
@@ -801,7 +815,16 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         </div>
       </div>
 
-      {convIng && <QuantityConvertSheet ing={convIng} onClose={() => setConvIng(null)} />}
+      {convIng && (
+        <QuantityConvertSheet
+          ing={convIng}
+          selectedUnit={spoonUnitByIng.get(convIng.id) || null}
+          onSelectUnit={(unit) => { setSpoonUnit(convIng.id, unit); setConvIng(null); }}
+          onReset={() => { setSpoonUnit(convIng.id, null); setConvIng(null); }}
+          zIndex={isNested ? 720 : 620}
+          onClose={() => setConvIng(null)}
+        />
+      )}
     </>,
     document.body
   );
