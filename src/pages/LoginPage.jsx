@@ -5,6 +5,7 @@ import { ThemeToggle } from "../components/ThemeToggle.jsx";
 import { LogoPod } from "../components/LogoPod.jsx";
 import { getRuntimeContext, showsDiscoverLink } from "../lib/ui/runtimeContext.js";
 import { signInFeedback, SIGN_IN_LOADING_MESSAGE } from "../lib/firebase/signInFeedback.js";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // Logo Google multicolore (SVG inline, pas d'asset externe).
 function GoogleMark() {
@@ -63,6 +64,10 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
   const busyRef = useRef(false);
   const ctx = useMemo(() => getRuntimeContext(), []);
   const loading = status === "loading";
+  // Overscroll élastique au bas de l'écran, comme les pages de l'app ; inutile sur
+  // desktop (pas de tactile, contenu qui tient).
+  const isDesktop = useMemo(() => typeof matchMedia === "function" && matchMedia("(min-width: 860px)").matches, []);
+  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
 
   useLoginDocumentHead();
 
@@ -90,17 +95,21 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
   };
 
   return (
-    <div className={`auth${isDark ? "" : " auth--light"}`} data-context={ctx}>
+    <div className={`auth${isDark ? "" : " auth--light"}`} data-context={ctx} ref={scrollRef}>
       <ThemeToggle isDark={isDark} onToggle={onToggleTheme} className="auth__theme" />
 
       {/* Retour vers la vitrine : uniquement dans un navigateur (jamais en PWA /
-          Capacitor, ou la landing n'est pas un ecran interne). */}
+          Capacitor, ou la landing n'est pas un ecran interne), et masqué sur mobile
+          (le logo prend sa place en haut). Hors de la grille pour ne pas être étiré
+          par l'overscroll. */}
       {showsDiscoverLink(ctx) && (
         <a className="auth__back" href="/">
           <Icon name="back" size={16} /> Retourner à la page de présentation
         </a>
       )}
 
+      {/* Grille scrollable (contenu étirable par l'overscroll élastique). */}
+      <div className="auth__grid" ref={contentRef}>
       {/* Panneau pitch : porte l'unique h1 de la page. */}
       <section className="auth__pitch">
         <div className="auth__pitch-inner">
@@ -111,7 +120,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
           <p className="auth__eyebrow">Donne du caractère à tes recettes</p>
           <h1 className="auth__title">
             <span className="auth__only-desktop">Pas un nouveau catalogue. Ton atelier.</span>
-            <span className="auth__only-mobile">Moins chercher. Plus cuisiner.</span>
+            <span className="auth__only-mobile">Donne du caractère à tes recettes</span>
           </h1>
           <p className="auth__desc">
             <span className="auth__only-desktop">Importe les recettes que tu aimes, améliore-les à chaque essai et retrouve-les prêtes à cuisiner.</span>
@@ -139,7 +148,6 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
             {loading ? <span className="auth__spinner" aria-hidden="true" /> : <GoogleMark />}
             <span>{loading ? SIGN_IN_LOADING_MESSAGE : "Continuer avec Google"}</span>
           </button>
-          <p className="auth__hint">Connexion ou création de compte en un clic.</p>
 
           {feedback && (
             <p className={`auth__feedback auth__feedback--${feedback.tone}`} role={feedback.tone === "error" ? "alert" : "status"}>
@@ -156,6 +164,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
         </div>
         <p className="auth__legalline">© 2026 Cardamome · v{__APP_VERSION__}</p>
       </section>
+      </div>
     </div>
   );
 }

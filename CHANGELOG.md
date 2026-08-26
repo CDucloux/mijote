@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.7.1 – Cardamome · L'accueil mobile de la connexion, peaufiné
+
+### Écran de connexion (mobile)
+- **Une entrée en matière plus franche** : le slogan « Donne du caractère à tes recettes » devient le titre de l'écran, en capitales accentuées façon eyebrow, et la marmite s'agrandit pour devenir le vrai point chaud du hero.
+- **Marque alignée sur le toggle** : le logo reste ancré en haut à gauche, à la hauteur exacte du bouton de thème, là où figurait le retour vitrine.
+- **Moins de bruit** : le retour vers la vitrine et le rappel « Connexion ou création de compte en un clic » disparaissent sur mobile (l'app est souvent installée), au profit d'une colonne centrée qui va droit au bouton.
+- **Overscroll élastique** : le bas de l'écran rebondit comme le reste de l'app (désactivé sur desktop).
+
 ## v4.7.0 – Cardamome · L'écran de connexion, repensé
 
 ### Écran de connexion
