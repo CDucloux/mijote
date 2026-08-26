@@ -37,7 +37,7 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
           position: "absolute", top: 4, bottom: 4, left: 4, width: "calc((100% - 8px) / 2)",
           background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
           transform: `translateX(calc(${listMode ? 1 : 0} * 100%))`,
-          transition: "transform 0.32s cubic-bezier(0.34, 1.4, 0.5, 1)",
+          transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
         }} />
         {[{ label: "Article", val: false }, { label: "Coller une liste", val: true }].map(({ label, val }) => (
           <button key={label} onClick={() => setListMode(val)}
