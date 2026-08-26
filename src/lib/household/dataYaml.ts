@@ -138,7 +138,7 @@ const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map(str).filter(
  * de TYPE sont signalées ; l'intégrité référentielle (parents, symétrie) relève du
  * validateur de génération, pas de cet import entrée par entrée.
  */
-function cleanTechniqueDimensions(raw: Record<string, unknown>, where: string, errors: string[]): Record<string, unknown> {
+function cleanTechniqueDimensions(raw: Record<string, unknown>, where = "", errors: string[] = []): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (raw.hierarchy != null) {
     if (!isObj(raw.hierarchy)) errors.push(`${where} : « hierarchy » doit être un objet.`);
@@ -241,6 +241,54 @@ interface TechniqueRow {
   expected_result?: { summary?: string; observable_indicators?: string[] };
   common_errors?: string[];
   not_to_be_confused_with?: TechniqueConfusion[];
+}
+
+/** Brouillon d'édition d'un geste (console admin) : mêmes formes que le schema v2,
+ *  telles que les produit le formulaire, avant nettoyage pour Firestore. */
+export interface TechniqueDraft {
+  id?: string;
+  name?: string;
+  category?: string;
+  definition?: string;
+  aliases?: string[];
+  difficulty?: number;
+  source?: string;
+  hierarchy?: { parent?: string | null; level?: number };
+  expected_result?: { summary?: string; observable_indicators?: string[] };
+  common_errors?: string[];
+  not_to_be_confused_with?: TechniqueConfusion[];
+}
+
+/**
+ * Construit l'enregistrement Firestore d'un geste à partir d'un brouillon de la
+ * console admin. Source de confiance (formes garanties par le formulaire), donc
+ * pas d'accumulation d'erreurs : on se contente de normaliser et de n'émettre que
+ * les clés non vides (Firestore rejette `undefined`). La hiérarchie n'est portée
+ * que si un parent est réellement choisi (contrairement au parse YAML, qui
+ * conserve le marqueur `{ parent: null }` des parents génériques).
+ *
+ * @param draft - Le brouillon saisi dans l'éditeur de geste.
+ * @returns L'enregistrement prêt à écrire dans la base master.
+ */
+export function buildTechniqueFromDraft(draft: TechniqueDraft): TechniqueRow {
+  const name = str(draft.name);
+  const definition = str(draft.definition);
+  const id = str(draft.id) || slugifyId("tech_", name);
+  const item: TechniqueRow = { id, name, category: draft.category || "preparation", definition };
+  const aliases = [...new Set((draft.aliases || []).map((a) => str(a).toLowerCase()).filter(Boolean))];
+  if (aliases.length) item.aliases = aliases;
+  const difficulty = draft.difficulty;
+  if (Number.isInteger(difficulty) && (difficulty as number) >= 1 && (difficulty as number) <= 5) item.difficulty = difficulty;
+  const source = str(draft.source);
+  if (source) item.source = source;
+  const rawDims: Record<string, unknown> = {
+    expected_result: draft.expected_result,
+    common_errors: draft.common_errors,
+    not_to_be_confused_with: draft.not_to_be_confused_with,
+  };
+  if (str(draft.hierarchy?.parent)) rawDims.hierarchy = draft.hierarchy;
+  Object.assign(item, cleanTechniqueDimensions(rawDims));
+  return item;
 }
 
 /**

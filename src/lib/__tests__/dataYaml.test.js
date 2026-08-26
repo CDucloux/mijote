@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
-  slugifyId, TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES,
+  slugifyId, TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES, buildTechniqueFromDraft,
 } from "@/lib/household/dataYaml.js";
 
 describe("slugifyId", () => {
@@ -157,6 +157,77 @@ techniques:
     // au moins un geste rattaché à un parent, avec son résultat attendu.
     const child = items.find(t => t.hierarchy && t.hierarchy.parent && t.expected_result);
     expect(child).toBeTruthy();
+  });
+});
+
+describe("buildTechniqueFromDraft", () => {
+  it("dérive l'id du nom et applique les valeurs par défaut", () => {
+    const item = buildTechniqueFromDraft({ name: "Émulsionner", definition: "Lier deux liquides." });
+    expect(item.id).toBe("tech_emulsionner");
+    expect(item.category).toBe("preparation");
+    expect("aliases" in item).toBe(false);
+    expect("difficulty" in item).toBe(false);
+    expect("hierarchy" in item).toBe(false);
+    expect("expected_result" in item).toBe(false);
+  });
+
+  it("conserve l'id existant et normalise les alias (minuscules, dédoublonnés, vides retirés)", () => {
+    const item = buildTechniqueFromDraft({
+      id: "tech_ciseler", name: "Ciseler", category: "decoupe", definition: "Tailler fin.",
+      aliases: ["  Émincer ", "émincer", "", "Hacher"],
+    });
+    expect(item.id).toBe("tech_ciseler");
+    expect(item.aliases).toEqual(["émincer", "hacher"]);
+  });
+
+  it("ne porte la difficulté que si c'est un entier de 1 à 5", () => {
+    expect("difficulty" in buildTechniqueFromDraft({ name: "A", definition: "d", difficulty: 0 })).toBe(false);
+    expect("difficulty" in buildTechniqueFromDraft({ name: "A", definition: "d", difficulty: 6 })).toBe(false);
+    expect(buildTechniqueFromDraft({ name: "A", definition: "d", difficulty: 3 }).difficulty).toBe(3);
+  });
+
+  it("porte les 4 dimensions v2 saisies", () => {
+    const item = buildTechniqueFromDraft({
+      name: "Ciseler", category: "decoupe", definition: "Tailler en dés.",
+      hierarchy: { parent: "tech_grp_hachage", level: 1 },
+      expected_result: { summary: "Des dés réguliers.", observable_indicators: ["Dés homogènes"] },
+      common_errors: ["Écraser l'aliment"],
+      not_to_be_confused_with: [{ technique_id: "tech_hacher", distinction: "plus grossier" }],
+    });
+    expect(item.hierarchy).toEqual({ parent: "tech_grp_hachage", level: 1 });
+    expect(item.expected_result).toEqual({ summary: "Des dés réguliers.", observable_indicators: ["Dés homogènes"] });
+    expect(item.common_errors).toEqual(["Écraser l'aliment"]);
+    expect(item.not_to_be_confused_with).toEqual([{ technique_id: "tech_hacher", distinction: "plus grossier" }]);
+  });
+
+  it("omet la hiérarchie quand aucun parent n'est choisi", () => {
+    expect("hierarchy" in buildTechniqueFromDraft({ name: "A", definition: "d", hierarchy: { parent: "" } })).toBe(false);
+    expect("hierarchy" in buildTechniqueFromDraft({ name: "A", definition: "d", hierarchy: undefined })).toBe(false);
+  });
+
+  it("n'émet pas les listes/objets vides (Firestore refuse undefined)", () => {
+    const item = buildTechniqueFromDraft({
+      name: "A", definition: "d",
+      expected_result: { summary: "", observable_indicators: [] },
+      common_errors: ["", "  "],
+      not_to_be_confused_with: [{ technique_id: "", distinction: "x" }],
+    });
+    expect("expected_result" in item).toBe(false);
+    expect("common_errors" in item).toBe(false);
+    expect("not_to_be_confused_with" in item).toBe(false);
+  });
+
+  it("round-trip : un brouillon complet ressort identique par le YAML", () => {
+    const item = buildTechniqueFromDraft({
+      name: "Ciseler", category: "decoupe", definition: "Tailler en dés.", difficulty: 2, source: "Escoffier",
+      hierarchy: { parent: "tech_grp_hachage" },
+      expected_result: { summary: "Des dés réguliers.", observable_indicators: ["Dés homogènes"] },
+      common_errors: ["Écraser l'aliment"],
+      not_to_be_confused_with: [{ technique_id: "tech_hacher", distinction: "plus grossier" }],
+    });
+    const { items, errors } = parseTechniquesYaml(formatTechniquesYaml([item]));
+    expect(errors).toEqual([]);
+    expect(items[0]).toEqual(item);
   });
 });
 
