@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.10.1 – Cardamome · La pastille se pose sans rebondir
+
+### Interface
+- **Sélecteurs segmentés sans rebond** : sur les contrôles à pastille glissante (créneau du planning, feuille « ajouter au planning », bascule Article / Coller une liste), la pastille blanche continue de glisser en douceur d'un segment à l'autre, mais sans l'effet de ressort qui la faisait dépasser puis revenir en fin de course. Le déplacement reste, le rebond disparaît.
+
 ## v4.10.0 – Cardamome · La cuillère prend le pouvoir
 
 ### Mode cuisine (mise en place)

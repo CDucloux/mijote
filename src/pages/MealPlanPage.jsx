@@ -540,7 +540,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               position: "absolute", top: 4, bottom: 4, left: 4, width: `calc((100% - 8px) / ${MEAL_SLOTS.length})`,
               background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
               transform: `translateX(calc(${activeIdx} * 100%))`,
-              transition: "transform 0.32s cubic-bezier(0.34, 1.4, 0.5, 1)",
+              transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
             }} />
             {MEAL_SLOTS.map(s => {
               const active = activeSlot === s.id;
