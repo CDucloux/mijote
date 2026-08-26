@@ -3185,12 +3185,6 @@ select {
   flex-shrink: 0;
 }
 
-.auth__hint {
-  margin: 10px 0 0;
-  font-size: 12.5px;
-  color: var(--text3);
-  text-align: center;
-}
 
 .auth__feedback {
   margin: 14px 0 0;
@@ -3283,11 +3277,17 @@ select {
    phrase secondaire réservée au desktop pour que le bouton reste prioritaire. ── */
 @media (max-width: 859px) {
   .auth__eyebrow { display: none; }
+  /* Pas de retour vers la vitrine sur mobile : l'app est souvent installée en PWA,
+     on evite d'y renvoyer. Le logo (dans le pitch) prend la place en haut. */
+  .auth__back { display: none; }
   /* Fond UNI sur petit écran : la bichromie pitch/auth n'a de sens que pour la mise
      en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. */
   .auth__panel { background: transparent; border-top: none; }
-  /* Marmite resserrée pour rester présente sans repousser le bouton hors de vue. */
-  .auth__art { margin-top: clamp(16px, 4vw, 26px); }
+  /* Tout centré en colonne unique (demande explicite pour l'écran mobile). */
+  .auth__pitch-inner { text-align: center; }
+  .auth__desc { max-width: 40ch; margin-inline: auto; }
+  /* Marmite centrée et resserrée pour rester présente sans repousser le bouton. */
+  .auth__art { margin-top: clamp(16px, 4vw, 26px); justify-content: center; }
   .auth__art svg { width: clamp(112px, 32vw, 148px); height: auto; }
 }
 /* La marmite n'est masquée qu'en paysage / écran vraiment court : en portrait, elle

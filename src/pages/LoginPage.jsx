@@ -111,7 +111,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
           <p className="auth__eyebrow">Donne du caractère à tes recettes</p>
           <h1 className="auth__title">
             <span className="auth__only-desktop">Pas un nouveau catalogue. Ton atelier.</span>
-            <span className="auth__only-mobile">Moins chercher. Plus cuisiner.</span>
+            <span className="auth__only-mobile">Donne du caractère à tes recettes.</span>
           </h1>
           <p className="auth__desc">
             <span className="auth__only-desktop">Importe les recettes que tu aimes, améliore-les à chaque essai et retrouve-les prêtes à cuisiner.</span>
@@ -139,7 +139,6 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
             {loading ? <span className="auth__spinner" aria-hidden="true" /> : <GoogleMark />}
             <span>{loading ? SIGN_IN_LOADING_MESSAGE : "Continuer avec Google"}</span>
           </button>
-          <p className="auth__hint">Connexion ou création de compte en un clic.</p>
 
           {feedback && (
             <p className={`auth__feedback auth__feedback--${feedback.tone}`} role={feedback.tone === "error" ? "alert" : "status"}>
