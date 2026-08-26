@@ -41,8 +41,23 @@ const TECH_CAT = {
 };
 const techCat = (c) => TECH_CAT[c] || { emoji: "🍳", color: "var(--accent)" };
 
+// Bloc secondaire de la bulle (résultat attendu, erreurs, confusions), séparé par un
+// filet fin, avec un intitulé discret en capitales.
+function PopSection({ label, color, children }) {
+  return (
+    <div style={{ marginTop: 10, paddingTop: 9, borderTop: "1px solid var(--border)" }}>
+      <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: color || "var(--text3)", marginBottom: 5 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+const popList = { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 };
+const popItem = { fontSize: 12, lineHeight: 1.5, color: "var(--text2)", display: "flex", gap: 7 };
+const popDot = (color) => ({ width: 4, height: 4, borderRadius: "50%", background: color, marginTop: 7, flexShrink: 0 });
+
 export function TechniqueText({ text, index: indexProp }) {
   const { techniques } = useAppShell();
+  const techById = useMemo(() => new Map((techniques || []).map(t => [t.id, t])), [techniques]);
   const builtIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const index = indexProp || builtIndex;
   // On retire les tirets cadratins (marqueur des textes IA) avant tout.
@@ -104,11 +119,17 @@ export function TechniqueText({ text, index: indexProp }) {
         <div style={{ position: "fixed", left: pop.left, top: pop.top, width: pop.width, zIndex: 500, transform: pop.above ? "translateY(-100%)" : "none", pointerEvents: pinned ? "auto" : "none" }}
           onClick={e => e.stopPropagation()}>
           {(() => {
-            const c = techCat(pop.tech.category);
-            const catLabel = TECHNIQUE_CATEGORIES[pop.tech.category] || pop.tech.category;
-            const diff = Number(pop.tech.difficulty) || 0;
+            const t = pop.tech;
+            const c = techCat(t.category);
+            const catLabel = TECHNIQUE_CATEGORIES[t.category] || t.category;
+            const diff = Number(t.difficulty) || 0;
+            const er = t.expected_result || null;
+            const inds = Array.isArray(er?.observable_indicators) ? er.observable_indicators : [];
+            const errs = Array.isArray(t.common_errors) ? t.common_errors : [];
+            const conf = Array.isArray(t.not_to_be_confused_with) ? t.not_to_be_confused_with : [];
+            const parentName = t.hierarchy?.parent ? techById.get(t.hierarchy.parent)?.name : null;
             return (
-              <div className="tech-pop" role="tooltip" style={{ transformOrigin: pop.above ? "bottom left" : "top left" }}>
+              <div className="tech-pop" role="tooltip" style={{ transformOrigin: pop.above ? "bottom left" : "top left", maxHeight: "min(70vh, 460px)", overflowY: "auto" }}>
                 {/* barre d'accent colorée en tête, selon la catégorie */}
                 <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "14px 14px 0 0", background: c.color }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
@@ -128,6 +149,44 @@ export function TechniqueText({ text, index: indexProp }) {
                   </div>
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.55 }}>{pop.tech.definition}</div>
+                {parentName && (
+                  <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 7 }}>
+                    Fait partie de <span style={{ fontWeight: 600, color: "var(--text2)" }}>{parentName}</span>
+                  </div>
+                )}
+                {er?.summary && (
+                  <PopSection label="Résultat attendu" color={c.color}>
+                    <div style={{ fontSize: 12, color: "var(--text2)", lineHeight: 1.5 }}>{er.summary}</div>
+                    {inds.length > 0 && (
+                      <ul style={{ ...popList, marginTop: 6 }}>
+                        {inds.map((s, k) => (
+                          <li key={k} style={popItem}><span style={popDot(c.color)} /><span>{s}</span></li>
+                        ))}
+                      </ul>
+                    )}
+                  </PopSection>
+                )}
+                {errs.length > 0 && (
+                  <PopSection label="Erreurs fréquentes" color="var(--red, #d1544f)">
+                    <ul style={popList}>
+                      {errs.map((s, k) => (
+                        <li key={k} style={popItem}><span style={popDot("var(--red, #d1544f)")} /><span>{s}</span></li>
+                      ))}
+                    </ul>
+                  </PopSection>
+                )}
+                {conf.length > 0 && (
+                  <PopSection label="Ne pas confondre avec">
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {conf.map((r, k) => (
+                        <div key={k} style={{ fontSize: 12, lineHeight: 1.5, color: "var(--text2)" }}>
+                          <span style={{ fontWeight: 600, color: "var(--accent)" }}>{techById.get(r.technique_id)?.name || r.technique_id}</span>
+                          {r.distinction && <span> {r.distinction}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </PopSection>
+                )}
                 {pop.tech.source && (
                   <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10.5, color: "var(--text3)", marginTop: 9, paddingTop: 9, borderTop: "1px solid var(--border)" }}>
                     <Icon name="book" size={11} color="var(--text3)" /> {pop.tech.source}

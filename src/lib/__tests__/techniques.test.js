@@ -19,6 +19,15 @@ describe("buildTechniqueIndex", () => {
     expect(idx.phrases.get("tailler en julienne").id).toBe("tech_julienne");
     expect(idx.maxWords).toBe(3);
   });
+
+  it("ignore les parents génériques (tech_grp_) : hiérarchie seule, jamais surlignés", () => {
+    const withParent = buildTechniqueIndex([
+      ...TECHS,
+      { id: "tech_grp_hachage", name: "Hachage", aliases: ["hachage"], definition: "Famille." },
+    ]);
+    expect(withParent.phrases.get("hachage")).toBeUndefined();
+    expect(withParent.phrases.get("suer").id).toBe("tech_suer"); // les gestes restent indexés
+  });
 });
 
 describe("annotateText", () => {

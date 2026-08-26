@@ -6,13 +6,31 @@
  * @module techniques
  */
 
+/** Préfixe d'id des techniques GÉNÉRIQUES (parents de la hiérarchie v2) : elles
+ *  servent de métadonnée de regroupement, mais ne sont jamais surlignées dans le
+ *  texte des recettes (cf. {@link buildTechniqueIndex}). */
+export const GENERIC_TECHNIQUE_PREFIX = "tech_grp_";
+
+/** Une relation « ne pas confondre avec » (schema v2). */
+export interface TechniqueConfusion { technique_id: string; distinction?: string }
+
 /** Une entrée de glossaire (geste technique). */
 export interface TechniqueEntry {
   id: string;
   name?: string;
+  category?: string;
   aliases?: string[];
   difficulty?: number;
   definition?: string;
+  source?: string;
+  /** Hiérarchie v2 : parent (id ou null) et profondeur. */
+  hierarchy?: { parent: string | null; level?: number };
+  /** Résultat attendu v2 : état observable après bonne exécution. */
+  expected_result?: { summary?: string; observable_indicators?: string[] };
+  /** Erreurs fréquentes v2. */
+  common_errors?: string[];
+  /** Confusions plausibles v2 (« ne pas confondre avec »). */
+  not_to_be_confused_with?: TechniqueConfusion[];
   [k: string]: unknown;
 }
 
@@ -55,6 +73,8 @@ export function buildTechniqueIndex(techniques: TechniqueEntry[] | null | undefi
   let maxWords = 1;
   for (const t of techniques || []) {
     if (!t?.id) continue;
+    // Les parents génériques (hiérarchie seule) ne sont jamais surlignés.
+    if (t.id.startsWith(GENERIC_TECHNIQUE_PREFIX)) continue;
     for (const form of [t.name, ...(Array.isArray(t.aliases) ? t.aliases : [])]) {
       const norm = normTech(form);
       if (!norm) continue;
