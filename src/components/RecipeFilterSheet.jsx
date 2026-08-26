@@ -116,6 +116,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
       {/* En-tête, collant en haut de la feuille, fond opaque couvrant la bande de
           padding du haut pour qu'aucun contenu ne transparaisse pendant le défilement */}
       <div style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", margin: "0 -20px 10px", padding: "18px 20px 12px", borderBottom: "1px solid var(--border)" }}>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M3 5h18M6 12h12M10 19h4" stroke="var(--text)" strokeWidth="2" strokeLinecap="round" /></svg>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: 1 }}>Tous les filtres</h2>
         {nActive > 0 && <button onClick={reset} style={{ alignSelf: "center", background: "none", border: "none", color: "var(--accent)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, lineHeight: 1 }}>Réinitialiser</button>}
         <button onClick={onClose} aria-label="Fermer" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "var(--surface2)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>
@@ -247,8 +248,8 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
 
       {/* CTA, pied plein, sans liseré, jusqu'au bas de la feuille */}
       <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "10px 20px calc(16px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 10 }}>
-        <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5 }} onClick={onClose}>
-          Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
+        <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={onClose}>
+          <Icon name="search" size={17} color="#fff" /> Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
         </button>
         {/* Enregistrer / mettre à jour la vue comme carnet (bibliothèque perso) */}
         {onSaveAsCarnet && nActive > 0 && (
