@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.8.0 – Cardamome · Le glossaire des gestes, plus savant
+
+### Techniques
+- **Chaque geste, mieux expliqué** : la bulle d'un geste surligné dans une recette ne se limite plus à la définition. Elle montre le **résultat attendu** (ce qu'on doit observer quand c'est réussi), les **erreurs fréquentes** à éviter, et les gestes **à ne pas confondre**, avec la nuance qui les sépare.
+- **Une famille pour chaque geste** : les gestes sont désormais rattachés à une hiérarchie (« fait partie de… ») regroupée par familles cohérentes, une métadonnée qui structure le glossaire sans jamais alourdir le surlignage des recettes.
+
 ## v4.7.1 – Cardamome · L'accueil mobile de la connexion, peaufiné
 
 ### Écran de connexion (mobile)

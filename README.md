@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.7.1-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.8.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -87,7 +87,9 @@ toujours avec vous.
   côté serveur pour WhatsApp / iMessage…), lisible même sans compte.
 - 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable
   (regroupable par catégorie), photos et astuces d'étape incluses, et
-  **minuteurs à notification native** (l'alerte sonne même écran verrouillé).
+  **minuteurs à notification native** (l'alerte sonne même écran verrouillé). Les
+  gestes techniques repérés dans les étapes ouvrent un **glossaire enrichi**
+  (définition, résultat attendu, erreurs fréquentes, à ne pas confondre).
 - 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
   coupées, badges vegan / cuisine / difficulté) et JSON (import / export).
 - 👤 **Profil** : nom d'affichage, heatmap d'activité cuisine façon GitHub, et
