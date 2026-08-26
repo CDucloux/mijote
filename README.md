@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.8.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.9.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -86,7 +86,8 @@ toujours avec vous.
   d'une recette publique génère un lien à l'**aperçu riche** (photo + titre, rendu
   côté serveur pour WhatsApp / iMessage…), lisible même sans compte.
 - 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable
-  (regroupable par catégorie), photos et astuces d'étape incluses, et
+  (regroupable par catégorie via un interrupteur, quantités convertibles en
+  cuillères), photos et astuces d'étape incluses, et
   **minuteurs à notification native** (l'alerte sonne même écran verrouillé). Les
   gestes techniques repérés dans les étapes ouvrent un **glossaire enrichi**
   (définition, résultat attendu, erreurs fréquentes, à ne pas confondre).

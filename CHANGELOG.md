@@ -1,5 +1,20 @@
 # Changelog – Cardamome
 
+## v4.9.0 – Cardamome · La mise en place s'affine, l'interface s'habille
+
+### Mode cuisine (mise en place)
+- **Regroupement par catégorie sur un interrupteur** : le bouton « Catégories » devient un vrai switch animé (la pastille glisse avec un ressort), plus clair sur l'état actif ou non.
+- **La catégorie se lit comme une sous-branche** : une fois affichée, chaque catégorie est décalée et préfixée d'une flèche « ↳ », ses ingrédients légèrement indentés, pour montrer qu'il s'agit d'un regroupement d'ingrédients.
+- **Conversion en cuillères dès la mise en place** : un tap sur le badge cuillère d'un ingrédient en donne l'équivalent en cuillères (à soupe / à café), sans quitter l'écran de préparation.
+- **Une icône qui ne trompe plus** : l'ancien pictogramme à flèches (qui évoquait à tort une substitution d'ingrédient) laisse place à une vraie cuillère, sur la fiche recette comme en mise en place.
+
+### Interface
+- **Des infobulles habillées** : les libellés au survol des boutons ne sont plus les infobulles brutes du navigateur mais une bulle stylée au ton de Cardamome (contraste net, petit caret qui pointe la cible, apparition douce), clavier et thème sombre compris.
+- **Titres au même diapason** : le poids des titres en Source Serif 4 est harmonisé sur la fiche recette et le mode pas-à-pas (nom de recette, en-têtes de section, titres d'étape), aligné sur le reste de l'app.
+
+### Console admin (glossaire des gestes)
+- **Édition complète de l'ontologie** : l'éditeur d'un geste couvre désormais toutes ses dimensions enrichies, la famille (« fait partie de… »), le résultat attendu et ses indicateurs observables, les erreurs fréquentes et les gestes à ne pas confondre, en plus du nom, de la catégorie, de la difficulté et des alias.
+
 ## v4.8.0 – Cardamome · Le glossaire des gestes, plus savant
 
 ### Techniques
