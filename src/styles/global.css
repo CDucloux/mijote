@@ -3281,10 +3281,16 @@ select {
   /* Fond UNI sur petit écran : la bichromie pitch/auth n'a de sens que pour la mise
      en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. */
   .auth__panel { background: transparent; border-top: none; }
+  /* Contenu empilé du haut, sans étirement des rangées : sinon la grille répartit
+     l'espace libre et éloigne le formulaire de la marmite (chaque moitié centrée). */
+  .auth__grid { align-content: start; }
+  /* Le pitch démarre à la même hauteur que le toggle (14px), et la marque occupe
+     une rangée de 44px centrée : le logo s'aligne ainsi avec le bouton de thème. */
+  .auth__pitch { padding-top: calc(14px + env(safe-area-inset-top)); }
   /* Tout centré en colonne unique (demande explicite), SAUF le logo qui reste
      ancré en haut à gauche, là où était le retour vitrine. */
   .auth__pitch-inner { text-align: center; }
-  .auth__brand { display: flex; justify-content: flex-start; }
+  .auth__brand { display: flex; justify-content: flex-start; align-items: center; min-height: 44px; }
   /* Le slogan prend le même traitement que l'eyebrow desktop : capitales, accent,
      interlettrage. C'est l'unique titre de l'écran mobile (h1 conservé). */
   .auth__title {
