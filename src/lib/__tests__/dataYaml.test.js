@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
 import {
   parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml,
@@ -76,6 +77,86 @@ describe("parseTechniquesYaml", () => {
 
   it("errors on invalid YAML", () => {
     expect(parseTechniquesYaml("- name: [unclosed").errors[0]).toMatch(/YAML invalide/);
+  });
+});
+
+describe("parseTechniquesYaml (schema v2)", () => {
+  const v2 = `
+schema_version: 2
+techniques:
+  - id: tech_grp_hachage
+    name: Hachage
+    category: decoupe
+    definition: Réduire en petits morceaux.
+    hierarchy: { parent: null, level: 0 }
+    expected_result:
+      summary: L'aliment est réduit en éléments menus.
+      observable_indicators: [Petits morceaux, Non écrasé]
+    common_errors: []
+    not_to_be_confused_with: []
+  - id: tech_ciseler
+    name: Ciseler
+    category: decoupe
+    definition: Tailler en petits dés.
+    hierarchy: { parent: tech_grp_hachage, level: 1 }
+    expected_result:
+      summary: Des dés menus et réguliers.
+      observable_indicators: [Dés homogènes]
+    common_errors: [Écraser l'aliment, Dés irréguliers]
+    not_to_be_confused_with:
+      - { technique_id: tech_hacher, distinction: Ciseler vise des dés réguliers. }
+`;
+
+  it("accepte la racine enrichie { schema_version, techniques }", () => {
+    const { items, errors } = parseTechniquesYaml(v2);
+    expect(errors).toEqual([]);
+    expect(items.map(t => t.id)).toEqual(["tech_grp_hachage", "tech_ciseler"]);
+  });
+
+  it("porte les 4 dimensions (hiérarchie, résultat, erreurs, confusions)", () => {
+    const { items } = parseTechniquesYaml(v2);
+    const cis = items.find(t => t.id === "tech_ciseler");
+    expect(cis.hierarchy).toEqual({ parent: "tech_grp_hachage", level: 1 });
+    expect(cis.expected_result.summary).toBe("Des dés menus et réguliers.");
+    expect(cis.expected_result.observable_indicators).toEqual(["Dés homogènes"]);
+    expect(cis.common_errors).toEqual(["Écraser l'aliment", "Dés irréguliers"]);
+    expect(cis.not_to_be_confused_with).toEqual([{ technique_id: "tech_hacher", distinction: "Ciseler vise des dés réguliers." }]);
+  });
+
+  it("conserve parent null et n'ajoute pas de listes vides", () => {
+    const { items } = parseTechniquesYaml(v2);
+    const grp = items.find(t => t.id === "tech_grp_hachage");
+    expect(grp.hierarchy).toEqual({ parent: null, level: 0 });
+    expect("common_errors" in grp).toBe(false); // liste vide non portée (pas d'undefined Firestore)
+    expect("not_to_be_confused_with" in grp).toBe(false);
+  });
+
+  it("accepte toujours la liste plate historique (v1)", () => {
+    const { items, errors } = parseTechniquesYaml("- name: Suer\n  category: cuisson\n  definition: Sans coloration.");
+    expect(errors).toEqual([]);
+    expect(items[0].name).toBe("Suer");
+    expect("hierarchy" in items[0]).toBe(false);
+  });
+
+  it("signale un type invalide sur une dimension enrichie", () => {
+    const { errors } = parseTechniquesYaml(`
+schema_version: 2
+techniques:
+  - name: X
+    category: cuisson
+    definition: Y
+    common_errors: "pas une liste"
+`);
+    expect(errors.some(e => /common_errors/.test(e))).toBe(true);
+  });
+
+  it("le glossaire canonique data/techniques.yaml se parse sans erreur (smoke)", () => {
+    const { items, errors } = parseTechniquesYaml(readFileSync("data/techniques.yaml", "utf8"));
+    expect(errors).toEqual([]);
+    expect(items.length).toBeGreaterThanOrEqual(63);
+    // au moins un geste rattaché à un parent, avec son résultat attendu.
+    const child = items.find(t => t.hierarchy && t.hierarchy.parent && t.expected_result);
+    expect(child).toBeTruthy();
   });
 });
 

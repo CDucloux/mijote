@@ -1,538 +1,2090 @@
-# ─── Glossaire des techniques culinaires ──────────────────────────────────────
-# Source de vérité versionnée du glossaire (Master DB → master/techniques).
-# Importé dans l'app via Configuration › Techniques (collage YAML) ou poussé par
-# `npm run seed`. Édite ce fichier, puis re-seed ou ré-importe.
-#
-# Schéma d'une entrée :
-#   id          identifiant stable (slug), unique. Préfixe `tech_`.
-#   name        libellé affiché (verbe à l'infinitif, capitalisé).
-#   aliases     formes du verbe à reconnaître plus tard au survol en CookMode
-#               (infinitif, participe, conjugaisons courantes). Minuscules.
-#   category    decoupe | cuisson | liaison | preparation | dressage
-#   difficulty  entier 1–5 (1 Très facile … 5 Expert). Alimente le score de
-#               difficulté d'une recette (max des gestes + modificateurs).
-#   definition  1–2 phrases, rédaction originale (le texte d'Escoffier est
-#               adapté, jamais recopié : l'OCR du Guide est bruité).
-#   source      attribution / inspiration (facultatif).
-#
-# Le Guide Culinaire d'A. Escoffier (1903) est dans le domaine public.
-
+# Glossaire des techniques culinaires Cardamome (schema_version 2).
+# Source de verite versionnee (Master DB -> master/techniques), importee via
+# Configuration > Techniques (collage YAML) ou poussee par `npm run seed`.
+# 63 gestes + 19 parents generiques (hierarchie), chacun portant : hierarchy,
+# expected_result, common_errors, not_to_be_confused_with. Editer puis re-seed.
+schema_version: 2
+techniques:
+- id: tech_grp_emincer_trancher
+  name: Détailler en tranches
+  category: decoupe
+  aliases:
+  - détailler en tranches
+  difficulty: 1
+  definition: 'Famille des découpes en tranches : réduire un aliment en lamelles régulières, droites ou en biais.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est réduit en tranches d'épaisseur régulière, calibrées selon la coupe visée.
+    observable_indicators:
+    - Tranches d'épaisseur homogène
+    - Coupe nette et régulière
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_hachage
+  name: Réduire en petits morceaux au couteau
+  category: decoupe
+  aliases:
+  - réduire en petits morceaux au couteau
+  difficulty: 1
+  definition: 'Famille des découpes menues : réduire un aliment en petits morceaux, réguliers ou non, au couteau.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est réduit en éléments menus, du dé régulier au hachis grossier selon la coupe.
+    observable_indicators:
+    - Petits morceaux calibrés selon la coupe
+    - Aliment non écrasé en purée
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_taille_reguliere
+  name: Tailler en dés et bâtonnets réguliers
+  category: decoupe
+  aliases:
+  - tailler en dés et bâtonnets réguliers
+  difficulty: 3
+  definition: 'Famille des coupes de précision : détailler un légume en éléments géométriques réguliers, dés ou bâtonnets.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Le légume est détaillé en éléments géométriques calibrés et parfaitement réguliers.
+    observable_indicators:
+    - Éléments de taille constante
+    - Arêtes nettes et régulières
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_abrasion
+  name: Réduire par abrasion
+  category: decoupe
+  aliases:
+  - réduire par abrasion
+  difficulty: 1
+  definition: 'Famille des réductions à la râpe : prélever ou réduire un aliment en filaments, poudre ou zestes par frottement.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est réduit en fins filaments, poudre ou zestes par frottement sur une surface abrasive.
+    observable_indicators:
+    - Filaments ou zestes fins et réguliers
+    - Prélèvement superficiel maîtrisé
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_colorer_corps_gras
+  name: Colorer dans un corps gras
+  category: cuisson
+  aliases:
+  - colorer dans un corps gras
+  difficulty: 1
+  definition: 'Famille des cuissons colorantes à la matière grasse : donner une coloration de surface à feu vif dans un corps gras chaud.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La surface de l'aliment est colorée dans un corps gras chaud, du blond léger à la croûte dorée.
+    observable_indicators:
+    - Coloration de surface
+    - Corps gras chaud, aliment non bouilli
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_cuire_sans_colorer
+  name: Cuire sans coloration
+  category: cuisson
+  aliases:
+  - cuire sans coloration
+  difficulty: 1
+  definition: Famille des cuissons douces à la matière grasse sans coloration, préalables au mouillement.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est cuit dans un corps gras à feu doux sans prendre de couleur, préparé pour la suite de la cuisson.
+    observable_indicators:
+    - Aucune coloration
+    - Texture assouplie ou enrobée
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_cuisson_liquide
+  name: Cuire en milieu liquide
+  category: cuisson
+  aliases:
+  - cuire en milieu liquide
+  difficulty: 1
+  definition: Famille des cuissons à l'eau ou au bouillon, de l'ébullition brève au frémissement.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est cuit ou traité dans un liquide chaud, du bref passage bouillant au frémissement doux.
+    observable_indicators:
+    - Aliment immergé dans un liquide chaud
+    - Intensité maîtrisée, du bouillon au frémissement
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_cuisson_lente
+  name: Cuire lentement à basse température
+  category: cuisson
+  aliases:
+  - cuire lentement à basse température
+  difficulty: 2
+  definition: Famille des cuissons longues et douces à couvert, qui attendrissent les pièces fermes.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La pièce est devenue fondante après une cuisson longue et douce à basse température.
+    observable_indicators:
+    - Texture fondante
+    - Cuisson longue à feu doux, couverte
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_chaleur_seche
+  name: Cuire à la chaleur rayonnante
+  category: cuisson
+  aliases:
+  - cuire à la chaleur rayonnante
+  difficulty: 1
+  definition: 'Famille des cuissons à chaleur sèche : four, broche, gril ou braises, sans immersion.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est cuit et coloré par une chaleur sèche et directe, doré en surface.
+    observable_indicators:
+    - Surface dorée ou saisie
+    - Cuisson sans liquide ni immersion
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_travail_fonds
+  name: Travailler les sucs et les fonds
+  category: cuisson
+  aliases:
+  - travailler les sucs et les fonds
+  difficulty: 2
+  definition: Famille des gestes qui construisent et affinent une sauce à partir des sucs et des liquides de cuisson.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Les sucs et liquides de cuisson sont exploités et affinés pour construire une sauce concentrée et nette.
+    observable_indicators:
+    - Sauce concentrée et savoureuse
+    - Fond net, sans écume ni sucs brûlés
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_emulsion
+  name: Monter une émulsion
+  category: liaison
+  aliases:
+  - monter une émulsion
+  difficulty: 4
+  definition: 'Famille des liaisons par émulsion : unir un corps gras et un liquide aqueux en une texture homogène et stable.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Un corps gras et un liquide aqueux forment une liaison homogène, lisse et stable.
+    observable_indicators:
+    - Texture crémeuse homogène
+    - Pas de séparation gras et eau
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_aerer
+  name: Alléger en incorporant de l'air
+  category: liaison
+  aliases:
+  - alléger en incorporant de l'air
+  difficulty: 3
+  definition: 'Famille des préparations foisonnées : incorporer de l''air au fouet pour augmenter le volume et alléger.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La préparation a gagné en volume et en légèreté grâce à l'air incorporé au fouet.
+    observable_indicators:
+    - Volume augmenté
+    - Texture aérée et stable
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_travail_pate
+  name: Travailler et façonner une pâte
+  category: preparation
+  aliases:
+  - travailler et façonner une pâte
+  difficulty: 2
+  definition: 'Famille des gestes de façonnage des pâtes : pétrir, abaisser, tourer pour leur donner structure et forme.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La pâte est travaillée et mise en forme, à la texture et à l'épaisseur voulues pour la suite.
+    observable_indicators:
+    - Pâte homogène et régulière
+    - Structure ou forme adaptée à l'usage
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_tapisser_moule
+  name: Tapisser un moule
+  category: preparation
+  aliases:
+  - tapisser un moule
+  difficulty: 2
+  definition: Famille des gestes qui garnissent l'intérieur d'un moule, pâte, papier, gelée ou farce, avant de le remplir.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'intérieur du moule est régulièrement tapissé, prêt à être garni et démoulé sans accroc.
+    observable_indicators:
+    - Parois et fond couverts régulièrement
+    - Démoulage facilité
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_enrober
+  name: Enrober d'une couche protectrice
+  category: preparation
+  aliases:
+  - enrober d'une couche protectrice
+  difficulty: 1
+  definition: Famille des gestes qui entourent un aliment d'une couche, lard ou chapelure, le protégeant à la cuisson.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est entouré d'une couche régulière qui le protège et le nourrit ou le croustille à la cuisson.
+    observable_indicators:
+    - Enrobage complet et régulier
+    - Couche bien adhérente
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_pretraiter
+  name: Débarrasser d'une partie indésirable
+  category: preparation
+  aliases:
+  - débarrasser d'une partie indésirable
+  difficulty: 1
+  definition: Famille des prétraitements qui retirent d'un aliment ce qu'on ne veut pas, eau, âcreté ou peau, avant cuisson.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est débarrassé d'une partie indésirable, eau, âcreté ou peau, et prêt pour la suite.
+    observable_indicators:
+    - Partie indésirable retirée
+    - Chair nette et intacte
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_donner_brillant
+  name: Donner du brillant
+  category: dressage
+  aliases:
+  - donner du brillant
+  difficulty: 2
+  definition: 'Famille des finitions brillantes : rendre la surface d''un mets luisante et appétissante avant le service.'
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La surface du mets est luisante et appétissante, prête pour le service.
+    observable_indicators:
+    - Surface brillante et homogène
+    - Aspect frais et net
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_recouvrir
+  name: Recouvrir d'une couche régulière
+  category: dressage
+  aliases:
+  - recouvrir d'une couche régulière
+  difficulty: 2
+  definition: Famille des gestes qui couvrent un mets d'une couche uniforme, sauce, crème ou glaçage.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Le mets est recouvert d'une couche uniforme et nette, prête à servir ou à décorer.
+    observable_indicators:
+    - Couverture complète et régulière
+    - Surface lisse
+  common_errors: []
+  not_to_be_confused_with: []
+- id: tech_grp_decor_feuilletage
+  name: Décorer un feuilletage avant cuisson
+  category: dressage
+  aliases:
+  - décorer un feuilletage avant cuisson
+  difficulty: 3
+  definition: Famille des gestes qui incisent ou rayent un feuilletage avant cuisson, pour la levée et le décor.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Le feuilletage porte un décor régulier tracé avant cuisson, qui l'orne et guide sa levée.
+    observable_indicators:
+    - Décor régulier
+    - Pâte non percée, levée maîtrisée
+  common_errors: []
+  not_to_be_confused_with: []
 - id: tech_suer
   name: Suer
-  aliases: [suer, faire suer, sué, suée]
+  aliases:
+  - suer
+  - faire suer
+  - sué
+  - suée
   category: cuisson
   difficulty: 1
-  definition: >
-    Cuire doucement un aliment, souvent des légumes, dans un peu de corps gras,
-    à feu doux et sans coloration, pour lui faire rendre son eau et concentrer
-    ses arômes avant la suite de la cuisson.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Cuire doucement un aliment, souvent des légumes, dans un peu de corps gras, à feu doux et sans coloration, pour lui faire rendre son eau et concentrer ses arômes avant la suite de la cuisson.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: tech_grp_cuire_sans_colorer
+    level: 1
+  expected_result:
+    summary: Les légumes ont rendu leur eau et se sont attendris sans prendre de couleur, arômes concentrés.
+    observable_indicators:
+    - Aucune coloration
+    - Légumes translucides et fondants
+    - Léger suintement d'eau évaporé
+  common_errors:
+  - Feu trop vif, coloration, ce n'est plus suer
+  - Sel oublié qui aiderait à rendre l'eau
+  - Aller trop vite, légumes encore croquants et âcres
+  not_to_be_confused_with:
+  - technique_id: tech_revenir
+    distinction: Suer se fait sans coloration, à feu doux, pour rendre l'eau ; faire revenir cherche au contraire une légère coloration.
+  - technique_id: tech_nacrer
+    distinction: Suer fait rendre son eau à un légume ; nacrer enrobe des grains de riz de gras jusqu'à les rendre translucides.
 - id: tech_deglacer
   name: Déglacer
-  aliases: [déglacer, deglacer, déglacé, déglace]
+  aliases:
+  - déglacer
+  - deglacer
+  - déglacé
+  - déglace
   category: cuisson
   difficulty: 2
-  definition: >
-    Dissoudre les sucs caramélisés au fond d'un récipient de cuisson en y versant
-    un liquide (vin, fonds, vinaigre) et en grattant, pour en faire la base d'une
-    sauce.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Dissoudre les sucs caramélisés au fond d''un récipient de cuisson en y versant un liquide (vin, fonds, vinaigre) et en grattant, pour en faire la base d''une sauce.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: tech_grp_travail_fonds
+    level: 1
+  expected_result:
+    summary: Les sucs caramélisés collés au fond sont dissous dans le liquide ajouté, formant la base d'une sauce.
+    observable_indicators:
+    - Fond du récipient redevenu propre
+    - Liquide coloré et parfumé par les sucs
+    - Grattage qui décolle les sucs
+  common_errors:
+  - Sucs brûlés avant le déglaçage, d'où l'amertume
+  - Trop de liquide qui dilue le goût
+  - Ne pas gratter, les sucs restent collés
+  not_to_be_confused_with:
+  - technique_id: tech_reduire
+    distinction: Déglacer dissout les sucs avec un liquide ; réduire concentre ensuite ce liquide par évaporation.
+  - technique_id: tech_flamber
+    distinction: Déglacer dissout les sucs du fond avec un liquide ; flamber enflamme un alcool versé sur le mets pour le parfumer.
 - id: tech_monder
   name: Monder
-  aliases: [monder, émonder, emonder, mondé, monde]
+  aliases:
+  - monder
+  - émonder
+  - emonder
+  - mondé
+  - monde
   category: preparation
   difficulty: 1
-  definition: >
-    Retirer la peau d'un aliment (tomate, amande, pêche) après l'avoir brièvement
-    plongé dans l'eau bouillante puis refroidi.
+  definition: 'Retirer la peau d''un aliment (tomate, amande, pêche) après l''avoir brièvement plongé dans l''eau bouillante puis refroidi.
 
+    '
+  hierarchy:
+    parent: tech_grp_pretraiter
+    level: 1
+  expected_result:
+    summary: La peau se détache et se retire aisément après un bref choc thermique, laissant la chair nue et intacte.
+    observable_indicators:
+    - Peau qui se pèle sans effort
+    - Chair non cuite en dessous
+    - Aspect net, tomate ou amande
+  common_errors:
+  - Trop laisser dans l'eau bouillante, la chair cuit
+  - Ne pas rafraîchir, la peau colle
+  - Entaille en croix oubliée sur la tomate, qui gêne l'épluchage
+  not_to_be_confused_with:
+  - technique_id: tech_blanchir
+    distinction: Monder retire la peau après un bref ébouillantage ; blanchir est ce passage à l'eau bouillante lui-même, sans forcément peler.
+  - technique_id: tech_degorger
+    distinction: Monder retire la peau après un bref passage à l'eau bouillante ; dégorger fait rendre son eau à l'aliment, au sel, ou le purge.
 - id: tech_blanchir
   name: Blanchir
-  aliases: [blanchir, blanchi, blanchie, blanchit]
+  aliases:
+  - blanchir
+  - blanchi
+  - blanchie
+  - blanchit
   category: cuisson
   difficulty: 1
-  definition: >
-    Plonger un aliment quelques instants dans l'eau bouillante (puis souvent le
-    rafraîchir) pour le raffermir, l'attendrir, fixer sa couleur ou en retirer
-    l'âcreté.
+  definition: 'Plonger un aliment quelques instants dans l''eau bouillante (puis souvent le rafraîchir) pour le raffermir, l''attendrir, fixer sa couleur ou en retirer l''âcreté.
 
+    '
+  hierarchy:
+    parent: tech_grp_cuisson_liquide
+    level: 1
+  expected_result:
+    summary: L'aliment est raffermi ou sa couleur fixée après un bref passage à l'eau bouillante, souvent suivi d'un rafraîchissement qui stoppe net la cuisson.
+    observable_indicators:
+    - Couleur des légumes verts avivée et fixée
+    - Cœur encore ferme, ce n'est pas une cuisson complète
+    - Refroidissement rapide à l'eau glacée
+  common_errors:
+  - Prolonger jusqu'à cuire complètement l'aliment
+  - Oublier de rafraîchir, la cuisson continue et la couleur vire
+  - Volume d'eau trop faible qui retombe de l'ébullition
+  not_to_be_confused_with:
+  - technique_id: tech_pocher
+    distinction: Blanchir est un bref passage à l'eau bouillante, un prétraitement ; pocher est une cuisson complète à frémissement.
+  - technique_id: tech_monder
+    distinction: Blanchir plonge l'aliment dans l'eau bouillante pour le raffermir ou fixer sa couleur ; monder utilise ce passage précisément pour en retirer la peau.
+  - technique_id: tech_cuire_a_blanc
+    distinction: Blanchir est un passage à l'eau bouillante ; cuire à blanc précuit à sec un fond de tarte au four, aucun rapport malgré le mot blanc.
 - id: tech_emulsionner
   name: Émulsionner
-  aliases: [émulsionner, emulsionner, émulsion, monter une émulsion]
+  aliases:
+  - émulsionner
+  - emulsionner
+  - émulsion
+  - monter une émulsion
   category: liaison
   difficulty: 4
-  definition: >
-    Mélanger énergiquement deux liquides qui ne se lient pas naturellement (gras
-    et aqueux), souvent à l'aide d'un jaune d'œuf ou de moutarde, pour obtenir une
-    texture homogène et stable.
+  definition: 'Mélanger énergiquement deux liquides qui ne se lient pas naturellement (gras et aqueux), souvent à l''aide d''un jaune d''œuf ou de moutarde, pour obtenir une texture homogène et stable.
 
+    '
+  hierarchy:
+    parent: tech_grp_emulsion
+    level: 1
+  expected_result:
+    summary: Deux liquides non miscibles, gras et aqueux, forment un mélange homogène, lisse et stable qui ne se sépare pas.
+    observable_indicators:
+    - Texture crémeuse homogène
+    - Aucune séparation gras et eau
+    - Tenue stable dans le temps
+  common_errors:
+  - Incorporer le gras trop vite, l'émulsion tranche
+  - Ingrédients à températures trop différentes
+  - Cesser de fouetter trop tôt, liaison instable
+  not_to_be_confused_with:
+  - technique_id: tech_lier
+    distinction: Émulsionner unit un corps gras et un liquide aqueux qui ne se mélangent pas ; lier épaissit une préparation à l'aide d'un liant.
+  - technique_id: tech_monter_au_beurre
+    distinction: Émulsionner désigne l'émulsion en général, mayonnaise ou vinaigrette ; monter au beurre est l'émulsion d'un beurre froid dans une sauce, hors du feu.
 - id: tech_napper
   name: Napper
-  aliases: [napper, nappé, nappe, nappant]
+  aliases:
+  - napper
+  - nappé
+  - nappe
+  - nappant
   category: dressage
   difficulty: 2
-  definition: >
-    Recouvrir un mets d'une couche régulière de sauce ; la sauce « nappe » quand
-    elle est assez réduite pour tenir sur le dos d'une cuillère.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Recouvrir un mets d''une couche régulière de sauce ; la sauce « nappe » quand elle est assez réduite pour tenir sur le dos d''une cuillère.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: tech_grp_recouvrir
+    level: 1
+  expected_result:
+    summary: Le mets est recouvert d'une couche régulière de sauce, assez réduite pour tenir et napper la cuillère.
+    observable_indicators:
+    - Sauce qui tient sur le dos de la cuillère, le trait au doigt reste net
+    - Couche régulière sur le mets
+    - Ni trop liquide ni figée
+  common_errors:
+  - Sauce trop liquide qui coule et n'accroche pas
+  - Sauce trop réduite qui masse
+  - Nappage inégal
+  not_to_be_confused_with:
+  - technique_id: tech_masquer
+    distinction: Napper couvre d'une couche de sauce assez réduite pour tenir ; masquer recouvre entièrement un entremets de crème ou de glaçage.
 - id: tech_sauter
   name: Sauter
-  aliases: [sauter, sauté, sautée, faire sauter]
+  aliases:
+  - sauter
+  - sauté
+  - sautée
+  - faire sauter
   category: cuisson
   difficulty: 2
-  definition: >
-    Cuire vivement un aliment dans un peu de matière grasse très chaude, en le
-    faisant sauter ou en le remuant, pour le colorer sans qu'il rende son jus.
+  definition: 'Cuire vivement un aliment dans un peu de matière grasse très chaude, en le faisant sauter ou en le remuant, pour le colorer sans qu''il rende son jus.
 
+    '
+  hierarchy:
+    parent: tech_grp_colorer_corps_gras
+    level: 1
+  expected_result:
+    summary: L'aliment est coloré et cuit vivement dans peu de gras, remué ou sauté, sans rendre son jus.
+    observable_indicators:
+    - Coloration vive et homogène
+    - Aliment sec et brillant, non baigné de jus
+    - Mouvement constant dans la poêle
+  common_errors:
+  - Poêle surchargée, l'aliment bout dans son eau
+  - Gras pas assez chaud
+  - Trop remuer une viande qu'on veut d'abord colorer
+  not_to_be_confused_with:
+  - technique_id: tech_frire
+    distinction: Sauter cuit vivement dans un peu de gras en remuant ; frire immerge l'aliment dans un bain de matière grasse.
+  - technique_id: tech_saisir
+    distinction: Sauter remue l'aliment pour le colorer sans qu'il rende son jus ; saisir le laisse au contact du feu vif pour former une croûte.
 - id: tech_braiser
   name: Braiser
-  aliases: [braiser, braisé, braisée, braise]
+  aliases:
+  - braiser
+  - braisé
+  - braisée
+  - braise
   category: cuisson
   difficulty: 2
-  definition: >
-    Cuire lentement à couvert, avec peu de liquide aromatique, un aliment d'abord
-    rissolé, méthode douce et longue qui attendrit les pièces fermes.
+  definition: 'Cuire lentement à couvert, avec peu de liquide aromatique, un aliment d''abord rissolé, méthode douce et longue qui attendrit les pièces fermes.
 
+    '
+  hierarchy:
+    parent: tech_grp_cuisson_lente
+    level: 1
+  expected_result:
+    summary: La pièce, d'abord colorée, devient fondante après une longue cuisson douce à couvert dans peu de liquide aromatique.
+    observable_indicators:
+    - Chair qui se détache à la fourchette
+    - Jus court, concentré et lié
+    - Coloration préalable visible
+  common_errors:
+  - Trop de liquide, on poche au lieu de braiser
+  - Ne pas avoir rissolé la pièce d'abord
+  - Cuisson à découvert qui dessèche
+  not_to_be_confused_with:
+  - technique_id: tech_mijoter
+    distinction: Braiser cuit une pièce rissolée dans peu de liquide aromatique à couvert ; mijoter la cuit longuement immergée dans le liquide.
+  - technique_id: tech_confire
+    distinction: Braiser cuit une pièce rissolée dans peu de liquide aromatique ; confire la cuit immergée dans un gras ou un sirop à basse température.
 - id: tech_pocher
   name: Pocher
-  aliases: [pocher, poché, pochée, poche]
+  aliases:
+  - pocher
+  - poché
+  - pochée
+  - poche
   category: cuisson
   difficulty: 2
-  definition: >
-    Cuire un aliment dans un liquide frémissant (jamais en pleine ébullition) pour
-    préserver sa tendreté et sa forme.
+  definition: 'Cuire un aliment dans un liquide frémissant (jamais en pleine ébullition) pour préserver sa tendreté et sa forme.
 
+    '
+  hierarchy:
+    parent: tech_grp_cuisson_liquide
+    level: 1
+  expected_result:
+    summary: L'aliment est cuit à cœur en restant moelleux et intact, dans un liquide qui frémit sans bouillir.
+    observable_indicators:
+    - Liquide qui frémit, sans gros bouillons
+    - Forme et tendreté préservées
+    - Cuisson douce et homogène
+  common_errors:
+  - Laisser bouillir, l'aliment se défait ou durcit
+  - Liquide insuffisamment chaud, cuisson qui traîne
+  - Pour l'œuf poché, eau non vinaigrée ou remous mal formé
+  not_to_be_confused_with:
+  - technique_id: tech_blanchir
+    distinction: Pocher cuit l'aliment à cœur dans un liquide frémissant ; blanchir ne fait que le tremper brièvement dans l'eau bouillante.
+  - technique_id: tech_mijoter
+    distinction: Pocher cuit une pièce délicate dans un liquide frémissant en préservant sa forme ; mijoter cuit longuement un ragoût à couvert.
 - id: tech_rissoler
   name: Rissoler
-  aliases: [rissoler, rissolé, rissolée, rissole]
+  aliases:
+  - rissoler
+  - rissolé
+  - rissolée
+  - rissole
   category: cuisson
   difficulty: 2
-  definition: >
-    Colorer vivement la surface d'un aliment dans un corps gras chaud pour obtenir
-    une croûte dorée et savoureuse.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Colorer vivement la surface d''un aliment dans un corps gras chaud pour obtenir une croûte dorée et savoureuse.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: tech_grp_colorer_corps_gras
+    level: 1
+  expected_result:
+    summary: La surface de l'aliment est saisie en une croûte dorée et savoureuse, uniformément colorée.
+    observable_indicators:
+    - Croûte dorée sur toutes les faces
+    - Sucs qui commencent à accrocher au fond
+    - Intérieur non desséché
+  common_errors:
+  - Poêle ou gras pas assez chauds, l'aliment blanchit et sue
+  - Retourner trop tôt, la croûte ne se forme pas
+  - Surcharger, la vapeur empêche la coloration
+  not_to_be_confused_with:
+  - technique_id: tech_revenir
+    distinction: Rissoler forme une croûte dorée et savoureuse ; faire revenir ne colore que légèrement pour lancer les arômes.
+  - technique_id: tech_saisir
+    distinction: Rissoler colore uniformément la surface en une croûte dorée ; saisir marque très vite la surface à feu très vif pour fixer les sucs.
 - id: tech_singer
   name: Singer
-  aliases: [singer, singé, singe]
+  aliases:
+  - singer
+  - singé
+  - singe
   category: liaison
   difficulty: 2
-  definition: >
-    Saupoudrer de farine un aliment en cours de cuisson, puis la cuire sur place,
-    pour lier la sauce qui se formera au mouillement.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Saupoudrer de farine un aliment en cours de cuisson, puis la cuire sur place, pour lier la sauce qui se formera au mouillement.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: tech_lier
+    level: 1
+  expected_result:
+    summary: La farine, saupoudrée sur l'aliment et cuite sur place, épaissira la sauce au mouillement sans grumeaux.
+    observable_indicators:
+    - Farine répartie et cuite sur les morceaux, non crue
+    - Sauce qui épaissit régulièrement au mouillement
+    - Absence de grumeaux
+  common_errors:
+  - Farine non cuite avant de mouiller, goût cru et grumeaux
+  - Trop de farine, sauce lourde
+  - Mouiller d'un coup à froid, la farine s'agglomère
+  not_to_be_confused_with:
+  - technique_id: tech_roux
+    distinction: Singer farine l'aliment en cours de cuisson puis mouille ; réaliser un roux cuit beurre et farine à part comme base liante.
 - id: tech_reduire
   name: Réduire
-  aliases: [réduire, reduire, réduit, réduction, réduite]
+  aliases:
+  - réduire
+  - reduire
+  - réduit
+  - réduction
+  - réduite
   category: cuisson
   difficulty: 2
-  definition: >
-    Faire évaporer une partie de l'eau d'un liquide par ébullition pour en
-    concentrer les saveurs et l'épaissir.
+  definition: 'Faire évaporer une partie de l''eau d''un liquide par ébullition pour en concentrer les saveurs et l''épaissir.
 
+    '
+  hierarchy:
+    parent: tech_grp_travail_fonds
+    level: 1
+  expected_result:
+    summary: Le liquide a diminué de volume par évaporation, ses saveurs sont concentrées et sa texture devient nappante.
+    observable_indicators:
+    - Volume nettement diminué
+    - Texture plus sirupeuse, nappante
+    - Goût concentré
+  common_errors:
+  - Réduire trop, sur-concentration salée ou amère
+  - Feu trop doux, réduction interminable
+  - Assaisonner avant réduction, le sel se concentre trop
+  not_to_be_confused_with:
+  - technique_id: tech_deglacer
+    distinction: Réduire concentre un liquide en le faisant évaporer ; déglacer sert d'abord à décoller les sucs avec un liquide.
+  - technique_id: tech_lier
+    distinction: Réduire épaissit et concentre par évaporation, sans liant ; lier épaissit en ajoutant un liant.
 - id: tech_clarifier
   name: Clarifier
-  aliases: [clarifier, clarifié, clarification, clarifie]
+  aliases:
+  - clarifier
+  - clarifié
+  - clarification
+  - clarifie
   category: preparation
   difficulty: 4
-  definition: >
-    Rendre un liquide limpide : un consommé à l'aide de blancs d'œuf et de viande
-    hachée, un beurre en éliminant le petit-lait et la caséine.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Rendre un liquide limpide : un consommé à l''aide de blancs d''œuf et de viande hachée, un beurre en éliminant le petit-lait et la caséine.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: 'Le liquide est devenu limpide : le consommé est translucide, ou le beurre séparé de son petit-lait et de sa caséine.'
+    observable_indicators:
+    - Liquide transparent, sans particules en suspension
+    - Radeau formé en surface pour un consommé
+    - Beurre clarifié doré et limpide, dépôts séparés
+  common_errors:
+  - Faire bouillir fort, le radeau se disloque et trouble le consommé
+  - Filtrer trop tôt ou trop tard
+  - Beurre chauffé trop fort qui colore et brûle la caséine
+  not_to_be_confused_with:
+  - technique_id: tech_depouiller
+    distinction: Clarifier rend le liquide limpide, avec des blancs d'œuf ou en séparant la caséine d'un beurre ; dépouiller se contente d'écumer la surface pendant la cuisson.
 - id: tech_ciseler
   name: Ciseler
-  aliases: [ciseler, ciselé, ciselée, cisèle]
+  aliases:
+  - ciseler
+  - ciselé
+  - ciselée
+  - cisèle
   category: decoupe
   difficulty: 1
-  definition: >
-    Tailler finement en très petits dés (oignon, échalote) ; pour une herbe,
-    la couper en fines lanières.
+  definition: 'Tailler finement en très petits dés (oignon, échalote) ; pour une herbe, la couper en fines lanières.
 
+    '
+  hierarchy:
+    parent: tech_grp_hachage
+    level: 1
+  expected_result:
+    summary: L'aliment est réduit en petits dés menus et réguliers, ou en fines lanières pour une herbe, aux arêtes nettes.
+    observable_indicators:
+    - Dés de taille homogène, sans bouillie
+    - Coupe nette, l'oignon ne rend pas son jus écrasé
+    - Herbes en fins rubans non noircis
+  common_errors:
+  - Écraser au lieu de trancher, l'aliment rend son jus et devient amer
+  - Dés irréguliers faute d'avoir d'abord émincé régulièrement
+  - Couteau peu affûté qui déchire les fibres
+  not_to_be_confused_with:
+  - technique_id: tech_hacher
+    distinction: Ciseler recherche des dés menus réguliers, ou de fines lanières d'herbe ; hacher réduit en morceaux fins sans souci de régularité.
 - id: tech_emincer
   name: Émincer
-  aliases: [émincer, emincer, émincé, émince]
+  aliases:
+  - émincer
+  - emincer
+  - émincé
+  - émince
   category: decoupe
   difficulty: 1
-  definition: >
-    Couper un aliment en tranches fines et régulières.
+  definition: 'Couper un aliment en tranches fines et régulières.
 
+    '
+  hierarchy:
+    parent: tech_grp_emincer_trancher
+    level: 1
+  expected_result:
+    summary: L'aliment est débité en tranches fines d'épaisseur régulière, qui cuiront de façon homogène.
+    observable_indicators:
+    - Tranches d'épaisseur constante
+    - Rondelles ou lamelles qui se tiennent
+    - Aucun morceau haché
+  common_errors:
+  - Épaisseur irrégulière, donc cuisson inégale
+  - Trancher trop épais
+  - Main non tenue en griffe, coupe hésitante
+  not_to_be_confused_with:
+  - technique_id: tech_escaloper
+    distinction: Émincer coupe des tranches fines droites et régulières ; escaloper les coupe en biais, larges et minces.
 - id: tech_hacher
   name: Hacher
-  aliases: [hacher, haché, hachée, hache]
+  aliases:
+  - hacher
+  - haché
+  - hachée
+  - hache
   category: decoupe
   difficulty: 1
-  definition: >
-    Réduire un aliment en très petits morceaux au couteau ou au hachoir.
+  definition: 'Réduire un aliment en très petits morceaux au couteau ou au hachoir.
 
+    '
+  hierarchy:
+    parent: tech_grp_hachage
+    level: 1
+  expected_result:
+    summary: L'aliment est réduit en très petits morceaux, sans recherche de forme régulière.
+    observable_indicators:
+    - Grain fin et homogène
+    - Aucun gros morceau résiduel
+    - Ail ou persil bien menu
+  common_errors:
+  - S'arrêter trop tôt, morceaux trop gros
+  - Hacher jusqu'à la purée, l'ail chauffe et tourne
+  - Planche et lame humides qui font coller
+  not_to_be_confused_with:
+  - technique_id: tech_ciseler
+    distinction: Hacher réduit en très petits morceaux sans forme définie ; ciseler vise au contraire des dés menus réguliers ou de fines lanières.
+  - technique_id: tech_concasser
+    distinction: Hacher réduit en morceaux très fins ; concasser reste grossier et irrégulier.
 - id: tech_concasser
   name: Concasser
-  aliases: [concasser, concassé, concassée, concasse]
+  aliases:
+  - concasser
+  - concassé
+  - concassée
+  - concasse
   category: decoupe
   difficulty: 1
-  definition: >
-    Hacher grossièrement (tomates, poivre, os) en morceaux irréguliers.
+  definition: 'Hacher grossièrement (tomates, poivre, os) en morceaux irréguliers.
 
+    '
+  hierarchy:
+    parent: tech_grp_hachage
+    level: 1
+  expected_result:
+    summary: L'aliment est cassé en morceaux grossiers et irréguliers, plus gros qu'un hachis.
+    observable_indicators:
+    - Morceaux inégaux mais grossièrement calibrés
+    - Chair non réduite en purée
+    - Texture rustique conservée
+  common_errors:
+  - Aller trop loin et obtenir un hachis fin
+  - Morceaux beaucoup trop gros et disparates
+  - Pour la tomate, ne pas l'avoir mondée ni épépinée quand la recette l'exige
+  not_to_be_confused_with:
+  - technique_id: tech_hacher
+    distinction: Concasser casse en gros morceaux irréguliers ; hacher va jusqu'au grain fin.
 - id: tech_julienne
   name: Tailler en julienne
-  aliases: [julienne, tailler en julienne, en julienne]
+  aliases:
+  - julienne
+  - tailler en julienne
+  - en julienne
   category: decoupe
   difficulty: 3
-  definition: >
-    Détailler un légume en fins bâtonnets allongés, de l'épaisseur d'une
-    allumette.
+  definition: 'Détailler un légume en fins bâtonnets allongés, de l''épaisseur d''une allumette.
 
+    '
+  hierarchy:
+    parent: tech_grp_taille_reguliere
+    level: 1
+  expected_result:
+    summary: Le légume est détaillé en fins bâtonnets réguliers de la taille d'une allumette.
+    observable_indicators:
+    - Bâtonnets de section et de longueur constantes
+    - Aspect allumette
+    - Aucun écrasement
+  common_errors:
+  - Bâtonnets d'épaisseur inégale
+  - Trop épais, proche du bâtonnet ou de la jardinière
+  - Ne pas avoir paré le légume en rectangle régulier d'abord
+  not_to_be_confused_with:
+  - technique_id: tech_brunoise
+    distinction: La julienne donne de fins bâtonnets ; la brunoise des petits dés obtenus en recoupant la julienne.
 - id: tech_brunoise
   name: Tailler en brunoise
-  aliases: [brunoise, tailler en brunoise, en brunoise]
+  aliases:
+  - brunoise
+  - tailler en brunoise
+  - en brunoise
   category: decoupe
   difficulty: 3
-  definition: >
-    Détailler un légume en très petits dés réguliers, plus fins que la
-    mirepoix.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Détailler un légume en très petits dés réguliers, plus fins que la mirepoix.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: tech_grp_taille_reguliere
+    level: 1
+  expected_result:
+    summary: Le légume est réduit en très petits dés parfaitement réguliers, de un à trois millimètres.
+    observable_indicators:
+    - Dés cubiques homogènes
+    - Arêtes nettes
+    - Plus fin qu'une mirepoix
+  common_errors:
+  - Passer par des bâtonnets irréguliers, donc des dés inégaux
+  - Dés trop gros, proches de la mirepoix
+  - Couteau émoussé qui écrase
+  not_to_be_confused_with:
+  - technique_id: tech_julienne
+    distinction: La brunoise est faite de petits dés ; la julienne de fins bâtonnets, dont la brunoise est souvent issue en les recoupant.
 - id: tech_chemiser
   name: Chemiser
-  aliases: [chemiser, chemisé, chemisée, chemise]
+  aliases:
+  - chemiser
+  - chemisé
+  - chemisée
+  - chemise
   category: preparation
   difficulty: 2
-  definition: >
-    Tapisser l'intérieur d'un moule (de papier, de gelée, de farce, de sucre)
-    avant de le garnir.
+  definition: 'Tapisser l''intérieur d''un moule (de papier, de gelée, de farce, de sucre) avant de le garnir.
 
+    '
+  hierarchy:
+    parent: tech_grp_tapisser_moule
+    level: 1
+  expected_result:
+    summary: L'intérieur du moule est entièrement tapissé d'une couche régulière, papier, gelée, farce ou sucre, prêt à être garni.
+    observable_indicators:
+    - Parois et fond couverts sans manque
+    - Couche régulière
+    - Démoulage et garnissage facilités
+  common_errors:
+  - Couche trop épaisse ou inégale
+  - Manques qui feront accrocher le contenu
+  - Chemisage à la gelée mal pris avant garnissage
+  not_to_be_confused_with:
+  - technique_id: tech_masquer
+    distinction: Chemiser tapisse l'intérieur d'un moule, papier, gelée ou farce ; masquer recouvre l'extérieur d'un entremets.
+  - technique_id: tech_foncer
+    distinction: Chemiser tapisse un moule de papier, gelée, farce ou sucre ; foncer le tapisse spécifiquement d'une abaisse de pâte.
 - id: tech_foncer
   name: Foncer
-  aliases: [foncer, foncé, foncée, fonce]
+  aliases:
+  - foncer
+  - foncé
+  - foncée
+  - fonce
   category: preparation
   difficulty: 2
-  definition: >
-    Garnir le fond et les parois d'un moule ou d'un cercle avec une abaisse de
-    pâte.
+  definition: 'Garnir le fond et les parois d''un moule ou d''un cercle avec une abaisse de pâte.
 
+    '
+  hierarchy:
+    parent: tech_grp_tapisser_moule
+    level: 1
+  expected_result:
+    summary: Le moule est garni d'une abaisse épousant fond et parois, sans bulle d'air ni surépaisseur.
+    observable_indicators:
+    - Pâte plaquée contre l'angle fond et paroi
+    - Épaisseur régulière, pas de déchirure
+    - Bords nets
+  common_errors:
+  - Étirer la pâte, elle se rétracte à la cuisson
+  - Bulles d'air sous la pâte à l'angle
+  - Pâte trop fine qui se perce
+  not_to_be_confused_with:
+  - technique_id: tech_abaisser
+    distinction: Foncer plaque une abaisse dans un moule ; abaisser désigne l'étape préalable d'étalage de la pâte.
+  - technique_id: tech_chemiser
+    distinction: Foncer tapisse un moule avec une pâte ; chemiser le tapisse d'un autre élément, papier, gelée, farce ou sucre.
 - id: tech_abaisser
   name: Abaisser
-  aliases: [abaisser, abaissé, abaisse, abaissée]
+  aliases:
+  - abaisser
+  - abaissé
+  - abaisse
+  - abaissée
   category: preparation
   difficulty: 2
-  definition: >
-    Étaler une pâte au rouleau pour l'amener à l'épaisseur voulue ; le résultat
-    s'appelle une « abaisse ».
+  definition: 'Étaler une pâte au rouleau pour l''amener à l''épaisseur voulue ; le résultat s''appelle une « abaisse ».
 
+    '
+  hierarchy:
+    parent: tech_grp_travail_pate
+    level: 1
+  expected_result:
+    summary: La pâte est étalée en une abaisse d'épaisseur régulière, prête à foncer ou à découper.
+    observable_indicators:
+    - Épaisseur uniforme sur toute la surface
+    - Forme régulière
+    - Pâte non collante, farinée juste ce qu'il faut
+  common_errors:
+  - Épaisseur inégale, cuisson irrégulière
+  - Trop travailler la pâte, elle se rétracte
+  - Fariner à l'excès, pâte sèche
+  not_to_be_confused_with:
+  - technique_id: tech_foncer
+    distinction: Abaisser étale la pâte au rouleau ; foncer utilise cette abaisse pour garnir un moule.
 - id: tech_paner
   name: Paner
-  aliases: [paner, pané, panée, pane]
+  aliases:
+  - paner
+  - pané
+  - panée
+  - pane
   category: preparation
   difficulty: 1
-  definition: >
-    Enrober un aliment de chapelure (souvent après l'avoir passé dans la farine
-    puis l'œuf battu) avant de le frire ou de le sauter.
+  definition: 'Enrober un aliment de chapelure (souvent après l''avoir passé dans la farine puis l''œuf battu) avant de le frire ou de le sauter.
 
+    '
+  hierarchy:
+    parent: tech_grp_enrober
+    level: 1
+  expected_result:
+    summary: L'aliment est enrobé d'une couche régulière de chapelure qui, à la cuisson, deviendra une croûte dorée et croustillante.
+    observable_indicators:
+    - Enrobage complet et régulier
+    - Chapelure adhérente après farine et œuf
+    - Croûte croustillante après cuisson
+  common_errors:
+  - Sauter l'étape farine ou œuf, la chapelure n'accroche pas
+  - Panure épaisse et irrégulière
+  - Excès de chapelure non tapoté qui brûle dans le bain
+  not_to_be_confused_with:
+  - technique_id: tech_barder
+    distinction: Paner enrobe de chapelure pour une croûte croustillante ; barder entoure d'une tranche de lard gras pour nourrir et protéger.
 - id: tech_vanner
   name: Vanner
-  aliases: [vanner, vanné, vannée, vanne]
+  aliases:
+  - vanner
+  - vanné
+  - vannée
+  - vanne
   category: preparation
   difficulty: 1
-  definition: >
-    Remuer une sauce ou une crème pendant son refroidissement pour l'empêcher de
-    croûter en surface et la garder lisse.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Remuer une sauce ou une crème pendant son refroidissement pour l''empêcher de croûter en surface et la garder lisse.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La crème ou la sauce refroidit sans former de peau, restant lisse et homogène.
+    observable_indicators:
+    - Aucune pellicule ni croûte en surface
+    - Texture lisse au refroidissement
+    - Température qui descend régulièrement
+  common_errors:
+  - Cesser de remuer, une peau se forme
+  - Remuer trop brutalement en incorporant de l'air
+  - Laisser refroidir sans filmer ni vanner
+  not_to_be_confused_with: []
 - id: tech_depouiller
   name: Dépouiller
-  aliases: [dépouiller, depouiller, dépouillé, dépouille, dépouillement]
+  aliases:
+  - dépouiller
+  - depouiller
+  - dépouillé
+  - dépouille
+  - dépouillement
   category: cuisson
   difficulty: 2
-  definition: >
-    Retirer au fur et à mesure l'écume et les graisses qui montent à la surface
-    d'un fonds ou d'une sauce en cuisson lente, pour l'affiner.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Retirer au fur et à mesure l''écume et les graisses qui montent à la surface d''un fonds ou d''une sauce en cuisson lente, pour l''affiner.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: tech_grp_travail_fonds
+    level: 1
+  expected_result:
+    summary: Le fonds ou la sauce est clair et affiné, débarrassé de l'écume et des graisses retirées au fil de la cuisson.
+    observable_indicators:
+    - Surface nette, sans écume ni pellicule grasse
+    - Liquide plus limpide
+    - Goût affiné, moins gras
+  common_errors:
+  - Remuer et réincorporer l'écume
+  - Faire bouillir fort, l'écume se disperse au lieu de monter
+  - Écumer trop tard, le goût est déjà troublé
+  not_to_be_confused_with:
+  - technique_id: tech_clarifier
+    distinction: Dépouiller retire au fil de l'eau l'écume et le gras en surface ; clarifier rend un liquide limpide grâce à des blancs d'œuf.
 - id: tech_glacer
   name: Glacer
-  aliases: [glacer, glacé, glacée, glace]
+  aliases:
+  - glacer
+  - glacé
+  - glacée
+  - glace
   category: dressage
   difficulty: 2
-  definition: >
-    Donner un aspect brillant à un mets : en le caramélisant légèrement, en le
-    nappant d'un sirop, ou en le passant sous une chaleur vive.
+  definition: 'Donner un aspect brillant à un mets : en le caramélisant légèrement, en le nappant d''un sirop, ou en le passant sous une chaleur vive.
 
+    '
+  hierarchy:
+    parent: tech_grp_donner_brillant
+    level: 1
+  expected_result:
+    summary: La surface du mets est brillante et appétissante, par caramélisation légère, nappage de sirop ou passage sous une chaleur vive.
+    observable_indicators:
+    - Surface luisante
+    - Coloration légère et régulière le cas échéant
+    - Aspect laqué
+  common_errors:
+  - Trop caraméliser, amertume et couleur trop foncée
+  - Glaçage inégal
+  - Sirop mal dosé qui reste collant ou coule
+  not_to_be_confused_with:
+  - technique_id: tech_carameliser
+    distinction: Glacer donne un aspect brillant par sirop, chaleur ou légère caramélisation ; caraméliser pousse le sucre jusqu'au caramel.
+  - technique_id: tech_lustrer
+    distinction: Glacer fait briller par caramélisation, sirop ou chaleur vive ; lustrer par un simple badigeon de beurre clarifié ou de gelée.
 - id: tech_monter_au_beurre
   name: Monter au beurre
-  aliases: [monter au beurre, monté au beurre, beurre monté]
+  aliases:
+  - monter au beurre
+  - monté au beurre
+  - beurre monté
   category: liaison
   difficulty: 3
-  definition: >
-    Incorporer hors du feu de petits morceaux de beurre froid à une sauce en la
-    fouettant, pour la lier, l'enrichir et la lustrer.
+  definition: 'Incorporer hors du feu de petits morceaux de beurre froid à une sauce en la fouettant, pour la lier, l''enrichir et la lustrer.
 
+    '
+  hierarchy:
+    parent: tech_grp_emulsion
+    level: 1
+  expected_result:
+    summary: La sauce est liée, brillante et onctueuse, le beurre froid y étant émulsionné hors du feu.
+    observable_indicators:
+    - Sauce nappante et lustrée
+    - Onctuosité et brillance
+    - Aucune matière grasse qui perle
+  common_errors:
+  - Sauce trop chaude, le beurre fond en huile au lieu d'émulsionner
+  - Ajouter le beurre trop vite
+  - Faire bouillir après montage, la liaison se casse
+  not_to_be_confused_with:
+  - technique_id: tech_emulsionner
+    distinction: Monter au beurre émulsionne du beurre froid dans une sauce pour la lier et la lustrer ; émulsionner désigne plus largement l'union d'un gras et d'un aqueux.
 - id: tech_fouetter
   name: Fouetter
-  aliases: [fouetter, fouetté, fouettée, fouette]
+  aliases:
+  - fouetter
+  - fouetté
+  - fouettée
+  - fouette
   category: preparation
   difficulty: 1
-  definition: >
-    Battre vivement au fouet pour mélanger, émulsionner ou incorporer de l'air
-    (blancs en neige, crème, sauce).
+  definition: 'Battre vivement au fouet pour mélanger, émulsionner ou incorporer de l''air (blancs en neige, crème, sauce).
 
+    '
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La préparation est homogène et, selon l'intention, aérée ou émulsionnée par l'action vive du fouet.
+    observable_indicators:
+    - Mélange lisse et homogène
+    - Volume ou mousse selon le but
+    - Aucun grumeau
+  common_errors:
+  - Geste mou, ni air incorporé ni émulsion
+  - Fouet inadapté à la préparation
+  - S'arrêter avant la texture voulue
+  not_to_be_confused_with:
+  - technique_id: tech_foisonner
+    distinction: Fouetter est l'action de battre au fouet, pour mélanger, émulsionner ou aérer ; foisonner désigne précisément le gain de volume par incorporation d'air.
+  - technique_id: tech_petrir
+    distinction: Fouetter bat vivement un appareil liquide pour l'aérer ou l'émulsionner ; pétrir travaille une pâte ferme pour développer son gluten.
 - id: tech_carameliser
   name: Caraméliser
-  aliases: [caraméliser, carameliser, caramélisé, caramélise]
+  aliases:
+  - caraméliser
+  - carameliser
+  - caramélisé
+  - caramélise
   category: cuisson
   difficulty: 3
-  definition: >
-    Transformer un sucre en caramel par la chaleur ; par extension, colorer la
-    surface d'un aliment riche en sucres.
+  definition: 'Transformer un sucre en caramel par la chaleur ; par extension, colorer la surface d''un aliment riche en sucres.
 
+    '
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Le sucre a viré au caramel ambré, ou la surface sucrée de l'aliment s'est colorée et laquée, avec ses arômes typiques.
+    observable_indicators:
+    - Couleur ambrée à brune
+    - Arôme de caramel
+    - Surface brillante et laquée
+  common_errors:
+  - Pousser jusqu'au brûlé amer
+  - Remuer un caramel à sec qui masse et cristallise
+  - Feu trop vif, coloration inégale
+  not_to_be_confused_with:
+  - technique_id: tech_glacer
+    distinction: Caraméliser transforme le sucre en caramel ; glacer vise seulement un aspect brillant, parfois via une légère caramélisation.
 - id: tech_revenir
   name: Faire revenir
-  aliases: [revenir, faire revenir, revenu, revenue]
+  aliases:
+  - revenir
+  - faire revenir
+  - revenu
+  - revenue
   category: cuisson
   difficulty: 1
-  definition: >
-    Colorer légèrement un aliment dans un corps gras chaud en début de cuisson,
-    pour développer ses arômes.
-  source: "Escoffier, Le Guide Culinaire (1903)"
+  definition: 'Colorer légèrement un aliment dans un corps gras chaud en début de cuisson, pour développer ses arômes.
 
+    '
+  source: Escoffier, Le Guide Culinaire (1903)
+  hierarchy:
+    parent: tech_grp_colorer_corps_gras
+    level: 1
+  expected_result:
+    summary: L'aliment a pris une légère coloration dorée dans le corps gras chaud et ses arômes se sont développés.
+    observable_indicators:
+    - Coloration blonde à dorée, légère
+    - Arôme grillé naissant
+    - Aliment enrobé de gras chaud, non bouilli
+  common_errors:
+  - Corps gras pas assez chaud, l'aliment bout et rend son eau
+  - Surcharger la poêle, la température chute
+  - Colorer trop, on passe au rissolage
+  not_to_be_confused_with:
+  - technique_id: tech_rissoler
+    distinction: Faire revenir donne une légère coloration de départ ; rissoler pousse jusqu'à une croûte dorée.
+  - technique_id: tech_suer
+    distinction: Faire revenir colore légèrement l'aliment ; suer le cuit à feu doux sans aucune coloration.
 - id: tech_mariner
   name: Mariner
-  aliases: [mariner, mariné, marinée, marine, marinade]
+  aliases:
+  - mariner
+  - mariné
+  - marinée
+  - marine
+  - marinade
   category: preparation
   difficulty: 1
-  definition: >
-    Laisser tremper un aliment dans un liquide aromatique (vin, huile, aromates)
-    pour le parfumer et l'attendrir avant cuisson.
+  definition: 'Laisser tremper un aliment dans un liquide aromatique (vin, huile, aromates) pour le parfumer et l''attendrir avant cuisson.
 
+    '
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est imprégné des arômes de la marinade et, selon l'acidité, légèrement attendri en surface.
+    observable_indicators:
+    - Parfums de la marinade perceptibles
+    - Surface colorée et aromatisée
+    - Attendrissement superficiel
+  common_errors:
+  - Marinade trop acide ou trop longue, chair cuite et farineuse
+  - Ne pas éponger avant cuisson, ça ne colore pas
+  - Volume de marinade insuffisant pour couvrir
+  not_to_be_confused_with:
+  - technique_id: tech_degorger
+    distinction: Mariner fait tremper l'aliment dans un liquide aromatique pour le parfumer ; dégorger lui fait rendre son eau ou le purge.
 - id: tech_detendre
   name: Détendre
-  aliases: [détendre, detendre, détendu, détend]
+  aliases:
+  - détendre
+  - detendre
+  - détendu
+  - détend
   category: liaison
   difficulty: 1
-  definition: >
-    Assouplir une préparation trop épaisse en y ajoutant un peu de liquide
-    (eau, lait, fonds).
+  definition: 'Assouplir une préparation trop épaisse en y ajoutant un peu de liquide (eau, lait, fonds).
 
+    '
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La préparation, trop épaisse, retrouve une consistance plus souple et fluide après ajout mesuré de liquide.
+    observable_indicators:
+    - Texture assouplie, plus coulante
+    - Homogène, sans grumeaux
+    - Consistance ajustée au besoin
+  common_errors:
+  - Ajouter trop de liquide d'un coup, préparation trop liquide
+  - Liquide froid qui fige un appareil chaud, ou l'inverse
+  - Ne pas mélanger, texture inégale
+  not_to_be_confused_with:
+  - technique_id: tech_lier
+    distinction: Détendre assouplit une préparation trop épaisse en ajoutant du liquide ; lier fait l'inverse, l'épaissir.
 - id: tech_lustrer
   name: Lustrer
-  aliases: [lustrer, lustré, lustrée, lustre]
+  aliases:
+  - lustrer
+  - lustré
+  - lustrée
+  - lustre
   category: dressage
   difficulty: 2
-  definition: >
-    Donner du brillant à un mets en le badigeonnant de beurre clarifié ou de
-    gelée juste avant de servir.
+  definition: 'Donner du brillant à un mets en le badigeonnant de beurre clarifié ou de gelée juste avant de servir.
 
-# ─── Ajouts : découpe avancée, cuissons, pâtisserie ───────────────────────────
-
+    '
+  hierarchy:
+    parent: tech_grp_donner_brillant
+    level: 1
+  expected_result:
+    summary: Le mets a pris un brillant net juste avant le service, par un badigeon de beurre clarifié ou de gelée.
+    observable_indicators:
+    - Brillance homogène
+    - Fine pellicule luisante
+    - Aspect frais et appétissant
+  common_errors:
+  - Couche trop épaisse ou trop grasse
+  - Lustrer trop tôt, l'effet retombe
+  - Gelée trop chaude qui glisse ou trop froide qui fige en paquets
+  not_to_be_confused_with:
+  - technique_id: tech_glacer
+    distinction: Lustrer donne du brillant en badigeonnant beurre clarifié ou gelée juste avant de servir ; glacer l'obtient par caramélisation, sirop ou chaleur.
 - id: tech_tourner
   name: Tourner les légumes
-  aliases: [tourner les légumes, légumes tournés, tournage]
+  aliases:
+  - tourner les légumes
+  - légumes tournés
+  - tournage
   category: decoupe
   difficulty: 5
-  definition: "Façonner un légume (pomme de terre, carotte, navet) en forme régulière à plusieurs faces au couteau, pour une cuisson homogène et un dressage soigné."
-
+  definition: Façonner un légume (pomme de terre, carotte, navet) en forme régulière à plusieurs faces au couteau, pour une cuisson homogène et un dressage soigné.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Le légume présente une forme régulière à plusieurs facettes identiques, pour une cuisson uniforme et un beau dressage.
+    observable_indicators:
+    - Facettes régulières et symétriques
+    - Pièces de taille homogène
+    - Surface lisse et galbée
+  common_errors:
+  - Facettes inégales
+  - Trop de matière retirée, pièce trop petite
+  - Angles marqués au lieu de faces galbées
+  not_to_be_confused_with:
+  - technique_id: tech_tourer
+    distinction: Tourner façonne un légume en forme régulière au couteau ; tourer donne ses tours à une pâte feuilletée, ce sont des faux amis.
 - id: tech_lever_filets
   name: Lever les filets
-  aliases: [lever les filets, filets levés, lever un filet, lever les suprêmes]
+  aliases:
+  - lever les filets
+  - filets levés
+  - lever un filet
+  - lever les suprêmes
   category: decoupe
   difficulty: 4
-  definition: "Détacher proprement les filets d'un poisson le long de l'arête, ou les quartiers d'un agrume à vif, sans laisser de chair."
-
+  definition: Détacher proprement les filets d'un poisson le long de l'arête, ou les quartiers d'un agrume à vif, sans laisser de chair.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Les filets se détachent entiers de l'arête, sans chair abandonnée sur les os.
+    observable_indicators:
+    - Arête quasi nette de chair
+    - Filet lisse, sans accroc
+    - Très peu de perte
+  common_errors:
+  - Lame qui s'éloigne de l'arête et laisse de la chair
+  - Déchirer le filet au lieu de le glisser
+  - Couteau non flexible ou mal affûté
+  not_to_be_confused_with:
+  - technique_id: tech_desosser
+    distinction: Lever les filets détache la chair d'un poisson le long de l'arête ; désosser retire les os d'une viande ou d'une volaille.
+  - technique_id: tech_parer
+    distinction: Lever les filets détache les filets du poisson ; parer nettoie une pièce de ses nerfs et de son gras avant cuisson.
 - id: tech_escaloper
   name: Escaloper
-  aliases: [escaloper, escalopé, escalopée]
+  aliases:
+  - escaloper
+  - escalopé
+  - escalopée
   category: decoupe
   difficulty: 2
-  definition: "Couper une pièce en biais, en tranches larges et minces appelées escalopes."
-
+  definition: Couper une pièce en biais, en tranches larges et minces appelées escalopes.
+  hierarchy:
+    parent: tech_grp_emincer_trancher
+    level: 1
+  expected_result:
+    summary: La pièce est coupée en biais en tranches larges et minces, offrant une grande surface.
+    observable_indicators:
+    - Tranches larges obtenues par une lame inclinée
+    - Épaisseur fine et régulière
+    - Surface d'attaque augmentée pour la cuisson
+  common_errors:
+  - Couper perpendiculairement au lieu d'en biais, donc tranches étroites
+  - Escalopes trop épaisses
+  - Ne pas tenir compte du sens des fibres
+  not_to_be_confused_with:
+  - technique_id: tech_emincer
+    distinction: Escaloper détaille en tranches larges coupées en biais ; émincer coupe des tranches fines droites.
 - id: tech_parer
   name: Parer
-  aliases: [parer, paré, parée, parage]
+  aliases:
+  - parer
+  - paré
+  - parée
+  - parage
   category: decoupe
   difficulty: 2
-  definition: "Retirer les nerfs, le gras et les parties non comestibles d'une pièce pour la rendre nette avant cuisson."
-
+  definition: Retirer les nerfs, le gras et les parties non comestibles d'une pièce pour la rendre nette avant cuisson.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La pièce est nette, débarrassée du gras, des nerfs et des parties non comestibles, prête à cuire.
+    observable_indicators:
+    - Surface propre, sans peau argentée ni nerf
+    - Forme régulière
+    - Chutes séparées
+  common_errors:
+  - Retirer trop de chair avec le gras
+  - Laisser la membrane argentée qui se rétracte à la cuisson
+  - Pièce inégale qui cuira mal
+  not_to_be_confused_with:
+  - technique_id: tech_desosser
+    distinction: Parer nettoie la pièce, nerfs, gras et membranes ; désosser en retire les os.
+  - technique_id: tech_lever_filets
+    distinction: Parer rend une pièce nette en retirant nerfs et gras ; lever les filets sépare la chair d'un poisson de son arête.
 - id: tech_zester
   name: Zester
-  aliases: [zester, zesté, zestée, zeste]
+  aliases:
+  - zester
+  - zesté
+  - zestée
+  - zeste
   category: decoupe
   difficulty: 1
-  definition: "Prélever la fine partie colorée et parfumée de la peau d'un agrume, sans le blanc amer."
-
+  definition: Prélever la fine partie colorée et parfumée de la peau d'un agrume, sans le blanc amer.
+  hierarchy:
+    parent: tech_grp_abrasion
+    level: 1
+  expected_result:
+    summary: Seule la fine couche colorée et parfumée de l'écorce est prélevée, sans le blanc amer.
+    observable_indicators:
+    - Zestes colorés sans partie blanche
+    - Parfum d'huiles essentielles libéré
+    - Agrume laissé nu de couleur mais blanc intact
+  common_errors:
+  - Entamer le ziste blanc, d'où l'amertume
+  - Prélever trop épais
+  - Ustensile mal adapté qui creuse la pulpe
+  not_to_be_confused_with:
+  - technique_id: tech_raper
+    distinction: Zester ne prélève que l'écorce colorée et parfumée de l'agrume ; râper réduit l'aliment entier en filaments ou en poudre.
 - id: tech_raper
   name: Râper
-  aliases: [râper, raper, râpé, râpée, rapé]
+  aliases:
+  - râper
+  - raper
+  - râpé
+  - râpée
+  - rapé
   category: decoupe
   difficulty: 1
-  definition: "Réduire un aliment en fins filaments ou en poudre à l'aide d'une râpe."
-
+  definition: Réduire un aliment en fins filaments ou en poudre à l'aide d'une râpe.
+  hierarchy:
+    parent: tech_grp_abrasion
+    level: 1
+  expected_result:
+    summary: L'aliment est réduit en fins filaments ou en poudre réguliers.
+    observable_indicators:
+    - Filaments homogènes
+    - Pas de gros morceaux
+    - Volume aéré
+  common_errors:
+  - Se râper les doigts en fin de morceau
+  - Choisir la mauvaise grille, trop fine ou trop grosse
+  - Aliment mou qui colle et bourre la râpe
+  not_to_be_confused_with:
+  - technique_id: tech_zester
+    distinction: Râper réduit tout l'aliment en filaments ou en poudre ; zester ne prélève que la fine peau colorée d'un agrume, sans le blanc.
 - id: tech_saisir
   name: Saisir
-  aliases: [saisir, saisi, saisie, saisir à vif]
+  aliases:
+  - saisir
+  - saisi
+  - saisie
+  - saisir à vif
   category: cuisson
   difficulty: 1
-  definition: "Colorer vivement la surface d'un aliment à feu très chaud pour former une croûte et fixer les sucs."
-
+  definition: Colorer vivement la surface d'un aliment à feu très chaud pour former une croûte et fixer les sucs.
+  hierarchy:
+    parent: tech_grp_colorer_corps_gras
+    level: 1
+  expected_result:
+    summary: Une croûte colorée s'est formée instantanément en surface au contact d'une chaleur très vive, fixant les sucs.
+    observable_indicators:
+    - Croûte colorée immédiate
+    - Surface qui se décolle seule une fois saisie
+    - Cœur encore peu cuit selon la pièce
+  common_errors:
+  - Feu insuffisant, l'aliment grille lentement et rend son eau
+  - Viande mouillée non épongée qui ne colore pas
+  - Déplacer la pièce sans arrêt, la croûte ne prend pas
+  not_to_be_confused_with:
+  - technique_id: tech_sauter
+    distinction: Saisir forme une croûte à feu très vif en laissant la pièce en place ; sauter fait cuire en remuant dans un peu de gras.
+  - technique_id: tech_rissoler
+    distinction: Saisir crée un choc thermique pour fixer les sucs et former une croûte rapide ; rissoler colore plus longuement toute la surface d'une pièce.
 - id: tech_rotir
   name: Rôtir
-  aliases: [rôtir, rotir, rôti, rôtie]
+  aliases:
+  - rôtir
+  - rotir
+  - rôti
+  - rôtie
   category: cuisson
   difficulty: 1
-  definition: "Cuire une pièce au four ou à la broche avec un peu de corps gras, en l'arrosant régulièrement."
-
+  definition: Cuire une pièce au four ou à la broche avec un peu de corps gras, en l'arrosant régulièrement.
+  hierarchy:
+    parent: tech_grp_chaleur_seche
+    level: 1
+  expected_result:
+    summary: La pièce est dorée et croustillante à l'extérieur, juteuse à l'intérieur, cuite par la chaleur du four ou de la broche.
+    observable_indicators:
+    - Extérieur doré et croustillant
+    - Jus clairs pour une volaille, cuisson à cœur voulue
+    - Pièce arrosée, non desséchée
+  common_errors:
+  - Ne pas arroser, la pièce sèche
+  - Four mal préchauffé
+  - Trancher aussitôt sans laisser reposer, le jus s'échappe
+  not_to_be_confused_with:
+  - technique_id: tech_griller
+    distinction: Rôtir cuit la pièce dans la chaleur du four ou de la broche avec un peu de gras ; griller la cuit au contact direct d'une chaleur vive.
 - id: tech_griller
   name: Griller
-  aliases: [griller, grillé, grillée]
+  aliases:
+  - griller
+  - grillé
+  - grillée
   category: cuisson
   difficulty: 1
-  definition: "Cuire un aliment par le contact direct d'une source de chaleur intense (gril, braises, plancha)."
-
+  definition: Cuire un aliment par le contact direct d'une source de chaleur intense (gril, braises, plancha).
+  hierarchy:
+    parent: tech_grp_chaleur_seche
+    level: 1
+  expected_result:
+    summary: L'aliment porte les marques d'un contact direct avec une chaleur intense, doré voire fumé, saisi en surface.
+    observable_indicators:
+    - Marques de gril nettes
+    - Surface saisie, arôme grillé
+    - Intérieur cuit selon l'épaisseur
+  common_errors:
+  - Gril pas assez chaud, l'aliment attache et sèche sans marquer
+  - Trop retourner, pas de marquage net
+  - Feu trop vif qui carbonise l'extérieur
+  not_to_be_confused_with:
+  - technique_id: tech_rotir
+    distinction: Griller cuit par contact direct avec une source intense, gril ou braises ; rôtir cuit par la chaleur enveloppante du four ou de la broche.
 - id: tech_mijoter
   name: Mijoter
-  aliases: [mijoter, mijoté, mijotée, mijote]
+  aliases:
+  - mijoter
+  - mijoté
+  - mijotée
+  - mijote
   category: cuisson
   difficulty: 1
-  definition: "Cuire longuement et doucement, à petits frémissements couverts, pour attendrir et lier les saveurs."
-
+  definition: Cuire longuement et doucement, à petits frémissements couverts, pour attendrir et lier les saveurs.
+  hierarchy:
+    parent: tech_grp_cuisson_lente
+    level: 1
+  expected_result:
+    summary: La préparation a cuit longuement à petits frémissements couverts, les pièces sont tendres et les saveurs liées.
+    observable_indicators:
+    - Petits frémissements, jamais de gros bouillons
+    - Pièces fondantes
+    - Sauce homogène, saveurs fondues
+  common_errors:
+  - Laisser bouillir fort, pièces qui se défont et sauce trouble
+  - Feu trop faible, on n'atteint pas le frémissement
+  - Ne pas couvrir, évaporation excessive
+  not_to_be_confused_with:
+  - technique_id: tech_braiser
+    distinction: Mijoter cuit l'aliment immergé dans le liquide ; braiser cuit avec peu de liquide, la pièce ayant d'abord été rissolée.
+  - technique_id: tech_pocher
+    distinction: Mijoter cuit longuement et doucement une préparation à couvert ; pocher cuit un aliment délicat dans un liquide frémissant en gardant sa forme.
 - id: tech_frire
   name: Frire
-  aliases: [frire, faire frire, frit, frite]
+  aliases:
+  - frire
+  - faire frire
+  - frit
+  - frite
   category: cuisson
   difficulty: 2
-  definition: "Cuire un aliment par immersion dans un bain de matière grasse chaude jusqu'à ce qu'il dore et croustille."
-
+  definition: Cuire un aliment par immersion dans un bain de matière grasse chaude jusqu'à ce qu'il dore et croustille.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'aliment est doré et croustillant à l'extérieur, cuit à cœur, sans être gras s'il est bien égoutté.
+    observable_indicators:
+    - Croûte dorée et croustillante
+    - Aliment qui remonte et bruisse
+    - Peu de gras absorbé après égouttage
+  common_errors:
+  - Bain trop peu chaud, l'aliment s'imbibe de gras
+  - Bain trop chaud, doré dehors et cru dedans
+  - Surcharger le bain, la température s'effondre
+  not_to_be_confused_with:
+  - technique_id: tech_confire
+    distinction: Frire cuit à haute température pour dorer et croustiller ; confire cuit lentement à basse température dans le gras pour attendrir.
+  - technique_id: tech_sauter
+    distinction: Frire cuit par immersion complète dans un bain de gras ; sauter cuit dans peu de gras, en remuant.
 - id: tech_confire
   name: Confire
-  aliases: [confire, confit, confite, confits]
+  aliases:
+  - confire
+  - confit
+  - confite
+  - confits
   category: cuisson
   difficulty: 2
-  definition: "Cuire lentement un aliment dans un corps gras, un sirop ou du sucre, à basse température, pour l'attendrir et le conserver."
-
+  definition: Cuire lentement un aliment dans un corps gras, un sirop ou du sucre, à basse température, pour l'attendrir et le conserver.
+  hierarchy:
+    parent: tech_grp_cuisson_lente
+    level: 1
+  expected_result:
+    summary: L'aliment est fondant et se conserve, cuit très lentement et immergé dans un gras, un sirop ou du sucre à basse température.
+    observable_indicators:
+    - Texture fondante qui se tient
+    - Immersion complète dans le gras ou le sirop
+    - Aucune coloration vive, basse température
+  common_errors:
+  - Température trop haute, l'aliment frit au lieu de confire
+  - Immersion incomplète
+  - Cuisson écourtée, texture encore ferme
+  not_to_be_confused_with:
+  - technique_id: tech_braiser
+    distinction: Confire cuit l'aliment immergé dans un gras ou un sucre à basse température, et le conserve ; braiser le cuit dans peu de liquide aromatique.
+  - technique_id: tech_frire
+    distinction: Confire cuit lentement à basse température dans le gras, pour attendrir et conserver ; frire cuit vite à haute température, pour dorer et croustiller.
 - id: tech_nacrer
   name: Nacrer
-  aliases: [nacrer, nacré, nacrée]
+  aliases:
+  - nacrer
+  - nacré
+  - nacrée
   category: cuisson
   difficulty: 2
-  definition: "Enrober les grains de riz de corps gras chaud jusqu'à ce qu'ils deviennent translucides et brillants, avant de mouiller (risotto, pilaf)."
-
+  definition: Enrober les grains de riz de corps gras chaud jusqu'à ce qu'ils deviennent translucides et brillants, avant de mouiller (risotto, pilaf).
+  hierarchy:
+    parent: tech_grp_cuire_sans_colorer
+    level: 1
+  expected_result:
+    summary: Les grains de riz sont enrobés de gras et devenus translucides et brillants, prêts à recevoir le mouillement.
+    observable_indicators:
+    - Grains translucides sur les bords
+    - Aspect brillant, nacré
+    - Aucune coloration
+  common_errors:
+  - Colorer le riz, feu trop vif
+  - Nacrer trop peu, grains encore mats et crayeux
+  - Trop de gras, riz gras et lourd
+  not_to_be_confused_with:
+  - technique_id: tech_suer
+    distinction: Nacrer rend les grains de riz translucides et brillants ; suer fait rendre son eau à un légume.
 - id: tech_flamber
   name: Flamber
-  aliases: [flamber, flambé, flambée, flambe]
+  aliases:
+  - flamber
+  - flambé
+  - flambée
+  - flambe
   category: cuisson
   difficulty: 3
-  definition: "Arroser un mets d'alcool chaud et l'enflammer pour le parfumer et brûler l'alcool."
-
+  definition: Arroser un mets d'alcool chaud et l'enflammer pour le parfumer et brûler l'alcool.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: L'alcool s'est enflammé puis éteint de lui-même, laissant l'arôme sans l'âpreté de l'alcool cru.
+    observable_indicators:
+    - Flamme brève qui retombe seule
+    - Odeur d'alcool disparue
+    - Arôme concentré
+  common_errors:
+  - Verser l'alcool à la bouteille au-dessus de la flamme, retour de flamme dangereux
+  - Alcool froid qui ne s'enflamme pas
+  - Laisser brûler trop longtemps et dessécher
+  not_to_be_confused_with:
+  - technique_id: tech_deglacer
+    distinction: Flamber enflamme un alcool chaud pour parfumer ; déglacer verse un liquide, parfois de l'alcool, pour dissoudre les sucs, sans forcément l'enflammer.
 - id: tech_cuire_a_blanc
   name: Cuire à blanc
-  aliases: [cuire à blanc, cuit à blanc, cuisson à blanc]
+  aliases:
+  - cuire à blanc
+  - cuit à blanc
+  - cuisson à blanc
   category: cuisson
   difficulty: 2
-  definition: "Précuire un fond de tarte à vide, souvent lesté de légumes secs, avant de le garnir."
-
+  definition: Précuire un fond de tarte à vide, souvent lesté de légumes secs, avant de le garnir.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Le fond de tarte est précuit, sec et légèrement doré, prêt à recevoir une garniture sans se détremper.
+    observable_indicators:
+    - Pâte sèche au fond, non crue
+    - Bords légèrement dorés
+    - Fond qui ne gonfle pas car lesté
+  common_errors:
+  - Omettre les billes ou légumes secs, la pâte gonfle et s'affaisse
+  - Sortir trop tôt, fond encore cru et pâle
+  - Ne pas avoir piqué la pâte
+  not_to_be_confused_with:
+  - technique_id: tech_blanchir
+    distinction: Cuire à blanc précuit un fond de tarte au four, à vide ; blanchir plonge un aliment dans l'eau bouillante, faux amis autour du mot blanc.
 - id: tech_temperer
   name: Tempérer le chocolat
-  aliases: [tempérer le chocolat, chocolat tempéré, tempérage, mettre au point le chocolat]
+  aliases:
+  - tempérer le chocolat
+  - chocolat tempéré
+  - tempérage
+  - mettre au point le chocolat
   category: liaison
   difficulty: 5
-  definition: "Faire suivre au chocolat fondu une courbe précise de température pour stabiliser ses cristaux, gage d'un rendu brillant, lisse et cassant."
-
+  definition: Faire suivre au chocolat fondu une courbe précise de température pour stabiliser ses cristaux, gage d'un rendu brillant, lisse et cassant.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: 'Le chocolat est stabilisé : une fois figé il est brillant, lisse et cassant, et se rétracte bien au démoulage.'
+    observable_indicators:
+    - Surface brillante
+    - Cassure nette et sonore
+    - Fonte homogène, sans traces blanches
+  common_errors:
+  - Dépasser les températures de la courbe, chocolat mat et strié
+  - Introduire de l'eau ou de la vapeur, le chocolat masse
+  - Travailler dans une pièce trop chaude ou trop froide
+  not_to_be_confused_with: []
 - id: tech_roux
   name: Réaliser un roux
-  aliases: [réaliser un roux, faire un roux, un roux, roux blond, roux brun]
+  aliases:
+  - réaliser un roux
+  - faire un roux
+  - un roux
+  - roux blond
+  - roux brun
   category: liaison
   difficulty: 3
-  definition: "Cuire à parts égales du beurre et de la farine, plus ou moins longtemps selon la couleur voulue, pour obtenir la base liante des sauces blanches et brunes."
-
+  definition: Cuire à parts égales du beurre et de la farine, plus ou moins longtemps selon la couleur voulue, pour obtenir la base liante des sauces blanches et brunes.
+  hierarchy:
+    parent: tech_lier
+    level: 1
+  expected_result:
+    summary: Le beurre et la farine cuits ensemble forment une pâte lisse et homogène, colorée selon l'usage, sans goût de farine crue.
+    observable_indicators:
+    - Mélange lisse, sans grumeaux
+    - Couleur atteinte, blanc, blond ou brun
+    - Odeur de noisette, plus de goût cru
+  common_errors:
+  - Farine insuffisamment cuite, goût farineux
+  - Roux brûlé, amer
+  - Proportions déséquilibrées entre beurre et farine
+  not_to_be_confused_with:
+  - technique_id: tech_singer
+    distinction: Le roux cuit le beurre et la farine à part avant de mouiller ; singer saupoudre la farine directement sur l'aliment en cuisson.
 - id: tech_foisonner
   name: Foisonner
-  aliases: [foisonner, foisonné, foisonnée, foisonnement]
+  aliases:
+  - foisonner
+  - foisonné
+  - foisonnée
+  - foisonnement
   category: liaison
   difficulty: 3
-  definition: "Incorporer de l'air à une préparation en la fouettant (crème, beurre, appareil) pour en augmenter le volume et l'alléger."
-
+  definition: Incorporer de l'air à une préparation en la fouettant (crème, beurre, appareil) pour en augmenter le volume et l'alléger.
+  hierarchy:
+    parent: tech_grp_aerer
+    level: 1
+  expected_result:
+    summary: La préparation a gagné en volume et en légèreté, gonflée par l'air incorporé au fouet.
+    observable_indicators:
+    - Volume nettement augmenté
+    - Texture mousseuse et aérienne
+    - Couleur souvent éclaircie
+  common_errors:
+  - Sous-foisonner, préparation encore dense
+  - Sur-foisonner une crème, elle graine et tourne en beurre
+  - Ustensile ou ingrédients trop chauds qui font retomber
+  not_to_be_confused_with:
+  - technique_id: tech_fouetter
+    distinction: Foisonner désigne le résultat, le volume gagné par l'air incorporé ; fouetter est le geste de battre au fouet, qui n'aère pas toujours.
+  - technique_id: tech_serrer
+    distinction: Foisonner incorpore l'air pour gonfler la masse ; serrer raffermit des blancs déjà montés en y ajoutant du sucre.
 - id: tech_lier
   name: Lier
-  aliases: [lier, lié, liée, lier la sauce]
+  aliases:
+  - lier
+  - lié
+  - liée
+  - lier la sauce
   category: liaison
   difficulty: 2
-  definition: "Épaissir et rendre homogène une préparation à l'aide d'un roux, d'un jaune d'œuf, de fécule ou de beurre."
-
+  definition: Épaissir et rendre homogène une préparation à l'aide d'un roux, d'un jaune d'œuf, de fécule ou de beurre.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La préparation est épaissie et homogène, elle nappe sans être liquide ni pâteuse.
+    observable_indicators:
+    - Consistance nappante, tient sur la cuillère
+    - Texture lisse, sans grumeaux
+    - Brillance selon le liant
+  common_errors:
+  - Verser le liant dans un liquide bouillant sans précaution, grumeaux
+  - Trop de liant, sauce pâteuse
+  - Cuisson insuffisante du roux ou de la fécule, goût farineux
+  not_to_be_confused_with:
+  - technique_id: tech_reduire
+    distinction: Lier épaissit à l'aide d'un liant, roux, jaune, fécule ou beurre ; réduire épaissit sans liant, par simple évaporation.
+  - technique_id: tech_emulsionner
+    distinction: Lier rend une préparation épaisse et homogène ; émulsionner unit spécifiquement un gras et un liquide aqueux en une émulsion stable.
+  - technique_id: tech_detendre
+    distinction: Lier épaissit une préparation ; détendre l'assouplit au contraire en y ajoutant du liquide.
 - id: tech_serrer
   name: Serrer les blancs
-  aliases: [serrer les blancs, blancs serrés, serrer la meringue]
+  aliases:
+  - serrer les blancs
+  - blancs serrés
+  - serrer la meringue
   category: liaison
   difficulty: 2
-  definition: "Terminer des blancs en neige en y ajoutant un peu de sucre tout en fouettant, pour les raffermir et les rendre lisses et brillants."
-
+  definition: Terminer des blancs en neige en y ajoutant un peu de sucre tout en fouettant, pour les raffermir et les rendre lisses et brillants.
+  hierarchy:
+    parent: tech_grp_aerer
+    level: 1
+  expected_result:
+    summary: Les blancs montés sont raffermis, lisses et brillants, resserrés par l'ajout de sucre en fouettant.
+    observable_indicators:
+    - Blancs fermes qui font le bec d'oiseau
+    - Surface lisse et satinée
+    - Masse serrée qui ne retombe pas
+  common_errors:
+  - Ajouter le sucre trop tôt ou trop vite, blancs qui grainent
+  - Trop fouetter, blancs granuleux et secs
+  - Blancs pas assez montés avant de serrer
+  not_to_be_confused_with:
+  - technique_id: tech_foisonner
+    distinction: Serrer les blancs les raffermit et les lisse avec du sucre en fin de montage ; foisonner désigne l'incorporation d'air qui gonfle la préparation.
 - id: tech_tourer
   name: Tourer
-  aliases: [tourer, touré, tourée, donner un tour, donner les tours, tourage]
+  aliases:
+  - tourer
+  - touré
+  - tourée
+  - donner un tour
+  - donner les tours
+  - tourage
   category: preparation
   difficulty: 5
-  definition: "Donner ses tours à une pâte feuilletée en pliant et abaissant successivement la détrempe et le beurre, pour créer les couches, geste long et minutieux."
-
+  definition: Donner ses tours à une pâte feuilletée en pliant et abaissant successivement la détrempe et le beurre, pour créer les couches, geste long et minutieux.
+  hierarchy:
+    parent: tech_grp_travail_pate
+    level: 1
+  expected_result:
+    summary: La pâte feuilletée a reçu ses tours, les couches alternées de détrempe et de beurre sont régulières et distinctes.
+    observable_indicators:
+    - Beurre réparti en couche régulière, non percé
+    - Angles droits, abaisse régulière
+    - Nombre de tours respecté, pâte reposée au frais
+  common_errors:
+  - Beurre trop mou ou trop dur qui perce ou casse les couches
+  - Ne pas respecter les temps de repos, le beurre traverse
+  - Tours mal comptés, feuilletage irrégulier
+  not_to_be_confused_with:
+  - technique_id: tech_tourner
+    distinction: Tourer plie et abaisse une pâte feuilletée pour créer ses couches ; tourner façonne un légume à plusieurs faces au couteau, ce sont des faux amis.
 - id: tech_desosser
   name: Désosser
-  aliases: [désosser, desosser, désossé, désossée]
+  aliases:
+  - désosser
+  - desosser
+  - désossé
+  - désossée
   category: preparation
   difficulty: 3
-  definition: "Retirer les os d'une pièce de viande ou de volaille en préservant au mieux la chair."
-
+  definition: Retirer les os d'une pièce de viande ou de volaille en préservant au mieux la chair.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Les os sont retirés en préservant la chair, qui reste en morceau exploitable, à farcir, rouler ou trancher.
+    observable_indicators:
+    - Chair sans esquilles d'os
+    - Peu de chair laissée sur les os
+    - Pièce entière prête à farcir ou rouler
+  common_errors:
+  - Déchirer ou trouer la chair
+  - Laisser des esquilles d'os
+  - Couteau inadapté au lieu d'un désosseur
+  not_to_be_confused_with:
+  - technique_id: tech_lever_filets
+    distinction: Désosser retire les os d'une viande ou d'une volaille en gardant la chair ; lever les filets sépare la chair du poisson de son arête.
+  - technique_id: tech_parer
+    distinction: Désosser ôte les os de la pièce ; parer la débarrasse des nerfs, du gras et des parties non comestibles.
 - id: tech_degorger
   name: Dégorger
-  aliases: [dégorger, degorger, dégorgé, dégorge]
+  aliases:
+  - dégorger
+  - degorger
+  - dégorgé
+  - dégorge
   category: preparation
   difficulty: 2
-  definition: "Faire rendre son eau à un légume au sel (concombre, aubergine), ou purger une viande ou un abat à l'eau froide."
-
+  definition: Faire rendre son eau à un légume au sel (concombre, aubergine), ou purger une viande ou un abat à l'eau froide.
+  hierarchy:
+    parent: tech_grp_pretraiter
+    level: 1
+  expected_result:
+    summary: L'aliment a rendu son eau au sel, ou a été purgé de son sang et de ses impuretés à l'eau froide.
+    observable_indicators:
+    - Eau perceptiblement rendue, le légume ramollit
+    - Amertume ou âcreté atténuée
+    - Eau de purge devenue claire
+  common_errors:
+  - Sel insuffisant ou temps trop court, l'eau n'est pas rendue
+  - Ne pas rincer ni éponger le sel ensuite
+  - Dégorger trop longtemps, l'aliment ramollit trop
+  not_to_be_confused_with:
+  - technique_id: tech_mariner
+    distinction: Dégorger fait rendre l'eau, au sel, ou purge à l'eau froide ; mariner imprègne au contraire l'aliment d'un liquide aromatique.
+  - technique_id: tech_monder
+    distinction: Dégorger fait rendre l'eau ou purge l'aliment ; monder lui retire la peau après ébouillantage.
 - id: tech_petrir
   name: Pétrir
-  aliases: [pétrir, petrir, pétri, pétrie, pétrissage]
+  aliases:
+  - pétrir
+  - petrir
+  - pétri
+  - pétrie
+  - pétrissage
   category: preparation
   difficulty: 1
-  definition: "Travailler une pâte à la main ou au crochet pour l'homogénéiser et développer le réseau de gluten."
-
+  definition: Travailler une pâte à la main ou au crochet pour l'homogénéiser et développer le réseau de gluten.
+  hierarchy:
+    parent: tech_grp_travail_pate
+    level: 1
+  expected_result:
+    summary: La pâte est lisse, élastique et homogène, son réseau de gluten développé, elle se tend sans se déchirer.
+    observable_indicators:
+    - Pâte lisse et souple
+    - Test de la fenêtre, la pâte s'étire fine
+    - Élasticité, la pâte reprend sa forme
+  common_errors:
+  - Sous-pétrir, pâte qui se déchire et mie serrée
+  - Sur-pétrir au robot, la pâte chauffe et se relâche
+  - Ajouter trop de farine pendant le pétrissage
+  not_to_be_confused_with:
+  - technique_id: tech_fouetter
+    distinction: Pétrir travaille une pâte, à la main ou au crochet, pour développer le gluten ; fouetter bat au fouet pour aérer ou émulsionner un appareil liquide.
 - id: tech_tamiser
   name: Tamiser
-  aliases: [tamiser, tamisé, tamisée, tamise]
+  aliases:
+  - tamiser
+  - tamisé
+  - tamisée
+  - tamise
   category: preparation
   difficulty: 1
-  definition: "Passer une poudre (farine, sucre glace) au tamis pour l'aérer et éliminer les grumeaux."
-
+  definition: Passer une poudre (farine, sucre glace) au tamis pour l'aérer et éliminer les grumeaux.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: La poudre est aérée et exempte de grumeaux, prête à s'incorporer uniformément.
+    observable_indicators:
+    - Poudre fine et légère
+    - Aucun grumeau
+    - Corps étrangers retenus par le tamis
+  common_errors:
+  - Ne pas tamiser au-dessus d'un récipient assez grand
+  - Tamis à maille inadaptée
+  - Forcer une poudre humide qui bourre le tamis
+  not_to_be_confused_with: []
 - id: tech_barder
   name: Barder
-  aliases: [barder, bardé, bardée]
+  aliases:
+  - barder
+  - bardé
+  - bardée
   category: preparation
   difficulty: 2
-  definition: "Entourer une pièce d'une fine tranche de lard gras avant cuisson pour la nourrir et l'empêcher de se dessécher."
-
+  definition: Entourer une pièce d'une fine tranche de lard gras avant cuisson pour la nourrir et l'empêcher de se dessécher.
+  hierarchy:
+    parent: tech_grp_enrober
+    level: 1
+  expected_result:
+    summary: La pièce est enveloppée d'une fine tranche de lard gras qui la protégera du dessèchement et la nourrira à la cuisson.
+    observable_indicators:
+    - Barde ajustée et maintenue
+    - Surface régulièrement couverte
+    - Gras qui fondra pour arroser la chair
+  common_errors:
+  - Barde trop épaisse qui empêche la coloration
+  - Barde mal fixée qui glisse
+  - Oublier de la retirer en fin de cuisson quand il faut colorer
+  not_to_be_confused_with:
+  - technique_id: tech_paner
+    distinction: Barder enveloppe la pièce de lard gras, pour la nourrir et éviter le dessèchement ; paner l'enrobe de chapelure pour la croûte.
 - id: tech_chiqueter
   name: Chiqueter
-  aliases: [chiqueter, chiqueté, chiquetée, chiquetage]
+  aliases:
+  - chiqueter
+  - chiqueté
+  - chiquetée
+  - chiquetage
   category: dressage
   difficulty: 3
-  definition: "Inciser en biais et à intervalles réguliers les bords d'un feuilletage, pour favoriser sa levée et le décorer."
-
+  definition: Inciser en biais et à intervalles réguliers les bords d'un feuilletage, pour favoriser sa levée et le décorer.
+  hierarchy:
+    parent: tech_grp_decor_feuilletage
+    level: 1
+  expected_result:
+    summary: Les bords du feuilletage sont incisés en biais à intervalles réguliers, ce qui favorise une levée droite et décore la pièce.
+    observable_indicators:
+    - Encoches régulières sur la tranche
+    - Bords qui lèvent droit et net
+    - Motif décoratif visible
+  common_errors:
+  - Inciser trop profond, jusqu'à ouvrir le feuilletage
+  - Espacement irrégulier
+  - Dos du couteau qui écrase la tranche au lieu d'inciser net
+  not_to_be_confused_with:
+  - technique_id: tech_rayer
+    distinction: Chiqueter incise les bords du feuilletage pour la levée ; rayer décore la surface dorée sans la percer.
 - id: tech_masquer
   name: Masquer
-  aliases: [masquer, masqué, masquée]
+  aliases:
+  - masquer
+  - masqué
+  - masquée
   category: dressage
   difficulty: 2
-  definition: "Recouvrir entièrement un entremets d'une couche régulière de crème ou de glaçage avant le décor."
-
+  definition: Recouvrir entièrement un entremets d'une couche régulière de crème ou de glaçage avant le décor.
+  hierarchy:
+    parent: tech_grp_recouvrir
+    level: 1
+  expected_result:
+    summary: L'entremets est entièrement et régulièrement recouvert de crème ou de glaçage, prêt à être décoré.
+    observable_indicators:
+    - Couverture complète, aucune zone nue
+    - Surface lisse et régulière
+    - Épaisseur homogène
+  common_errors:
+  - Couche inégale qui laisse voir le biscuit
+  - Crème trop molle ou trop ferme pour masquer net
+  - Bulles et traces de spatule non lissées
+  not_to_be_confused_with:
+  - technique_id: tech_napper
+    distinction: Masquer enrobe tout un entremets d'une couche de crème ou de glaçage avant décor ; napper recouvre un mets d'une couche de sauce.
+  - technique_id: tech_chemiser
+    distinction: Masquer recouvre l'extérieur d'un entremets ; chemiser tapisse l'intérieur d'un moule avant de le garnir.
 - id: tech_dresser
   name: Dresser
-  aliases: [dresser, dressé, dressée, dressage]
+  aliases:
+  - dresser
+  - dressé
+  - dressée
+  - dressage
   category: dressage
   difficulty: 1
-  definition: "Disposer harmonieusement les éléments d'un mets dans le plat ou l'assiette."
-
+  definition: Disposer harmonieusement les éléments d'un mets dans le plat ou l'assiette.
+  hierarchy:
+    parent: null
+    level: 0
+  expected_result:
+    summary: Les éléments du mets sont disposés dans l'assiette de façon lisible et harmonieuse, mettant en valeur le plat.
+    observable_indicators:
+    - Composition équilibrée et nette
+    - Bords d'assiette propres
+    - Hauteur et volume maîtrisés
+  common_errors:
+  - Surcharger l'assiette
+  - Traces et coulures sur le bord
+  - Éléments froids dans une assiette qui devait être chaude, ou l'inverse
+  not_to_be_confused_with: []
 - id: tech_rayer
   name: Rayer
-  aliases: [rayer, rayé, rayée]
+  aliases:
+  - rayer
+  - rayé
+  - rayée
   category: dressage
   difficulty: 2
-  definition: "Décorer à la pointe d'un couteau la surface dorée d'un feuilletage (galette, pâté en croûte) avant cuisson."
+  definition: Décorer à la pointe d'un couteau la surface dorée d'un feuilletage (galette, pâté en croûte) avant cuisson.
+  hierarchy:
+    parent: tech_grp_decor_feuilletage
+    level: 1
+  expected_result:
+    summary: La surface dorée du feuilletage porte un décor régulier tracé à la pointe du couteau, sans percer la pâte.
+    observable_indicators:
+    - Rayures nettes et régulières
+    - Dorure non transpercée
+    - Motif homogène, rosace ou chevrons
+  common_errors:
+  - Trancher trop profond, la pâte ne lève pas ou s'ouvre
+  - Rayures irrégulières
+  - Rayer avant la dorure, ou dorure qui coule dans les traits
+  not_to_be_confused_with:
+  - technique_id: tech_chiqueter
+    distinction: Rayer trace un décor sur la surface dorée du feuilletage ; chiqueter entaille les bords pour favoriser la levée.

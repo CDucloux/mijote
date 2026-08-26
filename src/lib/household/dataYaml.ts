@@ -113,8 +113,75 @@ const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide
  *   (import à annuler en entier, jamais d'écrasement partiel).
  */
+/**
+ * Charge la liste des techniques depuis le YAML, en acceptant DEUX formes : la liste
+ * plate historique (v1) ou la racine enrichie v2 `{ schema_version, techniques: [...] }`.
+ */
+function loadTechniquesList(text: string): { list: unknown[] | null; error: string | null } {
+  let doc: unknown;
+  try { doc = parseYaml(text); }
+  catch (e) { return { list: null, error: `YAML invalide : ${(e as Error)?.message || e}.` }; }
+  if (doc == null) return { list: null, error: "Fichier vide." };
+  if (isObj(doc) && Array.isArray((doc as Record<string, unknown>).techniques))
+    return { list: (doc as Record<string, unknown>).techniques as unknown[], error: null };
+  if (Array.isArray(doc)) return { list: doc, error: null };
+  return { list: null, error: "Le document doit être une liste d'entrées (« - … »), ou un objet { schema_version, techniques: [...] }." };
+}
+
+/** Liste de chaînes nettoyée (trim, vides retirés) ; `[]` si l'entrée n'est pas une liste. */
+const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map(str).filter(Boolean) : []);
+
+/**
+ * Valide et porte les 4 dimensions enrichies (schema v2) d'une technique, sans les
+ * réécrire : hierarchy, expected_result, common_errors, not_to_be_confused_with. Seules
+ * les clés non vides sont retournées (Firestore rejette `undefined`). Les incohérences
+ * de TYPE sont signalées ; l'intégrité référentielle (parents, symétrie) relève du
+ * validateur de génération, pas de cet import entrée par entrée.
+ */
+function cleanTechniqueDimensions(raw: Record<string, unknown>, where: string, errors: string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (raw.hierarchy != null) {
+    if (!isObj(raw.hierarchy)) errors.push(`${where} : « hierarchy » doit être un objet.`);
+    else {
+      const h = raw.hierarchy as Record<string, unknown>;
+      const hi: Record<string, unknown> = { parent: str(h.parent) || null };
+      if (Number.isInteger(h.level)) hi.level = h.level;
+      out.hierarchy = hi;
+    }
+  }
+  if (raw.expected_result != null) {
+    if (!isObj(raw.expected_result)) errors.push(`${where} : « expected_result » doit être un objet.`);
+    else {
+      const er = raw.expected_result as Record<string, unknown>;
+      const e: Record<string, unknown> = {};
+      const summary = str(er.summary);
+      const inds = strList(er.observable_indicators);
+      if (summary) e.summary = summary;
+      if (inds.length) e.observable_indicators = inds;
+      if (Object.keys(e).length) out.expected_result = e;
+    }
+  }
+  if (raw.common_errors != null) {
+    if (!Array.isArray(raw.common_errors)) errors.push(`${where} : « common_errors » doit être une liste.`);
+    else { const ce = strList(raw.common_errors); if (ce.length) out.common_errors = ce; }
+  }
+  if (raw.not_to_be_confused_with != null) {
+    if (!Array.isArray(raw.not_to_be_confused_with)) errors.push(`${where} : « not_to_be_confused_with » doit être une liste.`);
+    else {
+      const rel = (raw.not_to_be_confused_with as unknown[]).flatMap((e) => {
+        if (!isObj(e)) return [];
+        const tid = str((e as Record<string, unknown>).technique_id);
+        const dist = str((e as Record<string, unknown>).distinction);
+        return tid ? [dist ? { technique_id: tid, distinction: dist } : { technique_id: tid }] : [];
+      });
+      if (rel.length) out.not_to_be_confused_with = rel;
+    }
+  }
+  return out;
+}
+
 export function parseTechniquesYaml(text: string): ParseResult {
-  const { list, error } = loadYamlList(text);
+  const { list, error } = loadTechniquesList(text);
   if (error) return { items: [], errors: [error] };
 
   const errors: string[] = [];
@@ -150,10 +217,16 @@ export function parseTechniquesYaml(text: string): ParseResult {
     if (Number.isInteger(difficulty) && (difficulty as number) >= 1 && (difficulty as number) <= 5) item.difficulty = difficulty;
     const source = str(raw.source);
     if (source) item.source = source;
+    // Dimensions enrichies v2 (hiérarchie, résultat attendu, erreurs, confusions) :
+    // portées telles quelles vers la base, sans réécriture.
+    Object.assign(item, cleanTechniqueDimensions(raw, where, errors));
     items.push(item);
   });
   return { items: errors.length ? [] : items, errors };
 }
+
+/** Une relation « ne pas confondre avec ». */
+interface TechniqueConfusion { technique_id: string; distinction?: string }
 
 /** Technique (forme minimale utilisée par les exports). */
 interface TechniqueRow {
@@ -164,6 +237,10 @@ interface TechniqueRow {
   aliases?: string[];
   difficulty?: number;
   source?: string;
+  hierarchy?: { parent: string | null; level?: number };
+  expected_result?: { summary?: string; observable_indicators?: string[] };
+  common_errors?: string[];
+  not_to_be_confused_with?: TechniqueConfusion[];
 }
 
 /**
@@ -204,9 +281,14 @@ export function formatTechniquesYaml(list: TechniqueRow[]): string {
       if (t.difficulty) o.difficulty = t.difficulty;
       o.definition = t.definition;
       if (t.source) o.source = t.source;
+      if (t.hierarchy) o.hierarchy = t.hierarchy;
+      if (t.expected_result) o.expected_result = t.expected_result;
+      if (t.common_errors?.length) o.common_errors = t.common_errors;
+      if (t.not_to_be_confused_with?.length) o.not_to_be_confused_with = t.not_to_be_confused_with;
       return o;
     });
-  return dumpYaml(rows, `# Glossaire des techniques Cardamome (${rows.length}) – généré, réimportable.\n`);
+  // Racine enrichie v2, réimportable telle quelle par parseTechniquesYaml.
+  return dumpYaml({ schema_version: 2, techniques: rows }, `# Glossaire enrichi des techniques Cardamome (${rows.length}) – généré, réimportable.\n`);
 }
 
 /** Ingrédient (forme minimale utilisée par l'export). */
