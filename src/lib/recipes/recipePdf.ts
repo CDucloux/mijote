@@ -2,8 +2,9 @@
  * Export PDF. `buildRecipePdfHtml` est pure (recette + bases → chaîne HTML).
  * `recipesById` (Map<id, recipe>) permet de résoudre les lignes composant et de
  * générer une annexe « Préparations de base » en fin de document. `printRecipe`
- * ouvre le document et lance l'impression du navigateur (« Enregistrer en PDF ») :
- * texte sélectionnable et rendu fidèle.
+ * rend le document et lance l'impression (« Enregistrer en PDF ») : popup plein
+ * écran sur le web, iframe cachée dans la coquille native Capacitor (où le popup
+ * ne rejoint pas le service d'impression OS). Texte sélectionnable, rendu fidèle.
  *
  * @module recipePdf
  */
@@ -14,6 +15,7 @@ import { categoryLabel, categoryEmoji } from "@/constants/recipeCategories.js";
 import { cuisineEmoji, normalizeCuisine } from "@/constants/cuisines.js";
 import { DIFFICULTY_LABEL, computeDifficulty } from "@/lib/recipes/difficulty.js";
 import { fmtQtyUnit } from "@/lib/format.js";
+import { Capacitor } from "@capacitor/core";
 import type { IngredientLine, Step } from "@/lib/types.js";
 
 /** Ligne d'ingrédient/ustensile d'une recette pour le rendu PDF (alias de domaine). */
@@ -398,25 +400,79 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
 </html>`;
 }
 
+/** Stratégie d'impression selon la coquille d'exécution. */
+export type PrintStrategy = "popup" | "iframe";
+
 /**
- * Ouvre le document dans un nouvel onglet et lance l'impression du navigateur
- * (l'utilisateur choisit « Enregistrer en PDF »). Texte sélectionnable, rendu
- * fidèle. On attend le chargement de l'image de tête pour éviter un aperçu vide.
+ * Choisit le canal d'impression. Dans la coquille native (Capacitor), un
+ * `window.open("_blank")` ouvre une WebView auxiliaire que le pont natif ne relie
+ * PAS au service d'impression Android/iOS : le document s'affiche mais `print()`
+ * n'aboutit jamais. On rend alors dans une iframe cachée du document courant, dont
+ * le `print()` déclenche bien le framework d'impression natif (« Enregistrer en
+ * PDF »). Sur le web, la popup reste le meilleur choix (aperçu plein écran).
+ *
+ * @param isNative - Exécution dans la coquille Capacitor (`Capacitor.isNativePlatform()`).
+ * @returns `"iframe"` en natif, `"popup"` sur le web.
+ */
+export function choosePrintStrategy(isNative: boolean): PrintStrategy {
+  return isNative ? "iframe" : "popup";
+}
+
+// Attend le chargement de l'image de tête (ou son échec) avant d'imprimer, pour
+// éviter un aperçu tronqué ; sans image, court délai fixe le temps du layout.
+function printWhenReady(doc: Document, print: () => void): void {
+  const heroImg = doc.querySelector(".hero") as HTMLImageElement | null;
+  if (heroImg && !heroImg.complete) {
+    heroImg.onload = heroImg.onerror = () => setTimeout(print, 300);
+  } else {
+    setTimeout(print, heroImg ? 400 : 200);
+  }
+}
+
+// Web : nouvel onglet + impression du navigateur. Sans effet si la popup est bloquée.
+function printViaPopup(html: string): void {
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.write(html);
+  w.document.close();
+  printWhenReady(w.document, () => w.print());
+}
+
+// Natif : iframe hors écran dans le document courant, imprimée puis retirée. Le
+// `print()` de l'iframe passe par le WebView principal, seul relié au service
+// d'impression OS. On diffère le retrait pour ne pas annuler la capture en cours.
+function printViaIframe(html: string): void {
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+  document.body.appendChild(iframe);
+  const win = iframe.contentWindow;
+  const doc = win?.document;
+  if (!win || !doc) { iframe.remove(); return; }
+  doc.open();
+  doc.write(html);
+  doc.close();
+  printWhenReady(doc, () => {
+    win.focus();
+    win.print();
+    setTimeout(() => iframe.remove(), 1000);
+  });
+}
+
+/**
+ * Rend le document de la recette et lance l'impression (« Enregistrer en PDF »),
+ * via le canal adapté à la plateforme (voir {@link choosePrintStrategy}). Texte
+ * sélectionnable, rendu fidèle.
  *
  * @param recipe - La recette à imprimer.
  * @param dbs - Dépendances de rendu (voir {@link buildRecipePdfHtml}).
- * @returns Rien ; sans effet si la popup est bloquée par le navigateur.
+ * @returns Rien ; sur le web, sans effet si la popup est bloquée par le navigateur.
  */
 export function printRecipe(recipe: PdfRecipe, dbs: PdfDbs = {}): void {
   const html = buildRecipePdfHtml(recipe, dbs);
-  const w = window.open("", "_blank");
-  if (!w) return; // popup bloquée
-  w.document.write(html);
-  w.document.close();
-  const heroImg = w.document.querySelector(".hero") as HTMLImageElement | null;
-  if (heroImg && !heroImg.complete) {
-    heroImg.onload = heroImg.onerror = () => setTimeout(() => w.print(), 300);
+  if (choosePrintStrategy(Capacitor.isNativePlatform()) === "iframe") {
+    printViaIframe(html);
   } else {
-    setTimeout(() => w.print(), 1200);
+    printViaPopup(html);
   }
 }

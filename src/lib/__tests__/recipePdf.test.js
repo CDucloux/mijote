@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildRecipePdfHtml } from "@/lib/recipes/recipePdf.js";
+import { buildRecipePdfHtml, choosePrintStrategy } from "@/lib/recipes/recipePdf.js";
 
 const DB = [
   { id: "courgette", name: "Courgette", category: "vegetable" },
@@ -77,5 +77,15 @@ describe("buildRecipePdfHtml – tags de tête", () => {
     expect(html).toContain("hbadge-vegan");    // badge vegan style app
     expect(html).toContain("Italienne");
     expect(html).not.toContain('<div class="tags">'); // pas de repli sous le titre
+  });
+});
+
+describe("choosePrintStrategy", () => {
+  it("iframe dans la coquille native (le popup n'imprime pas dans la WebView)", () => {
+    expect(choosePrintStrategy(true)).toBe("iframe");
+  });
+
+  it("popup sur le web (aperçu plein écran)", () => {
+    expect(choosePrintStrategy(false)).toBe("popup");
   });
 });
