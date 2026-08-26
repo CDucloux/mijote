@@ -57,6 +57,10 @@
   --paper-2: #2e2a20;
   --paper-ink: #cabfa5;
   --glass-line: rgba(255, 255, 255, 0.14);
+  /* Tooltip inversé : bulle claire sur l'UI sombre (contraste net, lecture immédiate). */
+  --tooltip-bg: #f1f0e7;
+  --tooltip-fg: #23221c;
+  --tooltip-border: rgba(0, 0, 0, 0.05);
   --ff-display: 'Source Serif 4', Georgia, serif;
   --ff-body: 'Hanken Grotesk', sans-serif;
   --ff-hand: 'Caveat', 'Segoe Print', cursive;
@@ -118,6 +122,10 @@ html.light,
   --paper-2: #e8dcc3;
   --paper-ink: #4a4638;
   --glass-line: rgba(255, 255, 255, 0.6);
+  /* Tooltip inversé : bulle sombre chaude sur l'UI crème. */
+  --tooltip-bg: #26251f;
+  --tooltip-fg: #f4f3ec;
+  --tooltip-border: rgba(255, 255, 255, 0.07);
 }
 
 html.light,
@@ -1282,6 +1290,72 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .tech-pop {
     animation: none;
+  }
+}
+
+/* ── TOOLTIP GLOBAL ─────────────────────────────────────────────────────────
+   Bulle stylée qui remplace le tooltip natif brut du navigateur (calque unique,
+   voir TooltipLayer + tooltipPosition). Position `fixed` calculée en JS ; ici on
+   ne gère que l'apparence et la transition d'entrée. */
+.app-tooltip {
+  position: fixed;
+  z-index: 1200;
+  max-width: 260px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-fg);
+  border: 1px solid var(--tooltip-border);
+  font-family: var(--ff-body);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  text-align: center;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.45), 0 2px 7px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px) scale(0.98);
+  transition: opacity 0.14s ease, transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.app-tooltip[data-placement="bottom"] {
+  transform: translateY(-3px) scale(0.98);
+}
+.app-tooltip[data-show="1"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Caret : petit carré tourné, couleur de la bulle, aligné au centre de la cible
+   (--caret-x calculé en JS). Le décalage d'une moitié le fait chevaucher le bord. */
+.app-tooltip::after {
+  content: "";
+  position: absolute;
+  left: var(--caret-x, 50%);
+  width: 8px;
+  height: 8px;
+  background: var(--tooltip-bg);
+  border: 1px solid var(--tooltip-border);
+  transform: translateX(-50%) rotate(45deg);
+}
+.app-tooltip[data-placement="top"]::after {
+  bottom: -5px;
+  border-top: none;
+  border-left: none;
+}
+.app-tooltip[data-placement="bottom"]::after {
+  top: -5px;
+  border-bottom: none;
+  border-right: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-tooltip {
+    transition: opacity 0.1s ease;
+    transform: none;
+  }
+  .app-tooltip[data-placement="bottom"] {
+    transform: none;
   }
 }
 

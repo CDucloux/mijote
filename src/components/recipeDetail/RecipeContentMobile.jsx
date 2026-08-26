@@ -157,7 +157,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               </div>
             ))}
             {baseSteps.length > 0 && recipe.steps?.length > 0 && (
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
+              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
             )}
             {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
             const hdr = looseRunLabel(run, ri === runs.length - 1, hs);

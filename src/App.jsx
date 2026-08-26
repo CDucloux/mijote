@@ -37,6 +37,7 @@ import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/OfflineModal.jsx";
 import { HouseholdWelcome } from "./components/HouseholdWelcome.jsx";
 import { OnboardingCarousel } from "./components/OnboardingCarousel.jsx";
+import { TooltipLayer } from "./components/TooltipLayer.jsx";
 import { TabBar } from "./components/TabBar.jsx";
 import { DesktopSidebar } from "./components/DesktopSidebar.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
@@ -600,6 +601,7 @@ function AppInner({ user, isDark, toggleTheme }) {
         <OfflineModal />
         <HouseholdWelcome />
         <OnboardingCarousel />
+        <TooltipLayer />
       </div>
     </AppShellProvider>
   );

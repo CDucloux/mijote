@@ -17,7 +17,7 @@ import { ING_MD_COLUMNS, formatTips } from "@/lib/food/ingredientsMarkdown.js";
 import {
   parseIngredientsYaml, parseUtensilsYaml, parseTechniquesYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
-  TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES, slugifyId,
+  TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES, buildTechniqueFromDraft,
 } from "@/lib/household/dataYaml.js";
 import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
@@ -117,6 +117,49 @@ function DifficultyPips({ level }) {
   );
 }
 
+// Intitulé de section dans l'éditeur de geste : discret, en capitales espacées.
+const editLabel = { fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)", margin: "18px 0 8px" };
+
+// Éditeur d'une liste de phrases (indicateurs observables, erreurs fréquentes) :
+// une ligne par entrée, ajout/retrait, sans champ vide imposé.
+function PhraseListEditor({ items = [], onChange, placeholder, addLabel }) {
+  const setAt = (i, v) => onChange(items.map((it, k) => (k === i ? v : it)));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {items.map((it, i) => (
+        <div key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <input className="field-input" value={it} placeholder={placeholder} onChange={e => setAt(i, e.target.value)} style={{ flex: 1, marginBottom: 0 }} />
+          <button onClick={() => onChange(items.filter((_, k) => k !== i))} title="Retirer" style={{ color: "var(--text3)", padding: 8, flexShrink: 0 }}><Icon name="trash" size={14} /></button>
+        </div>
+      ))}
+      <button className="btn btn-ghost btn-sm" onClick={() => onChange([...items, ""])} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={13} /> {addLabel}</button>
+    </div>
+  );
+}
+
+// Éditeur des confusions (« ne pas confondre avec ») : une technique cible + la
+// distinction qui les sépare, par carte.
+function ConfusionListEditor({ items = [], onChange, options }) {
+  const setAt = (i, patch) => onChange(items.map((it, k) => (k === i ? { ...it, ...patch } : it)));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {items.map((it, i) => (
+        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6, padding: 10, background: "var(--surface2)", borderRadius: 10, border: "1px solid var(--border)" }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <select className="field-input" value={it.technique_id || ""} onChange={e => setAt(i, { technique_id: e.target.value })} style={{ flex: 1, marginBottom: 0 }}>
+              <option value="">Choisir un geste…</option>
+              {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
+            <button onClick={() => onChange(items.filter((_, k) => k !== i))} title="Retirer" style={{ color: "var(--text3)", padding: 8, flexShrink: 0 }}><Icon name="trash" size={14} /></button>
+          </div>
+          <input className="field-input" value={it.distinction || ""} placeholder="En quoi ce geste s'en distingue…" onChange={e => setAt(i, { distinction: e.target.value })} style={{ marginBottom: 0 }} />
+        </div>
+      ))}
+      <button className="btn btn-ghost btn-sm" onClick={() => onChange([...items, { technique_id: "", distinction: "" }])} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={13} /> Ajouter une confusion</button>
+    </div>
+  );
+}
+
 export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, techniques = [], setTechniques }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -204,18 +247,12 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     if (item?.image) deleteImageByUrl(item.image);
     setUtensilDB(prev => prev.filter(d => d.id !== id));
   };
-  // Upsert d'un geste technique (master). N'inclut que des clés définies (Firestore).
+  // Upsert d'un geste technique (master). La normalisation (clés vides retirées,
+  // dimensions v2 portées) vit dans `buildTechniqueFromDraft` (testé, src/lib).
   const saveTech = raw => {
-    const name = (raw.name || "").trim();
-    const definition = (raw.definition || "").trim();
-    if (!name || !definition) { setMdError("Nom et définition sont requis."); return; }
-    const id = raw.id || slugifyId("tech_", name);
-    const item = { id, name, category: raw.category || "preparation", definition };
-    const aliases = [...new Set((raw.aliases || []).map(a => (a || "").trim().toLowerCase()).filter(Boolean))];
-    if (aliases.length) item.aliases = aliases;
-    if (raw.difficulty) item.difficulty = raw.difficulty;
-    if ((raw.source || "").trim()) item.source = raw.source.trim();
-    setTechniques?.(prev => prev.find(t => t.id === id) ? prev.map(t => t.id === id ? item : t) : [...prev, item]);
+    if (!(raw.name || "").trim() || !(raw.definition || "").trim()) { setMdError("Nom et définition sont requis."); return; }
+    const item = buildTechniqueFromDraft(raw);
+    setTechniques?.(prev => prev.find(t => t.id === item.id) ? prev.map(t => t.id === item.id ? item : t) : [...prev, item]);
     setEditTech(null);
   };
   const delTech = id => setTechniques?.(prev => prev.filter(t => t.id !== id));
@@ -759,7 +796,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       {/* Éditeur de geste technique (admin) */}
       {editTech && (
         <SwipeableSheet onClose={() => setEditTech(null)}>
-          {(close) => (<>
+          {(close) => { const techOptions = [...techniques].filter(t => t.id !== editTech.id).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr")); return (<>
           <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editTech.id ? "Modifier" : "Nouveau"} geste</h3>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Émulsionner" value={editTech.name} onChange={e => setEditTech(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
@@ -782,7 +819,37 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 12 }}>{editTech.difficulty ? DIFFICULTY_LABEL[editTech.difficulty] : "Non définie (clique un chiffre ; re-clique pour effacer)."}</div>
           <div className="field-label">Définition</div>
           <textarea className="field-input" rows={3} placeholder="Que veut dire ce geste ?" value={editTech.definition} onChange={e => setEditTech(p => ({ ...p, definition: e.target.value }))} style={{ marginBottom: 12, resize: "vertical", minHeight: 64 }} />
-          <div className="field-label">Alias / synonymes</div>
+
+          <div style={editLabel}>Fait partie de</div>
+          <select className="field-input" value={editTech.hierarchy?.parent || ""}
+            onChange={e => setEditTech(p => ({ ...p, hierarchy: e.target.value ? { ...(p.hierarchy || {}), parent: e.target.value } : undefined }))}
+            style={{ marginBottom: 4 }}>
+            <option value="">Aucun (geste racine)</option>
+            {techOptions.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+          <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>Le geste générique dont celui-ci est une variante (ex : « Ciseler » fait partie de « Hachage »).</div>
+
+          <div style={editLabel}>Résultat attendu</div>
+          <textarea className="field-input" rows={2} placeholder="L'état observable après une bonne exécution."
+            value={editTech.expected_result?.summary || ""}
+            onChange={e => setEditTech(p => ({ ...p, expected_result: { ...(p.expected_result || {}), summary: e.target.value } }))}
+            style={{ marginBottom: 8, resize: "vertical", minHeight: 48 }} />
+          <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 6 }}>Indicateurs observables</div>
+          <PhraseListEditor items={editTech.expected_result?.observable_indicators || []}
+            onChange={v => setEditTech(p => ({ ...p, expected_result: { ...(p.expected_result || {}), observable_indicators: v } }))}
+            placeholder="ex: Des dés homogènes" addLabel="Ajouter un indicateur" />
+
+          <div style={editLabel}>Erreurs fréquentes</div>
+          <PhraseListEditor items={editTech.common_errors || []}
+            onChange={v => setEditTech(p => ({ ...p, common_errors: v }))}
+            placeholder="ex: Écraser l'aliment" addLabel="Ajouter une erreur" />
+
+          <div style={editLabel}>Ne pas confondre avec</div>
+          <ConfusionListEditor items={editTech.not_to_be_confused_with || []}
+            onChange={v => setEditTech(p => ({ ...p, not_to_be_confused_with: v }))}
+            options={techOptions} />
+
+          <div className="field-label" style={{ marginTop: 18 }}>Alias / synonymes</div>
           <div style={{ marginBottom: 12 }}>
             <TagInput tags={editTech.aliases || []} onChange={v => setEditTech(p => ({ ...p, aliases: v }))} allTags={[]} label="" placeholder="fouetter, battre…" inputId="tech-alias-input" commitOnBlur dedupeInsensitive />
           </div>
@@ -792,7 +859,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveTech(editTech)}><Icon name="save" size={15} /> Sauvegarder</button>
           </div>
-          </>)}
+          </>); }}
         </SwipeableSheet>
       )}
 
