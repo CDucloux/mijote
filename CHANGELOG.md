@@ -1,5 +1,16 @@
 # Changelog – Cardamome
 
+## v4.10.0 – Cardamome · La cuillère prend le pouvoir
+
+### Mode cuisine (mise en place)
+- **Choisir son unité en cuillères, partout** : la feuille de conversion devient un vrai sélecteur. On y choisit « cuillère à soupe » ou « cuillère à café », et l'ingrédient s'affiche alors dans cette unité dans toute la mise en place (aperçu et lignes d'étape), avec un retour à l'unité d'origine en un tap.
+- **Le badge cuillère répond enfin** : depuis la mise en place, la feuille de conversion s'ouvrait derrière l'écran plein écran du mode cuisine et semblait ne rien faire au clic. Elle passe désormais bien au premier plan.
+- **Une cuillère mieux posée** : l'icône est réorientée à 135°, cuilleron en haut, pour une silhouette plus juste.
+
+### Interface
+- **Badge « BASE » aligné** : sur la fiche recette, le badge d'une préparation de base passe en capitales, au diapason des badges « VEGAN » et « DE SAISON », et gagne des libellés d'accessibilité explicites (« Préparation de base », « Recette Vegan »).
+- **Le panneau de filtres se repère mieux** : l'icône filtres accompagne le titre « Tous les filtres », et une loupe précède le bouton « Voir N recettes ».
+
 ## v4.9.0 – Cardamome · La mise en place s'affine, l'interface s'habille
 
 ### Mode cuisine (mise en place)
