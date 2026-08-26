@@ -16,7 +16,7 @@ export function RecipeHeroBadges({ recipe, recipeVegan, recipeInSeason, difficul
   return (
     <>
       {recipe.isComponent && (
-        <button onClick={onOpenBaseInfo} className="tag" style={{ gap: 5, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.92)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer" }}>
+        <button onClick={onOpenBaseInfo} aria-label="Préparation de base" className="tag" style={{ gap: 5, fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(255,255,255,0.92)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer" }}>
           <BaseIcon size={12} color="#fff" /> Base
         </button>
       )}
