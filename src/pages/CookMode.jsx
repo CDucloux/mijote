@@ -427,7 +427,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           <div style={{ animation: "popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)", marginBottom: 24 }}>
             <div style={{ fontSize: 72, lineHeight: 1 }}>🍳</div>
           </div>
-          <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 12, animation: "popIn 0.6s 0.2s both cubic-bezier(0.34,1.56,0.64,1)" }}>
+          <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em", marginBottom: 12, animation: "popIn 0.6s 0.2s both cubic-bezier(0.34,1.56,0.64,1)" }}>
             {isNested ? "Base terminée !" : "Félicitations !"}
           </h1>
           <p style={{ fontSize: 16, color: "var(--text2)", lineHeight: 1.6, marginBottom: 32, maxWidth: 300, animation: "popIn 0.5s 0.35s both ease" }}>
@@ -527,7 +527,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                     <div key="head-overview" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="fileText" size={19} color="#fff" /></div>
-                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700 }}>Mise en place</h2>
+                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600 }}>Mise en place</h2>
                   </div>
                   <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
                     Rassemble tous les ingrédients aux bonnes quantités et sors les ustensiles nécessaires avant de te lancer.
@@ -599,7 +599,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                     <div key="head-bases" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={20} color="#fff" /></div>
-                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700 }}>Bases</h2>
+                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600 }}>Bases</h2>
                   </div>
                   <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.7, marginBottom: 24 }}>
                     Réalise ces préparations de base avant de commencer la recette principale.
@@ -645,7 +645,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   )}
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                     <div key="head-step" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
-                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700 }}>Étape {realIdx + 1}</h2>
+                    <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600 }}>Étape {realIdx + 1}</h2>
                   </div>
                   <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: stepDurations.length ? 14 : 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
 
