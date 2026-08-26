@@ -3017,8 +3017,6 @@ select {
 .auth {
   height: 100vh;
   height: 100svh;
-  display: grid;
-  grid-template-columns: 1fr;
   /* Trame de points discrète sur le fond. En desktop, le panneau d'auth (opaque,
      surface) la recouvre : elle n'habille donc que la partie gauche (pitch). En
      mobile, le panneau est transparent et la trame court sur toute la colonne. */
@@ -3029,9 +3027,16 @@ select {
   position: relative;
   /* Rendu sous #app (sans hauteur) et body en overflow:hidden : .auth doit être son
      PROPRE conteneur de défilement, sinon un contenu plus haut que l'écran (mobile)
-     serait coupé et le bouton deviendrait inatteignable. */
+     serait coupé et le bouton deviendrait inatteignable. La grille intérieure porte
+     le contenu (étiré par l'overscroll élastique) ; la barre système (toggle) et le
+     retour vitrine restent hors grille pour ne pas être déformés. */
   overflow-y: auto;
   overflow-x: hidden;
+}
+.auth__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100%;
 }
 
 /* Bascule thème : pastille en surface, cible tactile >= 44px, dans la safe-area. */
@@ -3211,14 +3216,14 @@ select {
 }
 .auth__consent a:hover { color: var(--accent); }
 
-/* Retour vitrine, en haut à gauche. En mobile : élément de flux (première rangée de
-   la grille) pour ne jamais chevaucher la marque ; en desktop : ancré dans le coin
-   (le pitch y est centré verticalement, le coin est donc libre). Absent en PWA /
-   Capacitor, donc aucune place perdue là-bas. */
+/* Retour vitrine, ancré dans le coin haut-gauche (le pitch y est centré
+   verticalement, le coin est libre). Masqué sur mobile (le logo prend sa place) et
+   absent en PWA / Capacitor. */
 .auth__back {
-  justify-self: start;
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  left: calc(18px + env(safe-area-inset-left));
   z-index: 10;
-  margin: calc(10px + env(safe-area-inset-top)) 0 0 clamp(12px, 4vw, 20px);
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -3250,14 +3255,7 @@ select {
 
 /* ── Desktop : deux panneaux côte à côte (pitch ~57%, auth ~43%) ── */
 @media (min-width: 860px) {
-  .auth { grid-template-columns: 57fr 43fr; }
-  /* Hors flux : le coin haut-gauche est libre (pitch centré verticalement). */
-  .auth__back {
-    position: absolute;
-    top: calc(16px + env(safe-area-inset-top));
-    left: calc(18px + env(safe-area-inset-left));
-    margin: 0;
-  }
+  .auth__grid { grid-template-columns: 57fr 43fr; }
   .auth__pitch { padding: 56px clamp(48px, 5vw, 88px); }
   .auth__panel {
     border-top: none;
@@ -3283,12 +3281,26 @@ select {
   /* Fond UNI sur petit écran : la bichromie pitch/auth n'a de sens que pour la mise
      en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. */
   .auth__panel { background: transparent; border-top: none; }
-  /* Tout centré en colonne unique (demande explicite pour l'écran mobile). */
+  /* Tout centré en colonne unique (demande explicite), SAUF le logo qui reste
+     ancré en haut à gauche, là où était le retour vitrine. */
   .auth__pitch-inner { text-align: center; }
+  .auth__brand { display: flex; justify-content: flex-start; }
+  /* Le slogan prend le même traitement que l'eyebrow desktop : capitales, accent,
+     interlettrage. C'est l'unique titre de l'écran mobile (h1 conservé). */
+  .auth__title {
+    margin: 14px 0 0;
+    font-family: var(--ff-body);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    line-height: 1.5;
+  }
   .auth__desc { max-width: 40ch; margin-inline: auto; }
-  /* Marmite centrée et resserrée pour rester présente sans repousser le bouton. */
-  .auth__art { margin-top: clamp(16px, 4vw, 26px); justify-content: center; }
-  .auth__art svg { width: clamp(112px, 32vw, 148px); height: auto; }
+  /* Marmite centrée et plus généreuse : c'est l'ancrage visuel du hero mobile. */
+  .auth__art { margin-top: clamp(20px, 5vw, 32px); justify-content: center; }
+  .auth__art svg { width: clamp(168px, 50vw, 240px); height: auto; }
 }
 /* La marmite n'est masquée qu'en paysage / écran vraiment court : en portrait, elle
    reste le point chaud de l'écran. */
