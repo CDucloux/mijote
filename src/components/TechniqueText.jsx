@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
+import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex, annotateText } from "@/lib/recipes/techniques.js";
 import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
@@ -41,19 +42,143 @@ const TECH_CAT = {
 };
 const techCat = (c) => TECH_CAT[c] || { emoji: "🍳", color: "var(--accent)" };
 
-// Bloc secondaire de la bulle (résultat attendu, erreurs, confusions), séparé par un
-// filet fin, avec un intitulé discret en capitales.
-function PopSection({ label, color, children }) {
+const popList = { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 };
+
+// ─── FICHE TECHNIQUE DÉTAILLÉE ────────────────────────────────────────────────
+// Ouverte depuis la bulle compacte via « Plus de détails ». Reprend tout ce que la
+// bulle ne montre plus (résultat attendu + indicateurs, erreurs fréquentes, ne pas
+// confondre avec), dans une feuille lisible et aérée (tiroir mobile / carte desktop).
+const RED = "var(--red, #d1544f)";
+const sheetLabel = (color) => ({ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: color || "var(--text3)", marginBottom: 9 });
+const sheetItem = { fontSize: 13.5, lineHeight: 1.55, color: "var(--text2)", display: "flex", gap: 9 };
+const sheetDot = (color) => ({ width: 5, height: 5, borderRadius: "50%", background: color, marginTop: 8, flexShrink: 0 });
+
+function SheetSection({ label, color, children }) {
   return (
-    <div style={{ marginTop: 10, paddingTop: 9, borderTop: "1px solid var(--border)" }}>
-      <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: color || "var(--text3)", marginBottom: 5 }}>{label}</div>
+    <section style={{ marginTop: 22 }}>
+      <div style={sheetLabel(color)}>{label}</div>
       {children}
-    </div>
+    </section>
   );
 }
-const popList = { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 };
-const popItem = { fontSize: 12, lineHeight: 1.5, color: "var(--text2)", display: "flex", gap: 7 };
-const popDot = (color) => ({ width: 4, height: 4, borderRadius: "50%", background: color, marginTop: 7, flexShrink: 0 });
+
+// Chaîne d'ancêtres (du plus haut au parent direct) pour le fil d'ariane, en
+// remontant `hierarchy.parent`. Garde-fou anti-cycle.
+function techAncestors(tech, techById) {
+  const out = [];
+  let pid = tech.hierarchy?.parent, guard = 0;
+  while (pid && guard < 8) {
+    const p = techById.get(pid);
+    if (!p) break;
+    out.unshift(p);
+    pid = p.hierarchy?.parent;
+    guard++;
+  }
+  return out;
+}
+
+const crumbPill = { fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "3px 9px", borderRadius: 999, whiteSpace: "nowrap" };
+
+function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
+  const c = techCat(tech.category);
+  const catLabel = TECHNIQUE_CATEGORIES[tech.category] || tech.category;
+  const diff = Number(tech.difficulty) || 0;
+  const er = tech.expected_result || null;
+  const inds = Array.isArray(er?.observable_indicators) ? er.observable_indicators : [];
+  const errs = Array.isArray(tech.common_errors) ? tech.common_errors : [];
+  const conf = Array.isArray(tech.not_to_be_confused_with) ? tech.not_to_be_confused_with : [];
+  const ancestors = techAncestors(tech, techById);
+  // Navigation entre fiches (confusions) : on remonte le scroll de la feuille en tête.
+  const topRef = useRef(null);
+  useEffect(() => { topRef.current?.closest(".modal-sheet")?.scrollTo({ top: 0 }); }, [tech.id]);
+  return (
+    <SwipeableSheet onClose={onClose} zIndex={760} style={{ maxHeight: "88dvh" }}>
+      {(close) => (
+        <div ref={topRef}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 27, background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}>{c.emoji}</span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h2 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{tech.name}</h2>
+              {diff > 0 && (
+                <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 3, alignItems: "center", marginTop: 8 }}>
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= diff ? c.color : "var(--surface3)" }} />
+                  ))}
+                </span>
+              )}
+            </div>
+            <button type="button" onClick={() => close()} aria-label="Fermer" className="pressable" style={{ flexShrink: 0, alignSelf: "flex-start", width: 32, height: 32, borderRadius: "50%", border: "none", background: "var(--surface2)", display: "grid", placeItems: "center", cursor: "pointer" }}>
+              <Icon name="close" size={16} color="var(--text2)" />
+            </button>
+          </div>
+
+          {/* Fil d'ariane taxonomique : catégorie > ... > parent direct (la technique
+              courante est le titre ci-dessus). Rend la hiérarchie lisible d'un coup d'œil. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginTop: 14 }}>
+            <span style={{ ...crumbPill, color: c.color, background: `color-mix(in srgb, ${c.color} 14%, transparent)` }}>{catLabel}</span>
+            {ancestors.map(a => (
+              <span key={a.id} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <Icon name="forward" size={11} color="var(--text3)" />
+                <span style={{ ...crumbPill, color: c.color, background: `color-mix(in srgb, ${c.color} 14%, transparent)` }}>{a.name}</span>
+              </span>
+            ))}
+          </div>
+
+          <p style={{ margin: "16px 0 0", fontSize: 14.5, lineHeight: 1.6, color: "var(--text)" }}>{tech.definition}</p>
+
+          {er?.summary && (
+            <SheetSection label="Résultat attendu" color={c.color}>
+              <div style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55 }}>{er.summary}</div>
+              {inds.length > 0 && (
+                <ul style={{ ...popList, gap: 7, marginTop: 10 }}>
+                  {inds.map((s, k) => (
+                    <li key={k} style={sheetItem}><span style={sheetDot(c.color)} /><span>{s}</span></li>
+                  ))}
+                </ul>
+              )}
+            </SheetSection>
+          )}
+          {errs.length > 0 && (
+            <SheetSection label="Erreurs fréquentes" color={RED}>
+              <ul style={{ ...popList, gap: 7 }}>
+                {errs.map((s, k) => (
+                  <li key={k} style={sheetItem}><span style={sheetDot(RED)} /><span>{s}</span></li>
+                ))}
+              </ul>
+            </SheetSection>
+          )}
+          {conf.length > 0 && (
+            <SheetSection label="Ne pas confondre avec">
+              <div style={{ margin: "0 -10px" }}>
+                {conf.map((r, k) => {
+                  const ct = techById.get(r.technique_id);
+                  const name = ct?.name || r.technique_id;
+                  return (
+                    <div key={k}
+                      onClick={ct ? () => onOpen(ct) : undefined}
+                      className={ct ? "tap-row tech-confuse" : undefined}
+                      style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 10px", borderTop: k === 0 ? "none" : "1px solid var(--border)", cursor: ct ? "pointer" : "default" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>{name}</div>
+                        {r.distinction && <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text3)", marginTop: 3 }}>{r.distinction}</div>}
+                      </div>
+                      {ct && <span className="tap-chevron" style={{ display: "flex", flexShrink: 0 }}><Icon name="forward" size={15} color="var(--text3)" /></span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </SheetSection>
+          )}
+          {tech.source && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--text3)", marginTop: 22, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+              <Icon name="book" size={12} color="var(--text3)" /> {tech.source}
+            </div>
+          )}
+        </div>
+      )}
+    </SwipeableSheet>
+  );
+}
 
 export function TechniqueText({ text, index: indexProp }) {
   const { techniques } = useAppShell();
@@ -66,6 +191,7 @@ export function TechniqueText({ text, index: indexProp }) {
   // Bulle affichée : { key, tech, left, top, width, above } ou null.
   const [pop, setPop] = useState(null);
   const [pinned, setPinned] = useState(false); // épinglée au tap (mobile)
+  const [detail, setDetail] = useState(null);  // technique dont la fiche détaillée est ouverte
 
   // Calcule la position `fixed` de la bulle à partir du rect du mot, bornée au
   // viewport (horizontalement) et retournée au-dessus si peu de place en bas.
@@ -128,6 +254,9 @@ export function TechniqueText({ text, index: indexProp }) {
             const errs = Array.isArray(t.common_errors) ? t.common_errors : [];
             const conf = Array.isArray(t.not_to_be_confused_with) ? t.not_to_be_confused_with : [];
             const parentName = t.hierarchy?.parent ? techById.get(t.hierarchy.parent)?.name : null;
+            // La bulle reste volontairement compacte (aperçu) ; tout le détail passe
+            // dans la fiche, ouverte à la demande quand il y a matière à montrer.
+            const hasMore = Boolean(er?.summary) || inds.length > 0 || errs.length > 0 || conf.length > 0;
             return (
               <div className="tech-pop" role="tooltip" style={{ transformOrigin: pop.above ? "bottom left" : "top left", maxHeight: "min(70vh, 460px)", overflowY: "auto" }}>
                 {/* barre d'accent colorée en tête, selon la catégorie */}
@@ -154,38 +283,12 @@ export function TechniqueText({ text, index: indexProp }) {
                     Fait partie de <span style={{ fontWeight: 600, color: "var(--text2)" }}>{parentName}</span>
                   </div>
                 )}
-                {er?.summary && (
-                  <PopSection label="Résultat attendu" color={c.color}>
-                    <div style={{ fontSize: 12, color: "var(--text2)", lineHeight: 1.5 }}>{er.summary}</div>
-                    {inds.length > 0 && (
-                      <ul style={{ ...popList, marginTop: 6 }}>
-                        {inds.map((s, k) => (
-                          <li key={k} style={popItem}><span style={popDot(c.color)} /><span>{s}</span></li>
-                        ))}
-                      </ul>
-                    )}
-                  </PopSection>
-                )}
-                {errs.length > 0 && (
-                  <PopSection label="Erreurs fréquentes" color="var(--red, #d1544f)">
-                    <ul style={popList}>
-                      {errs.map((s, k) => (
-                        <li key={k} style={popItem}><span style={popDot("var(--red, #d1544f)")} /><span>{s}</span></li>
-                      ))}
-                    </ul>
-                  </PopSection>
-                )}
-                {conf.length > 0 && (
-                  <PopSection label="Ne pas confondre avec">
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {conf.map((r, k) => (
-                        <div key={k} style={{ fontSize: 12, lineHeight: 1.5, color: "var(--text2)" }}>
-                          <span style={{ fontWeight: 600, color: "var(--accent)" }}>{techById.get(r.technique_id)?.name || r.technique_id}</span>
-                          {r.distinction && <span> {r.distinction}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </PopSection>
+                {hasMore && (
+                  <button type="button" className="pressable"
+                    onClick={e => { e.stopPropagation(); setDetail(t); setPop(null); setPinned(false); }}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 11, padding: "6px 13px 6px 14px", borderRadius: 999, border: "none", cursor: "pointer", background: `color-mix(in srgb, ${c.color} 13%, transparent)`, color: c.color, fontSize: 11.5, fontWeight: 600 }}>
+                    Plus de détails <Icon name="forward" size={13} color={c.color} />
+                  </button>
                 )}
                 {pop.tech.source && (
                   <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10.5, color: "var(--text3)", marginTop: 9, paddingTop: 9, borderTop: "1px solid var(--border)" }}>
@@ -198,6 +301,7 @@ export function TechniqueText({ text, index: indexProp }) {
         </div>,
         document.body
       )}
+      {detail && <TechniqueDetailSheet tech={detail} techById={techById} onOpen={setDetail} onClose={() => setDetail(null)} />}
     </>
   );
 }

@@ -593,7 +593,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                             <div key={g.key} style={{ paddingLeft: 8 }}>
                               {/* Décalage + ↳ : la catégorie se lit comme une sous-branche des « Ingrédients ». */}
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                                <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1, color: "var(--text3)", marginRight: 1, transform: "translateY(-1px)" }}>↳</span>
+                                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 1, flexShrink: 0 }}>
+                                  <polyline points="15 10 20 15 15 20" />
+                                  <path d="M4 4v7a4 4 0 0 0 4 4h12" />
+                                </svg>
                                 <span style={{ fontSize: 13 }}>{g.icon}</span>
                                 <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{g.label}</span>
                               </div>

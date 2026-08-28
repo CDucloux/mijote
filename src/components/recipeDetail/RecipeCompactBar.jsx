@@ -9,8 +9,12 @@ export function RecipeCompactBar({ barRef, barInnerRef, recipeName, publicMode, 
   return (
     <div ref={barRef} style={{
       position: "sticky", top: 0, zIndex: 30, flexShrink: 0,
-      height: 52, marginTop: -52,
-      display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px",
+      // Hauteur et remontée majorées de la réserve d'inset : une fois repliée, la
+      // barre recouvre AUSSI la zone système (fond plein), là où le hero peignait
+      // son image. Le padding haut maintient le contenu (retour, titre, Courses) à
+      // sa place d'origine, sous la barre système.
+      height: "calc(52px + var(--safe-hero-top))", marginTop: "calc(-52px - var(--safe-hero-top))",
+      display: "flex", alignItems: "center", justifyContent: "space-between", padding: "var(--safe-hero-top) 14px 0",
       background: "rgba(var(--bg-rgb),0)", pointerEvents: "none",
       willChange: "background-color, backdrop-filter",
     }}>

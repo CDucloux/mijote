@@ -1,5 +1,19 @@
 # Changelog – Cardamome
 
+## v4.11.0 – Cardamome · Le geste juste, d'un coup d'oeil
+
+### Gestes techniques
+- **Une fiche technique qui s'ouvre à la demande** : les gestes du glossaire (mijoter, glacer, suer...) ne débordent plus dans une bulle surchargée. Au survol ou au tap, la bulle donne l'essentiel (définition, catégorie, difficulté, source) ; un bouton « Plus de détails » ouvre une fiche complète et posée, avec le résultat attendu, les erreurs fréquentes et les gestes à ne pas confondre.
+- **Les confusions deviennent cliquables** : dans « ne pas confondre avec », chaque geste voisin s'ouvre d'un tap sur sa propre fiche, pour naviguer de proche en proche sans quitter la lecture.
+- **La hiérarchie se lit d'un coup d'oeil** : chaque fiche affiche sa place dans le glossaire sous forme de fil d'ariane (catégorie puis geste parent), au lieu d'une phrase.
+- **Flèche de sous-catégorie plus nette** : en mise en place groupée par catégorie, la petite flèche de branche gagne en épaisseur et en lisibilité.
+
+### Découvrir
+- **L'ingrédient du moment unifié** : la carte de l'ingrédient de la semaine abandonne son mélange de tons et ses dégradés au profit d'une seule teinte ambrée, plus franche et cohérente. Le bouton « Publier » passe en pilule.
+
+### Mobile
+- **Tirer pour rafraîchir, sans à-coup** : sur mobile, tirer vers le bas ne fait plus descendre toute la page. Un cercle apparaît et suit le doigt, puis déclenche le rafraîchissement une fois le seuil franchi. Un geste plus naturel et moins gênant.
+
 ## v4.10.2 – Cardamome · Le mobile soigne ses détails
 
 ### Mobile

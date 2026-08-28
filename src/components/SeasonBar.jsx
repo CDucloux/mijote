@@ -13,10 +13,12 @@ const MONTHS_INI = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
  * @param to - Couleur de fin du dégradé des segments.
  * @param node - Couleur de l'anneau du nœud « ce mois-ci ».
  * @param trackHeight - Épaisseur de la piste (px).
+ * @param glow - Couleur du halo sous les segments. Par défaut déduite de `from`
+ *   (vert / ambre / accent) ; la passer permet un `from` en aplat hex sans halo vert.
  * @param onToggle - Si fourni, la frise devient ÉDITABLE : chaque mois est un bouton
  *   qui appelle `onToggle(mois)` ; la piste reflète la sélection en direct.
  */
-export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node = "var(--accent-deep, #b8461c)", trackHeight = 12, onToggle }) {
+export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node = "var(--accent-deep, #b8461c)", trackHeight = 12, glow, onToggle }) {
   const on = new Set(months || []);
   const now = currentMonth();
   const pct = (n) => `${(n / 12) * 100}%`;
@@ -31,7 +33,7 @@ export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node
     <div>
       <div style={{ position: "relative", height: trackHeight, borderRadius: 999, background: "var(--surface2)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.06)" }}>
         {runs.map(([s, e], i) => (
-          <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: pct(s - 1), width: pct(e - s + 1), borderRadius: 999, background: `linear-gradient(90deg, ${from}, ${to})`, boxShadow: `0 2px 9px -2px ${from === "var(--green)" ? "rgba(var(--green-rgb),0.6)" : from === "var(--spice)" ? "rgba(var(--spice-rgb),0.6)" : "rgba(var(--accent-rgb),0.6)"}` }} />
+          <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: pct(s - 1), width: pct(e - s + 1), borderRadius: 999, background: `linear-gradient(90deg, ${from}, ${to})`, boxShadow: `0 2px 9px -2px ${glow || (from === "var(--green)" ? "rgba(var(--green-rgb),0.6)" : from === "var(--spice)" ? "rgba(var(--spice-rgb),0.6)" : "rgba(var(--accent-rgb),0.6)")}` }} />
         ))}
         <span aria-hidden="true" title="Ce mois-ci" style={{ position: "absolute", top: "50%", left: pct(now - 0.5), transform: "translate(-50%,-50%)", width: trackHeight + 3, height: trackHeight + 3, borderRadius: "50%", background: "var(--surface)", border: `2.5px solid ${node}`, boxShadow: "0 2px 7px rgba(60,50,30,0.3)", zIndex: 2 }} />
       </div>

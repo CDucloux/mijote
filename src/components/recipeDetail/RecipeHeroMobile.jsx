@@ -15,7 +15,7 @@ export function RecipeHeroMobile({
   heroImgRef, shadeRef, ctrlLRef, ctrlRRef, titleRef, srcRef, attribRef, badgesRef,
 }) {
   return (
-    <div style={{ position: "relative", height: HERO_H, flexShrink: 0, color: "#fff", overflow: "hidden" }}>
+    <div style={{ position: "relative", height: `calc(${HERO_H}px + var(--safe-hero-top))`, flexShrink: 0, color: "#fff", overflow: "hidden" }}>
       {/* Couche de parallaxe : transformée par le hook. transformOrigin en haut pour que
           la montée en échelle se propage vers le bas et ne laisse jamais de bande vide. */}
       <div ref={heroImgRef} style={{ position: "absolute", inset: 0, transformOrigin: "50% 0%", willChange: "transform" }}>
@@ -23,11 +23,11 @@ export function RecipeHeroMobile({
       </div>
       <div ref={shadeRef} style={{ position: "absolute", inset: 0, willChange: "opacity", background: "linear-gradient(to bottom,rgba(0,0,0,0.34) 0%,transparent 38%,rgba(0,0,0,0.74) 100%)" }} />
       {/* Boutons overlay */}
-      <div ref={ctrlLRef} style={{ position: "absolute", top: 16, left: 16 }}>
+      <div ref={ctrlLRef} style={{ position: "absolute", top: "calc(16px + var(--safe-hero-top))", left: 16 }}>
         <button onClick={handleBack} className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
       </div>
       {publicMode && (onExportPDF || reportAvailable || adminDeleteAvailable) && (
-      <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
+      <div ref={ctrlRRef} style={{ position: "absolute", top: "calc(16px + var(--safe-hero-top))", right: 16, display: "flex", gap: 8 }}>
         {onExportPDF && (
           <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
         )}
@@ -40,7 +40,7 @@ export function RecipeHeroMobile({
       </div>
       )}
       {!publicMode && (
-      <div ref={ctrlRRef} style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }}>
+      <div ref={ctrlRRef} style={{ position: "absolute", top: "calc(16px + var(--safe-hero-top))", right: 16, display: "flex", gap: 8 }}>
         <button onClick={onEdit} className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
         <button onClick={() => onExportPDF(recipe)} className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
         <HeroMenu
