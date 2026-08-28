@@ -261,8 +261,19 @@ html.native-feel [contenteditable="true"] * {
      l'inset (moins 14px), sinon les deux s'empilent et le gap paraît trop grand.
      `max(…, 0)` : nul en clair/desktop (inset 0) ; box-sizing:border-box → absorbé
      dans les 100svh, sans débordement. La barre reste toujours dégagée (padding
-     page + ce reste >= inset). */
-  padding-top: max(env(safe-area-inset-top) - 14px, 0px);
+     page + ce reste >= inset). Exposé en variable pour que la fiche recette puisse
+     le récupérer (hero à fond perdu jusqu'en haut). */
+  --safe-hero-top: max(env(safe-area-inset-top) - 14px, 0px);
+  padding-top: var(--safe-hero-top);
+}
+
+/* Fiche recette mobile : le hero peint son image à fond perdu jusqu'en haut de la
+   barre système. On annule ici la réserve d'inset du shell, et le hero la réabsorbe
+   en interne (hauteur + décalage des boutons) pour que boutons, titre et contenu ne
+   bougent pas d'un pixel. Une fois replié, c'est la barre compacte (fond plein) qui
+   recouvre la zone système, donc l'image ne déborde jamais quand elle est repliée. */
+#root.root--edge-hero {
+  padding-top: 0;
 }
 
 /* Zone système du bas (barre de navigation Android / home indicator) peinte à la

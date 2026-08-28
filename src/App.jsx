@@ -536,6 +536,12 @@ function AppInner({ user, isDark, toggleTheme }) {
     <RecipeNotFound onBack={() => navigate("/recipes")} />
   ) : tabContent;
 
+  // Fiche recette affichée en mobile (privée ou publique chargée) : le shell rend son
+  // hero à fond perdu jusqu'en haut de la barre système. On coupe alors la réserve
+  // d'inset du #root, que le hero réabsorbe lui-même (cf. .root--edge-hero).
+  const edgeHero = !isDesktop && !isEditing && !importRoute && !plusRoute
+    && (publicPubId ? !!publicDocs : (!!selectedRecipe && !!currentRecipe));
+
   // La dernière closure des fonctions du shell (définies plus bas, après les retours
   // anticipés) est publiée dans la ref stable déclarée en tête de composant. Écriture
   // pendant le render volontaire (motif « latest ref ») : idempotente, sans effet de
@@ -546,7 +552,7 @@ function AppInner({ user, isDark, toggleTheme }) {
 
   return (
     <AppShellProvider value={shellValue}>
-    <div id="root" className={isDark ? "" : "light"}>
+    <div id="root" className={`${isDark ? "" : "light"}${edgeHero ? " root--edge-hero" : ""}`}>
         {/* Garde-rotation (navigateur) : masque l'app en paysage sur téléphone, où la
             mise en page bascule vers un rendu desktop inadapté. CSS-only (voir
             .rotate-guard), rendu inerte hors du cas ciblé. */}
