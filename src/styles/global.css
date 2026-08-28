@@ -3732,6 +3732,13 @@ select {
   transition-duration: 0.09s;
 }
 
+/* Lignes « ne pas confondre avec » (fiche technique) : liste tappable sobre,
+   surlignage discret au survol / à l'appui. Pas de carte, pas d'emoji : la
+   hierarchie typographique et les filets suffisent. */
+.tech-confuse { transition: background-color 0.15s ease; }
+.tech-confuse:active { background: var(--surface2); }
+@media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
+
 /* Le nombre de portions « rebondit » à chaque changement. */
 .tap-bump {
   animation: tapBump 0.32s cubic-bezier(0.16, 1, 0.3, 1);

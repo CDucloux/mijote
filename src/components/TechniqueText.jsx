@@ -149,24 +149,21 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
           )}
           {conf.length > 0 && (
             <SheetSection label="Ne pas confondre avec">
-              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <div style={{ margin: "0 -10px" }}>
                 {conf.map((r, k) => {
                   const ct = techById.get(r.technique_id);
-                  const cc = techCat(ct?.category);
                   const name = ct?.name || r.technique_id;
-                  const Tag = ct ? "button" : "div";
                   return (
-                    <Tag key={k} type={ct ? "button" : undefined}
+                    <div key={k}
                       onClick={ct ? () => onOpen(ct) : undefined}
-                      className={ct ? "pressable" : undefined}
-                      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 14, padding: "11px 12px", cursor: ct ? "pointer" : "default" }}>
-                      <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 19, background: `color-mix(in srgb, ${cc.color} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${cc.color} 30%, transparent)` }}>{cc.emoji}</span>
-                      <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>{name}</span>
-                        {r.distinction && <span style={{ display: "block", fontSize: 12.5, lineHeight: 1.5, color: "var(--text2)", marginTop: 3 }}>{r.distinction}</span>}
-                      </span>
-                      {ct && <span style={{ flexShrink: 0, display: "flex", color: cc.color }}><Icon name="forward" size={16} color={cc.color} /></span>}
-                    </Tag>
+                      className={ct ? "tap-row tech-confuse" : undefined}
+                      style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 10px", borderTop: k === 0 ? "none" : "1px solid var(--border)", cursor: ct ? "pointer" : "default" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>{name}</div>
+                        {r.distinction && <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text3)", marginTop: 3 }}>{r.distinction}</div>}
+                      </div>
+                      {ct && <span className="tap-chevron" style={{ display: "flex", flexShrink: 0 }}><Icon name="forward" size={15} color="var(--text3)" /></span>}
+                    </div>
                   );
                 })}
               </div>
