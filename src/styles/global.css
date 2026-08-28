@@ -3389,9 +3389,10 @@ select {
   /* Fond UNI sur petit écran : la bichromie pitch/auth n'a de sens que pour la mise
      en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. */
   .auth__panel { background: transparent; border-top: none; }
-  /* Contenu empilé du haut, sans étirement des rangées : sinon la grille répartit
-     l'espace libre et éloigne le formulaire de la marmite (chaque moitié centrée). */
-  .auth__grid { align-content: start; }
+  /* Colonne répartie sur toute la hauteur : le pitch (logo, slogan, marmite) occupe
+     le haut, et le bloc d'auth prend l'espace bas restant (centré dedans) au lieu de
+     tout tasser en haut en laissant le bas vide. */
+  .auth__grid { grid-template-rows: auto 1fr; }
   /* Le pitch démarre à la même hauteur que le toggle (14px), et la marque occupe
      une rangée de 44px centrée : le logo s'aligne ainsi avec le bouton de thème. */
   .auth__pitch { padding-top: calc(14px + env(safe-area-inset-top)); }
@@ -3402,7 +3403,7 @@ select {
   /* Le slogan prend le même traitement que l'eyebrow desktop : capitales, accent,
      interlettrage. C'est l'unique titre de l'écran mobile (h1 conservé). */
   .auth__title {
-    margin: 14px 0 0;
+    margin: clamp(28px, 8vw, 56px) 0 0;
     font-family: var(--ff-body);
     font-size: 13px;
     font-weight: 600;
@@ -3412,9 +3413,9 @@ select {
     line-height: 1.5;
   }
   .auth__desc { max-width: 40ch; margin-inline: auto; }
-  /* Marmite centrée et plus généreuse : c'est l'ancrage visuel du hero mobile. */
-  .auth__art { margin-top: clamp(20px, 5vw, 32px); justify-content: center; }
-  .auth__art svg { width: clamp(168px, 50vw, 240px); height: auto; }
+  /* Marmite centrée et généreuse : c'est l'ancrage visuel du hero mobile. */
+  .auth__art { margin-top: clamp(28px, 7vw, 44px); justify-content: center; }
+  .auth__art svg { width: clamp(200px, 60vw, 290px); height: auto; }
 }
 /* La marmite n'est masquée qu'en paysage / écran vraiment court : en portrait, elle
    reste le point chaud de l'écran. */
