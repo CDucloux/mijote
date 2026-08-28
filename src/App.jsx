@@ -28,6 +28,7 @@ import { usePublicRecipes } from "./hooks/usePublicRecipes.js";
 import { useAccount } from "./hooks/useAccount.js";
 import { useRecipeCrud } from "./hooks/useRecipeCrud.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
+import { useSoftKeyboardOpen } from "./hooks/useSoftKeyboardOpen.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
 import { useAndroidBackButton } from "./hooks/useAndroidBackButton.js";
 import { SwipeableSheet } from "./components/SwipeableSheet.jsx";
@@ -265,6 +266,9 @@ function AppInner({ user, isDark, toggleTheme }) {
   );
   const currentRecipe = recipes.find(r => r.id === selectedRecipe);
   const isDesktop = useIsDesktop();
+  // Clavier logiciel ouvert (saisie) : on masque la tab bar, qui sinon se colle
+  // juste au-dessus du clavier une fois le webview redimensionné (mobile).
+  const keyboardOpen = useSoftKeyboardOpen();
 
   // Suppression optimiste : la recette disparaît de la liste avant que l'URL ne
   // change, ouvrant une fenêtre où l'id de l'URL ne résout plus rien. On mémorise
@@ -579,7 +583,7 @@ function AppInner({ user, isDark, toggleTheme }) {
             >
               {mainScreen}
             </PullToRefresh>
-            <TabBar tab={tab} setTab={requestTab} />
+            {!keyboardOpen && <TabBar tab={tab} setTab={requestTab} />}
           </div>
         )}
 
