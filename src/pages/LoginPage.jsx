@@ -67,7 +67,9 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
   // Overscroll élastique au bas de l'écran, comme les pages de l'app ; inutile sur
   // desktop (pas de tactile, contenu qui tient).
   const isDesktop = useMemo(() => typeof matchMedia === "function" && matchMedia("(min-width: 860px)").matches, []);
-  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
+  // L'écran de connexion tient à l'écran (rien à défiler) : on arme quand même
+  // l'élastique sur un swipe vers le haut, sinon le geste ne produirait aucun ressenti.
+  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop, armWhenUnscrollable: true });
 
   useLoginDocumentHead();
 

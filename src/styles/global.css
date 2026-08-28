@@ -3387,8 +3387,11 @@ select {
      on evite d'y renvoyer. Le logo (dans le pitch) prend la place en haut. */
   .auth__back { display: none; }
   /* Fond UNI sur petit écran : la bichromie pitch/auth n'a de sens que pour la mise
-     en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. */
-  .auth__panel { background: transparent; border-top: none; }
+     en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. Le bloc de
+     connexion se cale en haut de la zone basse (remonté), le copyright + version
+     (repoussé par `margin-top:auto`) se pose tout en bas de l'écran. */
+  .auth__panel { background: transparent; border-top: none; justify-content: flex-start; }
+  .auth__legalline { margin-top: auto; }
   /* Colonne répartie sur toute la hauteur : le pitch (logo, slogan, marmite) occupe
      le haut, et le bloc d'auth prend l'espace bas restant (centré dedans) au lieu de
      tout tasser en haut en laissant le bas vide. */

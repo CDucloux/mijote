@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { trackFlingPeak, bounceImpact } from "@/lib/ui/flingVelocity.js";
+import { canArmBottomStretch } from "@/lib/ui/elasticStretch.js";
 
 /**
  * Overscroll vertical « stretch » au BAS d'un conteneur scrollable : arrivé en bas,
@@ -22,6 +23,9 @@ import { trackFlingPeak, bounceImpact } from "@/lib/ui/flingVelocity.js";
  * @param options - Réglages.
  * @param options.max - Décalage maximal en pixels (défaut 38, volontairement subtil).
  * @param options.disabled - Désactive l'effet (ex. desktop).
+ * @param options.armWhenUnscrollable - Arme l'étirement sur un geste vers le haut même
+ *   quand le contenu tient à l'écran (rien à défiler). Utile sur une page courte (ex.
+ *   connexion) pour garder le ressenti élastique ; faux par défaut.
  * @returns `scrollRef` (conteneur `overflow-y`) et `contentRef` (enfant transformé,
  *   englobant tout le contenu défilable).
  *
@@ -31,7 +35,7 @@ import { trackFlingPeak, bounceImpact } from "@/lib/ui/flingVelocity.js";
  * return <div ref={scrollRef} style={{ overflowY: "auto" }}><div ref={contentRef}>…</div></div>;
  * ```
  */
-export function useElasticScroll({ max = 38, disabled = false }: { max?: number; disabled?: boolean } = {}) {
+export function useElasticScroll({ max = 38, disabled = false, armWhenUnscrollable = false }: { max?: number; disabled?: boolean; armWhenUnscrollable?: boolean } = {}) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
 
@@ -100,8 +104,9 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
       const dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
       if (!axis) { if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
       if (axis !== "y") return;
-      // On n'arme l'élastique que si on est déjà tout en bas et qu'on tire encore vers le haut.
-      if (!mode) { mode = scrollable() && atBottom() && dy < -2 ? "bottom" : "scroll"; if (mode === "bottom") lift(true); }
+      // On n'arme l'élastique que sur un tirage vers le haut, une fois à la butée
+      // basse (ou, si `armWhenUnscrollable`, même quand rien ne défile : cf. connexion).
+      if (!mode) { mode = canArmBottomStretch(scrollable(), atBottom(), armWhenUnscrollable) && dy < -2 ? "bottom" : "scroll"; if (mode === "bottom") lift(true); }
       if (mode !== "bottom") return;
       // On n'étire QUE vers le haut ; inverser le geste relâche proprement (pull=0)
       // sans jamais nourrir `rubber` d'une valeur négative (pas d'emballement).
@@ -154,7 +159,7 @@ export function useElasticScroll({ max = 38, disabled = false }: { max?: number;
       inner.removeEventListener("transitionend", onEnd);
       bounce?.cancel();
     };
-  }, [max, disabled]);
+  }, [max, disabled, armWhenUnscrollable]);
 
   return { scrollRef, contentRef };
 }
