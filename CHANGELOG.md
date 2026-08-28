@@ -1,5 +1,21 @@
 # Changelog – Cardamome
 
+## v4.10.2 – Cardamome · Le mobile soigne ses détails
+
+### Mobile
+- **Impression et export PDF réparés sur l'app** : dans la coquille native, l'export d'une recette n'ouvrait qu'un message puis restait sans effet (la WebView n'implémente pas l'impression du navigateur). Le document part désormais vers le service d'impression du téléphone (« Enregistrer en PDF » ou imprimante), et un échec éventuel est signalé au lieu de rester silencieux.
+- **La barre d'onglets s'efface quand on tape** : au clavier ouvert (recherche, formulaires), la barre du bas ne vient plus se coller juste au-dessus du clavier ; elle disparaît le temps de la saisie et revient à la fermeture, comme sur une app native.
+- **Plus d'infobulles au toucher** : les bulles d'aide, pensées pour le survol souris, s'affichaient parfois au simple tap sur mobile et gênaient. Elles sont désormais réservées au bureau.
+- **Ajout aux courses de nouveau défilable** : depuis une recette, la feuille « Ajouter aux courses » tassait ses lignes et devenait impossible à faire défiler dès qu'il y avait beaucoup d'ingrédients. La liste défile à nouveau normalement, en-tête et bouton d'ajout restant en place.
+
+### Fiche recette
+- **La conversion en cuillères reste au mode pas à pas** : le badge de conversion en cuillères quitte la liste d'ingrédients de la fiche (bureau et mobile) pour ne vivre que là où il sert vraiment, la mise en place du mode pas à pas.
+- **Bouton « Mode pas à pas » plus présent** : sur la fiche en grand écran, le bouton passe en pilule d'action principale, un peu plus grand, pour se repérer d'un coup d'oeil.
+
+### Interface
+- **Statut « en stock » harmonisé** : dans la feuille d'ajout aux courses, l'étiquette « en stock » adopte le brun garde-manger déjà utilisé sur la fiche recette, au lieu du vert, pour une couleur unique d'un écran à l'autre.
+- **Analyse nutritionnelle : la pastille glisse enfin** : la bascule Par portion / Pour 100 g / Calcul faisait sauter son fond d'un onglet à l'autre ; sa pastille glisse maintenant en douceur, à l'image des autres sélecteurs.
+
 ## v4.10.1 – Cardamome · La pastille se pose sans rebondir
 
 ### Interface
