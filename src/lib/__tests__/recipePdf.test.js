@@ -81,8 +81,11 @@ describe("buildRecipePdfHtml – tags de tête", () => {
 });
 
 describe("choosePrintStrategy", () => {
-  it("iframe dans la coquille native (le popup n'imprime pas dans la WebView)", () => {
-    expect(choosePrintStrategy(true)).toBe("iframe");
+  // Non-régression : la WebView Capacitor n'implémente pas window.print()
+  // (no-op silencieux), donc ni popup ni iframe n'aboutissent en natif : on
+  // passe par le plugin d'impression natif.
+  it("plugin natif dans la coquille Capacitor (window.print() y est un no-op)", () => {
+    expect(choosePrintStrategy(true)).toBe("native");
   });
 
   it("popup sur le web (aperçu plein écran)", () => {

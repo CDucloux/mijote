@@ -3,8 +3,9 @@
  * `recipesById` (Map<id, recipe>) permet de résoudre les lignes composant et de
  * générer une annexe « Préparations de base » en fin de document. `printRecipe`
  * rend le document et lance l'impression (« Enregistrer en PDF ») : popup plein
- * écran sur le web, iframe cachée dans la coquille native Capacitor (où le popup
- * ne rejoint pas le service d'impression OS). Texte sélectionnable, rendu fidèle.
+ * écran sur le web, plugin d'impression natif dans la coquille Capacitor (où
+ * `window.print()` de la WebView est un no-op et ne rejoint pas le service
+ * d'impression OS). Texte sélectionnable, rendu fidèle.
  *
  * @module recipePdf
  */
@@ -16,6 +17,7 @@ import { cuisineEmoji, normalizeCuisine } from "@/constants/cuisines.js";
 import { DIFFICULTY_LABEL, computeDifficulty } from "@/lib/recipes/difficulty.js";
 import { fmtQtyUnit } from "@/lib/format.js";
 import { Capacitor } from "@capacitor/core";
+import { Printer } from "@bcyesil/capacitor-plugin-printer";
 import type { IngredientLine, Step } from "@/lib/types.js";
 
 /** Ligne d'ingrédient/ustensile d'une recette pour le rendu PDF (alias de domaine). */
@@ -401,21 +403,21 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
 }
 
 /** Stratégie d'impression selon la coquille d'exécution. */
-export type PrintStrategy = "popup" | "iframe";
+export type PrintStrategy = "popup" | "native";
 
 /**
- * Choisit le canal d'impression. Dans la coquille native (Capacitor), un
- * `window.open("_blank")` ouvre une WebView auxiliaire que le pont natif ne relie
- * PAS au service d'impression Android/iOS : le document s'affiche mais `print()`
- * n'aboutit jamais. On rend alors dans une iframe cachée du document courant, dont
- * le `print()` déclenche bien le framework d'impression natif (« Enregistrer en
- * PDF »). Sur le web, la popup reste le meilleur choix (aperçu plein écran).
+ * Choisit le canal d'impression. Dans la coquille native (Capacitor), la WebView
+ * n'implémente pas `window.print()` (no-op silencieux sur Android System WebView
+ * et iOS WKWebView) : ni la popup ni une iframe cachée n'atteignent le service
+ * d'impression OS. On passe donc par un plugin natif qui remet le HTML au
+ * framework d'impression Android/iOS (« Enregistrer en PDF »). Sur le web, la
+ * popup reste le meilleur choix (aperçu plein écran).
  *
  * @param isNative - Exécution dans la coquille Capacitor (`Capacitor.isNativePlatform()`).
- * @returns `"iframe"` en natif, `"popup"` sur le web.
+ * @returns `"native"` en natif, `"popup"` sur le web.
  */
 export function choosePrintStrategy(isNative: boolean): PrintStrategy {
-  return isNative ? "iframe" : "popup";
+  return isNative ? "native" : "popup";
 }
 
 // Attend le chargement de l'image de tête (ou son échec) avant d'imprimer, pour
@@ -438,25 +440,12 @@ function printViaPopup(html: string): void {
   printWhenReady(w.document, () => w.print());
 }
 
-// Natif : iframe hors écran dans le document courant, imprimée puis retirée. Le
-// `print()` de l'iframe passe par le WebView principal, seul relié au service
-// d'impression OS. On diffère le retrait pour ne pas annuler la capture en cours.
-function printViaIframe(html: string): void {
-  const iframe = document.createElement("iframe");
-  iframe.setAttribute("aria-hidden", "true");
-  iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
-  document.body.appendChild(iframe);
-  const win = iframe.contentWindow;
-  const doc = win?.document;
-  if (!win || !doc) { iframe.remove(); return; }
-  doc.open();
-  doc.write(html);
-  doc.close();
-  printWhenReady(doc, () => {
-    win.focus();
-    win.print();
-    setTimeout(() => iframe.remove(), 1000);
-  });
+// Natif : le plugin charge le HTML dans une WebView dédiée et le remet au
+// framework d'impression de l'OS (Android Print / UIPrintInteractionController),
+// qui présente le dialogue « Enregistrer en PDF / Imprimer ». `name` sert de nom
+// de fichier proposé. Rejette si le service natif échoue, pour remonter l'erreur.
+function printViaNative(html: string, name?: string): Promise<void> {
+  return Printer.print({ content: html, ...(name ? { name } : {}) });
 }
 
 /**
@@ -466,13 +455,15 @@ function printViaIframe(html: string): void {
  *
  * @param recipe - La recette à imprimer.
  * @param dbs - Dépendances de rendu (voir {@link buildRecipePdfHtml}).
- * @returns Rien ; sur le web, sans effet si la popup est bloquée par le navigateur.
+ * @returns Promesse résolue une fois l'impression remise à l'OS (natif) ou la
+ * popup ouverte (web). Rejette si le service d'impression natif échoue ; sur le
+ * web, sans effet si la popup est bloquée par le navigateur.
  */
-export function printRecipe(recipe: PdfRecipe, dbs: PdfDbs = {}): void {
+export function printRecipe(recipe: PdfRecipe, dbs: PdfDbs = {}): Promise<void> {
   const html = buildRecipePdfHtml(recipe, dbs);
-  if (choosePrintStrategy(Capacitor.isNativePlatform()) === "iframe") {
-    printViaIframe(html);
-  } else {
-    printViaPopup(html);
+  if (choosePrintStrategy(Capacitor.isNativePlatform()) === "native") {
+    return printViaNative(html, recipe.name);
   }
+  printViaPopup(html);
+  return Promise.resolve();
 }

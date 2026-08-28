@@ -22,6 +22,7 @@
     "doc:serve": "typedoc && vite preview --outDir docs/api --port 4173"
   },
   "dependencies": {
+    "@bcyesil/capacitor-plugin-printer": "^0.0.6",
     "@capacitor-firebase/authentication": "^8.4.0",
     "@capacitor/android": "^8.5.0",
     "@capacitor/app": "^8.1.1",

@@ -142,12 +142,12 @@ export function useRecipeCrud({
   };
 
   const exportPDF = (recipe: Recipe): void => {
+    notify("Ouverture de l'aperçu d'impression…");
     printRecipe(recipe as unknown as PdfRecipe, {
       ingredientDB, utensilDB,
       recipesById: buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, PdfRecipe>,
       techniques,
-    } as Parameters<typeof printRecipe>[1]);
-    notify("Ouverture de l'aperçu d'impression…");
+    } as Parameters<typeof printRecipe>[1]).catch(() => notify("Impression indisponible sur cet appareil.", "error"));
   };
 
   return { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF };
