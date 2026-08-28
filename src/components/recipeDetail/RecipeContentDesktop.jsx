@@ -3,7 +3,6 @@ import { Img, IngImage } from "../Img.jsx";
 import { UtImage } from "../StepPills.jsx";
 import { BaseIcon } from "../BaseIcon.jsx";
 import { StepTip } from "../StepTip.jsx";
-import { ConvertBadge } from "../QuantityConvertSheet.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
 import { groupBy, sectionRuns, hasGroups, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
 import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../../lib/format.js";
@@ -14,7 +13,7 @@ import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "..
  * via `view` (contexte de rendu partagé avec la version mobile).
  */
 export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
-  const { mult, recipesById, getIngImage, getUtImage, resolveComp, convOf, openConvert, navigate } = view;
+  const { mult, recipesById, getIngImage, getUtImage, resolveComp, navigate } = view;
   return (
     <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: "12px 16px 16px", gap: 16 }}>
       {/* Left col: ingrédients + ustensiles (card) */}
@@ -48,7 +47,6 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
               <div key={ing.id} onClick={() => ing.dbId && navigate(`/admin/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: ing.dbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (ing.dbId) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
                 <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                   <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
-                  {convOf(ing, ing.amount * mult) && <ConvertBadge onClick={() => openConvert(ing, ing.amount * mult)} />}
                 </span>
                 <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                   <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
