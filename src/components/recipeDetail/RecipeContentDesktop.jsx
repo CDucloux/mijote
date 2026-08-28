@@ -80,8 +80,8 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 34, marginBottom: 16 }}>
           <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)" }}>Étapes</span>
           {recipe.steps && recipe.steps.length > 0 && (
-            <button className="btn btn-primary btn-sm" style={{ gap: 7, borderRadius: 999, padding: "8px 18px" }} onClick={() => setCookMode(true)}>
-              <Icon name="fire" size={13} /> Mode pas à pas
+            <button className="btn btn-primary btn-pill" style={{ gap: 8, fontSize: 14.5, fontWeight: 600, padding: "11px 24px" }} onClick={() => setCookMode(true)}>
+              <Icon name="fire" size={16} /> Mode pas à pas
             </button>
           )}
         </div>
