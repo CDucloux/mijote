@@ -16,6 +16,11 @@ import { useCanHover } from "../hooks/useCanHover.js";
 // publiques qui l'utilisent, ou une invitation à publier si la communauté est vide.
 const CAT_LABEL = { fruit: "Fruit", vegetable: "Légume" };
 
+// Une seule teinte chaude pour toute la carte : l'ambre du badge « De saison »,
+// en aplat (pas de dégradé), pour un rendu unifié. Source unique, DRY.
+const AMBER = "#e8920a";
+const AMBER_RGB = "232, 146, 10";
+
 // Frise de saison (accent) : réutilise la barre partagée <SeasonBar/> et ajoute
 // l'en-tête « Sa saison · N mois ».
 function SeasonFrieze({ months }) {
@@ -26,7 +31,7 @@ function SeasonFrieze({ months }) {
         <span style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600 }}>Sa saison</span>
         <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>{count} mois / an</span>
       </div>
-      <SeasonBar months={months} from="var(--spice)" to="#dd7a2e" node="#c56b46" />
+      <SeasonBar months={months} from={AMBER} to={AMBER} node={AMBER} glow={`rgba(${AMBER_RGB}, 0.5)`} />
     </div>
   );
 }
@@ -80,7 +85,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
       </div>
 
       <article style={{ position: "relative", overflow: "hidden", borderRadius: 20, border: "1px solid var(--border)", background: "var(--surface)", padding: "16px 16px 14px", boxShadow: "0 10px 26px -16px rgba(120,70,30,0.22)" }}>
-        <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: "linear-gradient(90deg, var(--spice), #c56b46)" }} />
+        <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: AMBER }} />
 
         {/* En-tête cliquable → fiche ingrédient */}
         <button onClick={() => onOpenIngredient?.(ingredient)} onPointerDown={onHeaderPress} className="pressable" style={{ position: "relative", display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
@@ -92,7 +97,7 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
           <span style={{ position: "relative", zIndex: 1, minWidth: 0, flex: 1 }}>
             <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 6, color: "var(--text)" }}>{ingredient.name}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(232,146,10,0.95)", color: "#fff", fontWeight: 600, fontSize: 10, padding: "3px 9px 3px 7px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: `rgba(${AMBER_RGB}, 0.95)`, color: "#fff", fontWeight: 600, fontSize: 10, padding: "3px 9px 3px 7px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <Icon name="sun" size={11} color="#fff" /> De saison
               </span>
               <span style={{ fontSize: 12, color: "var(--text3)", fontWeight: 500 }}>{catLabel}</span>
@@ -127,14 +132,14 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
             ))}
           </div>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(var(--spice-rgb),0.07)", border: "1px dashed rgba(var(--spice-rgb),0.4)", borderRadius: 14, padding: "12px 13px" }}>
-            <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: "rgba(var(--spice-rgb),0.16)", color: "var(--spice)", display: "grid", placeItems: "center" }}>
-              <Icon name="plus" size={18} color="var(--spice)" />
+          <div style={{ display: "flex", alignItems: "center", gap: 12, background: `rgba(${AMBER_RGB}, 0.07)`, border: `1px dashed rgba(${AMBER_RGB}, 0.4)`, borderRadius: 14, padding: "12px 13px" }}>
+            <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: `rgba(${AMBER_RGB}, 0.16)`, color: AMBER, display: "grid", placeItems: "center" }}>
+              <Icon name="plus" size={18} color={AMBER} />
             </span>
             <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "var(--text2)" }}>
               Personne n'a encore partagé de recette contenant cet ingrédient. <strong style={{ color: "var(--text)" }}>Et si tu ouvrais le bal ?</strong>
             </span>
-            {onPublish && <button className="btn btn-sm" style={{ marginLeft: "auto", flexShrink: 0, background: "#e8920a", color: "#fff", border: "none", fontWeight: 600 }} onClick={onPublish}>Publier</button>}
+            {onPublish && <button className="btn btn-sm pressable" style={{ marginLeft: "auto", flexShrink: 0, background: AMBER, color: "#fff", border: "none", fontWeight: 600, borderRadius: 999, padding: "7px 16px", boxShadow: `0 4px 12px -4px rgba(${AMBER_RGB}, 0.55)` }} onClick={onPublish}>Publier</button>}
           </div>
         )}
       </article>
