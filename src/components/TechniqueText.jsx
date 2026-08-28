@@ -119,7 +119,7 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
             {ancestors.map(a => (
               <span key={a.id} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 <Icon name="forward" size={11} color="var(--text3)" />
-                <span style={{ ...crumbPill, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)" }}>{a.name}</span>
+                <span style={{ ...crumbPill, color: c.color, background: `color-mix(in srgb, ${c.color} 14%, transparent)` }}>{a.name}</span>
               </span>
             ))}
           </div>
