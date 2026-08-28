@@ -57,7 +57,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               // Statut : « en stock » (BRUN, garde-manger, inclut le bientôt vide,
               // qui reste théoriquement en stock) ou, à défaut, « de saison » (vert).
               let badge = null;
-              if (inStock) badge = { text: "en stock", color: "#a0724e", icon: "box" };
+              if (inStock) badge = { text: "en stock", color: "var(--stock)", icon: "box" };
               else if (inSeason) badge = { text: "de saison", color: "var(--green)", icon: "sun" };
 
               const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;

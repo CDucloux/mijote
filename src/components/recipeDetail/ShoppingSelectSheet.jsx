@@ -10,24 +10,24 @@ import { fmtQtyUnit } from "../../lib/format.js";
  */
 export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, isInStock, isLowStock, getIngImage, mult, onClose, onConfirm }) {
   return (
-    <SwipeableSheet onClose={onClose} style={{ maxHeight: "85dvh" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+    <SwipeableSheet onClose={onClose} style={{ maxHeight: "85dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexShrink: 0 }}>
         <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)" }}>
           <Icon name="shopping" size={21} color="var(--accent)" />
         </span>
         <div style={{ minWidth: 0 }}>
           <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Ajouter aux courses</h3>
-          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--ok)" }}>en stock</span> sont décochés par défaut.</p>
+          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Les ingrédients <span style={{ fontWeight: 600, color: "var(--stock)" }}>en stock</span> sont décochés par défaut.</p>
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0 }}>
         <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{selectedIngs.length} / {flatIngs.length} sélectionné{selectedIngs.length > 1 ? "s" : ""}</span>
         <div style={{ display: "flex", gap: 6 }}>
           <button onClick={() => setSelectedIngs(flatIngs.map(fi => fi._fid))} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "rgba(var(--accent-rgb),0.10)", border: "1px solid rgba(var(--accent-rgb),0.28)", color: "var(--accent)" }}>Tout cocher</button>
           <button onClick={() => setSelectedIngs([])} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text3)" }}>Tout décocher</button>
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 7, overflowY: "auto", maxHeight: "52vh", marginBottom: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 7, overflowY: "auto", WebkitOverflowScrolling: "touch", flex: 1, minHeight: 0, marginBottom: 16 }}>
         {flatIngs.map(ing => {
           const selected = selectedIngs.includes(ing._fid);
           const inStock = isInStock(ing);
@@ -36,7 +36,7 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
             <button key={ing._fid} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing._fid) : [...prev, ing._fid])}
               className="pressable"
               style={{
-                display: "flex", alignItems: "center", gap: 12, padding: "10px 13px", borderRadius: 14,
+                display: "flex", alignItems: "center", gap: 12, padding: "10px 13px", borderRadius: 14, flexShrink: 0,
                 background: selected ? "rgba(var(--accent-rgb),0.10)" : "var(--surface2)",
                 border: `1.5px solid ${selected ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`,
                 textAlign: "left", transition: "background 0.15s, border-color 0.15s"
@@ -59,14 +59,14 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
                       display: "inline-flex", alignItems: "center", gap: 5,
                       marginLeft: "auto", flexShrink: 0,
                       fontSize: 10, fontWeight: 600,
-                      color: low ? "var(--accent)" : "var(--ok)",
+                      color: low ? "var(--accent)" : "var(--stock)",
                     }}>
                       <span style={{
                         width: 16, height: 16, borderRadius: "50%",
-                        background: low ? "var(--accent)" : "var(--ok)",
+                        background: low ? "var(--accent)" : "var(--stock)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
-                        <Icon name={low ? "warning" : "check"} size={low ? 10 : 9} color="#fff" />
+                        <Icon name={low ? "warning" : "box"} size={low ? 10 : 10} color="#fff" />
                       </span>
                       {low ? "bientôt vide" : "en stock"}
                     </span>
@@ -77,7 +77,7 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
           );
         })}
       </div>
-      <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "13px 0" }}
+      <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "13px 0", flexShrink: 0 }}
         disabled={selectedIngs.length === 0}
         onClick={() => onConfirm(flatIngs.filter(fi => selectedIngs.includes(fi._fid)))}>
         <Icon name="shopping" size={15} /> Ajouter {selectedIngs.length > 0 ? `${selectedIngs.length} article${selectedIngs.length > 1 ? "s" : ""}` : ""}
