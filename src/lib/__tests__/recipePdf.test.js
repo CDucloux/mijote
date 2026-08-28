@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildRecipePdfHtml } from "@/lib/recipes/recipePdf.js";
+import { buildRecipePdfHtml, choosePrintStrategy } from "@/lib/recipes/recipePdf.js";
 
 const DB = [
   { id: "courgette", name: "Courgette", category: "vegetable" },
@@ -77,5 +77,18 @@ describe("buildRecipePdfHtml – tags de tête", () => {
     expect(html).toContain("hbadge-vegan");    // badge vegan style app
     expect(html).toContain("Italienne");
     expect(html).not.toContain('<div class="tags">'); // pas de repli sous le titre
+  });
+});
+
+describe("choosePrintStrategy", () => {
+  // Non-régression : la WebView Capacitor n'implémente pas window.print()
+  // (no-op silencieux), donc ni popup ni iframe n'aboutissent en natif : on
+  // passe par le plugin d'impression natif.
+  it("plugin natif dans la coquille Capacitor (window.print() y est un no-op)", () => {
+    expect(choosePrintStrategy(true)).toBe("native");
+  });
+
+  it("popup sur le web (aperçu plein écran)", () => {
+    expect(choosePrintStrategy(false)).toBe("popup");
   });
 });

@@ -180,14 +180,27 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
         </div>
       ) : (
         <>
-      {/* Bascule portion / 100 g / Calcul (Calcul = traçabilité, réservé à Cardamome+) */}
-      <Row gap={4} style={{ background: "var(--surface2)", borderRadius: 10, padding: 3, margin: "14px 0 18px" }}>
-        {[["portion", "Par portion"], ["100g", "Pour 100 g"], ["calc", "Calcul"]].map(([id, lbl]) => (
-          <button key={id} onClick={() => setBasis(id)} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: basis === id ? "var(--surface)" : "transparent", color: basis === id ? "var(--text)" : "var(--text3)", boxShadow: basis === id ? "0 1px 3px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s" }}>
-            {id === "calc" && !isPlus && <Icon name="lock" size={11} color="currentColor" />}{lbl}
-          </button>
-        ))}
-      </Row>
+      {/* Bascule portion / 100 g / Calcul, pastille glissante (Calcul = traçabilité, réservé à Cardamome+) */}
+      {(() => {
+        const opts = [["portion", "Par portion"], ["100g", "Pour 100 g"], ["calc", "Calcul"]];
+        const activeIdx = Math.max(0, opts.findIndex(([id]) => id === basis));
+        return (
+          <Row style={{ position: "relative", background: "var(--surface2)", borderRadius: 10, padding: 3, margin: "14px 0 18px" }}>
+            {/* Pastille active : glisse d'un onglet à l'autre (translateX), sans rebond */}
+            <div aria-hidden="true" style={{
+              position: "absolute", top: 3, bottom: 3, left: 3, width: `calc((100% - 6px) / ${opts.length})`,
+              background: "var(--surface)", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+              transform: `translateX(calc(${activeIdx} * 100%))`,
+              transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
+            }} />
+            {opts.map(([id, lbl]) => (
+              <button key={id} onClick={() => setBasis(id)} style={{ position: "relative", zIndex: 1, flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: "transparent", color: basis === id ? "var(--text)" : "var(--text3)", transition: "color 0.3s ease" }}>
+                {id === "calc" && !isPlus && <Icon name="lock" size={11} color="currentColor" />}{lbl}
+              </button>
+            ))}
+          </Row>
+        );
+      })()}
 
       {basis === "calc" ? (
         isPlus && breakdown

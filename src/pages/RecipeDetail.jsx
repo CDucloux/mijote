@@ -8,7 +8,6 @@ import { BaseInfoModal } from "../components/BaseInfoModal.jsx";
 import { DifficultyModal } from "../components/DifficultyModal.jsx";
 import { RecipeJournal } from "../components/RecipeJournal.jsx";
 import { RecipeCalculators } from "../components/RecipeCalculators.jsx";
-import { QuantityConvertSheet } from "../components/QuantityConvertSheet.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { RecipeHeroDesktop } from "../components/recipeDetail/RecipeHeroDesktop.jsx";
 import { RecipeHeroMobile } from "../components/recipeDetail/RecipeHeroMobile.jsx";
@@ -34,7 +33,6 @@ import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { formatParamSummary } from "@/lib/utensils/appliances.js";
-import { spoonConversions } from "@/lib/food/calculators.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { computeDifficulty, explainDifficulty } from "@/lib/recipes/difficulty.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
@@ -57,7 +55,6 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const [bump, setBump] = useState(0); // relance l'animation « rebond » du compteur de portions
   const [panFactor, setPanFactor] = useState(1); // facteur d'adaptation de moule (calculatrice)
   const [showCalc, setShowCalc] = useState(false);
-  const [convIng, setConvIng] = useState(null); // ingrédient dont on montre l'équivalent cuillères
   const [activeTab, setActiveTab] = useState("Ingrédients");
   const isDesktop = useIsDesktop();
   const [showMealModal, setShowMealModal] = useState(false);
@@ -215,13 +212,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
   // Résumé des réglages d'appareil posés sur l'étape (vide si l'ustensile n'en est pas un).
   const getUtDetail = (u, step) => formatParamSummary(utensilDB.find(d => d.id === u.dbId)?.appliance, step?.utensilParams?.[u.id]);
-  // Équivalent cuillères d'un ingrédient (null si non convertible). Sert de garde
-  // d'affichage du badge ET de payload d'ouverture de la feuille.
-  const convOf = (ing, amount) => spoonConversions(amount, ing.unit, ing.name);
-  const openConvert = (ing, amount) => setConvIng({ name: ing.name, image: getIngImage(ing.dbId, ing.name), amount, unit: ing.unit, spoons: convOf(ing, amount) });
-
   // Contexte de rendu partagé par les contenus mobile/desktop (helpers d'affichage).
-  const view = { mult, recipesById, getIngImage, getUtImage, getUtDetail, resolveComp, isInStock, convOf, openConvert, seasonResolver, ingredientDB, navigate };
+  const view = { mult, recipesById, getIngImage, getUtImage, getUtDetail, resolveComp, isInStock, seasonResolver, ingredientDB, navigate };
 
   // Actions du menu « … » du hero (identiques desktop/mobile).
   const menuItems = [
@@ -384,7 +376,6 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <RecipeCalculators recipe={recipe} panApplied={panFactor !== 1}
           onApply={f => setPanFactor(f)} onReset={() => setPanFactor(1)} onClose={() => setShowCalc(false)} />
       )}
-      {convIng && <QuantityConvertSheet ing={convIng} onClose={() => setConvIng(null)} />}
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
       {showDifficulty && <DifficultyModal data={difficultyExplain} onClose={() => setShowDifficulty(false)} />}
       {showCollModal && (

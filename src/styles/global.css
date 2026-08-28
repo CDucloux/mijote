@@ -34,8 +34,9 @@
   --text3: #6b7061;
   --green: #46ab5f;          /* vert sémantique : saisonnalité, difficulté, vegan, santé */
   --green-rgb: 70, 171, 95;
-  --ok: #1f9e8f;             /* sarcelle : actions validées / cochées / terminé / en stock */
+  --ok: #1f9e8f;             /* sarcelle : actions validées / cochées / terminé */
   --ok-rgb: 31, 158, 143;
+  --stock: #a0724e;          /* brun garde-manger : statut « en stock » */
   --red: #e05252;
   --yellow: #f0c060;
   --blue: #5b9cf6;

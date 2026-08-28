@@ -4,7 +4,6 @@ import { Img, IngImage } from "../Img.jsx";
 import { IngredientPill, UtensilPill, UtImage } from "../StepPills.jsx";
 import { BaseIcon } from "../BaseIcon.jsx";
 import { StepTip } from "../StepTip.jsx";
-import { ConvertBadge } from "../QuantityConvertSheet.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
@@ -18,7 +17,7 @@ import { capitalize, fmtQty, pluralizeUnit, pluralizeName } from "../../lib/form
  * portions/pas-à-pas. Le rendu suit strictement l'onglet actif.
  */
 export function RecipeContentMobile({ recipe, activeTab, view, servings, setServings, bump, setBump, panFactor, setShowCalc, baseSteps, setCookMode }) {
-  const { mult, recipesById, getIngImage, getUtImage, getUtDetail, resolveComp, isInStock, convOf, openConvert, seasonResolver, ingredientDB, navigate } = view;
+  const { mult, recipesById, getIngImage, getUtImage, getUtDetail, resolveComp, isInStock, seasonResolver, ingredientDB, navigate } = view;
   return (
     <>
       {activeTab === "Ingrédients" && (
@@ -58,7 +57,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               // Statut : « en stock » (BRUN, garde-manger, inclut le bientôt vide,
               // qui reste théoriquement en stock) ou, à défaut, « de saison » (vert).
               let badge = null;
-              if (inStock) badge = { text: "en stock", color: "#a0724e", icon: "box" };
+              if (inStock) badge = { text: "en stock", color: "var(--stock)", icon: "box" };
               else if (inSeason) badge = { text: "de saison", color: "var(--green)", icon: "sun" };
 
               const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;
@@ -71,14 +70,12 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
                 if (isComp && rc.comp) navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } });
                 else if (!isComp && effDbId) navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`);
               };
-              const spoons = isComp ? null : convOf(ing, ing.amount * mult);
               return (
                 <div key={ing.id} onClick={onClick} onPointerDown={clickable ? spawnRipple : undefined} className={clickable ? "tap-row" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>
                   <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                     {isComp && !rc.comp?.image
                       ? <span style={{ width: 46, height: 46, borderRadius: "50%", background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
                       : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
-                    {spoons && <ConvertBadge onClick={() => openConvert(ing, ing.amount * mult)} />}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>

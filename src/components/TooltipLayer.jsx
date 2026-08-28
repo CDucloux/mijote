@@ -12,6 +12,11 @@ import { computeTooltipPosition } from "@/lib/ui/tooltipPosition.js";
 // Souris uniquement : au toucher il n'y a pas de survol, donc aucune bulle. Le
 // focus clavier l'affiche aussi (a11y). La logique de placement pure est testée
 // dans src/lib/ui/tooltipPosition.
+//
+// Tactile (mobile) : la bulle est entièrement désactivée. Le survol n'existe pas
+// au doigt, mais un simple tap donne le focus à un bouton et ferait apparaître la
+// bulle via `focusin`, ce qui parasite l'UX. Sur un appareil sans survol
+// (`hover: none`), on ne pose aucun écouteur et rien ne s'affiche jamais.
 
 const SHOW_DELAY = 320; // ms avant apparition : évite le clignotement au survol de passage
 
@@ -23,6 +28,8 @@ export function TooltipLayer() {
   const timerRef = useRef(0);
 
   useEffect(() => {
+    // Appareil tactile sans survol : pas d'infobulles du tout (voir en-tête).
+    if (typeof window !== "undefined" && window.matchMedia?.("(hover: none)").matches) return;
     // Rend son title natif à l'élément neutralisé (restauration = fallback + a11y).
     const restore = () => {
       const a = activeRef.current;
