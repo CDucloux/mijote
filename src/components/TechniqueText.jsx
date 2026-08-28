@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
@@ -62,7 +62,24 @@ function SheetSection({ label, color, children }) {
   );
 }
 
-function TechniqueDetailSheet({ tech, techById, onClose }) {
+// Chaîne d'ancêtres (du plus haut au parent direct) pour le fil d'ariane, en
+// remontant `hierarchy.parent`. Garde-fou anti-cycle.
+function techAncestors(tech, techById) {
+  const out = [];
+  let pid = tech.hierarchy?.parent, guard = 0;
+  while (pid && guard < 8) {
+    const p = techById.get(pid);
+    if (!p) break;
+    out.unshift(p);
+    pid = p.hierarchy?.parent;
+    guard++;
+  }
+  return out;
+}
+
+const crumbPill = { fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "3px 9px", borderRadius: 999, whiteSpace: "nowrap" };
+
+function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
   const c = techCat(tech.category);
   const catLabel = TECHNIQUE_CATEGORIES[tech.category] || tech.category;
   const diff = Number(tech.difficulty) || 0;
@@ -70,37 +87,44 @@ function TechniqueDetailSheet({ tech, techById, onClose }) {
   const inds = Array.isArray(er?.observable_indicators) ? er.observable_indicators : [];
   const errs = Array.isArray(tech.common_errors) ? tech.common_errors : [];
   const conf = Array.isArray(tech.not_to_be_confused_with) ? tech.not_to_be_confused_with : [];
-  const parentName = tech.hierarchy?.parent ? techById.get(tech.hierarchy.parent)?.name : null;
+  const ancestors = techAncestors(tech, techById);
+  // Navigation entre fiches (confusions) : on remonte le scroll de la feuille en tête.
+  const topRef = useRef(null);
+  useEffect(() => { topRef.current?.closest(".modal-sheet")?.scrollTo({ top: 0 }); }, [tech.id]);
   return (
     <SwipeableSheet onClose={onClose} zIndex={760} style={{ maxHeight: "88dvh" }}>
       {(close) => (
-        <div>
+        <div ref={topRef}>
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
             <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 27, background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}>{c.emoji}</span>
             <div style={{ minWidth: 0, flex: 1 }}>
               <h2 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{tech.name}</h2>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 7 }}>
-                <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: c.color, background: `color-mix(in srgb, ${c.color} 14%, transparent)`, padding: "3px 10px", borderRadius: 999 }}>{catLabel}</span>
-                {diff > 0 && (
-                  <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 3, alignItems: "center" }}>
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= diff ? c.color : "var(--surface3)" }} />
-                    ))}
-                  </span>
-                )}
-              </div>
+              {diff > 0 && (
+                <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 3, alignItems: "center", marginTop: 8 }}>
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= diff ? c.color : "var(--surface3)" }} />
+                  ))}
+                </span>
+              )}
             </div>
             <button type="button" onClick={() => close()} aria-label="Fermer" className="pressable" style={{ flexShrink: 0, alignSelf: "flex-start", width: 32, height: 32, borderRadius: "50%", border: "none", background: "var(--surface2)", display: "grid", placeItems: "center", cursor: "pointer" }}>
               <Icon name="close" size={16} color="var(--text2)" />
             </button>
           </div>
 
-          <p style={{ margin: "18px 0 0", fontSize: 14.5, lineHeight: 1.6, color: "var(--text)" }}>{tech.definition}</p>
-          {parentName && (
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, fontSize: 12, color: "var(--text3)", background: "var(--surface2)", padding: "5px 11px", borderRadius: 999 }}>
-              Fait partie de <span style={{ fontWeight: 600, color: "var(--text2)" }}>{parentName}</span>
-            </div>
-          )}
+          {/* Fil d'ariane taxonomique : catégorie > ... > parent direct (la technique
+              courante est le titre ci-dessus). Rend la hiérarchie lisible d'un coup d'œil. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginTop: 14 }}>
+            <span style={{ ...crumbPill, color: c.color, background: `color-mix(in srgb, ${c.color} 14%, transparent)` }}>{catLabel}</span>
+            {ancestors.map(a => (
+              <span key={a.id} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                <Icon name="forward" size={11} color="var(--text3)" />
+                <span style={{ ...crumbPill, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)" }}>{a.name}</span>
+              </span>
+            ))}
+          </div>
+
+          <p style={{ margin: "16px 0 0", fontSize: 14.5, lineHeight: 1.6, color: "var(--text)" }}>{tech.definition}</p>
 
           {er?.summary && (
             <SheetSection label="Résultat attendu" color={c.color}>
@@ -125,13 +149,26 @@ function TechniqueDetailSheet({ tech, techById, onClose }) {
           )}
           {conf.length > 0 && (
             <SheetSection label="Ne pas confondre avec">
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {conf.map((r, k) => (
-                  <div key={k} style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 13px" }}>
-                    <span style={{ fontWeight: 600, color: "var(--accent)" }}>{techById.get(r.technique_id)?.name || r.technique_id}</span>
-                    {r.distinction && <span> {r.distinction}</span>}
-                  </div>
-                ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                {conf.map((r, k) => {
+                  const ct = techById.get(r.technique_id);
+                  const cc = techCat(ct?.category);
+                  const name = ct?.name || r.technique_id;
+                  const Tag = ct ? "button" : "div";
+                  return (
+                    <Tag key={k} type={ct ? "button" : undefined}
+                      onClick={ct ? () => onOpen(ct) : undefined}
+                      className={ct ? "pressable" : undefined}
+                      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 14, padding: "11px 12px", cursor: ct ? "pointer" : "default" }}>
+                      <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 19, background: `color-mix(in srgb, ${cc.color} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${cc.color} 30%, transparent)` }}>{cc.emoji}</span>
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>{name}</span>
+                        {r.distinction && <span style={{ display: "block", fontSize: 12.5, lineHeight: 1.5, color: "var(--text2)", marginTop: 3 }}>{r.distinction}</span>}
+                      </span>
+                      {ct && <span style={{ flexShrink: 0, display: "flex", color: cc.color }}><Icon name="forward" size={16} color={cc.color} /></span>}
+                    </Tag>
+                  );
+                })}
               </div>
             </SheetSection>
           )}
@@ -267,7 +304,7 @@ export function TechniqueText({ text, index: indexProp }) {
         </div>,
         document.body
       )}
-      {detail && <TechniqueDetailSheet tech={detail} techById={techById} onClose={() => setDetail(null)} />}
+      {detail && <TechniqueDetailSheet tech={detail} techById={techById} onOpen={setDetail} onClose={() => setDetail(null)} />}
     </>
   );
 }
