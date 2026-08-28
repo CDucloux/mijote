@@ -1250,6 +1250,28 @@ select {
   backface-visibility: hidden;
 }
 
+/* Retour « en arrière » sur mobile natif (geste de retour du téléphone / bouton) :
+   la fiche recette s'efface en glissant vers la droite plutôt que de disparaître
+   d'un coup, pour un ressenti d'app native. La navigation réelle est déclenchée à
+   la fin de l'animation (cf. AppInner + screenTransition). */
+@keyframes detailDismissRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.page-dismiss-right {
+  animation: detailDismissRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
 /* Entrée douce des pages d'onglet (Accueil, Recettes, Planning, Profil, Légal,
    Config…) : fondu + léger glissement, rejoué à chaque changement d'onglet
    (clé React = tab). Volontairement subtil pour ne pas alourdir la navigation. */

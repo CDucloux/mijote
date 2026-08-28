@@ -19,6 +19,7 @@ import { useTheme } from "./hooks/useTheme.js";
 import { useOverlayThemeColor } from "./hooks/useOverlayThemeColor.js";
 import { useStatusBarSync } from "./hooks/useStatusBarSync.js";
 import { getRuntimeContext, isAppContext } from "./lib/ui/runtimeContext.js";
+import { shouldAnimateDismiss, DETAIL_DISMISS_MS } from "./lib/ui/screenTransition.js";
 import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
@@ -387,10 +388,44 @@ function AppInner({ user, isDark, toggleTheme }) {
   }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB, plusRoute]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
+  // ── Sortie animée de la fiche recette (ressenti « app native ») ───────────────
+  // Sur la coquille Capacitor mobile, revenir de la fiche vers la liste doit faire
+  // GLISSER la fiche vers la droite (dismiss), plutôt que de la retirer d'un coup.
+  // On garde la fiche montée le temps de l'animation : la route ne change qu'à la
+  // fin. `dismissing` bascule donc la classe du conteneur et diffère la navigation.
+  const runtimeCtx = useMemo(() => getRuntimeContext(), []);
+  const [dismissing, setDismissing] = useState(false);
+  const dismissNavRef = useRef(null);   // navigation à jouer en fin d'animation
+  const dismissTimerRef = useRef(null); // filet si `animationend` ne remonte pas
+  // Consomme la navigation différée UNE seule fois (l'`animationend` et le filet de
+  // sécurité peuvent tous deux se déclencher) et remet l'état à plat.
+  const finishDismiss = useCallback(() => {
+    const go = dismissNavRef.current;
+    if (!go) return;
+    dismissNavRef.current = null;
+    clearTimeout(dismissTimerRef.current);
+    setDismissing(false);
+    go();
+  }, []);
+  // Enrobe un retour depuis la fiche : si la sortie doit être animée, on arme
+  // l'animation et on navigue à sa fin ; sinon on navigue immédiatement. Appelable
+  // sans condition (la décision d'animer vit dans `shouldAnimateDismiss`).
+  const dismissDetail = useCallback((doNavigate) => {
+    if (dismissing) return; // sortie déjà en cours
+    const onDetail = !!selectedRecipe && !!currentRecipe && !isEditing;
+    const reducedMotion = typeof window !== "undefined"
+      && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (!shouldAnimateDismiss({ ctx: runtimeCtx, isDesktop, onDetail, reducedMotion })) { doNavigate(); return; }
+    dismissNavRef.current = doNavigate;
+    dismissTimerRef.current = setTimeout(finishDismiss, DETAIL_DISMISS_MS + 80);
+    setDismissing(true);
+  }, [dismissing, selectedRecipe, currentRecipe, isEditing, runtimeCtx, isDesktop, finishDismiss]);
+
   // Bouton retour Android (matériel / geste) : navigation interne plutôt que sortie
   // de l'app. En cours d'édition, on réutilise la garde d'abandon (comme la TabBar)
   // en visant l'onglet courant, pour ne pas perdre les modifications non sauvées.
-  useAndroidBackButton({ isEditing, onLeaveEditor: () => setPendingTab(tab) });
+  // Sur la fiche recette, `dismissDetail` enrobe le recul d'une sortie animée.
+  useAndroidBackButton({ isEditing, onLeaveEditor: () => setPendingTab(tab), onBackDismiss: dismissDetail });
 
   // Navigate with guard: if editing, show confirm dialog first
   const requestTab = (newTab) => {
@@ -525,8 +560,10 @@ function AppInner({ user, isDark, toggleTheme }) {
       <RecipeNotFound onBack={() => navigate("/home")} />
     )
   ) : selectedRecipe && currentRecipe ? (
-    <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => setSelectedRecipe(null)} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
+    <div key={selectedRecipe} className={`${dismissing ? "page-dismiss-right" : "editor-enter"}${isDesktop ? " desktop-content" : ""}`}
+      onAnimationEnd={dismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); } : undefined}
+      style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
+      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => dismissDetail(() => setSelectedRecipe(null))} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
     </div>
   ) : justDeleted ? (
     // Recette supprimée : la redirection vers /recipes est en cours, on n'affiche

@@ -22,23 +22,31 @@ import { decideBackAction } from "@/lib/ui/backButton.js";
  * @param {object} opts
  * @param {boolean} opts.isEditing - Un éditeur est-il ouvert avec des modifications en cours.
  * @param {() => void} opts.onLeaveEditor - Ouvre la confirmation d'abandon (au lieu de naviguer).
+ * @param {(doNavigate: () => void) => void} [opts.onBackDismiss] - Enrobe le recul
+ *   d'un cran : quand une fiche recette est ouverte, joue sa sortie animée puis
+ *   navigue ; sinon navigue immédiatement (cf. `AppInner`). Optionnel.
  */
-export function useAndroidBackButton({ isEditing, onLeaveEditor }) {
+export function useAndroidBackButton({ isEditing, onLeaveEditor, onBackDismiss }) {
   const navigate = useNavigate();
   // Motif « latest ref » : l'écouteur natif est posé une seule fois, mais lit
-  // toujours l'état d'édition et le callback les plus récents sans se re-câbler.
-  const latest = useRef({ isEditing, onLeaveEditor });
-  useEffect(() => { latest.current = { isEditing, onLeaveEditor }; });
+  // toujours l'état d'édition et les callbacks les plus récents sans se re-câbler.
+  const latest = useRef({ isEditing, onLeaveEditor, onBackDismiss });
+  useEffect(() => { latest.current = { isEditing, onLeaveEditor, onBackDismiss }; });
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     let handle;
     let cancelled = false;
     CapacitorApp.addListener("backButton", ({ canGoBack }) => {
-      const { isEditing, onLeaveEditor } = latest.current;
+      const { isEditing, onLeaveEditor, onBackDismiss } = latest.current;
       if (isEditing) { onLeaveEditor?.(); return; }
       const action = decideBackAction(window.location.pathname, canGoBack);
-      if (action === "back") navigate(-1);
+      if (action === "back") {
+        const goBack = () => navigate(-1);
+        // `onBackDismiss` décide seul s'il y a une sortie à animer ; sinon il
+        // rappelle `goBack` sans délai. On l'appelle donc inconditionnellement.
+        if (onBackDismiss) onBackDismiss(goBack); else goBack();
+      }
       else if (action === "home") navigate("/home", { replace: true });
       else CapacitorApp.exitApp();
     }).then((h) => { if (cancelled) h.remove(); else handle = h; });
