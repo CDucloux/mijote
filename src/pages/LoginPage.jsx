@@ -126,7 +126,6 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
           </h1>
           <p className="auth__desc">
             <span className="auth__only-desktop">Importe les recettes que tu aimes, améliore-les à chaque essai et retrouve-les prêtes à cuisiner.</span>
-            <span className="auth__only-mobile">Retrouve tes recettes, améliore-les et passe en cuisine.</span>
           </p>
           <div className="auth__art" aria-hidden="true">
             <EmptyArt name="casserole" size={168} />
@@ -142,7 +141,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
 
           <button
             type="button"
-            className="auth__google"
+            className="auth__google ripple"
             onClick={handleSignIn}
             disabled={loading}
             aria-busy={loading}

@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
+import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { LEGAL_DOCS, LEGAL_BY_ID, LEGAL_UPDATED } from "../constants/legalDocs.js";
 
 // ─── INFORMATIONS LÉGALES ───────────────────────────────────────────────────────
@@ -26,11 +27,11 @@ export function LegalPage() {
         </h1>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px var(--page-pad-b)" }}>
+      <ElasticScroll style={{ flex: 1, padding: "18px 20px var(--page-pad-b)" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           {doc ? <Document doc={doc} /> : <Index navigate={navigate} />}
         </div>
-      </div>
+      </ElasticScroll>
     </div>
   );
 }

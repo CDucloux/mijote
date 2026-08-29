@@ -3285,7 +3285,6 @@ select {
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
 }
 .auth__google:hover:not(:disabled) { border-color: var(--accent); background: var(--surface3); }
-.auth__google:active:not(:disabled) { transform: translateY(1px); }
 .auth__google:disabled { cursor: default; opacity: 0.85; }
 
 .auth__spinner {
@@ -3403,19 +3402,21 @@ select {
      ancré en haut à gauche, là où était le retour vitrine. */
   .auth__pitch-inner { text-align: center; }
   .auth__brand { display: flex; justify-content: flex-start; align-items: center; min-height: 44px; }
-  /* Le slogan prend le même traitement que l'eyebrow desktop : capitales, accent,
-     interlettrage. C'est l'unique titre de l'écran mobile (h1 conservé). */
+  /* Slogan mobile : l'unique titre de l'écran (h1 conservé), écrit à la main
+     (police manuscrite de la vitrine) pour donner de la chaleur et du caractère,
+     là où le reste de l'UI est net. La signature « faite main » de cet écran. */
   .auth__title {
-    margin: clamp(28px, 8vw, 56px) 0 0;
-    font-family: var(--ff-body);
-    font-size: 13px;
+    margin: clamp(24px, 7vw, 48px) 0 0;
+    font-family: var(--ff-hand);
+    font-size: clamp(2.2rem, 10vw, 3rem);
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
     color: var(--accent);
-    line-height: 1.5;
+    line-height: 1.02;
   }
-  .auth__desc { max-width: 40ch; margin-inline: auto; }
+  /* Sous-texte supprimé sur mobile : le slogan manuscrit porte seul le hero. */
+  .auth__desc { display: none; }
   /* Marmite centrée et généreuse : c'est l'ancrage visuel du hero mobile. */
   .auth__art { margin-top: clamp(28px, 7vw, 44px); justify-content: center; }
   .auth__art svg { width: clamp(200px, 60vw, 290px); height: auto; }

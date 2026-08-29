@@ -4,6 +4,8 @@ import { Icon } from "../components/Icon.jsx";
 import { ThemeToggle } from "../components/ThemeToggle.jsx";
 import { LogoPod } from "../components/LogoPod.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
+import { useElasticScroll } from "../hooks/useElasticScroll.js";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import "../styles/landing.css";
 
 // ─── LANDING PUBLIQUE (route /) ───────────────────────────────────────────────
@@ -333,6 +335,14 @@ export function LandingPage({ user, isDark, toggleTheme }) {
   const navigate = useNavigate();
   const primary = landingPrimaryCta(user);
   const rootRef = useRef(null);
+  // Overscroll élastique en bas de page (mobile), comme dans l'app. Désactivé sur
+  // desktop, où c'est la fenêtre qui défile (cf. .lp-root en hauteur de contenu).
+  // Le conteneur scrollable est .lp-root (partagé avec rootRef via setRoot) ; seul
+  // le contenu défilant est étiré (contentRef), la barre et le chevron fixes restent
+  // hors de la transformation pour ne pas casser leur `position: fixed`.
+  const isDesktop = useIsDesktop();
+  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
+  const setRoot = (el) => { rootRef.current = el; scrollRef.current = el; };
 
   const scrollToId = (id) => (e) => {
     e?.preventDefault?.();
@@ -389,7 +399,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
   );
 
   return (
-    <div className="lp-root" id="top" ref={rootRef}>
+    <div className="lp-root" id="top" ref={setRoot}>
       {/* Barre de navigation : PRÉSENTE sur toutes les slides. Fixe en haut, le
           contenu défile dessous. Marque + ancres (#) + thème + CTA. */}
       <header className="lp-navbar">
@@ -413,6 +423,9 @@ export function LandingPage({ user, isDark, toggleTheme }) {
         <Icon name="chevronDown" size={20} />
       </button>
 
+      {/* Contenu défilant (étiré par l'overscroll élastique). La barre et le chevron
+          fixes restent hors de ce bloc pour garder leur `position: fixed` intacte. */}
+      <div ref={contentRef}>
       {/* 1. Coup de poing */}
       <section className="lp-wrap lp-hero lp-slide">
         <div className="lp-hero__grid">
@@ -652,6 +665,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <span className="lp-footer__made">Fait avec soin, pas à la chaîne.</span>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
