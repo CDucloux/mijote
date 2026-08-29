@@ -91,11 +91,13 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
         <button onClick={() => onOpenIngredient?.(ingredient)} onPointerDown={onHeaderPress} className="pressable" style={{ position: "relative", display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
           {/* Couche d'onde tactile : borne l'encre sans rogner la photo (sœur, pas parent). */}
           <span ref={rippleClipRef} aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", borderRadius: 12, pointerEvents: "none", zIndex: 0 }} />
-          <span style={{ position: "relative", zIndex: 1, flexShrink: 0, width: 74, height: 74, borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 34% 30%, #fff, var(--surface2))", boxShadow: "0 0 0 1px var(--border), 0 8px 20px -12px rgba(0,0,0,0.28)", display: "grid", placeItems: "center" }}>
+          {/* Anneau via `border` (dans la boîte) et non `box-shadow` : le bouton `.pressable`
+              passe en `overflow:hidden` sur mobile, ce qui rognait l'anneau et l'ombre débordants. */}
+          <span style={{ position: "relative", zIndex: 1, flexShrink: 0, boxSizing: "border-box", width: 74, height: 74, borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 34% 30%, #fff, var(--surface2))", border: "1px solid var(--border)", display: "grid", placeItems: "center" }}>
             <IngImage src={ingredient.image} alt={ingredient.name} size={74} />
           </span>
           <span style={{ position: "relative", zIndex: 1, minWidth: 0, flex: 1 }}>
-            <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 6, color: "var(--text)" }}>{ingredient.name}</span>
+            <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 6, color: "var(--text)" }}>{ingredient.name}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: `rgba(${AMBER_RGB}, 0.95)`, color: "#fff", fontWeight: 600, fontSize: 10, padding: "3px 9px 3px 7px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <Icon name="sun" size={11} color="#fff" /> De saison
