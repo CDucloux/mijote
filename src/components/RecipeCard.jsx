@@ -17,7 +17,7 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
     <>
     <div role="button" tabIndex={0} className={`recipe-card pressable ripple${animate ? " slide-up" : ""}`} onClick={onClick}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(e); } }}
-      style={{ width: "100%", display: "block", background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer", ...style }}>
+      style={{ width: "100%", display: "block", background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 6px 16px -10px rgba(120,70,30,0.20)", cursor: "pointer", ...style }}>
       <div className="recipe-card-thumb" style={{ width: "100%", aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} style={{ width: "100%", height: "100%" }} />} />
         {/* Badges empilés en haut à droite */}
