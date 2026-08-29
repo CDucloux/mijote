@@ -23,6 +23,9 @@ import { OverscrollRow } from "../components/OverscrollRow.jsx";
 // Toutes les cartes s'animent à l'entrée ; le décalage est plafonné pour que les
 // dernières n'attendent pas indéfiniment (cf. animDelay dans la grille).
 const MAX_STAGGER = 0.6; // s, plafond du délai d'animation d'entrée
+// Pagination « à la demande » : on ne monte pas les 80+ cartes d'un coup (coût de
+// rendu / images au 1er paint). On affiche un lot, puis l'utilisateur charge la suite.
+const RECIPES_PAGE = 12;
 
 // Squelette de chargement (une seule fois par session) : laisse aux images le
 // temps d'arriver avant de révéler les cartes avec leur animation d'entrée.
@@ -235,6 +238,19 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   // Carnet persisté mais supprimé depuis (autre session / appareil) → on nettoie le filtre.
   useEffect(() => { if (filterCol && !collections.some(c => c.id === filterCol)) setFilterCol(null); }, [filterCol, collections, setFilterCol]);
 
+  // Signature du jeu de résultats : sert de clé de remontage de la grille ET de
+  // déclencheur du reset de pagination (nouvelle recherche / tri / carnet → on
+  // repart du 1er lot).
+  const gridKey = `${filterCol || "all"}|${normalizeStr(search)}|${sortBy}|${sortDir}`;
+  const [visibleCount, setVisibleCount] = useState(RECIPES_PAGE);
+  // Reset de pagination quand le jeu de résultats change : ajustement d'état PENDANT
+  // le rendu (pattern React recommandé), pas un effet, pour ne pas déclencher un
+  // rendu en cascade.
+  const [pagedKey, setPagedKey] = useState(gridKey);
+  if (pagedKey !== gridKey) { setPagedKey(gridKey); setVisibleCount(RECIPES_PAGE); }
+  const visibleRecipes = filtered.slice(0, visibleCount);
+  const remaining = filtered.length - visibleRecipes.length;
+
   const { scrollRef, contentRef } = useElasticScroll();
 
   return (
@@ -413,18 +429,27 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             → la grille se remonte et les cartes rejouent leur entrée décalée
             (fondu + translation, cascade ~40 ms). Les résultats apparaissent
             « un à un » plutôt que de surgir d'un bloc. */}
-        <div key={`${filterCol || "all"}|${normalizeStr(search)}|${sortBy}|${sortDir}`} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-          {filtered.map((r, idx) => {
+        <div key={gridKey} className="recipe-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
+          {visibleRecipes.map((r, idx) => {
             const sv = seasonVeganById.get(r.id);
             return (
               <RecipeGridItem key={r.id} recipe={r}
                 inSeason={sv?.inSeason || false} vegan={sv?.vegan || false} nutriLetter={sv?.nutriLetter}
-                animate animDelay={`${Math.min(idx * 0.045, MAX_STAGGER)}s`}
+                animate animDelay={`${Math.min((idx % RECIPES_PAGE) * 0.045, MAX_STAGGER)}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
                 startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} />
             );
           })}
         </div>
+        {remaining > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
+            <button onClick={() => setVisibleCount(c => c + RECIPES_PAGE)} className="btn btn-pill pressable ripple"
+              style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", fontSize: 14 }}>
+              Voir plus
+              <span style={{ color: "var(--text3)", fontWeight: 500 }}>· {remaining} restante{remaining > 1 ? "s" : ""}</span>
+            </button>
+          </div>
+        )}
         {filtered.length === 0 && (() => {
           const q = search.trim();
           const qShort = q.length > 22 ? q.slice(0, 22) + "…" : q;

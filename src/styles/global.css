@@ -1250,6 +1250,28 @@ select {
   backface-visibility: hidden;
 }
 
+/* Retour « en arrière » sur mobile natif (geste de retour du téléphone / bouton) :
+   la fiche recette s'efface en glissant vers la droite plutôt que de disparaître
+   d'un coup, pour un ressenti d'app native. La navigation réelle est déclenchée à
+   la fin de l'animation (cf. AppInner + screenTransition). */
+@keyframes detailDismissRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.page-dismiss-right {
+  animation: detailDismissRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
 /* Entrée douce des pages d'onglet (Accueil, Recettes, Planning, Profil, Légal,
    Config…) : fondu + léger glissement, rejoué à chaque changement d'onglet
    (clé React = tab). Volontairement subtil pour ne pas alourdir la navigation. */
@@ -2710,7 +2732,7 @@ select {
   }
 
   .recipe-card:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 10px 26px -12px rgba(120, 70, 30, 0.28);
   }
 
   /* Button hover / press feedback, desktop only (no motion) */
@@ -3263,7 +3285,6 @@ select {
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
 }
 .auth__google:hover:not(:disabled) { border-color: var(--accent); background: var(--surface3); }
-.auth__google:active:not(:disabled) { transform: translateY(1px); }
 .auth__google:disabled { cursor: default; opacity: 0.85; }
 
 .auth__spinner {
@@ -3365,11 +3386,15 @@ select {
      on evite d'y renvoyer. Le logo (dans le pitch) prend la place en haut. */
   .auth__back { display: none; }
   /* Fond UNI sur petit écran : la bichromie pitch/auth n'a de sens que pour la mise
-     en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. */
-  .auth__panel { background: transparent; border-top: none; }
-  /* Contenu empilé du haut, sans étirement des rangées : sinon la grille répartit
-     l'espace libre et éloigne le formulaire de la marmite (chaque moitié centrée). */
-  .auth__grid { align-content: start; }
+     en page desktop deux panneaux ; en PWA / sur mobile elle fait tache. Le bloc de
+     connexion se cale en haut de la zone basse (remonté), le copyright + version
+     (repoussé par `margin-top:auto`) se pose tout en bas de l'écran. */
+  .auth__panel { background: transparent; border-top: none; justify-content: flex-start; }
+  .auth__legalline { margin-top: auto; }
+  /* Colonne répartie sur toute la hauteur : le pitch (logo, slogan, marmite) occupe
+     le haut, et le bloc d'auth prend l'espace bas restant (centré dedans) au lieu de
+     tout tasser en haut en laissant le bas vide. */
+  .auth__grid { grid-template-rows: auto 1fr; }
   /* Le pitch démarre à la même hauteur que le toggle (14px), et la marque occupe
      une rangée de 44px centrée : le logo s'aligne ainsi avec le bouton de thème. */
   .auth__pitch { padding-top: calc(14px + env(safe-area-inset-top)); }
@@ -3377,22 +3402,24 @@ select {
      ancré en haut à gauche, là où était le retour vitrine. */
   .auth__pitch-inner { text-align: center; }
   .auth__brand { display: flex; justify-content: flex-start; align-items: center; min-height: 44px; }
-  /* Le slogan prend le même traitement que l'eyebrow desktop : capitales, accent,
-     interlettrage. C'est l'unique titre de l'écran mobile (h1 conservé). */
+  /* Slogan mobile : l'unique titre de l'écran (h1 conservé), écrit à la main
+     (police manuscrite de la vitrine) pour donner de la chaleur et du caractère,
+     là où le reste de l'UI est net. La signature « faite main » de cet écran. */
   .auth__title {
-    margin: 14px 0 0;
-    font-family: var(--ff-body);
-    font-size: 13px;
+    margin: clamp(24px, 7vw, 48px) 0 0;
+    font-family: var(--ff-hand);
+    font-size: clamp(2.2rem, 10vw, 3rem);
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
     color: var(--accent);
-    line-height: 1.5;
+    line-height: 1.02;
   }
-  .auth__desc { max-width: 40ch; margin-inline: auto; }
-  /* Marmite centrée et plus généreuse : c'est l'ancrage visuel du hero mobile. */
-  .auth__art { margin-top: clamp(20px, 5vw, 32px); justify-content: center; }
-  .auth__art svg { width: clamp(168px, 50vw, 240px); height: auto; }
+  /* Sous-texte supprimé sur mobile : le slogan manuscrit porte seul le hero. */
+  .auth__desc { display: none; }
+  /* Marmite centrée et généreuse : c'est l'ancrage visuel du hero mobile. */
+  .auth__art { margin-top: clamp(28px, 7vw, 44px); justify-content: center; }
+  .auth__art svg { width: clamp(200px, 60vw, 290px); height: auto; }
 }
 /* La marmite n'est masquée qu'en paysage / écran vraiment court : en portrait, elle
    reste le point chaud de l'écran. */
