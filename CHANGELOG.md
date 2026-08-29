@@ -1,5 +1,19 @@
 # Changelog – Cardamome
 
+## v4.12.0 – Cardamome · La bibliothèque s'ouvre en douceur
+
+### Mes Recettes
+- **Chargement par lots** : la bibliothèque n'affiche plus les 80+ recettes d'un coup (ce qui ralentissait l'ouverture). Elle en montre douze, puis un bouton « Voir plus » charge la suite à la demande. La page s'ouvre nettement plus vite, et chaque lot arrive avec sa petite cascade d'animation.
+- **Cartes mieux détourées** : l'ombre des cartes recette virait au gris froid dans les coins, ce qui les faisait paraître carrées. Elle devient une ombre chaude et diffuse, posée sous la carte : coins nets, léger relief, plus cohérent avec le reste de l'app.
+
+### Connexion
+- **Un écran plus vivant** : le bloc de connexion se cale en haut de la zone basse, le copyright se pose tout en bas, et l'ensemble respire mieux sur toute la hauteur de l'écran. Le slogan « Donne du caractère à tes recettes » passe en écriture manuscrite, comme une signature, et le sous-texte redondant disparaît sur mobile.
+- **Bouton « Continuer avec Google » posé** : il ne s'enfonce plus à l'appui (il restait à sa place mieux ainsi) et reçoit l'onde tactile du reste de l'app.
+- **Élastique partout** : tirer vers le haut fait maintenant rebondir en douceur le bas de la page de connexion, des pages légales et de la vitrine, même quand il n'y a rien à faire défiler.
+
+### Mobile
+- **Retour animé depuis une recette** : dans l'app installée, revenir d'une fiche recette vers la liste ne la faisait plus disparaître d'un coup. Elle glisse élégamment vers la droite, que le retour vienne du bouton ou du geste retour du téléphone.
+
 ## v4.11.0 – Cardamome · Le geste juste, d'un coup d'oeil
 
 ### Gestes techniques
