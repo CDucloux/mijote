@@ -42,7 +42,7 @@ export function ListConfigSheet({ configList, setConfigList, focusNoScroll, onCl
         <button onClick={() => setConfigList(p => ({ ...p, hideClear: !p.hideClear }))}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: "13px 15px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, margin: "18px 0", cursor: "pointer", textAlign: "left" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-            <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: "var(--surface2)", display: "grid", placeItems: "center" }}><Icon name="check" size={17} color="var(--text2)" /></span>
+            <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: "var(--surface2)", display: "grid", placeItems: "center" }}><Icon name="eyeOff" size={17} color="var(--text2)" /></span>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>Cacher « Valider l'achat »</div>
               <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2, lineHeight: 1.4 }}>Évite de valider les articles par mégarde.</div>

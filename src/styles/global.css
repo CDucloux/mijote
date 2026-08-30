@@ -486,6 +486,17 @@ select {
   border-color: var(--accent);
 }
 
+/* Variante « remplie » sans bordure (look plus moderne) : le fond suffit à poser
+   le champ ; au focus, un fin anneau accent inséré remplace la bordure comme
+   affordance (pas de halo décoratif, il traduit l'état de saisie). */
+.field-input.field-bare,
+.field-input.field-bare:focus {
+  border-color: transparent;
+}
+.field-input.field-bare:focus {
+  box-shadow: inset 0 0 0 1.5px rgba(var(--accent-rgb), 0.4);
+}
+
 /* Variante « douce » : surface pleine sans bordure visible, dans l'esprit épuré
    de la zone d'instructions d'étape. Le fond suffit à délimiter le champ, y
    compris au focus (pas de liseré accent). Le fond reste celui du champ. */

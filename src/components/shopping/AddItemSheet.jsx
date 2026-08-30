@@ -53,7 +53,7 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
         const over = count > MAX_LIST_ITEMS;
         return (
           <>
-            <textarea className="field-input" value={pasteText} maxLength={MAX_LIST_CHARS}
+            <textarea className="field-input field-bare" value={pasteText} maxLength={MAX_LIST_CHARS}
               onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
               placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
               style={{ minHeight: 140, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
@@ -70,7 +70,7 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
         );
       })() : (
         <>
-          <input className="field-input" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
+          <input className="field-input field-bare" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
             value={newItemName} onChange={e => setNewItemName(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") onAddItem(newItemName); }}
             onPaste={e => {
