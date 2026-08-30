@@ -1258,7 +1258,7 @@ select {
 }
 
 .account-drawer {
-  width: min(92vw, 400px);
+  width: min(100%, 480px);
   height: 100%;
   background: var(--bg);
   display: flex;
@@ -1267,13 +1267,12 @@ select {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-right: env(safe-area-inset-right);
-  animation: accountDrawerIn 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
   will-change: transform;
   backface-visibility: hidden;
-}
-
-.account-drawer.is-closing {
-  animation: accountDrawerOut 0.26s cubic-bezier(0.4, 0, 0.2, 1) both;
+  /* Entrée / sortie / swipe pilotés par `transform` en inline (cf. AccountSheet).
+     `pan-y` : le scroll vertical de la liste reste au navigateur, l'horizontal
+     (swipe pour fermer) est capté en JS. */
+  touch-action: pan-y;
 }
 
 /* Gouttière d'icône fixe pour aligner tous les libellés du drawer sur un bord. */
@@ -1284,24 +1283,40 @@ select {
   flex-shrink: 0;
 }
 
-@keyframes accountDrawerIn {
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
+/* Actions regroupées en cartes arrondies (standard des menus de compte natifs) :
+   les rangées d'un même groupe partagent une surface, séparées par un filet. */
+.account-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
 }
 
-@keyframes accountDrawerOut {
-  from {
-    transform: translateX(0);
-  }
+.account-group .menu-row {
+  border-radius: 0;
+  padding: 15px 16px;
+  font-size: 15px;
+}
 
-  to {
-    transform: translateX(100%);
-  }
+.account-group .menu-row + .menu-row {
+  border-top: 1px solid var(--border);
+}
+
+/* Carte « spéciale » (console admin) : teinte accent assumée pour la détacher. */
+.account-group.is-special {
+  background: rgba(var(--accent-rgb), 0.1);
+  border-color: rgba(var(--accent-rgb), 0.28);
+}
+
+.account-group.is-special .menu-row {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Carte de déconnexion : teinte rouge discrète, action détachée du reste. */
+.account-group.is-danger {
+  background: rgba(224, 82, 82, 0.08);
+  border-color: rgba(224, 82, 82, 0.22);
 }
 
 @keyframes editorSlideIn {

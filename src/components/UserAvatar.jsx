@@ -59,16 +59,23 @@ export function UserAvatar() {
   const syncColor = offline ? "var(--orange)" : syncStatus === "synced" ? "var(--ok)" : syncStatus === "error" ? "var(--red)" : "var(--text3)";
   const showDot = offline || syncStatus !== "idle";
   // Source UNIQUE des actions du compte, partagée par le dropdown web et le drawer
-  // mobile (chaque surface enrobe `onClick` à sa façon : fermeture animée + action).
-  const actions = [
-    isAdmin && { icon: "terminal", label: "Console admin", variant: "admin", onClick: () => navigate("/admin/dashboard") },
-    { icon: "user", label: "Profil", onClick: () => navigate("/profile") },
-    onToggleTheme && { icon: isDark ? "sun" : "moon", label: isDark ? "Mode clair" : "Mode sombre", keepsOpen: true, onClick: onToggleTheme },
-    { icon: "sparkle", label: "Revoir l'introduction", onClick: () => window.dispatchEvent(new Event("mijote:show-onboarding")) },
-    { icon: "info", label: "À propos", onClick: () => setAbout(true) },
-    { icon: "fileText", label: "Informations légales", onClick: () => navigate("/legal") },
-    { icon: "mail", label: "Nous contacter", href: CONTACT_MAILTO },
+  // mobile. En groupes : le drawer en fait des cartes (dont une « spéciale » pour
+  // l'admin), le dropdown web les aplatit. Chaque surface enrobe `onClick` à sa
+  // façon (fermeture animée + action).
+  const groups = [
+    isAdmin && { special: true, items: [{ icon: "terminal", label: "Console admin", variant: "admin", onClick: () => navigate("/admin/dashboard") }] },
+    { items: [
+      { icon: "user", label: "Profil", onClick: () => navigate("/profile") },
+      onToggleTheme && { icon: isDark ? "sun" : "moon", label: isDark ? "Mode clair" : "Mode sombre", keepsOpen: true, onClick: onToggleTheme },
+      { icon: "sparkle", label: "Revoir l'introduction", onClick: () => window.dispatchEvent(new Event("mijote:show-onboarding")) },
+    ].filter(Boolean) },
+    { items: [
+      { icon: "info", label: "À propos", onClick: () => setAbout(true) },
+      { icon: "fileText", label: "Informations légales", onClick: () => navigate("/legal") },
+      { icon: "mail", label: "Nous contacter", href: CONTACT_MAILTO },
+    ] },
   ].filter(Boolean);
+  const actions = groups.flatMap((g) => g.items); // dropdown web = liste à plat
   const signOutAction = { icon: "logout", label: "Se déconnecter", variant: "danger", onClick: () => setConfirmSignOut(true) };
 
   // Rendu d'une rangée du dropdown WEB depuis une action (le drawer mobile a son
@@ -132,7 +139,7 @@ export function UserAvatar() {
       )}
       {appSurface && open && (
         <AccountSheet user={user} isPlus={isPlus} syncLabel={syncLabel} syncColor={syncColor} offline={offline}
-          actions={actions} signOutAction={signOutAction} onClose={() => setOpen(false)} />
+          groups={groups} signOutAction={signOutAction} onClose={() => setOpen(false)} />
       )}
       {confirmSignOut && (
         <ConfirmDialog title="Se déconnecter ?" icon="logout" confirmLabel="Déconnexion" busyLabel="Déconnexion…" busy={signingOut} zIndex={1400}
