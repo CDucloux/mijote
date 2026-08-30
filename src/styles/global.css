@@ -1239,6 +1239,71 @@ select {
   }
 }
 
+/* ─── Panneau compte plein écran (app mobile : Capacitor / PWA) ──────────────
+   Sur le web (onglet), l'avatar ouvre le dropdown (expandDown ci-dessus). En
+   app installée, il ouvre plutôt ce drawer ancré à droite qui glisse de droite
+   à gauche, le standard des applis natives. */
+.account-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1300;
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeIn 0.22s ease backwards;
+}
+
+.account-drawer-backdrop.is-closing {
+  animation: fadeOut 0.26s ease forwards;
+}
+
+.account-drawer {
+  width: min(92vw, 400px);
+  height: 100%;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -14px 0 44px rgba(0, 0, 0, 0.34);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-right: env(safe-area-inset-right);
+  animation: accountDrawerIn 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.account-drawer.is-closing {
+  animation: accountDrawerOut 0.26s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Gouttière d'icône fixe pour aligner tous les libellés du drawer sur un bord. */
+.account-drawer .account-row-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  flex-shrink: 0;
+}
+
+@keyframes accountDrawerIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes accountDrawerOut {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes editorSlideIn {
   from {
     opacity: 0;
