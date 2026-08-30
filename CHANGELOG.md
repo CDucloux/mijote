@@ -1,5 +1,16 @@
 # Changelog – Cardamome
 
+## v4.13.0 – Cardamome · La vitrine ouvre ses portes
+
+### Le site public
+- **Une vitrine à l'entrée** : la racine du site (`/`) devient une page publique, ouverte sans compte, pendant que toute l'application (connexion comprise) s'installe sous `/app`. Un visiteur qui arrive découvre Cardamome avant d'avoir à se connecter, et les utilisateurs déjà installés sont redirigés en douceur vers l'app : aucune URL en poche ne casse, les anciens liens et le raccourci d'accueil retombent automatiquement sur la bonne page.
+- **Nouveau domaine : cardamome.studio** : l'app vit désormais sur `cardamome.studio`. Les liens de partage de recette et l'aperçu qui s'affiche quand on colle un lien (réseaux, messageries) suivent le nouveau domaine.
+
+### Finitions
+- **Listes de courses plus modernes** : les champs « Article » et « Coller » perdent leur bordure au profit d'un simple anneau d'accent au focus, plus épuré. L'option « Cacher Valider l'achat » prend une icône d'œil barré, cohérente avec le masquage des carnets.
+- **Mode cuisine plus sobre** : les boutons « Suivant » et « Terminé » en plein écran perdent leur halo vert, pour un rendu plus net.
+- **Fiche recette (mobile)** : la jonction entre la photo et le bloc d'infos est arrondie des deux côtés (fini la coupe droite), et les badges respirent mieux sous le titre.
+
 ## v4.12.2 – Cardamome · Le garde-manger s'ouvre plus vite
 
 ### Mon Stock
