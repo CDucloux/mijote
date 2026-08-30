@@ -1,5 +1,20 @@
 # Changelog – Cardamome
 
+## v4.12.1 – Cardamome · Finitions
+
+### Mes Recettes
+- **Coins de cartes enfin nets** : malgré l'ombre chaude de la 4.12.0, les cartes recette gardaient des coins d'ombre carrés et grisés. La cause était ailleurs (une optimisation d'affichage qui rognait l'ombre au carré) : elle est levée, l'ombre suit maintenant l'arrondi de la carte, comme sur l'accueil.
+- **Bouton « Charger plus de recettes »** : plus explicite que l'ancien « Voir plus », avec une icône et le compte restant. Fini le halo vert sous le bouton (un pill sobre à la place), et un petit indicateur de chargement apparaît le temps que le lot suivant s'affiche.
+
+### Découvrir
+- **Cercle de l'ingrédient du moment corrigé** : la photo ronde affichait par moments un double cercle légèrement décalé. Le contour en trop est supprimé, le cercle est net.
+
+### Planning
+- **Onde tactile sur la barre du haut** : les boutons de navigation (jour précédent, suivant, « Auj. ») reçoivent enfin l'onde au tap sur mobile, comme le reste de l'app.
+
+### Compatibilité
+- **Bandes noires sur DuckDuckGo** : dans le navigateur DuckDuckGo, des bandes noires apparaissaient en haut et en bas de toutes les pages. L'app déclare désormais son schéma de couleur, ce qui cale ces zones sur le thème et supprime les bandes.
+
 ## v4.12.0 – Cardamome · La bibliothèque s'ouvre en douceur
 
 ### Mes Recettes
