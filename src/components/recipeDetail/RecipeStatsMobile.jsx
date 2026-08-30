@@ -9,11 +9,12 @@ import { fmtTime } from "../../lib/format.js";
 export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, onOpenNutrition, onOpenShopping, onOpenMealPlan }) {
   return (
     <div style={{
-      // Chevauche le bas du hero et arrondit la transition image / contenu : la
-      // remontée fait ré-apparaître l'image dans les deux coins hauts (fin de coupe droite).
-      padding: "28px 16px 14px", flexShrink: 0,
+      // Léger chevauchement du bas du hero + coins hauts arrondis : la transition
+      // image / contenu s'adoucit et l'image reste visible entre les badges et le bord.
+      // Remontée volontairement faible (les badges du hero sont proches du bas).
+      padding: "20px 16px 14px", flexShrink: 0,
       position: "relative", zIndex: 1, background: "var(--bg)",
-      marginTop: -18, borderTopLeftRadius: 22, borderTopRightRadius: 22,
+      marginTop: -8, borderTopLeftRadius: 20, borderTopRightRadius: 20,
     }}>
       <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 16, padding: "14px 8px", marginBottom: 12, border: "1px solid var(--border)" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
