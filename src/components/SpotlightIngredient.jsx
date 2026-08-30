@@ -91,9 +91,10 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
         <button onClick={() => onOpenIngredient?.(ingredient)} onPointerDown={onHeaderPress} className="pressable" style={{ position: "relative", display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
           {/* Couche d'onde tactile : borne l'encre sans rogner la photo (sœur, pas parent). */}
           <span ref={rippleClipRef} aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", borderRadius: 12, pointerEvents: "none", zIndex: 0 }} />
-          {/* Anneau via `border` (dans la boîte) et non `box-shadow` : le bouton `.pressable`
-              passe en `overflow:hidden` sur mobile, ce qui rognait l'anneau et l'ombre débordants. */}
-          <span style={{ position: "relative", zIndex: 1, flexShrink: 0, boxSizing: "border-box", width: 74, height: 74, borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 34% 30%, #fff, var(--surface2))", border: "1px solid var(--border)", display: "grid", placeItems: "center" }}>
+          {/* Le cercle (fond blanc + anneau + rognage) est porté par IngImage lui-même :
+              aucun anneau ici, sinon on empile deux bordures concentriques mal alignées
+              (effet « double cercle », visible au zoom). */}
+          <span style={{ position: "relative", zIndex: 1, flexShrink: 0, display: "block", lineHeight: 0 }}>
             <IngImage src={ingredient.image} alt={ingredient.name} size={74} />
           </span>
           <span style={{ position: "relative", zIndex: 1, minWidth: 0, flex: 1 }}>

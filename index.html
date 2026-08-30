@@ -30,6 +30,11 @@
           if (!dark) document.documentElement.classList.add("light");
           var m = document.querySelector('meta[name="theme-color"]');
           if (m) m.setAttribute("content", dark ? "#0f110d" : "#f3f4ec");
+          // color-scheme cale le canvas des zones systeme (safe-area / overscroll)
+          // sur le theme : sans lui, DuckDuckGo (edge-to-edge en onglet) y peint des
+          // bandes noires. Tenu a jour ici comme theme-color, avant le premier rendu.
+          var cs = document.querySelector('meta[name="color-scheme"]');
+          if (cs) cs.setAttribute("content", dark ? "dark" : "light");
         } catch (e) {}
       })();
     </script>
@@ -41,6 +46,10 @@
          suit le thème in-app, pas celui du système. Valeur par défaut = thème sombre
          (défaut de l'appli), ajustée très tôt par le script ci-dessus puis en direct. -->
     <meta name="theme-color" content="#0f110d" />
+    <!-- Schéma de couleur déclaré (calé par le script ci-dessus sur le thème de
+         l'app) : évite que les navigateurs edge-to-edge (DuckDuckGo) peignent les
+         zones de safe-area en noir faute de schéma connu. -->
+    <meta name="color-scheme" content="dark light" />
     <link rel="canonical" href="https://cardamome.vercel.app/" />
 
     <!-- Icônes -->
