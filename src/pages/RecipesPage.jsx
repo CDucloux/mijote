@@ -250,6 +250,14 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   if (pagedKey !== gridKey) { setPagedKey(gridKey); setVisibleCount(RECIPES_PAGE); }
   const visibleRecipes = filtered.slice(0, visibleCount);
   const remaining = filtered.length - visibleRecipes.length;
+  // Chargement du lot suivant : bref état « spinner » avant de monter les cartes
+  // (le rendu du lot peut être perceptible sur mobile) → feedback immédiat au tap.
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadMore = () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    setTimeout(() => { setVisibleCount(c => c + RECIPES_PAGE); setLoadingMore(false); }, 320);
+  };
 
   const { scrollRef, contentRef } = useElasticScroll();
 
@@ -443,10 +451,20 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
         </div>
         {remaining > 0 && (
           <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
-            <button onClick={() => setVisibleCount(c => c + RECIPES_PAGE)} className="btn btn-pill pressable ripple"
-              style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", fontSize: 14 }}>
-              Voir plus
-              <span style={{ color: "var(--text3)", fontWeight: 500 }}>· {remaining} restante{remaining > 1 ? "s" : ""}</span>
+            <button onClick={loadMore} disabled={loadingMore} aria-busy={loadingMore} className="btn pressable ripple"
+              style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: 999, boxShadow: "none", fontSize: 14, fontWeight: 600, gap: 8, opacity: loadingMore ? 0.8 : 1 }}>
+              {loadingMore ? (
+                <>
+                  <span aria-hidden="true" style={{ width: 16, height: 16, border: "2px solid var(--border)", borderTopColor: "var(--text2)", borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+                  Chargement…
+                </>
+              ) : (
+                <>
+                  <Icon name="chevronDown" size={16} color="var(--text2)" />
+                  Charger plus de recettes
+                  <span style={{ color: "var(--text3)", fontWeight: 500 }}>· {remaining}</span>
+                </>
+              )}
             </button>
           </div>
         )}

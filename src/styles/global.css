@@ -3625,15 +3625,11 @@ select {
                 opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1) !important;
   }
 
-  /* La grille « Mes recettes » monte TOUTES les cartes d'un coup (jusqu'à 50).
-     `content-visibility: auto` laisse le navigateur sauter la mise en page et le
-     rendu des cartes hors écran → beaucoup moins de travail par frame au scroll.
-     `contain-intrinsic-size` réserve une hauteur estimée pour que la barre de
-     défilement reste stable ; `auto` mémorise la taille réelle une fois rendue. */
-  .recipe-grid > * {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 190px;
-  }
+  /* Note : pas de `content-visibility: auto` sur les cartes de la grille. Il
+     appliquait une containment de paint (`contain: paint`) qui clippait l'ombre
+     des cartes à leur border-box CARRÉE (coins d'ombre carrés). La pagination
+     (12 cartes par lot) a de toute façon supprimé le besoin de cette optimisation
+     (on ne monte plus des dizaines de cartes d'un coup). */
 }
 
 /* Appui maintenu : le fond s'éclaircit progressivement tant que le doigt reste
