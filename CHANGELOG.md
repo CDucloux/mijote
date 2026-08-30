@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.12.2 – Cardamome · Le garde-manger s'ouvre plus vite
+
+### Mon Stock
+- **Chargement par étagères** : le mur de stock n'affiche plus tous les bocaux d'un coup (images, verrerie, ombres), ce qui faisait ramer l'ouverture quand la base est bien remplie. Il montre quatre étagères, puis un bouton « Charger plus d'étagères » déroule la suite à la demande. L'onglet s'ouvre nettement plus fluide, sur « En stock », « Bientôt vide » comme « Tous ».
+
 ## v4.12.1 – Cardamome · Finitions
 
 ### Mes Recettes
