@@ -48,6 +48,14 @@ service cloud.firestore {
       }
     }
 
+    // ── Mapping technique achat Play → uid (serveur uniquement) ───────────────
+    // Écrit par verifyPlayPurchase / mis à jour par le webhook RTDN (Admin SDK) pour
+    // retrouver l'uid d'une notification Play (qui ne le porte pas). Ne contient
+    // qu'un uid et un productId, aucun secret ; jamais exposé au client.
+    match /playPurchases/{purchaseToken} {
+      allow read, write: if false;
+    }
+
     // ── Base Master partagée (écriture : admin) ──────────────────────────────
     // Lecture par DOC uniquement (`get`), jamais par requête (`list`) : la base
     // d'ingrédients enrichie (Ciqual) n'est pas énumérable/aspirable en masse. Le

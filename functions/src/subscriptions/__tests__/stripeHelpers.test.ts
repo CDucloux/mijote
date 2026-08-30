@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type Stripe from "stripe";
-import { isActiveStatus, uidFromMetadata, subscriptionDocFields, ACTIVE_STATUSES } from "../stripeHelpers.js";
+import { isActiveStatus, uidFromMetadata, subscriptionDocFields, ACTIVE_STATUSES, channelOf } from "../stripeHelpers.js";
 
 /** Fabrique un abonnement Stripe partiel typé pour les tests (champs non pertinents ignorés). */
 const sub = (o: Record<string, unknown>) => o as unknown as Stripe.Subscription;
@@ -56,6 +56,21 @@ describe("subscriptionDocFields", () => {
   });
   it("n'inclut jamais l'uid ni de secret (seulement des champs d'état)", () => {
     const d = subscriptionDocFields(sub({ status: "active", items: { data: [{ price: { id: "price_x" } }] } }));
-    expect(Object.keys(d).sort()).toEqual(["cancelAtPeriodEnd", "created", "currentPeriodEnd", "price", "status"]);
+    expect(Object.keys(d).sort()).toEqual(["cancelAtPeriodEnd", "channel", "created", "currentPeriodEnd", "price", "status"]);
+    expect(d.channel).toBe("stripe");
+  });
+});
+
+describe("channelOf", () => {
+  it("repli sur stripe quand le champ est absent (docs historiques)", () => {
+    expect(channelOf(undefined)).toBe("stripe");
+    expect(channelOf(null)).toBe("stripe");
+    expect(channelOf({})).toBe("stripe");
+    expect(channelOf({ channel: "stripe" })).toBe("stripe");
+  });
+  it("reconnaît play et appstore, ignore une valeur inconnue", () => {
+    expect(channelOf({ channel: "play" })).toBe("play");
+    expect(channelOf({ channel: "appstore" })).toBe("appstore");
+    expect(channelOf({ channel: "bogus" })).toBe("stripe");
   });
 });

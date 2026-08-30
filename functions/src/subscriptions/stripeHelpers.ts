@@ -3,13 +3,31 @@
 // testables sans réseau ni credentials. Cf. stripeHelpers.test.ts.
 import type Stripe from "stripe";
 
-/** Champs Firestore dérivés d'un abonnement Stripe (état d'accès Cardamome+). */
+/** Canal d'achat d'un abonnement. Absent sur les docs Stripe historiques (cf. `channelOf`). */
+export type SubscriptionChannel = "stripe" | "play" | "appstore";
+
+/** Champs Firestore dérivés d'un abonnement (état d'accès Cardamome+), tous canaux. */
 export interface SubscriptionDocFields {
   status: Stripe.Subscription.Status;
+  /** Canal d'achat, pour router la gestion (portail Stripe vs Play Store). */
+  channel: SubscriptionChannel;
   price: string | null;
   cancelAtPeriodEnd: boolean;
   currentPeriodEnd: Date | null;
   created: Date | null;
+}
+
+/**
+ * Canal d'un doc d'abonnement, avec repli `"stripe"` : les docs écrits avant
+ * l'ajout du champ `channel` (tous Stripe) restent correctement identifiés sans
+ * migration. C'est ce qui permet à Play d'être purement additif.
+ *
+ * @param data - Le doc d'abonnement (ou une forme partielle avec `channel`).
+ * @returns Le canal, `"stripe"` si le champ est absent.
+ */
+export function channelOf(data: { channel?: string } | null | undefined): SubscriptionChannel {
+  const c = data && data.channel;
+  return c === "play" || c === "appstore" ? c : "stripe";
 }
 
 /** Statuts Stripe considérés « abonné actif ». Doit refléter le front (subscribeToPlan). */
@@ -49,6 +67,7 @@ export function subscriptionDocFields(sub: Stripe.Subscription): SubscriptionDoc
     ?? (sub as unknown as { current_period_end?: number }).current_period_end;
   return {
     status: sub.status,
+    channel: "stripe",
     price,
     cancelAtPeriodEnd: !!sub.cancel_at_period_end,
     currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,

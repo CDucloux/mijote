@@ -91,8 +91,14 @@ comme le doc Stripe est indexé par `subId`.
    gestion des commandes dans Play Console. On évite ainsi de stocker un JSON de
    clé en secret. Repli si nécessaire : clé de service en secret Firebase
    (`PLAY_SERVICE_ACCOUNT_JSON`), même schéma que `STRIPE_SECRET_KEY`.
-5. **RTDN** : créer un **topic Pub/Sub** et le renseigner dans Play Console
-   (Monetization setup → Real-time developer notifications).
+5. **RTDN** : créer un **topic Pub/Sub**, le renseigner dans Play Console
+   (Monetization setup → Real-time developer notifications), et créer un abonnement
+   **push** vers `playRtdnWebhook` avec le secret partagé en query
+   (`?token=<PLAY_RTDN_SECRET>`).
+6. **Secret** : `firebase functions:secrets:set PLAY_RTDN_SECRET` (chaîne
+   aléatoire, comparée par `playRtdnWebhook` ; pendant de la signature Stripe).
+7. **Produit d'abonnement** `cardamome_plus` créé dans Play Console (allow-list
+   serveur `PLUS_PRODUCT_IDS`), base plans `monthly` / `yearly`.
 
 ## 4. Flux d'achat natif (Android uniquement)
 
@@ -242,9 +248,13 @@ calcul aux helpers purs.
   `capacitor-plugin-cdv-purchase` (cdvpurchase v13.15+), validation par **notre**
   Cloud Function. Reste à faire côté J0 : le **PoC** (achat en piste de test interne
   renvoyant un `purchaseToken`), qui exige un build natif Android réel.
-- **J1. Serveur, derrière un flag, sans UI** : `playHelpers.ts` + tests,
-  `verifyPlayPurchase`, `playRtdnWebhook`, règles `playPurchases`, secrets/creds,
-  topic Pub/Sub. Rien de visible côté app. `tsc` + `npm test` verts.
+- **J1. Serveur, sans UI : FAIT (code).** Livré : `playHelpers.ts` (pur) + tests
+  exhaustifs, `verifyPlayPurchase` + `playRtdnWebhook` (`play.ts`), champ `channel`
+  partagé (`stripeHelpers.ts` + garde inter-canal dans `stripe.ts`), règle Firestore
+  `playPurchases`, export `index.ts`, dépendance `google-auth-library` (ADC sans clé).
+  `tsc` + `npm test` (679) + lint verts. Aucun caller côté app : inerte tant que J2
+  n'est pas là. Reste hors-code (déploiement) : SA habilité en Play Console, topic +
+  abonnement push RTDN, secret `PLAY_RTDN_SECRET`, produit `cardamome_plus`.
 - **J2. Achat natif** : plugin intégré, CTA bifurqué sur `capacitor-android`,
   `playBilling.ts` (achat → `verifyPlayPurchase`). Test en piste interne Play.
 - **J3. Cycle de vie complet** : routage « Gérer » par canal, restauration des
