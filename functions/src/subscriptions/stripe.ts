@@ -86,6 +86,16 @@ export const createStripeCheckout = onCall(
       if (existing.data.some((s) => ACTIVE_STATUSES.includes(s.status))) {
         throw new HttpsError("failed-precondition", "Tu as déjà un abonnement actif. Gère-le depuis « Gérer mon abonnement ».");
       }
+      // Symétrie inter-canal : bloque aussi si un abonnement Play (ou autre canal) est
+      // actif côté Firestore. La source de vérité couvre tous les canaux (cf. play.ts).
+      const activeAny = await dbAdmin
+        .collection(`customers/${uid}/subscriptions`)
+        .where("status", "in", [...ACTIVE_STATUSES])
+        .limit(1)
+        .get();
+      if (!activeAny.empty) {
+        throw new HttpsError("failed-precondition", "Tu as déjà un abonnement actif. Gère-le depuis « Gérer mon abonnement ».");
+      }
 
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",

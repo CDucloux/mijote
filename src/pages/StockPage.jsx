@@ -26,6 +26,11 @@ function stkFillColor(seed) {
 
 const STATE_LABEL = { full: "en stock", low: "bientôt vide", empty: "à racheter" };
 
+// Pagination « à la demande » : le mur peut compter des dizaines de bocaux (images,
+// verrerie, ombres) très coûteux à monter d'un coup au 1er paint. On n'affiche
+// qu'un lot de planches, puis l'utilisateur charge la suite (cf. loadMore).
+const SHELVES_PAGE = 4; // planches (rangées) montées par lot
+
 /** Découpe un tableau en rangées de `n` éléments (une rangée = une planche). */
 function chunk(arr, n) {
   const out = [];
@@ -247,6 +252,54 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
     return Math.max(1, Math.floor((inner + gap - 2) / (jarW + gap)));
   }, [wallW]);
 
+  // Liste « à plat » des planches, toutes catégories confondues : une planche =
+  // une rangée de bocaux. On pagine sur ce nombre (indépendant de la densité
+  // d'écran → un lot représente une charge de rendu stable, quel que soit perRow).
+  const allShelves = useMemo(() => {
+    const out = [];
+    for (const [catKey, ings] of grouped) {
+      const inStockInCat = ings.filter(i => stockSet.has(i.id)).length;
+      const lowInCat = ings.filter(i => lowSet.has(i.id)).length;
+      const rows = chunk(ings, perRow);
+      rows.forEach((row, ri) => out.push({
+        catKey, total: ings.length, inStockInCat, lowInCat,
+        row, ri, lastRow: ri === rows.length - 1,
+      }));
+    }
+    return out;
+  }, [grouped, perRow, stockSet, lowSet]);
+
+  const [visibleShelves, setVisibleShelves] = useState(SHELVES_PAGE);
+  // Reset de pagination quand le jeu de résultats change (vue / recherche) :
+  // ajustement d'état PENDANT le rendu (pattern React), pas via un effet.
+  const listKey = `${view}|${normalizeStr(search)}`;
+  const [pagedKey, setPagedKey] = useState(listKey);
+  if (pagedKey !== listKey) { setPagedKey(listKey); setVisibleShelves(SHELVES_PAGE); }
+
+  const shownShelves = allShelves.slice(0, visibleShelves);
+  const remainingShelves = allShelves.length - shownShelves.length;
+  // Reconstitue les blocs .stk-group à partir des planches visibles : on regroupe
+  // les planches consécutives d'une même catégorie pour rendre l'étiquette de
+  // rayon une seule fois en tête du bloc.
+  const shownGroups = useMemo(() => {
+    const groups = [];
+    for (const shelf of shownShelves) {
+      const last = groups[groups.length - 1];
+      if (last && last.catKey === shelf.catKey) last.shelves.push(shelf);
+      else groups.push({ catKey: shelf.catKey, shelves: [shelf] });
+    }
+    return groups;
+  }, [shownShelves]);
+
+  // Chargement du lot suivant : bref « spinner » avant de monter les planches
+  // (le rendu d'un lot de bocaux peut être perceptible sur mobile) → feedback immédiat.
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadMore = () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    setTimeout(() => { setVisibleShelves(c => c + SHELVES_PAGE); setLoadingMore(false); }, 320);
+  };
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* En-tête (sur le fond crème, hors du mur) */}
@@ -341,23 +394,22 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
               } />
           );
         })() : (
-          grouped.map(([catKey, ings]) => {
+          <>
+          {shownGroups.map(({ catKey, shelves }) => {
             const cat = categories[catKey] || DEFAULT_CATEGORIES.other;
-            const inStockInCat = ings.filter(i => stockSet.has(i.id)).length;
-            const lowInCat = ings.filter(i => lowSet.has(i.id)).length;
-            const rows = chunk(ings, perRow);
+            const { total, inStockInCat, lowInCat } = shelves[0];
             return (
               <div key={catKey} className="stk-group">
                 {/* Étiquette de rayon */}
                 <div className="stk-tag">
                   <span className="ico">{cat.icon}</span>
                   {cat.label}
-                  {view === "all" && inStockInCat > 0 && <span className="cnt">{inStockInCat}/{ings.length}</span>}
+                  {view === "all" && inStockInCat > 0 && <span className="cnt">{inStockInCat}/{total}</span>}
                   {lowInCat > 0 && <span className="cnt low">{lowInCat} bientôt vide</span>}
                 </div>
 
-                {rows.map((row, ri) => {
-                  const roomForSprig = ri === rows.length - 1 && row.length < perRow;
+                {shelves.map(({ row, ri, lastRow }) => {
+                  const roomForSprig = lastRow && row.length < perRow;
                   return (
                     <div key={ri} className="stk-shelf">
                       <div className="stk-jars">
@@ -376,7 +428,27 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                 })}
               </div>
             );
-          })
+          })}
+          {remainingShelves > 0 && (
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}>
+              <button onClick={loadMore} disabled={loadingMore} aria-busy={loadingMore} className="btn pressable ripple"
+                style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: 999, boxShadow: "none", fontSize: 14, fontWeight: 600, gap: 8, opacity: loadingMore ? 0.8 : 1 }}>
+                {loadingMore ? (
+                  <>
+                    <span aria-hidden="true" style={{ width: 16, height: 16, border: "2px solid var(--border)", borderTopColor: "var(--text2)", borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+                    Chargement…
+                  </>
+                ) : (
+                  <>
+                    <Icon name="chevronDown" size={16} color="var(--text2)" />
+                    Charger plus d'étagères
+                    <span style={{ color: "var(--text3)", fontWeight: 500 }}>· {remainingShelves}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+          </>
         )}
         </div>
       </div>
