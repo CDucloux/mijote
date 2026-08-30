@@ -709,6 +709,13 @@ select {
   box-shadow: none;
 }
 
+/* Variante pleine SANS halo accent : pour les contextes où l'ombre colorée fait
+   « tache » (ex. CTA plein écran du mode cuisine sur fond sombre). */
+.btn-pill.btn-flat,
+.btn-pill.btn-flat:hover {
+  box-shadow: none;
+}
+
 .btn-danger {
   background: rgba(224, 82, 82, 0.15);
   color: var(--red);

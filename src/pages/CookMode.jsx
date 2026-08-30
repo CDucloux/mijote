@@ -812,8 +812,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
             {isOverview ? "Aperçu" : isBases ? "Bases" : `${realIdx + 1} / ${realStepCount}`}
           </span>
           {stepIdx < totalSteps - 1
-            ? <button className="btn btn-primary btn-pill" style={{ flex: 1 }} onClick={goNext} disabled={isBases && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
-            : <button className="btn btn-primary btn-pill" style={{ flex: 1, background: "var(--ok)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
+            ? <button className="btn btn-primary btn-pill btn-flat" style={{ flex: 1 }} onClick={goNext} disabled={isBases && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
+            : <button className="btn btn-primary btn-pill btn-flat" style={{ flex: 1, background: "var(--ok)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
           }
         </div>
       </div>
