@@ -10,6 +10,12 @@
 }
 
 :root {
+  /* Schéma déclaré : sans lui, certains navigateurs (DuckDuckGo, qui dessine en
+     edge-to-edge via viewport-fit=cover même en onglet) peignent les zones de
+     safe-area / overscroll non couvertes avec le canvas par défaut = NOIR, d'où
+     des bandes noires en haut et en bas. Le thème de l'app est forcé (classe
+     `.light`), donc on cale color-scheme dessus, pas sur l'OS. */
+  color-scheme: dark;
   --bg: #0f110d;
   --bg-rgb: 15, 17, 13;
   --surface: #191d15;
@@ -87,6 +93,7 @@ html.is-capacitor {
 /* ── LIGHT THEME ── */
 html.light,
 .light {
+  color-scheme: light;
   --bg: #f3f4ec;
   --bg-rgb: 243, 244, 236;
   --surface: #ffffff;
