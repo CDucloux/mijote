@@ -8,7 +8,14 @@ import { fmtTime } from "../../lib/format.js";
  */
 export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, onOpenNutrition, onOpenShopping, onOpenMealPlan }) {
   return (
-    <div style={{ padding: "16px 16px 14px", flexShrink: 0 }}>
+    <div style={{
+      // Léger chevauchement du bas du hero + coins hauts arrondis : la transition
+      // image / contenu s'adoucit et l'image reste visible entre les badges et le bord.
+      // Remontée volontairement faible (les badges du hero sont proches du bas).
+      padding: "20px 16px 14px", flexShrink: 0,
+      position: "relative", zIndex: 1, background: "var(--bg)",
+      marginTop: -8, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    }}>
       <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 16, padding: "14px 8px", marginBottom: 12, border: "1px solid var(--border)" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
           <Icon name="clock" size={13} color="var(--text3)" />

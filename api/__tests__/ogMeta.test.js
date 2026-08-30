@@ -100,15 +100,15 @@ describe("injectMetaTags", () => {
 <meta name="description" content="desc statique" />
 <meta property="og:title" content="Cardamome" />
 <meta property="og:description" content="og desc" />
-<meta property="og:url" content="https://cardamome.vercel.app/" />
-<meta property="og:image" content="https://cardamome.vercel.app/pwa-512.png" />
+<meta property="og:url" content="https://cardamome.studio/" />
+<meta property="og:image" content="https://cardamome.studio/pwa-512.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="512" />
 <meta property="og:image:height" content="512" />
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="Cardamome" />
 <meta name="twitter:description" content="tw desc" />
-<meta name="twitter:image" content="https://cardamome.vercel.app/pwa-512.png" />
+<meta name="twitter:image" content="https://cardamome.studio/pwa-512.png" />
 </head><body></body></html>`;
 
   const meta = { title: "Guacamole · Cardamome", description: "Cuisine mexicaine.", image: IMG, url: "https://site/discover/x" };
