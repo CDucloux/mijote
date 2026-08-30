@@ -18,7 +18,7 @@ import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useOverlayThemeColor } from "./hooks/useOverlayThemeColor.js";
 import { useStatusBarSync } from "./hooks/useStatusBarSync.js";
-import { getRuntimeContext, isAppContext } from "./lib/ui/runtimeContext.js";
+import { getRuntimeContext } from "./lib/ui/runtimeContext.js";
 import { shouldAnimateDismiss, DETAIL_DISMISS_MS } from "./lib/ui/screenTransition.js";
 import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useSubscription } from "./hooks/useSubscription.js";
@@ -57,7 +57,6 @@ import { LoginPage } from "./pages/LoginPage.jsx";
 import { ImportFromUrl } from "./pages/ImportFromUrl.jsx";
 import { ImportFromPicture } from "./pages/ImportFromPicture.jsx";
 import { PlusPage } from "./pages/PlusPage.jsx";
-import { LandingPage } from "./pages/LandingPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent,
@@ -680,10 +679,6 @@ export default function App() {
   const { isDark, toggleTheme } = useTheme();
   useOverlayThemeColor(); // voile la barre système PWA tant qu'une modale est ouverte
   useStatusBarSync(isDark); // aligne la barre système sur le thème (boot, bascule, reprise)
-  // La landing « / » est une vitrine PUBLIQUE (navigateur) : en app (PWA installée ou
-  // coquille Capacitor, qui charge la racine), elle ne doit jamais s'afficher comme un
-  // écran interne. On y renvoie vers l'app, qui bascule ensuite vers /login si besoin.
-  const appContext = useMemo(() => isAppContext(getRuntimeContext()), []);
   const { user, postLogin } = useAuthUser();
 
   return (
@@ -692,12 +687,11 @@ export default function App() {
           l'origine, après une brève transition « Connexion en cours… » (postLogin)
           pour que l'écran de chargement soit visible même quand le login est instantané. */}
       <Route path="/login" element={user === undefined || postLogin ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={signInWithGoogle} />} />
-      {/* La racine « / » sert la landing publique (marketing), consultable connectée
-          ou non : seul le CTA principal s'adapte à l'état d'auth. L'app garde ses
-          routes plates (/home, /recipes…) intactes, aucune migration transversale.
-          Le start_url du manifest pointe sur /home : la PWA installée ouvre l'app,
-          pas la landing. */}
-      <Route path="/" element={appContext ? <Navigate to="/home" replace /> : <LandingPage user={user} isDark={isDark} toggleTheme={toggleTheme} />} />
+      {/* Racine de la zone app (« /app ») : on entre par l'accueil (ou l'écran de
+          connexion via la garde d'auth). La vitrine publique vit hors /app
+          (src/PublicApp.jsx) ; ici, sous basename="/app", location.pathname est
+          déjà débarrassé du préfixe, donc tout le routage interne reste inchangé. */}
+      <Route path="/" element={<Navigate to="/home" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes de l'app : elle dérive
           l'onglet / la recette / la section depuis le pathname, ce qui évite tout
           remontage (et donc le flicker de l'écran de chargement) lors de la navigation. */}

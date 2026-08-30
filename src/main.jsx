@@ -4,9 +4,12 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import App from './App.jsx'
+import { PublicApp } from './PublicApp.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { installGlobalErrorHandlers } from './lib/observability/observability.js'
 import { markNativeFeel } from './lib/ui/nativeFeel.js'
+import { isAppContext, getRuntimeContext } from './lib/ui/runtimeContext.js'
+import { isAppZone, toAppPath, APP_BASE } from './lib/ui/appZone.js'
 import { registerSW } from 'virtual:pwa-register'
 
 // Filets globaux : erreurs non catchées + rejets de promesse non gérés. La
@@ -30,11 +33,25 @@ document.documentElement.classList.toggle('is-capacitor', Capacitor.isNativePlat
 
 registerSW({ immediate: true })
 
+// Deux zones d'URL (cf. lib/ui/appZone.ts) : la vitrine PUBLIQUE à la racine (/,
+// /legal, /discover) et l'APPLICATION sous /app. On décide au boot, avant de monter
+// le routeur. En zone app, on garantit le préfixe /app (Capacitor démarre à la
+// racine, une PWA déjà installée sur un ancien start_url /home aussi) : le routeur
+// est alors monté avec basename="/app", ce qui retire /app de location.pathname et
+// laisse TOUT le code interne de l'app (parsing + navigate) inchangé.
+const appZone = isAppZone(window.location.pathname, isAppContext(getRuntimeContext()))
+if (appZone) {
+    const normalized = toAppPath(window.location.pathname)
+    if (normalized !== window.location.pathname) {
+        window.history.replaceState(null, '', normalized + window.location.search + window.location.hash)
+    }
+}
+
 ReactDOM.createRoot(document.getElementById('app')).render(
     <React.StrictMode>
         <ErrorBoundary>
-            <BrowserRouter>
-                <App />
+            <BrowserRouter basename={appZone ? APP_BASE : undefined}>
+                {appZone ? <App /> : <PublicApp />}
             </BrowserRouter>
         </ErrorBoundary>
     </React.StrictMode>

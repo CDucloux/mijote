@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { decideBackAction } from "@/lib/ui/backButton.js";
+import { stripAppBase } from "@/lib/ui/appZone.js";
 
 /**
  * Câble le bouton retour matériel (et le geste de retour) d'Android sur la
@@ -40,7 +41,10 @@ export function useAndroidBackButton({ isEditing, onLeaveEditor, onBackDismiss }
     CapacitorApp.addListener("backButton", ({ canGoBack }) => {
       const { isEditing, onLeaveEditor, onBackDismiss } = latest.current;
       if (isEditing) { onLeaveEditor?.(); return; }
-      const action = decideBackAction(window.location.pathname, canGoBack);
+      // L'app est montée sous basename="/app" : on retire le préfixe pour que la
+      // décision raisonne sur le chemin interne (window.location, contrairement à
+      // useLocation, ne le strippe pas).
+      const action = decideBackAction(stripAppBase(window.location.pathname), canGoBack);
       if (action === "back") {
         const goBack = () => navigate(-1);
         // `onBackDismiss` décide seul s'il y a une sortie à animer ; sinon il

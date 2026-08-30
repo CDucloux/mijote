@@ -2,14 +2,14 @@
   "name": "Cardamome",
   "short_name": "Cardamome",
   "description": "Créez, affinez et partagez vos recettes.",
-  "start_url": "/home",
+  "start_url": "/app/home",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f110d",
   "theme_color": "#0f110d",
   "share_target": {
-    "action": "/recipes/import-from-url",
+    "action": "/app/recipes/import-from-url",
     "method": "GET",
     "enctype": "application/x-www-form-urlencoded",
     "params": {
