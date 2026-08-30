@@ -130,8 +130,13 @@ Miroir durci de `createStripeCheckout`, avec les gardes maison déjà éprouvée
 3. Appeler la **Play Developer API** `purchases.subscriptionsv2.get` (ou
    `purchases.subscriptions.get`) avec `packageName` + `purchaseToken`.
 4. **Contrôle anti-usurpation** : `obfuscatedExternalAccountId` renvoyé par l'API
-   doit correspondre à `uid`. S'il diffère (ou est absent sur un flux ancien),
-   refuser / journaliser (empêche de « réclamer » l'achat d'un autre compte).
+   doit correspondre à l'uid. Attention : le plugin (cf. §14) passe l'uid via
+   `applicationUsername` + `obfuscator: 'uuid'`, qui le **hashe en UUIDv3**. Le
+   serveur compare donc `uuidv3(uid, NS)` (déterministe), **pas** l'uid brut. S'il
+   diffère (ou est absent sur un flux ancien), refuser / journaliser (empêche de
+   « réclamer » l'achat d'un autre compte). Le résolveur robuste des RTDN reste le
+   mapping `playPurchases/{purchaseToken}` écrit ici, où l'on tient l'uid du token
+   d'auth ; l'`obfuscatedAccountId` n'est qu'une garde secondaire.
 5. **Garde anti-double-abonnement inter-canal** (miroir de la garde Stripe) : si un
    abonnement **Stripe** actif existe déjà pour l'uid, refuser proprement et
    renvoyer vers la gestion (évite le double prélèvement). Idem dans l'autre sens
@@ -233,13 +238,10 @@ calcul aux helpers purs.
 
 ## 12. Découpage en jalons (livraison incrémentale)
 
-- **J0. Spike plugin** (bloquant, à trancher en premier) : choisir le plugin
-  Capacitor de billing brut. Candidats à évaluer sur maintenance + support « raw
-  receipt / validation serveur maison » (aucun n'est un standard clair) :
-  - `cordova-plugin-purchase` (cdvpurchase) sous Capacitor, mode validation serveur ;
-  - un **plugin Capacitor maison** mince encapsulant la Play Billing Library v7
-    (le plus de contrôle, peu de code natif, cohérent avec l'esprit « maison »).
-  Livrable : décision + PoC d'achat en test interne renvoyant `purchaseToken`.
+- **J0. Spike plugin : TRANCHÉ (cf. §14).** Plugin retenu :
+  `capacitor-plugin-cdv-purchase` (cdvpurchase v13.15+), validation par **notre**
+  Cloud Function. Reste à faire côté J0 : le **PoC** (achat en piste de test interne
+  renvoyant un `purchaseToken`), qui exige un build natif Android réel.
 - **J1. Serveur, derrière un flag, sans UI** : `playHelpers.ts` + tests,
   `verifyPlayPurchase`, `playRtdnWebhook`, règles `playPurchases`, secrets/creds,
   topic Pub/Sub. Rien de visible côté app. `tsc` + `npm test` verts.
@@ -251,15 +253,61 @@ calcul aux helpers purs.
   accélérés), checklist MEP complète (§6 CLAUDE.md), déploiement fonctions
   (`cd functions && npm run deploy`, **actif seulement après déploiement manuel**).
 
-## 13. Questions ouvertes (à trancher avant J1)
+## 13. Décisions actées (tranchées avant J0)
 
-1. **Rétro-remplissage `channel`** des docs Stripe existants : nécessaire ou
-   l'absence-vaut-`"stripe"` suffit-elle ? (Suffit pour la lecture ; utile à écrire
-   pour le routage « Gérer ».)
-2. **iOS** : la coquille Capacitor cible Android aujourd'hui. Si iOS arrive, App
-   Store Billing (StoreKit) suivra le même patron (`channel: "appstore"`). La forme
-   de doc partagée est déjà prête pour ça.
-3. **Politique inter-canal** : un abonné web voulant « repayer » sur Android est
-   bloqué (garde anti-double). Confirmer le message et le renvoi vers la gestion.
-4. **Créds serveur** : service account des Functions habilité en Play Console
-   (sans clé fichier) vs secret JSON. Trancher selon les droits IAM disponibles.
+1. **Rétro-remplissage `channel` : NON.** La lecture (`status in [active,trialing]`)
+   ignore `channel`, donc les docs Stripe existants (sans le champ) fonctionnent tels
+   quels. Un helper pur `channelOf(doc)` retourne `"stripe"` par défaut quand le champ
+   est absent ; on ajoute `channel: "stripe"` aux **nouvelles** écritures de
+   `stripe.ts`. Aucune migration des docs en cours.
+2. **iOS : différé, forme prête.** On ne construit rien pour iOS (la coquille ne cible
+   qu'Android). Le champ `channel` accepte déjà `"appstore"` : StoreKit se greffera sur
+   le même patron le jour venu, sans toucher au chemin de lecture.
+3. **Inter-canal : bloquer + message.** Miroir exact de la garde anti-double-abonnement
+   Stripe : si un abonnement actif existe déjà sur un autre canal, `verifyPlayPurchase`
+   (et symétriquement le checkout Stripe) refuse proprement et renvoie vers « Gérer mon
+   abonnement ». Pas de double prélèvement, pas de parcours de migration à ce stade.
+4. **Créds serveur : service account des Functions, sans clé fichier.** On habilite le
+   service account des Cloud Functions (déjà sur GCP) directement dans Play Console, via
+   les droits admin. **Aucun** secret JSON à stocker. Repli documenté mais non retenu :
+   clé JSON en secret Firebase si la liaison IAM s'avérait impossible.
+
+## 14. Jalon 0 : décision plugin (livrable de spike)
+
+**Plugin retenu : `capacitor-plugin-cdv-purchase`** (cdvpurchase, la famille
+`cordova-plugin-purchase` de j3k0/Fovea, v13.15+).
+
+Pourquoi lui plutôt que les alternatives :
+
+| Critère | cdvpurchase (retenu) | Capawesome Purchases | Cap-go native-purchases | RevenueCat |
+| --- | --- | --- | --- | --- |
+| Bridge Capacitor natif (sans Cordova) | oui (v13.15+) | oui | oui | oui |
+| Play Billing Library | 8.3 | 8.0 | 7.x | via SDK |
+| Validation par **notre** serveur | oui (`store.validator` = URL/fn) | oui (expose le token) | oui | non (backend RevenueCat) |
+| Dépendance tierce payante | non (MIT) | sponsorware (certains plugins) | non | oui (% du CA) |
+| Maturité / base installée | très élevée | moyenne | moyenne | élevée |
+| Cycle de vie complet (sub, restore, ack) | oui | oui | partiel | oui |
+
+- **RevenueCat écarté** : backend tiers + commission sur le CA, à rebours du choix
+  « maison » fait pour Stripe (décision §11 de la démarche).
+- **Plugin maison écarté** : cdvpurchase couvre déjà tout le cycle de vie (achat,
+  acquittement via `finish()`, restauration, abonnements, changements d'offre) avec
+  validation serveur maison ; le réécrire serait de la dette nette.
+
+Points de branchement confirmés (côté `playBilling.ts`, J2) :
+
+- **Validation maison** : `store.validator = "<URL de verifyPlayPurchase>"` (ou une
+  fonction qui appelle la callable). On n'utilise **pas** le service hébergé payant
+  iaptic/Fovea. Le validateur répond OK/KO ; sur OK, cdvpurchase appelle `finish()`
+  qui **acquitte** l'achat côté Play (couvre la règle des 3 jours, §4).
+- **Liaison uid** : `store.applicationUsername = uid` + `store.obfuscator = 'uuid'`
+  → `obfuscatedAccountId` valide (UUIDv3 déterministe). Contrôle serveur : comparer
+  `uuidv3(uid)` (cf. §5 étape 4).
+- **Restauration** : `store.restorePurchases()` au lancement en contexte
+  `capacitor-android` (couvre §8).
+- **Licence** : MIT, gratuit ; aucune part de CA.
+
+**Reste du J0 (hands-on, hors de ce doc) :** PoC d'achat en **piste de test interne**
+Play (compte testeur licence) renvoyant un `purchaseToken`, pour valider le bridge
+avant d'écrire le serveur (J1). Nécessite un build natif Android réel
+(`npm run cap:sync` + Android Studio), donc à faire côté machine de dev.
