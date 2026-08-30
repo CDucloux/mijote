@@ -8,7 +8,13 @@ import { fmtTime } from "../../lib/format.js";
  */
 export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, onOpenNutrition, onOpenShopping, onOpenMealPlan }) {
   return (
-    <div style={{ padding: "16px 16px 14px", flexShrink: 0 }}>
+    <div style={{
+      // Chevauche le bas du hero et arrondit la transition image / contenu : la
+      // remontée fait ré-apparaître l'image dans les deux coins hauts (fin de coupe droite).
+      padding: "28px 16px 14px", flexShrink: 0,
+      position: "relative", zIndex: 1, background: "var(--bg)",
+      marginTop: -18, borderTopLeftRadius: 22, borderTopRightRadius: 22,
+    }}>
       <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 16, padding: "14px 8px", marginBottom: 12, border: "1px solid var(--border)" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
           <Icon name="clock" size={13} color="var(--text3)" />
