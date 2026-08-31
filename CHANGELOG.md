@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.14.0 – Cardamome · Gestes d'app
+
+### Mon compte
+- **Menu compte plein écran sur mobile** : en app installée (et dès que l'écran est étroit), toucher son avatar n'ouvre plus un petit menu déroulant mais un panneau plein écran qui glisse depuis la droite, comme dans les applis natives. Les actions y sont regroupées en cartes lisibles (la console admin dans sa propre carte mise en avant, la déconnexion détachée), avec un en-tête soigné : avatar, salutation et état de synchro. On le referme d'un glissement vers la droite, d'un appui sur la croix ou en touchant à côté. Sur grand écran, le menu déroulant sous l'avatar reste inchangé.
+
+### Finitions
+- **Tirer pour rafraîchir plus naturel** : le geste de rafraîchissement affiche désormais une flèche de rechargement circulaire qui se dessine au fil du tir, puis laisse place au cercle de chargement, au lieu de la petite flèche qui se retournait.
+
 ## v4.13.0 – Cardamome · La vitrine ouvre ses portes
 
 ### Le site public
