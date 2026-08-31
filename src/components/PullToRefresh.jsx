@@ -31,7 +31,10 @@ export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 })
             {refreshing
               ? <div style={{ width: 16, height: 16, border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
               : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={arrow.arc} />
+                  {/* Cap `butt` sur l'arc : sinon la demi-rondeur du trait déborde
+                      vers l'avant, pile dans l'axe de la pointe, et émousse/décale
+                      le sommet du chevron. Les barbes gardent leurs bouts arrondis. */}
+                  <path d={arrow.arc} strokeLinecap="butt" />
                   {progress > 0.12 && <polyline points={arrow.head} />}
                 </svg>}
           </div>
