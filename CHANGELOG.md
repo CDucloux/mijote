@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.15.1 – Cardamome · Stock plus vif
+
+### Performance
+- **Le Stock apparaît sans temps mort** : en arrivant d'un autre onglet (Accueil, Courses…), le mur d'étagères se montait d'un bloc pile pendant l'animation d'entrée, qui saccadait. Désormais le squelette se peint aussitôt et le mur de bocaux se monte juste après, hors du chemin de l'animation : l'onglet répond du tac au tac.
+- **Moins de travail au montage** : la largeur du mur est mesurée avant la peinture (plus de recalcul ni de saut de mise en page après coup), seules les étagères visibles sont construites (le reste est simplement compté), et le tri des ingrédients passe par un comparateur français partagé, plus rapide sur une grande base.
+
 ## v4.15.0 – Cardamome · Coller pour importer
 
 ### Import intelligent
