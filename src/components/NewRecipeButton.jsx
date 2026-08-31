@@ -5,16 +5,18 @@ import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { PlusBadge } from "./PlusBadge.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
-// ─── BOUTON « NOUVELLE » (choix : import IA par lien/photo, ou saisie manuelle) ─
-// Le sélecteur est visible par tous. Les imports IA sont une fonctionnalité
-// Cardamome+ : en plan gratuit ils portent un badge et renvoient vers /plus ; en
-// Cardamome+ ils ouvrent leur page dédiée (/recipes/import-from-url | -picture).
+// ─── BOUTON « NOUVELLE » (choix : import intelligent lien/photo/texte, ou saisie
+// manuelle) ─────────────────────────────────────────────────────────────────────
+// Le sélecteur est visible par tous. L'import intelligent est une fonctionnalité
+// Cardamome+ : en plan gratuit ses options portent un badge et renvoient vers
+// /plus ; en Cardamome+ elles ouvrent leur page dédiée (/recipes/import-from-url
+// | -picture | -text).
 
-// Pastille « IA » : pastille orange, anneau blanc fin (net dans les deux
-// thèmes) et un petit robot blanc (yeux évidés couleur pastille), centré.
-function AiBadge() {
+// Pastille « import intelligent » : pastille orange, anneau blanc fin (net dans
+// les deux thèmes) et un petit robot blanc (yeux évidés couleur pastille), centré.
+function SmartBadge() {
   return (
-    <span title="Extraction par IA" style={{ position: "absolute", top: -6, right: -6, display: "grid", placeItems: "center", width: 21, height: 21, borderRadius: "50%", background: "var(--accent)", border: "1.5px solid rgba(255,255,255,0.92)", boxShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
+    <span title="Import intelligent" style={{ position: "absolute", top: -6, right: -6, display: "grid", placeItems: "center", width: 21, height: 21, borderRadius: "50%", background: "var(--accent)", border: "1.5px solid rgba(255,255,255,0.92)", boxShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
       <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
         {/* antenne */}
         <rect x="11" y="2" width="2" height="3.4" rx="1" fill="#fff" />
@@ -30,8 +32,8 @@ function AiBadge() {
   );
 }
 
-// Ligne-option du sélecteur (empilées verticalement). `accent` = import IA.
-function Choice({ icon, title, subtitle, onClick, accent, ai, badge }) {
+// Ligne-option du sélecteur (empilées verticalement). `accent` = import intelligent.
+function Choice({ icon, title, subtitle, onClick, accent, smart, badge }) {
   return (
     <button onClick={onClick} className={`pressable nr-choice${accent ? "" : " nr-neutral"}`} style={{
       display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
@@ -44,7 +46,7 @@ function Choice({ icon, title, subtitle, onClick, accent, ai, badge }) {
         <span style={{ width: 46, height: 46, borderRadius: 14, display: "grid", placeItems: "center", background: accent ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)" }}>
           <Icon name={icon} size={22} color={accent ? "var(--accent)" : "var(--text2)"} />
         </span>
-        {ai && <AiBadge />}
+        {smart && <SmartBadge />}
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -66,8 +68,8 @@ export function NewRecipeButton({ onManual }) {
   const [open, setOpen] = useState(false);
 
   const goManual = () => { setOpen(false); onManual(); };
-  // Imports IA = fonctionnalité Cardamome+. En plan gratuit, on renvoie vers la page
-  // d'offre au lieu d'ouvrir l'import.
+  // Import intelligent = fonctionnalité Cardamome+. En plan gratuit, on renvoie vers
+  // la page d'offre au lieu d'ouvrir l'import.
   const goImportOrPlus = (path) => { setOpen(false); navigate(isPlus ? path : "/plus"); };
   const plusBadge = !isPlus ? <PlusBadge /> : undefined;
 
@@ -94,8 +96,9 @@ export function NewRecipeButton({ onManual }) {
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <Choice icon="link" accent ai badge={plusBadge} title="Importer depuis un lien" subtitle="Colle une URL : l'IA extrait et met en forme la recette." onClick={() => goImportOrPlus("/recipes/import-from-url")} />
-            <Choice icon="photo" accent ai badge={plusBadge} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImportOrPlus("/recipes/import-from-picture")} />
+            <Choice icon="link" accent smart badge={plusBadge} title="Importer depuis un lien" subtitle="Colle une URL : l'import intelligent extrait et met en forme la recette." onClick={() => goImportOrPlus("/recipes/import-from-url")} />
+            <Choice icon="photo" accent smart badge={plusBadge} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImportOrPlus("/recipes/import-from-picture")} />
+            <Choice icon="paste" accent smart badge={plusBadge} title="Coller un texte" subtitle="Un mail, une note, un message : colle le texte, il est mis en forme." onClick={() => goImportOrPlus("/recipes/import-from-text")} />
             <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
               <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
               <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>

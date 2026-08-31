@@ -16,7 +16,7 @@ Le lien uid Firebase ↔ client Stripe est stocké dans `customers/{uid}.stripeI
 dupliqué en métadonnée Stripe (`firebaseUID`). Région des fonctions : `europe-west1`.
 
 ## 1. Produits Stripe (déjà fait)
-Un produit **Cardamome+** avec deux tarifs récurrents : **3,99 €/mois** et **29,99 €/an**.
+Un produit **Cardamome+** avec deux tarifs récurrents : **4,99 €/mois** et **49,99 €/an**.
 Noter les deux identifiants `price_…` (bien ceux du **mode test** pour tester).
 
 ## 2. Secrets côté fonctions

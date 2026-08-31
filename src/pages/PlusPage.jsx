@@ -7,8 +7,8 @@ import { startCheckout, openBillingPortal } from "@/lib/firebase/subscription.js
 
 // Tarifs Cardamome+. `price` = ID Stripe (extension), fourni par l'env.
 const PRICES = {
-  monthly: { amount: "3,99 €", per: "/ mois", cta: "3,99 €/mois", price: import.meta.env.VITE_STRIPE_PRICE_MONTHLY },
-  yearly: { amount: "29,99 €", per: "/ an", cta: "29,99 €/an", note: "soit 2,50 €/mois · économise 18 €/an", price: import.meta.env.VITE_STRIPE_PRICE_YEARLY },
+  monthly: { amount: "4,99 €", per: "/ mois", cta: "4,99 €/mois", price: import.meta.env.VITE_STRIPE_PRICE_MONTHLY },
+  yearly: { amount: "49,99 €", per: "/ an", cta: "49,99 €/an", note: "soit 4,17 €/mois · économise 10 €/an", price: import.meta.env.VITE_STRIPE_PRICE_YEARLY },
 };
 
 // ─── CARDAMOME+ (route /plus) ───────────────────────────────────────────────────
@@ -139,7 +139,7 @@ export function PlusPage() {
                     boxShadow: billing === key ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
                   }}>
                     {label}
-                    {key === "yearly" && <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: "var(--ok)", borderRadius: 999, padding: "1px 6px" }}>-37%</span>}
+                    {key === "yearly" && <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: "var(--ok)", borderRadius: 999, padding: "1px 6px" }}>-17%</span>}
                   </button>
                 ))}
               </div>

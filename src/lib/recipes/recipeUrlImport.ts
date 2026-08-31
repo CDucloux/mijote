@@ -65,6 +65,26 @@ export async function importRecipeFromUrl(url: string, knownUtensils: string[] =
   }
 }
 
+/**
+ * Import de recette depuis un TEXTE BRUT collé par l'utilisateur. Appelle la Cloud
+ * Function `importRecipeFromText` (extraction Haiku, mêmes règles que l'URL). La
+ * garde admin/abonné est faite côté serveur.
+ *
+ * @param text - Le texte de recette collé.
+ * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
+ * @returns La charge utile serveur `{ recipe, method: "text" }`.
+ * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
+ */
+export async function importRecipeFromText(text: string, knownUtensils: string[] = []): Promise<unknown> {
+  const call = httpsCallable(functions, "importRecipeFromText", { timeout: 70000 });
+  try {
+    const res = await call({ text, knownUtensils });
+    return res.data;
+  } catch (e) {
+    throw mapImportError(e);
+  }
+}
+
 /** Partie image envoyée au serveur : type MIME + données base64 (sans préfixe). */
 export interface ImagePart { mediaType: string; data: string }
 

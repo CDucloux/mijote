@@ -56,6 +56,7 @@ import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { ImportFromUrl } from "./pages/ImportFromUrl.jsx";
 import { ImportFromPicture } from "./pages/ImportFromPicture.jsx";
+import { ImportFromText } from "./pages/ImportFromText.jsx";
 import { PlusPage } from "./pages/PlusPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
@@ -152,7 +153,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // partageable / navigable au bouton retour).
   const recipeSeg = location.pathname.startsWith("/recipes/") ? location.pathname.slice(9) : "";
   // Pages d'import IA (routes dédiées) : ne correspondent à aucune recette.
-  const importRoute = recipeSeg === "import-from-url" ? "url" : recipeSeg === "import-from-picture" ? "picture" : null;
+  const importRoute = recipeSeg === "import-from-url" ? "url" : recipeSeg === "import-from-picture" ? "picture" : recipeSeg === "import-from-text" ? "text" : null;
   // Éditeur d'une NOUVELLE recette (création manuelle ou brouillon d'import IA) :
   // route dédiée pour lui donner une URL stable, le retour arrière / rafraîchis-
   // sement ont un comportement défini et le brouillon extrait n'est plus perdu par
@@ -188,7 +189,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     if (to) navigate(to, { replace: true });
   }, [navigate]);
   // Import de recette (URL / photos) → ouvre l'éditeur sur le brouillon (useRecipeImport).
-  const { importFromUrl, importFromImages } = useRecipeImport({ ingredientDB, utensilDB, openEditor: openDraftEditor });
+  const { importFromUrl, importFromImages, importFromText } = useRecipeImport({ ingredientDB, utensilDB, openEditor: openDraftEditor });
   // Restauration du brouillon : on arrive sur /recipes/new sans brouillon en
   // mémoire (rafraîchissement, retour arrière) → on rejoue le cache s'il existe,
   // sinon la route n'a plus d'objet → retour propre à la bibliothèque.
@@ -238,6 +239,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     loadDirectory: (...a) => shellApiRef.current.loadDirectory?.(...a),
     importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
+    importFromText: (...a) => shellApiRef.current.importFromText?.(...a),
   }), []);
   // Accès à l'offre Cardamome+ : abonnement Stripe actif (extension Firebase) OU
   // admin (accès complet du propriétaire de l'app).
@@ -525,7 +527,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     </div>
   ) : importRoute ? (
     <div key={importRoute} className={`page-slide-in-right${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
-      {importRoute === "url" ? <ImportFromUrl /> : <ImportFromPicture />}
+      {importRoute === "url" ? <ImportFromUrl /> : importRoute === "text" ? <ImportFromText /> : <ImportFromPicture />}
     </div>
   ) : plusRoute ? (
     <div className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
@@ -584,7 +586,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // bord, et ces fonctions ne sont appelées que sur action utilisateur (jamais au
   // render ni dans un effet de montage), donc jamais lue avant d'être remplie.
   // eslint-disable-next-line react-hooks/refs
-  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages };
+  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages, importFromText };
 
   return (
     <AppShellProvider value={shellValue}>
