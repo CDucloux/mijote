@@ -8,6 +8,7 @@ import { AboutModal } from "./AboutModal.jsx";
 import { AccountSheet } from "./AccountSheet.jsx";
 import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useModalExit } from "../hooks/useModalExit.js";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { CONTACT_MAILTO } from "../constants/contact.js";
 import { getRuntimeContext, isAppContext } from "../lib/ui/runtimeContext.js";
 
@@ -22,9 +23,12 @@ export function UserAvatar() {
   const [dropPos, setDropPos] = useState({ top: 0, right: 0 });
   const btnRef = useRef(null);
   const online = useOnline();
-  // App installée (Capacitor natif ou PWA standalone) → panneau plein écran qui
-  // glisse depuis la droite ; simple onglet web → dropdown ancré sous l'avatar.
+  // Panneau plein écran qui glisse depuis la droite dès qu'on est en contexte
+  // « mobile » : app installée (Capacitor / PWA standalone) OU viewport étroit
+  // (< 768 px), y compris un onglet desktop réduit. Sinon dropdown sous l'avatar.
   const appSurface = useMemo(() => isAppContext(getRuntimeContext()), []);
+  const isDesktop = useIsDesktop();
+  const useDrawer = appSurface || !isDesktop;
   // Sortie animée du menu (sinon il disparaissait d'un coup). `closing` bascule la
   // pastille sur la keyframe collapseUp, puis onAnimationEnd applique la fermeture.
   const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(
@@ -114,7 +118,7 @@ export function UserAvatar() {
   };
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
-      <button ref={btnRef} className="ripple ripple-light" onClick={() => { if (appSurface) { setConfirmSignOut(false); setOpen(true); } else if (open) { closeThen(); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }} aria-label="Mon compte">
+      <button ref={btnRef} className="ripple ripple-light" onClick={() => { if (useDrawer) { setConfirmSignOut(false); setOpen(true); } else if (open) { closeThen(); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }} aria-label="Mon compte">
         {/* Anneau orange = abonné Cardamome+ (sinon bordure neutre). */}
         {user.photoURL
           ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: `2px solid ${isPlus ? "var(--accent)" : "var(--border)"}` }} />
@@ -123,7 +127,7 @@ export function UserAvatar() {
       </button>
       {/* Pastille de sync HORS du bouton (sinon le clip circulaire du ripple la masque). */}
       <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none", pointerEvents: "none" }} />
-      {!appSurface && (open || closing) && createPortal(
+      {!useDrawer && (open || closing) && createPortal(
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 1299 }} onClick={() => closeThen()} />
           <div ref={surfaceRef} onAnimationEnd={onAnimationEnd} style={{ position: "fixed", top: dropPos.top, right: dropPos.right, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 1300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: closing ? "collapseUp 0.16s ease forwards" : "expandDown 0.2s ease" }}>
@@ -137,7 +141,7 @@ export function UserAvatar() {
         </>,
         document.body
       )}
-      {appSurface && open && (
+      {useDrawer && open && (
         <AccountSheet user={user} isPlus={isPlus} syncLabel={syncLabel} syncColor={syncColor} offline={offline}
           groups={groups} signOutAction={signOutAction} onClose={() => setOpen(false)} />
       )}
