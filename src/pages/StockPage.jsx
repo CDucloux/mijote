@@ -1,8 +1,9 @@
-import { useState, useMemo, useRef, useEffect, useCallback, memo } from "react";
+import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, memo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { EmptyArt } from "../components/EmptyArt.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { paginateStockShelves, compareIngredientName } from "@/lib/food/stockShelves.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
@@ -30,13 +31,6 @@ const STATE_LABEL = { full: "en stock", low: "bientôt vide", empty: "à rachete
 // verrerie, ombres) très coûteux à monter d'un coup au 1er paint. On n'affiche
 // qu'un lot de planches, puis l'utilisateur charge la suite (cf. loadMore).
 const SHELVES_PAGE = 4; // planches (rangées) montées par lot
-
-/** Découpe un tableau en rangées de `n` éléments (une rangée = une planche). */
-function chunk(arr, n) {
-  const out = [];
-  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
-  return out;
-}
 
 /**
  * Un bocal. Mémoïsé sur `(ing, state, onCycle)` : toggler un bocal ne re-rend que
@@ -208,7 +202,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
     return stockable
       .filter(i => matchView(i)
         && (!q || normalizeStr(i.name).includes(q) || (i.aliases || []).some(a => normalizeStr(a).includes(q))))
-      .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
+      .sort(compareIngredientName);
   }, [stockable, search, view, stockSet, lowSet]);
 
   // Regroupement par catégorie
@@ -230,17 +224,33 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   const { scrollRef, contentRef } = useElasticScroll();
 
   // Largeur utile du mur -> nombre de bocaux par planche (une planche = une rangée).
+  // Mesure AVANT peinture (useLayoutEffect + lecture synchrone de la largeur de
+  // contenu) : `perRow` est ainsi correct dès le 1er rendu du mur, ce qui évite un
+  // second découpage/reflow après coup. Le ResizeObserver ne gère que les
+  // redimensionnements ultérieurs (rotation, split-view…).
   const [wallW, setWallW] = useState(0);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = contentRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(entries => {
-      const w = entries[0]?.contentRect?.width;
-      if (w) setWallW(w);
-    });
+    if (!el) return;
+    const cs = getComputedStyle(el);
+    const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    const measure = () => { const w = el.clientWidth - padX; if (w > 0) setWallW(w); };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => measure());
     ro.observe(el);
     return () => ro.disconnect();
   }, [contentRef]);
+
+  // Montage différé d'une frame : à l'arrivée sur l'onglet (key=tab remonte tout),
+  // on peint d'abord le squelette (quasi gratuit) pour que l'animation d'entrée
+  // reste fluide, puis on monte le mur de bocaux (réconciliation + paint lourds) à
+  // la frame suivante, hors du chemin critique de la transition.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
 
   const perRow = useMemo(() => {
     const vw = typeof window !== "undefined" ? window.innerWidth : 1000;
@@ -252,23 +262,6 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
     return Math.max(1, Math.floor((inner + gap - 2) / (jarW + gap)));
   }, [wallW]);
 
-  // Liste « à plat » des planches, toutes catégories confondues : une planche =
-  // une rangée de bocaux. On pagine sur ce nombre (indépendant de la densité
-  // d'écran → un lot représente une charge de rendu stable, quel que soit perRow).
-  const allShelves = useMemo(() => {
-    const out = [];
-    for (const [catKey, ings] of grouped) {
-      const inStockInCat = ings.filter(i => stockSet.has(i.id)).length;
-      const lowInCat = ings.filter(i => lowSet.has(i.id)).length;
-      const rows = chunk(ings, perRow);
-      rows.forEach((row, ri) => out.push({
-        catKey, total: ings.length, inStockInCat, lowInCat,
-        row, ri, lastRow: ri === rows.length - 1,
-      }));
-    }
-    return out;
-  }, [grouped, perRow, stockSet, lowSet]);
-
   const [visibleShelves, setVisibleShelves] = useState(SHELVES_PAGE);
   // Reset de pagination quand le jeu de résultats change (vue / recherche) :
   // ajustement d'état PENDANT le rendu (pattern React), pas via un effet.
@@ -276,20 +269,12 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   const [pagedKey, setPagedKey] = useState(listKey);
   if (pagedKey !== listKey) { setPagedKey(listKey); setVisibleShelves(SHELVES_PAGE); }
 
-  const shownShelves = allShelves.slice(0, visibleShelves);
-  const remainingShelves = allShelves.length - shownShelves.length;
-  // Reconstitue les blocs .stk-group à partir des planches visibles : on regroupe
-  // les planches consécutives d'une même catégorie pour rendre l'étiquette de
-  // rayon une seule fois en tête du bloc.
-  const shownGroups = useMemo(() => {
-    const groups = [];
-    for (const shelf of shownShelves) {
-      const last = groups[groups.length - 1];
-      if (last && last.catKey === shelf.catKey) last.shelves.push(shelf);
-      else groups.push({ catKey: shelf.catKey, shelves: [shelf] });
-    }
-    return groups;
-  }, [shownShelves]);
+  // Pagination : on ne construit QUE les planches visibles (le reste n'est que
+  // compté), au lieu de matérialiser tout le mur à chaque montage/toggle.
+  const { groups: shownGroups, totalShelves } = useMemo(
+    () => paginateStockShelves(grouped, perRow, stockSet, lowSet, visibleShelves),
+    [grouped, perRow, stockSet, lowSet, visibleShelves]);
+  const remainingShelves = Math.max(0, totalShelves - visibleShelves);
 
   // Chargement du lot suivant : bref « spinner » avant de monter les planches
   // (le rendu d'un lot de bocaux peut être perceptible sur mobile) → feedback immédiat.
@@ -393,11 +378,14 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                 </button>
               } />
           );
-        })() : (
+        })() : !ready ? (
+          // 1re frame après l'arrivée sur l'onglet : squelette d'abord, le mur de
+          // bocaux (lourd à peindre) est monté à la frame suivante (cf. `ready`).
+          <StockWallSkeleton perRow={perRow} />
+        ) : (
           <>
-          {shownGroups.map(({ catKey, shelves }) => {
+          {shownGroups.map(({ catKey, total, inStockInCat, lowInCat, shelves }) => {
             const cat = categories[catKey] || DEFAULT_CATEGORIES.other;
-            const { total, inStockInCat, lowInCat } = shelves[0];
             return (
               <div key={catKey} className="stk-group">
                 {/* Étiquette de rayon */}
