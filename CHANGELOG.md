@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.15.0 – Cardamome · Coller pour importer
+
+### Import intelligent
+- **Importer une recette depuis un texte collé** : en plus du lien et de la photo, l'import intelligent accepte désormais un **texte brut** (un mail, une note, un message…). On colle le texte, il est lu, structuré et mis en forme comme les autres imports, puis le brouillon s'ouvre dans l'éditeur pour relecture. Réservé aux abonnés Cardamome+ (quotas jour/mois, illimité pour l'administrateur).
+- **Le mot « IA » laisse place à « import intelligent »** : dans la feuille « Nouvelle recette », le vocabulaire s'aligne sur celui de la vitrine, plus fidèle à l'esprit du produit.
+
+### Cardamome+
+- **Nouveaux tarifs** : l'abonnement passe à **4,99 €/mois** et **49,99 €/an** (soit 4,17 €/mois, environ 10 € d'économie sur l'année).
+
+### Page vitrine
+- **Séparateur mieux posé sur mobile** : sous les badges « Bientôt sur Android / iOS », le trait de séparation ne colle plus aux boutons et respire autant en haut qu'en bas, et son petit losange est recentré pile sur la ligne.
+
 ## v4.14.2 – Cardamome · Boutons sobres
 
 ### Interface

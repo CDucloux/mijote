@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.14.2-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.15.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -55,11 +55,12 @@ toujours avec vous.
 - 🧩 **Préparations de base** : une recette peut consommer une « base »
   réutilisable (sauce, pâte, appareil) avec un rendement ; les courses éclatent
   automatiquement la base en ingrédients bruts.
-- 🤖 **Import intelligent** : importez une recette depuis une **URL** ou **1 à 2
-  photos** d'un livre : extraction, structuration et liaison des ingrédients /
-  ustensiles par Claude, qui **détecte aussi les préparations de base** (caramel,
-  pâte, fond…) et leur rendement estimé (réservé aux abonnés **Cardamome+**, quotas
-  jour/mois ; illimité pour l'administrateur).
+- 🤖 **Import intelligent** : importez une recette depuis une **URL**, **1 à 2
+  photos** d'un livre ou un **texte collé** (mail, note, message) : extraction,
+  structuration et liaison des ingrédients / ustensiles par Claude, qui
+  **détecte aussi les préparations de base** (caramel, pâte, fond…) et leur
+  rendement estimé (réservé aux abonnés **Cardamome+**, quotas jour/mois ;
+  illimité pour l'administrateur).
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
   « intelligents », dérivés d'un filtre).
 - 🌍 **Style de cuisine** : un champ unique parmi une liste prédéfinie
