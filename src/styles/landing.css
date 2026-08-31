@@ -1070,8 +1070,9 @@
   .lp-hero__grid { gap: clamp(26px, 7vw, 40px); }
   .lp-hero__note { font-size: 1.18rem; }
 
-  /* Scène frigo : bornée à la largeur de la colonne sur téléphone. */
-  .lp-fridge { width: clamp(180px, 56vw, 232px); }
+  /* Scène frigo masquee sur telephone : le hero s'arrete aux badges, puis la
+     barre de separation enchaine directement sur « Le vrai probleme ». */
+  .lp-hero__art { display: none; }
 
   /* Barre : resserrée pour tenir marque + thème + CTA sur les écrans étroits. */
   .lp-navbar__inner { gap: 10px; }
