@@ -97,7 +97,7 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
 
   const row = (action, i) => {
     const danger = action.variant === "danger";
-    const iconColor = danger ? "var(--red)" : action.variant === "admin" ? "var(--accent)" : "var(--text2)";
+    const iconColor = danger ? "var(--red)" : action.variant === "admin" ? "var(--admin)" : "var(--text2)";
     const body = (
       <>
         <span className="account-row-icon" style={{ color: iconColor }}>

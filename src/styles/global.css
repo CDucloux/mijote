@@ -1302,14 +1302,15 @@ select {
   border-top: 1px solid var(--border);
 }
 
-/* Carte « spéciale » (console admin) : teinte accent assumée pour la détacher. */
+/* Carte « spéciale » (console admin) : teinte violet « admin » assumée, en
+   cohérence avec le badge / le bandeau / l'en-tête de la console. */
 .account-group.is-special {
-  background: rgba(var(--accent-rgb), 0.1);
-  border-color: rgba(var(--accent-rgb), 0.28);
+  background: rgba(var(--admin-rgb), 0.1);
+  border-color: rgba(var(--admin-rgb), 0.28);
 }
 
 .account-group.is-special .menu-row {
-  color: var(--accent);
+  color: var(--admin);
   font-weight: 700;
 }
 
