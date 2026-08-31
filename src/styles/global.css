@@ -552,6 +552,23 @@ select {
   border-color: rgba(var(--accent-rgb), 0.5);
 }
 
+/* « Charger plus de recettes » : pilule surface, même hover que les pills
+   d'outils (la bordure se renforce). Styles portés en CSS pour que le :hover
+   prenne (les styles inline précédents l'empêchaient). */
+.load-more-btn {
+  gap: 8px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.load-more-btn:hover {
+  border-color: var(--text3);
+}
+
 /* En-tête de la fiche ingrédient : boutons blancs dont le bord s'assombrit au
    survol (comme les pills de filtres), et flèche de retour qui glisse (comme les
    écrans d'import). */
