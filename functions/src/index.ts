@@ -7,6 +7,6 @@
 //   • Paiement Cardamome+ (Stripe maison) → subscriptions/
 //   • Quotas d'import IA → quota/ (utilisé par imports/)
 
-export { importRecipeFromUrl, importRecipeFromImages } from "./imports/recipeImport.js";
+export { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText } from "./imports/recipeImport.js";
 export { createStripeCheckout, createStripePortal, stripeWebhook } from "./subscriptions/stripe.js";
 export { verifyPlayPurchase, playRtdnWebhook } from "./subscriptions/play.js";

@@ -51,4 +51,9 @@ describe("quotaError", () => {
   it("priorise le message jour quand les deux limites sont atteintes", () => {
     expect(quotaError({ dayCount: 5, monthCount: 60 }, "url")).toMatch(/par jour/);
   });
+  it("gère le type texte (5/jour, 60/mois) comme l'url", () => {
+    expect(quotaError({ dayCount: LIMITS.text.day - 1, monthCount: 0 }, "text")).toBeNull();
+    expect(quotaError({ dayCount: 5, monthCount: 0 }, "text")).toMatch(/par jour/);
+    expect(quotaError({ dayCount: 0, monthCount: 60 }, "text")).toMatch(/ce mois-ci/);
+  });
 });

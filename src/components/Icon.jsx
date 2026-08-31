@@ -12,7 +12,7 @@ import {
   Star, User, Lightbulb, ArrowSquareOut, Leaf, FileText, EnvelopeSimple, Package,
   WifiSlash, ClockCounterClockwise, Eraser, ArrowsLeftRight, ArrowsDownUp, Pause, Play,
   Stop, DotsThreeVertical, DotsThree, Info, Eye, EyeSlash, Heart, Globe, Lock, Scales,
-  AndroidLogo, AppleLogo, Camera,
+  AndroidLogo, AppleLogo, Camera, ClipboardText,
 } from "@phosphor-icons/react";
 
 // Cuillère (à café / à soupe) : Phosphor n'en fournit pas. Silhouette pleine dans
@@ -79,6 +79,7 @@ const ICONS = {
   externalLink: ArrowSquareOut,
   leaf: Leaf,
   fileText: FileText,
+  paste: ClipboardText,
   mail: EnvelopeSimple,
   box: Package,
   wifiOff: WifiSlash,

@@ -3,8 +3,8 @@ import { LIMITS, periodKeys, currentCounts, remainingFor } from "../aiQuota.js";
 
 // Ces limites DOIVENT rester alignées avec functions/quota.js (autorité serveur).
 describe("LIMITS (parité serveur)", () => {
-  it("url 5/jour 60/mois · photo 3/jour 30/mois", () => {
-    expect(LIMITS).toEqual({ url: { day: 5, month: 60 }, photo: { day: 3, month: 30 } });
+  it("url 5/jour 60/mois · photo 3/jour 30/mois · texte 5/jour 60/mois", () => {
+    expect(LIMITS).toEqual({ url: { day: 5, month: 60 }, photo: { day: 3, month: 30 }, text: { day: 5, month: 60 } });
   });
 });
 
@@ -42,5 +42,10 @@ describe("remainingFor", () => {
   it("blocked quand le mois est épuisé (jour encore ok)", () => {
     const r = remainingFor({ url: { day: "2026-08-06", dayCount: 1, month: "2026-08", monthCount: 60 } }, "url", now);
     expect(r).toMatchObject({ dayLeft: 4, monthLeft: 0, blocked: true });
+  });
+  it("type texte : reliquat plein et décompte comme l'url", () => {
+    expect(remainingFor(null, "text", now)).toMatchObject({ dayLeft: 5, dayLimit: 5, monthLeft: 60, monthLimit: 60, blocked: false });
+    const r = remainingFor({ text: { day: "2026-08-06", dayCount: 5, month: "2026-08", monthCount: 5 } }, "text", now);
+    expect(r).toMatchObject({ dayLeft: 0, blocked: true });
   });
 });

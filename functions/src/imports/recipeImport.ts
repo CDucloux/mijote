@@ -300,6 +300,50 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
   return llmToIntermediate(parsed, sourceUrl);
 }
 
+/**
+ * Extrait une recette depuis un TEXTE BRUT collé par l'utilisateur. Mêmes règles
+ * d'extraction que l'URL (prompt de base identique, modèle Haiku), mais la source
+ * est le texte fourni directement : ni fetch, ni image d'étape, ni source URL.
+ * Le libellé « page web » du prompt est remplacé pour refléter l'origine.
+ *
+ * @param text - Le texte de recette collé par l'utilisateur.
+ * @param knownUtensils - Noms d'ustensiles connus pour borner le modèle.
+ * @returns Le brouillon intermédiaire.
+ * @throws HttpsError `failed-precondition` si la clé IA manque, `internal` si la
+ *   réponse est vide ou illisible.
+ */
+async function extractFromText(text: string, knownUtensils: string[]): Promise<Intermediate> {
+  const key = ANTHROPIC_API_KEY.value();
+  if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
+  const system = PROMPT_TEMPLATE
+    .replace("depuis le texte brut d'une page web", "depuis le texte brut d'une recette collée par l'utilisateur")
+    .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)");
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic({ apiKey: key });
+  const body = text.slice(0, 24_000); // borne le coût (entrée)
+  let response: Anthropic.Message;
+  try {
+    response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 4096,
+      system,
+      messages: [{ role: "user", content: `Texte de la recette collée :\n\n${body}` }],
+    });
+  } catch (e) {
+    const err = e as { status?: number; name?: string; message?: string };
+    logger.error("Anthropic API error (text):", err?.status, err?.name, err?.message);
+    throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
+  }
+  const block = (response.content || []).find((b) => b.type === "text");
+  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
+  let parsed: LlmDraft;
+  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
+  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
+  logRawModelJson("text", block.text);
+  logDetectedGroups("text", parsed);
+  return llmToIntermediate(parsed, "");
+}
+
 /** Trace dans Cloud Logging les sections (`group`) renvoyées par le modèle, pour
  *  diagnostiquer un import (voir si la segmentation vient du modèle ou du pipeline). */
 function logDetectedGroups(kind: string, d: LlmDraft): void {
@@ -410,6 +454,42 @@ export const importRecipeFromImages = onCall(
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       logger.error("importRecipeFromImages, erreur inattendue:", e);
+      throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
+    }
+  }
+);
+
+/** Longueur minimale d'un texte collé exploitable (en deçà : rien à extraire). */
+const MIN_TEXT_LEN = 40;
+
+/**
+ * Importe une recette depuis un TEXTE BRUT collé par l'utilisateur. Même garde
+ * serveur que l'URL (admin illimité, abonné avec quota `text`), extraction Haiku,
+ * sans fetch ni image d'étape (le texte collé n'expose aucune URL exploitable).
+ *
+ * @returns `{ recipe, method: "text" }`.
+ * @throws HttpsError selon l'échec (accès/quota, texte vide, extraction).
+ */
+export const importRecipeFromText = onCall(
+  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
+  async (request) => {
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "text");
+
+    const text = String((request.data as { text?: unknown })?.text || "").trim();
+    if (text.length < MIN_TEXT_LEN) throw new HttpsError("invalid-argument", "Colle un texte de recette un peu plus complet (ingrédients et étapes).");
+    const knownUtensils = knownUtensilsFrom(request);
+
+    try {
+      const inter = await extractFromText(text, knownUtensils);
+      inter.image = "";
+      inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
+      for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un texte collé
+      const recipe = assignIdsAndLink(inter);
+      if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée dans ce texte.");
+      return { recipe, method: "text" };
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      logger.error("importRecipeFromText, erreur inattendue:", e);
       throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
     }
   }
