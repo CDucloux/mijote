@@ -785,7 +785,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       {/* FAB « + » flottant pour ajouter un ustensile (comme les listes de courses libres) */}
       {isAdmin && section === "ustensiles" && (
         <button onClick={() => setEditUt({ id: "", name: "", category: "divers", appliance: "", image: "" })} title="Nouvel ustensile" className="pressable"
-          style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(var(--accent-rgb),0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
+          style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 18px -4px rgba(0,0,0,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
           <Icon name="plus" size={22} color="#fff" />
         </button>
       )}

@@ -262,7 +262,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
               <button className="action-dock-close" title="Réduire" onClick={closeDock}><Icon name="close" size={15} /></button>
             </div>
           ) : (
-            <button className="fab-toggle" title="Actions" onClick={() => setActionsOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 26px -4px rgba(var(--accent-rgb),0.5)" }}>
+            <button className="fab-toggle" title="Actions" onClick={() => setActionsOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px -6px rgba(0,0,0,0.45)" }}>
               <Icon name="plus" size={24} color="#fff" />
             </button>
           )}
