@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.14.1 – Cardamome · Finitions
+
+### Interface
+- **Console admin au bon ton** : dans le menu compte plein écran, la carte « Console admin » passe du vert au violet, en cohérence avec le badge, le bandeau et l'en-tête de la console (le menu déroulant desktop l'était déjà).
+- **« Charger plus de recettes » plus vivant** : le bouton réagit au survol sur ordinateur (la bordure se renforce, comme les pilules Filtres et Tri), annonce clairement combien de recettes restent (« 12 restantes ») et adopte une icône plus parlante.
+- **Pointe de la flèche de rafraîchissement plus nette** : le petit débord arrondi qui émoussait le sommet de la flèche du tirer-pour-rafraîchir a disparu, la pointe est franche.
+
 ## v4.14.0 – Cardamome · Gestes d'app
 
 ### Mon compte
