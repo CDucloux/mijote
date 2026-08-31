@@ -1052,7 +1052,7 @@
   .lp-slide + .lp-slide::after {
     content: "";
     position: absolute;
-    top: -3.5px;
+    top: -2.5px;
     left: 50%;
     width: 6px;
     height: 6px;
@@ -1065,7 +1065,11 @@
   .lp-section { padding-block: clamp(52px, 12vw, 74px); }
   .lp-hero {
     padding-top: clamp(80px, 22vw, 108px);
-    padding-bottom: 8px;
+    /* Frigo masqué sur mobile : le hero s'arrête aux badges et enchaîne sur le trait
+       de séparation de la section suivante. On lui rend un bas aussi aéré que le haut
+       de cette section (même rythme que .lp-section) pour que le trait respire des
+       deux côtés, au lieu de coller aux badges. */
+    padding-bottom: clamp(52px, 12vw, 74px);
   }
   .lp-hero__grid { gap: clamp(26px, 7vw, 40px); }
   .lp-hero__note { font-size: 1.18rem; }
