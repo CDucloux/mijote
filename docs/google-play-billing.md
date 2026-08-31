@@ -82,7 +82,7 @@ comme le doc Stripe est indexé par `subId`.
 1. **Compte Google Play Console** + fiche app publiée (au moins en test interne)
    sous l'`appId` `studio.cardamome`.
 2. **Produit d'abonnement** `cardamome_plus` avec deux **base plans** :
-   `monthly` (3,99 €) et `yearly` (29,99 €), en **parité** avec les tarifs Stripe.
+   `monthly` (4,99 €) et `yearly` (49,99 €), en **parité** avec les tarifs Stripe.
    Noter les `productId` / base plan IDs (équivalents des `price_…`).
 3. **Google Play Developer API** activée sur le projet GCP, + **liaison**
    Play Console ↔ projet GCP.

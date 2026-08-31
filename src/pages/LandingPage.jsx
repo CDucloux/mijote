@@ -614,10 +614,10 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <span className="lp-plan__flag">Recommandé</span>
             <h3 className="lp-plan__name">Cardamome+ <span className="lp-plan__badge">+</span></h3>
             <div className="lp-plan__price">
-              <span className="lp-plan__amount">3,99 €</span>
+              <span className="lp-plan__amount">4,99 €</span>
               <span className="lp-plan__per">/ mois</span>
             </div>
-            <p className="lp-plan__hint lp-plan__hint--save">ou 29,99 €/an, soit 2,50 €/mois.</p>
+            <p className="lp-plan__hint lp-plan__hint--save">ou 49,99 €/an, soit 4,17 €/mois.</p>
             <ul className="lp-plan__list">
               {PLAN_PLUS.map(([f, strong]) => (
                 <li key={f}><span className="lp-plan__check"><Icon name="check" size={13} weight="bold" /></span>{strong ? <strong>{f}</strong> : f}</li>
