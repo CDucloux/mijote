@@ -20,7 +20,7 @@ export function ConvertBadge({ onClick, size = 19 }) {
       style={{ position: "absolute", bottom: -2, right: -2,
         width: size, height: size, borderRadius: "50%", background: "var(--accent)",
         border: "2px solid var(--surface)", display: "grid", placeItems: "center",
-        cursor: "pointer", padding: 0, boxShadow: "0 2px 7px -1px rgba(var(--accent-rgb),0.6)" }}>
+        cursor: "pointer", padding: 0, boxShadow: "0 2px 6px -1px rgba(0,0,0,0.4)" }}>
       <Icon name="spoon" size={size - 7} color="#fff" />
     </button>
   );

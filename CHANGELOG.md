@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.14.2 – Cardamome · Boutons sobres
+
+### Interface
+- **Fini les halos verts sur les boutons** : les boutons d'action (« Nouvelle », « Générer », le bouton flottant des fiches, la barre d'actions, les CTA de la vitrine, « Enregistrer »…) perdaient une auréole verte lumineuse qui les faisait paraître « fluo ». Elle disparaît au profit d'une ombre neutre discrète : le vert plein se détache déjà sur les fonds sombres, plus net et plus sobre.
+- **« Enregistrer comme carnet » à plat** : le fond de ce bouton passe d'un léger dégradé vert-ambre à une teinte verte unie, plus franche.
+
+### Page vitrine
+- **Vitrine mobile plus directe** : sur téléphone, la page d'accueil publique n'affiche plus l'illustration du frigo et son point d'interrogation. On passe directement des badges « Bientôt sur Android / iOS » à la section « Le vrai problème ».
+
 ## v4.14.1 – Cardamome · Finitions
 
 ### Interface

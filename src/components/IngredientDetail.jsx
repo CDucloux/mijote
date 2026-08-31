@@ -132,7 +132,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           {editing ? (
             <>
               <button onClick={cancel} className="pressable fiche-hdr-btn" style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 40, padding: "0 16px", borderRadius: 999, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}><Icon name="back" size={15} color="var(--text2)" /> Annuler</button>
-              <button onClick={save} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 20px", borderRadius: 999, background: "var(--accent)", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "#fff", boxShadow: "0 6px 16px -8px rgba(var(--accent-rgb),0.8)" }}>
+              <button onClick={save} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 20px", borderRadius: 999, background: "var(--accent)", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "#fff", boxShadow: "0 2px 6px rgba(0,0,0,0.22)" }}>
                 <Icon name="save" size={16} color="#fff" /> Enregistrer
               </button>
             </>
