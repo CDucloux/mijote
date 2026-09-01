@@ -1004,6 +1004,21 @@
   color: var(--accent2);
   transform: rotate(-1.5deg);
 }
+/* Logos sociaux : boutons ronds sobres, homogènes (même taille, currentColor).
+   Non cliquables pour l'instant (comptes à venir) → curseur par défaut, pas de
+   hover. Deviendront des liens le jour venu. */
+.lp-socials { display: flex; align-items: center; gap: 9px; margin-top: 18px; }
+.lp-social {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  cursor: default;
+}
 @media (min-width: 720px) {
   .lp-footer__inner { grid-template-columns: 1.7fr 1fr 1fr; gap: clamp(32px, 5vw, 72px); }
 }
