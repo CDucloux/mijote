@@ -1,11 +1,9 @@
 import { useState, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
-import { Icon } from "./Icon.jsx";
 import { EmptyArt } from "./EmptyArt.jsx";
-import { AdminBadge } from "./AdminBadge.jsx";
 
-// ─── UI PARTAGÉE DES IMPORTS IA (lien / photo) ───────────────────────────────
-// L'import IA consomme un crédit : l'écran d'attente est VOLONTAIREMENT
+// ─── OVERLAY D'ATTENTE DE L'IMPORT INTELLIGENT ───────────────────────────────
+// L'import intelligent consomme un crédit : l'écran d'attente est VOLONTAIREMENT
 // non-annulable (pas de fermeture, pas de swipe, pas de bouton) pour éviter
 // qu'un crédit parte dans le vide.
 
@@ -104,101 +102,5 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
       </div>
     </div>,
     document.body
-  );
-}
-
-/** Bandeau d'erreur inline (URL invalide, trop de photos…). Les VRAIS échecs
- * d'import passent, eux, par ErrorModal (popup centrée). */
-export function InlineError({ children }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.28)", margin: "0 0 14px" }}>
-      <Icon name="warning" size={15} color="var(--red)" />
-      <span style={{ fontSize: 12.5, color: "var(--red)", fontWeight: 600, lineHeight: 1.4 }}>{children}</span>
-    </div>
-  );
-}
-
-/** Carte d'aide (pastille d'icône colorée + texte) : partage navigateur,
- * confidentialité… Fond blanc/surface, pastille teintée pour un rendu net. */
-export function HintCard({ icon, iconColor = "var(--text2)", tint = "var(--surface3)", children }) {
-  return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 15px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
-      <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: tint }}>
-        <Icon name={icon} size={16} color={iconColor} />
-      </span>
-      <span style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, paddingTop: 3 }}>{children}</span>
-    </div>
-  );
-}
-
-/**
- * Compteur de quota d'import IA (reliquat jour + mois) pour les abonnés Cardamome+.
- * Purement INDICATIF : l'autorité reste le serveur. Deux jauges compactes (jour /
- * mois) avec un liseré rouge quand la limite est atteinte. L'admin voit « Illimité ».
- *
- * @param label - Libellé du type (« depuis un lien », « photo »).
- * @param rem - Reliquat renvoyé par `remainingFor` (dayUsed/dayLimit/monthUsed/monthLimit/blocked).
- * @param unlimited - `true` pour l'admin (illimité).
- */
-export function QuotaMeter({ label, rem, unlimited }) {
-  if (unlimited) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 14, background: "rgba(var(--admin-rgb),0.09)", border: "1px solid rgba(var(--admin-rgb),0.28)" }}>
-        <AdminBadge />
-        <span style={{ fontSize: 12.5, color: "var(--text2)", fontWeight: 600 }}>Imports {label} <strong style={{ color: "var(--admin)" }}>illimités</strong>, les quotas ne s'appliquent pas.</span>
-      </div>
-    );
-  }
-  if (!rem) return null;
-
-  // La jauge représente ce qui RESTE (et non ce qui est consommé) : un quota
-  // quasi-intact affiche une barre quasi-pleine, cohérent avec « Imports restants »,
-  // et on évite l'effet « barre presque toute grise » qui semblait négatif.
-  const Gauge = ({ tag, left, limit }) => {
-    const frac = limit ? Math.max(0, Math.min(1, left / limit)) : 0;
-    const out = left === 0;
-    const low = !out && frac <= 0.2;
-    const color = out ? "var(--red)" : low ? "#e8920a" : "var(--accent)";
-    return (
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-          <span style={{ fontSize: 10.5, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{tag}</span>
-          <span style={{ fontSize: 12.5, fontWeight: 600, color }}>{left}<span style={{ color: "var(--text3)", fontWeight: 500 }}> / {limit}</span></span>
-        </div>
-        <div style={{ height: 6, borderRadius: 999, background: "var(--surface3)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${frac * 100}%`, borderRadius: 999, background: color, transition: "width 0.3s ease" }} />
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div style={{ padding: "13px 15px", borderRadius: 16, background: "var(--surface)", border: `1px solid ${rem.blocked ? "rgba(224,82,82,0.35)" : "var(--border)"}`, boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
-        <Icon name={rem.blocked ? "warning" : "sparkle"} size={13} color={rem.blocked ? "var(--red)" : "var(--accent)"} />
-        <span style={{ fontSize: 11.5, fontWeight: 600, color: rem.blocked ? "var(--red)" : "var(--text2)" }}>
-          {rem.blocked ? "Limite atteinte" : "Imports restants"}
-        </span>
-        {/* Type d'import en pastille (pas de séparateur « · ») */}
-        <span style={{ marginLeft: "auto", fontSize: 10.5, fontWeight: 600, color: "var(--text3)", background: "var(--surface2)", borderRadius: 20, padding: "2px 9px" }}>{label}</span>
-      </div>
-      <div style={{ display: "flex", gap: 16 }}>
-        <Gauge tag="Aujourd'hui" left={rem.dayLeft} limit={rem.dayLimit} />
-        <Gauge tag="Ce mois-ci" left={rem.monthLeft} limit={rem.monthLimit} />
-      </div>
-    </div>
-  );
-}
-
-/** En-tête de page d'import : bouton retour + titre. L'icône identitaire vit dans
- * le bloc d'intro (une seule occurrence), pas de répétition ici. */
-export function ImportHeader({ title, onBack }) {
-  return (
-    <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-      <button onClick={onBack} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
-        <Icon name="back" size={17} />
-      </button>
-      <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>{title}</h1>
-    </div>
   );
 }

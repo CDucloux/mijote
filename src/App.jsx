@@ -54,9 +54,7 @@ import { ProfilePage } from "./pages/ProfilePage.jsx";
 import { LegalPage } from "./pages/LegalPage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
-import { ImportFromUrl } from "./pages/ImportFromUrl.jsx";
-import { ImportFromPicture } from "./pages/ImportFromPicture.jsx";
-import { ImportFromText } from "./pages/ImportFromText.jsx";
+import { ImportPage } from "./pages/ImportPage.jsx";
 import { PlusPage } from "./pages/PlusPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
@@ -110,8 +108,8 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Base de référence (Master partagée + ajouts perso), voir useMasterData.
   const {
     masterDB, setMasterDB, userDB, setUserDB,
-    categories, setCategories, ingredientDB, utensilDB, techniques,
-    setIngredientDB, setUtensilDB, setTechniques,
+    categories, setCategories, ingredientDB, utensilDB, techniques, sources,
+    setIngredientDB, setUtensilDB, setTechniques, setSources,
   } = useMasterData(isAdmin);
 
   const [stock, setStock] = useLS("rf_stock", []);
@@ -246,8 +244,8 @@ function AppInner({ user, isDark, toggleTheme }) {
   const subscribed = useSubscription(user?.uid);
   const isPlus = isAdmin || subscribed;
   const shellValue = useMemo(
-    () => ({ user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, ...stableApi }),
-    [user, syncStatus, isDark, notify, techniques, directory, isAdmin, isPlus, stableApi]
+    () => ({ user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, ...stableApi }),
+    [user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, stableApi]
   );
 
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
@@ -505,7 +503,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} components={recipes.filter(r => r.isComponent)} />}
-      {tab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} />}
+      {tab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources} />}
       {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
       {tab === "legal" && <LegalPage />}
       </div>
@@ -526,8 +524,11 @@ function AppInner({ user, isDark, toggleTheme }) {
         ingredientDB={ingredientDB} utensilDB={utensilDB} collections={collections} recipes={recipes} />
     </div>
   ) : importRoute ? (
-    <div key={importRoute} className={`page-slide-in-right${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
-      {importRoute === "url" ? <ImportFromUrl /> : importRoute === "text" ? <ImportFromText /> : <ImportFromPicture />}
+    // Clé STABLE (et non `importRoute`) : basculer d'onglet change le mode par une
+    // navigation, sans remonter la page — le pouce du segmented glisse au lieu d'un
+    // slide plein écran, et la saisie en cours (URL, photos, texte) est préservée.
+    <div key="import" className={`page-slide-in-right${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
+      <ImportPage mode={importRoute === "url" ? "lien" : importRoute === "text" ? "texte" : "photo"} />
     </div>
   ) : plusRoute ? (
     <div className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>

@@ -18,6 +18,7 @@ export const CONFIG_SECTION_BY_PATH = {
   "ingredients": "ingredients",
   "ustensils": "ustensiles",
   "techniques": "techniques",
+  "sources": "sources",
   "moderation": "modération",
 };
 export const CONFIG_PATH_BY_SECTION = Object.fromEntries(
