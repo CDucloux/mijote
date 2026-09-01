@@ -543,9 +543,9 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <span className="lp-eyebrow">Notre parti pris</span>
             <h2 className="lp-h2 lp-h2--wide">On pourrait te donner des milliers de recettes. À quoi bon ?</h2>
             <p className="lp-p">
-              Tu n'as pas besoin de 47 carbonara. Tu en veux une : la bonne, celle que tu réussis et
-              que tu recuisines. Découvrir les recettes des autres reste possible, et se cloner d'un
-              geste. Choisi, pas entassé.
+              Tu n'as pas besoin de 47 recettes de carbonara. Une seule suffit : celle qui devient
+              la tienne. Celle que tu maîtrises, que tu ajustes au fil du temps et que tu reprends
+              les yeux fermés. Les recettes des autres sont là pour inspirer, pas pour encombrer.
             </p>
             <p className="lp-punch">
               Une bonne app ne t'occupe pas pendant que tu cherches quoi faire. <em>Elle t'aide à cuisiner.</em>
