@@ -32,14 +32,19 @@ describe("pullArrowGeometry", () => {
     expect(endOf(0.3)).not.toBe(endOf(0.6));
   });
 
-  it("la pointe est un chevron de trois points, ancré au bout de l'arc", () => {
+  it("la pointe est un triangle de trois sommets, tangent au bout de l'arc", () => {
     const { arc, head } = pullArrowGeometry(0.7);
-    const headPts = nums(head);
-    expect(headPts).toHaveLength(6);
+    const [c1x, c1y, tipx, tipy, c2x, c2y] = nums(head);
+    expect(nums(head)).toHaveLength(6);
     const arcNums = nums(arc);
     const [ex, ey] = [arcNums[arcNums.length - 2], arcNums[arcNums.length - 1]];
-    // Le point central du chevron coïncide avec l'extrémité de l'arc.
-    expect(headPts[2]).toBeCloseTo(ex, 5);
-    expect(headPts[3]).toBeCloseTo(ey, 5);
+    const dist = (ax: number, ay: number, bx: number, by: number) => Math.hypot(ax - bx, ay - by);
+    // Triangle non dégénéré : les deux coins de base sont écartés.
+    expect(dist(c1x, c1y, c2x, c2y)).toBeGreaterThan(1);
+    // La pointe MÈNE : elle est plus loin de la base que ne l'est le bout de l'arc.
+    const baseMidX = (c1x + c2x) / 2, baseMidY = (c1y + c2y) / 2;
+    expect(dist(tipx, tipy, baseMidX, baseMidY)).toBeGreaterThan(dist(ex, ey, baseMidX, baseMidY));
+    // La base est centrée sur le bout de l'arc (pointe posée dessus, non détachée).
+    expect(dist(baseMidX, baseMidY, ex, ey)).toBeLessThan(3);
   });
 });

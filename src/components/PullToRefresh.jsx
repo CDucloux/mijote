@@ -9,12 +9,9 @@ export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 })
   const active = pull > 0 || refreshing;
   const progress = Math.min(1, pull / threshold);
   const arrow = pullArrowGeometry(progress);
-  // Le contenu ne bouge plus : le cercle émerge sous l'en-tête et s'y ancre.
-  // On plafonne sa descente à REST_Y (au lieu de suivre le doigt jusqu'à `max`,
-  // ce qui le larguait en plein milieu du contenu comme un bouton orphelin) :
-  // il suit le geste sur les premiers pixels puis se cale, la progression du
-  // tir restant lisible via l'arc qui se dessine.
-  const y = refreshing ? REST_Y : Math.min(pull, REST_Y);
+  // Le contenu ne bouge plus : seul le cercle descend, en suivant le doigt puis
+  // en se calant à REST_Y pendant le refresh.
+  const y = refreshing ? REST_Y : pull;
   const gliding = refreshing || pull === 0; // release ou refresh → transition douce, sinon on colle au doigt
 
   return (
@@ -34,11 +31,15 @@ export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 })
             {refreshing
               ? <div style={{ width: 16, height: 16, border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
               : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  {/* Cap `butt` sur l'arc : sinon la demi-rondeur du trait déborde
-                      vers l'avant, pile dans l'axe de la pointe, et émousse/décale
-                      le sommet du chevron. Les barbes gardent leurs bouts arrondis. */}
+                  {/* Cap `butt` sur l'arc : la pointe (triangle plein) le recouvre,
+                      inutile d'arrondir un bout qui sera caché. */}
                   <path d={arrow.arc} strokeLinecap="butt" />
-                  {progress > 0.12 && <polyline points={arrow.head} />}
+                  {/* Pointe = triangle PLEIN posé sur le bout de l'arc, tangent au
+                      cercle. Un chevron ouvert, au ras d'une extrémité quasi
+                      verticale, voyait une barbe longer l'arc et l'autre saillir :
+                      il se lisait comme un crochet de travers. Le triangle plein,
+                      lui, se lit sans ambiguïté quelle que soit sa place sur l'anneau. */}
+                  {progress > 0.12 && <polygon points={arrow.head} fill="var(--accent)" strokeWidth="1" />}
                 </svg>}
           </div>
         </div>
