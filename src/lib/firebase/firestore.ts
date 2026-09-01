@@ -60,6 +60,7 @@ export interface MasterDB {
   ingredients: DocumentData[];
   utensils: DocumentData[];
   techniques: DocumentData[];
+  sources: DocumentData[];
   categories: CategoryMap;
 }
 
@@ -461,16 +462,18 @@ export function subscribeHouseholdPointer(uid: string, cb: (data: DocumentData |
  */
 export async function loadMasterDB(): Promise<MasterDB> {
   try {
-    const [ing, ut, cat, tech] = await Promise.all([
+    const [ing, ut, cat, tech, src] = await Promise.all([
       getDoc(doc(db, "master", "ingredients")),
       getDoc(doc(db, "master", "utensils")),
       getDoc(doc(db, "master", "categories")),
       getDoc(doc(db, "master", "techniques")),
+      getDoc(doc(db, "master", "sources")),
     ]);
     return {
       ingredients: ing.exists() ? (ing.data().items || []) : [],
       utensils: ut.exists() ? (ut.data().items || []) : [],
       techniques: tech.exists() ? (tech.data().items || []) : [],
+      sources: src.exists() ? (src.data().items || []) : [],
       categories: cat.exists() ? normCategories(cat.data()) : DEFAULT_CATEGORIES,
     };
   } catch (e) {
@@ -479,7 +482,7 @@ export async function loadMasterDB(): Promise<MasterDB> {
     // signal fort (l'appli se retrouverait sans ingrédients/ustensiles). L'appelant
     // (bootstrap) protège désormais le cache d'un écrasement par ce repli vide.
     reportError(e, { where: "loadMasterDB" });
-    return { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
+    return { ingredients: [], utensils: [], techniques: [], sources: [], categories: DEFAULT_CATEGORIES };
   }
 }
 
@@ -498,9 +501,9 @@ function normCategories(data: DocumentData | undefined): CategoryMap {
  * @returns La fonction de désabonnement (dénoue les 4 abonnements).
  */
 export function subscribeMasterDB(cb: (masterDb: MasterDB) => void): Unsubscribe {
-  const latest: MasterDB = { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
-  const seen = { ingredients: false, utensils: false, techniques: false, categories: false };
-  const emit = (): void => { if (seen.ingredients && seen.utensils && seen.techniques && seen.categories) cb({ ...latest }); };
+  const latest: MasterDB = { ingredients: [], utensils: [], techniques: [], sources: [], categories: DEFAULT_CATEGORIES };
+  const seen = { ingredients: false, utensils: false, techniques: false, sources: false, categories: false };
+  const emit = (): void => { if (seen.ingredients && seen.utensils && seen.techniques && seen.sources && seen.categories) cb({ ...latest }); };
   const bind = <K extends keyof MasterDB>(name: string, key: K, pick: (s: DocumentSnapshot) => MasterDB[K]): Unsubscribe =>
     onSnapshot(doc(db, "master", name),
       s => { latest[key] = pick(s); seen[key] = true; emit(); }, () => { });
@@ -508,6 +511,7 @@ export function subscribeMasterDB(cb: (masterDb: MasterDB) => void): Unsubscribe
     bind("ingredients", "ingredients", s => s.exists() ? (s.data().items || []) : []),
     bind("utensils", "utensils", s => s.exists() ? (s.data().items || []) : []),
     bind("techniques", "techniques", s => s.exists() ? (s.data().items || []) : []),
+    bind("sources", "sources", s => s.exists() ? (s.data().items || []) : []),
     bind("categories", "categories", s => s.exists() ? normCategories(s.data()) : DEFAULT_CATEGORIES),
   ];
   return () => subs.forEach(u => u());

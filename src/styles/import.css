@@ -1,0 +1,140 @@
+/* ─── PAGE IMPORT INTELLIGENT (lien / photo / texte) ─────────────────────────
+   Un seul écran à onglets. Mobile : colonne unique + pied collant (quota + CTA).
+   Desktop : deux panneaux (action 70 % / contexte 30 %). Tokens de design réels ;
+   tout est préfixé `imp-` pour rester isolé du reste. */
+
+.imp { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+
+/* En-tête : retour + titre (+ segmented à droite en desktop) */
+.imp-hdr { flex-shrink: 0; padding: 18px 20px 14px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+.imp-back { width: 34px; height: 34px; border-radius: 50%; background: var(--surface2); border: none; cursor: pointer; display: grid; place-items: center; color: var(--text); flex-shrink: 0; }
+.imp-hdr h1 { font-family: var(--ff-display); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.imp-desktop .imp-hdr { padding: 22px 40px 16px; }
+.imp-desktop .imp-hdr h1 { font-size: 30px; }
+.imp-hdr .imp-seg { margin-left: auto; width: 300px; flex-shrink: 0; }
+
+/* Contrôle segmenté (Lien / Photo / Texte) avec pouce glissant */
+.imp-seg { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--surface2); border-radius: 14px; padding: 4px; }
+.imp-seg__thumb { position: absolute; top: 4px; left: 4px; height: calc(100% - 8px); width: calc((100% - 8px) / 3); background: var(--surface); border-radius: 11px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); transition: transform 0.26s cubic-bezier(0.4, 0.9, 0.3, 1); }
+.imp-seg button { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 7px; background: none; border: none; cursor: pointer; padding: 9px 4px; border-radius: 11px; font-family: var(--ff-body); font-size: 13.5px; font-weight: 600; color: var(--text3); transition: color 0.2s; }
+.imp-seg button.on { color: var(--accent); }
+
+/* Corps scrollable (mobile) */
+.imp-body { flex: 1; overflow-y: auto; padding: 18px 20px 12px; }
+.imp-col { display: flex; flex-direction: column; gap: 18px; max-width: 560px; margin: 0 auto; }
+.imp-mp { display: flex; flex-direction: column; gap: 18px; }
+
+/* Intro par mode */
+.imp-lede h2 { font-family: var(--ff-display); font-size: 19px; font-weight: 600; line-height: 1.25; margin: 0 0 4px; letter-spacing: -0.01em; }
+.imp-lede p { font-size: 12.5px; color: var(--text3); line-height: 1.5; margin: 0; max-width: 46ch; }
+
+/* Champ lien */
+.imp-field { position: relative; }
+.imp-field .imp-glyph { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; display: grid; place-items: center; }
+.imp-urlfield { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 15px; padding: 15px 16px 15px 44px; color: var(--text); font-size: 14.5px; font-family: var(--ff-body); outline: none; transition: box-shadow 0.18s, border-color 0.18s; }
+.imp-urlfield::placeholder { color: var(--text3); }
+.imp-urlfield:focus { border-color: transparent; box-shadow: inset 0 0 0 1.8px rgba(var(--accent-rgb), 0.5); }
+
+/* Coller le lien copié */
+.imp-clip { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; cursor: pointer; padding: 11px 13px; border-radius: 13px; background: rgba(var(--accent-rgb), 0.07); border: 1.5px dashed rgba(var(--accent-rgb), 0.45); }
+.imp-clip .t { flex: 1; min-width: 0; }
+.imp-clip .t b { display: block; font-size: 13px; font-weight: 600; color: var(--accent); }
+.imp-clip .t span { display: block; font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+
+/* Étagère « Sources recommandées » */
+.imp-shelf-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.imp-shelf-head .ttl { font-family: var(--ff-display); font-size: 16.5px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.imp-shelf-head .sub { font-size: 11.5px; color: var(--text3); line-height: 1.45; margin: 3px 0 0; max-width: 42ch; }
+.imp-shelf-head .hand { font-family: var(--ff-hand); font-size: 17px; color: var(--accent); white-space: nowrap; transform: rotate(-3deg); flex-shrink: 0; }
+.imp-shelf { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-top: 12px; }
+.imp-creator { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; cursor: pointer; padding: 12px 14px; background: none; border: none; border-top: 1px solid var(--border); font-family: var(--ff-body); transition: background 0.15s; }
+.imp-creator:first-child { border-top: none; }
+.imp-creator:active { background: rgba(var(--accent-rgb), 0.06); }
+.imp-mono { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: grid; place-items: center; font-family: var(--ff-display); font-size: 18px; font-weight: 600; line-height: 1; overflow: hidden; }
+.imp-mono img { width: 100%; height: 100%; object-fit: cover; }
+.imp-creator .meta { flex: 1; min-width: 0; }
+.imp-creator .name { display: flex; align-items: center; gap: 7px; font-size: 14.5px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.imp-creator .row2 { display: flex; align-items: center; gap: 7px; margin-top: 3px; }
+.imp-tag { font-size: 10.5px; font-weight: 600; color: var(--text2); background: var(--surface2); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.imp-net { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; color: var(--ok); }
+.imp-extl { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface2); color: var(--text3); }
+.imp-shelf-foot { display: flex; justify-content: center; padding: 10px; border-top: 1px solid var(--border); }
+.imp-shelf-foot button { font-family: var(--ff-body); font-size: 12.5px; font-weight: 600; color: var(--accent); background: none; border: none; cursor: pointer; padding: 4px 10px; }
+
+/* Photo : emplacements */
+.imp-photogrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.imp-addphoto { aspect-ratio: 3 / 4; border-radius: 16px; border: 1.5px dashed rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; padding: 12px; font-family: var(--ff-body); }
+.imp-addphoto.solo { width: min(72%, 240px); margin: 0 auto; }
+.imp-addphoto .plus { width: 48px; height: 48px; border-radius: 50%; background: rgba(var(--accent-rgb), 0.14); display: grid; place-items: center; color: var(--accent); }
+.imp-addphoto .l { font-size: 13px; font-weight: 600; color: var(--text2); }
+.imp-addphoto .h { font-size: 11px; color: var(--text3); text-align: center; line-height: 1.4; }
+.imp-photo { position: relative; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+.imp-photo img { width: 100%; height: 100%; object-fit: cover; }
+.imp-photo .rm { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: none; background: rgba(0, 0, 0, 0.6); color: #fff; display: grid; place-items: center; cursor: pointer; }
+
+/* Dropzone (desktop photo) */
+.imp-dropzone { border: 1.5px dashed rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.05); border-radius: 18px; padding: 34px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; cursor: pointer; }
+.imp-dropzone.drag { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.1); }
+.imp-dropzone .plus { width: 52px; height: 52px; border-radius: 50%; background: rgba(var(--accent-rgb), 0.14); display: grid; place-items: center; color: var(--accent); }
+.imp-dropzone .l { font-size: 15px; font-weight: 600; color: var(--text); }
+.imp-dropzone .h { font-size: 12px; color: var(--text3); }
+
+/* Texte : coller + zone */
+.imp-pastebtn { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; padding: 9px 15px; border-radius: 999px; cursor: pointer; background: rgba(var(--accent-rgb), 0.08); border: 1px solid rgba(var(--accent-rgb), 0.3); color: var(--accent); font-family: var(--ff-body); font-size: 13px; font-weight: 600; }
+.imp-txtarea { width: 100%; min-height: 180px; resize: vertical; line-height: 1.55; font-size: 14px; font-family: var(--ff-body); color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; outline: none; box-sizing: border-box; }
+.imp-txtarea:focus { border-color: transparent; box-shadow: inset 0 0 0 1.8px rgba(var(--accent-rgb), 0.5); }
+.imp-txtarea::placeholder { color: var(--text3); }
+
+/* Carte d'aide inline */
+.imp-hint { display: flex; align-items: flex-start; gap: 12px; padding: 13px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+.imp-hint .ic { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; display: grid; place-items: center; background: rgba(var(--accent-rgb), 0.14); color: var(--accent); }
+.imp-hint p { font-size: 12.5px; color: var(--text2); line-height: 1.5; margin: 0; }
+
+/* Erreur inline */
+.imp-inline-err { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 10px; background: rgba(224, 82, 82, 0.1); border: 1px solid rgba(224, 82, 82, 0.28); }
+.imp-inline-err span { font-size: 12.5px; color: var(--red); font-weight: 600; line-height: 1.4; }
+
+/* Quota linéaire */
+.imp-quota { display: flex; flex-direction: column; gap: 7px; }
+.imp-q-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.imp-q-label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); }
+.imp-q-label .spark { color: var(--accent); display: inline-flex; }
+.imp-q-count { font-size: 12px; font-weight: 600; color: var(--text2); }
+.imp-q-track { height: 5px; border-radius: 999px; background: var(--surface3); overflow: hidden; }
+.imp-q-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.35s ease; }
+.imp-q-reset { font-size: 11px; color: var(--text3); }
+.imp-quota.low .imp-q-fill { background: var(--spice); }
+.imp-quota.low .imp-q-label .spark { color: var(--spice); }
+.imp-quota.blocked .imp-q-fill { background: var(--red); }
+.imp-quota.blocked .imp-q-count { color: var(--red); }
+.imp-quota.blocked .imp-q-label .spark { color: var(--red); }
+.imp-quota.admin { flex-direction: row; align-items: center; gap: 8px; }
+.imp-quota.admin .adot { width: 18px; height: 18px; border-radius: 6px; background: rgba(var(--admin-rgb), 0.16); display: grid; place-items: center; color: var(--admin); }
+.imp-quota.admin .atxt { font-size: 12px; font-weight: 600; color: var(--text2); }
+.imp-quota.admin .atxt b { color: var(--admin); }
+
+/* CTA */
+.imp-cta { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 999px; border: none; cursor: pointer; font-family: var(--ff-body); font-size: 15px; font-weight: 600; color: #fff; background: var(--accent); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22); transition: transform 0.12s, opacity 0.18s; }
+.imp-cta:active { transform: scale(0.97); }
+.imp-cta:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+
+/* Pied collant (mobile) */
+.imp-foot { flex-shrink: 0; border-top: 1px solid var(--border); background: var(--bg); padding: 12px 20px calc(14px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
+.imp-foot .imp-col { gap: 12px; }
+
+/* ─── Desktop : deux panneaux ───────────────────────────────────────────────── */
+.imp-desktop .imp-body { padding: 26px 40px 34px; }
+.imp-panes { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 3fr); gap: 34px; max-width: 1040px; margin: 0; }
+.imp-pane-action { display: flex; flex-direction: column; gap: 20px; }
+.imp-pane-side { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.imp-pane-side .grid-ttl { font-family: var(--ff-display); font-size: 16px; font-weight: 600; margin: 0 0 3px; letter-spacing: -0.01em; }
+.imp-pane-side .grid-sub { font-size: 11.5px; color: var(--text3); margin: 0 0 12px; line-height: 1.45; }
+.imp-tips { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 18px 6px; }
+.imp-tips h3 { font-family: var(--ff-display); font-size: 15px; font-weight: 600; margin: 0 0 12px; }
+.imp-tip { display: flex; gap: 10px; padding-bottom: 14px; }
+.imp-tip .n { width: 22px; height: 22px; border-radius: 7px; flex-shrink: 0; display: grid; place-items: center; background: rgba(var(--accent-rgb), 0.14); color: var(--accent); font-size: 12px; font-weight: 700; font-family: var(--ff-display); }
+.imp-tip p { margin: 0; font-size: 12.5px; color: var(--text2); line-height: 1.45; }
+.imp-tip p b { color: var(--text); }
+.imp-dact { display: flex; align-items: center; gap: 20px; padding-top: 4px; }
+.imp-dact .imp-quota { flex: 1; }
+.imp-dact .imp-cta { width: auto; min-width: 180px; }

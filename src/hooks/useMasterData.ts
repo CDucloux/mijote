@@ -13,6 +13,7 @@ export interface MasterData {
   ingredients: DbRow[];
   utensils: DbRow[];
   techniques: DbRow[];
+  sources: DbRow[];
   categories: CategoryMap;
 }
 
@@ -41,7 +42,7 @@ export function useMasterData(isAdmin: boolean) {
       const cached = localStorage.getItem("rf_masterDB_cache");
       if (cached) return JSON.parse(cached) as MasterData;
     } catch { /* ignore */ }
-    return { ingredients: [], utensils: [], techniques: [], categories: DEFAULT_CATEGORIES };
+    return { ingredients: [], utensils: [], techniques: [], sources: [], categories: DEFAULT_CATEGORIES };
   });
   const [userDB, setUserDB] = useState<PersonalDB>({ ingredients: [], utensils: [] });
 
@@ -91,9 +92,17 @@ export function useMasterData(isAdmin: boolean) {
     setMasterDB(prev => ({ ...prev, techniques: resolve(updater, prev.techniques || []) }));
   }, [isAdmin]);
 
+  // Sources recommandées (page d'import « depuis un lien ») : Master seule, admin
+  // en écriture. Lisibles par tous pour alimenter l'étagère de sources.
+  const sources = useMemo(() => masterDB.sources || [], [masterDB]);
+  const setSources = useCallback((updater: Updater<DbRow[]>) => {
+    if (!isAdmin) return;
+    setMasterDB(prev => ({ ...prev, sources: resolve(updater, prev.sources || []) }));
+  }, [isAdmin]);
+
   return {
     masterDB, setMasterDB, userDB, setUserDB,
-    categories, setCategories, ingredientDB, utensilDB, techniques,
-    setIngredientDB, setUtensilDB, setTechniques,
+    categories, setCategories, ingredientDB, utensilDB, techniques, sources,
+    setIngredientDB, setUtensilDB, setTechniques, setSources,
   };
 }

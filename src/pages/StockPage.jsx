@@ -165,7 +165,10 @@ function StockWallSkeleton({ perRow }) {
 
 export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, loading = false }) {
   const [search, setSearch] = useState("");
-  const [view, setView] = useState("all"); // "all" = tout | "stock" = ce que j'ai | "low" = à racheter
+  // Vue par défaut : « ce que j'ai en stock » (l'objet de la page), pas le catalogue
+  // complet des ingrédients gérables. "stock" = ce que j'ai | "low" = à racheter |
+  // "all" = catalogue (tout ce que Cardamome sait gérer).
+  const [view, setView] = useState("stock");
 
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
@@ -318,7 +321,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           {[
             { key: "stock", label: "En stock", count: inStockCount },
             { key: "low", label: "Bientôt vide", count: lowStock.length },
-            { key: "all", label: "Tous", count: stockable.length },
+            { key: "all", label: "Catalogue", count: stockable.length },
           ].map(p => {
             const active = view === p.key;
             return (
@@ -371,10 +374,10 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           return (
             <StockEmpty icon="box" art={low ? "liste" : undefined}
               title={low ? "Rien à racheter" : "Aucun article en stock"}
-              body={low ? "Marque un ingrédient « bientôt vide » en tapant deux fois dessus." : "Ajoute des ingrédients depuis l'onglet « Tous »."}
+              body={low ? "Marque un ingrédient « bientôt vide » en tapant deux fois dessus." : "Ajoute des ingrédients depuis l'onglet « Catalogue »."}
               action={
                 <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={() => setView("all")}>
-                  <Icon name="box" size={15} color="#fff" /> Voir tous les ingrédients
+                  <Icon name="box" size={15} color="#fff" /> Voir le catalogue
                 </button>
               } />
           );

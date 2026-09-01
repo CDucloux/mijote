@@ -42,6 +42,7 @@ interface MasterLike {
   ingredients: unknown[];
   utensils: unknown[];
   techniques?: unknown[];
+  sources?: unknown[];
   categories?: unknown;
 }
 
@@ -84,7 +85,7 @@ const mapOf = (recipes: DocumentData[] | null | undefined): Map<string, Recipe> 
 // Signature de la base Master (anti-écho écriture↔snapshot) : un snapshot dont la
 // signature égale la dernière appliquée/écrite ne ré-applique rien et ne relance
 // aucune écriture. Doit refléter exactement ce que le push envoie (les 4 slices).
-const masterSig = (m: MasterLike): string => JSON.stringify({ i: m.ingredients || [], u: m.utensils || [], t: m.techniques || [], c: m.categories || DEFAULT_CATEGORIES });
+const masterSig = (m: MasterLike): string => JSON.stringify({ i: m.ingredients || [], u: m.utensils || [], t: m.techniques || [], s: m.sources || [], c: m.categories || DEFAULT_CATEGORIES });
 
 // Cache local du foyer actif : permet au bootstrap de charger DIRECTEMENT le bon
 // namespace (foyer) au lieu d'afficher le solo une fraction de seconde avant la
@@ -557,6 +558,7 @@ export function useFirestoreSync({
       setDoc(doc(db, "master", "utensils"), { items: masterDB.utensils }),
       setDoc(doc(db, "master", "categories"), { map: masterDB.categories || DEFAULT_CATEGORIES }),
       setDoc(doc(db, "master", "techniques"), { items: masterDB.techniques || [] }),
+      setDoc(doc(db, "master", "sources"), { items: masterDB.sources || [] }),
     ]).then(() => setSyncStatus("synced")).catch(() => setSyncStatus("error"));
   }, [masterDB, user, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
