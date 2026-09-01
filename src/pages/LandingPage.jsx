@@ -182,12 +182,14 @@ function SceneCardPile() {
 /** Étagère de livres de cuisine : ce que tu aimes déjà. Tons chauds (oak/spice),
  *  un marque-page. Illustre « Tu as 15 livres de cuisine. Tu les aimes ». */
 function SceneBooks() {
+  // Vrais grands livres de cuisine, chefs reconnus (les plus longs titres sur les
+  // dos les plus hauts) : Escoffier, Bocuse, Saint-Ange, Gouffé, Fernand Point.
   const books = [
-    { t: "Le grand classique", tone: "oak", h: 148, lean: "-2deg" },
-    { t: "Pâtisserie", tone: "spice", h: 168, mark: true },
-    { t: "Cuisine de saison", tone: "accent", h: 138 },
-    { t: "Carnet de famille", tone: "ink", h: 158, lean: "1.5deg" },
-    { t: "Basiques", tone: "oak2", h: 130 },
+    { t: "Le Guide Culinaire", tone: "oak", h: 148, lean: "-2deg" },
+    { t: "La Cuisine du marché", tone: "spice", h: 168, mark: true },
+    { t: "La Bonne Cuisine", tone: "accent", h: 138 },
+    { t: "Le Livre de Cuisine", tone: "ink", h: 158, lean: "1.5deg" },
+    { t: "Ma Gastronomie", tone: "oak2", h: 130 },
   ];
   return (
     <div className="lp-books" aria-hidden="true">
