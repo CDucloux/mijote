@@ -139,7 +139,7 @@ function FoyerSection() {
         <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 18px 16px 22px" }}>
           {household
             ? <MemberStack emails={household.memberEmails || []} photoFor={photoFor} nameFor={nameFor} />
-            : <span style={{ width: 50, height: 50, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--accent)", boxShadow: "0 4px 12px rgba(224,95,44,0.28)" }}>
+            : <span style={{ width: 50, height: 50, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--accent)" }}>
                 <FoyerGlyph size={27} />
               </span>}
         </span>
