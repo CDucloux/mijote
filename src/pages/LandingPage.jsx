@@ -519,9 +519,9 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <span className="lp-eyebrow">L'import intelligent</span>
             <h2 className="lp-h2 lp-h2--wide">Les autres recopient. Cardamome comprend ta recette.</h2>
             <p className="lp-p">
-              Extraire, c'est ranger des mots dans des cases. Comprendre, c'est savoir ce qu'ils
-              veulent dire une fois en cuisine : les portions ajustent les quantités, la saison et
-              le Nutri-Score arrivent tout seuls.
+              Extraire, c'est ranger des mots dans des cases. Comprendre, c'est révéler la
+              composition de la recette. Ingrédients, ustensiles, techniques et sous-étapes
+              prennent alors tout leur sens.
             </p>
             <p className="lp-punch">
               Un lien collé, une photo de page, une recette qui se cuisine. <em>Sans recopier une ligne.</em>
