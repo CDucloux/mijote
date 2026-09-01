@@ -83,6 +83,7 @@ function SceneFridge() {
           <div className="lp-fridge__shelf">
             <span className="lp-fr lp-fr--milk" />
             <span className="lp-fr lp-fr--jar" />
+            <span className="lp-fr lp-fr--can" />
             <span className="lp-fr lp-fr--bottle lp-fr--push" />
           </div>
           <div className="lp-fridge__shelf">
@@ -93,12 +94,11 @@ function SceneFridge() {
           </div>
           <div className="lp-fridge__shelf">
             <span className="lp-fr lp-fr--cheese" />
+            <span className="lp-fr lp-fr--juice" />
             <span className="lp-fr lp-fr--bowl lp-fr--push" />
             <span className="lp-fr lp-fr--bottle2" />
           </div>
           <div className="lp-fridge__crisper">
-            <span className="lp-veg lp-veg--carrot" />
-            <span className="lp-veg lp-veg--greens" />
             <span className="lp-fridge__cripanel" />
           </div>
         </div>

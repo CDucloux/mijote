@@ -315,21 +315,6 @@
   border: 1px solid var(--surface3);
   overflow: hidden;
 }
-.lp-veg { position: absolute; bottom: 5px; z-index: 1; }
-.lp-veg--carrot {
-  left: 20%;
-  width: 11px;
-  height: 30px;
-  clip-path: polygon(50% 100%, 0 0, 100% 0);
-  background: linear-gradient(100deg, #d98a4a, #b56a28);
-}
-.lp-veg--greens {
-  left: 46%;
-  width: 30px;
-  height: 22px;
-  border-radius: 45% 45% 32% 32%;
-  background: radial-gradient(circle at 38% 28%, #78a24a, #3f5f28);
-}
 .lp-fridge__cripanel {
   position: absolute;
   inset: 0;
@@ -348,13 +333,16 @@
   background: var(--surface3);
 }
 /* ── Aliments (bases posées sur la clayette, dégradés de volume, détails) ────── */
-.lp-fr { position: relative; flex-shrink: 0; z-index: 1; }
+/* Ombre portée douce commune : chaque aliment (pseudos compris) se pose sur la
+   clayette au lieu de flotter, ce qui donne le relief qui manquait. */
+.lp-fr { position: relative; flex-shrink: 0; z-index: 1; filter: drop-shadow(0 2px 2.5px rgba(0, 0, 0, 0.22)); }
 /* Brique de lait : pignon, bouchon, bandeau d'étiquette. */
 .lp-fr--milk {
   width: 20px;
   height: 46px;
   border-radius: 2px 2px 3px 3px;
   background: linear-gradient(100deg, #e7e0ce, #d3cbb4 58%, #b9b19a);
+  box-shadow: inset 1.5px 0 0 rgba(255, 255, 255, 0.32), inset -2px 0 0 rgba(0, 0, 0, 0.12);
 }
 .lp-fr--milk::before {
   content: "";
@@ -382,6 +370,7 @@
   border-radius: 4px 4px 6px 6px;
   background: linear-gradient(100deg, rgba(150, 142, 122, 0.5), rgba(84, 78, 66, 0.55));
   border: 1px solid var(--border);
+  box-shadow: inset 2px 0 0 rgba(255, 255, 255, 0.18);
 }
 .lp-fr--jar::before {
   content: "";
@@ -409,6 +398,7 @@
   height: 52px;
   border-radius: 2px 2px 4px 4px;
   background: linear-gradient(100deg, #6f9a45, #4e7030 62%, #385124);
+  box-shadow: inset 1.5px 0 0 rgba(255, 255, 255, 0.28), inset -1.5px 0 0 rgba(0, 0, 0, 0.18);
 }
 .lp-fr--bottle::before {
   content: "";
@@ -437,6 +427,7 @@
   height: 30px;
   border-radius: 2px 2px 4px 4px;
   background: linear-gradient(100deg, #d98a4a, #a85f27);
+  box-shadow: inset 1.5px 0 0 rgba(255, 255, 255, 0.3), inset -1.5px 0 0 rgba(0, 0, 0, 0.16);
 }
 .lp-fr--bottle2::before {
   content: "";
@@ -448,6 +439,62 @@
   height: 10px;
   border-radius: 2px;
   background: #7a4a1e;
+}
+/* Canette : cylindre métallisé, jonc supérieur clair et bandeau d'étiquette. */
+.lp-fr--can {
+  width: 16px;
+  height: 30px;
+  border-radius: 3px / 5px;
+  background: linear-gradient(100deg, #c9ccc7, #9aa09a 60%, #7f857f);
+  box-shadow: inset 1.5px 0 0 rgba(255, 255, 255, 0.4), inset -2px 0 0 rgba(0, 0, 0, 0.16);
+}
+.lp-fr--can::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 1px;
+  right: 1px;
+  height: 3px;
+  border-radius: 3px / 2px;
+  background: linear-gradient(#eef0ec, #b7bcb6);
+}
+.lp-fr--can::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: -1px;
+  right: -1px;
+  height: 12px;
+  background: rgba(var(--spice-rgb), 0.55);
+}
+/* Brique de jus : même pignon que le lait, ambre orangé, avec sa pastille de fruit. */
+.lp-fr--juice {
+  width: 18px;
+  height: 40px;
+  border-radius: 2px 2px 3px 3px;
+  background: linear-gradient(100deg, #e79a44, #cf7f2c 58%, #ad6321);
+  box-shadow: inset 1.5px 0 0 rgba(255, 255, 255, 0.28), inset -2px 0 0 rgba(0, 0, 0, 0.14);
+}
+.lp-fr--juice::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 9px;
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  background: linear-gradient(100deg, #e79a44, #c2762a);
+}
+.lp-fr--juice::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, #f4d06a, #e0a52c);
 }
 /* Barquette de beurre : couvercle et bandeau. */
 .lp-fr--butter {
