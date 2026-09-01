@@ -185,6 +185,44 @@ export function moveMealItem(
 }
 
 /**
+ * Recopie UN item de planning (même recette, portions et rôle) sur PLUSIEURS
+ * jours, au même créneau. Sert au « dupliquer » du menu contextuel : poser une
+ * recette sur N jours d'un coup, sans toucher à l'original.
+ *
+ * Sur chaque jour, la copie applique la même règle de rattachement que
+ * `moveMealItem` : elle rejoint le repas déjà présent sur le créneau (reprise du
+ * `groupId`), sinon elle fonde le sien (nouveau `groupId`), le matin restant non
+ * composé. Le `groupId` d'origine n'est jamais recopié tel quel (il appartient
+ * au repas source). Purement fonctionnel : renvoie un nouveau `MealPlan`.
+ *
+ * @param plan - Le planning courant (indexé par date ISO).
+ * @param item - L'item source à recopier.
+ * @param dates - Les dates cibles ; dates vides et doublons sont ignorés.
+ * @param toSlot - Le créneau cible, identique sur chaque jour.
+ * @param makeGroupId - Fabrique d'id de groupe (injectable pour les tests).
+ * @returns Un nouveau planning avec une copie de l'item sur chaque date cible.
+ */
+export function copyMealToDays(
+  plan: MealPlan,
+  item: MealItem,
+  dates: string[],
+  toSlot: string,
+  makeGroupId: () => string = newGroupId,
+): MealPlan {
+  let next = plan;
+  for (const date of [...new Set(dates.filter(Boolean))]) {
+    const toArr = [...(next[date] || [])];
+    const targetGroup = toArr.find(m => m.slot === toSlot && m.groupId)?.groupId
+      || (toSlot === "matin" ? undefined : makeGroupId());
+    const copy: MealItem = { ...item, slot: toSlot };
+    if (targetGroup) copy.groupId = targetGroup; else delete copy.groupId;
+    toArr.push(copy);
+    next = { ...next, [date]: toArr };
+  }
+  return next;
+}
+
+/**
  * Catégories jouant un rôle donné (pour les pickers manuels).
  *
  * @param role - Le rôle recherché.

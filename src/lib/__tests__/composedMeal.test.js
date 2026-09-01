@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roleForCategory, itemRole, groupSlotMeals, mealsForSlot, newGroupId, platNeedsSide, moveMealItem } from "@/lib/planning/composedMeal.js";
+import { roleForCategory, itemRole, groupSlotMeals, mealsForSlot, newGroupId, platNeedsSide, moveMealItem, copyMealToDays } from "@/lib/planning/composedMeal.js";
 
 describe("roleForCategory", () => {
   it("mappe le type vers un rôle", () => {
@@ -135,6 +135,48 @@ describe("moveMealItem", () => {
     const plan = { "2026-08-24": [{ recipeId: "boeuf", slot: "midi", groupId: "g1" }] };
     const snapshot = JSON.parse(JSON.stringify(plan));
     moveMealItem(plan, "2026-08-24", 0, "2026-08-25", "soir", gid);
+    expect(plan).toEqual(snapshot);
+  });
+});
+
+describe("copyMealToDays", () => {
+  const gid = () => "gNEW";
+  const item = { recipeId: "pasta", slot: "soir", groupId: "g1", role: "plat", portions: 2 };
+
+  it("copie l'item sur chaque jour cible sans toucher à l'original", () => {
+    const plan = { "2026-08-31": [item] };
+    const next = copyMealToDays(plan, item, ["2026-09-01", "2026-09-02"], "soir", gid);
+    expect(next["2026-08-31"]).toEqual([item]); // source intacte
+    expect(next["2026-09-01"][0]).toMatchObject({ recipeId: "pasta", slot: "soir", role: "plat", portions: 2 });
+    expect(next["2026-09-02"]).toHaveLength(1);
+  });
+
+  it("la copie ne reprend pas le groupId d'origine (nouveau repas)", () => {
+    const next = copyMealToDays({}, item, ["2026-09-01"], "soir", gid);
+    expect(next["2026-09-01"][0].groupId).toBe("gNEW");
+  });
+
+  it("rejoint le repas déjà présent sur le créneau cible", () => {
+    const plan = { "2026-09-01": [{ recipeId: "riz", slot: "soir", groupId: "gExist", role: "plat" }] };
+    const next = copyMealToDays(plan, item, ["2026-09-01"], "soir", gid);
+    expect(next["2026-09-01"]).toHaveLength(2);
+    expect(next["2026-09-01"][1]).toMatchObject({ recipeId: "pasta", groupId: "gExist" });
+  });
+
+  it("créneau du matin → copie non composée (pas de groupId)", () => {
+    const next = copyMealToDays({}, item, ["2026-09-01"], "matin", gid);
+    expect(next["2026-09-01"][0].groupId).toBeUndefined();
+  });
+
+  it("ignore les dates vides et dédoublonne", () => {
+    const next = copyMealToDays({}, item, ["2026-09-01", "", "2026-09-01"], "soir", gid);
+    expect(next["2026-09-01"]).toHaveLength(1);
+  });
+
+  it("ne mute pas le planning d'origine", () => {
+    const plan = { "2026-08-31": [item] };
+    const snapshot = JSON.parse(JSON.stringify(plan));
+    copyMealToDays(plan, item, ["2026-09-01"], "soir", gid);
     expect(plan).toEqual(snapshot);
   });
 });
