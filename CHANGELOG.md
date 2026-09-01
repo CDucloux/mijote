@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.17.0 – Cardamome · Import à découvrir
+
+### Import intelligent
+- **On découvre avant de s'abonner** : les écrans d'import (lien, photo, texte) s'ouvrent désormais pour tout le monde. On explore l'interface, on colle son lien ou ses photos, et l'offre Cardamome+ ne se présente qu'au moment de lancer l'import, avec un mot sur ce que ça apporte, plutôt que de buter sur un mur dès le menu.
+
+### Page vitrine
+- **Réseaux sociaux dans le pied de page** : les logos Instagram, Facebook, X et LinkedIn font leur apparition dans le footer (comptes à venir).
+- **Frigo du hero peaufiné** : le bac à légumes, dont les formes se devinaient mal derrière la vitre, est épuré ; le frigo gagne deux aliments nets (une canette, une brique de jus) et un vrai relief (ombres portées douces, volume sur les contenants).
+
+### Accueil
+- **Carte foyer plus nette** : disparition d'un léger halo orange résiduel derrière l'icône, qui jurait avec le vert de l'app.
+
 ## v4.16.1 – Cardamome · Vitrine peaufinée
 
 ### Page vitrine

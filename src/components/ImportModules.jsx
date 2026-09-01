@@ -19,12 +19,12 @@ export const LEDE = {
 /** Conseils propres à chaque mode (rail contextuel). */
 export const TIPS = {
   lien: { h: "Bien importer un lien", items: [
-    ["Vise la page de la recette", " — pas la page d'accueil ni une liste."],
+    ["Vise la page de la recette", " : pas la page d'accueil ni une liste."],
     ["Blogs, magazines, sites perso", " : ça passe en général sans souci."],
     ["Un site qui bloque ?", " Copie le texte de la recette et passe par l'onglet Texte."],
   ] },
   photo: { h: "Pour une bonne extraction", items: [
-    ["À plat, bien éclairé", " — évite l'ombre de ta main et les reflets."],
+    ["À plat, bien éclairé", " : évite l'ombre de ta main et les reflets."],
     ["Cadre la recette entière", " : titre, ingrédients et étapes."],
     ["Deux pages ?", " Une photo par page, dans l'ordre de lecture."],
   ] },
@@ -98,7 +98,7 @@ export function QuotaBar({ rem, unlimited }) {
     ? (monthBlocks ? "Limite du mois atteinte" : "Limite du jour atteinte")
     : `${left} import${left > 1 ? "s" : ""} restant${left > 1 ? "s" : ""} ${period}`;
   const reset = rem.blocked
-    ? (monthBlocks ? "Se réinitialise le mois prochain — ou essaie une photo / un texte" : "Se réinitialise à minuit — ou essaie une photo / un texte")
+    ? (monthBlocks ? "Se réinitialise le mois prochain, ou essaie une photo / un texte" : "Se réinitialise à minuit, ou essaie une photo / un texte")
     : "Se réinitialise à minuit";
   return (
     <div className={`imp-quota${low ? " low" : ""}${rem.blocked ? " blocked" : ""}`}>

@@ -344,7 +344,7 @@ function Socials() {
   return (
     <div className="lp-socials" role="group" aria-label="Réseaux sociaux (bientôt)">
       {SOCIALS.map((s) => (
-        <span key={s.id} className="lp-social" aria-disabled="true" title={`${s.label} — bientôt`} aria-label={`${s.label}, bientôt`}>
+        <span key={s.id} className="lp-social" aria-disabled="true" title={`${s.label}, bientôt`} aria-label={`${s.label}, bientôt`}>
           <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d={s.path} /></svg>
         </span>
       ))}
