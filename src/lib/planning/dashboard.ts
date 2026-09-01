@@ -6,6 +6,8 @@
  * @module dashboard
  */
 import { slotOrder } from "@/constants/mealSlots.js";
+import { aggregateShopping, type ShoppingList } from "@/lib/food/shoppingAggregate.js";
+import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import type { MealItem } from "@/lib/types.js";
 
 /** Item de planning (alias de domaine). */
@@ -17,10 +19,7 @@ export interface DashRecipe {
   name?: string;
 }
 
-/** Liste de courses (forme minimale). */
-export interface ShoppingList {
-  items?: { checked?: boolean }[];
-}
+export type { ShoppingList };
 
 /** Ingrédient de la base (forme minimale). */
 export interface DashIngredient {
@@ -77,13 +76,23 @@ export function upcomingSlot(date: Date = new Date()): "matin" | "midi" | "soir"
 }
 
 /**
- * Nombre total d'articles non cochés sur l'ensemble des listes de courses.
+ * Nombre d'articles restant à acheter, tel qu'affiché dans « Toutes les courses ».
+ *
+ * Avec une seule liste, aucun doublon inter-listes n'est possible : on somme
+ * directement les articles non cochés. Dès deux listes, la vue de courses
+ * fusionne les articles identiques (le même ingrédient venu de deux recettes
+ * ne compte que pour un) ; le compteur d'accueil doit refléter cette liste
+ * concaténée, et non la somme brute qui gonflerait le total.
  *
  * @param lists - Les listes de courses.
- * @returns Le total d'articles restant à acheter.
+ * @param ingredientDB - Base d'ingrédients pour la déduplication (>= 2 listes).
+ * @returns Le nombre d'articles restant à acheter.
  */
-export function countShoppingTodo(lists: ShoppingList[] = []): number {
-  return lists.reduce((sum, l) => sum + ((l.items || []).filter(i => !i.checked).length), 0);
+export function countShoppingTodo(lists: ShoppingList[] = [], ingredientDB: DbEntry[] = []): number {
+  if (lists.length < 2) {
+    return lists.reduce((sum, l) => sum + ((l.items || []).filter(i => !i.checked).length), 0);
+  }
+  return aggregateShopping(lists, ingredientDB).filter(a => !a.checked).length;
 }
 
 /**
@@ -104,7 +113,7 @@ export interface DashboardInput {
   recipes?: DashRecipe[];
   shoppingLists?: ShoppingList[];
   lowStock?: string[];
-  ingredientDB?: DashIngredient[];
+  ingredientDB?: DbEntry[];
   date?: Date;
 }
 
@@ -118,7 +127,7 @@ export interface DashboardInput {
 export function buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowStock, ingredientDB, date = new Date() }: DashboardInput = {}) {
   const key = todayKey(date);
   const meals = getTodayMeals(mealPlan, recipes, key);
-  const shoppingTodo = countShoppingTodo(shoppingLists);
+  const shoppingTodo = countShoppingTodo(shoppingLists, ingredientDB);
   const lowStockNames = getLowStockNames(lowStock, ingredientDB);
   return {
     meals,

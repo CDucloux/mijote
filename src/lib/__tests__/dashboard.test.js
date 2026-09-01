@@ -50,14 +50,43 @@ describe("upcomingSlot", () => {
 });
 
 describe("countShoppingTodo", () => {
-  it("counts unchecked items across all lists", () => {
+  it("une seule liste : somme directe des articles non cochés", () => {
     const lists = [
-      { items: [{ checked: false }, { checked: true }, { checked: false }] },
-      { items: [{ checked: false }] },
-      { items: [] },
-      {},
+      { id: "a", items: [
+        { id: "1", name: "Riz", checked: false },
+        { id: "2", name: "Sel", checked: true },
+        { id: "3", name: "Huile d'olive", checked: false },
+      ] },
     ];
-    expect(countShoppingTodo(lists)).toBe(3);
+    expect(countShoppingTodo(lists, ingredientDB)).toBe(2);
+  });
+  it("dès deux listes : reflète la liste concaténée (ingrédient partagé compté une fois)", () => {
+    const lists = [
+      { id: "a", items: [
+        { id: "1", name: "Riz", checked: false },
+        { id: "2", name: "Huile d'olive", checked: false },
+      ] },
+      { id: "b", items: [
+        { id: "3", name: "riz", checked: false },   // même ingrédient que la liste A
+        { id: "4", name: "Poivre", checked: false },
+      ] },
+    ];
+    // Concaténé : Riz, Huile d'olive, Poivre → 3 (et non 4).
+    expect(countShoppingTodo(lists, ingredientDB)).toBe(3);
+  });
+  it("un article agrégé coché sur toutes ses listes ne compte plus", () => {
+    const lists = [
+      { id: "a", items: [{ id: "1", name: "Riz", checked: true }] },
+      { id: "b", items: [{ id: "2", name: "riz", checked: true }, { id: "3", name: "Poivre", checked: false }] },
+    ];
+    expect(countShoppingTodo(lists, ingredientDB)).toBe(1);
+  });
+  it("un article coché sur une seule de ses listes reste à acheter", () => {
+    const lists = [
+      { id: "a", items: [{ id: "1", name: "Riz", checked: true }] },
+      { id: "b", items: [{ id: "2", name: "riz", checked: false }] },
+    ];
+    expect(countShoppingTodo(lists, ingredientDB)).toBe(1);
   });
   it("is 0 for no lists", () => {
     expect(countShoppingTodo()).toBe(0);

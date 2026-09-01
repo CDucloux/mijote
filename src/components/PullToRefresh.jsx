@@ -9,9 +9,12 @@ export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 })
   const active = pull > 0 || refreshing;
   const progress = Math.min(1, pull / threshold);
   const arrow = pullArrowGeometry(progress);
-  // Le contenu ne bouge plus : seul le cercle descend, en suivant le doigt puis
-  // en se calant à REST_Y pendant le refresh.
-  const y = refreshing ? REST_Y : pull;
+  // Le contenu ne bouge plus : le cercle émerge sous l'en-tête et s'y ancre.
+  // On plafonne sa descente à REST_Y (au lieu de suivre le doigt jusqu'à `max`,
+  // ce qui le larguait en plein milieu du contenu comme un bouton orphelin) :
+  // il suit le geste sur les premiers pixels puis se cale, la progression du
+  // tir restant lisible via l'arc qui se dessine.
+  const y = refreshing ? REST_Y : Math.min(pull, REST_Y);
   const gliding = refreshing || pull === 0; // release ou refresh → transition douce, sinon on colle au doigt
 
   return (
