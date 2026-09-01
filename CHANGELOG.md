@@ -1,5 +1,18 @@
 # Changelog – Cardamome
 
+## v4.16.0 – Cardamome · Import repensé
+
+### Import intelligent
+- **Un seul écran, trois façons d'importer** : les imports depuis un lien, une photo ou un texte collé sont réunis dans une même page à onglets, plus claire et plus soignée. On passe de l'un à l'autre d'un geste, la saisie en cours est conservée, et le reliquat d'imports du jour s'affiche en une barre lisible qui se réinitialise à minuit. Sur ordinateur, la page s'ouvre en deux colonnes : l'action à gauche, les conseils et les sources à droite.
+- **Sources recommandées** : sur l'import depuis un lien, une sélection de créatrices et créateurs aux recettes soignées, dont les pages s'importent proprement. On ouvre, on choisit une recette, on revient : le lien se colle tout seul.
+- **Des conseils au bon moment** : chaque mode (lien, photo, texte) affiche ses propres repères pour réussir l'import du premier coup.
+
+### Mon Stock
+- **La page s'ouvre sur ce que vous avez vraiment** : « En stock » devient la vue par défaut, et l'ancien onglet « Tous » se nomme désormais « Catalogue », pour bien distinguer votre stock de l'ensemble des ingrédients que Cardamome sait gérer.
+
+### Console admin
+- **Sources recommandées configurables** : une nouvelle section « Sources » permet de gérer la sélection affichée à l'import (nom, lien, spécialité, logo, mise en avant « import net », visibilité et ordre).
+
 ## v4.15.1 – Cardamome · Stock plus vif
 
 ### Performance
