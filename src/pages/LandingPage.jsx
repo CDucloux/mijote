@@ -548,7 +548,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
               les yeux fermés. Les recettes des autres sont là pour inspirer, pas pour encombrer.
             </p>
             <p className="lp-punch">
-              Une bonne app ne t'occupe pas pendant que tu cherches quoi faire. <em>Elle t'aide à cuisiner.</em>
+              Une bonne app ne te laisse pas te tourner les pouces. <em>Elle te pousse à cuisiner.</em>
             </p>
           </div>
         </div>
