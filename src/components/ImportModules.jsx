@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Icon } from "./Icon.jsx";
+import { SwipeableSheet } from "./SwipeableSheet.jsx";
+import { PlusBadge } from "./PlusBadge.jsx";
 import { monogramOf, tintOf } from "@/lib/sources/recommendedSources.js";
 
 // ─── BRIQUES DE LA PAGE D'IMPORT INTELLIGENT ────────────────────────────────
@@ -186,6 +188,43 @@ export function Tips({ mode }) {
         </div>
       ))}
     </div>
+  );
+}
+
+/** Argumentaire du mur d'offre, formulé selon le mode tenté. */
+const GATE_PITCH = {
+  lien: "Colle n'importe quel lien : l'import intelligent lit la page et met la recette en forme.",
+  photo: "Photographie une recette de livre, jusqu'à 2 pages : l'import intelligent la reconstruit.",
+  texte: "Un mail, une note, un message : l'import intelligent en fait une vraie recette, prête à relire.",
+};
+
+/**
+ * Mur d'offre de l'import intelligent, présenté AU MOMENT où un non-abonné tente
+ * l'import (et non à l'entrée de l'écran) : feuille avec argumentaire propre au
+ * mode et bascule vers l'offre. Présentation pure ; la navigation vers /plus est
+ * déléguée à `onUpgrade`, la fermeture à `onClose`.
+ */
+export function ImportPlusGate({ mode, onClose, onUpgrade }) {
+  return (
+    <SwipeableSheet onClose={onClose}>
+      {(close) => (
+        <div style={{ textAlign: "center", padding: "2px 2px 4px" }}>
+          <span style={{ width: 52, height: 52, borderRadius: 16, background: "var(--accent)", display: "inline-grid", placeItems: "center", boxShadow: "0 8px 20px -8px rgba(var(--accent-rgb),0.65)", marginBottom: 14 }}>
+            <Icon name="sparkle" size={24} color="#fff" />
+          </span>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 8px" }}>Débloque l'import intelligent</h3>
+          <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, maxWidth: 320, margin: "0 auto 18px" }}>
+            {GATE_PITCH[mode] || GATE_PITCH.lien} C'est réservé à <PlusBadge />.
+          </p>
+          <button onClick={() => close(onUpgrade)} className="btn btn-primary btn-pill" style={{ width: "100%", justifyContent: "center", padding: "13px 20px" }}>
+            <Icon name="sparkle" size={16} color="#fff" /> Passer à Cardamome+
+          </button>
+          <button onClick={() => close()} className="pressable" style={{ marginTop: 8, width: "100%", padding: 11, background: "transparent", border: "none", color: "var(--text3)", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
+            Plus tard
+          </button>
+        </div>
+      )}
+    </SwipeableSheet>
   );
 }
 

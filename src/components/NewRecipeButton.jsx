@@ -8,9 +8,10 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // ─── BOUTON « NOUVELLE » (choix : import intelligent lien/photo/texte, ou saisie
 // manuelle) ─────────────────────────────────────────────────────────────────────
 // Le sélecteur est visible par tous. L'import intelligent est une fonctionnalité
-// Cardamome+ : en plan gratuit ses options portent un badge et renvoient vers
-// /plus ; en Cardamome+ elles ouvrent leur page dédiée (/recipes/import-from-url
-// | -picture | -text).
+// Cardamome+ : en plan gratuit ses options portent un badge indicatif mais
+// ouvrent quand même leur page dédiée (/recipes/import-from-url | -picture |
+// -text). Le mur d'offre n'apparaît qu'au moment d'essayer l'import (cf.
+// ImportPage) : on laisse d'abord découvrir l'écran, on ne bloque pas l'entrée.
 
 // Pastille « import intelligent » : pastille orange, anneau blanc fin (net dans
 // les deux thèmes) et un petit robot blanc (yeux évidés couleur pastille), centré.
@@ -68,9 +69,10 @@ export function NewRecipeButton({ onManual }) {
   const [open, setOpen] = useState(false);
 
   const goManual = () => { setOpen(false); onManual(); };
-  // Import intelligent = fonctionnalité Cardamome+. En plan gratuit, on renvoie vers
-  // la page d'offre au lieu d'ouvrir l'import.
-  const goImportOrPlus = (path) => { setOpen(false); navigate(isPlus ? path : "/plus"); };
+  // Import intelligent : on ouvre TOUJOURS la page dédiée, y compris en plan
+  // gratuit. Le blocage (mur d'offre) se joue au moment d'essayer l'import, pas à
+  // l'entrée : l'utilisateur découvre d'abord l'écran.
+  const goImport = (path) => { setOpen(false); navigate(path); };
   const plusBadge = !isPlus ? <PlusBadge /> : undefined;
 
   return (
@@ -96,9 +98,9 @@ export function NewRecipeButton({ onManual }) {
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <Choice icon="link" accent smart badge={plusBadge} title="Importer depuis un lien" subtitle="Colle une URL : l'import intelligent extrait et met en forme la recette." onClick={() => goImportOrPlus("/recipes/import-from-url")} />
-            <Choice icon="photo" accent smart badge={plusBadge} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImportOrPlus("/recipes/import-from-picture")} />
-            <Choice icon="paste" accent smart badge={plusBadge} title="Coller un texte" subtitle="Un mail, une note, un message : colle le texte, il est mis en forme." onClick={() => goImportOrPlus("/recipes/import-from-text")} />
+            <Choice icon="link" accent smart badge={plusBadge} title="Importer depuis un lien" subtitle="Colle une URL : l'import intelligent extrait et met en forme la recette." onClick={() => goImport("/recipes/import-from-url")} />
+            <Choice icon="photo" accent smart badge={plusBadge} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImport("/recipes/import-from-picture")} />
+            <Choice icon="paste" accent smart badge={plusBadge} title="Coller un texte" subtitle="Un mail, une note, un message : colle le texte, il est mis en forme." onClick={() => goImport("/recipes/import-from-text")} />
             <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
               <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
               <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>

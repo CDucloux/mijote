@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
 import { LoadingOverlay } from "../components/ImportUI.jsx";
-import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError } from "../components/ImportModules.jsx";
+import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate } from "../components/ImportModules.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
@@ -16,7 +16,9 @@ import "../styles/import.css";
 // Un seul écran à onglets pour les trois modes d'import intelligent. Le mode est
 // porté par l'URL (une route dédiée par mode, cf. App) pour préserver le partage
 // natif et le retour arrière ; le brouillon extrait s'ouvre ensuite dans l'éditeur.
-// Réservé à Cardamome+ (garde serveur), quota par mode.
+// L'écran est ACCESSIBLE à tous : un non-abonné le découvre et compose sa saisie,
+// le mur d'offre ne se lève qu'à la tentative d'import (cf. `go`). La garde réelle
+// reste serveur (Cardamome+), quota par mode.
 
 const ROUTE_BY_MODE = { lien: "import-from-url", photo: "import-from-picture", texte: "import-from-text" };
 const KIND_BY_MODE = { lien: "url", photo: "photo", texte: "text" };
@@ -39,6 +41,7 @@ export function ImportPage({ mode = "lien" }) {
   const [text, setText] = useState("");
   const [error, setError] = useState("");          // hint de saisie (inline)
   const [importError, setImportError] = useState(null); // échec réel → popup
+  const [gate, setGate] = useState(false);         // mur d'offre (non-abonné)
   const [loading, setLoading] = useState(false);
   const [drag, setDrag] = useState(false);
   const urlRef = useRef(null);
@@ -52,8 +55,6 @@ export function ImportPage({ mode = "lien" }) {
     return v.length ? v : visibleSources(DEFAULT_SOURCES);
   }, [sources]);
 
-  // Accès direct par un non-abonné → retour bibliothèque.
-  useEffect(() => { if (!isPlus) navigate("/recipes", { replace: true }); }, [isPlus, navigate]);
   // Libère les aperçus photo au démontage uniquement (cf. ImportFromPicture d'origine).
   useEffect(() => () => { photosRef.current.forEach(p => URL.revokeObjectURL(p.preview)); }, []);
 
@@ -117,6 +118,9 @@ export function ImportPage({ mode = "lien" }) {
   const blocked = !unlimited && rem?.blocked;
 
   const go = async () => {
+    // Mur d'offre : c'est ICI, à la tentative d'import, qu'on bloque un non-abonné,
+    // pas à l'entrée de l'écran (il a pu tout découvrir et composer sa saisie).
+    if (!isPlus) { setGate(true); return; }
     if (!navigator.onLine) { setError("Pas de connexion internet. L'import intelligent a besoin d'être en ligne."); return; }
     if (blocked) { setError(rem.dayLeft === 0 ? "Limite du jour atteinte. Réessaie demain." : "Limite du mois atteinte pour ce mode."); return; }
     if (!ready) return;
@@ -193,9 +197,12 @@ export function ImportPage({ mode = "lien" }) {
         value={text} onChange={e => { setText(e.target.value); if (error) setError(""); }} />
     </>
   );
-  const quota = <QuotaBar rem={rem} unlimited={unlimited} />;
+  // Le quota ne concerne que les abonnés ; pour un non-abonné il afficherait un
+  // reliquat trompeur (il ne peut pas encore importer). Le CTA, lui, reste
+  // cliquable pour un non-abonné : le clic lève le mur d'offre.
+  const quota = isPlus ? <QuotaBar rem={rem} unlimited={unlimited} /> : null;
   const cta = (
-    <button className="imp-cta" disabled={!ready || blocked} onClick={go}>
+    <button className="imp-cta" disabled={isPlus && (!ready || blocked)} onClick={go}>
       <Icon name="sparkle" size={16} color="#fff" /> {CTA_LABEL[mode]}
     </button>
   );
@@ -214,6 +221,10 @@ export function ImportPage({ mode = "lien" }) {
   const overlays = (
     <>
       {loading && <LoadingOverlay estimateMs={estimateMs} />}
+      {gate && (
+        <ImportPlusGate mode={mode} onClose={() => setGate(false)}
+          onUpgrade={() => { setGate(false); navigate("/plus"); }} />
+      )}
       {importError && (
         <ErrorModal title="Import impossible" message={importError.message} code={importError.code}
           onClose={() => setImportError(null)}
