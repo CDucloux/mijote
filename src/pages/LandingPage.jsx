@@ -497,9 +497,10 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <span className="lp-eyebrow">Ce que fait Cardamome</span>
             <h2 className="lp-h2 lp-h2--wide">Une recette n'est pas juste du texte. Cardamome le sait.</h2>
             <p className="lp-p">
-              Chaque recette est <strong>structurée</strong> : ingrédients, ustensiles, étapes. Et le
-              mode pas à pas t'accompagne sur les <strong>gestes techniques</strong>, saisir,
-              émulsionner, monter, pile au moment où tu les réalises.
+              Chaque recette est construite autour de ses <strong>ingrédients, ustensiles et
+              techniques</strong>, avec détection automatique des <strong>produits de saison</strong>.
+              Le mode pas à pas t'accompagne avec les bons gestes, minuteurs et astuces, au moment
+              où tu en as besoin.
             </p>
             <p className="lp-punch">
               Tu n'exécutes pas naïvement. <em>Tu apprends quelque chose de nouveau à chaque recette.</em>

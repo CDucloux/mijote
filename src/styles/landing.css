@@ -1243,7 +1243,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 0;
+  padding: 0;
   transform-origin: bottom center;
   /* Arrondi du dos : lumière à gauche, ombre à droite, posé sur la teinte de reliure */
   background:
@@ -1266,8 +1266,8 @@
     linear-gradient(rgba(238, 222, 178, 0.7), rgba(150, 122, 62, 0.5)) top / 100% 1.5px no-repeat,
     linear-gradient(rgba(238, 222, 178, 0.7), rgba(150, 122, 62, 0.5)) bottom / 100% 1.5px no-repeat;
 }
-.lp-book::before { top: 12px; }
-.lp-book::after { bottom: 12px; }
+.lp-book::before { top: 8px; }
+.lp-book::after { bottom: 8px; }
 .lp-book--oak { --spine: linear-gradient(90deg, var(--oak), var(--oak-edge2)); }
 .lp-book--oak2 { --spine: linear-gradient(90deg, var(--oak-top), var(--oak-edge)); }
 .lp-book--spice { --spine: linear-gradient(90deg, #d98a33, var(--spice) 55%, #9a5e14); }
@@ -1278,16 +1278,16 @@
   transform: rotate(180deg);
   font-family: var(--ff-display);
   font-weight: 600;
-  font-size: 10.5px;
-  letter-spacing: 0.02em;
+  font-size: 10px;
+  letter-spacing: 0.01em;
   /* Lettrage à la dorure : ivoire chaud + micro-emboss */
   color: #efe1bd;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45), 0 0 1px rgba(0, 0, 0, 0.35);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: calc(100% - 48px);
-  padding: 10px 2px;
+  max-height: calc(100% - 32px);
+  padding: 6px 3px;
   border-radius: 5px;
   /* Cartouche : fin filet doré + creux discret, comme une étiquette de reliure */
   box-shadow: inset 0 0 0 1px rgba(238, 222, 178, 0.28), inset 0 0 0 3px rgba(0, 0, 0, 0.05);
