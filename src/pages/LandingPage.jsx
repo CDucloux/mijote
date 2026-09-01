@@ -182,12 +182,14 @@ function SceneCardPile() {
 /** Étagère de livres de cuisine : ce que tu aimes déjà. Tons chauds (oak/spice),
  *  un marque-page. Illustre « Tu as 15 livres de cuisine. Tu les aimes ». */
 function SceneBooks() {
+  // Vrais grands livres de cuisine, chefs reconnus (les plus longs titres sur les
+  // dos les plus hauts) : Escoffier, Bocuse, Saint-Ange, Gouffé, Fernand Point.
   const books = [
-    { t: "Le grand classique", tone: "oak", h: 148, lean: "-2deg" },
-    { t: "Pâtisserie", tone: "spice", h: 168, mark: true },
-    { t: "Cuisine de saison", tone: "accent", h: 138 },
-    { t: "Carnet de famille", tone: "ink", h: 158, lean: "1.5deg" },
-    { t: "Basiques", tone: "oak2", h: 130 },
+    { t: "Le Guide Culinaire", tone: "oak", h: 148, lean: "-2deg" },
+    { t: "La Cuisine du marché", tone: "spice", h: 168, mark: true },
+    { t: "La Bonne Cuisine", tone: "accent", h: 138 },
+    { t: "Le Livre de Cuisine", tone: "ink", h: 158, lean: "1.5deg" },
+    { t: "Ma Gastronomie", tone: "oak2", h: 130 },
   ];
   return (
     <div className="lp-books" aria-hidden="true">
@@ -495,9 +497,10 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <span className="lp-eyebrow">Ce que fait Cardamome</span>
             <h2 className="lp-h2 lp-h2--wide">Une recette n'est pas juste du texte. Cardamome le sait.</h2>
             <p className="lp-p">
-              Chaque recette est <strong>structurée</strong> : ingrédients, ustensiles, étapes. Et le
-              mode pas à pas t'accompagne sur les <strong>gestes techniques</strong>, saisir,
-              émulsionner, monter, pile au moment où tu les réalises.
+              Chaque recette est construite autour de ses <strong>ingrédients, ustensiles et
+              techniques</strong>, avec détection automatique des <strong>produits de saison</strong>.
+              Le mode pas à pas t'accompagne avec les bons gestes, minuteurs et astuces, au moment
+              où tu en as besoin.
             </p>
             <p className="lp-punch">
               Tu n'exécutes pas naïvement. <em>Tu apprends quelque chose de nouveau à chaque recette.</em>
@@ -519,9 +522,9 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <span className="lp-eyebrow">L'import intelligent</span>
             <h2 className="lp-h2 lp-h2--wide">Les autres recopient. Cardamome comprend ta recette.</h2>
             <p className="lp-p">
-              Extraire, c'est ranger des mots dans des cases. Comprendre, c'est savoir ce qu'ils
-              veulent dire une fois en cuisine : les portions ajustent les quantités, la saison et
-              le Nutri-Score arrivent tout seuls.
+              Extraire, c'est ranger des mots dans des cases. Comprendre, c'est révéler la
+              composition de la recette. Ingrédients, ustensiles, techniques et sous-étapes
+              prennent alors tout leur sens.
             </p>
             <p className="lp-punch">
               Un lien collé, une photo de page, une recette qui se cuisine. <em>Sans recopier une ligne.</em>
@@ -543,12 +546,12 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             <span className="lp-eyebrow">Notre parti pris</span>
             <h2 className="lp-h2 lp-h2--wide">On pourrait te donner des milliers de recettes. À quoi bon ?</h2>
             <p className="lp-p">
-              Tu n'as pas besoin de 47 carbonara. Tu en veux une : la bonne, celle que tu réussis et
-              que tu recuisines. Découvrir les recettes des autres reste possible, et se cloner d'un
-              geste. Choisi, pas entassé.
+              Tu n'as pas besoin de 47 recettes de carbonara. Une seule suffit : celle qui devient
+              la tienne. Celle que tu maîtrises, que tu ajustes au fil du temps et que tu reprends
+              les yeux fermés. Les recettes des autres sont là pour inspirer, pas pour encombrer.
             </p>
             <p className="lp-punch">
-              Une bonne app ne t'occupe pas pendant que tu cherches quoi faire. <em>Elle t'aide à cuisiner.</em>
+              Une bonne app ne te laisse pas te tourner les pouces. <em>Elle te pousse à cuisiner.</em>
             </p>
           </div>
         </div>

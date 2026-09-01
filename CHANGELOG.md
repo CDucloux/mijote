@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.16.1 – Cardamome · Vitrine peaufinée
+
+### Page vitrine
+- **Une étagère de vrais classiques** : les livres du hero portent désormais de vrais grands titres de la cuisine française (Escoffier, Bocuse, Saint-Ange, Gouffé, Fernand Point), sur des dos façon reliure, arrondis et dorés, au lieu des aplats précédents. Les titres s'affichent en entier, sans être coupés.
+- **Textes affinés** : plusieurs passages de la vitrine sont reformulés, notamment la promesse « Cardamome comprend ta recette » (composition autour des ingrédients, ustensiles et techniques) et le parti pris sur le fait d'avoir une bonne recette plutôt que mille.
+
 ## v4.16.0 – Cardamome · Import repensé
 
 ### Import intelligent
