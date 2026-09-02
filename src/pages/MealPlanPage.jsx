@@ -15,7 +15,7 @@ import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "@/lib/household/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useLS } from "../hooks/useLS.js";
-import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide, moveMealItem } from "@/lib/planning/composedMeal.js";
+import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNeedsSide, moveMealItem, copyMealToDays } from "@/lib/planning/composedMeal.js";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
@@ -148,6 +148,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const [moveFor, setMoveFor] = useState(null);
   const [moveWeekRef, setMoveWeekRef] = useState(new Date());
   const [moveTarget, setMoveTarget] = useState({ date: null, slot: null });
+  const [dupFor, setDupFor] = useState(null); // item à dupliquer (menu contextuel)
+  const [dupWeekRef, setDupWeekRef] = useState(new Date());
+  const [dupDates, setDupDates] = useState(() => new Set()); // jours cibles (multi-sélection)
+  const [dupSlot, setDupSlot] = useState(null);
   const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
 
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -299,6 +303,27 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     setMoveFor(null);
     notify("Repas replanifié");
   }, [moveFor, moveTarget, moveMeal, notify]);
+  // « Dupliquer » : poser la même recette sur plusieurs jours (le jour d'origine
+  // est présélectionné et verrouillé, on ne duplique que vers d'autres jours).
+  const openDuplicate = useCallback((info) => {
+    setItemMenu(null);
+    setDupFor(info);
+    setDupWeekRef(new Date(info.date + "T12:00"));
+    setDupDates(new Set());
+    setDupSlot(info.slot);
+  }, []);
+  const toggleDupDate = useCallback((dstr) => setDupDates(prev => {
+    const s = new Set(prev); s.has(dstr) ? s.delete(dstr) : s.add(dstr); return s;
+  }), []);
+  const confirmDuplicate = useCallback(() => {
+    if (!dupFor || !dupDates.size || !dupSlot) return;
+    const src = (mealPlan[dupFor.date] || [])[dupFor.idx];
+    if (!src) { setDupFor(null); return; }
+    const targets = [...dupDates];
+    setMealPlan(prev => copyMealToDays(prev, src, targets, dupSlot));
+    setDupFor(null);
+    notify(targets.length > 1 ? `Recette dupliquée sur ${targets.length} jours` : "Recette dupliquée");
+  }, [dupFor, dupDates, dupSlot, mealPlan, setMealPlan, notify]);
   const navigate = useCallback(dir => setCurrentDate(prev => {
     const d = new Date(prev);
     if (viewMode === "week") d.setDate(d.getDate() + dir * 7); else d.setMonth(d.getMonth() + dir);
@@ -641,6 +666,11 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             <button className="menu-row" onPointerDown={spawnRipple} onClick={() => openReschedule(it)}>
               <Icon name="calendar" size={19} color="var(--text2)" /> Replanifier
             </button>
+            {r && (
+              <button className="menu-row" onPointerDown={spawnRipple} onClick={() => openDuplicate(it)}>
+                <Icon name="copy" size={19} color="var(--text2)" /> Dupliquer sur d'autres jours
+              </button>
+            )}
             <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onPointerDown={spawnRipple} onClick={() => { removeMeal(it.date, it.idx); close(); notify("Repas retiré du planning"); }}>
               <Icon name="trash" size={19} color="var(--red)" /> Supprimer du calendrier
             </button>
@@ -708,6 +738,71 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
           <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} disabled={!moveTarget.date || !moveTarget.slot} onClick={confirmReschedule}>
             <Icon name="check" size={16} /> Déplacer ici
+          </button>
+        </SwipeableSheet>
+        );
+      })()}
+
+      {/* Dupliquer : poser la même recette sur plusieurs jours (multi-sélection) + créneau */}
+      {dupFor && (() => {
+        const r = recipesById.get(dupFor.recipeId);
+        const close = () => setDupFor(null);
+        const days = mpGetWeekDays(dupWeekRef);
+        const shiftWeek = (dir) => setDupWeekRef(prev => { const d = new Date(prev); d.setDate(d.getDate() + dir * 7); return d; });
+        return (
+        <SwipeableSheet onClose={close} style={{ maxHeight: "82dvh" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
+              <Icon name="copy" size={21} color="var(--accent)" />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Dupliquer</h3>
+              <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>« {r?.name || "cette recette"} » sur d'autres jours</div>
+            </div>
+          </div>
+
+          {/* Navigation de semaine */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <button onClick={() => shiftWeek(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={15} /></button>
+            <span style={{ flex: 1, textAlign: "center", fontSize: 13.5, fontWeight: 600 }}>
+              {`${new Date(days[0] + "T12:00").getDate()} – ${new Date(days[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(days[6] + "T12:00").getMonth()]}`}
+            </span>
+            <button onClick={() => shiftWeek(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={15} /></button>
+          </div>
+
+          {/* Jours cibles : multi-sélection ; le jour d'origine est verrouillé (déjà planifié) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 16 }}>
+            {days.map(dstr => {
+              const d = new Date(dstr + "T12:00");
+              const isSource = dstr === dupFor.date;
+              const active = dupDates.has(dstr);
+              return (
+                <button key={dstr} disabled={isSource} onClick={() => toggleDupDate(dstr)} className="pressable"
+                  style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 0", borderRadius: 12, cursor: isSource ? "default" : "pointer", opacity: isSource ? 0.4 : 1,
+                    background: active ? "var(--accent)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "#fff" : "var(--text2)" }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.9 }}>{MP_DAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700 }}>{d.getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Créneau cible (commun aux jours choisis) */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            {MEAL_SLOTS.map(s => {
+              const active = dupSlot === s.id;
+              return (
+                <button key={s.id} onClick={() => setDupSlot(s.id)} className="pressable"
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 4px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                    background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "var(--accent)" : "var(--text3)" }}>
+                  <span style={{ fontSize: 15 }}>{s.emoji}</span>{s.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} disabled={!dupDates.size || !dupSlot} onClick={confirmDuplicate}>
+            <Icon name="copy" size={16} /> {dupDates.size > 1 ? `Dupliquer sur ${dupDates.size} jours` : "Dupliquer ici"}
           </button>
         </SwipeableSheet>
         );
