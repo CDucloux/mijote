@@ -6,7 +6,9 @@
 //   • Import de recette (URL / photo) → imports/
 //   • Paiement Cardamome+ (Stripe maison) → subscriptions/
 //   • Quotas d'import IA → quota/ (utilisé par imports/)
+//   • Foyer partagé (création réservée à Cardamome+) → households/
 
 export { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText } from "./imports/recipeImport.js";
 export { createStripeCheckout, createStripePortal, stripeWebhook } from "./subscriptions/stripe.js";
 export { verifyPlayPurchase, playRtdnWebhook } from "./subscriptions/play.js";
+export { createHousehold } from "./households/household.js";
