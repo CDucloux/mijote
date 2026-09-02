@@ -56,6 +56,7 @@ INGRÉDIENTS
 
 USTENSILES
 - Uniquement ceux réellement nécessaires ET présents dans cette liste (orthographe exacte) ; sinon n'en mets pas. Aucun → `[]`.
+- **Déduis aussi l'ustensile IMPLICITE** qu'un geste exige sans le nommer, et relie-le à l'étape : « râpé/zesté » → râpe ; « fouetté/monté » → fouet ; « mélanger/pétrir/mariner » → saladier ou bol ; « mixer/mixer fin » → mixeur ; « étaler la pâte » → rouleau ; « filtrer/passer » → passoire ou chinois. Reste TOUJOURS dans la limite de la liste ci-dessous.
   Liste : {{UTENSILS}}
 
 ÉTAPES
