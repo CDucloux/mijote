@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
-  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, inferImplicitUtensils,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -367,5 +367,57 @@ describe("canonicalizeUnit", () => {
   it("est appliqué à l'assemblage : un tsp du LLM ressort en cuillère à café", () => {
     const r = assignIdsAndLink({ ingredients: [{ name: "cumin", amount: 1, unit: "tsp" }], utensils: [], steps: [] });
     expect(r.ingredients[0].unit).toBe("cuillère à café");
+  });
+});
+
+describe("inferImplicitUtensils", () => {
+  const known = ["Râpe", "Bol", "Saladier", "Fouet", "Mixeur", "Rouleau", "Passoire"];
+
+  it("déduit la râpe d'un geste « râper » et le lie via l'assemblage", () => {
+    const inter = { steps: [{ text: "Râper le parmesan finement.", utensils: [] }] };
+    inferImplicitUtensils(inter, known);
+    expect(inter.steps[0].utensils).toContain("Râpe");
+    // bout-en-bout, comme le pipeline : remontée en tête (collectUtensils) puis
+    // assemblage. L'ustensile figure dans la recette ET est lié à l'étape.
+    inter.utensils = filterUtensilsToKnown(collectUtensils(inter), known);
+    const r = assignIdsAndLink(inter);
+    const rape = r.utensils.find(u => u.name === "Râpe");
+    expect(rape).toBeTruthy();
+    expect(r.steps[0].utensils).toContain(rape.id);
+  });
+
+  it("déduit un contenant pour « mélanger » (saladier en tête, sinon bol)", () => {
+    const inter = { steps: [{ text: "Mélanger la farine et le sucre.", utensils: [] }] };
+    inferImplicitUtensils(inter, known);
+    expect(inter.steps[0].utensils).toContain("Saladier");
+    // sans saladier dans la base, on retombe sur le bol
+    const inter2 = { steps: [{ text: "Bien mélanger le tout.", utensils: [] }] };
+    inferImplicitUtensils(inter2, ["Bol", "Fouet"]);
+    expect(inter2.steps[0].utensils).toContain("Bol");
+  });
+
+  it("ne confond pas « rapidement » avec « râper »", () => {
+    const inter = { steps: [{ text: "Mélanger rapidement au fouet.", utensils: [] }] };
+    inferImplicitUtensils(inter, known);
+    expect(inter.steps[0].utensils).not.toContain("Râpe");
+    expect(inter.steps[0].utensils).toContain("Fouet");
+  });
+
+  it("ne pose que des ustensiles présents dans la base master", () => {
+    const inter = { steps: [{ text: "Râper le zeste du citron.", utensils: [] }] };
+    inferImplicitUtensils(inter, ["Casserole", "Fouet"]); // pas de râpe connue
+    expect(inter.steps[0].utensils || []).toEqual([]);
+  });
+
+  it("ne duplique pas un ustensile déjà cité sur l'étape", () => {
+    const inter = { steps: [{ text: "Fouetter les œufs en neige.", utensils: ["Fouet"] }] };
+    inferImplicitUtensils(inter, known);
+    expect(inter.steps[0].utensils.filter(u => u === "Fouet")).toHaveLength(1);
+  });
+
+  it("no-op si la base master est vide (pas de bornage possible)", () => {
+    const inter = { steps: [{ text: "Râper le fromage.", utensils: [] }] };
+    inferImplicitUtensils(inter, []);
+    expect(inter.steps[0].utensils).toEqual([]);
   });
 });

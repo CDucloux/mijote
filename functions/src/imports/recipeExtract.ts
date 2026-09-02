@@ -393,6 +393,62 @@ export function filterUtensilsToKnown(utensils: DraftUtensil[], knownNames: stri
   });
 }
 
+// Gestes qui EXIGENT un ustensile sans le nommer → ustensile(s) canonique(s), le
+// premier disponible dans la base master l'emporte. Testé sur le TEXTE de l'étape
+// normalisé (sans accent, minuscules). Bornes de mot pour éviter les faux positifs
+// (« mélanger rapidement » ne déclenche pas la râpe).
+const IMPLICIT_UTENSIL_RULES: { test: RegExp; targets: string[] }[] = [
+  { test: /\brap(e|es|er|ee|ees|ez)\b|\bzest/, targets: ["râpe"] },
+  { test: /\bfouett|\bfouet\b|\bneige\b/, targets: ["fouet"] },
+  { test: /\bmelang|\bpetri|\bmarin(e|es|er|ee|ees|ez|ade)\b|\bincorpor/, targets: ["saladier", "bol"] },
+  { test: /\bmix(e|es|er|ez|ee|ees)?\b|\bblend|\bmoulin/, targets: ["mixeur", "blender"] },
+  { test: /(etal\w*\s+(la\s+)?pate)|\babaiss|\brouleau\b/, targets: ["rouleau"] },
+  { test: /\bfiltr|\btamis|\bchinois\b/, targets: ["passoire", "chinois", "tamis"] },
+];
+
+/**
+ * Résout un ustensile canonique (« râpe », « saladier »…) vers son libellé EXACT
+ * dans la base master (faute de quoi il serait filtré et non lié côté client).
+ * Rapprochement tolérant (accents/casse, inclusion), comme {@link filterUtensilsToKnown}.
+ *
+ * @returns Le nom tel qu'écrit dans la base, ou `null` s'il en est absent.
+ */
+function resolveKnownUtensil(target: string, knownNames: string[]): string | null {
+  const t = norm(target);
+  for (const name of knownNames) {
+    const n = norm(name);
+    if (n === t || n.includes(t) || t.includes(n)) return name;
+  }
+  return null;
+}
+
+/**
+ * Déduit DÉTERMINISTIQUEMENT les ustensiles qu'un geste d'étape exige sans les
+ * nommer (râper → râpe, mélanger → saladier/bol…) et les rattache à l'étape, en
+ * complément du prompt : la fiabilité ne dépend plus de l'adhérence du modèle. Ne
+ * pose QUE des ustensiles présents dans la base master (même bornage que le reste
+ * du flux), n'invente rien et ne duplique pas un ustensile déjà cité sur l'étape.
+ *
+ * @param inter - Brouillon intermédiaire (ses étapes sont mutées en place).
+ * @param knownNames - Noms d'ustensiles de la base master (bornage).
+ */
+export function inferImplicitUtensils(inter: Pick<Intermediate, "steps">, knownNames: string[]): void {
+  if (!knownNames?.length) return;
+  for (const step of inter.steps || []) {
+    const text = norm(step.text);
+    if (!text) continue;
+    const present = new Set((step.utensils || []).map((u) => norm(typeof u === "string" ? u : u?.name)));
+    for (const rule of IMPLICIT_UTENSIL_RULES) {
+      if (!rule.test.test(text)) continue;
+      const resolved = rule.targets.map((t) => resolveKnownUtensil(t, knownNames)).find((r): r is string => !!r);
+      if (resolved && !present.has(norm(resolved))) {
+        (step.utensils ||= []).push(resolved);
+        present.add(norm(resolved));
+      }
+    }
+  }
+}
+
 // Assemble le brouillon FINAL au schéma Cardamome : ids stables sur ingrédients/
 // ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
 // fourni par le LLM, complété par détection dans le texte de l'étape).
