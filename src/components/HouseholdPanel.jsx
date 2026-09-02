@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
@@ -17,8 +18,9 @@ function Avatar({ photo, label, size = 34, dim = false }) {
 // ─── PANNEAU FOYER ────────────────────────────────────────────────────────────
 // `onClose` (optionnel) : ferme la feuille parente après un quitter/dissoudre.
 export function HouseholdPanel({ onClose }) {
-  const { user, directory = [], loadDirectory, preferences } = useAppShell();
+  const { user, directory = [], loadDirectory, preferences, isPlus } = useAppShell();
   const { household, invites, loading, actions } = useHousehold();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
   // Le panneau foyer a besoin de l'annuaire (candidats à l'invitation + avatars).
@@ -83,9 +85,23 @@ export function HouseholdPanel({ onClose }) {
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Créer un foyer</div>
             <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 14 }}>Tu en seras le propriétaire et pourras inviter {MAX_HOUSEHOLD - 1} personne{MAX_HOUSEHOLD - 1 > 1 ? "s" : ""}.</div>
             <input className="field-input" placeholder="Nom du foyer (ex. Maison Dupont)" value={name} maxLength={40} onChange={e => setName(e.target.value)} style={{ marginBottom: 12 }} />
-            <button className="btn btn-primary" onClick={async () => { if (await actions.create(name)) setName(""); }} style={{ width: "100%" }}>
-              <Icon name="plus" size={16} /> Créer le foyer
-            </button>
+            {/* Soft-lock : en gratuit, la page de création reste visible (l'utilisateur
+                se projette), mais la validation renvoie vers l'offre au lieu de créer. */}
+            {isPlus ? (
+              <button className="btn btn-primary" onClick={async () => { if (await actions.create(name)) setName(""); }} style={{ width: "100%" }}>
+                <Icon name="plus" size={16} /> Créer le foyer
+              </button>
+            ) : (
+              <>
+                <button className="btn btn-primary" onClick={() => navigate("/plus")} style={{ width: "100%" }}>
+                  <Icon name="sparkle" size={16} /> Débloquer avec Cardamome+
+                </button>
+                <Row gap={6} justify="center" style={{ marginTop: 10 }}>
+                  <Icon name="lock" size={13} color="var(--text3)" />
+                  <span style={{ fontSize: 12, color: "var(--text3)" }}>Le foyer partagé fait partie de Cardamome+.</span>
+                </Row>
+              </>
+            )}
           </>
         )
       ) : (
