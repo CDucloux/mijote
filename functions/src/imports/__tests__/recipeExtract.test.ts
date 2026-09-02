@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
-  parseApplianceInfos, formatAppliancesForPrompt,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -341,5 +341,31 @@ describe("htmlToText", () => {
     expect(t).toContain("⟦IMG:https://x/step2.jpg⟧"); // préfère data-src au placeholder
     expect(t).not.toContain("logo.svg");
     expect(imageUrlsInText(t).has("https://x/step1.jpg")).toBe(true);
+  });
+});
+
+describe("canonicalizeUnit", () => {
+  it("rabat les cuillères impériales sur l'unité fermée (1:1)", () => {
+    expect(canonicalizeUnit("tsp")).toBe("cuillère à café");
+    expect(canonicalizeUnit("teaspoon")).toBe("cuillère à café");
+    expect(canonicalizeUnit("tbsp")).toBe("cuillère à soupe");
+    expect(canonicalizeUnit("tablespoons")).toBe("cuillère à soupe");
+  });
+  it("rabat les abréviations françaises (accents, points, casse)", () => {
+    expect(canonicalizeUnit("c. à c.")).toBe("cuillère à café");
+    expect(canonicalizeUnit("càc")).toBe("cuillère à café");
+    expect(canonicalizeUnit("C. À S.")).toBe("cuillère à soupe");
+    expect(canonicalizeUnit("cas")).toBe("cuillère à soupe");
+  });
+  it("laisse passer les unités déjà valides et l'unité vide", () => {
+    expect(canonicalizeUnit("g")).toBe("g");
+    expect(canonicalizeUnit("ml")).toBe("ml"); // on ne devine pas la cuillère depuis un volume
+    expect(canonicalizeUnit("cuillère à soupe")).toBe("cuillère à soupe");
+    expect(canonicalizeUnit("")).toBe("");
+    expect(canonicalizeUnit(undefined)).toBe("");
+  });
+  it("est appliqué à l'assemblage : un tsp du LLM ressort en cuillère à café", () => {
+    const r = assignIdsAndLink({ ingredients: [{ name: "cumin", amount: 1, unit: "tsp" }], utensils: [], steps: [] });
+    expect(r.ingredients[0].unit).toBe("cuillère à café");
   });
 });

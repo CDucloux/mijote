@@ -160,6 +160,33 @@ const PLURAL_UNITS: Record<string, string> = {
 // et on ne les écrit pas dans `_raw`.
 const SILENT_UNITS = new Set(["piece", "pieces", "unite", "unites"]);
 
+// Filet déterministe : malgré la consigne, le LLM laisse parfois filer une cuillère
+// sous une graphie non fermée (impériale `tsp`/`tbsp`, ou abréviation `c. à s.`,
+// `càc`…). On la rabat sur l'unité canonique. Équivalence 1:1 en volume (1 tsp =
+// 1 c. à café, 1 tbsp = 1 c. à soupe) : le NOMBRE reste juste, on ne touche qu'au
+// libellé. Clés déjà normalisées (sans accent/point, espaces compressés).
+const SPOON_ALIASES: Record<string, string> = {
+  tsp: "cuillère à café", tsps: "cuillère à café", teaspoon: "cuillère à café", teaspoons: "cuillère à café",
+  cac: "cuillère à café", "c a c": "cuillère à café", "c a cafe": "cuillère à café",
+  tbsp: "cuillère à soupe", tbsps: "cuillère à soupe", tbs: "cuillère à soupe", tablespoon: "cuillère à soupe", tablespoons: "cuillère à soupe",
+  cas: "cuillère à soupe", "c a s": "cuillère à soupe", "c a soupe": "cuillère à soupe",
+};
+
+/**
+ * Rabat une cuillère mal orthographiée (impériale ou abrégée) sur l'unité fermée
+ * correspondante. Purement défensif et 1:1 (le nombre reste valide) ; toute unité
+ * non reconnue est renvoyée telle quelle (juste trimée). Ne convertit PAS les
+ * millilitres : on ne peut pas retrouver la cuillère d'origine depuis un volume.
+ *
+ * @param unit - Unité brute renvoyée par le LLM.
+ */
+export function canonicalizeUnit(unit: string | undefined): string {
+  const raw = (unit || "").toString().trim();
+  if (!raw) return "";
+  const key = norm(raw).replace(/\./g, "").replace(/\s+/g, " ").trim();
+  return SPOON_ALIASES[key] || raw;
+}
+
 /** Unité accordée au pluriel selon la quantité (règle française : ≥ 2). */
 function pluralUnit(amount: number | string | undefined, unit: string | undefined): string {
   const u = (unit || "").toString().trim();
@@ -377,7 +404,7 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     // l'unité est absente, on la promeut depuis ce mot.
     const stripped = stripMeasurePrefix(i.name);
     const name = stripped ? stripped.name : (i.name || "");
-    const unitRaw = (i.unit || "") || (stripped ? stripped.measure : "");
+    const unitRaw = canonicalizeUnit((i.unit || "") || (stripped ? stripped.measure : ""));
     const unit = SILENT_UNITS.has(norm(unitRaw)) ? "" : unitRaw;
     // _raw reconstruit à partir des champs normalisés (texte propre et éditable).
     // Sans unité, l'ingrédient est comptable : on accorde le nom au pluriel.
