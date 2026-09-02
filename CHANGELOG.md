@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.18.0 – Cardamome · Planning agile
+
+### Planning repas
+- **Dupliquer un repas sur plusieurs jours** : le menu d'un repas planifié gagne une action « Dupliquer sur d'autres jours ». On coche les jours voulus (en naviguant de semaine en semaine, le jour d'origine étant verrouillé), on choisit le créneau, et la recette se recopie partout d'un coup.
+
+### Accueil
+- **Compteur de courses juste** : le « N articles à acheter » de l'accueil comptait deux fois un ingrédient présent dans plusieurs listes. Il reflète maintenant la liste dédupliquée, comme la vue « Toutes les courses ».
+- **Rechargement au bon endroit** : en tirant vers le bas pour actualiser, le cercle de rechargement s'ancre désormais sous l'en-tête au lieu de dériver en plein contenu, et sa flèche affiche une vraie pointe pleine, lisible quel que soit l'avancement du geste.
+
 ## v4.17.0 – Cardamome · Import à découvrir
 
 ### Import intelligent
