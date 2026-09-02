@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { startCheckout, openBillingPortal } from "@/lib/firebase/subscription.js";
+import "../styles/plus.css";
 
 // Tarifs Cardamome+. `price` = ID Stripe (extension), fourni par l'env.
 const PRICES = {
@@ -11,10 +12,10 @@ const PRICES = {
   yearly: { amount: "49,99 €", per: "/ an", cta: "49,99 €/an", note: "soit 4,17 €/mois · économise 10 €/an", price: import.meta.env.VITE_STRIPE_PRICE_YEARLY },
 };
 
-// ─── CARDAMOME+ (route /plus) ───────────────────────────────────────────────────
+// ─── FORMULE (route /plus) ──────────────────────────────────────────────────────
 // Page de présentation / achat de l'offre Cardamome+ : tableau comparatif Gratuit vs
-// Cardamome+. Le paiement n'est pas encore branché (CTA « bientôt »). Le plan est
-// dérivé de `isAdmin` en attendant un vrai système d'abonnement.
+// Cardamome+. Desktop en split asymétrique (rail de vente + comparatif), mobile en
+// colonne unique avec CTA collé en bas. La logique de paiement (Stripe) est intacte.
 
 // Comparatif Gratuit vs Cardamome+. Une valeur booléenne rend une coche / un tiret ;
 // une chaîne rend un libellé (ex. quota de recettes).
@@ -24,8 +25,8 @@ const FEATURES = [
   { label: "Nutri-Score & saisonnalité", free: true, plus: true },
   { label: "Mode hors-ligne", free: true, plus: true },
   { label: "Foyer partagé", free: false, plus: true },
-  { label: "Import IA depuis un lien", free: false, plus: true },
-  { label: "Import IA depuis une photo", free: false, plus: true },
+  { label: "Import intelligent depuis un lien", free: false, plus: true },
+  { label: "Import intelligent depuis une photo", free: false, plus: true },
   { label: "Journal d'itérations", free: false, plus: true },
   { label: "Génération de planning", free: false, plus: true },
   { label: "Batch cooking", free: false, plus: true },
@@ -44,7 +45,7 @@ export function PlusPage() {
   const navigate = useNavigate();
   const { isPlus, notify, user } = useAppShell();
   const location = useLocation();
-  const [billing, setBilling] = useState("yearly"); // annuel mis en avant par défaut
+  const [billing, setBilling] = useState("monthly"); // mensuel mis en avant : 4,99 € accroche mieux que 49,99 €
   const [busy, setBusy] = useState(false);
   const price = PRICES[billing];
   // Le paiement est prêt dès que les deux tarifs Stripe sont fournis par l'env.
@@ -70,20 +71,71 @@ export function PlusPage() {
     await openBillingPortal(msg => { setBusy(false); notify?.(msg, "error"); });
   };
 
+  // ─── Bascule mensuel / annuel : curseur glissant ──────────────────────────
+  // On mesure le bouton actif et on positionne le `.plus-thumb` par-dessus. La
+  // glisse ne doit répondre qu'à l'action de l'utilisateur : au montage, au
+  // resize et après le chargement des polices, on repositionne SANS transition.
+  const toggleRef = useRef(null);
+  const monthlyRef = useRef(null);
+  const yearlyRef = useRef(null);
+  const thumbRef = useRef(null);
+  const animatedRef = useRef(false);
+
+  const placeThumb = useCallback((animate) => {
+    const active = billing === "monthly" ? monthlyRef.current : yearlyRef.current;
+    const thumb = thumbRef.current;
+    if (!active || !thumb) return;
+    if (!animate) thumb.style.transition = "none";
+    thumb.style.width = `${active.offsetWidth}px`;
+    thumb.style.height = `${active.offsetHeight}px`;
+    thumb.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
+    if (!animate) requestAnimationFrame(() => { thumb.style.transition = ""; });
+  }, [billing]);
+
+  // Positionne au changement d'onglet : la première passe (montage) ne glisse pas.
+  useLayoutEffect(() => {
+    if (isPlus) return; // toggle absent en état abonné
+    placeThumb(animatedRef.current);
+    animatedRef.current = true;
+  }, [billing, isPlus, placeThumb]);
+
+  // Recalage sans glisse au resize et après chargement des polices (largeur des
+  // boutons dépendante de la fonte).
+  useEffect(() => {
+    if (isPlus) return;
+    const replace = () => placeThumb(false);
+    window.addEventListener("resize", replace);
+    if (document.fonts?.ready) document.fonts.ready.then(replace);
+    return () => window.removeEventListener("resize", replace);
+  }, [isPlus, placeThumb]);
+
+  // Un seul handler par action, rendu à deux emplacements (rail desktop + barre
+  // collée mobile) pour éviter toute divergence de logique.
+  const renderCta = () =>
+    isPlus ? (
+      <button className="btn" style={{ width: "100%", borderRadius: 999, background: "var(--surface2)", color: "var(--text)", border: "1px solid var(--border)" }} disabled={busy} onClick={onManage}>
+        <Icon name="settings" size={15} /> Gérer mon abonnement
+      </button>
+    ) : (
+      <button className="btn btn-primary btn-pill" style={{ width: "100%" }} disabled={busy} onClick={onSubscribe}>
+        <Icon name="sparkle" size={15} /> {busy ? "Redirection…" : `Passer à Cardamome+ · ${price.cta}`}
+      </button>
+    );
+
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div className="plus-root">
       {/* En-tête */}
-      <div style={{ padding: "18px 20px 14px", flexShrink: 0, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
+      <header className="plus-appbar">
         <button onClick={() => navigate(-1)} aria-label="Retour" className="import-back" style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
         </button>
-        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>Cardamome+</h1>
-      </div>
+        <h1>Formule</h1>
+      </header>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "22px 20px 24px" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 560, margin: "0 auto" }}>
-          {/* Hero : bandeau de confirmation vert si abonné, sinon pitch */}
+      <main className="plus-stage">
+        <div className={isPlus ? "plus-layout" : "plus-layout plus-layout--split"}>
           {isPlus ? (
+            /* État abonné : bandeau de confirmation, hors split (colonne unique). */
             <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, background: "rgba(var(--ok-rgb),0.1)", border: "1px solid rgba(var(--ok-rgb),0.4)" }}>
               <span style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--ok)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 5px 16px -5px rgba(var(--ok-rgb),0.65)" }}>
                 <Icon name="check" size={24} color="#fff" />
@@ -98,78 +150,69 @@ export function PlusPage() {
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: "center" }}>
-              <div style={{ display: "inline-flex", marginBottom: 12 }}><PlusBadge size="lg" /></div>
-              <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-                Passe à la vitesse supérieure
-              </h2>
-              <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0, maxWidth: 420, marginInline: "auto" }}>
-                Débloque l'<strong style={{ color: "var(--text)" }}>import de recettes par IA</strong> (depuis un lien ou une photo de livre) et gagne un temps fou à saisir tes recettes.
-              </p>
-            </div>
-          )}
+            <>
+              {/* Rail de vente : pitch + tarif + CTA (desktop) */}
+              <section className="plus-pitch">
+                <span className="plus-badge-wrap"><PlusBadge size="lg" /></span>
+                <h2 className="plus-title">Passe à la vitesse supérieure</h2>
+                <p className="plus-lede">
+                  Débloque l'<strong>import intelligent de recettes</strong> (depuis un lien ou une photo de livre) et gagne un temps fou à saisir tes recettes.
+                </p>
 
-          {/* Tableau comparatif */}
-          <div style={{ border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", background: "var(--surface)" }}>
-            {/* En-tête colonnes */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)" }}>Fonctionnalité</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />gratuit</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", textAlign: "center", lineHeight: 1.2 }}>Plan<br />Cardamome+</span>
-            </div>
-            {FEATURES.map((f, i) => (
-              <div key={f.label} style={{ display: "grid", gridTemplateColumns: "1fr 92px 92px", alignItems: "center", padding: "12px 14px", borderBottom: i < FEATURES.length - 1 ? "1px solid var(--border)" : "none", background: !f.free ? "rgba(var(--accent-rgb),0.04)" : "transparent" }}>
-                <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.35 }}>{f.label}</span>
-                <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.free} /></span>
-                <span style={{ display: "grid", placeItems: "center" }}><Cell value={f.plus} accent /></span>
-              </div>
-            ))}
-          </div>
+                <div className="plus-pricing">
+                  <div className="plus-toggle" ref={toggleRef} role="tablist" aria-label="Périodicité">
+                    <span className="plus-thumb" ref={thumbRef} aria-hidden="true" />
+                    <button ref={monthlyRef} role="tab" aria-selected={billing === "monthly"} onClick={() => setBilling("monthly")} className={`plus-toggle-btn${billing === "monthly" ? " is-on" : ""}`}>
+                      Mensuel
+                    </button>
+                    <button ref={yearlyRef} role="tab" aria-selected={billing === "yearly"} onClick={() => setBilling("yearly")} className={`plus-toggle-btn${billing === "yearly" ? " is-on" : ""}`}>
+                      Annuel <span className="plus-save">-17%</span>
+                    </button>
+                  </div>
+                  <div className="plus-price">
+                    <span className="plus-price-amount">{price.amount}</span>
+                    <span className="plus-price-per">{price.per}</span>
+                  </div>
+                  {price.note && <div className="plus-price-note">{price.note}</div>}
+                </div>
 
-          {/* Tarifs : bascule mensuel / annuel */}
-          {!isPlus && (
-            <div style={{ border: "1px solid var(--border)", borderRadius: 16, padding: "16px 16px 18px", background: "var(--surface)", textAlign: "center" }}>
-              <div style={{ display: "inline-flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 999, marginBottom: 14 }}>
-                {[["monthly", "Mensuel"], ["yearly", "Annuel"]].map(([key, label]) => (
-                  <button key={key} onClick={() => setBilling(key)} style={{
-                    display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 999, border: "none", cursor: "pointer",
-                    fontSize: 13, fontWeight: 600,
-                    background: billing === key ? "var(--surface)" : "transparent",
-                    color: billing === key ? "var(--text)" : "var(--text3)",
-                    boxShadow: billing === key ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
-                  }}>
-                    {label}
-                    {key === "yearly" && <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: "var(--ok)", borderRadius: 999, padding: "1px 6px" }}>-17%</span>}
-                  </button>
+                <div className="plus-cta-rail">{renderCta()}</div>
+
+                <p className="plus-reassure">
+                  <Icon name="lock" size={13} />
+                  {paymentReady
+                    ? "Paiement sécurisé via Stripe · résiliable à tout moment."
+                    : "L'abonnement Cardamome+ arrive bientôt. Les imports intelligents restent en accès limité en attendant."}
+                </p>
+              </section>
+
+              {/* Comparatif : tableau + bande d'accent (desktop) */}
+              <section className="plus-compare" aria-label="Comparatif des plans">
+                <div className="plus-highlight" aria-hidden="true" />
+                <div className="plus-thead">
+                  <span className="plus-col">Fonctionnalité</span>
+                  <span className="plus-col plus-col--center">Plan gratuit</span>
+                  <span className="plus-col plus-col--plus plus-col--center">
+                    <span className="plus-col-name">Cardamome+</span>
+                    <span className="plus-col-tag">Recommandé</span>
+                  </span>
+                </div>
+                {FEATURES.map((f) => (
+                  <div key={f.label} className={`plus-row${!f.free ? " plus-row--diff" : ""}`}>
+                    <span className="plus-feat">{f.label}</span>
+                    <span className="plus-cell"><Cell value={f.free} /></span>
+                    <span className="plus-cell"><Cell value={f.plus} accent /></span>
+                  </div>
                 ))}
-              </div>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6 }}>
-                <span style={{ fontFamily: "var(--ff-display)", fontSize: 34, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>{price.amount}</span>
-                <span style={{ fontSize: 14, color: "var(--text3)", fontWeight: 500 }}>{price.per}</span>
-              </div>
-              {price.note && <div style={{ fontSize: 12, color: "var(--ok)", fontWeight: 600, marginTop: 4 }}>{price.note}</div>}
-            </div>
+              </section>
+            </>
           )}
-
-          <p style={{ fontSize: 11.5, color: "var(--text3)", textAlign: "center", lineHeight: 1.5, margin: 0 }}>
-            {paymentReady
-              ? "Paiement sécurisé via Stripe · résiliable à tout moment."
-              : "L'abonnement Cardamome+ arrive bientôt. Les imports IA restent en accès limité en attendant."}
-          </p>
         </div>
-      </div>
+      </main>
 
-      {/* CTA */}
-      <div style={{ flexShrink: 0, borderTop: "1px solid var(--border)", padding: "12px 20px calc(12px + env(safe-area-inset-bottom))", maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        {isPlus ? (
-          <button className="btn" style={{ width: "100%", borderRadius: 999, background: "var(--surface2)", color: "var(--text)", border: "1px solid var(--border)" }} disabled={busy} onClick={onManage}>
-            <Icon name="settings" size={15} /> Gérer mon abonnement
-          </button>
-        ) : (
-          <button className="btn btn-primary btn-pill" style={{ width: "100%" }} disabled={busy} onClick={onSubscribe}>
-            <Icon name="sparkle" size={15} /> {busy ? "Redirection…" : `Passer à Cardamome+ · ${price.cta}`}
-          </button>
-        )}
+      {/* CTA collé en bas : mobile (les deux états) + desktop (état abonné seul). */}
+      <div className={`plus-cta-bar${isPlus ? "" : " plus-cta-bar--doubled"}`}>
+        {renderCta()}
       </div>
     </div>
   );
