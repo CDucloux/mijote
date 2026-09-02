@@ -30,6 +30,11 @@ export interface DraftStep {
   image?: string;
   ingredients?: string[];
   utensils?: (string | DraftUtensil)[];
+  /**
+   * Réglages d'appareils déduits par le LLM, indexés par NOM d'appareil (le
+   * re-clé vers l'id d'ustensile de recette est fait par {@link assignIdsAndLink}).
+   */
+  utensilParams?: Record<string, Record<string, unknown>>;
   /** Section/sous-préparation (« La pâte »…). Vide/absent = pas de groupement. */
   group?: string;
 }
@@ -94,6 +99,12 @@ export interface RecipeStep {
   image: string;
   ingredients: string[];
   utensils: string[];
+  /**
+   * Réglages d'appareils posés sur l'étape, indexés par id d'ustensile de recette
+   * (mêmes ids que `utensils`). Présent seulement si au moins un réglage est déduit ;
+   * les valeurs restent brutes (validées côté client contre le schéma de l'appareil).
+   */
+  utensilParams?: Record<string, Record<string, unknown>>;
   group?: string;
 }
 
@@ -261,6 +272,64 @@ export function mentions(text: string, name: string): boolean {
   return new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(text);
 }
 
+/** Réglage d'un appareil décrit pour le prompt (schéma aplati venu du client). */
+export interface ApplianceParamInfo {
+  key: string;
+  label: string;
+  kind: string;
+  unit?: string;
+  options?: string[];
+}
+
+/** Descripteur d'appareil connu (nom + réglages) transmis par le client d'import. */
+export interface ApplianceInfo {
+  name: string;
+  fields: ApplianceParamInfo[];
+}
+
+/**
+ * Valide et borne les descripteurs d'appareils fournis par le client (payload
+ * externe non fiable) : nom non vide, réglages avec clé, tailles plafonnées. Un
+ * descripteur sans nom ou sans aucun réglage exploitable est écarté.
+ *
+ * @param raw - La valeur brute `appliances` de la requête (forme inconnue).
+ * @returns Les descripteurs exploitables pour {@link formatAppliancesForPrompt}.
+ */
+export function parseApplianceInfos(raw: unknown): ApplianceInfo[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 40).map((a): ApplianceInfo => {
+    const o = (a && typeof a === "object" ? a : {}) as Record<string, unknown>;
+    const fieldsRaw = Array.isArray(o.fields) ? o.fields : [];
+    const fields = fieldsRaw.slice(0, 12).map((f): ApplianceParamInfo => {
+      const fo = (f && typeof f === "object" ? f : {}) as Record<string, unknown>;
+      const field: ApplianceParamInfo = { key: String(fo.key || "").slice(0, 40), label: String(fo.label || "").slice(0, 60), kind: String(fo.kind || "") };
+      if (fo.unit) field.unit = String(fo.unit).slice(0, 12);
+      if (Array.isArray(fo.options)) field.options = fo.options.map((x) => String(x).slice(0, 40)).slice(0, 24);
+      return field;
+    }).filter((f) => f.key);
+    return { name: String(o.name || "").slice(0, 60), fields };
+  }).filter((a) => a.name && a.fields.length);
+}
+
+/**
+ * Rend la liste des appareils et de leurs réglages acceptés pour injection dans le
+ * prompt (placeholder `{{APPLIANCES}}`). Chaque appareil tient sur une ligne, chaque
+ * réglage y indique son type/valeurs pour que le LLM produise EXACTEMENT les bonnes
+ * clés et valeurs. `(aucun)` si la base ne contient aucun appareil.
+ *
+ * @param infos - Les descripteurs d'appareils connus (déjà validés).
+ * @returns Le bloc texte prêt à injecter (ou `(aucun)`).
+ */
+export function formatAppliancesForPrompt(infos: ApplianceInfo[]): string {
+  if (!infos || !infos.length) return "(aucun)";
+  const field = (f: ApplianceParamInfo): string => {
+    if (f.kind === "enum") return `${f.key} (${(f.options || []).join("|")})`;
+    if (f.kind === "bool") return `${f.key} (true/false)`;
+    return `${f.key} (nombre${f.unit ? `, ${f.unit}` : ""})`;
+  };
+  return "\n" + infos.map((a) => `  - ${a.name} : ${a.fields.map(field).join(" ; ")}`).join("\n");
+}
+
 // Union des ustensiles cités PARTOUT par le LLM : le tableau de tête `utensils`
 // ET ceux référencés au fil des étapes. Certains modèles ne remplissent que les
 // étapes (ou renvoient un tableau de tête vide) : sans ça, la recette ressortait
@@ -338,6 +407,21 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     const utIds = utensils.filter((u) => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map((u) => u.id);
     const rs: RecipeStep = { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
     if (stepGroup) rs.group = stepGroup;
+    // Réglages d'appareils : le LLM les indexe par NOM d'appareil ; on les re-clé
+    // vers l'id d'ustensile de recette et on ne garde QUE ceux liés à cette étape.
+    // Les valeurs restent brutes (validées côté client contre le schéma de l'appareil).
+    const rawParams = (s.utensilParams && typeof s.utensilParams === "object") ? s.utensilParams : null;
+    if (rawParams) {
+      const linked = new Set(utIds);
+      const byName = new Map(Object.entries(rawParams).map(([nm, v]) => [norm(nm), v]));
+      const params: Record<string, Record<string, unknown>> = {};
+      for (const u of utensils) {
+        if (!linked.has(u.id)) continue;
+        const v = byName.get(norm(u.name));
+        if (v && typeof v === "object" && Object.keys(v).length) params[u.id] = v;
+      }
+      if (Object.keys(params).length) rs.utensilParams = params;
+    }
     return rs;
   });
 

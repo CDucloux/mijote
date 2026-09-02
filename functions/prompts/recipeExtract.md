@@ -13,7 +13,7 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
   "prepTime": number, "cookTime": number, "servings": number,
   "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string }],
   "utensils": [{ "name": string }],
-  "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "group": string }]
+  "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "utensilParams": object, "group": string }]
 }
 ```
 
@@ -58,6 +58,10 @@ USTENSILES
 - Uniquement ceux réellement nécessaires ET présents dans cette liste (orthographe exacte) ; sinon n'en mets pas. Aucun → `[]`.
 - **Déduis aussi l'ustensile IMPLICITE** qu'un geste exige sans le nommer, et relie-le à l'étape : « râpé/zesté » → râpe ; « fouetté/monté » → fouet ; « mélanger/pétrir/mariner » → saladier ou bol ; « mixer/mixer fin » → mixeur ; « étaler la pâte » → rouleau ; « filtrer/passer » → passoire ou chinois. Reste TOUJOURS dans la limite de la liste ci-dessous.
   Liste : {{UTENSILS}}
+
+APPAREILS (réglages d'étape)
+- Certains ustensiles ci-dessous sont des APPAREILS avec des réglages. Quand une étape en utilise un, remplis `utensilParams` : objet indexé par le NOM EXACT de l'appareil (tel qu'écrit dans `utensils`), contenant les réglages **déduits du texte** (ex. `{ "Four": { "temperature": 210, "mode": "tournante", "prechauffage": true, "duree": 25 } }`). N'invente aucun réglage absent du texte, omets ce qui n'est pas précisé, et emploie EXACTEMENT les clés/valeurs listées (températures converties en °C). Étape sans appareil réglé → pas de `utensilParams`.
+  Appareils et réglages acceptés : {{APPLIANCES}}
 
 ÉTAPES
 - **Regroupe** les actions d'une même phase en UNE étape (ex. « laver puis couper tous les légumes »). Vise un déroulé **synthétique**, en général **3 à 8 étapes** pour une recette simple. Ne crée jamais d'étape pour une action triviale, ne coupe pas une phrase en deux, et n'éclate pas une recette de salade en 15 étapes.

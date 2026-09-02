@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
+  parseApplianceInfos, formatAppliancesForPrompt,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -211,6 +212,64 @@ describe("assignIdsAndLink", () => {
     const plat = assignIdsAndLink({ name: "Sauce tomate express", category: "sauce", ingredients: [{ name: "tomate", amount: 400, unit: "g" }], utensils: [], steps: [] });
     expect(plat.isComponent).toBeUndefined();
     expect(plat.category).toBe("sauce");
+  });
+  it("re-clé les réglages d'appareils par nom → id d'ustensile, borné aux ustensiles liés à l'étape", () => {
+    const inter = {
+      ingredients: [], utensils: [{ name: "Four" }, { name: "Saladier" }],
+      steps: [
+        { text: "Enfourner le gratin.", utensils: ["Four"], utensilParams: { Four: { temperature: 210, mode: "tournante" } } },
+        { text: "Mélanger dans le saladier.", utensils: ["Saladier"], utensilParams: { Four: { temperature: 180 } } },
+      ],
+    };
+    const r = assignIdsAndLink(inter);
+    // u0 = Four, u1 = Saladier
+    expect(r.steps[0].utensilParams).toEqual({ u0: { temperature: 210, mode: "tournante" } });
+    // Le Four n'est pas lié à l'étape 2 : ses réglages y sont ignorés.
+    expect(r.steps[1].utensilParams).toBeUndefined();
+  });
+  it("nom d'appareil rapproché malgré accents/casse ; aucun réglage → pas de champ", () => {
+    const inter = {
+      ingredients: [], utensils: [{ name: "Air fryer" }],
+      steps: [
+        { text: "Cuire.", utensils: ["Air fryer"], utensilParams: { "air fryer": { temperature: 200 } } },
+        { text: "Servir.", utensils: ["Air fryer"], utensilParams: { "Air fryer": {} } },
+      ],
+    };
+    const r = assignIdsAndLink(inter);
+    expect(r.steps[0].utensilParams).toEqual({ u0: { temperature: 200 } });
+    expect(r.steps[1].utensilParams).toBeUndefined();
+  });
+});
+
+describe("parseApplianceInfos", () => {
+  it("valide et borne les descripteurs d'appareils, écarte le vide", () => {
+    const out = parseApplianceInfos([
+      { name: "Four", fields: [{ key: "temperature", label: "Température", kind: "number", unit: "°C" }, { key: "", label: "x", kind: "number" }] },
+      { name: "", fields: [{ key: "vitesse", label: "V", kind: "enum", options: ["max"] }] }, // sans nom → écarté
+      { name: "Blender", fields: [] }, // sans réglage → écarté
+    ]);
+    expect(out).toEqual([{ name: "Four", fields: [{ key: "temperature", label: "Température", kind: "number", unit: "°C" }] }]);
+  });
+  it("retourne un tableau vide pour une valeur non-tableau", () => {
+    expect(parseApplianceInfos(undefined)).toEqual([]);
+    expect(parseApplianceInfos("x")).toEqual([]);
+    expect(parseApplianceInfos({})).toEqual([]);
+  });
+});
+
+describe("formatAppliancesForPrompt", () => {
+  it("rend une ligne par appareil, avec type/valeurs des réglages", () => {
+    const out = formatAppliancesForPrompt([
+      { name: "Four", fields: [
+        { key: "prechauffage", label: "Préchauffage", kind: "bool" },
+        { key: "temperature", label: "Température", kind: "number", unit: "°C" },
+        { key: "mode", label: "Mode", kind: "enum", options: ["tournante", "statique"] },
+      ] },
+    ]);
+    expect(out).toContain("- Four : prechauffage (true/false) ; temperature (nombre, °C) ; mode (tournante|statique)");
+  });
+  it("(aucun) quand la base ne contient aucun appareil", () => {
+    expect(formatAppliancesForPrompt([])).toBe("(aucun)");
   });
 });
 

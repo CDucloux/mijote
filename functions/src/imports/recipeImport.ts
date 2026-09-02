@@ -24,7 +24,8 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
-  type Intermediate,
+  parseApplianceInfos, formatAppliancesForPrompt,
+  type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
 
@@ -132,7 +133,7 @@ type LlmDraft = Record<string, unknown> & {
   cuisine?: string; category?: string;
   ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown }[];
   utensils?: { name?: string }[];
-  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; group?: unknown }[];
+  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; utensilParams?: unknown; group?: unknown }[];
   /** Numéro (1-based) de l'image qui est la photo du plat, 0/absent si aucune. */
   coverPhoto?: unknown;
   /** Préparation de base réutilisable (caramel, pâte, fond…) plutôt qu'un plat fini. */
@@ -152,6 +153,32 @@ type LlmDraft = Record<string, unknown> & {
  * @param sourceUrl - L'URL source (vide pour un import photo).
  * @returns Le brouillon intermédiaire prêt pour {@link assignIdsAndLink}.
  */
+/**
+ * Borne structurellement les réglages d'appareils bruts du LLM (indexés par nom
+ * d'appareil → réglages scalaires). Écarte tout ce qui n'est pas un scalaire
+ * (nombre/booléen/chaîne courte), plafonne les tailles, et retourne `undefined`
+ * si rien d'exploitable. La VALIDATION métier (bornes, choix, appareil réel) est
+ * faite plus tard côté client contre le schéma de l'appareil.
+ *
+ * @param raw - La valeur `utensilParams` brute d'une étape (forme inconnue).
+ * @returns Les réglages bornés (par nom), ou `undefined`.
+ */
+function sanitizeUtensilParams(raw: unknown): Record<string, Record<string, unknown>> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const out: Record<string, Record<string, unknown>> = {};
+  for (const [name, vals] of Object.entries(raw as Record<string, unknown>).slice(0, 12)) {
+    if (!vals || typeof vals !== "object" || Array.isArray(vals)) continue;
+    const clean: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(vals as Record<string, unknown>).slice(0, 12)) {
+      const key = String(k).slice(0, 40);
+      if (typeof v === "number" || typeof v === "boolean") clean[key] = v;
+      else if (typeof v === "string" && v.trim()) clean[key] = v.slice(0, 40);
+    }
+    if (Object.keys(clean).length) out[String(name).slice(0, 60)] = clean;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
   const num = (s: unknown): number | undefined => { const n = Number(String(s ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? n : undefined; };
   const inter: Intermediate = {
@@ -176,6 +203,7 @@ function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
         ingredients: Array.isArray(s.ingredients) ? s.ingredients.map((x) => String(x)) : [],
         utensils: Array.isArray(s.utensils) ? s.utensils.map((x) => String(x)) : [],
       };
+      const params = sanitizeUtensilParams(s.utensilParams); if (params) step.utensilParams = params;
       const group = (typeof s.group === "string" ? s.group : "").trim(); if (group) step.group = group.slice(0, 80);
       return step;
     }).filter((s) => s.text),
@@ -218,11 +246,12 @@ const MAX_IMG_B64 = 6_000_000;
  * @throws HttpsError `failed-precondition` si la clé IA manque, `internal` si la
  *   réponse du modèle est vide ou illisible.
  */
-async function extractFromImages(images: InputImage[], knownUtensils: string[]): Promise<{ inter: Intermediate; coverIndex: number }> {
+async function extractFromImages(images: InputImage[], knownUtensils: string[], applianceInfos: ApplianceInfo[]): Promise<{ inter: Intermediate; coverIndex: number }> {
   const key = ANTHROPIC_API_KEY.value();
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
   const system = PROMPT_TEMPLATE
     .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)")
+    .replace("{{APPLIANCES}}", formatAppliancesForPrompt(applianceInfos))
     .replace("depuis le texte brut d'une page web", "depuis une ou plusieurs photos (pages d'un livre ou magazine de cuisine)")
     + "\n\n" + IMG_PROMPT_ADDENDUM;
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
@@ -270,10 +299,12 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[]):
  * @throws HttpsError `failed-precondition` si la clé IA manque, `internal` si la
  *   réponse est vide ou illisible.
  */
-async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: string[]): Promise<Intermediate> {
+async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: string[], applianceInfos: ApplianceInfo[]): Promise<Intermediate> {
   const key = ANTHROPIC_API_KEY.value();
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "Cette page n'a pas de données structurées et l'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
-  const system = PROMPT_TEMPLATE.replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)");
+  const system = PROMPT_TEMPLATE
+    .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)")
+    .replace("{{APPLIANCES}}", formatAppliancesForPrompt(applianceInfos));
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
   const body = text.slice(0, 24_000); // borne le coût (entrée)
@@ -312,12 +343,13 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
  * @throws HttpsError `failed-precondition` si la clé IA manque, `internal` si la
  *   réponse est vide ou illisible.
  */
-async function extractFromText(text: string, knownUtensils: string[]): Promise<Intermediate> {
+async function extractFromText(text: string, knownUtensils: string[], applianceInfos: ApplianceInfo[]): Promise<Intermediate> {
   const key = ANTHROPIC_API_KEY.value();
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
   const system = PROMPT_TEMPLATE
     .replace("depuis le texte brut d'une page web", "depuis le texte brut d'une recette collée par l'utilisateur")
-    .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)");
+    .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)")
+    .replace("{{APPLIANCES}}", formatAppliancesForPrompt(applianceInfos));
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: key });
   const body = text.slice(0, 24_000); // borne le coût (entrée)
@@ -371,6 +403,17 @@ function knownUtensilsFrom(request: CallableRequest): string[] {
 }
 
 /**
+ * Lit et borne les descripteurs d'appareils fournis par le client (nom + réglages).
+ * Ils indiquent au modèle quels réglages d'étape déduire (`utensilParams`).
+ *
+ * @param request - La requête onCall.
+ * @returns Les descripteurs d'appareils exploitables (validés).
+ */
+function applianceInfosFrom(request: CallableRequest): ApplianceInfo[] {
+  return parseApplianceInfos((request.data as { appliances?: unknown })?.appliances);
+}
+
+/**
  * Importe une recette depuis une URL.
  *
  * Flux : garde d'accès + quota → récupération du HTML → texte → extraction Haiku →
@@ -392,13 +435,14 @@ export const importRecipeFromUrl = onCall(
     const url = String((request.data as { url?: unknown })?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
     const knownUtensils = knownUtensilsFrom(request);
+    const applianceInfos = applianceInfosFrom(request);
 
     try {
       const html = await fetchHtml(url);
       const ogImage = extractOgImage(html); // image principale du plat
       const text = htmlToText(html);
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
-      const inter = await extractWithLlm(text, url, knownUtensils);
+      const inter = await extractWithLlm(text, url, knownUtensils, applianceInfos);
       inter.image = ogImage;
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       // Anti-hallucination : on ne garde que des URLs présentes dans la page, et
@@ -442,9 +486,10 @@ export const importRecipeFromImages = onCall(
       if (im.data.length > MAX_IMG_B64) throw new HttpsError("invalid-argument", "Image trop volumineuse (max ~4,5 Mo).");
     }
     const knownUtensils = knownUtensilsFrom(request);
+    const applianceInfos = applianceInfosFrom(request);
 
     try {
-      const { inter, coverIndex } = await extractFromImages(images, knownUtensils);
+      const { inter, coverIndex } = await extractFromImages(images, knownUtensils, applianceInfos);
       inter.image = "";
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
@@ -478,9 +523,10 @@ export const importRecipeFromText = onCall(
     const text = String((request.data as { text?: unknown })?.text || "").trim();
     if (text.length < MIN_TEXT_LEN) throw new HttpsError("invalid-argument", "Colle un texte de recette un peu plus complet (ingrédients et étapes).");
     const knownUtensils = knownUtensilsFrom(request);
+    const applianceInfos = applianceInfosFrom(request);
 
     try {
-      const inter = await extractFromText(text, knownUtensils);
+      const inter = await extractFromText(text, knownUtensils, applianceInfos);
       inter.image = "";
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un texte collé

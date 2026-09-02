@@ -130,6 +130,79 @@ export function isApplianceKey(x: unknown): x is ApplianceKey {
   return typeof x === "string" && x in APPLIANCE_SCHEMAS;
 }
 
+/** Réglage d'appareil décrit pour l'import intelligent (schéma aplati, sérialisable). */
+export interface ApplianceImportField {
+  key: string;
+  label: string;
+  kind: ParamKind;
+  unit?: string;
+  /** Pour un `enum` : les valeurs acceptées (les `value`, pas les libellés). */
+  options?: string[];
+}
+
+/** Descripteur d'un appareil transmis au serveur d'import (nom affiché + réglages). */
+export interface ApplianceImportInfo {
+  name: string;
+  fields: ApplianceImportField[];
+}
+
+/**
+ * Construit les descripteurs d'appareils à transmettre à l'import intelligent
+ * depuis la base d'ustensiles : pour chaque ustensile porteur d'un `appliance`
+ * connu, son nom et son schéma de réglages aplati. Dédupliqué par nom (le LLM
+ * référence l'appareil par son nom). Sert à indiquer au modèle quels réglages
+ * déduire, sans dupliquer la taxonomie côté serveur.
+ *
+ * @param items - Lignes de la base d'ustensiles (nom + `appliance` éventuel).
+ * @returns Un descripteur par appareil distinct présent dans la base.
+ */
+export function applianceImportInfos(
+  items: { name?: string; appliance?: unknown }[] | null | undefined,
+): ApplianceImportInfo[] {
+  const out: ApplianceImportInfo[] = [];
+  const seen = new Set<string>();
+  for (const it of items || []) {
+    const key = it?.appliance;
+    if (!isApplianceKey(key)) continue;
+    const name = (it?.name || "").toString().trim();
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push({
+      name,
+      fields: APPLIANCE_SCHEMAS[key].map((f) => {
+        const field: ApplianceImportField = { key: f.key, label: f.label, kind: f.kind };
+        if (f.unit) field.unit = f.unit;
+        if (f.options) field.options = f.options.map((o) => o.value);
+        return field;
+      }),
+    });
+  }
+  return out;
+}
+
+/**
+ * Nettoie les réglages d'appareils d'une étape importée : ne conserve que les
+ * entrées dont l'ustensile est un appareil connu, avec des valeurs valides au regard
+ * de son schéma (bornes, choix, type). Une entrée qui retombe sur un objet vide
+ * (ustensile non-appareil, valeurs toutes invalides) est écartée.
+ *
+ * @param params - Réglages bruts issus de l'import (indexés par id d'ustensile).
+ * @param applianceOf - Résout la clé d'appareil d'un id d'ustensile de recette.
+ * @returns Les réglages validés, indexés par id d'ustensile (entrées vides retirées).
+ */
+export function sanitizeStepUtensilParams(
+  params: Record<string, Record<string, unknown>> | null | undefined,
+  applianceOf: (utensilId: string) => unknown,
+): Record<string, Record<string, unknown>> {
+  const src = params && typeof params === "object" ? params : {};
+  const out: Record<string, Record<string, unknown>> = {};
+  for (const [utId, vals] of Object.entries(src)) {
+    const { values } = validateParamValues(applianceOf(utId), vals as Record<string, unknown>);
+    if (Object.keys(values).length) out[utId] = values;
+  }
+  return out;
+}
+
 /**
  * Schéma de réglages d'un appareil. Retourne un tableau vide (jamais `undefined`)
  * pour un ustensile sans appareil ou inconnu : le côté appelant peut toujours
