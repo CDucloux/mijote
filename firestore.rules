@@ -84,12 +84,12 @@ service cloud.firestore {
 
       allow read: if isHMember(resource) || isHInvited(resource);
 
-      // Création : le créateur s'inscrit owner + unique membre, sans invitation préchargée.
-      allow create: if hasVerifiedEmail()
-                    && request.resource.data.ownerUid == request.auth.uid
-                    && request.resource.data.memberUids == [request.auth.uid]
-                    && email() in request.resource.data.memberEmails
-                    && request.resource.data.invitedEmails.size() == 0;
+      // Création : RÉSERVÉE AU SERVEUR. Le foyer partagé est une fonctionnalité
+      // Cardamome+ ; la vérification de l'abonnement ne pouvant se faire en règles
+      // (pas de requête sur customers/{uid}/subscriptions), le doc est créé par la
+      // Cloud Function `createHousehold` (Admin SDK, gardée par assertPlusOrAdmin).
+      // Aucun client ne crée households/{hid} directement.
+      allow create: if false;
 
       // Mise à jour : un membre ou un invité (qui accepte) édite, MAIS owner immuable
       // et plafond de 4 places maintenu.

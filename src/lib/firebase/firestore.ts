@@ -17,11 +17,12 @@ import {
   type DocumentData, type DocumentReference, type CollectionReference,
   type Query, type DocumentSnapshot, type Unsubscribe,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase/firebase.js";
+import { httpsCallable, getFunctions } from "firebase/functions";
+import { db, firebaseApp } from "@/lib/firebase/firebase.js";
 import { reportError } from "@/lib/observability/observability.js";
 import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
 import {
-  newHouseholdDoc, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved,
+  withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved,
   peopleCount, MAX_HOUSEHOLD, type Household, type HouseholdUser,
 } from "@/lib/household/household.js";
 import { householdWorkspace, type Workspace } from "@/lib/household/workspace.js";
@@ -302,18 +303,23 @@ export async function writeSharedData(ws: WorkspaceRef, data: SharedData, recipe
  * Crée un foyer, y SÈME les données du créateur, puis pointe son espace dessus
  * (pointeur posé EN DERNIER pour éviter toute course avec le coordinateur de sync).
  *
- * @param user - Le créateur (devient propriétaire + 1er membre).
+ * Le document `households/{hid}` lui-même est écrit CÔTÉ SERVEUR par la Cloud
+ * Function `createHousehold` (gardée par l'abonnement Cardamome+ : le client ne peut
+ * plus le créer, cf. firestore.rules). Le semis des données et le pointeur restent
+ * client (écritures autorisées au membre une fois le foyer créé).
+ *
+ * @param user - Le créateur (devient propriétaire + 1er membre côté serveur).
  * @param name - Le nom du foyer.
  * @param sharedData - Les données à semer dans le foyer.
  * @returns L'identifiant du foyer créé.
  */
 export async function createHousehold(user: HouseholdUser, name: string, sharedData?: SharedData): Promise<string> {
-  const ref = doc(householdsCol());
-  await setDoc(ref, newHouseholdDoc({ id: ref.id, owner: user, name }));
-  const ws = householdWorkspace(ref.id);
+  const call = httpsCallable<{ name: string }, { id: string }>(getFunctions(firebaseApp, "europe-west1"), "createHousehold");
+  const hid = (await call({ name })).data.id;
+  const ws = householdWorkspace(hid);
   await writeSharedData(ws, sharedData || {});
-  await setHouseholdPointer(user.uid, ref.id, true); // déjà migré (semé)
-  return ref.id;
+  await setHouseholdPointer(user.uid, hid, true); // déjà migré (semé)
+  return hid;
 }
 
 /**

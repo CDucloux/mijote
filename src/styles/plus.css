@@ -1,0 +1,359 @@
+/* ─── Page « Formule » (Cardamome+) ──────────────────────────────────────────
+   Layout de la page d'abonnement. Mobile-first : colonne unique (proche de
+   l'existant), CTA collé en bas pour le pouce. Le split desktop (rail de vente
+   à gauche, comparatif à droite) est une amélioration `min-width:900px`, ce qui
+   isole tout risque de régression sur mobile. Les couleurs restent des tokens
+   (`var(--…)`), jamais les hex de la maquette. */
+
+.plus-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* En-tête inchangé, juste hissé en flex-item non rétractable. */
+.plus-appbar {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 18px 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.plus-appbar h1 {
+  font-family: var(--ff-display);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* Zone défilante : sur mobile un simple scroll ; sur desktop une scène centrée. */
+.plus-stage {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 20px 24px;
+}
+
+/* Mobile-first : colonne unique aérée, largeur de lecture bornée. */
+.plus-layout {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── Rail de vente (pitch + tarif + CTA) ──────────────────────────────────── */
+.plus-pitch {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+}
+.plus-badge-wrap {
+  display: inline-flex;
+  margin-bottom: 12px;
+}
+.plus-title {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.plus-lede {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text2);
+  margin: 0;
+  max-width: 42ch;
+}
+.plus-lede strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Bloc tarif, sans carte : le blanc et la typo suffisent à le poser. */
+.plus-pricing {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Bascule mensuel / annuel : curseur glissant. Seul le `.plus-thumb` porte le
+   fond + l'ombre ; les boutons restent transparents. */
+.plus-toggle {
+  position: relative;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  background: var(--surface2);
+  border-radius: 999px;
+}
+.plus-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  transition: transform 0.3s cubic-bezier(0.4, 0.08, 0.16, 1),
+    width 0.3s cubic-bezier(0.4, 0.08, 0.16, 1);
+}
+.plus-toggle-btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--ff-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text3);
+  background: transparent;
+  transition: color 0.22s ease;
+}
+.plus-toggle-btn.is-on {
+  color: var(--text);
+}
+.plus-save {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--ok);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .plus-thumb {
+    transition: none;
+  }
+}
+
+.plus-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.plus-price-amount {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 34px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.plus-price-per {
+  font-size: 14px;
+  color: var(--text3);
+  font-weight: 500;
+}
+.plus-price-note {
+  font-size: 12px;
+  color: var(--ok);
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.plus-reassure {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  color: var(--text3);
+  line-height: 1.5;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* ─── CTA : deux emplacements, un seul masqué selon le breakpoint ───────────── */
+.plus-cta-rail {
+  display: none; /* mobile : le rail est caché, la barre collée prend le relais */
+  width: 100%;
+  margin-top: 18px;
+}
+.plus-cta-bar {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ─── Comparatif ────────────────────────────────────────────────────────────
+   Mobile : colonnes serrées, teinte de ligne sur les fonctionnalités premium.
+   Desktop : colonnes élargies + bande d'accent qui remplace la teinte. */
+.plus-compare {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  --col-free: 92px;
+  --col-plus: 92px;
+}
+.plus-highlight {
+  display: none;
+}
+.plus-thead,
+.plus-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--col-free) var(--col-plus);
+  align-items: center;
+  padding: 12px 14px;
+}
+.plus-thead {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.plus-row + .plus-row {
+  border-top: 1px solid var(--border);
+}
+/* Teinte de ligne premium (mobile uniquement) : la bande la remplace en desktop. */
+.plus-row--diff {
+  background: rgba(var(--accent-rgb), 0.04);
+}
+
+.plus-col {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  line-height: 1.2;
+}
+.plus-col--center {
+  text-align: center;
+}
+.plus-col--plus {
+  color: var(--accent2);
+}
+.plus-col-name {
+  display: block;
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+.plus-col-tag {
+  display: none; /* étiquette « Recommandé » réservée au desktop (place) */
+}
+
+.plus-feat {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.35;
+}
+.plus-cell {
+  display: grid;
+  place-items: center;
+}
+
+@media (min-width: 900px) {
+  .plus-stage {
+    display: flex;
+    flex-direction: column;
+    justify-content: safe center;
+    padding: clamp(28px, 5vh, 64px) clamp(20px, 4vw, 48px);
+  }
+
+  /* Split asymétrique : rail de vente resserré à gauche, comparatif au large. */
+  .plus-layout--split {
+    max-width: 1160px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 0.86fr) minmax(0, 1fr);
+    gap: clamp(40px, 5vw, 88px);
+    align-items: center;
+  }
+
+  .plus-layout--split .plus-pitch {
+    max-width: 460px;
+    text-align: left;
+    align-items: flex-start;
+  }
+  .plus-layout--split .plus-title {
+    font-size: clamp(38px, 4vw, 54px);
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+  }
+  .plus-layout--split .plus-lede {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .plus-layout--split .plus-pricing {
+    align-items: flex-start;
+  }
+  .plus-layout--split .plus-cta-rail {
+    display: block;
+  }
+  /* Barre collée masquée en desktop dès qu'un rail la double (état de vente).
+     En état abonné, pas de rail : la barre reste visible. */
+  .plus-cta-bar--doubled {
+    display: none;
+  }
+
+  /* Comparatif : bande d'accent ancrée à droite = alignée pile sur la colonne
+     Cardamome+. Le padding passe sur les cellules pour que la bande file sur
+     toute la hauteur, colonne comprise. */
+  .plus-layout--split .plus-compare {
+    position: relative;
+    border-radius: 20px;
+    --col-free: 120px;
+    --col-plus: 172px;
+  }
+  .plus-layout--split .plus-highlight {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: var(--col-plus);
+    background: rgba(var(--accent-rgb), 0.07);
+    border-inline: 1.5px solid rgba(var(--accent-rgb), 0.28);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .plus-layout--split .plus-thead,
+  .plus-layout--split .plus-row {
+    padding: 0;
+  }
+  .plus-layout--split .plus-thead > *,
+  .plus-layout--split .plus-row > * {
+    position: relative;
+    z-index: 1;
+    padding: 15px 20px;
+  }
+  .plus-layout--split .plus-row--diff {
+    background: transparent; /* la bande remplace la teinte de ligne */
+  }
+  .plus-layout--split .plus-col-name {
+    font-size: 15px;
+  }
+  .plus-layout--split .plus-col-tag {
+    display: inline-block;
+    margin-top: 3px;
+    font-family: var(--ff-body);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent2);
+    opacity: 0.8;
+  }
+  .plus-layout--split .plus-feat {
+    font-size: 14.5px;
+  }
+}
+
+/* Focus clavier net sur les cibles interactives de la page. */
+.plus-toggle-btn:focus-visible,
+.plus-cta-rail .btn:focus-visible {
+  outline: 2px solid var(--accent2);
+  outline-offset: 2px;
+}

@@ -1,5 +1,4 @@
 import { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { Img } from "../components/Img.jsx";
@@ -98,10 +97,11 @@ function MemberStack({ emails, photoFor, nameFor }) {
 function FoyerSection() {
   const { user, directory = [], loadDirectory, isPlus } = useAppShell();
   const { household, invites, loading } = useHousehold();
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  // Foyer partagé = fonctionnalité Cardamome+ : en gratuit, la carte renvoie vers l'offre.
-  const openFoyer = () => isPlus ? setOpen(v => !v) : navigate("/plus");
+  // La carte ouvre toujours le panneau foyer, y compris en gratuit : l'utilisateur
+  // découvre d'abord la page de création, où le soft-lock Cardamome+ prend le relais
+  // (cf. HouseholdPanel), plutôt que d'être renvoyé sèchement vers l'offre.
+  const openFoyer = () => setOpen(v => !v);
   // Annuaire chargé à la demande, seulement s'il y a un foyer (avatars des membres).
   useEffect(() => { if (household || invites.length) loadDirectory?.(); }, [household, invites.length, loadDirectory]);
   // Pendant le chargement : on réserve l'espace avec un skeleton de même hauteur

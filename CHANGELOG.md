@@ -1,5 +1,16 @@
 # Changelog – Cardamome
 
+## v4.19.0 – Cardamome · Formule grand écran
+
+### Abonnement
+- **La page Formule respire enfin en grand écran** : sur ordinateur, l'offre s'affiche désormais en deux temps, l'argumentaire et le prix d'un côté, le comparatif détaillé de l'autre, la colonne Cardamome+ mise en avant par une bande d'accent, au lieu d'une étroite colonne mobile perdue au milieu du vide. Sur téléphone, rien ne change : la même colonne unique avec le bouton d'action à portée de pouce.
+- **On ouvre sur le tarif qui accroche** : la page présente d'emblée l'offre mensuelle à 4,99 €, l'option annuelle et son économie restant à un clic.
+- **La bascule mensuel / annuel glisse** : le curseur suit d'un mouvement doux l'onglet choisi au lieu de sauter d'un bloc à l'autre.
+
+### Foyer partagé
+- **On découvre avant de s'abonner** : en gratuit, la carte « Mon foyer » de l'Accueil ouvre désormais le panneau de création comme pour un abonné ; l'offre Cardamome+ ne se présente qu'au moment de valider, plutôt que de renvoyer d'emblée vers l'abonnement.
+- **Création mieux protégée** : la création d'un foyer partagé est maintenant verrouillée côté serveur, comme les imports intelligents, et non plus seulement dans l'interface.
+
 ## v4.18.0 – Cardamome · Planning agile
 
 ### Planning repas
