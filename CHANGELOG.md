@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.21.1 – Cardamome · Compte au propre
+
+### Panneau compte (mobile)
+- **Ton e-mail comme identité** : sous l'avatar, on affiche directement ton adresse e-mail (en gris discret) au lieu du « Bonjour … », et on ne la répète plus en haut du panneau.
+- **Retour tactile accordé à l'action** : l'onde au toucher prend la couleur de la ligne, violet sur la console admin et rouge sur la déconnexion, au lieu d'un gris qui ne voulait rien dire.
+
 ## v4.21.0 – Cardamome · Défilement qui rebondit partout
 
 ### Confort de navigation
