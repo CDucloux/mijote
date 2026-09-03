@@ -23,7 +23,7 @@ import { defineSecret, defineString } from "firebase-functions/params";
 import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
-  assignIdsAndLink, collectUtensils, filterUtensilsToKnown, inferImplicitUtensils, CUISINE_LABELS,
+  assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
   parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut,
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
@@ -445,7 +445,6 @@ export const importRecipeFromUrl = onCall(
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
       const inter = await extractWithLlm(text, url, knownUtensils, applianceInfos);
       inter.image = ogImage;
-      inferImplicitUtensils(inter, knownUtensils); // ustensiles implicites (râper → râpe…), en amont du filtre
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       // Anti-hallucination : on ne garde que des URLs présentes dans la page, et
       // jamais l'image principale du plat.
@@ -493,7 +492,6 @@ export const importRecipeFromImages = onCall(
     try {
       const { inter, coverIndex } = await extractFromImages(images, knownUtensils, applianceInfos);
       inter.image = "";
-      inferImplicitUtensils(inter, knownUtensils); // ustensiles implicites (râper → râpe…), en amont du filtre
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
       const recipe = assignIdsAndLink(inter);
@@ -531,7 +529,6 @@ export const importRecipeFromText = onCall(
     try {
       const inter = await extractFromText(text, knownUtensils, applianceInfos);
       inter.image = "";
-      inferImplicitUtensils(inter, knownUtensils); // ustensiles implicites (râper → râpe…), en amont du filtre
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un texte collé
       const recipe = assignIdsAndLink(inter);

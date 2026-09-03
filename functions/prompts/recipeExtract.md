@@ -59,8 +59,8 @@ INGRÉDIENTS
   La découpe va dans `cut`, **jamais dans `name`** (cf. règle `name`) : « 2 oignons émincés » → name `oignon`, amount `2`, `cut` `{ "forme": "emince" }`.
 
 USTENSILES
-- Uniquement ceux réellement nécessaires ET présents dans cette liste (orthographe exacte) ; sinon n'en mets pas. Aucun → `[]`.
-- **Déduis aussi l'ustensile IMPLICITE** qu'un geste exige sans le nommer, et relie-le à l'étape : « râpé/zesté » → râpe ; « fouetté/monté » → fouet ; « mélanger/pétrir/mariner » → saladier ou bol ; « mixer/mixer fin » → mixeur ; « étaler la pâte » → rouleau ; « filtrer/passer » → passoire ou chinois. Reste TOUJOURS dans la limite de la liste ci-dessous.
+- Inscris tout ustensile que la recette **utilise vraiment**, qu'il soit **nommé** (« au fouet », « dans une poêle ») OU **implicite** : un geste peut exiger un ustensile sans le nommer. Déduis ces implicites et relie-les à l'étape concernée : « râpé/zesté » → râpe · « fouetté/monté en neige » → fouet · « mélanger/pétrir/mariner » → saladier ou bol · « mixer » → mixeur · « étaler la pâte » → rouleau · « filtrer/passer » → passoire ou chinois.
+- **Une seule limite, absolue** : n'inscris QUE des ustensiles présents dans la liste `{{UTENSILS}}` (orthographe exacte), nommés comme implicites. Un ustensile pertinent mais absent de la liste s'omet (on n'invente rien). Aucun ustensile → `[]`.
   Liste : {{UTENSILS}}
 
 APPAREILS (réglages d'étape)
