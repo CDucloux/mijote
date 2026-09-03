@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.20.0 – Cardamome · Import plus fin
+
+### Import intelligent
+- **Les ustensiles sous-entendus sont devinés** : quand une recette dit « ail râpé » ou « mélanger » sans nommer l'outil, l'import rattache désormais l'ustensile qui va avec (râpe, saladier, fouet, mixeur, rouleau, passoire…), borné à ta base d'ustensiles, sans rien inventer.
+- **Les réglages d'appareils se remplissent seuls** : four, air fryer, blender et consorts récupèrent leurs réglages (température, mode, vitesse…) déduits du texte, posés directement sur les bonnes étapes.
+- **Fini les « 30 ml de coriandre »** : une recette en cuillères anglaises (tsp / tbsp) ne ressort plus jamais convertie en millilitres ; épices et herbes séchées passent en grammes, liquides en cuillères, avec le bon nombre.
+- **Le sélecteur Lien / Photo / Texte respire** : sur téléphone, il ne colle plus à l'en-tête « Importer » et retrouve un vrai espace sous le titre.
+- **Les sources recommandées répondent au doigt** : chaque créateur de la liste diffuse désormais l'onde tactile au toucher, comme le reste des surfaces de l'application.
+- **Le défilement rebondit** : les trois écrans d'import (lien, photo, texte) gagnent l'overscroll élastique en bout de course, pour un défilement au feel natif.
+
 ## v4.19.0 – Cardamome · Formule grand écran
 
 ### Abonnement
