@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, inferImplicitUtensils,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -212,6 +213,64 @@ describe("assignIdsAndLink", () => {
     expect(plat.isComponent).toBeUndefined();
     expect(plat.category).toBe("sauce");
   });
+  it("re-clé les réglages d'appareils par nom → id d'ustensile, borné aux ustensiles liés à l'étape", () => {
+    const inter = {
+      ingredients: [], utensils: [{ name: "Four" }, { name: "Saladier" }],
+      steps: [
+        { text: "Enfourner le gratin.", utensils: ["Four"], utensilParams: { Four: { temperature: 210, mode: "tournante" } } },
+        { text: "Mélanger dans le saladier.", utensils: ["Saladier"], utensilParams: { Four: { temperature: 180 } } },
+      ],
+    };
+    const r = assignIdsAndLink(inter);
+    // u0 = Four, u1 = Saladier
+    expect(r.steps[0].utensilParams).toEqual({ u0: { temperature: 210, mode: "tournante" } });
+    // Le Four n'est pas lié à l'étape 2 : ses réglages y sont ignorés.
+    expect(r.steps[1].utensilParams).toBeUndefined();
+  });
+  it("nom d'appareil rapproché malgré accents/casse ; aucun réglage → pas de champ", () => {
+    const inter = {
+      ingredients: [], utensils: [{ name: "Air fryer" }],
+      steps: [
+        { text: "Cuire.", utensils: ["Air fryer"], utensilParams: { "air fryer": { temperature: 200 } } },
+        { text: "Servir.", utensils: ["Air fryer"], utensilParams: { "Air fryer": {} } },
+      ],
+    };
+    const r = assignIdsAndLink(inter);
+    expect(r.steps[0].utensilParams).toEqual({ u0: { temperature: 200 } });
+    expect(r.steps[1].utensilParams).toBeUndefined();
+  });
+});
+
+describe("parseApplianceInfos", () => {
+  it("valide et borne les descripteurs d'appareils, écarte le vide", () => {
+    const out = parseApplianceInfos([
+      { name: "Four", fields: [{ key: "temperature", label: "Température", kind: "number", unit: "°C" }, { key: "", label: "x", kind: "number" }] },
+      { name: "", fields: [{ key: "vitesse", label: "V", kind: "enum", options: ["max"] }] }, // sans nom → écarté
+      { name: "Blender", fields: [] }, // sans réglage → écarté
+    ]);
+    expect(out).toEqual([{ name: "Four", fields: [{ key: "temperature", label: "Température", kind: "number", unit: "°C" }] }]);
+  });
+  it("retourne un tableau vide pour une valeur non-tableau", () => {
+    expect(parseApplianceInfos(undefined)).toEqual([]);
+    expect(parseApplianceInfos("x")).toEqual([]);
+    expect(parseApplianceInfos({})).toEqual([]);
+  });
+});
+
+describe("formatAppliancesForPrompt", () => {
+  it("rend une ligne par appareil, avec type/valeurs des réglages", () => {
+    const out = formatAppliancesForPrompt([
+      { name: "Four", fields: [
+        { key: "prechauffage", label: "Préchauffage", kind: "bool" },
+        { key: "temperature", label: "Température", kind: "number", unit: "°C" },
+        { key: "mode", label: "Mode", kind: "enum", options: ["tournante", "statique"] },
+      ] },
+    ]);
+    expect(out).toContain("- Four : prechauffage (true/false) ; temperature (nombre, °C) ; mode (tournante|statique)");
+  });
+  it("(aucun) quand la base ne contient aucun appareil", () => {
+    expect(formatAppliancesForPrompt([])).toBe("(aucun)");
+  });
 });
 
 describe("filterUtensilsToKnown", () => {
@@ -282,5 +341,83 @@ describe("htmlToText", () => {
     expect(t).toContain("⟦IMG:https://x/step2.jpg⟧"); // préfère data-src au placeholder
     expect(t).not.toContain("logo.svg");
     expect(imageUrlsInText(t).has("https://x/step1.jpg")).toBe(true);
+  });
+});
+
+describe("canonicalizeUnit", () => {
+  it("rabat les cuillères impériales sur l'unité fermée (1:1)", () => {
+    expect(canonicalizeUnit("tsp")).toBe("cuillère à café");
+    expect(canonicalizeUnit("teaspoon")).toBe("cuillère à café");
+    expect(canonicalizeUnit("tbsp")).toBe("cuillère à soupe");
+    expect(canonicalizeUnit("tablespoons")).toBe("cuillère à soupe");
+  });
+  it("rabat les abréviations françaises (accents, points, casse)", () => {
+    expect(canonicalizeUnit("c. à c.")).toBe("cuillère à café");
+    expect(canonicalizeUnit("càc")).toBe("cuillère à café");
+    expect(canonicalizeUnit("C. À S.")).toBe("cuillère à soupe");
+    expect(canonicalizeUnit("cas")).toBe("cuillère à soupe");
+  });
+  it("laisse passer les unités déjà valides et l'unité vide", () => {
+    expect(canonicalizeUnit("g")).toBe("g");
+    expect(canonicalizeUnit("ml")).toBe("ml"); // on ne devine pas la cuillère depuis un volume
+    expect(canonicalizeUnit("cuillère à soupe")).toBe("cuillère à soupe");
+    expect(canonicalizeUnit("")).toBe("");
+    expect(canonicalizeUnit(undefined)).toBe("");
+  });
+  it("est appliqué à l'assemblage : un tsp du LLM ressort en cuillère à café", () => {
+    const r = assignIdsAndLink({ ingredients: [{ name: "cumin", amount: 1, unit: "tsp" }], utensils: [], steps: [] });
+    expect(r.ingredients[0].unit).toBe("cuillère à café");
+  });
+});
+
+describe("inferImplicitUtensils", () => {
+  const known = ["Râpe", "Bol", "Saladier", "Fouet", "Mixeur", "Rouleau", "Passoire"];
+
+  it("déduit la râpe d'un geste « râper » et le lie via l'assemblage", () => {
+    const inter = { steps: [{ text: "Râper le parmesan finement.", utensils: [] }] };
+    inferImplicitUtensils(inter, known);
+    expect(inter.steps[0].utensils).toContain("Râpe");
+    // bout-en-bout, comme le pipeline : remontée en tête (collectUtensils) puis
+    // assemblage. L'ustensile figure dans la recette ET est lié à l'étape.
+    inter.utensils = filterUtensilsToKnown(collectUtensils(inter), known);
+    const r = assignIdsAndLink(inter);
+    const rape = r.utensils.find(u => u.name === "Râpe");
+    expect(rape).toBeTruthy();
+    expect(r.steps[0].utensils).toContain(rape.id);
+  });
+
+  it("déduit un contenant pour « mélanger » (saladier en tête, sinon bol)", () => {
+    const inter = { steps: [{ text: "Mélanger la farine et le sucre.", utensils: [] }] };
+    inferImplicitUtensils(inter, known);
+    expect(inter.steps[0].utensils).toContain("Saladier");
+    // sans saladier dans la base, on retombe sur le bol
+    const inter2 = { steps: [{ text: "Bien mélanger le tout.", utensils: [] }] };
+    inferImplicitUtensils(inter2, ["Bol", "Fouet"]);
+    expect(inter2.steps[0].utensils).toContain("Bol");
+  });
+
+  it("ne confond pas « rapidement » avec « râper »", () => {
+    const inter = { steps: [{ text: "Mélanger rapidement au fouet.", utensils: [] }] };
+    inferImplicitUtensils(inter, known);
+    expect(inter.steps[0].utensils).not.toContain("Râpe");
+    expect(inter.steps[0].utensils).toContain("Fouet");
+  });
+
+  it("ne pose que des ustensiles présents dans la base master", () => {
+    const inter = { steps: [{ text: "Râper le zeste du citron.", utensils: [] }] };
+    inferImplicitUtensils(inter, ["Casserole", "Fouet"]); // pas de râpe connue
+    expect(inter.steps[0].utensils || []).toEqual([]);
+  });
+
+  it("ne duplique pas un ustensile déjà cité sur l'étape", () => {
+    const inter = { steps: [{ text: "Fouetter les œufs en neige.", utensils: ["Fouet"] }] };
+    inferImplicitUtensils(inter, known);
+    expect(inter.steps[0].utensils.filter(u => u === "Fouet")).toHaveLength(1);
+  });
+
+  it("no-op si la base master est vide (pas de bornage possible)", () => {
+    const inter = { steps: [{ text: "Râper le fromage.", utensils: [] }] };
+    inferImplicitUtensils(inter, []);
+    expect(inter.steps[0].utensils).toEqual([]);
   });
 });

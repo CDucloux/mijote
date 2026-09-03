@@ -30,6 +30,11 @@ export interface DraftStep {
   image?: string;
   ingredients?: string[];
   utensils?: (string | DraftUtensil)[];
+  /**
+   * Réglages d'appareils déduits par le LLM, indexés par NOM d'appareil (le
+   * re-clé vers l'id d'ustensile de recette est fait par {@link assignIdsAndLink}).
+   */
+  utensilParams?: Record<string, Record<string, unknown>>;
   /** Section/sous-préparation (« La pâte »…). Vide/absent = pas de groupement. */
   group?: string;
 }
@@ -94,6 +99,12 @@ export interface RecipeStep {
   image: string;
   ingredients: string[];
   utensils: string[];
+  /**
+   * Réglages d'appareils posés sur l'étape, indexés par id d'ustensile de recette
+   * (mêmes ids que `utensils`). Présent seulement si au moins un réglage est déduit ;
+   * les valeurs restent brutes (validées côté client contre le schéma de l'appareil).
+   */
+  utensilParams?: Record<string, Record<string, unknown>>;
   group?: string;
 }
 
@@ -148,6 +159,33 @@ const PLURAL_UNITS: Record<string, string> = {
 // Unités implicites : « 1 pièce oignon » se dit « 1 oignon ». On ne les stocke pas
 // et on ne les écrit pas dans `_raw`.
 const SILENT_UNITS = new Set(["piece", "pieces", "unite", "unites"]);
+
+// Filet déterministe : malgré la consigne, le LLM laisse parfois filer une cuillère
+// sous une graphie non fermée (impériale `tsp`/`tbsp`, ou abréviation `c. à s.`,
+// `càc`…). On la rabat sur l'unité canonique. Équivalence 1:1 en volume (1 tsp =
+// 1 c. à café, 1 tbsp = 1 c. à soupe) : le NOMBRE reste juste, on ne touche qu'au
+// libellé. Clés déjà normalisées (sans accent/point, espaces compressés).
+const SPOON_ALIASES: Record<string, string> = {
+  tsp: "cuillère à café", tsps: "cuillère à café", teaspoon: "cuillère à café", teaspoons: "cuillère à café",
+  cac: "cuillère à café", "c a c": "cuillère à café", "c a cafe": "cuillère à café",
+  tbsp: "cuillère à soupe", tbsps: "cuillère à soupe", tbs: "cuillère à soupe", tablespoon: "cuillère à soupe", tablespoons: "cuillère à soupe",
+  cas: "cuillère à soupe", "c a s": "cuillère à soupe", "c a soupe": "cuillère à soupe",
+};
+
+/**
+ * Rabat une cuillère mal orthographiée (impériale ou abrégée) sur l'unité fermée
+ * correspondante. Purement défensif et 1:1 (le nombre reste valide) ; toute unité
+ * non reconnue est renvoyée telle quelle (juste trimée). Ne convertit PAS les
+ * millilitres : on ne peut pas retrouver la cuillère d'origine depuis un volume.
+ *
+ * @param unit - Unité brute renvoyée par le LLM.
+ */
+export function canonicalizeUnit(unit: string | undefined): string {
+  const raw = (unit || "").toString().trim();
+  if (!raw) return "";
+  const key = norm(raw).replace(/\./g, "").replace(/\s+/g, " ").trim();
+  return SPOON_ALIASES[key] || raw;
+}
 
 /** Unité accordée au pluriel selon la quantité (règle française : ≥ 2). */
 function pluralUnit(amount: number | string | undefined, unit: string | undefined): string {
@@ -261,6 +299,64 @@ export function mentions(text: string, name: string): boolean {
   return new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(text);
 }
 
+/** Réglage d'un appareil décrit pour le prompt (schéma aplati venu du client). */
+export interface ApplianceParamInfo {
+  key: string;
+  label: string;
+  kind: string;
+  unit?: string;
+  options?: string[];
+}
+
+/** Descripteur d'appareil connu (nom + réglages) transmis par le client d'import. */
+export interface ApplianceInfo {
+  name: string;
+  fields: ApplianceParamInfo[];
+}
+
+/**
+ * Valide et borne les descripteurs d'appareils fournis par le client (payload
+ * externe non fiable) : nom non vide, réglages avec clé, tailles plafonnées. Un
+ * descripteur sans nom ou sans aucun réglage exploitable est écarté.
+ *
+ * @param raw - La valeur brute `appliances` de la requête (forme inconnue).
+ * @returns Les descripteurs exploitables pour {@link formatAppliancesForPrompt}.
+ */
+export function parseApplianceInfos(raw: unknown): ApplianceInfo[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 40).map((a): ApplianceInfo => {
+    const o = (a && typeof a === "object" ? a : {}) as Record<string, unknown>;
+    const fieldsRaw = Array.isArray(o.fields) ? o.fields : [];
+    const fields = fieldsRaw.slice(0, 12).map((f): ApplianceParamInfo => {
+      const fo = (f && typeof f === "object" ? f : {}) as Record<string, unknown>;
+      const field: ApplianceParamInfo = { key: String(fo.key || "").slice(0, 40), label: String(fo.label || "").slice(0, 60), kind: String(fo.kind || "") };
+      if (fo.unit) field.unit = String(fo.unit).slice(0, 12);
+      if (Array.isArray(fo.options)) field.options = fo.options.map((x) => String(x).slice(0, 40)).slice(0, 24);
+      return field;
+    }).filter((f) => f.key);
+    return { name: String(o.name || "").slice(0, 60), fields };
+  }).filter((a) => a.name && a.fields.length);
+}
+
+/**
+ * Rend la liste des appareils et de leurs réglages acceptés pour injection dans le
+ * prompt (placeholder `{{APPLIANCES}}`). Chaque appareil tient sur une ligne, chaque
+ * réglage y indique son type/valeurs pour que le LLM produise EXACTEMENT les bonnes
+ * clés et valeurs. `(aucun)` si la base ne contient aucun appareil.
+ *
+ * @param infos - Les descripteurs d'appareils connus (déjà validés).
+ * @returns Le bloc texte prêt à injecter (ou `(aucun)`).
+ */
+export function formatAppliancesForPrompt(infos: ApplianceInfo[]): string {
+  if (!infos || !infos.length) return "(aucun)";
+  const field = (f: ApplianceParamInfo): string => {
+    if (f.kind === "enum") return `${f.key} (${(f.options || []).join("|")})`;
+    if (f.kind === "bool") return `${f.key} (true/false)`;
+    return `${f.key} (nombre${f.unit ? `, ${f.unit}` : ""})`;
+  };
+  return "\n" + infos.map((a) => `  - ${a.name} : ${a.fields.map(field).join(" ; ")}`).join("\n");
+}
+
 // Union des ustensiles cités PARTOUT par le LLM : le tableau de tête `utensils`
 // ET ceux référencés au fil des étapes. Certains modèles ne remplissent que les
 // étapes (ou renvoient un tableau de tête vide) : sans ça, la recette ressortait
@@ -297,6 +393,62 @@ export function filterUtensilsToKnown(utensils: DraftUtensil[], knownNames: stri
   });
 }
 
+// Gestes qui EXIGENT un ustensile sans le nommer → ustensile(s) canonique(s), le
+// premier disponible dans la base master l'emporte. Testé sur le TEXTE de l'étape
+// normalisé (sans accent, minuscules). Bornes de mot pour éviter les faux positifs
+// (« mélanger rapidement » ne déclenche pas la râpe).
+const IMPLICIT_UTENSIL_RULES: { test: RegExp; targets: string[] }[] = [
+  { test: /\brap(e|es|er|ee|ees|ez)\b|\bzest/, targets: ["râpe"] },
+  { test: /\bfouett|\bfouet\b|\bneige\b/, targets: ["fouet"] },
+  { test: /\bmelang|\bpetri|\bmarin(e|es|er|ee|ees|ez|ade)\b|\bincorpor/, targets: ["saladier", "bol"] },
+  { test: /\bmix(e|es|er|ez|ee|ees)?\b|\bblend|\bmoulin/, targets: ["mixeur", "blender"] },
+  { test: /(etal\w*\s+(la\s+)?pate)|\babaiss|\brouleau\b/, targets: ["rouleau"] },
+  { test: /\bfiltr|\btamis|\bchinois\b/, targets: ["passoire", "chinois", "tamis"] },
+];
+
+/**
+ * Résout un ustensile canonique (« râpe », « saladier »…) vers son libellé EXACT
+ * dans la base master (faute de quoi il serait filtré et non lié côté client).
+ * Rapprochement tolérant (accents/casse, inclusion), comme {@link filterUtensilsToKnown}.
+ *
+ * @returns Le nom tel qu'écrit dans la base, ou `null` s'il en est absent.
+ */
+function resolveKnownUtensil(target: string, knownNames: string[]): string | null {
+  const t = norm(target);
+  for (const name of knownNames) {
+    const n = norm(name);
+    if (n === t || n.includes(t) || t.includes(n)) return name;
+  }
+  return null;
+}
+
+/**
+ * Déduit DÉTERMINISTIQUEMENT les ustensiles qu'un geste d'étape exige sans les
+ * nommer (râper → râpe, mélanger → saladier/bol…) et les rattache à l'étape, en
+ * complément du prompt : la fiabilité ne dépend plus de l'adhérence du modèle. Ne
+ * pose QUE des ustensiles présents dans la base master (même bornage que le reste
+ * du flux), n'invente rien et ne duplique pas un ustensile déjà cité sur l'étape.
+ *
+ * @param inter - Brouillon intermédiaire (ses étapes sont mutées en place).
+ * @param knownNames - Noms d'ustensiles de la base master (bornage).
+ */
+export function inferImplicitUtensils(inter: Pick<Intermediate, "steps">, knownNames: string[]): void {
+  if (!knownNames?.length) return;
+  for (const step of inter.steps || []) {
+    const text = norm(step.text);
+    if (!text) continue;
+    const present = new Set((step.utensils || []).map((u) => norm(typeof u === "string" ? u : u?.name)));
+    for (const rule of IMPLICIT_UTENSIL_RULES) {
+      if (!rule.test.test(text)) continue;
+      const resolved = rule.targets.map((t) => resolveKnownUtensil(t, knownNames)).find((r): r is string => !!r);
+      if (resolved && !present.has(norm(resolved))) {
+        (step.utensils ||= []).push(resolved);
+        present.add(norm(resolved));
+      }
+    }
+  }
+}
+
 // Assemble le brouillon FINAL au schéma Cardamome : ids stables sur ingrédients/
 // ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
 // fourni par le LLM, complété par détection dans le texte de l'étape).
@@ -308,7 +460,7 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     // l'unité est absente, on la promeut depuis ce mot.
     const stripped = stripMeasurePrefix(i.name);
     const name = stripped ? stripped.name : (i.name || "");
-    const unitRaw = (i.unit || "") || (stripped ? stripped.measure : "");
+    const unitRaw = canonicalizeUnit((i.unit || "") || (stripped ? stripped.measure : ""));
     const unit = SILENT_UNITS.has(norm(unitRaw)) ? "" : unitRaw;
     // _raw reconstruit à partir des champs normalisés (texte propre et éditable).
     // Sans unité, l'ingrédient est comptable : on accorde le nom au pluriel.
@@ -338,6 +490,21 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     const utIds = utensils.filter((u) => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map((u) => u.id);
     const rs: RecipeStep = { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
     if (stepGroup) rs.group = stepGroup;
+    // Réglages d'appareils : le LLM les indexe par NOM d'appareil ; on les re-clé
+    // vers l'id d'ustensile de recette et on ne garde QUE ceux liés à cette étape.
+    // Les valeurs restent brutes (validées côté client contre le schéma de l'appareil).
+    const rawParams = (s.utensilParams && typeof s.utensilParams === "object") ? s.utensilParams : null;
+    if (rawParams) {
+      const linked = new Set(utIds);
+      const byName = new Map(Object.entries(rawParams).map(([nm, v]) => [norm(nm), v]));
+      const params: Record<string, Record<string, unknown>> = {};
+      for (const u of utensils) {
+        if (!linked.has(u.id)) continue;
+        const v = byName.get(norm(u.name));
+        if (v && typeof v === "object" && Object.keys(v).length) params[u.id] = v;
+      }
+      if (Object.keys(params).length) rs.utensilParams = params;
+    }
     return rs;
   });
 

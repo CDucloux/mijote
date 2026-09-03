@@ -261,7 +261,7 @@ export function ImportPage({ mode = "lien" }) {
   return (
     <div className="imp">
       {header}
-      <div style={{ padding: "2px 20px 0", flexShrink: 0 }}><Segmented mode={mode} onSelect={selectMode} /></div>
+      <div style={{ padding: "14px 20px 2px", flexShrink: 0 }}><Segmented mode={mode} onSelect={selectMode} /></div>
       <div className="imp-body">
         <div className="imp-col">
           <Lede mode={mode} />

@@ -8,6 +8,7 @@
 import { httpsCallable, type HttpsCallableResult } from "firebase/functions";
 import { functions } from "@/lib/firebase/firebase.js";
 import { prepareImageForUpload, blobToBase64 } from "@/lib/firebase/imageResize.js";
+import type { ApplianceImportInfo } from "@/lib/utensils/appliances.js";
 
 /** Erreur d'import : conserve le `code` canonique Firebase (origine visible). */
 export interface ImportError extends Error { code: string }
@@ -52,13 +53,14 @@ export function mapImportError(e: unknown): ImportError {
  *
  * @param url - URL de la page recette.
  * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
+ * @param appliances - Descripteurs d'appareils connus (réglages à déduire par étape).
  * @returns La charge utile serveur `{ recipe, method: "jsonld" | "llm" }`.
  * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
  */
-export async function importRecipeFromUrl(url: string, knownUtensils: string[] = []): Promise<unknown> {
+export async function importRecipeFromUrl(url: string, knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromUrl", { timeout: 70000 });
   try {
-    const res = await call({ url, knownUtensils });
+    const res = await call({ url, knownUtensils, appliances });
     return res.data;
   } catch (e) {
     throw mapImportError(e);
@@ -72,13 +74,14 @@ export async function importRecipeFromUrl(url: string, knownUtensils: string[] =
  *
  * @param text - Le texte de recette collé.
  * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
+ * @param appliances - Descripteurs d'appareils connus (réglages à déduire par étape).
  * @returns La charge utile serveur `{ recipe, method: "text" }`.
  * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
  */
-export async function importRecipeFromText(text: string, knownUtensils: string[] = []): Promise<unknown> {
+export async function importRecipeFromText(text: string, knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromText", { timeout: 70000 });
   try {
-    const res = await call({ text, knownUtensils });
+    const res = await call({ text, knownUtensils, appliances });
     return res.data;
   } catch (e) {
     throw mapImportError(e);
@@ -94,13 +97,14 @@ export interface ImagePart { mediaType: string; data: string }
  *
  * @param images - Parties image (base64), max 2.
  * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
+ * @param appliances - Descripteurs d'appareils connus (réglages à déduire par étape).
  * @returns La charge utile serveur (recette + éventuel index de couverture).
  * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
  */
-export async function importRecipeFromImages(images: ImagePart[], knownUtensils: string[] = []): Promise<unknown> {
+export async function importRecipeFromImages(images: ImagePart[], knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromImages", { timeout: 115000 });
   try {
-    const res: HttpsCallableResult = await call({ images, knownUtensils });
+    const res: HttpsCallableResult = await call({ images, knownUtensils, appliances });
     return res.data;
   } catch (e) {
     throw mapImportError(e);

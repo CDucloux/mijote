@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   APPLIANCE_LABELS, APPLIANCE_SCHEMAS,
   isApplianceKey, getApplianceSchema, validateParamValues, formatParamSummary,
+  applianceImportInfos, sanitizeStepUtensilParams,
 } from "@/lib/utensils/appliances.js";
 
 describe("schémas d'appareils", () => {
@@ -74,6 +75,55 @@ describe("validateParamValues", () => {
     expect(validateParamValues("nope", { x: 1 })).toEqual({ values: {}, errors: [] });
     expect(validateParamValues("four", null)).toEqual({ values: {}, errors: [] });
     expect(validateParamValues("four", undefined)).toEqual({ values: {}, errors: [] });
+  });
+});
+
+describe("applianceImportInfos", () => {
+  it("ne retient que les ustensiles-appareils connus, avec leur schéma aplati", () => {
+    const out = applianceImportInfos([
+      { name: "Four", appliance: "four" },
+      { name: "Saladier" },                       // pas un appareil
+      { name: "Truc", appliance: "inexistant" },  // appareil inconnu
+    ]);
+    expect(out.map(a => a.name)).toEqual(["Four"]);
+    const four = out[0];
+    // Un enum expose ses valeurs (pas les libellés) ; un number son unité.
+    const mode = four.fields.find(f => f.key === "mode");
+    expect(mode.kind).toBe("enum");
+    expect(mode.options).toContain("tournante");
+    expect(mode.options).not.toContain("Chaleur tournante");
+    expect(four.fields.find(f => f.key === "temperature").unit).toBe("°C");
+  });
+  it("dédoublonne par nom (insensible à la casse) et tolère une base vide/nulle", () => {
+    const out = applianceImportInfos([
+      { name: "Four", appliance: "four" },
+      { name: "four", appliance: "four" },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(applianceImportInfos(null)).toEqual([]);
+    expect(applianceImportInfos([])).toEqual([]);
+  });
+});
+
+describe("sanitizeStepUtensilParams", () => {
+  const applianceOf = (id) => ({ u0: "four", u1: "blender" }[id]); // u2 = non-appareil
+
+  it("ne garde que les entrées valides contre le schéma de l'appareil résolu", () => {
+    const out = sanitizeStepUtensilParams(
+      {
+        u0: { temperature: "180", mode: "tournante", bidon: 5 }, // coerce + purge hors-schéma
+        u1: { vitesse: "plasma" },                               // enum invalide → vidé
+        u2: { temperature: 200 },                                // ustensile non-appareil → vidé
+      },
+      applianceOf,
+    );
+    expect(out).toEqual({ u0: { temperature: 180, mode: "tournante" } });
+  });
+
+  it("tolère une entrée absente/nulle et retourne un objet vide", () => {
+    expect(sanitizeStepUtensilParams(null, applianceOf)).toEqual({});
+    expect(sanitizeStepUtensilParams(undefined, applianceOf)).toEqual({});
+    expect(sanitizeStepUtensilParams({ u0: {} }, applianceOf)).toEqual({});
   });
 });
 

@@ -1,6 +1,7 @@
 import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
 import { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText, type ImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import { uploadImage } from "@/lib/firebase/storage.js";
+import { applianceImportInfos, sanitizeStepUtensilParams } from "@/lib/utensils/appliances.js";
 import type { Recipe } from "@/lib/types.js";
 
 /** base64 (sans préfixe) → Blob, pour ré-uploader une photo importée vers Storage. */
@@ -46,27 +47,44 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeI
     // purger les liens d'étapes qui pointaient vers un ustensile écarté.
     const keptUt = (draft.utensils || []).filter(u => u.dbId);
     const keptIds = new Set(keptUt.map(u => u.id));
+    // Appareil de chaque ustensile conservé (résolu via la base master par dbId) :
+    // sert à valider les réglages déduits à l'import contre le bon schéma.
+    const applianceByUtId = new Map<string, unknown>();
+    for (const u of keptUt) {
+      const row = utensilDB.find(d => d.id === u.dbId);
+      if (row?.appliance) applianceByUtId.set(u.id ?? "", row.appliance);
+    }
     draft = {
       ...draft,
       utensils: keptUt,
-      steps: (draft.steps || []).map(s => ({ ...s, utensils: (s.utensils || []).filter(id => keptIds.has(id)) })),
+      steps: (draft.steps || []).map(s => {
+        const params = sanitizeStepUtensilParams(s.utensilParams, id => applianceByUtId.get(id));
+        const step = { ...s, utensils: (s.utensils || []).filter(id => keptIds.has(id)) };
+        if (Object.keys(params).length) step.utensilParams = params;
+        else delete step.utensilParams;
+        return step;
+      }),
     };
     if (coverUrl) draft.image = coverUrl;
     openEditor(withItemIds(draft));
   };
 
+  // Descripteurs d'appareils (nom + réglages) transmis au serveur pour que le LLM
+  // déduise les réglages d'étape ; recalculés à chaque appel (base à jour).
+  const appliancesOf = (): ReturnType<typeof applianceImportInfos> => applianceImportInfos(utensilDB);
+
   const importFromUrl = async (url: string): Promise<{ method: string }> => {
-    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name)) as { recipe: Recipe; method: string };
+    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name), appliancesOf()) as { recipe: Recipe; method: string };
     openImportedDraft(recipe);
     return { method };
   };
   const importFromText = async (text: string): Promise<{ method: string }> => {
-    const { recipe, method } = await importRecipeFromText(text, utensilDB.map(u => u.name)) as { recipe: Recipe; method: string };
+    const { recipe, method } = await importRecipeFromText(text, utensilDB.map(u => u.name), appliancesOf()) as { recipe: Recipe; method: string };
     openImportedDraft(recipe);
     return { method };
   };
   const importFromImages = async (images: ImagePart[]): Promise<{ method: string }> => {
-    const { recipe, method, coverIndex } = await importRecipeFromImages(images, utensilDB.map(u => u.name)) as { recipe: Recipe; method: string; coverIndex: number };
+    const { recipe, method, coverIndex } = await importRecipeFromImages(images, utensilDB.map(u => u.name), appliancesOf()) as { recipe: Recipe; method: string; coverIndex: number };
     // La page identifiée comme photo du plat devient l'image de couverture : on la
     // ré-upload vers Storage (comme n'importe quelle image de recette). Best-effort :
     // un échec d'upload n'empêche pas l'ouverture du brouillon (couverture vide).

@@ -13,7 +13,7 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
   "prepTime": number, "cookTime": number, "servings": number,
   "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string }],
   "utensils": [{ "name": string }],
-  "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "group": string }]
+  "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "utensilParams": object, "group": string }]
 }
 ```
 
@@ -37,6 +37,7 @@ LANGUE & CONVERSIONS
 - Les noms d'ingrédients : **nom commun français au singulier** (« tomate », pas « tomatoes » ni « tomates cerises coupées en deux »). Un nom non traduit ne résout aucun ingrédient de la base (pas de valeur nutritionnelle ni de saisonnalité).
 - **`unit` ne doit JAMAIS contenir une unité impériale.** Convertis systématiquement.
   - Correspondances directes : `teaspoon`/`tsp` → `cuillère à café` · `tablespoon`/`tbsp` → `cuillère à soupe` · `pinch` → **grammes** (≈ 1 g pour une épice, 2 g pour le sel, surtout PAS `pincée`) · `clove` → `gousse` · `slice` → `tranche` · `sprig` → `branche` · `can` → `boîte`.
+  - **Une cuillère (`tsp`/`tbsp`) ne se traduit JAMAIS en millilitres.** Épices, sel, poivre, herbes séchées, levure chimique / bicarbonate mesurés à la cuillère → convertis en **grammes** (1 c. à café de sel ≈ 5 g · d'épice ou d'herbe séchée moulue ≈ 2 g · de levure/bicarbonate ≈ 4 g ; 1 c. à soupe = 3 c. à café ; unit `g`). Un LIQUIDE ou une pâte à la cuillère (huile, vinaigre, extrait, miel, moutarde, yaourt) garde `cuillère à café` / `cuillère à soupe`.
   - Masses : 1 oz → 28 g · 1 lb → 450 g · 1 stick de beurre → 115 g.
   - Volumes liquides : 1 fl oz → 30 ml · 1 cup → 240 ml · 1 pint → 470 ml · 1 quart → 950 ml.
   - **Cups d'ingrédients SECS → grammes** (une conversion volumétrique naïve fausse la pâtisserie) : farine 125 g · sucre en poudre 200 g · sucre roux tassé 220 g · sucre glace 120 g · beurre 227 g · riz cru 185 g · cacao en poudre 85 g · flocons d'avoine 90 g · pépites de chocolat 170 g · noix/amandes hachées 120 g · fromage râpé 100 g · miel/sirop 340 g · lait/eau/crème/huile 240 ml.
@@ -56,7 +57,12 @@ INGRÉDIENTS
 
 USTENSILES
 - Uniquement ceux réellement nécessaires ET présents dans cette liste (orthographe exacte) ; sinon n'en mets pas. Aucun → `[]`.
+- **Déduis aussi l'ustensile IMPLICITE** qu'un geste exige sans le nommer, et relie-le à l'étape : « râpé/zesté » → râpe ; « fouetté/monté » → fouet ; « mélanger/pétrir/mariner » → saladier ou bol ; « mixer/mixer fin » → mixeur ; « étaler la pâte » → rouleau ; « filtrer/passer » → passoire ou chinois. Reste TOUJOURS dans la limite de la liste ci-dessous.
   Liste : {{UTENSILS}}
+
+APPAREILS (réglages d'étape)
+- Certains ustensiles ci-dessous sont des APPAREILS avec des réglages. Quand une étape en utilise un, remplis `utensilParams` : objet indexé par le NOM EXACT de l'appareil (tel qu'écrit dans `utensils`), contenant les réglages **déduits du texte** (ex. `{ "Four": { "temperature": 210, "mode": "tournante", "prechauffage": true, "duree": 25 } }`). N'invente aucun réglage absent du texte, omets ce qui n'est pas précisé, et emploie EXACTEMENT les clés/valeurs listées (températures converties en °C). Étape sans appareil réglé → pas de `utensilParams`.
+  Appareils et réglages acceptés : {{APPLIANCES}}
 
 ÉTAPES
 - **Regroupe** les actions d'une même phase en UNE étape (ex. « laver puis couper tous les légumes »). Vise un déroulé **synthétique**, en général **3 à 8 étapes** pour une recette simple. Ne crée jamais d'étape pour une action triviale, ne coupe pas une phrase en deux, et n'éclate pas une recette de salade en 15 étapes.
