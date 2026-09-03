@@ -11,7 +11,7 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
   "baseCategory": string,
   "yield": { "amount": number, "unit": string },
   "prepTime": number, "cookTime": number, "servings": number,
-  "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string }],
+  "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string, "cut"?: { "forme": string, "calibre"?: string } }],
   "utensils": [{ "name": string }],
   "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "utensilParams": object, "group": string }]
 }
