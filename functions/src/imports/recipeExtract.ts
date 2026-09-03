@@ -454,18 +454,36 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
   });
   const utensils: RecipeUtensil[] = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: ((u as DraftUtensil).name || u).toString() }));
 
+  // Cloisonnement = désambiguïsation des HOMONYMES uniquement. Un même nom présent
+  // dans plusieurs groupes distincts est ambigu : une étape ne relie alors que
+  // l'occurrence de sa propre section (ou hors-section). Un nom UNIQUE, lui, se lie
+  // librement quel que soit son groupe (un « oignon » rangé dans « Les légumes »
+  // mais employé dans une étape « La sauce tomate » DOIT s'y rattacher).
+  const groupsByName = new Map<string, Set<string>>();
+  for (const i of ingredients) {
+    if (!i.name) continue;
+    const key = norm(i.name);
+    let set = groupsByName.get(key);
+    if (!set) { set = new Set(); groupsByName.set(key, set); }
+    set.add((i.group || "").trim());
+  }
+  const isAmbiguous = (name: string): boolean => (groupsByName.get(norm(name))?.size ?? 0) > 1;
+
   const steps: RecipeStep[] = (d.steps || []).map((s, k) => {
     const text = norm(s.text);
     const stepGroup = (s.group || "").toString().trim();
     const explicitIng = new Set((s.ingredients || []).map(norm));
     const explicitUt = new Set((s.utensils || []).map((x) => norm(typeof x === "string" ? x : x?.name)));
-    // Cloisonnement des sections : une étape appartenant à une sous-préparation ne
-    // peut se lier qu'aux ingrédients du MÊME groupe (ou hors-section), jamais à un
-    // ingrédient homonyme d'un AUTRE groupe (sinon l'« huile d'olive » de la
-    // vinaigrette se relie à tort à une étape du groupe « Croûtons »). Une étape
-    // hors-section (montage/dressage) reste libre de tout lier (comportement inchangé).
-    const inScope = (g: string | undefined): boolean => { if (!stepGroup) return true; const ig = (g || "").trim(); return ig === "" || ig === stepGroup; };
-    const ingIds = ingredients.filter((i) => i.name && inScope(i.group) && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map((i) => i.id);
+    // Étape hors-section : libre. Nom unique : le groupe ne restreint pas. Homonyme
+    // (même nom dans plusieurs sections) : on garde l'occurrence de la section de
+    // l'étape (ou hors-section), pour ne pas relier l'« huile d'olive » de la
+    // vinaigrette à une étape « Croûtons ».
+    const inScope = (i: RecipeIngredient): boolean => {
+      if (!stepGroup || !isAmbiguous(i.name)) return true;
+      const ig = (i.group || "").trim();
+      return ig === "" || ig === stepGroup;
+    };
+    const ingIds = ingredients.filter((i) => i.name && inScope(i) && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map((i) => i.id);
     const utIds = utensils.filter((u) => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map((u) => u.id);
     const rs: RecipeStep = { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
     if (stepGroup) rs.group = stepGroup;

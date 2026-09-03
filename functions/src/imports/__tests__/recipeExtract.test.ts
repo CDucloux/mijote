@@ -118,6 +118,23 @@ describe("assignIdsAndLink", () => {
     // Étape Croûtons : pain + huile + sel de la section Croûtons uniquement (jamais i0/i1).
     expect([...r.steps[1].ingredients].sort()).toEqual(["i2", "i3", "i4"]);
   });
+  it("nom UNIQUE : se lie à une étape d'un autre groupe (l'oignon des « légumes » utilisé dans « la sauce »)", () => {
+    // Régression ratatouille : oignon/ail rangés dans « Les légumes » mais employés
+    // dans des étapes « La sauce tomate ». Un nom unique ne subit pas le cloisonnement.
+    const inter = {
+      ingredients: [
+        { name: "tomate", amount: 7, group: "La sauce tomate" },   // i0
+        { name: "oignon", amount: 2, group: "Les légumes" },       // i1
+        { name: "ail", amount: 8, unit: "gousse", group: "Les légumes" }, // i2
+      ],
+      utensils: [],
+      steps: [
+        { text: "Peler et émincer l'oignon, écraser l'ail.", group: "La sauce tomate", ingredients: ["oignon", "ail"], utensils: [] },
+      ],
+    };
+    const r = assignIdsAndLink(inter);
+    expect([...r.steps[0].ingredients].sort()).toEqual(["i1", "i2"]);
+  });
   it("une étape hors-section peut lier des ingrédients de n'importe quel groupe (montage)", () => {
     const inter = {
       ingredients: [
