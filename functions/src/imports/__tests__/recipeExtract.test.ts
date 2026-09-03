@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
-  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut, parseJsonLoose,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -415,5 +415,25 @@ describe("assignIdsAndLink : découpe (cut)", () => {
   it("pas de découpe → pas de champ cut", () => {
     const r = assignIdsAndLink({ ingredients: [{ name: "farine", amount: 250, unit: "g" }], utensils: [], steps: [] });
     expect(r.ingredients[0].cut).toBeUndefined();
+  });
+});
+
+describe("parseJsonLoose", () => {
+  it("analyse un objet JSON nu", () => {
+    expect(parseJsonLoose('{"name":"tarte"}')).toEqual({ name: "tarte" });
+  });
+  it("retire les fences ```json et le texte autour de l'objet", () => {
+    expect(parseJsonLoose('Voici la recette :\n```json\n{"name":"tarte"}\n```\nVoilà.')).toEqual({ name: "tarte" });
+    expect(parseJsonLoose('bla {"a":1} bla')).toEqual({ a: 1 });
+  });
+  it("lève sur une réponse TRONQUÉE (max_tokens en plein JSON) : accolades déséquilibrées", () => {
+    // Non-régression : une sortie coupée par la limite de tokens n'est pas
+    // « réparée » en un objet partiel, elle lève (l'appelant le traduit alors
+    // en message « recette trop longue »).
+    expect(() => parseJsonLoose('{"name":"tarte","steps":[{"text":"Faire reveni')).toThrow();
+  });
+  it("lève sur une chaîne vide ou sans JSON", () => {
+    expect(() => parseJsonLoose("")).toThrow();
+    expect(() => parseJsonLoose("aucun json ici")).toThrow();
   });
 });

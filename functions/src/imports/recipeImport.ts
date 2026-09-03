@@ -24,7 +24,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
-  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut,
+  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, parseJsonLoose,
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
@@ -40,6 +40,13 @@ const MAX_HTML_BYTES = 3_000_000;
 const FETCH_TIMEOUT_MS = 15_000;
 /** Modèle d'extraction pour l'URL (texte déjà propre). */
 const MODEL = "claude-haiku-4-5";
+/**
+ * Plafond de tokens de sortie. 4096 était trop juste : une recette longue et
+ * verbeuse (nombreuses étapes, astuces, conversions) dépassait ce budget, la
+ * réponse était coupée en plein JSON et devenait illisible. 8192 donne une marge
+ * confortable sans surcoût réel (le modèle s'arrête à `end_turn` bien avant).
+ */
+const MAX_OUTPUT_TOKENS = 8192;
 /**
  * Modèle d'extraction pour les PHOTOS. L'OCR d'une page de livre exige une bien
  * meilleure vision que l'URL : on confie ce cas à Sonnet, plus fiable sur les
@@ -65,20 +72,33 @@ const PROMPT_TEMPLATE = fs
 const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "..", "..", "prompts", "recipeExtractImage.md"), "utf-8");
 
 /**
- * Extrait un objet JSON d'une réponse LLM, en tolérant les fences ```json et le
- * texte parasite autour de l'objet.
+ * Analyse la réponse d'un modèle en un brouillon JSON, en distinguant les échecs
+ * pour un message actionnable au lieu d'un « illisible » opaque : réponse vide,
+ * sortie TRONQUÉE (limite de tokens atteinte → JSON coupé), ou JSON réellement
+ * inexploitable. Factorise le bloc commun aux trois points d'entrée d'extraction.
  *
- * @param s - La réponse texte brute du modèle.
- * @returns L'objet analysé (typé `unknown` : payload externe non fiable).
- * @throws SyntaxError si aucun JSON exploitable n'est trouvé.
+ * @param response - La réponse brute du modèle (SDK Anthropic).
+ * @param kind - L'origine (`url` / `text` / `images`), pour la trace de diagnostic.
+ * @returns Le brouillon LLM brut (payload externe non fiable, narrowé en aval).
+ * @throws HttpsError `internal` si la réponse est vide ou le JSON illisible ;
+ *   `resource-exhausted` si la sortie a été tronquée (recette trop longue).
  */
-function parseJsonLoose(s: string): unknown {
-  let t = (s || "").trim();
-  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fence) t = fence[1].trim();
-  const a = t.indexOf("{"), b = t.lastIndexOf("}");
-  if (a >= 0 && b > a) t = t.slice(a, b + 1);
-  return JSON.parse(t);
+function parseModelResponse(response: Anthropic.Message, kind: string): LlmDraft {
+  const block = (response.content || []).find((b) => b.type === "text");
+  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
+  let parsed: LlmDraft;
+  try {
+    parsed = parseJsonLoose(block.text) as LlmDraft;
+  } catch {
+    if (response.stop_reason === "max_tokens") {
+      logger.warn(`import[${kind}] réponse tronquée (max_tokens atteint)`);
+      throw new HttpsError("resource-exhausted", "Recette trop longue pour l'import automatique. Colle plutôt le texte de la recette, ou importe une version plus courte.");
+    }
+    throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable).");
+  }
+  logRawModelJson(kind, block.text);
+  logDetectedGroups(kind, parsed);
+  return parsed;
 }
 
 /**
@@ -267,7 +287,7 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[], 
   let response: Anthropic.Message;
   try {
     response = await client.messages.create({
-      model: VISION_MODEL, max_tokens: 4096, system,
+      model: VISION_MODEL, max_tokens: MAX_OUTPUT_TOKENS, system,
       messages: [{ role: "user", content }],
     });
   } catch (e) {
@@ -275,16 +295,10 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[], 
     logger.error("Anthropic API error (images):", err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  const block = (response.content || []).find((b) => b.type === "text");
-  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
-  let parsed: LlmDraft;
-  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
-  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
+  const parsed = parseModelResponse(response, "images");
   // Conversion du numéro 1-based du modèle en index 0-based validé (-1 = aucune).
   const cp = Number(parsed.coverPhoto);
   const coverIndex = Number.isInteger(cp) && cp >= 1 && cp <= images.length ? cp - 1 : -1;
-  logRawModelJson("images", block.text);
-  logDetectedGroups("images", parsed);
   return { inter: llmToIntermediate(parsed, ""), coverIndex };
 }
 
@@ -313,7 +327,7 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
   try {
     response = await client.messages.create({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: MAX_OUTPUT_TOKENS,
       system,
       messages: [{ role: "user", content: `Texte de la page (source : ${sourceUrl}) :\n\n${body}` }],
     });
@@ -322,14 +336,7 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
     logger.error("Anthropic API error:", err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  const block = (response.content || []).find((b) => b.type === "text");
-  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
-  let parsed: LlmDraft;
-  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
-  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
-  logRawModelJson("url", block.text);
-  logDetectedGroups("url", parsed);
-  return llmToIntermediate(parsed, sourceUrl);
+  return llmToIntermediate(parseModelResponse(response, "url"), sourceUrl);
 }
 
 /**
@@ -358,7 +365,7 @@ async function extractFromText(text: string, knownUtensils: string[], applianceI
   try {
     response = await client.messages.create({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: MAX_OUTPUT_TOKENS,
       system,
       messages: [{ role: "user", content: `Texte de la recette collée :\n\n${body}` }],
     });
@@ -367,14 +374,7 @@ async function extractFromText(text: string, knownUtensils: string[], applianceI
     logger.error("Anthropic API error (text):", err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  const block = (response.content || []).find((b) => b.type === "text");
-  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
-  let parsed: LlmDraft;
-  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
-  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
-  logRawModelJson("text", block.text);
-  logDetectedGroups("text", parsed);
-  return llmToIntermediate(parsed, "");
+  return llmToIntermediate(parseModelResponse(response, "text"), "");
 }
 
 /** Trace dans Cloud Logging les sections (`group`) renvoyées par le modèle, pour

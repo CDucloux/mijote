@@ -587,3 +587,21 @@ export function imageUrlsInText(text: string): Set<string> {
   for (const m of (text || "").matchAll(/⟦IMG:([^⟧]+)⟧/g)) set.add(m[1]);
   return set;
 }
+
+/**
+ * Extrait un objet JSON d'une réponse LLM, en tolérant les fences ```json et le
+ * texte parasite autour de l'objet. Une réponse TRONQUÉE (limite de tokens
+ * atteinte en plein objet) lève ici : les accolades ne s'équilibrent pas.
+ *
+ * @param s - La réponse texte brute du modèle (payload externe non fiable).
+ * @returns L'objet analysé (typé `unknown` : à narrower côté appelant).
+ * @throws SyntaxError si aucun JSON exploitable n'est trouvé.
+ */
+export function parseJsonLoose(s: string): unknown {
+  let t = (s || "").trim();
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) t = fence[1].trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a >= 0 && b > a) t = t.slice(a, b + 1);
+  return JSON.parse(t);
+}
