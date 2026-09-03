@@ -262,7 +262,7 @@ export function ImportPage({ mode = "lien" }) {
     <div className="imp">
       {header}
       <div style={{ padding: "14px 20px 2px", flexShrink: 0 }}><Segmented mode={mode} onSelect={selectMode} /></div>
-      <div className="imp-body">
+      <div className="imp-body" data-elastic-scroll>
         <div className="imp-col">
           <Lede mode={mode} />
           {mode === "lien" && <>{linkField}{clipBtn}<SourcesShelf sources={sourceList} layout="shelf" /></>}

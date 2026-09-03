@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.21.0 – Cardamome · Défilement qui rebondit partout
+
+### Confort de navigation
+- **Le rebond élastique est désormais partout** : arrivé en bout de page, tirer encore étire doucement le contenu puis le laisse revenir en ressort, ce petit rebond « à la iOS » déjà présent sur l'Accueil et les Recettes gagne maintenant les écrans qui ne l'avaient pas, dont l'Import, le Profil et la page Cardamome+. Un défilement homogène, plus vivant, d'un écran à l'autre.
+
 ## v4.20.0 – Cardamome · Import plus fin
 
 ### Import intelligent

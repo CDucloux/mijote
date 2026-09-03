@@ -132,7 +132,7 @@ export function PlusPage() {
         <h1>Formule</h1>
       </header>
 
-      <main className="plus-stage">
+      <main className="plus-stage" data-elastic-scroll>
         <div className={isPlus ? "plus-layout" : "plus-layout plus-layout--split"}>
           {isPlus ? (
             /* État abonné : bandeau de confirmation, hors split (colonne unique). */

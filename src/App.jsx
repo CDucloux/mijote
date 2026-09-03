@@ -13,6 +13,7 @@ import { useFirestoreSync, readCachedHid } from "./hooks/useFirestoreSync.js";
 import { useRecipeDerived } from "./hooks/useRecipeDerived.js";
 import { useMealPlanner } from "./hooks/useMealPlanner.js";
 import { installGlobalRipple } from "@/lib/ui/ripple.js";
+import { installGlobalElasticScroll } from "@/lib/ui/globalElasticScroll.js";
 import { usePublicRecipeView } from "./hooks/usePublicRecipeView.js";
 import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -119,6 +120,9 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Onde tactile (ripple) globale : toute surface `.ripple` la reçoit au toucher
   // (mobile). Installée une seule fois pour toute l'app.
   useEffect(() => installGlobalRipple(), []);
+  // Overscroll « stretch » global : tout corps défilant marqué `data-elastic-scroll`
+  // reçoit le rubber-band (mobile), sans câbler de hook page par page.
+  useEffect(() => installGlobalElasticScroll(), []);
 
   // Données dérivées par recette (saison/vegan/Nutri-Score) mémoïsées ICI (composant
   // persistant) → la bascule vers l'onglet « Recettes » ne recalcule plus tout à
