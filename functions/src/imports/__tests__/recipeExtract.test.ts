@@ -359,6 +359,21 @@ describe("htmlToText", () => {
     expect(t).not.toContain("logo.svg");
     expect(imageUrlsInText(t).has("https://x/step1.jpg")).toBe(true);
   });
+  it("ne casse PAS un mot enrobé d'une balise inline (régression « dégerm »)", () => {
+    // Une balise inline (span, a, b…) au milieu d'un mot ne crée aucune espace en
+    // HTML : « dégerm<span>er</span> » doit rester « dégermer », pas « dégerm er »
+    // (que le modèle tronquerait ensuite en « dégerm »).
+    expect(htmlToText("<p>Peler et dégerm<span>er</span> l'ail.</p>")).toContain("dégermer");
+    expect(htmlToText('<p>Laisser dég<a href="/glossaire">orger</a> les aubergines.</p>')).toContain("dégorger");
+    expect(htmlToText("<p>Faire <b>sép</b>arer les blancs.</p>")).toContain("séparer");
+  });
+  it("garde une frontière de mot pour les balises STRUCTURELLES (cellules, listes)", () => {
+    // Les balises de bloc, elles, doivent séparer les mots.
+    const t = htmlToText("<tr><td>Sel</td><td>Poivre</td></tr>");
+    expect(t).toContain("Sel");
+    expect(t).toContain("Poivre");
+    expect(t).not.toContain("SelPoivre");
+  });
 });
 
 describe("canonicalizeUnit", () => {

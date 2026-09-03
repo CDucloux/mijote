@@ -575,6 +575,12 @@ export function htmlToText(html: string, { maxImages = 15 }: { maxImages?: numbe
       return `\n⟦IMG:${url}⟧\n`;
     })
     .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, "\n")
+    // Balises INLINE (phrasé) : en HTML elles ne créent aucune espace
+    // (`<b>foo</b>bar` = « foobar »). Les retirer SANS espace évite de casser un
+    // mot enrobé de markup (« dégerm<span>er</span> » ne doit pas donner « dégerm er »,
+    // que le modèle tronque ensuite en « dégerm »). Les balises structurelles
+    // restantes passent, elles, à l'espace juste après.
+    .replace(/<\/?(?:a|b|strong|i|em|u|s|span|mark|small|abbr|sup|sub|wbr|font|q|cite|code|ins|del|big|tt|var|kbd|samp|bdi|bdo|time|data|ruby|rt|rp)\b[^>]*>/gi, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&#39;|&apos;/gi, "'")
     .replace(/&quot;/gi, '"').replace(/&eacute;/gi, "é").replace(/&egrave;/gi, "è")
