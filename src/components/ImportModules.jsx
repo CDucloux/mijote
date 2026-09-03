@@ -116,7 +116,7 @@ export function QuotaBar({ rem, unlimited }) {
 function Creator({ source, onOpen }) {
   const tint = tintOf(source.tint);
   return (
-    <button className="imp-creator" onClick={() => onOpen(source.url)}>
+    <button className="imp-creator ripple" onClick={() => onOpen(source.url)}>
       <span className="imp-mono" style={{ background: `rgba(${tint.rgb},0.16)`, color: tint.color }}>
         {source.image ? <img src={source.image} alt="" loading="lazy" /> : monogramOf(source)}
       </span>
