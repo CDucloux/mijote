@@ -24,7 +24,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, inferImplicitUtensils, CUISINE_LABELS,
-  parseApplianceInfos, formatAppliancesForPrompt,
+  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut,
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
@@ -131,7 +131,7 @@ async function fetchHtml(url: string): Promise<string> {
 type LlmDraft = Record<string, unknown> & {
   name?: string; prepTime?: number; cookTime?: number; servings?: number;
   cuisine?: string; category?: string;
-  ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown }[];
+  ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown; cut?: unknown }[];
   utensils?: { name?: string }[];
   steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; utensilParams?: unknown; group?: unknown }[];
   /** Numéro (1-based) de l'image qui est la photo du plat, 0/absent si aucune. */
@@ -192,6 +192,7 @@ function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
       const a = num(i.amount); if (a != null) ing.amount = a;
       if (i.unit) ing.unit = String(i.unit).slice(0, 30);
       const group = (typeof i.group === "string" ? i.group : "").trim(); if (group) ing.group = group.slice(0, 80);
+      const cut = sanitizeCut(i.cut); if (cut) ing.cut = cut;
       return ing;
     }).filter((i) => i.name),
     utensils: (d.utensils || []).map((u) => ({ name: (u.name || "").slice(0, 60) })).filter((u) => u.name),

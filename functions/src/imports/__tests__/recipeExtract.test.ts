@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
-  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, inferImplicitUtensils,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, inferImplicitUtensils, sanitizeCut,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -419,5 +419,36 @@ describe("inferImplicitUtensils", () => {
     const inter = { steps: [{ text: "Râper le fromage.", utensils: [] }] };
     inferImplicitUtensils(inter, []);
     expect(inter.steps[0].utensils).toEqual([]);
+  });
+});
+
+describe("sanitizeCut", () => {
+  it("borne une chaîne en objet { forme }", () => {
+    expect(sanitizeCut("émincé")).toEqual({ forme: "émincé" });
+  });
+  it("borne un objet { forme, calibre } sans les inventer", () => {
+    expect(sanitizeCut({ forme: "brunoise", calibre: "fin" })).toEqual({ forme: "brunoise", calibre: "fin" });
+    expect(sanitizeCut({ forme: "des" })).toEqual({ forme: "des" });
+  });
+  it("écarte le calibre non textuel et tronque les longueurs", () => {
+    expect(sanitizeCut({ forme: "hache", calibre: 3 })).toEqual({ forme: "hache" });
+    expect(sanitizeCut("x".repeat(80)).forme).toHaveLength(40);
+  });
+  it("→ undefined si pas de forme exploitable", () => {
+    expect(sanitizeCut("")).toBeUndefined();
+    expect(sanitizeCut(null)).toBeUndefined();
+    expect(sanitizeCut({ calibre: "fin" })).toBeUndefined();
+    expect(sanitizeCut(["emince"])).toBeUndefined();
+  });
+});
+
+describe("assignIdsAndLink : découpe (cut)", () => {
+  it("transporte la découpe brute de l'ingrédient (narrowing fait côté client)", () => {
+    const r = assignIdsAndLink({ ingredients: [{ name: "oignon", amount: 2, cut: { forme: "emince" } }], utensils: [], steps: [] });
+    expect(r.ingredients[0].cut).toEqual({ forme: "emince" });
+  });
+  it("pas de découpe → pas de champ cut", () => {
+    const r = assignIdsAndLink({ ingredients: [{ name: "farine", amount: 250, unit: "g" }], utensils: [], steps: [] });
+    expect(r.ingredients[0].cut).toBeUndefined();
   });
 });

@@ -7,6 +7,36 @@
 
 // ── Types (les payloads LLM sont volontairement lâches : JSON externe non fiable)
 
+/** Découpe brute portée par un ingrédient (forme + calibre grossiers). Le narrowing
+ *  final vers le vocabulaire fermé se fait côté client (`parseCut` dans `decoupe`) :
+ *  ici on ne fait que transporter la valeur bornée renvoyée par le LLM. */
+export interface RawCut {
+  forme: string;
+  calibre?: string;
+}
+
+/**
+ * Borne une découpe renvoyée par le LLM (chaîne « émincé » ou objet `{ forme,
+ * calibre }`) en un objet `{ forme, calibre? }` de longueurs limitées. Ne fait
+ * AUCUN narrowing vers le vocabulaire fermé (c'est le rôle de `parseCut` côté
+ * client) : on transporte une valeur bornée, jamais inventée.
+ *
+ * @param raw - Valeur brute (payload LLM non fiable).
+ * @returns La découpe bornée, ou `undefined` si inexploitable.
+ */
+export function sanitizeCut(raw: unknown): RawCut | undefined {
+  let forme: unknown, calibre: unknown;
+  if (typeof raw === "string") forme = raw;
+  else if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    forme = (raw as Record<string, unknown>).forme;
+    calibre = (raw as Record<string, unknown>).calibre;
+  }
+  if (typeof forme !== "string" || !forme.trim()) return undefined;
+  const cut: RawCut = { forme: forme.trim().slice(0, 40) };
+  if (typeof calibre === "string" && calibre.trim()) cut.calibre = calibre.trim().slice(0, 20);
+  return cut;
+}
+
 /** Ingrédient au fil de l'assemblage (nom + quantité/unité optionnelles). */
 export interface DraftIngredient {
   name?: string;
@@ -16,6 +46,8 @@ export interface DraftIngredient {
   _raw?: string;
   /** Section/sous-préparation (« La pâte »…). Vide/absent = pas de groupement. */
   group?: string;
+  /** Découpe de mise en place (émincé, brunoise…), narrowée côté client. */
+  cut?: RawCut;
 }
 
 /** Ustensile (nom seul), parfois une simple chaîne côté LLM. */
@@ -81,6 +113,8 @@ export interface RecipeIngredient {
   amount?: number | string;
   unit?: string;
   group?: string;
+  /** Découpe de mise en place (brute, narrowée côté client). */
+  cut?: RawCut;
 }
 
 /** Ustensile au schéma final. */
@@ -471,6 +505,7 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     if (unit) ing.unit = unit;
     const group = (i.group || "").toString().trim();
     if (group) ing.group = group;
+    if (i.cut) ing.cut = i.cut; // découpe brute transportée telle quelle (narrowing client)
     return ing;
   });
   const utensils: RecipeUtensil[] = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: ((u as DraftUtensil).name || u).toString() }));

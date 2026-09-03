@@ -54,6 +54,9 @@ INGRÉDIENTS
 - `unit` : EXACTEMENT une valeur de cette liste FERMÉE, sinon `""` (ingrédient à l'unité, « 3 œufs ») :
   `g` · `kg` · `mg` · `ml` · `cl` · `dl` · `l` · `cuillère à soupe` · `cuillère à café` · `gousse` · `sachet` · `tranche` · `botte` · `feuille` · `branche` · `poignée` · `verre` · `bol` · `tasse` · `boîte` · `pot` · `pièce`.
   INTERDIT dans `unit` (à convertir, cf. LANGUE & CONVERSIONS) : `pincée` (→ grammes), `cup`, `oz`, `lb`, `tbsp`, `tsp`, `fl oz`, `pint`, `quart`, `stick`.
+- `cut` (optionnel) : la **découpe de mise en place** quand la recette la précise (dans la ligne d'ingrédient ou les étapes : « oignon émincé », « carottes en brunoise », « ail haché », « pommes de terre en rondelles »). Objet `{ "forme": <valeur ci-dessous>, "calibre"?: "fin" | "moyen" | "gros" }`. **Omets `cut`** s'il n'y a pas de découpe au couteau (farine, œufs, liquides, épices en poudre…) ou si elle n'est pas indiquée : n'invente JAMAIS une découpe.
+  `forme` : EXACTEMENT une valeur de cette liste FERMÉE (minuscules, sans accent) : `emince` · `cisele` · `hache` · `chiffonade` · `rape` · `des` · `brunoise` · `mirepoix` · `paysanne` · `julienne` · `batonnet` · `rondelle` · `troncon` · `quartier`.
+  La découpe va dans `cut`, **jamais dans `name`** (cf. règle `name`) : « 2 oignons émincés » → name `oignon`, amount `2`, `cut` `{ "forme": "emince" }`.
 
 USTENSILES
 - Uniquement ceux réellement nécessaires ET présents dans cette liste (orthographe exacte) ; sinon n'en mets pas. Aucun → `[]`.
