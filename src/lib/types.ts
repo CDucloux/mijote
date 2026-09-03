@@ -15,6 +15,36 @@ export interface RecipeYield {
 }
 
 /**
+ * Forme de découpe canonique d'un légume (vocabulaire fermé). Sert de clé de
+ * regroupement pour la mise en place ; les formulations libres d'une recette y sont
+ * ramenées à l'import (cf. `parseCut` dans `recipes/decoupe`).
+ */
+export type FormeDecoupe =
+  | "emince"
+  | "cisele"
+  | "des"
+  | "brunoise"
+  | "mirepoix"
+  | "paysanne"
+  | "julienne"
+  | "batonnet"
+  | "rondelle"
+  | "troncon"
+  | "quartier"
+  | "rape"
+  | "hache"
+  | "chiffonade";
+
+/** Calibre grossier d'une découpe (pas de millimètres : inexploitable et source d'hallucination LLM). */
+export type Calibre = "fin" | "moyen" | "gros";
+
+/** Découpe d'une ligne d'ingrédient. `calibre` optionnel ; absent = non précisé. */
+export interface Cut {
+  forme: FormeDecoupe;
+  calibre?: Calibre;
+}
+
+/**
  * Ligne d'ingrédient d'une recette. Soit brute (`dbId` → base d'ingrédients), soit
  * référence à une préparation de base (`recipeId`). `amount` tolère la chaîne (saisie).
  */
@@ -28,6 +58,8 @@ export interface IngredientLine {
   image?: string;
   /** Libellé de la section/groupe (« Pour la pâte »). Vide/absent = section principale. */
   group?: string;
+  /** Découpe du légume, si la recette la précise (mise en place). Absent/`null` = non taillé ou non précisé. */
+  cut?: Cut | null;
 }
 
 /** Ustensile lié à une recette (résolu à la base par `dbId`). */

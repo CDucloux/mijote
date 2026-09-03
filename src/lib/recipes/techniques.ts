@@ -53,7 +53,7 @@ interface Token { norm: string; start: number; end: number }
  * ≠ « grille » (grille de cuisson), « glacé » ≠ « glace » (sucre glace). Casse et
  * ponctuation restent ignorées.
  */
-function normTech(s: string | null | undefined): string {
+export function normTech(s: string | null | undefined): string {
   return (s || "")
     .toLowerCase()
     .replace(/[^0-9a-zà-ÿœ ]+/g, " ")
