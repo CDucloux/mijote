@@ -44,6 +44,7 @@
   --ok-rgb: 31, 158, 143;
   --stock: #a0724e;          /* brun garde-manger : statut « en stock » */
   --red: #e05252;
+  --red-rgb: 224, 82, 82;
   --yellow: #f0c060;
   --blue: #5b9cf6;
   --orange: #f0992a;
@@ -3854,6 +3855,11 @@ select {
 /* Variante accent : onde teintée terracotta, pour les surfaces où le retour tactile
    doit se lire dans la couleur d'accent (ex. pastille d'onglet actif de la tab bar). */
 .ripple-accent > .ripple-ink { background: rgba(var(--accent-rgb), 0.32); }
+/* Ondes teintées par SENS de l'action : une onde grise sur une ligne colorée (console
+   admin violette, déconnexion rouge) n'a aucun sens. On accorde l'encre à la couleur
+   de la ligne. */
+.account-group.is-special .menu-row > .ripple-ink { background: rgba(var(--admin-rgb), 0.2); }
+.menu-row-danger > .ripple-ink { background: rgba(var(--red-rgb), 0.2); }
 
 /* Généralisation aux boutons et pilules : tout `.btn` et tout `.pressable` reçoit
    l'onde au même titre que l'opt-in `.ripple` (cf. RIPPLE_SELECTOR côté JS). Réservé

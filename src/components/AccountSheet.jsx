@@ -93,7 +93,6 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
   const transform = closing ? "translateX(100%)"
     : dragX != null ? `translateX(${dragX}px)`
       : entered ? "translateX(0)" : "translateX(100%)";
-  const firstName = (user.displayName || user.email || "").split(/[ @]/)[0];
 
   const row = (action, i) => {
     const danger = action.variant === "danger";
@@ -118,8 +117,7 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
         onTransitionEnd={onTransitionEnd}
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         style={{ transform, transition: dragging ? "none" : ENTER_TRANSITION }}>
-        <header style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 8px 12px 18px" }}>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
+        <header style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "8px 8px 0" }}>
           <button className="ripple ripple-light" onClick={() => close()} aria-label="Fermer"
             style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", border: "none", background: "none", display: "grid", placeItems: "center", cursor: "pointer" }}>
             <Icon name="close" size={22} color="var(--text2)" />
@@ -130,7 +128,7 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
           {user.photoURL
             ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 76, height: 76, borderRadius: "50%", display: "block", border: `2.5px solid ${isPlus ? "var(--accent)" : "var(--border)"}` }} />
             : <div style={{ width: 76, height: 76, borderRadius: "50%", background: "var(--accent)", display: "grid", placeItems: "center", fontSize: 30, fontWeight: 600, color: "#fff", border: `2.5px solid ${isPlus ? "var(--accent)" : "transparent"}` }}>{(user.displayName || "?")[0].toUpperCase()}</div>}
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", textAlign: "center" }}>Bonjour {firstName} !</div>
+          <div style={{ maxWidth: "100%", fontSize: 14.5, fontWeight: 500, color: "var(--text3)", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
           {syncLabel && (
             <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: syncColor }}>
               {offline && <Icon name="wifiOff" size={13} color={syncColor} />}{syncLabel}
