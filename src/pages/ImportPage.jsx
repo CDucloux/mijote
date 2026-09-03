@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
 import { LoadingOverlay } from "../components/ImportUI.jsx";
+import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate } from "../components/ImportModules.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
@@ -262,7 +263,7 @@ export function ImportPage({ mode = "lien" }) {
     <div className="imp">
       {header}
       <div style={{ padding: "14px 20px 2px", flexShrink: 0 }}><Segmented mode={mode} onSelect={selectMode} /></div>
-      <div className="imp-body">
+      <ElasticScroll className="imp-body">
         <div className="imp-col">
           <Lede mode={mode} />
           {mode === "lien" && <>{linkField}{clipBtn}<SourcesShelf sources={sourceList} layout="shelf" /></>}
@@ -271,7 +272,7 @@ export function ImportPage({ mode = "lien" }) {
           {inlineErr}
           <Tips mode={mode} />
         </div>
-      </div>
+      </ElasticScroll>
       <div className="imp-foot"><div className="imp-col">{quota}{cta}</div></div>
       {overlays}
     </div>
