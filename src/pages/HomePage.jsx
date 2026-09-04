@@ -55,6 +55,61 @@ function NotifRow({ icon, color, title, subtitle, onClick, animationDelay, canHo
   );
 }
 
+// État « compte encore vierge » : plutôt que « Tout est à jour » (rassurant à tort
+// quand il n'y a RIEN à faire faute de contenu), on invite à démarrer. Le parcours
+// Recette → Planning → Courses en pied dit POURQUOI l'accueil est vide et ce que la
+// première recette débloque : la boucle propre à Cardamome, pas un vide générique.
+function OnboardingCard({ onNewRecipe, onOpenPublic }) {
+  const steps = [
+    { icon: "book", label: "Recette", on: true },
+    { icon: "calendar", label: "Planning", on: false },
+    { icon: "shopping", label: "Courses", on: false },
+  ];
+  return (
+    <div className="slide-up" style={{ animationDelay: "0.04s",
+      background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20,
+      padding: "22px 20px 18px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
+      <span style={{ width: 48, height: 48, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center",
+        background: "rgba(var(--accent-rgb),0.12)", border: "1px solid rgba(var(--accent-rgb),0.28)" }}>
+        <Icon name="book" size={24} color="var(--accent)" />
+      </span>
+      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "16px 0 6px" }}>
+        Ta cuisine démarre ici
+      </h3>
+      <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0, maxWidth: "44ch" }}>
+        Ajoute une première recette et tout s'enchaîne : le planning de la semaine, la liste de courses et le suivi du stock se remplissent ensuite pour toi.
+      </p>
+
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, marginTop: 18 }}>
+        <button onClick={onNewRecipe} className="btn btn-primary btn-pill pressable ripple" style={{ width: "auto" }}>
+          <Icon name="plus" size={16} color="#fff" /> Ajouter une recette
+        </button>
+        <button onClick={onOpenPublic} className="pressable" style={{ background: "none", border: "none", cursor: "pointer",
+          display: "inline-flex", alignItems: "center", gap: 4, padding: "8px 4px",
+          fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>
+          Explorer la communauté <Icon name="forward" size={14} color="var(--accent)" />
+        </button>
+      </div>
+
+      {/* Parcours : le geste suivant se débloque une fois la recette ajoutée. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+        {steps.map((s, i) => (
+          <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, opacity: s.on ? 1 : 0.5 }}>
+              <span style={{ width: 24, height: 24, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                background: s.on ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)" }}>
+                <Icon name={s.icon} size={14} color={s.on ? "var(--accent)" : "var(--text3)"} />
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: s.on ? "var(--text)" : "var(--text3)", whiteSpace: "nowrap" }}>{s.label}</span>
+            </span>
+            {i < steps.length - 1 && <span aria-hidden="true" style={{ flex: 1, minWidth: 12, height: 1, background: "var(--border)" }} />}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Pictogramme « foyer » : un toit qui abrite deux personnes. Inline pour pouvoir
 // le teinter en blanc sur le badge dégradé (aucune icône « groupe » dispo sinon).
 function FoyerGlyph({ size = 26 }) {
@@ -188,7 +243,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
     () => buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowStock, ingredientDB }),
     [mealPlan, recipes, shoppingLists, lowStock, ingredientDB]
   );
-  const { meals, shoppingTodo, lowStockNames, isCalm } = summary;
+  const { meals, shoppingTodo, lowStockNames, isCalm, isEmpty } = summary;
 
   // Regroupe les items d'un repas composé (même créneau + groupId) en UNE carte :
   // le plat en tête, les autres services résumés. Un item solo reste une carte.
@@ -245,6 +300,8 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
               <div className="skeleton" style={{ height: 62, borderRadius: 14 }} />
               <div className="skeleton" style={{ height: 62, borderRadius: 14 }} />
             </div>
+          ) : isEmpty ? (
+            <OnboardingCard onNewRecipe={onNewRecipe} onOpenPublic={onOpenPublic} />
           ) : isCalm ? (
             <button className="slide-up pressable ripple" onClick={() => setTab?.("meal-plan")}
               style={{ animationDelay: "0.04s", display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
@@ -252,7 +309,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
                 <Icon name="check" size={15} color="var(--ok)" />
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                <strong style={{ fontWeight: 600 }}>Tout est à jour</strong>
+                <strong style={{ fontWeight: 600 }}>Rien de prévu aujourd'hui</strong>
               </span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 12, fontWeight: 600, color: "var(--accent)", flexShrink: 0 }}>Planifier <Icon name="forward" size={13} color="var(--accent)" /></span>
             </button>

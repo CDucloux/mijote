@@ -122,18 +122,23 @@ export interface DashboardInput {
  * « rien à signaler ».
  *
  * @param input - Sources agrégées (planning, recettes, listes, stock bas, base, date).
- * @returns Le résumé du jour : repas, créneau à venir, courses, stock bas, `isCalm`.
+ * @returns Le résumé du jour : repas, créneau à venir, courses, stock bas, `isCalm`
+ *   (rien à signaler aujourd'hui) et `isEmpty` (compte encore vierge, à distinguer
+ *   d'un jour calme : sans aucune recette, on ne peut même pas planifier, il faut
+ *   inviter à démarrer plutôt que rassurer avec « tout est à jour »).
  */
 export function buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowStock, ingredientDB, date = new Date() }: DashboardInput = {}) {
   const key = todayKey(date);
   const meals = getTodayMeals(mealPlan, recipes, key);
   const shoppingTodo = countShoppingTodo(shoppingLists, ingredientDB);
   const lowStockNames = getLowStockNames(lowStock, ingredientDB);
+  const isCalm = meals.length === 0 && shoppingTodo === 0 && lowStockNames.length === 0;
   return {
     meals,
     upcomingSlot: upcomingSlot(date),
     shoppingTodo,
     lowStockNames,
-    isCalm: meals.length === 0 && shoppingTodo === 0 && lowStockNames.length === 0,
+    isCalm,
+    isEmpty: isCalm && (recipes?.length ?? 0) === 0,
   };
 }

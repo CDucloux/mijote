@@ -119,5 +119,19 @@ describe("buildDashboardSummary", () => {
   it("flags a calm day when there is nothing to surface", () => {
     const s = buildDashboardSummary({ mealPlan: {}, recipes, shoppingLists: [], lowStock: [], ingredientDB, date });
     expect(s.isCalm).toBe(true);
+    expect(s.isEmpty).toBe(false); // calme mais avec des recettes → pas vide
+  });
+  it("flags an empty account (no recipes, nothing planned) as empty", () => {
+    const s = buildDashboardSummary({ mealPlan: {}, recipes: [], shoppingLists: [], lowStock: [], ingredientDB, date });
+    expect(s.isCalm).toBe(true);
+    expect(s.isEmpty).toBe(true);
+  });
+  it("is not empty when the account has content to act on, even without recipes", () => {
+    const s = buildDashboardSummary({
+      mealPlan: {}, recipes: [],
+      shoppingLists: [{ items: [{ checked: false }] }],
+      lowStock: [], ingredientDB, date,
+    });
+    expect(s.isEmpty).toBe(false); // des courses à faire → inviter à démarrer n'a pas de sens
   });
 });
