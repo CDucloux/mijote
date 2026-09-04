@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
-  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, inferImplicitUtensils,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut, parseJsonLoose,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -117,6 +117,23 @@ describe("assignIdsAndLink", () => {
     expect([...r.steps[0].ingredients].sort()).toEqual(["i0", "i1"]);
     // Étape Croûtons : pain + huile + sel de la section Croûtons uniquement (jamais i0/i1).
     expect([...r.steps[1].ingredients].sort()).toEqual(["i2", "i3", "i4"]);
+  });
+  it("nom UNIQUE : se lie à une étape d'un autre groupe (l'oignon des « légumes » utilisé dans « la sauce »)", () => {
+    // Régression ratatouille : oignon/ail rangés dans « Les légumes » mais employés
+    // dans des étapes « La sauce tomate ». Un nom unique ne subit pas le cloisonnement.
+    const inter = {
+      ingredients: [
+        { name: "tomate", amount: 7, group: "La sauce tomate" },   // i0
+        { name: "oignon", amount: 2, group: "Les légumes" },       // i1
+        { name: "ail", amount: 8, unit: "gousse", group: "Les légumes" }, // i2
+      ],
+      utensils: [],
+      steps: [
+        { text: "Peler et émincer l'oignon, écraser l'ail.", group: "La sauce tomate", ingredients: ["oignon", "ail"], utensils: [] },
+      ],
+    };
+    const r = assignIdsAndLink(inter);
+    expect([...r.steps[0].ingredients].sort()).toEqual(["i1", "i2"]);
   });
   it("une étape hors-section peut lier des ingrédients de n'importe quel groupe (montage)", () => {
     const inter = {
@@ -370,54 +387,53 @@ describe("canonicalizeUnit", () => {
   });
 });
 
-describe("inferImplicitUtensils", () => {
-  const known = ["Râpe", "Bol", "Saladier", "Fouet", "Mixeur", "Rouleau", "Passoire"];
-
-  it("déduit la râpe d'un geste « râper » et le lie via l'assemblage", () => {
-    const inter = { steps: [{ text: "Râper le parmesan finement.", utensils: [] }] };
-    inferImplicitUtensils(inter, known);
-    expect(inter.steps[0].utensils).toContain("Râpe");
-    // bout-en-bout, comme le pipeline : remontée en tête (collectUtensils) puis
-    // assemblage. L'ustensile figure dans la recette ET est lié à l'étape.
-    inter.utensils = filterUtensilsToKnown(collectUtensils(inter), known);
-    const r = assignIdsAndLink(inter);
-    const rape = r.utensils.find(u => u.name === "Râpe");
-    expect(rape).toBeTruthy();
-    expect(r.steps[0].utensils).toContain(rape.id);
+describe("sanitizeCut", () => {
+  it("borne une chaîne en objet { forme }", () => {
+    expect(sanitizeCut("émincé")).toEqual({ forme: "émincé" });
   });
-
-  it("déduit un contenant pour « mélanger » (saladier en tête, sinon bol)", () => {
-    const inter = { steps: [{ text: "Mélanger la farine et le sucre.", utensils: [] }] };
-    inferImplicitUtensils(inter, known);
-    expect(inter.steps[0].utensils).toContain("Saladier");
-    // sans saladier dans la base, on retombe sur le bol
-    const inter2 = { steps: [{ text: "Bien mélanger le tout.", utensils: [] }] };
-    inferImplicitUtensils(inter2, ["Bol", "Fouet"]);
-    expect(inter2.steps[0].utensils).toContain("Bol");
+  it("borne un objet { forme, calibre } sans les inventer", () => {
+    expect(sanitizeCut({ forme: "brunoise", calibre: "fin" })).toEqual({ forme: "brunoise", calibre: "fin" });
+    expect(sanitizeCut({ forme: "des" })).toEqual({ forme: "des" });
   });
-
-  it("ne confond pas « rapidement » avec « râper »", () => {
-    const inter = { steps: [{ text: "Mélanger rapidement au fouet.", utensils: [] }] };
-    inferImplicitUtensils(inter, known);
-    expect(inter.steps[0].utensils).not.toContain("Râpe");
-    expect(inter.steps[0].utensils).toContain("Fouet");
+  it("écarte le calibre non textuel et tronque les longueurs", () => {
+    expect(sanitizeCut({ forme: "hache", calibre: 3 })).toEqual({ forme: "hache" });
+    expect(sanitizeCut("x".repeat(80)).forme).toHaveLength(40);
   });
-
-  it("ne pose que des ustensiles présents dans la base master", () => {
-    const inter = { steps: [{ text: "Râper le zeste du citron.", utensils: [] }] };
-    inferImplicitUtensils(inter, ["Casserole", "Fouet"]); // pas de râpe connue
-    expect(inter.steps[0].utensils || []).toEqual([]);
+  it("→ undefined si pas de forme exploitable", () => {
+    expect(sanitizeCut("")).toBeUndefined();
+    expect(sanitizeCut(null)).toBeUndefined();
+    expect(sanitizeCut({ calibre: "fin" })).toBeUndefined();
+    expect(sanitizeCut(["emince"])).toBeUndefined();
   });
+});
 
-  it("ne duplique pas un ustensile déjà cité sur l'étape", () => {
-    const inter = { steps: [{ text: "Fouetter les œufs en neige.", utensils: ["Fouet"] }] };
-    inferImplicitUtensils(inter, known);
-    expect(inter.steps[0].utensils.filter(u => u === "Fouet")).toHaveLength(1);
+describe("assignIdsAndLink : découpe (cut)", () => {
+  it("transporte la découpe brute de l'ingrédient (narrowing fait côté client)", () => {
+    const r = assignIdsAndLink({ ingredients: [{ name: "oignon", amount: 2, cut: { forme: "emince" } }], utensils: [], steps: [] });
+    expect(r.ingredients[0].cut).toEqual({ forme: "emince" });
   });
+  it("pas de découpe → pas de champ cut", () => {
+    const r = assignIdsAndLink({ ingredients: [{ name: "farine", amount: 250, unit: "g" }], utensils: [], steps: [] });
+    expect(r.ingredients[0].cut).toBeUndefined();
+  });
+});
 
-  it("no-op si la base master est vide (pas de bornage possible)", () => {
-    const inter = { steps: [{ text: "Râper le fromage.", utensils: [] }] };
-    inferImplicitUtensils(inter, []);
-    expect(inter.steps[0].utensils).toEqual([]);
+describe("parseJsonLoose", () => {
+  it("analyse un objet JSON nu", () => {
+    expect(parseJsonLoose('{"name":"tarte"}')).toEqual({ name: "tarte" });
+  });
+  it("retire les fences ```json et le texte autour de l'objet", () => {
+    expect(parseJsonLoose('Voici la recette :\n```json\n{"name":"tarte"}\n```\nVoilà.')).toEqual({ name: "tarte" });
+    expect(parseJsonLoose('bla {"a":1} bla')).toEqual({ a: 1 });
+  });
+  it("lève sur une réponse TRONQUÉE (max_tokens en plein JSON) : accolades déséquilibrées", () => {
+    // Non-régression : une sortie coupée par la limite de tokens n'est pas
+    // « réparée » en un objet partiel, elle lève (l'appelant le traduit alors
+    // en message « recette trop longue »).
+    expect(() => parseJsonLoose('{"name":"tarte","steps":[{"text":"Faire reveni')).toThrow();
+  });
+  it("lève sur une chaîne vide ou sans JSON", () => {
+    expect(() => parseJsonLoose("")).toThrow();
+    expect(() => parseJsonLoose("aucun json ici")).toThrow();
   });
 });

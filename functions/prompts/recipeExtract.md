@@ -1,4 +1,8 @@
-Tu extrais une recette depuis le texte brut d'une page web, en français.
+Tu extrais une recette depuis le texte brut d'une page web.
+
+LANGUE (règle prioritaire) : distingue deux registres qui ne se mélangent JAMAIS.
+- **Contenu en langue naturelle** (`name`, noms d'ingrédients, `text` et `tip` des étapes) : rédigé en **français impeccable**, orthographe et grammaire soignées, verbes ENTIERS et bien conjugués. Jamais d'anglicisme, jamais de mot tronqué, mal orthographié ou inventé (« séparer », pas « séparate » ; « dégermer », pas « dégerm » ; « émincer », pas « éminc »). Relis-toi.
+- **Charpente technique du JSON** : les **clés** (`name`, `ingredients`, `steps`…) et les **valeurs de vocabulaire fermé** (`unit`, `category`, `cut.forme` comme `emince`, `cisele`…) se recopient EXACTEMENT comme spécifié ci-dessous, en anglais ou sans accent quand c'est la forme imposée. On ne les traduit pas, on ne les « francise » pas.
 
 Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), au format EXACT :
 
@@ -11,7 +15,7 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
   "baseCategory": string,
   "yield": { "amount": number, "unit": string },
   "prepTime": number, "cookTime": number, "servings": number,
-  "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string }],
+  "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string, "cut"?: { "forme": string, "calibre"?: string } }],
   "utensils": [{ "name": string }],
   "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "utensilParams": object, "group": string }]
 }
@@ -54,10 +58,14 @@ INGRÉDIENTS
 - `unit` : EXACTEMENT une valeur de cette liste FERMÉE, sinon `""` (ingrédient à l'unité, « 3 œufs ») :
   `g` · `kg` · `mg` · `ml` · `cl` · `dl` · `l` · `cuillère à soupe` · `cuillère à café` · `gousse` · `sachet` · `tranche` · `botte` · `feuille` · `branche` · `poignée` · `verre` · `bol` · `tasse` · `boîte` · `pot` · `pièce`.
   INTERDIT dans `unit` (à convertir, cf. LANGUE & CONVERSIONS) : `pincée` (→ grammes), `cup`, `oz`, `lb`, `tbsp`, `tsp`, `fl oz`, `pint`, `quart`, `stick`.
+- `cut` (optionnel) : la **découpe de mise en place** quand la recette la précise (dans la ligne d'ingrédient ou les étapes : « oignon émincé », « carottes en brunoise », « ail haché », « pommes de terre en rondelles »). Objet `{ "forme": <valeur ci-dessous>, "calibre"?: "fin" | "moyen" | "gros" }`. **Omets `cut`** s'il n'y a pas de découpe au couteau (farine, œufs, liquides, épices en poudre…) ou si elle n'est pas indiquée : n'invente JAMAIS une découpe.
+  `forme` : EXACTEMENT une valeur de cette liste FERMÉE (minuscules, sans accent) : `emince` · `cisele` · `hache` · `chiffonade` · `rape` · `des` · `brunoise` · `mirepoix` · `paysanne` · `julienne` · `batonnet` · `rondelle` · `troncon` · `quartier`.
+  La découpe va dans `cut`, **jamais dans `name`** (cf. règle `name`) : « 2 oignons émincés » → name `oignon`, amount `2`, `cut` `{ "forme": "emince" }`.
 
 USTENSILES
-- Uniquement ceux réellement nécessaires ET présents dans cette liste (orthographe exacte) ; sinon n'en mets pas. Aucun → `[]`.
-- **Déduis aussi l'ustensile IMPLICITE** qu'un geste exige sans le nommer, et relie-le à l'étape : « râpé/zesté » → râpe ; « fouetté/monté » → fouet ; « mélanger/pétrir/mariner » → saladier ou bol ; « mixer/mixer fin » → mixeur ; « étaler la pâte » → rouleau ; « filtrer/passer » → passoire ou chinois. Reste TOUJOURS dans la limite de la liste ci-dessous.
+- Inscris tout ustensile que la recette **utilise vraiment**, qu'il soit **nommé** (« au fouet », « dans une poêle ») OU **implicite** : un geste peut exiger un ustensile sans le nommer. Déduis ces implicites et relie-les à l'étape concernée : « couper/émincer/hacher/trancher/tailler » → couteau ET planche (ils vont toujours ensemble) · « ébouillanter/blanchir/bouillir/cuire à l'eau » → casserole ou faitout · « faire revenir/saisir/sauter/poêler » → poêle · « rôtir/enfourner/gratiner » → plat + four · « râpé/zesté » → râpe · « fouetté/monté en neige » → fouet · « mélanger/pétrir/mariner » → saladier ou bol · « mixer » → mixeur · « étaler la pâte » → rouleau · « filtrer/passer » → passoire ou chinois.
+- **Invariant couteau + planche** : toute étape qui contient `couteau` (couper, émincer, hacher, trancher, tailler…) DOIT aussi contenir `planche`, et inversement : on ne coupe jamais sans planche. Ne relie jamais l'un sans l'autre.
+- **Une seule limite, absolue** : n'inscris QUE des ustensiles présents dans la liste `{{UTENSILS}}` (orthographe exacte), nommés comme implicites. Un ustensile pertinent mais absent de la liste s'omet (on n'invente rien). Aucun ustensile → `[]`.
   Liste : {{UTENSILS}}
 
 APPAREILS (réglages d'étape)
@@ -67,7 +75,7 @@ APPAREILS (réglages d'étape)
 ÉTAPES
 - **Regroupe** les actions d'une même phase en UNE étape (ex. « laver puis couper tous les légumes »). Vise un déroulé **synthétique**, en général **3 à 8 étapes** pour une recette simple. Ne crée jamais d'étape pour une action triviale, ne coupe pas une phrase en deux, et n'éclate pas une recette de salade en 15 étapes.
 - `text` : l'instruction, rédigée à l'**INFINITIF** (« Préparer », « Mélanger », « Enfourner »), **jamais** à l'impératif en « -ez » (« Préparez », « Mélangez »). Peut regrouper plusieurs gestes liés. **Ne répète PAS les quantités chiffrées** dans le texte : elles sont déjà affichées sous l'étape via les ingrédients liés (et sont ajustables). Écris « ajouter la farine et le beurre » plutôt que « ajouter 250 g de farine et 100 g de beurre ». Une indication *relative* reste permise si utile (« la moitié du beurre », « le reste du sucre »).
-- `ingredients` / `utensils` : les noms (repris EXACTEMENT de tes listes ci-dessus) utilisés dans l'étape ; `[]` sinon. **Ne relie QUE des ingrédients réellement mentionnés/utilisés dans le texte de CETTE étape** : ne « complète » jamais avec des ingrédients d'une autre phase parce qu'ils portent le même nom.
+- `ingredients` / `utensils` : les noms (repris EXACTEMENT de tes listes ci-dessus) utilisés dans l'étape ; `[]` sinon. **Relie CHAQUE ingrédient nommé dans le texte de l'étape**, y compris quand il est désigné par un article ou un pronom (« peler et émincer **l'oignon** », « écraser **l'ail** » → relie `oignon` et `ail`) : un ingrédient présent dans la liste et cité dans le geste ne doit JAMAIS être laissé sans lien, **même si son `group` diffère de celui de l'étape** (un « oignon » rangé dans « Les légumes » mais employé dans une étape « La sauce tomate » se relie bien à cette étape). Le seul garde-fou est le cloisonnement des HOMONYMES ci-dessous.
 - `tip` : seulement une **vraie** astuce technique non évidente (température, repère de cuisson, erreur classique). La PLUPART des étapes → `""`. Jamais à chaque étape, jamais inventée.
 - `image` : si une photo `⟦IMG:url⟧` figurant à proximité illustre le **geste ou le résultat** de CETTE étape et apporte une vraie valeur, mets son url exacte ; sinon `""`. Jamais une image décorative, un logo, une photo d'ambiance, ni l'image principale du plat. La plupart des étapes n'ont pas d'image.
 
@@ -76,8 +84,9 @@ GROUPEMENTS (sections)
 - **Par défaut `group` vaut `""`.** La GRANDE MAJORITÉ des recettes n'ont AUCUN groupement : une seule liste d'ingrédients, une seule suite d'étapes → **tous les `group` doivent alors être `""`**. N'invente JAMAIS de sections.
 - Ne remplis `group` **QUE** si la source structure EXPLICITEMENT la recette en sous-parties, signalées par des **intertitres** du type « Pour la pâte », « Pour la garniture », « For the sauce », « Génoise », « Crème au beurre »… (souvent en gras, chacun suivi de sa propre liste d'ingrédients et/ou de ses étapes).
 - Le libellé `group` : **court groupe nominal français**, SANS le « Pour la/le/les » (« Pour la pâte » → `group: "La pâte"` ou `"Pâte"`). Garde le **MÊME libellé exact** pour les ingrédients et les étapes d'une même sous-préparation, afin qu'ils se rejoignent.
+- **Le `group` d'un ingrédient suit la sous-préparation où il est UTILISÉ (les étapes qui l'emploient), pas sa famille culinaire.** Si un ingrédient ne sert que dans les étapes d'une seule section, donne-lui le `group` de cette section, même si une liste d'achat le rangerait ailleurs. Exemple : dans une ratatouille, oignon et ail employés uniquement pour la sauce tomate portent `group: "La sauce tomate"`, PAS `"Les légumes"`, même s'ils sont listés parmi les légumes.
 - Un ingrédient ou une étape hors de toute sous-partie nommée (assemblage/montage final, dressage) garde `group: ""`.
-- **Cloisonnement des sections** : une étape d'une sous-préparation ne peut relier dans ses `ingredients`/`utensils` QUE des ingrédients de la MÊME sous-préparation (même `group`) ou, à défaut, des ingrédients hors-section (`group: ""`). Elle ne DOIT JAMAIS aller chercher un ingrédient appartenant à un AUTRE `group`, même homonyme. Exemple : si « huile d'olive » et « sel » existent à la fois dans la vinaigrette et dans la section « Croûtons », une étape du groupe « Croûtons » relie l'huile d'olive et le sel **de la section Croûtons uniquement**, pas ceux de la vinaigrette. Chaque ligne d'ingrédient (avec sa quantité propre) n'est reliée qu'aux étapes de son propre groupe.
+- **Cloisonnement = désambiguïsation des HOMONYMES uniquement.** Il ne joue QUE lorsqu'un MÊME nom d'ingrédient existe dans PLUSIEURS sections. Dans ce cas seulement, une étape relie l'occurrence de SA propre section (ou hors-section), jamais l'homonyme d'un autre `group`. Exemple : si « huile d'olive » et « sel » existent à la fois dans la vinaigrette et dans la section « Croûtons », une étape du groupe « Croûtons » relie l'huile d'olive et le sel **de la section Croûtons**, pas ceux de la vinaigrette. Hors de ce cas d'homonymie, le `group` ne restreint PAS le linking : un ingrédient au nom unique se relie à toute étape qui l'emploie, quel que soit son `group`.
 - Dans le doute, ou si le découpage n'est pas net → `""`. Mieux vaut aucune section qu'une section erronée.
 
 RÈGLES

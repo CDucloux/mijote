@@ -23,8 +23,8 @@ import { defineSecret, defineString } from "firebase-functions/params";
 import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
-  assignIdsAndLink, collectUtensils, filterUtensilsToKnown, inferImplicitUtensils, CUISINE_LABELS,
-  parseApplianceInfos, formatAppliancesForPrompt,
+  assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
+  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, parseJsonLoose,
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
@@ -40,6 +40,13 @@ const MAX_HTML_BYTES = 3_000_000;
 const FETCH_TIMEOUT_MS = 15_000;
 /** Modèle d'extraction pour l'URL (texte déjà propre). */
 const MODEL = "claude-haiku-4-5";
+/**
+ * Plafond de tokens de sortie. 4096 était trop juste : une recette longue et
+ * verbeuse (nombreuses étapes, astuces, conversions) dépassait ce budget, la
+ * réponse était coupée en plein JSON et devenait illisible. 8192 donne une marge
+ * confortable sans surcoût réel (le modèle s'arrête à `end_turn` bien avant).
+ */
+const MAX_OUTPUT_TOKENS = 8192;
 /**
  * Modèle d'extraction pour les PHOTOS. L'OCR d'une page de livre exige une bien
  * meilleure vision que l'URL : on confie ce cas à Sonnet, plus fiable sur les
@@ -65,20 +72,33 @@ const PROMPT_TEMPLATE = fs
 const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "..", "..", "prompts", "recipeExtractImage.md"), "utf-8");
 
 /**
- * Extrait un objet JSON d'une réponse LLM, en tolérant les fences ```json et le
- * texte parasite autour de l'objet.
+ * Analyse la réponse d'un modèle en un brouillon JSON, en distinguant les échecs
+ * pour un message actionnable au lieu d'un « illisible » opaque : réponse vide,
+ * sortie TRONQUÉE (limite de tokens atteinte → JSON coupé), ou JSON réellement
+ * inexploitable. Factorise le bloc commun aux trois points d'entrée d'extraction.
  *
- * @param s - La réponse texte brute du modèle.
- * @returns L'objet analysé (typé `unknown` : payload externe non fiable).
- * @throws SyntaxError si aucun JSON exploitable n'est trouvé.
+ * @param response - La réponse brute du modèle (SDK Anthropic).
+ * @param kind - L'origine (`url` / `text` / `images`), pour la trace de diagnostic.
+ * @returns Le brouillon LLM brut (payload externe non fiable, narrowé en aval).
+ * @throws HttpsError `internal` si la réponse est vide ou le JSON illisible ;
+ *   `resource-exhausted` si la sortie a été tronquée (recette trop longue).
  */
-function parseJsonLoose(s: string): unknown {
-  let t = (s || "").trim();
-  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fence) t = fence[1].trim();
-  const a = t.indexOf("{"), b = t.lastIndexOf("}");
-  if (a >= 0 && b > a) t = t.slice(a, b + 1);
-  return JSON.parse(t);
+function parseModelResponse(response: Anthropic.Message, kind: string): LlmDraft {
+  const block = (response.content || []).find((b) => b.type === "text");
+  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
+  let parsed: LlmDraft;
+  try {
+    parsed = parseJsonLoose(block.text) as LlmDraft;
+  } catch {
+    if (response.stop_reason === "max_tokens") {
+      logger.warn(`import[${kind}] réponse tronquée (max_tokens atteint)`);
+      throw new HttpsError("resource-exhausted", "Recette trop longue pour l'import automatique. Colle plutôt le texte de la recette, ou importe une version plus courte.");
+    }
+    throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable).");
+  }
+  logRawModelJson(kind, block.text);
+  logDetectedGroups(kind, parsed);
+  return parsed;
 }
 
 /**
@@ -131,7 +151,7 @@ async function fetchHtml(url: string): Promise<string> {
 type LlmDraft = Record<string, unknown> & {
   name?: string; prepTime?: number; cookTime?: number; servings?: number;
   cuisine?: string; category?: string;
-  ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown }[];
+  ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown; cut?: unknown }[];
   utensils?: { name?: string }[];
   steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; utensilParams?: unknown; group?: unknown }[];
   /** Numéro (1-based) de l'image qui est la photo du plat, 0/absent si aucune. */
@@ -192,6 +212,7 @@ function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
       const a = num(i.amount); if (a != null) ing.amount = a;
       if (i.unit) ing.unit = String(i.unit).slice(0, 30);
       const group = (typeof i.group === "string" ? i.group : "").trim(); if (group) ing.group = group.slice(0, 80);
+      const cut = sanitizeCut(i.cut); if (cut) ing.cut = cut;
       return ing;
     }).filter((i) => i.name),
     utensils: (d.utensils || []).map((u) => ({ name: (u.name || "").slice(0, 60) })).filter((u) => u.name),
@@ -266,7 +287,7 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[], 
   let response: Anthropic.Message;
   try {
     response = await client.messages.create({
-      model: VISION_MODEL, max_tokens: 4096, system,
+      model: VISION_MODEL, max_tokens: MAX_OUTPUT_TOKENS, system,
       messages: [{ role: "user", content }],
     });
   } catch (e) {
@@ -274,16 +295,10 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[], 
     logger.error("Anthropic API error (images):", err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  const block = (response.content || []).find((b) => b.type === "text");
-  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
-  let parsed: LlmDraft;
-  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
-  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
+  const parsed = parseModelResponse(response, "images");
   // Conversion du numéro 1-based du modèle en index 0-based validé (-1 = aucune).
   const cp = Number(parsed.coverPhoto);
   const coverIndex = Number.isInteger(cp) && cp >= 1 && cp <= images.length ? cp - 1 : -1;
-  logRawModelJson("images", block.text);
-  logDetectedGroups("images", parsed);
   return { inter: llmToIntermediate(parsed, ""), coverIndex };
 }
 
@@ -312,7 +327,7 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
   try {
     response = await client.messages.create({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: MAX_OUTPUT_TOKENS,
       system,
       messages: [{ role: "user", content: `Texte de la page (source : ${sourceUrl}) :\n\n${body}` }],
     });
@@ -321,14 +336,7 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
     logger.error("Anthropic API error:", err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  const block = (response.content || []).find((b) => b.type === "text");
-  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
-  let parsed: LlmDraft;
-  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
-  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
-  logRawModelJson("url", block.text);
-  logDetectedGroups("url", parsed);
-  return llmToIntermediate(parsed, sourceUrl);
+  return llmToIntermediate(parseModelResponse(response, "url"), sourceUrl);
 }
 
 /**
@@ -357,7 +365,7 @@ async function extractFromText(text: string, knownUtensils: string[], applianceI
   try {
     response = await client.messages.create({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: MAX_OUTPUT_TOKENS,
       system,
       messages: [{ role: "user", content: `Texte de la recette collée :\n\n${body}` }],
     });
@@ -366,14 +374,7 @@ async function extractFromText(text: string, knownUtensils: string[], applianceI
     logger.error("Anthropic API error (text):", err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  const block = (response.content || []).find((b) => b.type === "text");
-  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
-  let parsed: LlmDraft;
-  try { parsed = parseJsonLoose(block.text) as LlmDraft; }
-  catch { throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable)."); }
-  logRawModelJson("text", block.text);
-  logDetectedGroups("text", parsed);
-  return llmToIntermediate(parsed, "");
+  return llmToIntermediate(parseModelResponse(response, "text"), "");
 }
 
 /** Trace dans Cloud Logging les sections (`group`) renvoyées par le modèle, pour
@@ -444,7 +445,6 @@ export const importRecipeFromUrl = onCall(
       if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
       const inter = await extractWithLlm(text, url, knownUtensils, applianceInfos);
       inter.image = ogImage;
-      inferImplicitUtensils(inter, knownUtensils); // ustensiles implicites (râper → râpe…), en amont du filtre
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       // Anti-hallucination : on ne garde que des URLs présentes dans la page, et
       // jamais l'image principale du plat.
@@ -492,7 +492,6 @@ export const importRecipeFromImages = onCall(
     try {
       const { inter, coverIndex } = await extractFromImages(images, knownUtensils, applianceInfos);
       inter.image = "";
-      inferImplicitUtensils(inter, knownUtensils); // ustensiles implicites (râper → râpe…), en amont du filtre
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
       const recipe = assignIdsAndLink(inter);
@@ -530,7 +529,6 @@ export const importRecipeFromText = onCall(
     try {
       const inter = await extractFromText(text, knownUtensils, applianceInfos);
       inter.image = "";
-      inferImplicitUtensils(inter, knownUtensils); // ustensiles implicites (râper → râpe…), en amont du filtre
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un texte collé
       const recipe = assignIdsAndLink(inter);

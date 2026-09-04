@@ -1,5 +1,19 @@
 # Changelog – Cardamome
 
+## v4.22.0 – Cardamome · Tout couper d'avance
+
+### Découpe en mise en place
+- **La planche avant les casseroles** : le mode cuisine affiche désormais un poste « Découpe » en tête de mise en place, qui regroupe et ordonne tous les gestes de taille (« Émincer : 3 oignons », « Ciseler : 1 échalote », « Râper : 200 g de carottes »…) pour tout tailler d'un coup, planche propre jusqu'au bout, avant d'allumer le feu.
+- **Chaque geste se coche** : comme les ingrédients et les ustensiles, chaque poste de découpe se coche au doigt et un compteur suit l'avancement, pour ne rien oublier et voir la planche se vider.
+- **Les quantités suivent le nombre de convives** : les quantités affichées sur chaque poste se mettent à l'échelle avec le multiplicateur de la recette.
+
+### Import intelligent
+- **L'import repère la découpe** : à l'import d'une recette, la forme de taille de chaque ingrédient (émincé, ciselé, en dés, en brunoise, râpé, en rondelles…) est extraite et rattachée à l'ingrédient, ce qui alimente directement le poste « Découpe » du mode cuisine.
+- **Un français impeccable, garanti** : le contrat de langue est désormais posé en tête du prompt, l'import ne laisse plus passer de tournures bancales ou d'anglicismes dans les étapes.
+- **Fini les imports illisibles** : un budget de sortie trop court tronquait parfois le JSON de la recette et rendait l'import inexploitable ; ce cas est corrigé, les longues recettes passent en entier.
+- **Ustensiles sous-entendus et liens plus fiables** : l'inférence des ustensiles implicites et le rattachement des ingrédients aux étapes sont renforcés (invariant couteau + planche, verbes d'action complets), pour une mise en place plus juste.
+- **Plus de mots coupés en deux** : le nettoyage du texte source ne casse plus un mot enrobé d'une balise de mise en forme (gras, italique) au moment de lire la page.
+
 ## v4.21.1 – Cardamome · Compte au propre
 
 ### Panneau compte (mobile)

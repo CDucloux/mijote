@@ -9,6 +9,7 @@
 import { validateRecipeSchema } from "@/lib/recipes/recipeSchema.js";
 import { buildNameMatcher } from "@/lib/food/nameMatcher.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
+import { parseCut } from "@/lib/recipes/decoupe.js";
 import type { Recipe } from "@/lib/types.js";
 
 /** Recette importée (alias du type de domaine). */
@@ -65,10 +66,14 @@ export function prepareRecipeImport(
     // l'utilisateur, puis recalcule le score santé. Un dbId déjà présent est respecté.
     const prepared = validRecipes.map(r => {
       const ingredients = (r.ingredients || []).map(ing => {
-        if (ing.dbId) return ing;
-        const dbId = matchIng(ing.name);
-        if (dbId) linked++;
-        return { ...ing, dbId };
+        // Découpe : on ramène TOUJOURS au vocabulaire fermé (même si `dbId` est déjà
+        // là), et on écarte toute découpe non reconnue plutôt que de stocker du brut.
+        const cut = parseCut(ing.cut);
+        const dbId = ing.dbId || matchIng(ing.name);
+        if (!ing.dbId && dbId) linked++;
+        const next = { ...ing, dbId };
+        if (cut) next.cut = cut; else delete next.cut;
+        return next;
       });
       const utensils = (r.utensils || []).map(u => {
         if (u.dbId) return u;

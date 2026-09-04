@@ -7,6 +7,36 @@
 
 // ── Types (les payloads LLM sont volontairement lâches : JSON externe non fiable)
 
+/** Découpe brute portée par un ingrédient (forme + calibre grossiers). Le narrowing
+ *  final vers le vocabulaire fermé se fait côté client (`parseCut` dans `decoupe`) :
+ *  ici on ne fait que transporter la valeur bornée renvoyée par le LLM. */
+export interface RawCut {
+  forme: string;
+  calibre?: string;
+}
+
+/**
+ * Borne une découpe renvoyée par le LLM (chaîne « émincé » ou objet `{ forme,
+ * calibre }`) en un objet `{ forme, calibre? }` de longueurs limitées. Ne fait
+ * AUCUN narrowing vers le vocabulaire fermé (c'est le rôle de `parseCut` côté
+ * client) : on transporte une valeur bornée, jamais inventée.
+ *
+ * @param raw - Valeur brute (payload LLM non fiable).
+ * @returns La découpe bornée, ou `undefined` si inexploitable.
+ */
+export function sanitizeCut(raw: unknown): RawCut | undefined {
+  let forme: unknown, calibre: unknown;
+  if (typeof raw === "string") forme = raw;
+  else if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    forme = (raw as Record<string, unknown>).forme;
+    calibre = (raw as Record<string, unknown>).calibre;
+  }
+  if (typeof forme !== "string" || !forme.trim()) return undefined;
+  const cut: RawCut = { forme: forme.trim().slice(0, 40) };
+  if (typeof calibre === "string" && calibre.trim()) cut.calibre = calibre.trim().slice(0, 20);
+  return cut;
+}
+
 /** Ingrédient au fil de l'assemblage (nom + quantité/unité optionnelles). */
 export interface DraftIngredient {
   name?: string;
@@ -16,6 +46,8 @@ export interface DraftIngredient {
   _raw?: string;
   /** Section/sous-préparation (« La pâte »…). Vide/absent = pas de groupement. */
   group?: string;
+  /** Découpe de mise en place (émincé, brunoise…), narrowée côté client. */
+  cut?: RawCut;
 }
 
 /** Ustensile (nom seul), parfois une simple chaîne côté LLM. */
@@ -81,6 +113,8 @@ export interface RecipeIngredient {
   amount?: number | string;
   unit?: string;
   group?: string;
+  /** Découpe de mise en place (brute, narrowée côté client). */
+  cut?: RawCut;
 }
 
 /** Ustensile au schéma final. */
@@ -393,62 +427,6 @@ export function filterUtensilsToKnown(utensils: DraftUtensil[], knownNames: stri
   });
 }
 
-// Gestes qui EXIGENT un ustensile sans le nommer → ustensile(s) canonique(s), le
-// premier disponible dans la base master l'emporte. Testé sur le TEXTE de l'étape
-// normalisé (sans accent, minuscules). Bornes de mot pour éviter les faux positifs
-// (« mélanger rapidement » ne déclenche pas la râpe).
-const IMPLICIT_UTENSIL_RULES: { test: RegExp; targets: string[] }[] = [
-  { test: /\brap(e|es|er|ee|ees|ez)\b|\bzest/, targets: ["râpe"] },
-  { test: /\bfouett|\bfouet\b|\bneige\b/, targets: ["fouet"] },
-  { test: /\bmelang|\bpetri|\bmarin(e|es|er|ee|ees|ez|ade)\b|\bincorpor/, targets: ["saladier", "bol"] },
-  { test: /\bmix(e|es|er|ez|ee|ees)?\b|\bblend|\bmoulin/, targets: ["mixeur", "blender"] },
-  { test: /(etal\w*\s+(la\s+)?pate)|\babaiss|\brouleau\b/, targets: ["rouleau"] },
-  { test: /\bfiltr|\btamis|\bchinois\b/, targets: ["passoire", "chinois", "tamis"] },
-];
-
-/**
- * Résout un ustensile canonique (« râpe », « saladier »…) vers son libellé EXACT
- * dans la base master (faute de quoi il serait filtré et non lié côté client).
- * Rapprochement tolérant (accents/casse, inclusion), comme {@link filterUtensilsToKnown}.
- *
- * @returns Le nom tel qu'écrit dans la base, ou `null` s'il en est absent.
- */
-function resolveKnownUtensil(target: string, knownNames: string[]): string | null {
-  const t = norm(target);
-  for (const name of knownNames) {
-    const n = norm(name);
-    if (n === t || n.includes(t) || t.includes(n)) return name;
-  }
-  return null;
-}
-
-/**
- * Déduit DÉTERMINISTIQUEMENT les ustensiles qu'un geste d'étape exige sans les
- * nommer (râper → râpe, mélanger → saladier/bol…) et les rattache à l'étape, en
- * complément du prompt : la fiabilité ne dépend plus de l'adhérence du modèle. Ne
- * pose QUE des ustensiles présents dans la base master (même bornage que le reste
- * du flux), n'invente rien et ne duplique pas un ustensile déjà cité sur l'étape.
- *
- * @param inter - Brouillon intermédiaire (ses étapes sont mutées en place).
- * @param knownNames - Noms d'ustensiles de la base master (bornage).
- */
-export function inferImplicitUtensils(inter: Pick<Intermediate, "steps">, knownNames: string[]): void {
-  if (!knownNames?.length) return;
-  for (const step of inter.steps || []) {
-    const text = norm(step.text);
-    if (!text) continue;
-    const present = new Set((step.utensils || []).map((u) => norm(typeof u === "string" ? u : u?.name)));
-    for (const rule of IMPLICIT_UTENSIL_RULES) {
-      if (!rule.test.test(text)) continue;
-      const resolved = rule.targets.map((t) => resolveKnownUtensil(t, knownNames)).find((r): r is string => !!r);
-      if (resolved && !present.has(norm(resolved))) {
-        (step.utensils ||= []).push(resolved);
-        present.add(norm(resolved));
-      }
-    }
-  }
-}
-
 // Assemble le brouillon FINAL au schéma Cardamome : ids stables sur ingrédients/
 // ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
 // fourni par le LLM, complété par détection dans le texte de l'étape).
@@ -471,22 +449,41 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     if (unit) ing.unit = unit;
     const group = (i.group || "").toString().trim();
     if (group) ing.group = group;
+    if (i.cut) ing.cut = i.cut; // découpe brute transportée telle quelle (narrowing client)
     return ing;
   });
   const utensils: RecipeUtensil[] = (d.utensils || []).map((u, k) => ({ id: `u${k}`, dbId: "", name: ((u as DraftUtensil).name || u).toString() }));
+
+  // Cloisonnement = désambiguïsation des HOMONYMES uniquement. Un même nom présent
+  // dans plusieurs groupes distincts est ambigu : une étape ne relie alors que
+  // l'occurrence de sa propre section (ou hors-section). Un nom UNIQUE, lui, se lie
+  // librement quel que soit son groupe (un « oignon » rangé dans « Les légumes »
+  // mais employé dans une étape « La sauce tomate » DOIT s'y rattacher).
+  const groupsByName = new Map<string, Set<string>>();
+  for (const i of ingredients) {
+    if (!i.name) continue;
+    const key = norm(i.name);
+    let set = groupsByName.get(key);
+    if (!set) { set = new Set(); groupsByName.set(key, set); }
+    set.add((i.group || "").trim());
+  }
+  const isAmbiguous = (name: string): boolean => (groupsByName.get(norm(name))?.size ?? 0) > 1;
 
   const steps: RecipeStep[] = (d.steps || []).map((s, k) => {
     const text = norm(s.text);
     const stepGroup = (s.group || "").toString().trim();
     const explicitIng = new Set((s.ingredients || []).map(norm));
     const explicitUt = new Set((s.utensils || []).map((x) => norm(typeof x === "string" ? x : x?.name)));
-    // Cloisonnement des sections : une étape appartenant à une sous-préparation ne
-    // peut se lier qu'aux ingrédients du MÊME groupe (ou hors-section), jamais à un
-    // ingrédient homonyme d'un AUTRE groupe (sinon l'« huile d'olive » de la
-    // vinaigrette se relie à tort à une étape du groupe « Croûtons »). Une étape
-    // hors-section (montage/dressage) reste libre de tout lier (comportement inchangé).
-    const inScope = (g: string | undefined): boolean => { if (!stepGroup) return true; const ig = (g || "").trim(); return ig === "" || ig === stepGroup; };
-    const ingIds = ingredients.filter((i) => i.name && inScope(i.group) && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map((i) => i.id);
+    // Étape hors-section : libre. Nom unique : le groupe ne restreint pas. Homonyme
+    // (même nom dans plusieurs sections) : on garde l'occurrence de la section de
+    // l'étape (ou hors-section), pour ne pas relier l'« huile d'olive » de la
+    // vinaigrette à une étape « Croûtons ».
+    const inScope = (i: RecipeIngredient): boolean => {
+      if (!stepGroup || !isAmbiguous(i.name)) return true;
+      const ig = (i.group || "").trim();
+      return ig === "" || ig === stepGroup;
+    };
+    const ingIds = ingredients.filter((i) => i.name && inScope(i) && (explicitIng.has(norm(i.name)) || mentions(text, i.name))).map((i) => i.id);
     const utIds = utensils.filter((u) => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map((u) => u.id);
     const rs: RecipeStep = { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
     if (stepGroup) rs.group = stepGroup;
@@ -589,4 +586,22 @@ export function imageUrlsInText(text: string): Set<string> {
   const set = new Set<string>();
   for (const m of (text || "").matchAll(/⟦IMG:([^⟧]+)⟧/g)) set.add(m[1]);
   return set;
+}
+
+/**
+ * Extrait un objet JSON d'une réponse LLM, en tolérant les fences ```json et le
+ * texte parasite autour de l'objet. Une réponse TRONQUÉE (limite de tokens
+ * atteinte en plein objet) lève ici : les accolades ne s'équilibrent pas.
+ *
+ * @param s - La réponse texte brute du modèle (payload externe non fiable).
+ * @returns L'objet analysé (typé `unknown` : à narrower côté appelant).
+ * @throws SyntaxError si aucun JSON exploitable n'est trouvé.
+ */
+export function parseJsonLoose(s: string): unknown {
+  let t = (s || "").trim();
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) t = fence[1].trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a >= 0 && b > a) t = t.slice(a, b + 1);
+  return JSON.parse(t);
 }

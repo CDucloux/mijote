@@ -10,6 +10,7 @@ import { Img, IngImage } from "../components/Img.jsx";
 import { TechniqueText } from "../components/TechniqueText.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
+import { buildPostesDecoupe, posteLabel } from "@/lib/recipes/decoupe.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { consumptionFraction } from "@/lib/recipes/recipeComponents.js";
@@ -80,8 +81,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   // CETTE session de cuisine, jamais persistée (elle n'a plus de sens à la prochaine).
   const [checkedIngIds, setCheckedIngIds] = useState(() => new Set());
   const [checkedUtIds, setCheckedUtIds] = useState(() => new Set());
+  const [checkedCutKeys, setCheckedCutKeys] = useState(() => new Set());
   const toggleIngChecked = (id) => setCheckedIngIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   const toggleUtChecked = (id) => setCheckedUtIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const toggleCutChecked = (key) => setCheckedCutKeys(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; });
   // Conversion d'une quantité en cuillères (feuille), depuis la mise en place.
   const [convIng, setConvIng] = useState(null);
   // Unité d'affichage choisie par ingrédient (cuillère à soupe / à café), pour qui
@@ -189,6 +192,16 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       .filter(([k]) => buckets[k]?.length)
       .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: buckets[k] }));
   }, [recipe.ingredients, ingredientDB, categories]);
+  // Postes de découpe de la mise en place : regroupés/ordonnés depuis les
+  // ingrédients porteurs d'une découpe, aux quantités mises à l'échelle (mult).
+  const postesDecoupe = useMemo(() => {
+    const scaled = (recipe.ingredients || []).map(i => {
+      const a = i.amount != null && i.amount !== "" ? Number(i.amount) * (mult || 1) : i.amount;
+      return { ...i, amount: a };
+    });
+    return buildPostesDecoupe(scaled, techIndex);
+  }, [recipe.ingredients, mult, techIndex]);
+
   const realStepCount = (recipe.steps || []).length;
   const pages = useMemo(() => {
     const arr = [];
@@ -445,6 +458,26 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     );
   };
 
+  // Rendu d'un poste de découpe COCHABLE : geste impératif + quantité (« Émincer :
+  // 3 oignons »), même rangée cliquable que les ingrédients.
+  const renderPosteRow = (poste) => {
+    const done = checkedCutKeys.has(poste.key);
+    const toggle = () => toggleCutChecked(poste.key);
+    return (
+      <div key={poste.key} role="button" tabIndex={0} onClick={toggle}
+        onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
+        className="pressable"
+        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", cursor: "pointer", borderRadius: 10 }}>
+        <span style={{ width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: "grid", placeItems: "center", border: `2px solid ${done ? "var(--ok)" : "var(--border)"}`, background: done ? "var(--ok)" : "transparent", transition: "background 0.15s, border-color 0.15s" }}>
+          {done && <Icon name="check" size={13} color="#fff" />}
+        </span>
+        <span style={{ flex: 1, fontSize: 14, color: "var(--text)", textDecoration: done ? "line-through" : "none", opacity: done ? 0.55 : 1, transition: "opacity 0.15s" }}>
+          {posteLabel(poste)}
+        </span>
+      </div>
+    );
+  };
+
   return createPortal(
     <>
       {/* CookMode imbriqué pour un composant */}
@@ -635,6 +668,23 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                             </button>
                           );
                         })}
+                      </div>
+                    </div>
+                  )}
+                  {postesDecoupe.length > 0 && (
+                    <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Découpe</span>
+                        {checkedCutKeys.size > 0 && (
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--ok)", background: "rgba(var(--ok-rgb),0.12)", borderRadius: 999, padding: "1px 8px" }}>
+                            {checkedCutKeys.size}/{postesDecoupe.length}
+                          </span>
+                        )}
+                      </div>
+                      {/* Le geste est déjà dans chaque libellé : une seule ligne d'intro suffit. */}
+                      <p style={{ fontSize: 11.5, color: "var(--text3)", margin: "0 0 12px", lineHeight: 1.45 }}>Taille tout d'avance, dans l'ordre : planche propre jusqu'au bout.</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {postesDecoupe.map(renderPosteRow)}
                       </div>
                     </div>
                   )}

@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.21.1-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.22.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -58,7 +58,9 @@ toujours avec vous.
 - 🤖 **Import intelligent** : importez une recette depuis une **URL**, **1 à 2
   photos** d'un livre ou un **texte collé** (mail, note, message) : extraction,
   structuration et liaison des ingrédients / ustensiles par Claude, qui
-  **détecte aussi les préparations de base** (caramel, pâte, fond…) et leur
+  **extrait aussi la découpe de chaque ingrédient** (émincé, ciselé, en dés,
+  râpé…) pour alimenter le poste « Découpe » du mode cuisine, et
+  **détecte les préparations de base** (caramel, pâte, fond…) et leur
   rendement estimé (réservé aux abonnés **Cardamome+**, quotas jour/mois ;
   illimité pour l'administrateur). Les trois modes vivent sur un écran unique à
   onglets, avec une sélection de **sources recommandées** (configurable en console
@@ -92,7 +94,9 @@ toujours avec vous.
   côté serveur pour WhatsApp / iMessage…), lisible même sans compte.
 - 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable
   (regroupable par catégorie via un interrupteur, quantités affichables en
-  cuillères à soupe ou à café au choix), photos et astuces d'étape incluses, et
+  cuillères à soupe ou à café au choix), avec un **poste « Découpe »** qui
+  regroupe et ordonne tous les gestes de taille (émincer, ciseler, tailler en
+  dés, râper…) mis à l'échelle du nombre de convives, photos et astuces d'étape incluses, et
   **minuteurs à notification native** (l'alerte sonne même écran verrouillé). Les
   gestes techniques repérés dans les étapes ouvrent un **glossaire enrichi**
   (définition, résultat attendu, erreurs fréquentes, à ne pas confondre).
