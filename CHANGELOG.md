@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.25.0 – Cardamome · Une cuisine qui démarre
+
+### Accueil
+- **Un premier pas clair quand tout est vide** : à la première connexion, l'accueil n'affiche plus « Tout est à jour » (rassurant à tort quand on n'a encore ni recette, ni planning, ni courses). À la place, une invitation à démarrer : « Ta cuisine démarre ici », un bouton pour ajouter une première recette et un lien pour explorer la communauté, avec le parcours Recette, Planning, Courses qui montre ce que la première recette débloque.
+- **Un jour sans rien de prévu se dit juste** : quand tu as déjà des recettes mais rien de planifié aujourd'hui, le message devient « Rien de prévu aujourd'hui » (au lieu de « Tout est à jour »), avec le raccourci pour planifier.
+
 ## v4.24.0 – Cardamome · Des créneaux qui invitent
 
 ### Planning
