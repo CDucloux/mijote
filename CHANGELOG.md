@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.24.0 – Cardamome · Des créneaux qui invitent
+
+### Planning
+- **Un créneau vide se lit et s'ouvre d'un geste** : sur une semaine non remplie, chaque jour montre désormais deux rangées claires, « Midi, ajouter le déjeuner » et « Soir, ajouter le dîner », au lieu d'un aplat teinté muet. Un lavis léger dans la couleur du créneau, l'icône du moment (soleil le midi, lune le soir) et le libellé du repas disent d'un coup d'œil quoi ajouter et où.
+- **On tombe pile sur le bon créneau** : cliquer une rangée vide ouvre l'ajout déjà réglé sur ce créneau (le soir compris), au lieu du midi par défaut. Le lavis se densifie au survol, les créneaux déjà remplis ne bougent pas d'un pixel et le glisser-déposer reste intact.
+
 ## v4.23.0 – Cardamome · Ton abonnement, au clair
 
 ### Page Formule (état abonné)
