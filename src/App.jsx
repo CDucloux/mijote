@@ -56,7 +56,7 @@ import { LegalPage } from "./pages/LegalPage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { ImportPage } from "./pages/ImportPage.jsx";
-import { PlusPage } from "./pages/PlusPage.jsx";
+import { PlanPage } from "./pages/PlanPage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent,
@@ -162,7 +162,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // mégarde (il est aussi mis en cache en sessionStorage, restauré ci-dessous).
   const newRoute = recipeSeg === "new";
   // Page d'offre Cardamome+ (route dédiée).
-  const plusRoute = location.pathname === "/plus";
+  const planRoute = location.pathname === "/plan";
   const cookModeRoute = recipeSeg.endsWith("/cookmode");
   const editRoute = recipeSeg.endsWith("/edit");
   const routeSuffix = cookModeRoute ? "/cookmode" : editRoute ? "/edit" : "";
@@ -245,11 +245,11 @@ function AppInner({ user, isDark, toggleTheme }) {
   }), []);
   // Accès à l'offre Cardamome+ : abonnement Stripe actif (extension Firebase) OU
   // admin (accès complet du propriétaire de l'app).
-  const subscribed = useSubscription(user?.uid);
-  const isPlus = isAdmin || subscribed;
+  const subscription = useSubscription(user?.uid);
+  const isPlus = isAdmin || subscription.active;
   const shellValue = useMemo(
-    () => ({ user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, ...stableApi }),
-    [user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, stableApi]
+    () => ({ user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, ...stableApi }),
+    [user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, stableApi]
   );
 
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
@@ -292,7 +292,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     // pour rien) : au-delà de la limite → offre Cardamome+.
     if (!canAddRecipes(recipes, isPlus, 1)) {
       notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
-      navigate("/plus");
+      navigate("/plan");
       return;
     }
     const p = preset && typeof preset === "object" ? preset : {};
@@ -350,7 +350,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   const duplicateRecipe = useCallback((recipe) => {
     if (!canAddRecipes(recipes, isPlus, 1)) {
       notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
-      navigate("/plus");
+      navigate("/plan");
       return;
     }
     const copy = { ...recipe, id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: `${recipe.name} (copie)`, createdAt: Date.now(), updatedAt: Date.now() };
@@ -386,9 +386,9 @@ function AppInner({ user, isDark, toggleTheme }) {
     const ingFicheId = adminFiche ? decodeURIComponent(location.pathname.replace(/^\/admin\/ingredients\//, "")) : null;
     const ingName = ingFicheId ? ingredientDB.find(d => d.id === ingFicheId)?.name : null;
     // Écrans hors onglets (dérivés de l'URL) : leur propre titre plutôt que le repli « Accueil ».
-    const routeName = plusRoute ? "Abonnement" : null;
+    const routeName = planRoute ? "Abonnement" : null;
     document.title = `Cardamome | ${recipeName || ingName || routeName || TAB_TITLES[tab] || "Accueil"}`;
-  }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB, plusRoute]);
+  }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB, planRoute]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
   // ── Sortie animée de la fiche recette (ressenti « app native ») ───────────────
@@ -534,9 +534,9 @@ function AppInner({ user, isDark, toggleTheme }) {
     <div key="import" className={`page-slide-in-right${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
       <ImportPage mode={importRoute === "url" ? "lien" : importRoute === "text" ? "texte" : "photo"} />
     </div>
-  ) : plusRoute ? (
+  ) : planRoute ? (
     <div className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
-      <PlusPage />
+      <PlanPage />
     </div>
   ) : publicPubId ? (
     publicDocs ? (
@@ -582,7 +582,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Fiche recette affichée en mobile (privée ou publique chargée) : le shell rend son
   // hero à fond perdu jusqu'en haut de la barre système. On coupe alors la réserve
   // d'inset du #root, que le hero réabsorbe lui-même (cf. .root--edge-hero).
-  const edgeHero = !isDesktop && !isEditing && !importRoute && !plusRoute
+  const edgeHero = !isDesktop && !isEditing && !importRoute && !planRoute
     && (publicPubId ? !!publicDocs : (!!selectedRecipe && !!currentRecipe));
 
   // La dernière closure des fonctions du shell (définies plus bas, après les retours

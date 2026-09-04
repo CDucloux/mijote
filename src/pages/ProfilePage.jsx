@@ -137,7 +137,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   </div>
                 )}
               </div>
-              <button className="btn btn-pill" style={{ flexShrink: 0, fontSize: 13, alignSelf: isPlus ? "center" : "flex-start", background: isPlus ? "var(--surface)" : "var(--accent)", color: isPlus ? "var(--text)" : "#fff", border: isPlus ? "1px solid var(--border)" : "none", boxShadow: isPlus ? "none" : undefined }} onClick={() => navigate("/plus")}>
+              <button className="btn btn-pill" style={{ flexShrink: 0, fontSize: 13, alignSelf: isPlus ? "center" : "flex-start", background: isPlus ? "var(--surface)" : "var(--accent)", color: isPlus ? "var(--text)" : "#fff", border: isPlus ? "1px solid var(--border)" : "none", boxShadow: isPlus ? "none" : undefined }} onClick={() => navigate("/plan")}>
                 {isPlus ? "Gérer" : "Découvrir"}
               </button>
             </div>

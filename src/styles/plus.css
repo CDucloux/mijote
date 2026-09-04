@@ -270,7 +270,10 @@
     display: grid;
     grid-template-columns: minmax(0, 0.86fr) minmax(0, 1fr);
     gap: clamp(40px, 5vw, 88px);
-    align-items: center;
+    /* Rail de vente aligné en haut, à hauteur de l'en-tête du comparatif : sur un
+       desktop peu haut, prix et CTA restent au-dessus de la ligne de flottaison
+       au lieu d'être poussés en bas par le centrage sur le grand tableau. */
+    align-items: start;
   }
 
   .plus-layout--split .plus-pitch {
@@ -348,6 +351,200 @@
   }
   .plus-layout--split .plus-feat {
     font-size: 14.5px;
+  }
+}
+
+/* ─── État abonné : rail récap + « ce que tu débloques » ─────────────────────
+   Réutilise la coquille du split et les primitives du comparatif ; on ne définit
+   ici que le rail (récap, note, admin) et la variante 2 colonnes du tableau. */
+.plus-account {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+}
+.plus-account-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 16px;
+  color: var(--ok);
+  font-size: 13px;
+  font-weight: 700;
+}
+.plus-account-title {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 8px 0 10px;
+}
+.plus-account-lede {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text2);
+  margin: 0;
+  max-width: 42ch;
+}
+.plus-account-lede strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Récap formule : liste filetée, sans carte à ombre ni icône de tête. */
+.plus-summary {
+  width: 100%;
+  margin-top: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.plus-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 16px;
+}
+.plus-summary-row + .plus-summary-row {
+  border-top: 1px solid var(--border);
+}
+.plus-summary-k {
+  color: var(--text3);
+  font-size: 13px;
+  font-weight: 600;
+}
+.plus-summary-v {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: right;
+}
+.plus-summary-v small {
+  display: block;
+  font-weight: 500;
+  color: var(--text3);
+  font-size: 11.5px;
+  margin-top: 1px;
+}
+
+/* Résiliation programmée : note sobre, tokenisée, sans dramatiser. */
+.plus-account-endnote {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 15px;
+  border-radius: var(--radius-sm);
+  background: rgba(var(--red-rgb), 0.07);
+  border: 1px solid rgba(var(--red-rgb), 0.28);
+  font-size: 12.5px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.plus-account-endnote strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.plus-account-endnote button {
+  margin-left: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-family: var(--ff-body);
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Accès admin : remplace le récap + le CTA + la réassurance. */
+.plus-account-admin {
+  width: 100%;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+.plus-account-admin-t {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+.plus-account-admin p {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+/* Bouton « Gérer » : pilule ghost. Pas de lift au hover (jugé « cheap »). */
+.btn-manage {
+  width: 100%;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.btn-manage:hover {
+  filter: brightness(0.97);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* « Ce que tu débloques » : même boîte que .plus-compare, mais une seule colonne
+   de valeur (2 colonnes au total). Le reste (thead, lignes, bande, tag) est
+   hérité des règles génériques du comparatif. */
+.plus-unlocked {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  --col-free: 0px;
+  --col-plus: 92px;
+}
+.plus-unlocked .plus-thead,
+.plus-unlocked .plus-row {
+  grid-template-columns: minmax(0, 1fr) var(--col-plus);
+}
+
+@media (min-width: 900px) {
+  .plus-layout--split .plus-account {
+    text-align: left;
+    align-items: flex-start;
+    max-width: 440px;
+  }
+  .plus-layout--split .plus-account-title {
+    font-size: clamp(30px, 3vw, 46px);
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    margin-bottom: 12px;
+  }
+  .plus-layout--split .plus-account-lede {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .plus-layout--split .plus-unlocked {
+    border-radius: 20px;
+    --col-plus: 168px;
+  }
+}
+
+/* Desktop peu haut : le comparatif (10+ lignes) dépasse la hauteur utile, et le
+   centrage vertical de la scène cachait le bas du rail (prix, CTA). On ancre en
+   haut et on resserre le rythme vertical pour tout garder à l'écran. */
+@media (min-width: 900px) and (max-height: 820px) {
+  .plus-stage {
+    justify-content: flex-start;
+    padding-top: 24px;
+    padding-bottom: 24px;
   }
 }
 

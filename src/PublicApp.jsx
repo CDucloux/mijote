@@ -11,7 +11,7 @@ import { toAppPath } from "./lib/ui/appZone.js";
 // Vitrine marketing (/), documents légaux (/legal…) et point d'entrée des liens
 // partagés (/discover…), servis HORS du préfixe /app. Le rendu réel d'une recette
 // partagée vit dans l'app (login + DB master), donc /discover redirige vers
-// /app/discover/:id ; les anciennes URL plates (/home, /plus…) y sont aussi
+// /app/discover/:id ; les anciennes URL plates (/home, /plan…) y sont aussi
 // renvoyées (rétro-compat des favoris et des PWA déjà installées). La zone app,
 // elle, est montée par App.jsx sous basename="/app". Cf. src/lib/ui/appZone.ts.
 

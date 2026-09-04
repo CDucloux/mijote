@@ -201,7 +201,7 @@ const GATE_PITCH = {
 /**
  * Mur d'offre de l'import intelligent, présenté AU MOMENT où un non-abonné tente
  * l'import (et non à l'entrée de l'écran) : feuille avec argumentaire propre au
- * mode et bascule vers l'offre. Présentation pure ; la navigation vers /plus est
+ * mode et bascule vers l'offre. Présentation pure ; la navigation vers /plan est
  * déléguée à `onUpgrade`, la fermeture à `onClose`.
  */
 export function ImportPlusGate({ mode, onClose, onUpgrade }) {

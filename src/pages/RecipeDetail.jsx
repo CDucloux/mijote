@@ -188,7 +188,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const recipeVegan = useMemo(() => isRecipeVegan(recipe, seasonResolver, { recipes }), [recipe, seasonResolver, recipes]);
   const { techniques, isPlus } = useAppShell();
   // Journal d'itérations = fonctionnalité Cardamome+ : en gratuit → page d'offre.
-  const openJournal = () => isPlus ? setJournalOpen(true) : navigate("/plus");
+  const openJournal = () => isPlus ? setJournalOpen(true) : navigate("/plan");
   const difficulty = useMemo(() => computeDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
   const difficultyExplain = useMemo(() => explainDifficulty(recipe, techniques, { recipes }), [recipe, techniques, recipes]);
   const difficultyTitle = difficulty.overridden

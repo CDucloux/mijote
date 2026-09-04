@@ -1,5 +1,20 @@
 # Changelog – Cardamome
 
+## v4.23.0 – Cardamome · Ton abonnement, au clair
+
+### Page Formule (état abonné)
+- **Un vrai récap quand tu es abonné** : la page Formule ne se contente plus d'un bandeau vert. Elle affiche ta formule (mensuelle ou annuelle), son prix, la date de renouvellement et depuis quand tu es membre, à côté d'un rappel de tout ce que débloque Cardamome+.
+- **La résiliation programmée est dite clairement** : si ton abonnement doit s'arrêter en fin de période, une note sobre te donne la date jusqu'à laquelle tu gardes l'accès, avec un lien pour le réactiver.
+- **Accès admin reconnu** : le compte administrateur, qui a tout sans abonnement Stripe, voit un encart dédié plutôt qu'un bouton « Gérer » qui n'aurait mené nulle part.
+- **Abonnés via Google Play** : le bouton « Gérer mon abonnement » renvoie vers les abonnements Google Play quand c'est là que tu as souscrit, au lieu du portail Stripe.
+
+### Confort d'affichage
+- **La page Formule tient à l'écran sur petit desktop** : le bloc de gauche remonte en haut, prix et bouton restent visibles sans avoir à faire défiler.
+- **Le texte de présentation est à jour** : il mentionne désormais l'import intelligent depuis un texte collé, en plus du lien et de la photo, et le comparatif met les fonctions fortes en tête.
+
+### Sous le capot
+- **La route de l'abonnement devient `/plan`** (au lieu de `/plus`).
+
 ## v4.22.0 – Cardamome · Tout couper d'avance
 
 ### Découpe en mise en place

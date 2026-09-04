@@ -1,24 +1,25 @@
 import { useState, useEffect } from "react";
-import { subscribeToPlan } from "@/lib/firebase/subscription.js";
+import { subscribeToPlan, EMPTY_PLAN, type PlanState } from "@/lib/firebase/subscription.js";
 
 /**
  * Suit l'état d'abonnement Cardamome+ de l'utilisateur (intégration Stripe maison,
- * cf. docs/stripe-mijote-plus.md).
+ * cf. docs/stripe-mijote-plus.md). Renvoie l'objet {@link PlanState} complet ;
+ * `active` reste le booléen d'accès premium consommé partout ailleurs.
  *
  * @param uid - L'identifiant de l'utilisateur (ou falsy si déconnecté).
- * @returns `true` tant qu'un abonnement Stripe actif existe.
+ * @returns L'état d'abonnement courant ({@link EMPTY_PLAN} tant qu'aucun actif).
  *
  * @example
  * ```tsx
- * const subscribed = useSubscription(user?.uid);
- * const isPlus = isAdmin || subscribed;
+ * const sub = useSubscription(user?.uid);
+ * const isPlus = isAdmin || sub.active;
  * ```
  */
-export function useSubscription(uid: string | null | undefined): boolean {
-  const [subscribed, setSubscribed] = useState(false);
+export function useSubscription(uid: string | null | undefined): PlanState {
+  const [state, setState] = useState<PlanState>(EMPTY_PLAN);
   useEffect(() => {
-    if (!uid) { setSubscribed(false); return; }
-    return subscribeToPlan(uid, setSubscribed);
+    if (!uid) { setState(EMPTY_PLAN); return; }
+    return subscribeToPlan(uid, setState);
   }, [uid]);
-  return subscribed;
+  return state;
 }
