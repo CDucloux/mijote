@@ -629,7 +629,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               const added = addedId === r.id;
               return (
                 <button key={r.id} onClick={() => confirmAdd(r)} disabled={!!addedId} className="complete-row ripple"
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--ok-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease, box-shadow 0.2s ease, transform 0.2s ease", opacity: addedId && !added ? 0.55 : 1 }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--ok-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease, box-shadow 0.2s ease", opacity: addedId && !added ? 0.55 : 1 }}>
                   <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>

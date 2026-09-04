@@ -2211,7 +2211,6 @@ select {
   .complete-row:hover {
     border-color: rgba(var(--accent-rgb), 0.45) !important;
     box-shadow: 0 6px 18px -10px rgba(var(--accent-rgb), 0.55) !important;
-    transform: translateY(-1px);
   }
 
   .complete-row:hover .complete-add {
@@ -2333,7 +2332,7 @@ select {
 }
 
 .complete-row {
-  transition: border-color 0.15s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.15s ease, box-shadow 0.2s ease;
 }
 
 .complete-add {
