@@ -127,7 +127,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
       });
       })() : (
         <button type="button" className="mp-empty-slot ripple" data-slot={slot}
-          onClick={() => onAdd(date, [slot])}
+          onClick={() => onAdd(date, [slot], true)}
           aria-label={`Ajouter le ${mealLower}`}>
           <Icon name={meta.icon} size={20} weight="duotone" />
           <span className="mp-empty-txt"><b>{meta.label}</b><em>Ajouter le {mealLower}</em></span>
@@ -340,7 +340,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     return d;
   }), [viewMode]);
 
-  const openAdd = useCallback((date, slots) => { setAddModal({ date, slots }); setSearchQ(""); }, []);
+  // `lockSlot` : ouvert depuis le créneau lui-même (le slot est déjà choisi), on
+  // masque alors le sélecteur matin/midi/soir. Depuis l'en-tête du jour, il reste.
+  const openAdd = useCallback((date, slots, lockSlot = false) => { setAddModal({ date, slots, lockSlot }); setSearchQ(""); }, []);
 
   const filteredRecipes = useMemo(() =>
     recipes.filter(r => !searchQ || r.name.toLowerCase().includes(searchQ.toLowerCase())),
@@ -523,6 +525,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           // Créneau UNIQUE (sélecteur simple) : moins ambigu qu'une multi-sélection.
           const activeSlot = addModal.slots[0];
           const activeIdx = Math.max(0, MEAL_SLOTS.findIndex(s => s.id === activeSlot));
+          // Ouvert depuis un créneau précis → le slot est figé, pas de sélecteur.
+          const lockSlot = !!addModal.lockSlot;
+          const activeMeta = SLOT_BY_ID[activeSlot];
           const pickSlot = (id) => setAddModal(p => ({ ...p, slots: [id] }));
           // Clic sur (+) : le rond passe en ✓ vert (animation), puis la feuille se
           // ferme avec sa sortie animée et le repas est ajouté au planning.
@@ -577,12 +582,14 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             <div style={{ minWidth: 0 }}>
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Ajouter une recette</h3>
               <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                {lockSlot && activeMeta ? `${activeMeta.meal} · ` : ""}{new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
               </div>
             </div>
           </div>
 
-          {/* Créneau : contrôle segmenté avec pastille glissante (transition douce) */}
+          {/* Créneau : contrôle segmenté avec pastille glissante (transition douce).
+              Masqué quand la feuille est ouverte depuis un créneau précis (slot figé). */}
+          {!lockSlot && (
           <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
             {/* Pastille active : glisse d'un créneau à l'autre (translateX) */}
             <div aria-hidden="true" style={{
@@ -599,11 +606,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                     background: "transparent", color: active ? s.text : "var(--text3)",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                     transition: "color 0.3s ease" }}>
-                  <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
+                  <Icon name={s.icon} size={15} weight="duotone" color={active ? s.text : "var(--text3)"} />{s.label}
                 </button>
               );
             })}
           </div>
+          )}
 
           {/* Recherche standard (loupe clavier mobile, effacement) */}
           <SearchField value={searchQ} onChange={setSearchQ} placeholder="Rechercher une recette…" style={{ marginBottom: 16 }} />
