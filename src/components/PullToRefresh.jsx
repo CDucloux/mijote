@@ -1,14 +1,15 @@
 import { usePullToRefresh } from "../hooks/usePullToRefresh.js";
-import { pullArrowGeometry } from "../lib/ui/pullArrow.js";
+import { Icon } from "./Icon.jsx";
 
 /** Position de repos du cercle pendant le refresh (px depuis le haut). */
 const REST_Y = 64;
+/** Rotation totale (deg) balayée par la flèche entre repos et seuil atteint. */
+const MAX_SPIN = 270;
 
 export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 }) {
   const { containerRef, pull, refreshing } = usePullToRefresh(onRefresh, { enabled, threshold });
   const active = pull > 0 || refreshing;
   const progress = Math.min(1, pull / threshold);
-  const arrow = pullArrowGeometry(progress);
   // Le contenu ne bouge plus : seul le cercle descend, en suivant le doigt puis
   // en se calant à REST_Y pendant le refresh.
   const y = refreshing ? REST_Y : pull;
@@ -29,18 +30,14 @@ export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 })
             transform: `scale(${refreshing ? 1 : 0.6 + progress * 0.4})`,
           }}>
             {refreshing
-              ? <div style={{ width: 16, height: 16, border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-              : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  {/* Cap `butt` sur l'arc : la pointe (triangle plein) le recouvre,
-                      inutile d'arrondir un bout qui sera caché. */}
-                  <path d={arrow.arc} strokeLinecap="butt" />
-                  {/* Pointe = triangle PLEIN posé sur le bout de l'arc, tangent au
-                      cercle. Un chevron ouvert, au ras d'une extrémité quasi
-                      verticale, voyait une barbe longer l'arc et l'autre saillir :
-                      il se lisait comme un crochet de travers. Le triangle plein,
-                      lui, se lit sans ambiguïté quelle que soit sa place sur l'anneau. */}
-                  {progress > 0.12 && <polygon points={arrow.head} fill="var(--accent)" strokeWidth="1" />}
-                </svg>}
+              ? <Icon name="spinner" size={18} color="var(--accent)" weight="bold" style={{ animation: "spin 0.8s linear infinite" }} />
+              : <Icon
+                  name="refresh"
+                  size={20}
+                  color="var(--accent)"
+                  weight="bold"
+                  style={{ transform: `rotate(${progress * MAX_SPIN}deg)`, transition: gliding ? "transform 0.25s ease-out" : "none" }}
+                />}
           </div>
         </div>
       )}
