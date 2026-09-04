@@ -205,7 +205,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
       {basis === "calc" ? (
         isPlus && breakdown
           ? <NutriCalcView breakdown={breakdown} />
-          : <CalcLocked onUpgrade={() => { onClose?.(); navigate("/plus"); }} />
+          : <CalcLocked onUpgrade={() => { onClose?.(); navigate("/plan"); }} />
       ) : (
       <>
       {/* Énergie + donut macros */}

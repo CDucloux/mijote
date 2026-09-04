@@ -12,7 +12,7 @@ const PRICES = {
   yearly: { amount: "49,99 €", per: "/ an", cta: "49,99 €/an", note: "soit 4,17 €/mois · économise 10 €/an", price: import.meta.env.VITE_STRIPE_PRICE_YEARLY },
 };
 
-// ─── FORMULE (route /plus) ──────────────────────────────────────────────────────
+// ─── FORMULE (route /plan) ──────────────────────────────────────────────────────
 // Page de présentation / achat de l'offre Cardamome+ : tableau comparatif Gratuit vs
 // Cardamome+. Desktop en split asymétrique (rail de vente + comparatif), mobile en
 // colonne unique avec CTA collé en bas. La logique de paiement (Stripe) est intacte.
@@ -42,7 +42,7 @@ function Cell({ value, accent }) {
     : <Icon name="close" size={14} color="var(--red)" />;
 }
 
-export function PlusPage() {
+export function PlanPage() {
   const navigate = useNavigate();
   const { isPlus, notify, user } = useAppShell();
   const location = useLocation();
@@ -56,7 +56,7 @@ export function PlusPage() {
   useEffect(() => {
     if (new URLSearchParams(location.search).get("checkout") === "success") {
       notify?.("Bienvenue dans Cardamome+ ! 🎉");
-      navigate("/plus", { replace: true });
+      navigate("/plan", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

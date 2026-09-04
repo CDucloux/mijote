@@ -62,9 +62,9 @@ VITE_STRIPE_PRICE_YEARLY=price_…    # tarif annuel
 Tant que ces prix sont absents, le CTA « Passer à Cardamome+ » affiche « arrive bientôt ».
 
 ## 7. Test de bout en bout (mode test)
-- `/plus` → « Passer à Cardamome+ » → Stripe Checkout.
+- `/plan` → « Passer à Cardamome+ » → Stripe Checkout.
 - Carte de test `4242 4242 4242 4242`, date future, CVC quelconque.
-- Retour sur `/plus?checkout=success` → `isPlus` bascule dès que le webhook a écrit
+- Retour sur `/plan?checkout=success` → `isPlus` bascule dès que le webhook a écrit
   l'abonnement (quelques secondes).
 - « Gérer » → portail de facturation Stripe.
 

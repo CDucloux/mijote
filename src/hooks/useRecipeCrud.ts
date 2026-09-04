@@ -52,11 +52,11 @@ export function useRecipeCrud({
   ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate,
 }: RecipeCrudDeps) {
   // Quota du plan gratuit : bloque la création au-delà de la limite. `redirect`
-  // renvoie vers l'offre, désactivé depuis l'éditeur (qui masquerait /plus).
+  // renvoie vers l'offre, désactivé depuis l'éditeur (qui masquerait /plan).
   const guardQuota = (adding = 1, redirect = true): boolean => {
     if (canAddRecipes(recipes, isPlus, adding)) return true;
     notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
-    if (redirect) navigate("/plus");
+    if (redirect) navigate("/plan");
     return false;
   };
 

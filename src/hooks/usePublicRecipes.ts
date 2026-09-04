@@ -38,7 +38,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
   const guardQuota = (): boolean => {
     if (canAddRecipes(recipes, isPlus, 1)) return true;
     notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
-    navigate("/plus");
+    navigate("/plan");
     return false;
   };
   const publishRecipe = async (recipe: PubRecipe): Promise<void> => {

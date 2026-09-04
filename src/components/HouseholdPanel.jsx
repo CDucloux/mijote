@@ -93,7 +93,7 @@ export function HouseholdPanel({ onClose }) {
               </button>
             ) : (
               <>
-                <button className="btn btn-primary" onClick={() => navigate("/plus")} style={{ width: "100%" }}>
+                <button className="btn btn-primary" onClick={() => navigate("/plan")} style={{ width: "100%" }}>
                   <Icon name="sparkle" size={16} /> Débloquer avec Cardamome+
                 </button>
                 <Row gap={6} justify="center" style={{ marginTop: 10 }}>

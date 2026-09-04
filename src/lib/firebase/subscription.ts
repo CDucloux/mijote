@@ -44,8 +44,8 @@ export async function startCheckout(_uid: string, priceId: string, onError?: (ms
     const fn = httpsCallable(getFunctions(firebaseApp, REGION), "createStripeCheckout");
     const { data } = await fn({
       price: priceId,
-      successUrl: `${window.location.origin}${APP_BASE}/plus?checkout=success`,
-      cancelUrl: `${window.location.origin}${APP_BASE}/plus`,
+      successUrl: `${window.location.origin}${APP_BASE}/plan?checkout=success`,
+      cancelUrl: `${window.location.origin}${APP_BASE}/plan`,
     });
     const url = (data as { url?: string })?.url;
     if (url) window.location.assign(url);
@@ -64,7 +64,7 @@ export async function startCheckout(_uid: string, priceId: string, onError?: (ms
 export async function openBillingPortal(onError?: (msg: string) => void): Promise<void> {
   try {
     const fn = httpsCallable(getFunctions(firebaseApp, REGION), "createStripePortal");
-    const { data } = await fn({ returnUrl: `${window.location.origin}${APP_BASE}/plus` });
+    const { data } = await fn({ returnUrl: `${window.location.origin}${APP_BASE}/plan` });
     const url = (data as { url?: string })?.url;
     if (url) window.location.assign(url);
     else onError?.("Portail de facturation indisponible.");

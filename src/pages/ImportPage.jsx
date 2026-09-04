@@ -223,7 +223,7 @@ export function ImportPage({ mode = "lien" }) {
       {loading && <LoadingOverlay estimateMs={estimateMs} />}
       {gate && (
         <ImportPlusGate mode={mode} onClose={() => setGate(false)}
-          onUpgrade={() => { setGate(false); navigate("/plus"); }} />
+          onUpgrade={() => { setGate(false); navigate("/plan"); }} />
       )}
       {importError && (
         <ErrorModal title="Import impossible" message={importError.message} code={importError.code}

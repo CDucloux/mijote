@@ -23,7 +23,7 @@ describe("isAppZone", () => {
 
   it("navigateur : ancienne URL plate d'app → zone publique (sera redirigée vers /app)", () => {
     expect(isAppZone("/home", false)).toBe(false);
-    expect(isAppZone("/plus", false)).toBe(false);
+    expect(isAppZone("/plan", false)).toBe(false);
   });
 
   it("ne confond pas un préfixe ressemblant (/application) avec /app", () => {

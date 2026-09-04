@@ -133,7 +133,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
   // vers l'offre Cardamome+ quand une fonctionnalité premium est verrouillée.
   const gotoRoute = useNavigate();
-  const goPlus = () => gotoRoute("/plus");
+  const goPlus = () => gotoRoute("/plan");
   const { household } = useHousehold();
   const [viewMode] = useState("week");
   const [currentDate, setCurrentDate] = useState(new Date());
