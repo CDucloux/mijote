@@ -1,10 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { EmptyArt } from "./EmptyArt.jsx";
-import { SpotlightIngredient } from "./SpotlightIngredient.jsx";
-import { pickSpotlightIngredient, publicRecipesWithIngredient } from "@/lib/planning/spotlight.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useDiscoverRecipes } from "../hooks/useDiscoverRecipes.js";
 import { RecipeCard } from "./RecipeCard.jsx";
@@ -127,7 +124,6 @@ function Carousel({ icon, iconNode, title, items, renderItem }) {
 // ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
 export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic, onNewRecipe, initialSearch = "", onSeedConsumed }) {
   const { user, techniques = [] } = useAppShell();
-  const navigate = useNavigate();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
@@ -224,10 +220,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const cuisines = useMemo(() => [...new Set(pubs.filter(p => !p.isComponent && p.cuisine).map(p => p.cuisine))].sort(), [pubs]);
   const usedCuisines = useMemo(() => CUISINES.filter(c => pubs.some(p => p.cuisine === c.label)), [pubs]);
   const activeFilters = !!(usePrefs || authorUid || text) || nActiveFilters > 0;
-  // L'« ingrédient du moment » est éditorial : il reste affiché pendant une
-  // recherche texte ; on ne le masque que sur un vrai filtre (préférences,
-  // auteur, feuille de filtres).
-  const hideSpotlight = usePrefs || authorUid || nActiveFilters > 0;
 
   // Rangées éditoriales (mode navigation, sans recherche ni filtre actif).
   const featured = useMemo(() => pubs.filter(p => !p.isComponent).slice(0, 12), [pubs]);
@@ -237,11 +229,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   // Préparations de base (composants publics) : exclues de la recherche/feed normal
   // par filterPublicRecipes ; on les met en avant dans leur propre rangée.
   const bases = useMemo(() => pubs.filter(p => p.isComponent).slice(0, 12), [pubs]);
-
-  // Ingrédient du moment (fruit/légume de saison, rotation hebdo) + recettes
-  // publiques qui l'utilisent.
-  const spotlight = useMemo(() => pickSpotlightIngredient(ingredientDB), [ingredientDB]);
-  const spotlightRecipes = useMemo(() => publicRecipesWithIngredient(spotlight, pubs, resolver, 10), [spotlight, pubs, resolver]);
 
   const card = (p, idx) => (
     <PublicRecipeCard
@@ -260,22 +247,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
   return (
     <section className="slide-up" style={{ animationDelay: "0.22s" }}>
-      {/* Ingrédient du moment : accroche éditoriale, au-dessus de la barre de
-          recherche (uniquement en mode navigation). */}
-      {spotlight && !hideSpotlight && (
-        <SpotlightIngredient
-          ingredient={spotlight}
-          recipes={spotlightRecipes}
-          nutriFor={liveNutri}
-          loading={loading && !loadedOnce}
-          onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)}
-          onOpenPublic={(p) => onOpenPublic?.(p, componentsFor(p))}
-          onPublish={onNewRecipe
-            ? () => onNewRecipe({ ingredients: [{ id: "i" + Date.now(), dbId: spotlight.id, name: spotlight.name || "", amount: "", unit: "", _raw: spotlight.name || "", group: "" }] })
-            : undefined}
-        />
-      )}
-
       {/* Sentinelle pour détecter le sticky */}
       <div ref={sentinelRef} style={{ height: 1, marginBottom: -1, pointerEvents: "none" }} />
 
@@ -290,8 +261,10 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         transition: "box-shadow 0.2s",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 7 }}>
-            <Icon name="sparkle" size={16} color="var(--accent)" /> Découvrir
+          {/* Sous-titre (le mode « Découvrir » est déjà porté par le sélecteur du
+              haut de page) : on nomme ici ce que la vue montre, sans redite. */}
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)", display: "flex", alignItems: "center", gap: 7 }}>
+            <Icon name="sparkle" size={15} color="var(--accent)" /> Recettes de la communauté
             {!online && !noPublic && <span style={{ fontSize: 11, fontWeight: 500, color: "var(--orange)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="wifiOff" size={11} color="var(--orange)" /> en cache</span>}
           </h2>
           <button

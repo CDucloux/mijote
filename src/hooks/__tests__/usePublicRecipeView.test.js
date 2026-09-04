@@ -54,7 +54,7 @@ describe("usePublicRecipeView", () => {
   it("open() d'une recette qui m'appartient route vers ma version locale éditable", () => {
     const { result, navigate } = setup({ recipes: [{ id: "r1" }], user: { uid: "u1" } });
     act(() => result.current.open(PUB));
-    expect(navigate).toHaveBeenCalledWith("/recipes/r1", { state: { fromPath: "/home" } });
+    expect(navigate).toHaveBeenCalledWith("/recipes/r1", { state: { fromPath: "/discover" } });
   });
 
   it("open() d'une recette d'autrui précharge et n'entraîne aucun fetch au rendu suivant", async () => {

@@ -303,11 +303,13 @@ function AppInner({ user, isDark, toggleTheme }) {
     openDraftEditor({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients, utensils: [], steps: [], collections: [], image: "" });
   }, [recipes, isPlus, notify, navigate, openDraftEditor]);
 
-  // Requête semée dans « Découvrir » depuis un autre onglet (ex. « chercher dans
-  // la communauté » quand la bibliothèque privée ne renvoie rien). Consommée une
-  // fois par DiscoverSection puis remise à zéro.
+  // Requête semée dans « Découvrir » depuis ailleurs (ex. « chercher dans la
+  // communauté » quand la bibliothèque privée ne renvoie rien, ou l'ingrédient du
+  // moment sur le tableau de bord). Consommée une fois par DiscoverSection puis
+  // remise à zéro. Ouvre la route /discover (sous-vue « Découvrir » de l'Accueil).
   const [discoverSeed, setDiscoverSeed] = useState("");
-  const searchCommunity = useCallback((q) => { setDiscoverSeed((q || "").trim()); setTab("home"); }, [setTab]);
+  const goDiscover = useCallback((q = "") => { setDiscoverSeed((q || "").trim()); navigate("/discover"); }, [navigate]);
+  const searchCommunity = goDiscover;
 
   // Bascule l'appartenance d'une recette à un carnet + recalcule les compteurs.
   // Partagé par la fiche recette et le menu d'appui long de la liste.
@@ -502,7 +504,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           (Accueil, Recettes, Planning, Profil, Config, Légal…), qui apparaissaient
           jusqu'ici sans transition. */}
       <div key={tab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} loading={!workspaceReady || sharedHydrating} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
+      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}

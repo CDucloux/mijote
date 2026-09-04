@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pickSpotlightIngredient, publicRecipesWithIngredient } from "@/lib/planning/spotlight.js";
-import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
+import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
 
 // août = mois 8
 const AUG = new Date(2025, 7, 15);
@@ -33,25 +32,5 @@ describe("pickSpotlightIngredient", () => {
     const picks = new Set();
     for (let d = 1; d <= 28; d++) picks.add(pickSpotlightIngredient(DB, new Date(2025, 7, d)).id);
     expect(picks.size).toBeGreaterThan(1); // figue ET courgette apparaissent sur le mois
-  });
-});
-
-describe("publicRecipesWithIngredient", () => {
-  const resolver = createIngredientResolver(DB);
-  const fig = DB[0];
-  const pubs = [
-    { pubId: "a", isComponent: false, recipe: { ingredients: [{ name: "Figues fraîches" }, { name: "Chèvre" }] } },
-    { pubId: "b", isComponent: false, recipe: { ingredients: [{ name: "Poireau" }] } },
-    { pubId: "c", isComponent: true, recipe: { ingredients: [{ name: "Figue" }] } }, // base exclue
-  ];
-  it("retrouve les recettes utilisant l'ingrédient (pluriel géré)", () => {
-    const out = publicRecipesWithIngredient(fig, pubs, resolver);
-    expect(out.map(p => p.pubId)).toEqual(["a"]);
-  });
-  it("évite les faux positifs poire/poireau", () => {
-    const out = publicRecipesWithIngredient(DB[1] /* poireau */, [
-      { pubId: "z", isComponent: false, recipe: { ingredients: [{ name: "Poire" }] } },
-    ], resolver);
-    expect(out).toHaveLength(0);
   });
 });

@@ -1,6 +1,6 @@
 /**
  * Ingrédient du moment (logique pure) : choisit un fruit/légume de saison à mettre
- * en vedette dans l'Accueil, et retrouve les recettes publiques qui l'utilisent.
+ * en vedette sur le tableau de bord de l'Accueil (rotation hebdomadaire).
  *
  * @module spotlight
  */
@@ -13,14 +13,6 @@ export interface SpotlightIngredient {
   category?: string;
   months?: unknown;
 }
-
-/** Recette publique candidate (feed Découvrir). */
-export interface PublicEntry {
-  isComponent?: boolean;
-  recipe?: { ingredients?: { name?: string }[] };
-}
-
-type IngredientResolver = (name: string | undefined) => { id?: string } | null;
 
 const SPOTLIGHT_CATEGORIES = new Set(["fruit", "vegetable"]);
 
@@ -60,27 +52,4 @@ export function pickSpotlightIngredient(
   if (!candidates.length) return null;
   const sorted = [...candidates].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
   return sorted[weekIndex(date) % sorted.length];
-}
-
-/**
- * Recettes publiques (hors préparations de base) utilisant l'ingrédient vedette.
- * `resolver` (createIngredientResolver) gère pluriels, qualificatifs et distingue
- * les proches (« poire » ≠ « poireau »).
- *
- * @param ingredient - L'ingrédient vedette.
- * @param pubs - Les recettes publiques candidates.
- * @param resolver - Résolveur nom → ingrédient (pluriels, qualificatifs).
- * @param max - Nombre maximum de recettes retournées (défaut 10).
- * @returns Les recettes publiques (hors bases) qui utilisent l'ingrédient.
- */
-export function publicRecipesWithIngredient(
-  ingredient: SpotlightIngredient | null | undefined,
-  pubs: PublicEntry[] | null | undefined,
-  resolver: IngredientResolver | null | undefined,
-  max = 10,
-): PublicEntry[] {
-  if (!ingredient || !resolver) return [];
-  const uses = (recipe: PublicEntry["recipe"]): boolean =>
-    (recipe?.ingredients || []).some(ing => resolver(ing?.name)?.id === ingredient.id);
-  return (pubs || []).filter(p => !p.isComponent && uses(p.recipe)).slice(0, max);
 }
