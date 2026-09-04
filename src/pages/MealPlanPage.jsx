@@ -126,12 +126,11 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
         );
       });
       })() : (
-        <button type="button" className="mp-empty-slot" data-slot={slot}
+        <button type="button" className="mp-empty-slot ripple" data-slot={slot}
           onClick={() => onAdd(date, [slot])}
           aria-label={`Ajouter le ${mealLower}`}>
           <Icon name={meta.icon} size={20} weight="duotone" />
           <span className="mp-empty-txt"><b>{meta.label}</b><em>Ajouter le {mealLower}</em></span>
-          <Icon name="plus" size={15} className="mp-empty-plus" />
         </button>
       )}
     </div>
@@ -424,6 +423,20 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const { scrollRef, contentRef } = useElasticScroll();
 
+  // « Auj. » : revient sur la semaine courante ET défile jusqu'à la carte du jour.
+  // Double rAF : on attend que la bonne semaine soit rendue avant de mesurer/scroller,
+  // et on borne le défilement au conteneur (pas la fenêtre).
+  const goToday = useCallback(() => {
+    setCurrentDate(new Date());
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const container = scrollRef.current;
+      const el = container?.querySelector(`[data-date="${todayStr}"]`);
+      if (!container || !el) return;
+      const delta = el.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      container.scrollTo({ top: container.scrollTop + delta - 12, behavior: "smooth" });
+    }));
+  }, [scrollRef, todayStr]);
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
@@ -442,7 +455,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {`${new Date(weekDays[0] + "T12:00").getDate()} – ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
           </span>
           <button onClick={() => navigate(1)} className="pressable ripple" style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
-          <button onClick={() => setCurrentDate(new Date())} className="pressable ripple" style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
+          <button onClick={goToday} className="pressable ripple" style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
           <button onClick={exportICS} className="pressable ripple" title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", flexShrink: 0 }}>
             <Icon name="calendar" size={13} color="var(--text2)" /> Agenda
           </button>
@@ -477,7 +490,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               const isToday = date === todayStr;
               const d = new Date(date + "T12:00");
               return (
-                <div key={date} className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, animationDelay: `${di * 0.04}s` }}>
+                <div key={date} data-date={date} className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, animationDelay: `${di * 0.04}s` }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: isToday ? "var(--accent)" : "var(--text)" }}>

@@ -3713,8 +3713,6 @@ select {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.mp-empty-slot .mp-empty-plus { opacity: 0.7; }
-
 @media (hover: hover) {
   .mp-empty-slot[data-slot="midi"]:hover { background: var(--slot-midi); }
   .mp-empty-slot[data-slot="soir"]:hover { background: var(--slot-soir); }
