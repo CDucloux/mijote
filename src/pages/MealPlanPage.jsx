@@ -55,17 +55,20 @@ function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T
 function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").join("\\,").split(";").join("\\;"); }
 
 // SlotZone lifted out + memoised → never re-created on parent re-render
-const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOpenItemMenu, startLongPress, cancelLongPress, moveLongPress, wasLongPress }) {
+const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOpenItemMenu, onAdd, startLongPress, cancelLongPress, moveLongPress, wasLongPress }) {
   const dropKey = date + ":" + slot;
   const isOver = dropTarget === dropKey;
+  const slotGroups = mealsForSlot(meals, recipesById);
+  const hasContent = slotGroups.some(g => g.items.some(({ item }) => recipesById.has(item.recipeId)));
+  const meta = SLOT_BY_ID[slot];
+  const mealLower = meta.meal.toLowerCase();
   return (
     <div
       onDragOver={e => { e.preventDefault(); onSetDropTarget(dropKey); }}
       onDragLeave={() => onSetDropTarget(null)}
       onDrop={e => { e.preventDefault(); onSetDropTarget(null); if (dragInfo && !(dragInfo.date === date && dragInfo.slot === slot)) { onMoveMeal(dragInfo.date, dragInfo.idx, date, slot); } onSetDragInfo(null); }}
-      style={{ borderRadius: 10, padding: "6px 8px", background: isOver ? "rgba(var(--accent-rgb),0.12)" : MP_SLOT_COLOR[slot], border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: meals.length ? "flex-start" : "center" }}>
-      {(() => {
-      const slotGroups = mealsForSlot(meals, recipesById);
+      style={{ borderRadius: 10, padding: hasContent ? "6px 8px" : 0, background: isOver ? "rgba(var(--accent-rgb),0.12)" : (hasContent ? MP_SLOT_COLOR[slot] : "transparent"), border: `1px solid ${isOver ? "var(--accent)" : "transparent"}`, transition: "all 0.15s", minHeight: 60, overflow: "hidden", display: "flex", flexDirection: "column", gap: 6, justifyContent: hasContent ? "flex-start" : "center" }}>
+      {hasContent ? (() => {
       // La barre verticale ne distingue les repas que s'il y en a PLUSIEURS dans le
       // slot (ex. un 2ᵉ plat). Un repas unique (même composé plat+entrée+dessert) ne
       // porte pas de barre : les rôles suffisent à le lire.
@@ -122,7 +125,15 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
           </div>
         );
       });
-      })()}
+      })() : (
+        <button type="button" className="mp-empty-slot" data-slot={slot}
+          onClick={() => onAdd(date, [slot])}
+          aria-label={`Ajouter le ${mealLower}`}>
+          <Icon name={meta.icon} size={20} weight="duotone" />
+          <span className="mp-empty-txt"><b>{meta.label}</b><em>Ajouter le {mealLower}</em></span>
+          <Icon name="plus" size={15} className="mp-empty-plus" />
+        </button>
+      )}
     </div>
   );
 });
@@ -481,7 +492,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {MEAL_SLOTS.filter(s => s.id !== "matin" || getMeals(date, s.id).length).map(s => (
-                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOpenItemMenu={openItemMenu} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
+                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOpenItemMenu={openItemMenu} onAdd={openAdd} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
                     ))}
                   </div>
                 </div>

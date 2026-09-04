@@ -3681,6 +3681,46 @@ select {
   transform: scale(0.88);
 }
 
+/* ─── Créneau vide du planning ───────────────────────────────────────────────
+   Lavis teinté léger sans bordure, qui se densifie au survol. La couleur du
+   créneau, portée par `color`, est héritée par les icônes (currentColor) et le
+   libellé. Le corps du bouton n'est pas draggable : le drag & drop reste sur la
+   SlotZone parente. */
+.mp-empty-slot {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--ff-body);
+  transition: background 0.18s ease;
+}
+.mp-empty-slot[data-slot="midi"] { background: color-mix(in srgb, var(--slot-midi) 55%, transparent); color: var(--slot-midi-text); }
+.mp-empty-slot[data-slot="soir"] { background: color-mix(in srgb, var(--slot-soir) 55%, transparent); color: var(--slot-soir-text); }
+.mp-empty-slot[data-slot="matin"] { background: color-mix(in srgb, var(--slot-matin) 55%, transparent); color: var(--slot-matin-text); }
+.mp-empty-slot .mp-empty-txt { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 7px; }
+.mp-empty-slot .mp-empty-txt b { font-size: 13px; font-weight: 600; color: inherit; }
+.mp-empty-slot .mp-empty-txt em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mp-empty-slot .mp-empty-plus { opacity: 0.7; }
+
+@media (hover: hover) {
+  .mp-empty-slot[data-slot="midi"]:hover { background: var(--slot-midi); }
+  .mp-empty-slot[data-slot="soir"]:hover { background: var(--slot-soir); }
+  .mp-empty-slot[data-slot="matin"]:hover { background: var(--slot-matin); }
+}
+
 /* ─── Retour tactile « pressé » (appareils tactiles uniquement) ──────────────
    Feel d'app mobile native FIDÈLE (iOS / React Native Pressable) : tout élément
    tappable s'assombrit sous le doigt ; les cartes et boutons principaux se
