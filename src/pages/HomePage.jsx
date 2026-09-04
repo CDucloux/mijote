@@ -25,6 +25,10 @@ function greeting(date = new Date()) {
   return h >= 6 && h < 18 ? "Bonjour" : "Bonsoir";
 }
 
+// Titre d'onglet, identique au standard des autres pages (Recettes, Planning…) :
+// même fonte, taille et graisse, pour une hiérarchie de titres homogène.
+const HOME_TITLE_STYLE = { fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+
 // Carte de notification compacte (courses, stock bas) – icône + libellé + chevron.
 // La surbrillance de survol n'est câblée que sur pointeur fin (souris) : sur tactile,
 // un mouseenter synthétisé au tap/appui long resterait collé (pas de mouseleave).
@@ -298,30 +302,39 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* En-tête persistant : sélecteur de sous-vue (À suivre / Découvrir) + avatar.
-          La salutation, propre au tableau de bord, vit désormais dans le corps
-          défilant du mode « À suivre » (elle défile avec le contenu). */}
-      <div style={{ padding: "14px 20px 10px", flexShrink: 0, position: "relative", zIndex: 1, background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
-        <UserAvatar />
+      {/* En-tête aligné sur le standard des autres onglets : titre serif 26/600 en
+          tête à padding 20/20/0 (+ sous-titre discret), avatar à droite. Le
+          sélecteur de sous-vue reste un contrôle SECONDAIRE, SOUS le titre : il ne
+          remplace plus le titre en tête d'onglet (cohérence de hiérarchie). */}
+      <div style={{ padding: "20px 20px 0", flexShrink: 0, position: "relative", zIndex: 1, background: "var(--bg)" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
+            {mode === "discover" ? (
+              <h1 style={HOME_TITLE_STYLE}>Découvrir</h1>
+            ) : (
+              <>
+                <h1 style={HOME_TITLE_STYLE}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
+                <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
+                  Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color: "var(--text2)" }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
+                </span>
+              </>
+            )}
+          </div>
+          <UserAvatar />
+        </div>
+        <div style={{ marginTop: 14, paddingBottom: 2 }}>
+          <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
+        </div>
       </div>
 
       {mode === "discover" ? (
         /* ── Découvrir : recettes de la communauté (route /discover) ──────── */
-        <ElasticScroll style={{ flex: 1, padding: "0 20px var(--page-pad-b)" }}>
+        <ElasticScroll style={{ flex: 1, padding: "12px 20px var(--page-pad-b)" }}>
           <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
         </ElasticScroll>
       ) : (
       /* ── À suivre : tableau de bord perso (route /home) ─────────────────── */
-      <ElasticScroll style={{ flex: 1, padding: "0 20px var(--page-pad-b)" }}>
-        {/* Salutation */}
-        <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0, marginBottom: 22 }}>
-          <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
-          <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
-            Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color: "var(--text2)" }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
-          </span>
-        </div>
-
+      <ElasticScroll style={{ flex: 1, padding: "12px 20px var(--page-pad-b)" }}>
         {/* ── Mon foyer (en tête d'accueil) ───────────────────────────────── */}
         <FoyerSection />
 
