@@ -629,7 +629,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               const added = addedId === r.id;
               return (
                 <button key={r.id} onClick={() => confirmAdd(r)} disabled={!!addedId} className="complete-row ripple"
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--ok-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease", opacity: addedId && !added ? 0.55 : 1 }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--ok-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease, box-shadow 0.2s ease, transform 0.2s ease", opacity: addedId && !added ? 0.55 : 1 }}>
                   <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
@@ -1093,15 +1093,22 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               </div>
             </div>
 
-            {/* Contrôle segmenté (rôle) : pastille active blanche sur rail teinté */}
-            <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
+            {/* Contrôle segmenté (rôle) : pastille active blanche qui GLISSE d'un
+                onglet à l'autre (translateX), comme les autres sélecteurs de l'app. */}
+            <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
+              <div aria-hidden="true" style={{
+                position: "absolute", top: 4, bottom: 4, left: 4, width: `calc((100% - 8px) / ${COMPLETE_ROLES.length})`,
+                background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+                transform: `translateX(calc(${Math.max(0, COMPLETE_ROLES.findIndex(x => x.id === completeRole))} * 100%))`,
+                transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
+              }} />
               {COMPLETE_ROLES.map(r => {
                 const active = completeRole === r.id;
                 return (
                   <button key={r.id} onClick={() => setCompleteRole(r.id)}
-                    style={{ flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", border: "none",
-                      background: active ? "var(--surface)" : "transparent", color: active ? "var(--accent)" : "var(--text3)",
-                      boxShadow: active ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "color 0.15s ease, background-color 0.15s ease" }}>
+                    style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", border: "none",
+                      background: "transparent", color: active ? "var(--accent)" : "var(--text3)",
+                      transition: "color 0.3s ease" }}>
                     {r.label}
                   </button>
                 );

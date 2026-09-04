@@ -2205,10 +2205,13 @@ select {
     color: var(--text);
   }
 
-  /* Ligne de suggestion « compléter le repas » : mise en avant au survol. */
+  /* Ligne de suggestion « compléter le repas » : mise en avant au survol.
+     `!important` : ces cartes portent des `border`/`box-shadow` en style inline
+     (bordure d'état, ombre de base) qui, sinon, l'emportent sur ce survol. */
   .complete-row:hover {
-    border-color: rgba(var(--accent-rgb), 0.45);
-    box-shadow: 0 6px 18px -10px rgba(var(--accent-rgb), 0.55);
+    border-color: rgba(var(--accent-rgb), 0.45) !important;
+    box-shadow: 0 6px 18px -10px rgba(var(--accent-rgb), 0.55) !important;
+    transform: translateY(-1px);
   }
 
   .complete-row:hover .complete-add {
@@ -2330,7 +2333,7 @@ select {
 }
 
 .complete-row {
-  transition: border-color 0.15s ease, box-shadow 0.2s ease;
+  transition: border-color 0.15s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .complete-add {
