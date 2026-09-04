@@ -21,15 +21,16 @@ const PRICES = {
 // une chaîne rend un libellé (ex. quota de recettes).
 const FEATURES = [
   { label: "Nombre de recettes", free: "50", plus: "Illimité" },
+  { label: "Import intelligent depuis un lien", free: false, plus: true },
+  { label: "Import intelligent depuis une photo", free: false, plus: true },
+  { label: "Import intelligent depuis un texte", free: false, plus: true },
+  { label: "Foyer partagé", free: false, plus: true },
+  { label: "Génération de planning", free: false, plus: true },
+  { label: "Batch cooking", free: false, plus: true },
+  { label: "Journal d'itérations", free: false, plus: true },
   { label: "Planning repas & liste de courses", free: true, plus: true },
   { label: "Nutri-Score & saisonnalité", free: true, plus: true },
   { label: "Mode hors-ligne", free: true, plus: true },
-  { label: "Foyer partagé", free: false, plus: true },
-  { label: "Import intelligent depuis un lien", free: false, plus: true },
-  { label: "Import intelligent depuis une photo", free: false, plus: true },
-  { label: "Journal d'itérations", free: false, plus: true },
-  { label: "Génération de planning", free: false, plus: true },
-  { label: "Batch cooking", free: false, plus: true },
 ];
 
 function Cell({ value, accent }) {
@@ -156,7 +157,7 @@ export function PlusPage() {
                 <span className="plus-badge-wrap"><PlusBadge size="lg" /></span>
                 <h2 className="plus-title">Passe à la vitesse supérieure</h2>
                 <p className="plus-lede">
-                  Débloque l'<strong>import intelligent de recettes</strong> (depuis un lien ou une photo de livre) et gagne un temps fou à saisir tes recettes.
+                  Débloque l'<strong>import intelligent de recettes</strong> (depuis un lien, une photo de livre ou un texte collé) et gagne un temps fou à saisir tes recettes.
                 </p>
 
                 <div className="plus-pricing">

@@ -270,7 +270,10 @@
     display: grid;
     grid-template-columns: minmax(0, 0.86fr) minmax(0, 1fr);
     gap: clamp(40px, 5vw, 88px);
-    align-items: center;
+    /* Rail de vente aligné en haut, à hauteur de l'en-tête du comparatif : sur un
+       desktop peu haut, prix et CTA restent au-dessus de la ligne de flottaison
+       au lieu d'être poussés en bas par le centrage sur le grand tableau. */
+    align-items: start;
   }
 
   .plus-layout--split .plus-pitch {
@@ -348,6 +351,17 @@
   }
   .plus-layout--split .plus-feat {
     font-size: 14.5px;
+  }
+}
+
+/* Desktop peu haut : le comparatif (10+ lignes) dépasse la hauteur utile, et le
+   centrage vertical de la scène cachait le bas du rail (prix, CTA). On ancre en
+   haut et on resserre le rythme vertical pour tout garder à l'écran. */
+@media (min-width: 900px) and (max-height: 820px) {
+  .plus-stage {
+    justify-content: flex-start;
+    padding-top: 24px;
+    padding-bottom: 24px;
   }
 }
 
