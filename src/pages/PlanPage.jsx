@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { startCheckout, openBillingPortal } from "@/lib/firebase/subscription.js";
+import { startCheckout, openBillingPortal, PLAY_SUBS_URL } from "@/lib/firebase/subscription.js";
 import "../styles/plus.css";
 
 // Tarifs Cardamome+. `price` = ID Stripe (extension), fourni par l'env.
@@ -44,7 +44,7 @@ function Cell({ value, accent }) {
 
 export function PlanPage() {
   const navigate = useNavigate();
-  const { isPlus, notify, user } = useAppShell();
+  const { isPlus, isAdmin, notify, user, subscription } = useAppShell();
   const location = useLocation();
   const [billing, setBilling] = useState("monthly"); // mensuel mis en avant : 4,99 € accroche mieux que 49,99 €
   const [busy, setBusy] = useState(false);
@@ -68,6 +68,9 @@ export function PlanPage() {
     await startCheckout(user.uid, price.price, msg => { setBusy(false); notify?.(msg, "error"); });
   };
   const onManage = async () => {
+    // Un abonnement souscrit via Google Play ne se gère pas dans le portail Stripe :
+    // on renvoie vers les abonnements Play (l'appel Stripe échouerait sinon).
+    if (subscription.channel === "play") { window.location.assign(PLAY_SUBS_URL); return; }
     setBusy(true);
     await openBillingPortal(msg => { setBusy(false); notify?.(msg, "error"); });
   };
@@ -110,18 +113,29 @@ export function PlanPage() {
     return () => window.removeEventListener("resize", replace);
   }, [isPlus, placeThumb]);
 
-  // Un seul handler par action, rendu à deux emplacements (rail desktop + barre
+  // Accès premium SANS abonnement Stripe (propriétaire de l'app) : variante dédiée,
+  // pas de bouton « Gérer » (le portail Stripe planterait, aucun client rattaché).
+  const adminAccess = isAdmin && !subscription.active;
+
+  // Un seul bouton par action, rendu à deux emplacements (rail desktop + barre
   // collée mobile) pour éviter toute divergence de logique.
-  const renderCta = () =>
-    isPlus ? (
-      <button className="btn" style={{ width: "100%", borderRadius: 999, background: "var(--surface2)", color: "var(--text)", border: "1px solid var(--border)" }} disabled={busy} onClick={onManage}>
-        <Icon name="settings" size={15} /> Gérer mon abonnement
-      </button>
-    ) : (
-      <button className="btn btn-primary btn-pill" style={{ width: "100%" }} disabled={busy} onClick={onSubscribe}>
-        <Icon name="sparkle" size={15} /> {busy ? "Redirection…" : `Passer à Cardamome+ · ${price.cta}`}
-      </button>
-    );
+  const renderCta = () => (
+    <button className="btn btn-primary btn-pill" style={{ width: "100%" }} disabled={busy} onClick={onSubscribe}>
+      <Icon name="sparkle" size={15} /> {busy ? "Redirection…" : `Passer à Cardamome+ · ${price.cta}`}
+    </button>
+  );
+  const renderManage = () => (
+    <button className="btn btn-manage" disabled={busy} onClick={onManage}>
+      <Icon name="settings" size={15} /> {busy ? "Redirection…" : "Gérer mon abonnement"}
+    </button>
+  );
+
+  // Récap de l'abonnement : chaque ligne n'apparaît que si sa donnée est présente
+  // (dégradation propre sur le booléen seul, tant que la Phase 2 data n'a rien écrit).
+  const fmtDay = (d) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const fmtMonth = (d) => d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  const planLabel = subscription.plan === "yearly" ? "Annuel" : subscription.plan === "monthly" ? "Mensuel" : null;
+  const planPrice = subscription.plan ? PRICES[subscription.plan] : null;
 
   return (
     <div className="plus-root">
@@ -134,22 +148,97 @@ export function PlanPage() {
       </header>
 
       <main className="plus-stage" data-elastic-scroll>
-        <div className={isPlus ? "plus-layout" : "plus-layout plus-layout--split"}>
+        <div className="plus-layout plus-layout--split">
           {isPlus ? (
-            /* État abonné : bandeau de confirmation, hors split (colonne unique). */
-            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, background: "rgba(var(--ok-rgb),0.1)", border: "1px solid rgba(var(--ok-rgb),0.4)" }}>
-              <span style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--ok)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 5px 16px -5px rgba(var(--ok-rgb),0.65)" }}>
-                <Icon name="check" size={24} color="#fff" />
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  Tu es abonné·e à Cardamome+ <PlusBadge />
+            <>
+              {/* Rail gauche : récap de l'abonnement (desktop) */}
+              <section className="plus-account">
+                <span className="plus-badge-wrap"><PlusBadge size="lg" /></span>
+                <span className="plus-account-eyebrow">
+                  <Icon name="check" size={16} color="var(--ok)" /> Abonnement actif
+                </span>
+                <h2 className="plus-account-title">Merci d'être là.</h2>
+                {!adminAccess && (
+                  <p className="plus-account-lede">
+                    Ton abonnement <strong>Cardamome+</strong> est actif. Tu profites de tout, sans limite de recettes ni d'imports.
+                  </p>
+                )}
+
+                {adminAccess ? (
+                  <div className="plus-account-admin">
+                    <div className="plus-account-admin-t">
+                      <Icon name="shield" size={18} color="var(--accent)" /> Accès complet · compte admin
+                    </div>
+                    <p>Tu as accès à toutes les fonctionnalités de Cardamome+ via ton compte administrateur. Aucun abonnement Stripe n'est rattaché à ce compte.</p>
+                  </div>
+                ) : (
+                  <>
+                    {subscription.active && (
+                      <div className="plus-summary">
+                        <div className="plus-summary-row">
+                          <span className="plus-summary-k">Formule</span>
+                          <span className="plus-summary-v">Cardamome+{planLabel ? ` · ${planLabel}` : ""}</span>
+                        </div>
+                        {planPrice && (
+                          <div className="plus-summary-row">
+                            <span className="plus-summary-k">Prix</span>
+                            <span className="plus-summary-v">
+                              {planPrice.amount}
+                              <small>{subscription.plan === "yearly" ? "par an · 4,17 €/mois" : "par mois"}</small>
+                            </span>
+                          </div>
+                        )}
+                        {subscription.currentPeriodEnd && (
+                          <div className="plus-summary-row">
+                            <span className="plus-summary-k">{subscription.cancelAtPeriodEnd ? "Fin de l'abonnement" : "Renouvellement"}</span>
+                            <span className="plus-summary-v">{fmtDay(subscription.currentPeriodEnd)}</span>
+                          </div>
+                        )}
+                        {subscription.since && (
+                          <div className="plus-summary-row">
+                            <span className="plus-summary-k">Membre depuis</span>
+                            <span className="plus-summary-v">{fmtMonth(subscription.since)}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {subscription.cancelAtPeriodEnd && subscription.currentPeriodEnd && (
+                      <div className="plus-account-endnote">
+                        Ton abonnement se termine le <strong>{fmtDay(subscription.currentPeriodEnd)}</strong>. Tu gardes l'accès complet jusque là.
+                        <button type="button" onClick={onManage}>Réactiver</button>
+                      </div>
+                    )}
+
+                    <div className="plus-cta-rail">{renderManage()}</div>
+                    <p className="plus-reassure">
+                      <Icon name="lock" size={13} />
+                      {subscription.channel === "play"
+                        ? "Abonnement géré via Google Play. Résiliable à tout moment."
+                        : "Facturation gérée par Stripe. Résiliable à tout moment."}
+                    </p>
+                  </>
+                )}
+              </section>
+
+              {/* Zone droite : ce que tu débloques (comparatif recyclé en une colonne) */}
+              <section className="plus-unlocked" aria-label="Fonctionnalités incluses">
+                <div className="plus-highlight" aria-hidden="true" />
+                <div className="plus-thead">
+                  <span className="plus-col">Fonctionnalité</span>
+                  <span className="plus-col plus-col--plus plus-col--center">
+                    <span className="plus-col-name">Cardamome+</span>
+                    <span className="plus-col-tag">Inclus</span>
+                  </span>
                 </div>
-                <p style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, margin: "3px 0 0" }}>
-                  Merci de ton soutien&nbsp;! Tu profites de l'ensemble des fonctionnalités disponibles dans Cardamome.
-                </p>
-              </div>
-            </div>
+                {FEATURES.map((f) => (
+                  <div key={f.label} className={`plus-row${f.free !== true ? " plus-row--diff" : ""}`}>
+                    <span className="plus-feat">{f.label}</span>
+                    <span className="plus-cell"><Cell value={f.plus} accent /></span>
+                  </div>
+                ))}
+              </section>
+            </>
           ) : (
             <>
               {/* Rail de vente : pitch + tarif + CTA (desktop) */}
@@ -211,10 +300,13 @@ export function PlanPage() {
         </div>
       </main>
 
-      {/* CTA collé en bas : mobile (les deux états) + desktop (état abonné seul). */}
-      <div className={`plus-cta-bar${isPlus ? "" : " plus-cta-bar--doubled"}`}>
-        {renderCta()}
-      </div>
+      {/* CTA collé en bas, mobile uniquement (doublé dans les deux états depuis que
+          l'abonné a aussi un CTA dans le rail). Rien à rendre en accès admin. */}
+      {!adminAccess && (
+        <div className="plus-cta-bar plus-cta-bar--doubled">
+          {isPlus ? renderManage() : renderCta()}
+        </div>
+      )}
     </div>
   );
 }

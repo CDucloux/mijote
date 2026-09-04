@@ -245,11 +245,11 @@ function AppInner({ user, isDark, toggleTheme }) {
   }), []);
   // Accès à l'offre Cardamome+ : abonnement Stripe actif (extension Firebase) OU
   // admin (accès complet du propriétaire de l'app).
-  const subscribed = useSubscription(user?.uid);
-  const isPlus = isAdmin || subscribed;
+  const subscription = useSubscription(user?.uid);
+  const isPlus = isAdmin || subscription.active;
   const shellValue = useMemo(
-    () => ({ user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, ...stableApi }),
-    [user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, stableApi]
+    () => ({ user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, ...stableApi }),
+    [user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, stableApi]
   );
 
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
