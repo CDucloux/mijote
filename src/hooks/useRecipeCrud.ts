@@ -8,6 +8,7 @@ import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
 import { printRecipe, type PdfRecipe } from "@/lib/recipes/recipePdf.js";
 import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
+import type { ActivityInput } from "@/lib/notifications/activity.js";
 import type { ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
 
 /** Liste de courses (forme minimale manipulée ici). */
@@ -33,6 +34,7 @@ export interface RecipeCrudDeps {
   isPlus: boolean;
   notify: (msg: string, type?: string) => void;
   navigate: (path: string) => void;
+  logActivity: (input: ActivityInput) => void;
 }
 
 /** Index de recettes tel qu'attendu par les helpers courses/PDF (composants). */
@@ -49,7 +51,7 @@ const componentIndex = (recipes: Recipe[]): Map<string, ComponentRecipe> =>
  */
 export function useRecipeCrud({
   recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
-  ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate,
+  ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity,
 }: RecipeCrudDeps) {
   // Quota du plan gratuit : bloque la création au-delà de la limite. `redirect`
   // renvoie vers l'offre, désactivé depuis l'éditeur (qui masquerait /plan).
@@ -72,6 +74,9 @@ export function useRecipeCrud({
     setCollections(prev => recomputeCollectionCounts(prev, updatedRecipes));
     setEditingRecipe(null);
     notify("Recette sauvegardée");
+    // Une base (isComponent) n'est pas un ajout de recette « visible » : on ne la
+    // journalise pas comme telle. On distingue création et édition pour le libellé.
+    if (!result.recipe.isComponent) logActivity({ type: isNew ? "recipe.add" : "recipe.edit", target: result.recipe.name });
     return true;
   };
 
@@ -101,6 +106,7 @@ export function useRecipeCrud({
     setRecipes(prev => prev.filter(x => x.id !== id));
     navigate("/recipes");
     notify("Recette supprimée");
+    if (r) logActivity({ type: "recipe.delete", target: r.name });
   };
 
   const addToShopping = (recipe: Recipe, selectedIngredients: IngredientLine[] | null | undefined, mult = 1): void => {
@@ -112,6 +118,7 @@ export function useRecipeCrud({
       return [...prev, { id: "sl" + Date.now(), name: recipe.name, type: "recipe", recipeId: recipe.id, items }];
     });
     notify(`${items.length} ingrédient(s) ajoutés aux courses`);
+    logActivity({ type: "shopping.add", target: recipe.name, count: items.length });
   };
 
   const exportJSON = (recipe: Recipe): void => {
@@ -135,7 +142,7 @@ export function useRecipeCrud({
         dupes > 0 ? `${dupes} doublon(s) ignoré(s)` : "",
         rejected > 0 ? `${rejected} recette(s) non conforme(s) écartée(s)` : "",
       ].filter(Boolean).join(" · ");
-      if (newOnes.length > 0) notify(`${newOnes.length} recette(s) importée(s)${extras ? ` · ${extras}` : ""}`);
+      if (newOnes.length > 0) { notify(`${newOnes.length} recette(s) importée(s)${extras ? ` · ${extras}` : ""}`); logActivity({ type: "recipe.import", count: newOnes.length }); }
       else notify(`Aucune recette importée${extras ? ` – ${extras}` : ""}`, "error");
       return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
     });

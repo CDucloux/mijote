@@ -5,6 +5,7 @@ import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { SpotlightIngredient } from "../components/SpotlightIngredient.jsx";
+import { NotificationsSection } from "../components/NotificationsSection.jsx";
 import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
 import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
@@ -309,7 +310,7 @@ function SubviewPill({ mode, onNavigate }) {
   );
 }
 
-export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, loading = false, mode = "home", onNavigateSubview, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, onOpenIngredient, onExploreSeason, discoverSeed = "", onDiscoverSeedConsumed }) {
+export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], activities = [], preferences, loading = false, mode = "home", onNavigateSubview, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, onOpenIngredient, onExploreSeason, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
   const canHover = useCanHover();
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
@@ -480,6 +481,9 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             onExplore={onExploreSeason}
           />
         )}
+
+        {/* ── Notifications (activité du foyer) ────────────────────────────── */}
+        {!loading && <NotificationsSection activities={activities} />}
       </ElasticScroll>
       )}
     </div>

@@ -24,6 +24,7 @@ import { shouldAnimateDismiss, DETAIL_DISMISS_MS } from "./lib/ui/screenTransiti
 import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
+import { useActivityLog } from "./hooks/useActivityLog.js";
 import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
 import { usePublicRecipes } from "./hooks/usePublicRecipes.js";
@@ -222,6 +223,13 @@ function AppInner({ user, isDark, toggleTheme }) {
     userDB, setUserDB,
   });
 
+  // Journal d'activité (notifications du tableau de bord) : abonnement au workspace
+  // actif + `logActivity` co-localisé avec les toasts des actions métier.
+  const { activities, logActivity } = useActivityLog({
+    user, householdId: householdPointer?.id || null, workspaceReady,
+    actorName: preferences?.displayName || user?.displayName || "",
+  });
+
 
 
 
@@ -242,6 +250,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
     importFromText: (...a) => shellApiRef.current.importFromText?.(...a),
+    logActivity: (...a) => shellApiRef.current.logActivity?.(...a),
   }), []);
   // Accès à l'offre Cardamome+ : abonnement Stripe actif (extension Firebase) OU
   // admin (accès complet du propriétaire de l'app).
@@ -255,12 +264,12 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
   const { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF } = useRecipeCrud({
     recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
-    ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate,
+    ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity,
   });
 
   // Publier / dépublier / cloner des recettes publiques (communauté), voir usePublicRecipes.
   const { publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic } =
-    usePublicRecipes({ user, displayName: preferences?.displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate });
+    usePublicRecipes({ user, displayName: preferences?.displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate, logActivity });
 
   // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer
   // à sa création (copie de mes données vers le namespace du foyer).
@@ -331,7 +340,8 @@ function AppInner({ user, isDark, toggleTheme }) {
   const addRecipeToMealPlan = useCallback((r, date, portions, slot) => {
     setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi", groupId: newGroupId(), role: roleForCategory(r.category) }] }));
     notify("Ajouté au planning");
-  }, [notify]);
+    logActivity({ type: "mealplan.add", target: r.name });
+  }, [notify, logActivity]);
 
   // Journal de cuisine : un plat mené jusqu'au bout du mode pas à pas est consigné
   // au jour courant (dans les préférences, synchronisées perso). C'est CE journal,
@@ -363,7 +373,8 @@ function AppInner({ user, isDark, toggleTheme }) {
       return next;
     });
     notify("Recette dupliquée");
-  }, [notify, recipes, isPlus, navigate]);
+    logActivity({ type: "recipe.add", target: copy.name });
+  }, [notify, recipes, isPlus, navigate, logActivity]);
 
   // Ouvre une recette en transmettant une intention consommée à l'arrivée par la
   // fiche (« plan » → modale planning, « share » → flux de partage/publication).
@@ -504,7 +515,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           (Accueil, Recettes, Planning, Profil, Config, Légal…), qui apparaissaient
           jusqu'ici sans transition. */}
       <div key={tab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
+      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
@@ -593,7 +604,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // bord, et ces fonctions ne sont appelées que sur action utilisateur (jamais au
   // render ni dans un effet de montage), donc jamais lue avant d'être remplie.
   // eslint-disable-next-line react-hooks/refs
-  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages, importFromText };
+  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages, importFromText, logActivity };
 
   return (
     <AppShellProvider value={shellValue}>

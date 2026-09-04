@@ -139,7 +139,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
 export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
-  const { notify, user, isPlus } = useAppShell();
+  const { notify, user, isPlus, logActivity } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
   // vers l'offre Cardamome+ quand une fonctionnalité premium est verrouillée.
   const gotoRoute = useNavigate();
@@ -224,13 +224,14 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     setGenOpen(false);
     if (count > 0) {
       notify(`${count} repas proposés, à relire et ajuster`, "success");
+      logActivity?.({ type: "mealplan.generate", count });
       // Batch cooking demandé → on ouvre directement la session (tout à préparer).
       if (batch) openBatch();
     } else if (!recipes.length) {
       // Aucune recette en bibliothèque : rien à proposer (≠ semaine déjà remplie).
       notify("Ajoute d'abord des recettes pour générer une semaine", "info");
     } else notify(`Cette semaine est déjà remplie (${slotsLabel})`, "info");
-  }, [generate, weekDays, notify, household, recipes, genSlots]);
+  }, [generate, weekDays, notify, household, recipes, genSlots, logActivity]);
   const handleUndo = useCallback(() => { if (undo()) notify("Génération annulée", "info"); }, [undo, notify]);
 
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
@@ -703,7 +704,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 <Icon name="copy" size={19} color="var(--text2)" /> Dupliquer sur d'autres jours
               </button>
             )}
-            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onPointerDown={spawnRipple} onClick={() => { removeMeal(it.date, it.idx); close(); notify("Repas retiré du planning"); }}>
+            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onPointerDown={spawnRipple} onClick={() => { removeMeal(it.date, it.idx); close(); notify("Repas retiré du planning"); logActivity?.({ type: "mealplan.remove", target: r?.name || "" }); }}>
               <Icon name="trash" size={19} color="var(--red)" /> Supprimer du calendrier
             </button>
           </div>
