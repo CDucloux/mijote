@@ -27,6 +27,11 @@ export interface ActivityInput {
   type: ActivityType;
   /** Nom de la cible (recette, repas...) ; vide si sans objet. */
   target?: string;
+  /**
+   * Identifiant de la cible (recette, liste de courses...), pour un lien profond
+   * vers la bonne page plutôt que vers l'onglet. Absent si sans objet.
+   */
+  targetId?: string;
   /** Compteur associé (articles ajoutés, repas générés...) ; 0 si sans objet. */
   count?: number;
 }
@@ -40,6 +45,8 @@ export interface ActivityEvent {
   /** Nom affiché de l'auteur au moment de l'action (peut être vide). */
   actorName: string;
   target: string;
+  /** Id de la cible pour le lien profond (vide si sans objet ou évènement ancien). */
+  targetId: string;
   count: number;
   /** Instant de l'action en millisecondes epoch. */
   ts: number;
@@ -104,6 +111,7 @@ export function parseActivity(id: string, raw: unknown, now: number = Date.now()
     actorEmail: asStr(o.actorEmail).toLowerCase(),
     actorName: asStr(o.actorName),
     target: asStr(o.target),
+    targetId: asStr(o.targetId),
     count: asNum(o.count),
     ts: tsToMillis(o.ts, now),
   };
@@ -160,9 +168,22 @@ const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: st
  *
  * @param ev - Évènement à décrire.
  */
+/**
+ * Lien profond d'un évènement : quand la cible a un id, on renvoie vers SA page
+ * (fiche recette, liste de courses précise) plutôt que vers l'onglet générique.
+ * Sans id (évènement ancien, cible multiple comme un import), on retombe sur
+ * l'onglet de base du descripteur. `null` (suppressions) reste `null`.
+ */
+function routeFor(ev: ActivityEvent, base: string | null): string | null {
+  if (!base || !ev.targetId) return base;
+  if (ev.type.startsWith("recipe.")) return `/recipes/${ev.targetId}`;
+  if (ev.type === "shopping.create" || ev.type === "shopping.add") return `/shopping-lists?list=${ev.targetId}`;
+  return base;
+}
+
 export function describeActivity(ev: ActivityEvent): ActivityView {
   const d = DESCRIPTORS[ev.type];
-  return { icon: d.icon, color: d.color, route: d.route, title: d.title(ev) };
+  return { icon: d.icon, color: d.color, route: routeFor(ev, d.route), title: d.title(ev) };
 }
 
 /**

@@ -56,6 +56,8 @@ export function useActivityLog({ user, householdId, workspaceReady, actorName }:
     void appendActivity(ws, {
       type: input.type,
       target: input.target || "",
+      // Firestore refuse les champs `undefined` : on n'ajoute targetId que s'il existe.
+      ...(input.targetId ? { targetId: input.targetId } : {}),
       count: input.count || 0,
       actorEmail: (user.email || "").toLowerCase(),
       actorName: nameRef.current,

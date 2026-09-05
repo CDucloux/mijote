@@ -54,7 +54,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
       setRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, visibility: "public", publicId: publicId(user.uid, recipe.id) } : r));
       const bases = docs.length - 1;
       notify(bases > 0 ? `Recette publiée (+ ${bases} base${bases > 1 ? "s" : ""})` : "Recette publiée");
-      logActivity({ type: "recipe.publish", target: recipe.name });
+      logActivity({ type: "recipe.publish", target: recipe.name, targetId: recipe.id });
     } catch { notify("Publication refusée – règles Firestore déployées ?", "error"); }
   };
 
@@ -76,7 +76,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
         const { visibility, publicId: _p, ...rest } = r; void visibility; void _p; return rest;
       }));
       notify("Recette dépubliée");
-      logActivity({ type: "recipe.unpublish", target: recipe.name });
+      logActivity({ type: "recipe.unpublish", target: recipe.name, targetId: recipe.id });
     } catch { notify("Échec de la dépublication", "error"); }
   };
 
@@ -95,7 +95,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
       setCollections(prev => recomputeCollectionCounts(prev, updated));
       const bases = added.length - 1;
       notify(bases > 0 ? `Ajoutée à tes recettes (+ ${bases} base${bases > 1 ? "s" : ""})` : "Ajoutée à tes recettes");
-      logActivity({ type: "recipe.clone", target: typeof pub.recipe?.name === "string" ? pub.recipe.name : "" });
+      logActivity({ type: "recipe.clone", target: typeof pub.recipe?.name === "string" ? pub.recipe.name : "", targetId: mainId });
       navigate(`/recipes/${mainId}`);
     } catch { notify("Échec du clonage", "error"); }
   };
@@ -105,7 +105,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
     try {
       const compPubIds = (pub.componentRefs || []).map(origId => publicId(pub.authorUid, origId));
       const comps = (compPubIds.length ? await fetchPublicDocsByIds(compPubIds) : []) as PublicDoc[];
-      const { added, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
+      const { added, mainId, alreadyOwned } = clonePublicBundle(pub, comps, { existingRecipes: recipes });
       if (alreadyOwned) { notify("Déjà dans tes recettes"); return; }
       if (!guardQuota()) return;
       const updated = [...added, ...recipes];
@@ -113,7 +113,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
       setCollections(prev => recomputeCollectionCounts(prev, updated));
       const bases = added.length - 1;
       notify(bases > 0 ? `Ajoutée à tes recettes (+ ${bases} base${bases > 1 ? "s" : ""})` : "Ajoutée à tes recettes");
-      logActivity({ type: "recipe.clone", target: typeof pub.recipe?.name === "string" ? pub.recipe.name : "" });
+      logActivity({ type: "recipe.clone", target: typeof pub.recipe?.name === "string" ? pub.recipe.name : "", targetId: mainId });
     } catch { notify("Échec de l'ajout", "error"); }
   };
 

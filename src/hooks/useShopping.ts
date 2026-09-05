@@ -51,7 +51,7 @@ export interface ShoppingController {
   catOf: (name: string) => string;
   updateList: (id: string, fn: (l: ShoppingList) => ShoppingList) => void;
   deleteList: (id: string) => void;
-  createList: (name: string, hideClear: boolean) => void;
+  createList: (name: string, hideClear: boolean) => string;
   addItem: (raw: string) => void;
   addManyFromText: (text: string) => void;
   deleteItem: (listId: string, itemId: string) => void;
@@ -101,10 +101,11 @@ export function useShopping(
     if (activeListId === id) setActiveListId(null);
   };
 
-  const createList = (name: string, hideClear: boolean) => {
+  const createList = (name: string, hideClear: boolean): string => {
     const l: ShoppingList = { id: "sl" + Date.now(), name, type: "free", items: [], hideClear };
     setShoppingLists(prev => [...prev, l]);
     setActiveListId(l.id);
+    return l.id;
   };
 
   const toggleItem = (listId: string, itemId: string) =>

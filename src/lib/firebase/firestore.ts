@@ -84,6 +84,8 @@ export interface ActivityWrite {
   actorEmail: string;
   actorName: string;
   target: string;
+  /** Id de la cible pour un lien profond ; omis quand il n'y en a pas. */
+  targetId?: string;
   count: number;
 }
 

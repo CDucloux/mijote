@@ -274,7 +274,7 @@ function AppInner({ user, isDark, toggleTheme }) {
 
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
   const { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF } = useRecipeCrud({
-    recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
+    recipes, setRecipes, setCollections, setEditingRecipe, shoppingLists, setShoppingLists,
     ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity,
   });
 
@@ -367,7 +367,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       return { ...base, cookLog: log };
     });
     const cooked = recipes.find(r => r.id === recipeId);
-    if (cooked) logActivity({ type: "recipe.cooked", target: cooked.name });
+    if (cooked) logActivity({ type: "recipe.cooked", target: cooked.name, targetId: cooked.id });
   }, [setPreferences, recipes, logActivity]);
 
   // Duplique une recette : copie privée (pas de lien public), nom suffixé, en tête
