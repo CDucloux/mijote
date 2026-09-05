@@ -34,8 +34,8 @@ describe("tsToMillis", () => {
 
 describe("parseActivity", () => {
   it("narrow un document valide", () => {
-    const r = parseActivity("id1", { type: "shopping.add", actorEmail: "A@B.FR", actorName: "Ana", target: "X", count: 3, ts: 42 });
-    expect(r).toEqual({ id: "id1", type: "shopping.add", actorEmail: "a@b.fr", actorName: "Ana", target: "X", count: 3, ts: 42 });
+    const r = parseActivity("id1", { type: "shopping.add", actorEmail: "A@B.FR", actorName: "Ana", target: "X", targetId: "sl7", count: 3, ts: 42 });
+    expect(r).toEqual({ id: "id1", type: "shopping.add", actorEmail: "a@b.fr", actorName: "Ana", target: "X", targetId: "sl7", count: 3, ts: 42 });
   });
   it("rejette un type inconnu ou un objet manquant", () => {
     expect(parseActivity("i", { type: "nope" })).toBeNull();
@@ -117,6 +117,21 @@ describe("describeActivity", () => {
   it("nomme les publications/dépublications communautaires", () => {
     expect(describeActivity(ev({ type: "recipe.publish", target: "Tarte" })).title).toBe("Publiée dans la communauté : Tarte");
     expect(describeActivity(ev({ type: "recipe.unpublish", target: "Tarte" })).title).toBe("Retirée de la communauté : Tarte");
+  });
+  it("lien profond vers la cible quand un targetId est présent", () => {
+    expect(describeActivity(ev({ type: "recipe.add", targetId: "r42" })).route).toBe("/recipes/r42");
+    expect(describeActivity(ev({ type: "recipe.cooked", targetId: "r42" })).route).toBe("/recipes/r42");
+    expect(describeActivity(ev({ type: "recipe.publish", targetId: "r42" })).route).toBe("/recipes/r42");
+    expect(describeActivity(ev({ type: "shopping.create", targetId: "sl9" })).route).toBe("/shopping-lists?list=sl9");
+    expect(describeActivity(ev({ type: "shopping.add", targetId: "sl9" })).route).toBe("/shopping-lists?list=sl9");
+    // Une suppression reste non navigable même avec un id.
+    expect(describeActivity(ev({ type: "recipe.delete", targetId: "r42" })).route).toBeNull();
+    // Le stock n'a pas de page par cible : on garde l'onglet même avec un id.
+    expect(describeActivity(ev({ type: "stock.add", targetId: "i1" })).route).toBe("/stock");
+  });
+  it("retombe sur l'onglet quand le targetId manque (évènements anciens)", () => {
+    expect(describeActivity(ev({ type: "recipe.add", targetId: "" })).route).toBe("/recipes");
+    expect(describeActivity(ev({ type: "shopping.add", targetId: "" })).route).toBe("/shopping-lists");
   });
   it("route chaque type vers le bon onglet, sauf les suppressions (route null)", () => {
     const routeOf = t => describeActivity(ev({ type: t })).route;

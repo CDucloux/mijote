@@ -1340,6 +1340,41 @@ select {
   border-color: rgba(224, 82, 82, 0.22);
 }
 
+/* Cartes autonomes (console admin, déconnexion) : une seule action indépendante
+   → forme pilule assumée. Le maintien/hover gris générique écraserait leur teinte,
+   on le remplace par une teinte accordée à la carte. Et la persistance du hover
+   n'est réservée qu'aux vrais pointeurs : sur tactile, l'onde (.ripple-ink) suffit
+   comme feedback et se résorbe seule (pas d'état gris « collé » après l'appui). */
+.account-group.is-special,
+.account-group.is-danger {
+  border-radius: 999px;
+}
+
+.account-group.is-special .menu-row,
+.account-group.is-danger .menu-row {
+  border-radius: 999px;
+}
+
+@media (hover: hover) {
+  .account-group.is-special .menu-row:hover,
+  .account-group.is-special .menu-row:active {
+    background-color: rgba(var(--admin-rgb), 0.16);
+  }
+  .account-group.is-danger .menu-row:hover,
+  .account-group.is-danger .menu-row:active {
+    background-color: rgba(var(--red-rgb), 0.14);
+  }
+}
+
+/* Tactile : pas de teinte de maintien « collée » sur ces cartes, seule l'onde
+   parle (le gris générique de .menu-row:active resterait figé après l'appui). */
+@media (hover: none) {
+  .account-group.is-special .menu-row:active,
+  .account-group.is-danger .menu-row:active {
+    background-color: transparent;
+  }
+}
+
 @keyframes editorSlideIn {
   from {
     opacity: 0;
@@ -2187,6 +2222,259 @@ select {
   margin-top: 26px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
+}
+
+/* ─── GUIDE : prose enrichie ────────────────────────────────────────────────────
+   Chaque thème porte sa propre couleur d'accent (--guide-accent, posée inline
+   depuis le front-matter), à la manière des slides d'onboarding. La hiérarchie
+   naît de la typo et de repères colorés discrets (marqueur de section, badges
+   d'étape, filet de callout), jamais d'un aplat criard. */
+/* Décline la couleur du thème en teintes douces (fond, bordure) via color-mix :
+   marche aussi bien pour un hex de front-matter que pour var(--accent). */
+.guide-doc {
+  --guide-accent-soft: color-mix(in srgb, var(--guide-accent) 11%, transparent);
+  --guide-accent-border: color-mix(in srgb, var(--guide-accent) 30%, transparent);
+}
+
+.guide-hero {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: var(--guide-accent-soft);
+  border: 1px solid var(--guide-accent-border);
+  margin-bottom: 24px;
+}
+
+.guide-hero-icon {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  background: var(--guide-accent);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 20px -10px var(--guide-accent);
+}
+
+.guide-hero-lead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text2);
+}
+
+.guide-md {
+  font-size: 14px;
+  line-height: 1.64;
+  color: var(--text2);
+}
+
+/* Chapô : la première ligne du thème respire un cran au-dessus du corps. */
+.guide-md > div > p:first-child {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0 0 20px;
+}
+
+.guide-md h2 {
+  font-family: var(--ff-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 28px 0 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guide-md h2::before {
+  content: "";
+  flex-shrink: 0;
+  width: 4px;
+  height: 19px;
+  border-radius: 999px;
+  background: var(--guide-accent);
+}
+
+.guide-md h3 {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 20px 0 6px;
+}
+
+.guide-md p {
+  margin: 0 0 11px;
+}
+
+/* Listes à puces : pastille colorée maison plutôt que le disque par défaut. */
+.guide-md ul {
+  list-style: none;
+  margin: 8px 0 14px;
+  padding-left: 2px;
+}
+
+.guide-md ul > li {
+  position: relative;
+  padding-left: 20px;
+  margin: 0 0 8px;
+}
+
+.guide-md ul > li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--guide-accent);
+}
+
+/* Listes ordonnées : de vraies étapes, chaque numéro dans un jeton coloré. */
+.guide-md ol {
+  list-style: none;
+  counter-reset: guide-step;
+  margin: 10px 0 16px;
+  padding-left: 0;
+}
+
+.guide-md ol > li {
+  counter-increment: guide-step;
+  position: relative;
+  padding: 3px 0 3px 42px;
+  margin: 0 0 12px;
+  min-height: 28px;
+}
+
+.guide-md ol > li::before {
+  content: counter(guide-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--guide-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.guide-md li strong,
+.guide-md p strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Blockquote = encart « astuce » : filet coloré, fond teinté, coins doux. */
+.guide-md blockquote {
+  margin: 16px 0;
+  padding: 13px 16px;
+  background: var(--guide-accent-soft);
+  border-left: 3px solid var(--guide-accent);
+  border-radius: 0 13px 13px 0;
+  color: var(--text2);
+  font-size: 13.5px;
+}
+
+.guide-md blockquote p {
+  margin: 0 0 6px;
+}
+
+.guide-md blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Code inline : touche « clavier » douce pour les libellés de boutons cités. */
+.guide-md code {
+  font-family: var(--ff-mono, ui-monospace, monospace);
+  font-size: 12.5px;
+  padding: 1.5px 6px;
+  border-radius: 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.guide-md hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0;
+}
+
+/* Tableau comparatif : encadré doux, en-tête teinté à l'accent du thème. */
+.guide-md table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0 18px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.guide-md thead th {
+  background: var(--guide-accent-soft);
+  color: var(--text);
+  font-weight: 700;
+  text-align: left;
+}
+
+.guide-md th,
+.guide-md td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-md td:not(:first-child),
+.guide-md th:not(:first-child) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.guide-md tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.guide-md a {
+  color: var(--guide-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}
+
+.guide-md a:hover {
+  opacity: 0.8;
+}
+
+/* Pied de thème : navigation vers le sujet suivant, teintée à l'accent du thème. */
+.guide-next {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  margin-top: 28px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .guide-next:hover {
+    border-color: var(--guide-accent);
+  }
 }
 
 @media (hover:hover) {
@@ -3960,4 +4248,176 @@ select {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ═══ Notifications : timeline « journal du foyer » ══════════════════════════
+   Refonte présentationnelle (cf. NotificationsSection.jsx). Regroupement par
+   jour (libellé sticky) + spine hairline derrière des pastilles teintées par
+   type d'évènement. Tokens uniquement, clair/sombre gérés par color-mix. */
+.notif-feed {
+  display: flex;
+  flex-direction: column;
+  animation: notifFadeIn 0.3s ease both;
+}
+@keyframes notifFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.notif-group { position: relative; }
+
+.notif-daylabel {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 14px 0 8px;
+  background: linear-gradient(var(--bg) 62%, transparent);
+}
+.notif-daylabel span {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text3);
+}
+
+/* spine : hairline continue derrière les pastilles du groupe */
+.notif-stack { position: relative; }
+.notif-stack::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 4px;
+  bottom: 10px;
+  width: 1.5px;
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.notif-row {
+  display: grid;
+  grid-template-columns: 33px 1fr auto auto;
+  align-items: start;
+  column-gap: 12px;
+  width: 100%;
+  padding: 7px 10px 7px 0;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border-radius: 12px;
+  position: relative;
+}
+.notif-row--nav { cursor: pointer; transition: background 0.14s; }
+.notif-row--nav:hover { background: var(--surface2); }
+
+.notif-spine-wrap { display: flex; justify-content: center; }
+.notif-node {
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px var(--bg);
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  transition: box-shadow 0.14s;
+}
+.notif-row--nav:hover .notif-node { box-shadow: 0 0 0 4px var(--surface2); }
+
+.notif-body { min-width: 0; padding-top: 5px; }
+.notif-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.34;
+  overflow: hidden;
+}
+.notif-who {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text2);
+}
+.notif-who::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text3);
+  margin-right: 6px;
+  vertical-align: middle;
+  margin-top: -2px;
+}
+
+.notif-meta { padding-top: 7px; text-align: right; }
+.notif-time {
+  font-size: 11.5px;
+  color: var(--text3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.notif-chev {
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  padding-top: 6px;
+  opacity: 0.5;
+  transition: opacity 0.14s, transform 0.14s;
+}
+.notif-row--nav:hover .notif-chev { opacity: 1; transform: translateX(1px); }
+
+.notif-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 6px 6px;
+  padding: 7px 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--ff-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.notif-empty {
+  text-align: center;
+  padding: 54px 24px;
+  color: var(--text3);
+  max-width: 340px;
+  margin: 0 auto;
+}
+.notif-empty-ic {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  margin-bottom: 14px;
+}
+.notif-empty-t { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--text2); }
+.notif-empty-s { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .notif-feed { animation: none; }
+}
+
+/* Desktop « registre » : colonne lisible centrée, date dans la marge gauche. */
+@media (min-width: 768px) {
+  .notif-feed { max-width: 820px; margin: 0 auto; width: 100%; }
+  .notif-group { display: grid; grid-template-columns: 150px 1fr; align-items: start; }
+  .notif-daylabel { position: sticky; top: 8px; background: none; padding: 22px 0 0; }
+  .notif-daylabel span { font-size: 12px; }
+  .notif-row { max-width: 620px; }
+  .notif-more { margin-left: 156px; }
 }

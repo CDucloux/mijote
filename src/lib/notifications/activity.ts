@@ -27,6 +27,11 @@ export interface ActivityInput {
   type: ActivityType;
   /** Nom de la cible (recette, repas...) ; vide si sans objet. */
   target?: string;
+  /**
+   * Identifiant de la cible (recette, liste de courses...), pour un lien profond
+   * vers la bonne page plutôt que vers l'onglet. Absent si sans objet.
+   */
+  targetId?: string;
   /** Compteur associé (articles ajoutés, repas générés...) ; 0 si sans objet. */
   count?: number;
 }
@@ -40,6 +45,8 @@ export interface ActivityEvent {
   /** Nom affiché de l'auteur au moment de l'action (peut être vide). */
   actorName: string;
   target: string;
+  /** Id de la cible pour le lien profond (vide si sans objet ou évènement ancien). */
+  targetId: string;
   count: number;
   /** Instant de l'action en millisecondes epoch. */
   ts: number;
@@ -104,6 +111,7 @@ export function parseActivity(id: string, raw: unknown, now: number = Date.now()
     actorEmail: asStr(o.actorEmail).toLowerCase(),
     actorName: asStr(o.actorName),
     target: asStr(o.target),
+    targetId: asStr(o.targetId),
     count: asNum(o.count),
     ts: tsToMillis(o.ts, now),
   };
@@ -160,9 +168,36 @@ const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: st
  *
  * @param ev - Évènement à décrire.
  */
+/**
+ * Lien profond d'un évènement : quand la cible a un id, on renvoie vers SA page
+ * (fiche recette, liste de courses précise) plutôt que vers l'onglet générique.
+ * Sans id (évènement ancien, cible multiple comme un import), on retombe sur
+ * l'onglet de base du descripteur. `null` (suppressions) reste `null`.
+ */
+function routeFor(ev: ActivityEvent, base: string | null): string | null {
+  if (!base || !ev.targetId) return base;
+  if (ev.type.startsWith("recipe.")) return `/recipes/${ev.targetId}`;
+  if (ev.type === "shopping.create" || ev.type === "shopping.add") return `/shopping-lists?list=${ev.targetId}`;
+  return base;
+}
+
 export function describeActivity(ev: ActivityEvent): ActivityView {
   const d = DESCRIPTORS[ev.type];
-  return { icon: d.icon, color: d.color, route: d.route, title: d.title(ev) };
+  return { icon: d.icon, color: d.color, route: routeFor(ev, d.route), title: d.title(ev) };
+}
+
+/**
+ * Nombre d'évènements « non lus » : ceux strictement postérieurs au dernier
+ * instant consulté (`lastSeen`, ms epoch). Un `lastSeen` à 0 (jamais consulté)
+ * compte donc tout le flux. Fonction pure, alimente la pastille de l'en-tête.
+ *
+ * @param activities - Flux d'évènements (seul `ts` est lu).
+ * @param lastSeen - Dernier instant de consultation des notifications (ms epoch).
+ */
+export function countUnread(activities: readonly Pick<ActivityEvent, "ts">[], lastSeen: number): number {
+  let n = 0;
+  for (const a of activities) if (a.ts > lastSeen) n++;
+  return n;
 }
 
 const MINUTE = 60_000, HOUR = 3_600_000, DAY = 86_400_000;
@@ -184,4 +219,33 @@ export function relativeTime(ms: number, now: number = Date.now()): string {
   if (days === 1) return "hier";
   if (days < 7) return `il y a ${days} j`;
   return new Date(ms).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+// Nombre de jours civils entre deux instants, en comparant les dates locales
+// (année/mois/jour) et non un delta en ms : « hier » reste « hier » même à 2 min
+// d'écart autour de minuit.
+const civilDayDiff = (a: Date, b: Date): number => {
+  const da = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const db = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((db.getTime() - da.getTime()) / DAY);
+};
+
+/**
+ * Libellé de regroupement par jour pour la timeline des notifications :
+ * « Aujourd'hui », « Hier », le nom du jour (capitalisé) pour les 6 jours qui
+ * précèdent, puis une date courte au-delà. Compare des dates CIVILES (pas un
+ * delta en ms) pour rester stable autour de minuit.
+ *
+ * @param ms - Instant de l'évènement (millisecondes epoch).
+ * @param now - Instant de référence (par défaut « maintenant »).
+ */
+export function dayBucketLabel(ms: number, now: number = Date.now()): string {
+  const d = new Date(ms);
+  const diff = civilDayDiff(d, new Date(now));
+  if (diff <= 0) return "Aujourd'hui";
+  if (diff === 1) return "Hier";
+  if (diff <= 6) return capitalize(d.toLocaleDateString("fr-FR", { weekday: "long" }));
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }

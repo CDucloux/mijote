@@ -26,6 +26,7 @@ export interface RecipeCrudDeps {
   setRecipes: Dispatch<SetStateAction<Recipe[]>>;
   setCollections: Dispatch<SetStateAction<Collection[]>>;
   setEditingRecipe: (r: Recipe | null) => void;
+  shoppingLists: ShoppingList[];
   setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
   ingredientDB: ActionDbItem[];
   utensilDB: ImportDbItem[];
@@ -50,7 +51,7 @@ const componentIndex = (recipes: Recipe[]): Map<string, ComponentRecipe> =>
  * @returns `{ saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF }`.
  */
 export function useRecipeCrud({
-  recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
+  recipes, setRecipes, setCollections, setEditingRecipe, shoppingLists, setShoppingLists,
   ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity,
 }: RecipeCrudDeps) {
   // Quota du plan gratuit : bloque la création au-delà de la limite. `redirect`
@@ -76,7 +77,7 @@ export function useRecipeCrud({
     notify("Recette sauvegardée");
     // Une base (isComponent) n'est pas un ajout de recette « visible » : on ne la
     // journalise pas comme telle. On distingue création et édition pour le libellé.
-    if (!result.recipe.isComponent) logActivity({ type: isNew ? "recipe.add" : "recipe.edit", target: result.recipe.name });
+    if (!result.recipe.isComponent) logActivity({ type: isNew ? "recipe.add" : "recipe.edit", target: result.recipe.name, targetId: result.recipe.id });
     return true;
   };
 
@@ -112,13 +113,16 @@ export function useRecipeCrud({
   const addToShopping = (recipe: Recipe, selectedIngredients: IngredientLine[] | null | undefined, mult = 1): void => {
     const items = buildShoppingItems(recipe, selectedIngredients, mult, ingredientDB, componentIndex(recipes), new Set(stock));
     if (items.length === 0) return;
+    // Id de la liste cible (existante ou nouvelle), résolu sur l'état courant pour
+    // un lien profond fiable (les updaters React ne s'exécutent pas de façon synchrone).
+    const existing = shoppingLists.find(l => l.type === "recipe" && l.recipeId === recipe.id);
+    const listId = existing ? existing.id : "sl" + Date.now();
     setShoppingLists(prev => {
-      const existing = prev.find(l => l.type === "recipe" && l.recipeId === recipe.id);
-      if (existing) return prev.map(l => l.id === existing.id ? { ...l, items: [...l.items, ...items] } : l);
-      return [...prev, { id: "sl" + Date.now(), name: recipe.name, type: "recipe", recipeId: recipe.id, items }];
+      if (prev.find(l => l.id === listId)) return prev.map(l => l.id === listId ? { ...l, items: [...l.items, ...items] } : l);
+      return [...prev, { id: listId, name: recipe.name, type: "recipe", recipeId: recipe.id, items }];
     });
     notify(`${items.length} ingrédient(s) ajoutés aux courses`);
-    logActivity({ type: "shopping.add", target: recipe.name, count: items.length });
+    logActivity({ type: "shopping.add", target: recipe.name, targetId: listId, count: items.length });
   };
 
   const exportJSON = (recipe: Recipe): void => {

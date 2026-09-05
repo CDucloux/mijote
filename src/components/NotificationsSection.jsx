@@ -2,49 +2,41 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { describeActivity, actorLabel, relativeTime } from "@/lib/notifications/activity.js";
+import { describeActivity, actorLabel, relativeTime, dayBucketLabel } from "@/lib/notifications/activity.js";
 
 // Nombre d'évènements montrés d'emblée ; le reste se déplie à la demande. Garde la
 // section courte au repos sans masquer l'historique déjà chargé.
 const COLLAPSED = 5;
 
-// Une ligne d'activité : pastille (icône teintée) + phrase + méta (auteur · quand).
-// Navigable (route non nulle) → bouton pressable qui renvoie vers l'onglet concerné,
-// avec un chevron d'affordance ; sinon (suppression) un simple <div> statique.
-function ActivityRow({ event, currentEmail, animationDelay, onNavigate }) {
+// Une ligne de la timeline : pastille teintée (perce la spine) + phrase (2 lignes max)
+// + ligne acteur si ce n'est pas « Toi » + heure dédiée. Navigable (route non nulle)
+// → <button> pressable avec chevron d'affordance ; sinon (suppression) un <div> statique.
+function ActivityRow({ event, currentEmail, onNavigate }) {
   const { icon, color, title, route } = describeActivity(event);
   const who = actorLabel(event, currentEmail);
   const when = relativeTime(event.ts);
   const inner = (
     <>
-      <span style={{
-        width: 34, height: 34, borderRadius: 11, flexShrink: 0, marginTop: 1,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: "var(--surface2)", border: "1px solid var(--border)",
-      }}>
-        <Icon name={icon} size={17} color={color} />
-      </span>
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--text)", lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {title}
-        </span>
-        <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>
-          <span style={{ fontWeight: 600, color: who === "Toi" ? "var(--accent)" : "var(--text2)" }}>{who}</span>
-          {" · "}{when}
+      <span className="notif-spine-wrap">
+        <span className="notif-node" style={{ "--nc": color, background: `color-mix(in srgb, ${color} 13%, var(--surface))` }}>
+          <Icon name={icon} size={16} color={color} />
         </span>
       </span>
-      {route && <Icon name="forward" size={15} color="var(--text3)" />}
+      <span className="notif-body">
+        <span className="notif-title">{title}</span>
+        {who !== "Toi" && <span className="notif-who">{who}</span>}
+      </span>
+      <span className="notif-meta"><span className="notif-time">{when}</span></span>
+      {route && (
+        <span className="notif-chev"><Icon name="forward" size={15} color="var(--text3)" /></span>
+      )}
     </>
   );
-  const base = { display: "flex", alignItems: "center", gap: 12, padding: "11px 2px", width: "100%" };
   if (!route) {
-    return <div className="slide-up" style={{ ...base, animationDelay }}>{inner}</div>;
+    return <div className="notif-row">{inner}</div>;
   }
   return (
-    <button
-      type="button" className="slide-up pressable" onClick={() => onNavigate(route)}
-      style={{ ...base, animationDelay, background: "none", border: "none", textAlign: "left", cursor: "pointer", font: "inherit", color: "inherit" }}
-    >
+    <button type="button" className="notif-row notif-row--nav pressable" onClick={() => onNavigate(route)}>
       {inner}
     </button>
   );
@@ -53,8 +45,8 @@ function ActivityRow({ event, currentEmail, animationDelay, onNavigate }) {
 /**
  * Section « Notifications » du tableau de bord : journal des dernières modifications
  * du foyer (ajout/édition/suppression de recettes, courses, planning...), attribuées
- * à leur auteur. Masquée quand il n'y a encore aucune activité. Un tick périodique
- * rafraîchit les horodatages relatifs sans re-souscrire.
+ * à leur auteur, présenté en timeline « journal du foyer » regroupée par jour. Un tick
+ * périodique rafraîchit les horodatages relatifs sans re-souscrire.
  */
 export function NotificationsSection({ activities = [], onNavigated }) {
   const { user } = useAppShell();
@@ -74,35 +66,42 @@ export function NotificationsSection({ activities = [], onNavigated }) {
   // Renvoie vers l'onglet ciblé puis referme le panneau (accès via le bouton rond).
   const go = (route) => { onNavigated?.(); navigate(route); };
 
+  // Regroupe par jour SANS re-trier : préserve l'ordre `ts desc` du flux.
+  const groups = useMemo(() => {
+    const out = [];
+    for (const event of shown) {
+      const label = dayBucketLabel(event.ts);
+      const last = out[out.length - 1];
+      if (last && last.label === label) last.events.push(event);
+      else out.push({ label, events: [event] });
+    }
+    return out;
+  }, [shown]);
+
   if (activities.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: "32px 16px 20px", color: "var(--text3)" }}>
-        <span style={{ width: 52, height: 52, borderRadius: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 12 }}>
-          <Icon name="bell" size={22} color="var(--text3)" />
-        </span>
-        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>Aucune activité pour l'instant</p>
-        <p style={{ margin: "4px 0 0", fontSize: 12.5 }}>Les actions du foyer s'afficheront ici.</p>
+      <div className="notif-empty">
+        <span className="notif-empty-ic"><Icon name="bell" size={22} color="var(--text3)" /></span>
+        <p className="notif-empty-t">Rien à signaler pour l'instant</p>
+        <p className="notif-empty-s">Les actions de ton foyer apparaîtront ici : recettes ajoutées, courses, stock, planning.</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div style={{
-        background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18,
-        padding: "4px 16px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
-      }}>
-        {shown.map((event, i) => (
-          <div key={event.id} style={i > 0 ? { borderTop: "1px solid var(--border)" } : undefined}>
-            <ActivityRow event={event} currentEmail={currentEmail} animationDelay={`${Math.min(i, 6) * 0.04}s`} onNavigate={go} />
+    <div className="notif-feed">
+      {groups.map((group, gi) => (
+        <section key={`${group.label}-${gi}`} className="notif-group">
+          <div className="notif-daylabel"><span>{group.label}</span></div>
+          <div className="notif-stack">
+            {group.events.map(event => (
+              <ActivityRow key={event.id} event={event} currentEmail={currentEmail} onNavigate={go} />
+            ))}
           </div>
-        ))}
-      </div>
+        </section>
+      ))}
       {rest > 0 && (
-        <button onClick={() => setExpanded(v => !v)} className="pressable"
-          style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 10, padding: "6px 4px",
-            background: "none", border: "none", cursor: "pointer",
-            fontFamily: "var(--ff-body)", fontSize: 12.5, fontWeight: 600, color: "var(--accent)" }}>
+        <button onClick={() => setExpanded(v => !v)} className="pressable notif-more">
           {expanded ? "Réduire" : `Voir ${rest} de plus`}
           <Icon name={expanded ? "chevronUp" : "chevronDown"} size={14} color="var(--accent)" />
         </button>

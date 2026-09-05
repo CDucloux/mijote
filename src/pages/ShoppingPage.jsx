@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -34,6 +34,17 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   const shop = useShopping(shoppingLists, setShoppingLists, ingredientDB, { setStock, setLowStock });
   const { activeList, allMode, aggregated } = shop;
 
+  // Lien profond depuis les notifications (?list=<id>) : sélectionne la liste ciblée
+  // dès qu'elle est chargée, puis nettoie l'URL pour ne pas re-forcer la sélection.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const listParam = searchParams.get("list");
+  const setActiveListId = shop.setActiveListId;
+  useEffect(() => {
+    if (!listParam) return;
+    if (shoppingLists.some(l => l.id === listParam)) { setActiveListId(listParam); setSearchParams({}, { replace: true }); }
+    else if (!loading) setSearchParams({}, { replace: true }); // liste absente (supprimée) : nettoie l'URL
+  }, [listParam, shoppingLists, loading, setActiveListId, setSearchParams]);
+
   const openNewList = () => setConfigList({ isNew: true, name: "", type: "free", hideClear: false });
 
   // Supprime une liste en journalisant l'évènement (nom résolu avant suppression).
@@ -61,7 +72,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
   const saveConfig = () => {
     const name = configList.name.trim();
-    if (configList.isNew) { shop.createList(name, !!configList.hideClear); logActivity?.({ type: "shopping.create", target: name }); }
+    if (configList.isNew) { const id = shop.createList(name, !!configList.hideClear); logActivity?.({ type: "shopping.create", target: name, targetId: id }); }
     else shop.updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear }));
     // `close(cb)` exécute cb À LA PLACE de `onClose` → on ferme nous-mêmes.
     setConfigList(null);

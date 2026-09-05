@@ -25,6 +25,7 @@ import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
 import { useActivityLog } from "./hooks/useActivityLog.js";
+import { countUnread } from "./lib/notifications/activity.js";
 import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
 import { usePublicRecipes } from "./hooks/usePublicRecipes.js";
@@ -59,6 +60,7 @@ import { LoginPage } from "./pages/LoginPage.jsx";
 import { ImportPage } from "./pages/ImportPage.jsx";
 import { PlanPage } from "./pages/PlanPage.jsx";
 import { NotificationsPage } from "./pages/NotificationsPage.jsx";
+import { GuidePage } from "./pages/GuidePage.jsx";
 import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent,
@@ -76,7 +78,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : location.pathname.startsWith("/notifications") ? "notifications" : location.pathname.startsWith("/recipes") ? "recipes" : location.pathname.startsWith("/meal-plan") ? "meal-plan" : "home");
+  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : location.pathname.startsWith("/guide") ? "guide" : location.pathname.startsWith("/notifications") ? "notifications" : location.pathname.startsWith("/recipes") ? "recipes" : location.pathname.startsWith("/meal-plan") ? "meal-plan" : "home");
   // Fiche ingrédient (/admin/ingredients/{id}) : page PUBLIQUE (lisible par tous, en
   // lecture seule pour les non-admins), on la laisse passer même hors console admin.
   const adminFiche = /^\/admin\/ingredients\/.+/.test(location.pathname);
@@ -231,6 +233,15 @@ function AppInner({ user, isDark, toggleTheme }) {
     actorName: preferences?.displayName || user?.displayName || "",
   });
 
+  // Notifications non lues : instant de dernière consultation persisté, marqué à
+  // l'ouverture de la page /notifications. La pastille de l'en-tête d'accueil
+  // compte les évènements postérieurs à cet instant.
+  const [notifsLastSeen, setNotifsLastSeen] = useLS("rf_notifsLastSeen", 0);
+  const unreadCount = useMemo(() => countUnread(activities, notifsLastSeen), [activities, notifsLastSeen]);
+  useEffect(() => {
+    if (tab === "notifications") setNotifsLastSeen(Date.now());
+  }, [tab, activities, setNotifsLastSeen]);
+
 
 
 
@@ -264,7 +275,7 @@ function AppInner({ user, isDark, toggleTheme }) {
 
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
   const { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF } = useRecipeCrud({
-    recipes, setRecipes, setCollections, setEditingRecipe, setShoppingLists,
+    recipes, setRecipes, setCollections, setEditingRecipe, shoppingLists, setShoppingLists,
     ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity,
   });
 
@@ -357,7 +368,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       return { ...base, cookLog: log };
     });
     const cooked = recipes.find(r => r.id === recipeId);
-    if (cooked) logActivity({ type: "recipe.cooked", target: cooked.name });
+    if (cooked) logActivity({ type: "recipe.cooked", target: cooked.name, targetId: cooked.id });
   }, [setPreferences, recipes, logActivity]);
 
   // Duplique une recette : copie privée (pas de lien public), nom suffixé, en tête
@@ -393,7 +404,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Titre de l'onglet navigateur : nom de la recette quand on en consulte/édite une,
   // sinon l'onglet courant.
   useEffect(() => {
-    const TAB_TITLES = { home: "Accueil", recipes: "Recettes", "meal-plan": "Planning", shopping: "Courses", stock: "Mon Stock", admin: "Console admin", profile: "Profil", legal: "Informations légales" };
+    const TAB_TITLES = { home: "Accueil", recipes: "Recettes", "meal-plan": "Planning", shopping: "Courses", stock: "Mon Stock", admin: "Console admin", profile: "Profil", legal: "Informations légales", guide: "Guide" };
     const recipeName = recipeBeingEdited
       ? (recipeBeingEdited.name?.trim() || "Nouvelle recette")
       : (publicDocs?.pub?.recipe?.name)
@@ -518,7 +529,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           (Accueil, Recettes, Planning, Profil, Config, Légal…), qui apparaissaient
           jusqu'ici sans transition. */}
       <div key={tab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
+      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} unreadCount={unreadCount} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
@@ -526,6 +537,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       {tab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources} />}
       {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
       {tab === "legal" && <LegalPage />}
+      {tab === "guide" && <GuidePage />}
       {tab === "notifications" && <NotificationsPage activities={activities} />}
       </div>
       </Profiler>
