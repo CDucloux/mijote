@@ -56,7 +56,7 @@ function ActivityRow({ event, currentEmail, animationDelay, onNavigate }) {
  * à leur auteur. Masquée quand il n'y a encore aucune activité. Un tick périodique
  * rafraîchit les horodatages relatifs sans re-souscrire.
  */
-export function NotificationsSection({ activities = [] }) {
+export function NotificationsSection({ activities = [], onNavigated }) {
   const { user } = useAppShell();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
@@ -69,23 +69,32 @@ export function NotificationsSection({ activities = [] }) {
   }, []);
 
   const shown = useMemo(() => (expanded ? activities : activities.slice(0, COLLAPSED)), [expanded, activities]);
-  if (activities.length === 0) return null;
   const currentEmail = user?.email || "";
   const rest = activities.length - COLLAPSED;
+  // Renvoie vers l'onglet ciblé puis referme le panneau (accès via le bouton rond).
+  const go = (route) => { onNavigated?.(); navigate(route); };
+
+  if (activities.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "32px 16px 20px", color: "var(--text3)" }}>
+        <span style={{ width: 52, height: 52, borderRadius: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 12 }}>
+          <Icon name="bell" size={22} color="var(--text3)" />
+        </span>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>Aucune activité pour l'instant</p>
+        <p style={{ margin: "4px 0 0", fontSize: 12.5 }}>Les actions du foyer s'afficheront ici.</p>
+      </div>
+    );
+  }
 
   return (
-    <section style={{ marginTop: 26 }}>
-      <h2 className="slide-up" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
-        <Icon name="bell" size={17} color="var(--accent)" weight="fill" />
-        Notifications
-      </h2>
+    <div>
       <div style={{
         background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18,
         padding: "4px 16px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
       }}>
         {shown.map((event, i) => (
           <div key={event.id} style={i > 0 ? { borderTop: "1px solid var(--border)" } : undefined}>
-            <ActivityRow event={event} currentEmail={currentEmail} animationDelay={`${Math.min(i, 6) * 0.04}s`} onNavigate={navigate} />
+            <ActivityRow event={event} currentEmail={currentEmail} animationDelay={`${Math.min(i, 6) * 0.04}s`} onNavigate={go} />
           </div>
         ))}
       </div>
@@ -98,6 +107,6 @@ export function NotificationsSection({ activities = [] }) {
           <Icon name={expanded ? "chevronUp" : "chevronDown"} size={14} color="var(--accent)" />
         </button>
       )}
-    </section>
+    </div>
   );
 }

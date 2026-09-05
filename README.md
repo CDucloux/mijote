@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.26.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.27.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -88,8 +88,9 @@ toujours avec vous.
   stock, et la fiche recette signale ce que vous avez déjà.
 - 🏡 **Foyer** : partage temps réel des recettes, du planning et des courses
   entre les membres d'un même foyer (invitation par e-mail). Un **journal
-  d'activité** sur l'accueil retrace les dernières actions du foyer, attribuées
-  à leur auteur, chaque entrée renvoyant vers l'onglet concerné.
+  d'activité** (page dédiée, accessible d'un bouton sur l'accueil) retrace les
+  dernières actions du foyer, attribuées à leur auteur, chaque entrée renvoyant
+  vers l'onglet concerné.
 - 🧭 **Découvrir & partager** : recettes publiées par la communauté, filtrables
   et clonables en un geste ; publication depuis vos propres recettes. Le partage
   d'une recette publique génère un lien à l'**aperçu riche** (photo + titre, rendu
