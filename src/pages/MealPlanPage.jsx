@@ -223,9 +223,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const { count } = generate(weekDays, slots, { compose: true, portionsPerMeal: ppm, style, batch });
     setGenOpen(false);
     if (count > 0) {
-      notify(`${count} plats proposés, à relire et ajuster`, "success");
+      notify(`${count} recettes proposées, à relire et ajuster`, "success");
       const { week, year } = isoWeek(weekDays[0]);
-      logActivity?.({ type: "mealplan.generate", target: `Semaine ${week} · ${year}`, count });
+      logActivity?.({ type: "mealplan.generate", target: `Semaine S${week} - ${year}`, count });
       // Batch cooking demandé → on ouvre directement la session (tout à préparer).
       if (batch) openBatch();
     } else if (!recipes.length) {

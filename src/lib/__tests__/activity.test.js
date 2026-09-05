@@ -78,14 +78,14 @@ describe("describeActivity", () => {
     expect(describeActivity(ev({ type: "shopping.add", count: 1, target: "" })).title)
       .toBe("1 article ajouté aux courses");
   });
-  it("décrit une semaine générée avec sa semaine/année et un compte de plats", () => {
-    expect(describeActivity(ev({ type: "mealplan.generate", target: "Semaine 36 · 2026", count: 14 })).title)
-      .toBe("Semaine 36 · 2026 générée : 14 plats");
-    expect(describeActivity(ev({ type: "mealplan.generate", target: "Semaine 1 · 2027", count: 1 })).title)
-      .toBe("Semaine 1 · 2027 générée : 1 plat");
+  it("décrit une semaine générée avec sa semaine/année et un compte de recettes", () => {
+    expect(describeActivity(ev({ type: "mealplan.generate", target: "Semaine S36 - 2026", count: 14 })).title)
+      .toBe("Semaine S36 - 2026 générée : 14 recettes");
+    expect(describeActivity(ev({ type: "mealplan.generate", target: "Semaine S1 - 2027", count: 1 })).title)
+      .toBe("Semaine S1 - 2027 générée : 1 recette");
     // Repli si la cible manque (anciens évènements sans target).
     expect(describeActivity(ev({ type: "mealplan.generate", target: "", count: 3 })).title)
-      .toBe("Semaine générée : 3 plats");
+      .toBe("Semaine générée : 3 recettes");
   });
   it("nomme un repas planifié « Recette planifiée »", () => {
     expect(describeActivity(ev({ type: "mealplan.add", target: "Tarte au Comté" })).title)
