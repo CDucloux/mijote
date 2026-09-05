@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.27.0 – Cardamome · Les notifications à portée
+
+### Notifications
+- **Une page dédiée** : les notifications ont désormais leur propre écran (`/notifications`), avec un en-tête clair et un retour vers l'accueil, au lieu de s'empiler en bas du tableau de bord.
+- **Un bouton d'accès direct** : à droite du sélecteur À suivre / Découvrir, un bouton rond (cloche) ouvre les notifications, avec une pastille quand il y a de l'activité récente, comme dans la plupart des applications.
+- **Un accueil mieux cadré** : l'espacement sous le sélecteur À suivre / Découvrir s'aligne sur celui des autres onglets, pour un rythme homogène.
+
 ## v4.26.0 – Cardamome · Le journal du foyer
 
 ### Notifications
