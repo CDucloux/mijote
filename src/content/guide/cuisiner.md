@@ -3,7 +3,7 @@ short: Le mode pas à pas et les gestes techniques
 icon: fire
 title: Cuisiner pas à pas
 color: "#e8703a"
-lead: Lance le mode guidé et avance sereinement : chaque geste s'explique au bon moment.
+lead: "Lance le mode guidé et avance sereinement : chaque geste s'explique au bon moment."
 order: 3
 ---
 

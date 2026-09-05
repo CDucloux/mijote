@@ -3,7 +3,7 @@ short: Partager recettes, planning, courses et stock
 icon: home
 title: Cuisiner à plusieurs
 color: "#d86c8a"
-lead: Crée un foyer et cuisinez ensemble : tout se partage en temps réel.
+lead: "Crée un foyer et cuisinez ensemble : tout se partage en temps réel."
 order: 8
 ---
 
