@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { dayBucketLabel } from "../activity.js";
+import { dayBucketLabel, countUnread } from "../activity.js";
 
 describe("dayBucketLabel", () => {
   // `now` fixe : mercredi 9 septembre 2026, 14h00 locale.
@@ -25,5 +25,27 @@ describe("dayBucketLabel", () => {
 
   it("au-delà de 6 jours → date courte jour + mois", () => {
     expect(dayBucketLabel(new Date(2026, 7, 20, 10, 0, 0).getTime(), now)).toBe("20 août");
+  });
+});
+
+describe("countUnread", () => {
+  const acts = [{ ts: 300 }, { ts: 200 }, { ts: 100 }];
+
+  it("jamais consulté (lastSeen = 0) → tout est non lu", () => {
+    expect(countUnread(acts, 0)).toBe(3);
+  });
+
+  it("ne compte que les évènements strictement postérieurs à lastSeen", () => {
+    expect(countUnread(acts, 200)).toBe(1);
+    expect(countUnread(acts, 150)).toBe(2);
+  });
+
+  it("tout consulté → 0", () => {
+    expect(countUnread(acts, 300)).toBe(0);
+    expect(countUnread(acts, 999)).toBe(0);
+  });
+
+  it("flux vide → 0", () => {
+    expect(countUnread([], 0)).toBe(0);
   });
 });

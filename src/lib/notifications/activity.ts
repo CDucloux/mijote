@@ -165,6 +165,20 @@ export function describeActivity(ev: ActivityEvent): ActivityView {
   return { icon: d.icon, color: d.color, route: d.route, title: d.title(ev) };
 }
 
+/**
+ * Nombre d'évènements « non lus » : ceux strictement postérieurs au dernier
+ * instant consulté (`lastSeen`, ms epoch). Un `lastSeen` à 0 (jamais consulté)
+ * compte donc tout le flux. Fonction pure, alimente la pastille de l'en-tête.
+ *
+ * @param activities - Flux d'évènements (seul `ts` est lu).
+ * @param lastSeen - Dernier instant de consultation des notifications (ms epoch).
+ */
+export function countUnread(activities: readonly Pick<ActivityEvent, "ts">[], lastSeen: number): number {
+  let n = 0;
+  for (const a of activities) if (a.ts > lastSeen) n++;
+  return n;
+}
+
 const MINUTE = 60_000, HOUR = 3_600_000, DAY = 86_400_000;
 
 /**

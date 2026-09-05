@@ -25,6 +25,7 @@ import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
 import { useActivityLog } from "./hooks/useActivityLog.js";
+import { countUnread } from "./lib/notifications/activity.js";
 import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
 import { usePublicRecipes } from "./hooks/usePublicRecipes.js";
@@ -230,6 +231,15 @@ function AppInner({ user, isDark, toggleTheme }) {
     user, householdId: householdPointer?.id || null, workspaceReady,
     actorName: preferences?.displayName || user?.displayName || "",
   });
+
+  // Notifications non lues : instant de dernière consultation persisté, marqué à
+  // l'ouverture de la page /notifications. La pastille de l'en-tête d'accueil
+  // compte les évènements postérieurs à cet instant.
+  const [notifsLastSeen, setNotifsLastSeen] = useLS("rf_notifsLastSeen", 0);
+  const unreadCount = useMemo(() => countUnread(activities, notifsLastSeen), [activities, notifsLastSeen]);
+  useEffect(() => {
+    if (tab === "notifications") setNotifsLastSeen(Date.now());
+  }, [tab, activities, setNotifsLastSeen]);
 
 
 
@@ -518,7 +528,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           (Accueil, Recettes, Planning, Profil, Config, Légal…), qui apparaissaient
           jusqu'ici sans transition. */}
       <div key={tab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
+      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} unreadCount={unreadCount} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
       {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
       {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
       {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}

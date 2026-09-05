@@ -310,11 +310,10 @@ function SubviewPill({ mode, onNavigate }) {
   );
 }
 
-export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], activities = [], preferences, loading = false, mode = "home", onNavigateSubview, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, onOpenIngredient, onExploreSeason, discoverSeed = "", onDiscoverSeedConsumed }) {
+export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], unreadCount = 0, preferences, loading = false, mode = "home", onNavigateSubview, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, onOpenIngredient, onExploreSeason, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
   const canHover = useCanHover();
   const navigate = useNavigate();
-  const hasActivity = activities.length > 0;
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
   const spotlight = useMemo(() => pickSpotlightIngredient(ingredientDB), [ingredientDB]);
 
@@ -368,13 +367,19 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
           <button
             type="button" className="pressable" onClick={() => navigate("/notifications")}
-            aria-label="Notifications" title="Notifications"
+            aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "Notifications"}
+            title="Notifications"
             style={{ position: "relative", marginLeft: "auto", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
               display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-              background: "var(--surface2)", border: "1px solid var(--border)" }}>
-            <Icon name="bell" size={18} color="var(--text2)" />
-            {hasActivity && (
-              <span aria-hidden="true" style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: "50%", background: "var(--accent)", border: "2px solid var(--bg)" }} />
+              background: "none", border: "none", padding: 0 }}>
+            <Icon name="bell" size={22} color="var(--text2)" />
+            {unreadCount > 0 && (
+              <span style={{ position: "absolute", top: 2, right: 2, minWidth: 17, height: 17, padding: "0 4px",
+                display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: 999,
+                background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 700, lineHeight: 1,
+                fontVariantNumeric: "tabular-nums", border: "2px solid var(--bg)", boxSizing: "content-box" }}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
             )}
           </button>
         </div>
