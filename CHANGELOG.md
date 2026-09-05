@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.28.0 – Cardamome · Le guide et les raccourcis
+
+### Guide d'utilisation
+- **Un guide complet dans l'app** : un nouvel écran `/guide` explique, sujet par sujet, tout ce que Cardamome sait faire (démarrer, tes recettes, cuisine pas à pas, difficulté/saison/Nutri-Score, planning, courses et stock, communauté, foyer, notifications, offre). Accessible depuis le menu de l'avatar et un bouton d'aide sur l'accueil.
+- **Des pages soignées, pas du texte brut** : chaque sujet a sa couleur d'accent, un en-tête illustré, des repères de section, des étapes numérotées, des encarts « astuce » et un lien vers le sujet suivant pour enchaîner la lecture.
+
+### Notifications
+- **Chaque notification ouvre sa cible précise** : une recette ajoutée, cuisinée ou publiée ouvre sa fiche ; une liste de courses créée ouvre cette liste ; le stock et le planning renvoient à leur onglet. Fini l'atterrissage sur un onglet générique.
+
+### Compte
+- **Console admin et Se déconnecter en pilule** : ces deux cartes autonomes ont des bords franchement arrondis, un survol accordé à leur couleur (plus de gris qui jure) et plus aucun état « collé » après l'appui sur mobile.
+
 ## v4.27.0 – Cardamome · Les notifications à portée
 
 ### Notifications
