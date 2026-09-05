@@ -1,5 +1,25 @@
 # Changelog – Cardamome
 
+## v4.26.0 – Cardamome · Le journal du foyer
+
+### Notifications
+- **Un journal d'activité sur l'accueil** : une section « Notifications » retrace les dernières actions du foyer, attribuées à leur auteur (« Toi » ou le prénom de l'autre membre) et horodatées en relatif (« à l'instant », « il y a 5 min »). Recettes ajoutées, modifiées, importées, cuisinées, publiées ou retirées de la communauté, mouvements de stock, listes de courses, planning : tout y passe.
+- **Chaque notification renvoie au bon endroit** : cliquer une entrée ouvre l'onglet concerné (Recettes, Courses, Planning, Stock), avec un chevron qui l'indique. Les suppressions (recette ou repas retiré, liste vidée ou supprimée, ingrédient épuisé) ne mènent nulle part, leur cible n'existant plus.
+- **Ce qui manquait est désormais suivi** : création et suppression d'une liste de courses libre, ajout au stock et passage en « bientôt épuisé », recette menée jusqu'au bout du mode pas à pas (« Recette cuisinée »).
+- **Des libellés justes** : un repas ajouté au planning se dit « Recette planifiée », et une génération de semaine indique la semaine et l'année (« Semaine S37 - 2026 générée : N recettes »), avec un décompte de recettes distinctes (une recette étalée sur plusieurs jours ne compte qu'une fois).
+- **Un aperçu court** : les cinq dernières notifications s'affichent, le reste se déplie d'un « Voir plus », sous une icône dédiée.
+
+### Accueil
+- **Accueil et Découvrir, deux sous-vues d'un même onglet** : un sélecteur « À suivre / Découvrir » bascule entre le tableau de bord et la communauté, avec une pastille qui glisse en douceur d'un mode à l'autre.
+- **Un titre d'onglet aligné sur les autres** : l'en-tête de l'accueil adopte la même disposition (marges, titre) que les autres onglets.
+
+### Planning
+- **Des cards plus sobres** : plus de soulèvement au survol, on garde bordure et ombre ; le sélecteur de rôle s'anime, et le sélecteur de créneau se masque quand le créneau est déjà choisi.
+- **Des créneaux épurés** : un seul bouton d'ajout par créneau, un ripple au tactile et un défilement automatique vers le jour courant.
+
+### Sous le capot
+- **Le tirer pour rafraîchir** utilise désormais l'icône du set commun plutôt qu'une flèche maison.
+
 ## v4.25.0 – Cardamome · Une cuisine qui démarre
 
 ### Accueil
