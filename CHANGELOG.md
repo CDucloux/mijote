@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.28.1 – Cardamome · Correctif du guide
+
+### Corrigé
+- **Guide de nouveau accessible** : un deux-points dans le sous-titre de deux thèmes cassait la lecture de leurs métadonnées au chargement, ce qui figeait l'application sur un écran noir. Les valeurs concernées sont désormais protégées, et un test vérifie le chargement de tous les thèmes du guide.
+
 ## v4.28.0 – Cardamome · Le guide et les raccourcis
 
 ### Guide d'utilisation
