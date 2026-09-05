@@ -88,17 +88,31 @@ describe("describeActivity", () => {
     expect(describeActivity(ev({ type: "shopping.create", target: "" })).title)
       .toBe("Liste de courses créée");
   });
+  it("décrit les mouvements de stock", () => {
+    expect(describeActivity(ev({ type: "stock.add", target: "Riz" })).title).toBe("Riz ajouté au stock");
+    expect(describeActivity(ev({ type: "stock.low", target: "Huile d'olive" })).title).toBe("Huile d'olive bientôt épuisé");
+    expect(describeActivity(ev({ type: "stock.out", target: "Sel" })).title).toBe("Sel retiré du stock");
+  });
+  it("nomme les publications/dépublications communautaires", () => {
+    expect(describeActivity(ev({ type: "recipe.publish", target: "Tarte" })).title).toBe("Publiée dans la communauté : Tarte");
+    expect(describeActivity(ev({ type: "recipe.unpublish", target: "Tarte" })).title).toBe("Retirée de la communauté : Tarte");
+  });
   it("route chaque type vers le bon onglet, sauf les suppressions (route null)", () => {
     const routeOf = t => describeActivity(ev({ type: t })).route;
     expect(routeOf("recipe.add")).toBe("/recipes");
     expect(routeOf("recipe.import")).toBe("/recipes");
+    expect(routeOf("recipe.publish")).toBe("/recipes");
+    expect(routeOf("recipe.unpublish")).toBe("/recipes");
     expect(routeOf("shopping.create")).toBe("/shopping-lists");
     expect(routeOf("shopping.add")).toBe("/shopping-lists");
+    expect(routeOf("stock.add")).toBe("/stock");
+    expect(routeOf("stock.low")).toBe("/stock");
     expect(routeOf("mealplan.add")).toBe("/meal-plan");
     expect(routeOf("mealplan.generate")).toBe("/meal-plan");
-    // Suppressions : pas de cible où renvoyer.
+    // Suppressions / retraits : pas de cible où renvoyer.
     expect(routeOf("recipe.delete")).toBeNull();
     expect(routeOf("shopping.clear")).toBeNull();
+    expect(routeOf("stock.out")).toBeNull();
     expect(routeOf("mealplan.remove")).toBeNull();
   });
   it("couvre tous les types sans lever", () => {

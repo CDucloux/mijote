@@ -6,6 +6,7 @@ import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { paginateStockShelves, compareIngredientName } from "@/lib/food/stockShelves.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
+import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
 // Gestion binaire du stock présentée en « mur d'étagères » : chaque ingrédient est
@@ -170,8 +171,10 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   // "all" = catalogue (tout ce que Cardamome sait gérer).
   const [view, setView] = useState("stock");
 
+  const { logActivity } = useAppShell();
   const stockSet = useMemo(() => new Set(stock), [stock]);
   const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
+  const nameById = useMemo(() => new Map(ingredientDB.map(i => [i.id, i.name || ""])), [ingredientDB]);
 
   // Cycle à 3 états : pas en stock → en stock → bientôt vide → pas en stock.
   // Lecture de l'état courant via refs pour garder `cycle` stable (mémoïsation des
@@ -182,15 +185,19 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   const cycle = useCallback((id) => {
     const inStock = stockRef.current.includes(id);
     const isLow = lowRef.current.includes(id);
+    const target = nameById.get(id) || "";
     if (!inStock) {
       setStock(prev => [...prev, id]);                       // → en stock
+      logActivity?.({ type: "stock.add", target });
     } else if (!isLow) {
       setLowStock(prev => [...prev, id]);                    // → bientôt vide
+      logActivity?.({ type: "stock.low", target });
     } else {
       setStock(prev => prev.filter(x => x !== id));          // → pas en stock
       setLowStock(prev => prev.filter(x => x !== id));
+      logActivity?.({ type: "stock.out", target });
     }
-  }, [setStock, setLowStock]);
+  }, [setStock, setLowStock, logActivity, nameById]);
 
   // Tous les ingrédients stockables (catégories non-périssables, avec nom)
   const stockable = useMemo(() =>
