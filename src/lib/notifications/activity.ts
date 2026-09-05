@@ -150,7 +150,7 @@ const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: st
   "stock.out": { icon: "box", color: "var(--text3)", route: null, title: e => `${e.target} retiré du stock` },
   "mealplan.add": { icon: "calendar", color: "var(--accent)", route: PLANNING, title: e => `Recette planifiée : ${e.target}` },
   "mealplan.remove": { icon: "calendar", color: "var(--text3)", route: null, title: e => `Retiré du planning : ${e.target}` },
-  "mealplan.generate": { icon: "sparkle", color: "var(--accent)", route: PLANNING, title: e => `Semaine générée : ${e.count} repas` },
+  "mealplan.generate": { icon: "sparkle", color: "var(--accent)", route: PLANNING, title: e => `${e.target || "Semaine"} générée : ${e.count} plat${plural(e.count)}` },
 };
 
 /**

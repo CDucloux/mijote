@@ -21,7 +21,7 @@ import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { fmtQtyUnit, fmtTime } from "@/lib/format.js";
+import { fmtQtyUnit, fmtTime, isoWeek } from "@/lib/format.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
@@ -223,8 +223,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const { count } = generate(weekDays, slots, { compose: true, portionsPerMeal: ppm, style, batch });
     setGenOpen(false);
     if (count > 0) {
-      notify(`${count} repas proposés, à relire et ajuster`, "success");
-      logActivity?.({ type: "mealplan.generate", count });
+      notify(`${count} plats proposés, à relire et ajuster`, "success");
+      const { week, year } = isoWeek(weekDays[0]);
+      logActivity?.({ type: "mealplan.generate", target: `Semaine ${week} · ${year}`, count });
       // Batch cooking demandé → on ouvre directement la session (tout à préparer).
       if (batch) openBatch();
     } else if (!recipes.length) {
