@@ -14,7 +14,7 @@
 export const ACTIVITY_TYPES = [
   "recipe.add", "recipe.edit", "recipe.delete", "recipe.import",
   "recipe.publish", "recipe.unpublish", "recipe.clone",
-  "shopping.create", "shopping.add", "shopping.clear",
+  "shopping.create", "shopping.add", "shopping.clear", "shopping.delete",
   "stock.add", "stock.low", "stock.out",
   "mealplan.add", "mealplan.remove", "mealplan.generate",
 ] as const;
@@ -143,6 +143,7 @@ const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: st
   "shopping.create": { icon: "plusCircle", color: "var(--ok)", route: SHOPPING, title: e => `Liste de courses créée${e.target ? ` : ${e.target}` : ""}` },
   "shopping.add": { icon: "shopping", color: "#e8920a", route: SHOPPING, title: e => `${e.count} article${plural(e.count)} ajouté${plural(e.count)} aux courses${e.target ? ` · ${e.target}` : ""}` },
   "shopping.clear": { icon: "eraser", color: "var(--text3)", route: null, title: () => "Liste de courses vidée" },
+  "shopping.delete": { icon: "trash", color: "var(--red)", route: null, title: e => `Liste de courses supprimée${e.target ? ` : ${e.target}` : ""}` },
   "stock.add": { icon: "box", color: "var(--ok)", route: STOCK, title: e => `${e.target} ajouté au stock` },
   "stock.low": { icon: "warning", color: "#e8920a", route: STOCK, title: e => `${e.target} bientôt épuisé` },
   "stock.out": { icon: "box", color: "var(--text3)", route: null, title: e => `${e.target} retiré du stock` },
