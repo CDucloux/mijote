@@ -13,6 +13,7 @@ import {
   WifiSlash, ClockCounterClockwise, Eraser, ArrowsLeftRight, ArrowsDownUp, Pause, Play,
   Stop, DotsThreeVertical, DotsThree, Info, Eye, EyeSlash, Heart, Globe, Lock, Scales,
   AndroidLogo, AppleLogo, Camera, ClipboardText, ArrowClockwise, CircleNotch, Bell,
+  Question,
 } from "@phosphor-icons/react";
 
 // Cuillère (à café / à soupe) : Phosphor n'en fournit pas. Silhouette pleine dans
@@ -104,6 +105,7 @@ const ICONS = {
   camera: Camera,
   refresh: ArrowClockwise,
   spinner: CircleNotch,
+  help: Question,
 };
 
 // Poids par défaut : la plupart des icônes vivent en `regular` (trait épuré) ;

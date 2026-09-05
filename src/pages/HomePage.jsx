@@ -366,10 +366,18 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, marginBottom: 12 }}>
           <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
           <button
+            type="button" className="pressable" onClick={() => navigate("/guide")}
+            aria-label="Guide d'utilisation" title="Guide d'utilisation"
+            style={{ marginLeft: "auto", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
+              display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+              background: "none", border: "none", padding: 0 }}>
+            <Icon name="help" size={22} color="var(--text2)" />
+          </button>
+          <button
             type="button" className="pressable" onClick={() => navigate("/notifications")}
             aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "Notifications"}
             title="Notifications"
-            style={{ position: "relative", marginLeft: "auto", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
+            style={{ position: "relative", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
               display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
               background: "none", border: "none", padding: 0 }}>
             <Icon name="bell" size={22} color="var(--text2)" />

@@ -72,6 +72,7 @@ export function UserAvatar() {
       { icon: "user", label: "Profil", onClick: () => navigate("/profile") },
       onToggleTheme && { icon: isDark ? "sun" : "moon", label: isDark ? "Mode clair" : "Mode sombre", keepsOpen: true, onClick: onToggleTheme },
       { icon: "sparkle", label: "Revoir l'introduction", onClick: () => window.dispatchEvent(new Event("mijote:show-onboarding")) },
+      { icon: "help", label: "Guide d'utilisation", onClick: () => navigate("/guide") },
     ].filter(Boolean) },
     { items: [
       { icon: "info", label: "À propos", onClick: () => setAbout(true) },
