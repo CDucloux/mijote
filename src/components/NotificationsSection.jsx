@@ -6,7 +6,7 @@ import { describeActivity, actorLabel, relativeTime } from "@/lib/notifications/
 
 // Nombre d'évènements montrés d'emblée ; le reste se déplie à la demande. Garde la
 // section courte au repos sans masquer l'historique déjà chargé.
-const COLLAPSED = 6;
+const COLLAPSED = 5;
 
 // Une ligne d'activité : pastille (icône teintée) + phrase + méta (auteur · quand).
 // Navigable (route non nulle) → bouton pressable qui renvoie vers l'onglet concerné,
