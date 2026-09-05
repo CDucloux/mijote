@@ -16,10 +16,12 @@ export function NotificationsPage({ activities = [] }) {
           style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
         </button>
-        <h1 style={{ display: "flex", alignItems: "center", gap: 9, fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>
-          <Icon name="bell" size={22} color="var(--accent)" weight="fill" />
-          Notifications
-        </h1>
+        <div>
+          <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, lineHeight: 1.1 }}>
+            Notifications
+          </h1>
+          <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--text3)" }}>Ton activité récente</p>
+        </div>
       </div>
 
       <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>

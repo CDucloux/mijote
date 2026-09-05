@@ -185,3 +185,32 @@ export function relativeTime(ms: number, now: number = Date.now()): string {
   if (days < 7) return `il y a ${days} j`;
   return new Date(ms).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
+
+const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+// Nombre de jours civils entre deux instants, en comparant les dates locales
+// (année/mois/jour) et non un delta en ms : « hier » reste « hier » même à 2 min
+// d'écart autour de minuit.
+const civilDayDiff = (a: Date, b: Date): number => {
+  const da = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const db = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((db.getTime() - da.getTime()) / DAY);
+};
+
+/**
+ * Libellé de regroupement par jour pour la timeline des notifications :
+ * « Aujourd'hui », « Hier », le nom du jour (capitalisé) pour les 6 jours qui
+ * précèdent, puis une date courte au-delà. Compare des dates CIVILES (pas un
+ * delta en ms) pour rester stable autour de minuit.
+ *
+ * @param ms - Instant de l'évènement (millisecondes epoch).
+ * @param now - Instant de référence (par défaut « maintenant »).
+ */
+export function dayBucketLabel(ms: number, now: number = Date.now()): string {
+  const d = new Date(ms);
+  const diff = civilDayDiff(d, new Date(now));
+  if (diff <= 0) return "Aujourd'hui";
+  if (diff === 1) return "Hier";
+  if (diff <= 6) return capitalize(d.toLocaleDateString("fr-FR", { weekday: "long" }));
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
