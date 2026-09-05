@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fmtTime, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes, allowsFractionGlyph } from "../format.js";
+import { fmtTime, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes, allowsFractionGlyph, isoWeek } from "../format.js";
 
 const EM_DASH = "\u2014";
 const EN_DASH = "\u2013";
@@ -187,5 +187,23 @@ describe("stripAiDashes", () => {
     expect(stripAiDashes("")).toBe("");
     expect(stripAiDashes(null)).toBe("");
     expect(stripAiDashes(undefined)).toBe("");
+  });
+});
+
+describe("isoWeek", () => {
+  it("numérote les semaines ISO en milieu d'année", () => {
+    expect(isoWeek("2026-08-31")).toEqual({ week: 36, year: 2026 }); // lundi
+    expect(isoWeek("2026-06-15")).toEqual({ week: 25, year: 2026 });
+  });
+  it("rattache fin décembre / début janvier à l'année ISO correcte", () => {
+    // 2026-12-31 (jeudi) appartient à la semaine 53 de 2026.
+    expect(isoWeek("2026-12-31")).toEqual({ week: 53, year: 2026 });
+    // 2027-01-01 (vendredi) reste rattaché à la semaine 53 de 2026.
+    expect(isoWeek("2027-01-01")).toEqual({ week: 53, year: 2026 });
+    // 2023-01-01 (dimanche) appartient à la semaine 52 de 2022.
+    expect(isoWeek("2023-01-01")).toEqual({ week: 52, year: 2022 });
+  });
+  it("accepte un objet Date", () => {
+    expect(isoWeek(new Date("2026-08-31T12:00:00"))).toEqual({ week: 36, year: 2026 });
   });
 });

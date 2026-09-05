@@ -1,19 +1,16 @@
 import { useRef } from "react";
 import { Icon } from "./Icon.jsx";
-import { Img, IngImage } from "./Img.jsx";
-import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
-import { NutriScoreBadge } from "./NutriScoreBadge.jsx";
+import { IngImage } from "./Img.jsx";
 import { ingredientMonths } from "@/lib/food/seasonality.js";
-import { fmtTime } from "../lib/format.js";
-import { OverscrollRow } from "./OverscrollRow.jsx";
 import { SeasonBar } from "./SeasonBar.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { useCanHover } from "../hooks/useCanHover.js";
 
 // ─── L'INGRÉDIENT DU MOMENT ───────────────────────────────────────────────────
-// Carte éditoriale en tête de « Découvrir » : un fruit/légume de saison, sa frise
-// de saison (donnée réelle `months`), une accroche (description), et les recettes
-// publiques qui l'utilisent, ou une invitation à publier si la communauté est vide.
+// Bloc d'engagement en tête du tableau de bord (mode « À suivre ») : un fruit/
+// légume de saison, sa frise de saison (donnée réelle `months`), une accroche, et
+// un rebond vers « Découvrir » pré-filtré sur ce produit. Volontairement léger et
+// sans I/O : les recettes de la communauté qui l'emploient vivent côté /discover.
 const CAT_LABEL = { fruit: "Fruit", vegetable: "Légume" };
 
 // Une seule teinte chaude pour toute la carte : l'ambre du badge « De saison »,
@@ -36,26 +33,14 @@ function SeasonFrieze({ months }) {
   );
 }
 
-function MiniRecipe({ pub, onOpen, nutriFor }) {
-  const r = pub.recipe;
-  const nutriLetter = nutriFor ? nutriFor(r) : r.nutriLetter;
-  return (
-    <button onClick={() => onOpen?.(pub)} className="pressable" style={{ flex: "0 0 132px", scrollSnapAlign: "start", background: "var(--surface)", borderRadius: 14, overflow: "hidden", border: "1px solid var(--border)", boxShadow: "0 4px 12px -8px rgba(80,50,20,0.3)", textAlign: "left", cursor: "pointer", padding: 0 }}>
-      <div style={{ height: 76, position: "relative" }}>
-        <Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={r.name} fontSize={30} style={{ width: "100%", height: "100%" }} />} />
-      </div>
-      <div style={{ padding: "8px 9px 9px" }}>
-        <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: 30 }}>{r.name}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 10.5, color: "var(--text3)", fontWeight: 500 }}>
-          <Icon name="clock" size={11} color="var(--text3)" /> {fmtTime((r.prepTime || 0) + (r.cookTime || 0))}
-          <span style={{ marginLeft: "auto" }}><NutriScoreBadge letter={nutriLetter} compact /></span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loading = false, onOpenIngredient, onOpenPublic, onPublish }) {
+/**
+ * Bloc « ingrédient du moment » du tableau de bord.
+ *
+ * @param ingredient - Fruit/légume de saison mis en avant (issu de la base locale).
+ * @param onOpenIngredient - Ouvre la fiche de l'ingrédient (tap sur l'en-tête).
+ * @param onExplore - Rebond vers « Découvrir » pré-filtré sur cet ingrédient (CTA).
+ */
+export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore }) {
   const canHover = useCanHover();
   // Onde tactile posée dans une COUCHE dédiée (sœur de la photo), pas via la classe
   // `.ripple` : celle-ci imposerait `overflow: hidden` au bouton, qui rognerait le
@@ -69,7 +54,6 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
   if (!ingredient) return null;
   const months = ingredientMonths(ingredient);
   const catLabel = CAT_LABEL[ingredient.category] || "Ingrédient";
-  const hasRecipes = recipes.length > 0;
 
   return (
     <section style={{ marginBottom: 22 }}>
@@ -115,35 +99,17 @@ export function SpotlightIngredient({ ingredient, recipes = [], nutriFor, loadin
 
         {months && <SeasonFrieze months={months} />}
 
-        <div style={{ height: 1, background: "var(--border)", margin: "14px 0 12px" }} />
-
-        {hasRecipes ? (
+        {onExplore && (
           <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 2px 10px" }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text2)" }}>À cuisiner · {recipes.length} recette{recipes.length > 1 ? "s" : ""} de la communauté</span>
-            </div>
-            <OverscrollRow stretch className="discover-row" style={{ gap: 10, paddingBottom: 4 }} outerStyle={{ margin: "0 -2px", scrollSnapType: "x proximity" }}>
-              {recipes.map(p => <MiniRecipe key={p.pubId} pub={p} onOpen={onOpenPublic} nutriFor={nutriFor} />)}
-            </OverscrollRow>
+            <div style={{ height: 1, background: "var(--border)", margin: "14px 0 12px" }} />
+            {/* Rebond vers « Découvrir » pré-semé sur ce produit : la saisonnalité
+                (tableau de bord) mène à l'exploration (communauté) d'un seul geste. */}
+            <button onClick={() => onExplore(ingredient)} className="pressable" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: `rgba(${AMBER_RGB}, 0.12)`, color: AMBER, border: `1px solid rgba(${AMBER_RGB}, 0.32)`, fontWeight: 600, fontSize: 13.5, borderRadius: 999, padding: "10px 16px", cursor: "pointer" }}>
+              <Icon name="sparkle" size={15} color={AMBER} />
+              Des recettes avec {(ingredient.name || "").toLowerCase()}
+              <Icon name="forward" size={14} color={AMBER} />
+            </button>
           </>
-        ) : loading ? (
-          // Chargement initial des recettes communautaires : squelette discret, pour
-          // ne pas faire clignoter l'état « personne n'a publié » avant l'arrivée des données.
-          <div style={{ display: "flex", gap: 10 }}>
-            {[0, 1].map(i => (
-              <div key={i} className="skeleton" style={{ width: 132, height: 150, borderRadius: 14, flexShrink: 0 }} />
-            ))}
-          </div>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, background: `rgba(${AMBER_RGB}, 0.07)`, border: `1px dashed rgba(${AMBER_RGB}, 0.4)`, borderRadius: 14, padding: "12px 13px" }}>
-            <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 10, background: `rgba(${AMBER_RGB}, 0.16)`, color: AMBER, display: "grid", placeItems: "center" }}>
-              <Icon name="plus" size={18} color={AMBER} />
-            </span>
-            <span style={{ fontSize: 12.5, lineHeight: 1.4, color: "var(--text2)" }}>
-              Personne n'a encore partagé de recette contenant cet ingrédient. <strong style={{ color: "var(--text)" }}>Et si tu ouvrais le bal ?</strong>
-            </span>
-            {onPublish && <button className="btn btn-sm pressable" style={{ marginLeft: "auto", flexShrink: 0, background: AMBER, color: "#fff", border: "none", fontWeight: 600, borderRadius: 999, padding: "7px 16px", boxShadow: `0 4px 12px -4px rgba(${AMBER_RGB}, 0.55)` }} onClick={onPublish}>Publier</button>}
-          </div>
         )}
       </article>
     </section>

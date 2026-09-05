@@ -20,7 +20,7 @@ import { ListConfigSheet } from "../components/shopping/ListConfigSheet.jsx";
 
 export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }) {
   const navigate = useNavigate();
-  const { notify } = useAppShell();
+  const { notify, logActivity } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
 
@@ -35,6 +35,12 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
   const { activeList, allMode, aggregated } = shop;
 
   const openNewList = () => setConfigList({ isNew: true, name: "", type: "free", hideClear: false });
+
+  // Supprime une liste en journalisant l'évènement (nom résolu avant suppression).
+  const deleteList = (id) => {
+    logActivity?.({ type: "shopping.delete", target: shoppingLists.find(l => l.id === id)?.name || "" });
+    shop.deleteList(id);
+  };
 
   // Aperçu « Valider l'achat » : produits de placard cochés (doublons conservés
   // pour le compte affiché, dédupliqués pour les toasts, comme à l'origine).
@@ -55,7 +61,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
   const saveConfig = () => {
     const name = configList.name.trim();
-    if (configList.isNew) shop.createList(name, !!configList.hideClear);
+    if (configList.isNew) { shop.createList(name, !!configList.hideClear); logActivity?.({ type: "shopping.create", target: name }); }
     else shop.updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear }));
     // `close(cb)` exécute cb À LA PLACE de `onClose` → on ferme nous-mêmes.
     setConfigList(null);
@@ -102,21 +108,21 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
           activeList={activeList} categories={categories} ingredientDB={ingredientDB} catOf={shop.catOf}
           pending={shop.pending} unchecking={shop.unchecking}
           onBuy={shop.buyItem} onDeleteItem={shop.deleteItem} onClear={() => setConfirmClearId(activeList.id)}
-          onDeleteList={shop.deleteList} onOpenAdd={() => setShowAddModal(true)} />
+          onDeleteList={deleteList} onOpenAdd={() => setShowAddModal(true)} />
       )}
 
       {/* Menu d'une liste (⋯ de la pastille active / appui long) */}
       {listMenu && (
         <ListMenuSheet list={listMenu} onClose={() => setListMenu(null)}
           onSettings={list => setConfigList({ ...list })}
-          onDelete={list => list.type === "free" ? setConfirmDeleteId(list.id) : shop.deleteList(list.id)} />
+          onDelete={list => list.type === "free" ? setConfirmDeleteId(list.id) : deleteList(list.id)} />
       )}
 
       {/* Confirm delete – uniquement pour les listes libres */}
       {confirmDeleteId && (
         <ConfirmDialog title="Supprimer la liste ?"
           onCancel={() => setConfirmDeleteId(null)}
-          onConfirm={() => { shop.deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>
+          onConfirm={() => { deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>
           <strong style={{ color: "var(--text)" }}>« {shoppingLists.find(l => l.id === confirmDeleteId)?.name} »</strong> sera supprimée définitivement avec tous ses articles.
         </ConfirmDialog>
       )}

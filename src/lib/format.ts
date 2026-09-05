@@ -198,6 +198,27 @@ export function relativeDate(ts: number | null | undefined, now: number = Date.n
 }
 
 /**
+ * Numéro de semaine ISO 8601 et son année de rattachement, à partir d'une date
+ * (`Date` ou clé `YYYY-MM-DD`). Norme ISO : la semaine 1 est celle qui contient
+ * le premier jeudi de l'année, aussi la fin décembre / début janvier peut se
+ * rattacher à l'année voisine (d'où un `year` distinct de l'année calendaire).
+ *
+ * @param date - Date de référence (`Date` ou clé ISO `YYYY-MM-DD`).
+ * @returns `{ week, year }` : numéro de semaine (1-53) et année ISO.
+ */
+export function isoWeek(date: Date | string): { week: number; year: number } {
+  const src = typeof date === "string" ? new Date(date + "T12:00:00") : date;
+  const d = new Date(Date.UTC(src.getFullYear(), src.getMonth(), src.getDate()));
+  // Jeudi de la semaine courante (ISO : lundi = 1 ... dimanche = 7).
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const year = d.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(year, 0, 1));
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return { week, year };
+}
+
+/**
  * Retire les tirets cadratins (U+2014, typiques des textes générés par IA) d'un
  * texte d'affichage : la parenthèse en incise devient une virgule, plus naturelle
  * en français. Les traits d'union « - » et les demi-cadratins « – » (plages de

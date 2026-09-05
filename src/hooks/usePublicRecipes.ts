@@ -5,6 +5,7 @@ import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import type { Collection } from "@/lib/types.js";
+import type { ActivityInput } from "@/lib/notifications/activity.js";
 
 /** Index de recettes tel qu'attendu par les fonctions de `publicRecipes`. */
 const indexOf = (recipes: PubRecipe[]): Map<string, PubRecipe> =>
@@ -23,6 +24,7 @@ export interface PublicRecipesDeps {
   isPlus: boolean;
   notify: (msg: string, type?: string) => void;
   navigate: (path: string, opts?: { state?: unknown }) => void;
+  logActivity: (input: ActivityInput) => void;
 }
 
 /**
@@ -32,7 +34,7 @@ export interface PublicRecipesDeps {
  * @param deps - État de l'app, `notify` et `navigate`.
  * @returns `{ publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic }`.
  */
-export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate }: PublicRecipesDeps) {
+export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate, logActivity }: PublicRecipesDeps) {
   // Quota du plan gratuit : cloner une recette publique compte pour 1 (les bases
   // sont des composants, hors quota). Bloque + renvoie vers l'offre si dépassé.
   const guardQuota = (): boolean => {
@@ -52,6 +54,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
       setRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, visibility: "public", publicId: publicId(user.uid, recipe.id) } : r));
       const bases = docs.length - 1;
       notify(bases > 0 ? `Recette publiée (+ ${bases} base${bases > 1 ? "s" : ""})` : "Recette publiée");
+      logActivity({ type: "recipe.publish", target: recipe.name });
     } catch { notify("Publication refusée – règles Firestore déployées ?", "error"); }
   };
 
@@ -73,6 +76,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
         const { visibility, publicId: _p, ...rest } = r; void visibility; void _p; return rest;
       }));
       notify("Recette dépubliée");
+      logActivity({ type: "recipe.unpublish", target: recipe.name });
     } catch { notify("Échec de la dépublication", "error"); }
   };
 
@@ -91,6 +95,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
       setCollections(prev => recomputeCollectionCounts(prev, updated));
       const bases = added.length - 1;
       notify(bases > 0 ? `Ajoutée à tes recettes (+ ${bases} base${bases > 1 ? "s" : ""})` : "Ajoutée à tes recettes");
+      logActivity({ type: "recipe.clone", target: typeof pub.recipe?.name === "string" ? pub.recipe.name : "" });
       navigate(`/recipes/${mainId}`);
     } catch { notify("Échec du clonage", "error"); }
   };
@@ -108,6 +113,7 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
       setCollections(prev => recomputeCollectionCounts(prev, updated));
       const bases = added.length - 1;
       notify(bases > 0 ? `Ajoutée à tes recettes (+ ${bases} base${bases > 1 ? "s" : ""})` : "Ajoutée à tes recettes");
+      logActivity({ type: "recipe.clone", target: typeof pub.recipe?.name === "string" ? pub.recipe.name : "" });
     } catch { notify("Échec de l'ajout", "error"); }
   };
 

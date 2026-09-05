@@ -21,7 +21,7 @@ import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { fmtQtyUnit, fmtTime } from "@/lib/format.js";
+import { fmtQtyUnit, fmtTime, isoWeek } from "@/lib/format.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
@@ -126,12 +126,11 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
         );
       });
       })() : (
-        <button type="button" className="mp-empty-slot" data-slot={slot}
-          onClick={() => onAdd(date, [slot])}
+        <button type="button" className="mp-empty-slot ripple" data-slot={slot}
+          onClick={() => onAdd(date, [slot], true)}
           aria-label={`Ajouter le ${mealLower}`}>
           <Icon name={meta.icon} size={20} weight="duotone" />
           <span className="mp-empty-txt"><b>{meta.label}</b><em>Ajouter le {mealLower}</em></span>
-          <Icon name="plus" size={15} className="mp-empty-plus" />
         </button>
       )}
     </div>
@@ -140,7 +139,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
 export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
-  const { notify, user, isPlus } = useAppShell();
+  const { notify, user, isPlus, logActivity } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
   // vers l'offre Cardamome+ quand une fonctionnalité premium est verrouillée.
   const gotoRoute = useNavigate();
@@ -224,14 +223,16 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const { count } = generate(weekDays, slots, { compose: true, portionsPerMeal: ppm, style, batch });
     setGenOpen(false);
     if (count > 0) {
-      notify(`${count} repas proposés, à relire et ajuster`, "success");
+      notify(`${count} recettes proposées, à relire et ajuster`, "success");
+      const { week, year } = isoWeek(weekDays[0]);
+      logActivity?.({ type: "mealplan.generate", target: `Semaine S${week} - ${year}`, count });
       // Batch cooking demandé → on ouvre directement la session (tout à préparer).
       if (batch) openBatch();
     } else if (!recipes.length) {
       // Aucune recette en bibliothèque : rien à proposer (≠ semaine déjà remplie).
       notify("Ajoute d'abord des recettes pour générer une semaine", "info");
     } else notify(`Cette semaine est déjà remplie (${slotsLabel})`, "info");
-  }, [generate, weekDays, notify, household, recipes, genSlots]);
+  }, [generate, weekDays, notify, household, recipes, genSlots, logActivity]);
   const handleUndo = useCallback(() => { if (undo()) notify("Génération annulée", "info"); }, [undo, notify]);
 
   // Session batch : vue dérivée de la semaine visible (plats à cuisiner + bases partagées).
@@ -341,7 +342,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     return d;
   }), [viewMode]);
 
-  const openAdd = useCallback((date, slots) => { setAddModal({ date, slots }); setSearchQ(""); }, []);
+  // `lockSlot` : ouvert depuis le créneau lui-même (le slot est déjà choisi), on
+  // masque alors le sélecteur matin/midi/soir. Depuis l'en-tête du jour, il reste.
+  const openAdd = useCallback((date, slots, lockSlot = false) => { setAddModal({ date, slots, lockSlot }); setSearchQ(""); }, []);
 
   const filteredRecipes = useMemo(() =>
     recipes.filter(r => !searchQ || r.name.toLowerCase().includes(searchQ.toLowerCase())),
@@ -424,6 +427,20 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const { scrollRef, contentRef } = useElasticScroll();
 
+  // « Auj. » : revient sur la semaine courante ET défile jusqu'à la carte du jour.
+  // Double rAF : on attend que la bonne semaine soit rendue avant de mesurer/scroller,
+  // et on borne le défilement au conteneur (pas la fenêtre).
+  const goToday = useCallback(() => {
+    setCurrentDate(new Date());
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const container = scrollRef.current;
+      const el = container?.querySelector(`[data-date="${todayStr}"]`);
+      if (!container || !el) return;
+      const delta = el.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      container.scrollTo({ top: container.scrollTop + delta - 12, behavior: "smooth" });
+    }));
+  }, [scrollRef, todayStr]);
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
@@ -442,7 +459,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {`${new Date(weekDays[0] + "T12:00").getDate()} – ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
           </span>
           <button onClick={() => navigate(1)} className="pressable ripple" style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
-          <button onClick={() => setCurrentDate(new Date())} className="pressable ripple" style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
+          <button onClick={goToday} className="pressable ripple" style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
           <button onClick={exportICS} className="pressable ripple" title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", flexShrink: 0 }}>
             <Icon name="calendar" size={13} color="var(--text2)" /> Agenda
           </button>
@@ -477,7 +494,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               const isToday = date === todayStr;
               const d = new Date(date + "T12:00");
               return (
-                <div key={date} className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, animationDelay: `${di * 0.04}s` }}>
+                <div key={date} data-date={date} className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, animationDelay: `${di * 0.04}s` }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: isToday ? "var(--accent)" : "var(--text)" }}>
@@ -510,6 +527,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           // Créneau UNIQUE (sélecteur simple) : moins ambigu qu'une multi-sélection.
           const activeSlot = addModal.slots[0];
           const activeIdx = Math.max(0, MEAL_SLOTS.findIndex(s => s.id === activeSlot));
+          // Ouvert depuis un créneau précis → le slot est figé, pas de sélecteur.
+          const lockSlot = !!addModal.lockSlot;
+          const activeMeta = SLOT_BY_ID[activeSlot];
           const pickSlot = (id) => setAddModal(p => ({ ...p, slots: [id] }));
           // Clic sur (+) : le rond passe en ✓ vert (animation), puis la feuille se
           // ferme avec sa sortie animée et le repas est ajouté au planning.
@@ -564,12 +584,14 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             <div style={{ minWidth: 0 }}>
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Ajouter une recette</h3>
               <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                {lockSlot && activeMeta ? `${activeMeta.meal} · ` : ""}{new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
               </div>
             </div>
           </div>
 
-          {/* Créneau : contrôle segmenté avec pastille glissante (transition douce) */}
+          {/* Créneau : contrôle segmenté avec pastille glissante (transition douce).
+              Masqué quand la feuille est ouverte depuis un créneau précis (slot figé). */}
+          {!lockSlot && (
           <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
             {/* Pastille active : glisse d'un créneau à l'autre (translateX) */}
             <div aria-hidden="true" style={{
@@ -586,11 +608,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                     background: "transparent", color: active ? s.text : "var(--text3)",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                     transition: "color 0.3s ease" }}>
-                  <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
+                  <Icon name={s.icon} size={15} weight="duotone" color={active ? s.text : "var(--text3)"} />{s.label}
                 </button>
               );
             })}
           </div>
+          )}
 
           {/* Recherche standard (loupe clavier mobile, effacement) */}
           <SearchField value={searchQ} onChange={setSearchQ} placeholder="Rechercher une recette…" style={{ marginBottom: 16 }} />
@@ -608,7 +631,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               const added = addedId === r.id;
               return (
                 <button key={r.id} onClick={() => confirmAdd(r)} disabled={!!addedId} className="complete-row ripple"
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--ok-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease", opacity: addedId && !added ? 0.55 : 1 }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--ok-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease, box-shadow 0.2s ease", opacity: addedId && !added ? 0.55 : 1 }}>
                   <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
@@ -682,7 +705,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 <Icon name="copy" size={19} color="var(--text2)" /> Dupliquer sur d'autres jours
               </button>
             )}
-            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onPointerDown={spawnRipple} onClick={() => { removeMeal(it.date, it.idx); close(); notify("Repas retiré du planning"); }}>
+            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onPointerDown={spawnRipple} onClick={() => { removeMeal(it.date, it.idx); close(); notify("Repas retiré du planning"); logActivity?.({ type: "mealplan.remove", target: r?.name || "" }); }}>
               <Icon name="trash" size={19} color="var(--red)" /> Supprimer du calendrier
             </button>
           </div>
@@ -1072,15 +1095,22 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               </div>
             </div>
 
-            {/* Contrôle segmenté (rôle) : pastille active blanche sur rail teinté */}
-            <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
+            {/* Contrôle segmenté (rôle) : pastille active blanche qui GLISSE d'un
+                onglet à l'autre (translateX), comme les autres sélecteurs de l'app. */}
+            <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
+              <div aria-hidden="true" style={{
+                position: "absolute", top: 4, bottom: 4, left: 4, width: `calc((100% - 8px) / ${COMPLETE_ROLES.length})`,
+                background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+                transform: `translateX(calc(${Math.max(0, COMPLETE_ROLES.findIndex(x => x.id === completeRole))} * 100%))`,
+                transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
+              }} />
               {COMPLETE_ROLES.map(r => {
                 const active = completeRole === r.id;
                 return (
                   <button key={r.id} onClick={() => setCompleteRole(r.id)}
-                    style={{ flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", border: "none",
-                      background: active ? "var(--surface)" : "transparent", color: active ? "var(--accent)" : "var(--text3)",
-                      boxShadow: active ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "color 0.15s ease, background-color 0.15s ease" }}>
+                    style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", border: "none",
+                      background: "transparent", color: active ? "var(--accent)" : "var(--text3)",
+                      transition: "color 0.3s ease" }}>
                     {r.label}
                   </button>
                 );

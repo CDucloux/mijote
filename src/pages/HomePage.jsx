@@ -1,9 +1,12 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
 import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
+import { SpotlightIngredient } from "../components/SpotlightIngredient.jsx";
+import { NotificationsSection } from "../components/NotificationsSection.jsx";
+import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
 import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ElasticScroll } from "../components/ElasticScroll.jsx";
@@ -22,6 +25,10 @@ function greeting(date = new Date()) {
   const h = date.getHours();
   return h >= 6 && h < 18 ? "Bonjour" : "Bonsoir";
 }
+
+// Titre d'onglet, identique au standard des autres pages (Recettes, Planning…) :
+// même fonte, taille et graisse, pour une hiérarchie de titres homogène.
+const HOME_TITLE_STYLE = { fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 
 // Carte de notification compacte (courses, stock bas) – icône + libellé + chevron.
 // La surbrillance de survol n'est câblée que sur pointeur fin (souris) : sur tactile,
@@ -234,10 +241,80 @@ function FoyerSection() {
   );
 }
 
-export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], preferences, loading = false, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, discoverSeed = "", onDiscoverSeedConsumed }) {
+// Sélecteur de sous-vue de l'Accueil : « À suivre » (tableau de bord perso) vs
+// « Découvrir » (recettes de la communauté). Chaque segment porte sa propre route
+// (/home ↔ /discover) ; l'onglet reste unique dans la barre de navigation.
+// Le fond actif est porté par UN seul « thumb » qui GLISSE d'un segment à l'autre
+// (au lieu d'un fond qui apparaît/disparaît par segment). On mesure le segment actif
+// et on positionne le thumb par-dessus. La glisse ne doit répondre qu'à l'action de
+// l'utilisateur : au montage, au resize et après le chargement des polices (largeur
+// dépendante de la fonte), on repositionne SANS transition.
+function SubviewPill({ mode, onNavigate }) {
+  const homeRef = useRef(null);
+  const discoverRef = useRef(null);
+  const thumbRef = useRef(null);
+  const animatedRef = useRef(false);
+
+  const placeThumb = useCallback((animate) => {
+    const active = mode === "discover" ? discoverRef.current : homeRef.current;
+    const thumb = thumbRef.current;
+    if (!active || !thumb) return;
+    const reduce = animate && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (!animate || reduce) thumb.style.transition = "none";
+    thumb.style.width = `${active.offsetWidth}px`;
+    thumb.style.transform = `translateX(${active.offsetLeft}px)`;
+    if (!animate || reduce) requestAnimationFrame(() => { thumb.style.transition = ""; });
+  }, [mode]);
+
+  // Positionne au changement de mode : la première passe (montage) ne glisse pas.
+  useLayoutEffect(() => {
+    placeThumb(animatedRef.current);
+    animatedRef.current = true;
+  }, [mode, placeThumb]);
+
+  // Recalage sans glisse au resize et après chargement des polices.
+  useEffect(() => {
+    const replace = () => placeThumb(false);
+    window.addEventListener("resize", replace);
+    if (document.fonts?.ready) document.fonts.ready.then(replace);
+    return () => window.removeEventListener("resize", replace);
+  }, [placeThumb]);
+
+  const seg = (id, label, ref) => {
+    const active = mode === id;
+    return (
+      <button ref={ref}
+        role="tab" aria-selected={active} onClick={() => onNavigate?.(id)}
+        className="pressable"
+        style={{
+          position: "relative", zIndex: 1, flex: "0 0 auto", padding: "7px 16px", borderRadius: 999,
+          border: "none", cursor: "pointer", background: "transparent",
+          fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em",
+          color: active ? "var(--text)" : "var(--text3)",
+          transition: "color 0.22s ease",
+        }}>
+        {label}
+      </button>
+    );
+  };
+  return (
+    <div role="tablist" aria-label="Vue de l'accueil" style={{ position: "relative", display: "inline-flex", gap: 3, padding: 3, borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)" }}>
+      <span ref={thumbRef} aria-hidden="true" style={{
+        position: "absolute", top: 3, left: 0, zIndex: 0, height: "calc(100% - 6px)", borderRadius: 999,
+        background: "var(--bg)", boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
+        transition: "transform 0.28s cubic-bezier(0.4,0.08,0.16,1), width 0.28s cubic-bezier(0.4,0.08,0.16,1)",
+      }} />
+      {seg("home", "À suivre", homeRef)}
+      {seg("discover", "Découvrir", discoverRef)}
+    </div>
+  );
+}
+
+export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], activities = [], preferences, loading = false, mode = "home", onNavigateSubview, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, onOpenIngredient, onExploreSeason, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
   const canHover = useCanHover();
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
+  const spotlight = useMemo(() => pickSpotlightIngredient(ingredientDB), [ingredientDB]);
 
   const summary = useMemo(
     () => buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowStock, ingredientDB }),
@@ -265,21 +342,39 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* En-tête */}
-      <div style={{ padding: "20px 20px 8px", flexShrink: 0, position: "relative", zIndex: 1, background: "var(--bg)" }}>
-        <div className="slide-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
-            <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
-            <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
-              Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color: "var(--text2)" }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
-            </span>
+      {/* En-tête aligné sur le standard des autres onglets : titre serif 26/600 en
+          tête à padding 20/20/0 (+ sous-titre discret), avatar à droite. Le
+          sélecteur de sous-vue reste un contrôle SECONDAIRE, SOUS le titre : il ne
+          remplace plus le titre en tête d'onglet (cohérence de hiérarchie). */}
+      <div style={{ padding: "20px 20px 0", flexShrink: 0, position: "relative", zIndex: 1, background: "var(--bg)" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
+            {mode === "discover" ? (
+              <h1 style={HOME_TITLE_STYLE}>Découvrir</h1>
+            ) : (
+              <>
+                <h1 style={HOME_TITLE_STYLE}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
+                <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
+                  Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color: "var(--text2)" }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
+                </span>
+              </>
+            )}
           </div>
           <UserAvatar />
         </div>
+        <div style={{ marginTop: 14, paddingBottom: 2 }}>
+          <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
+        </div>
       </div>
 
-      {/* Corps défilant */}
-      <ElasticScroll style={{ flex: 1, padding: "0 20px var(--page-pad-b)" }}>
+      {mode === "discover" ? (
+        /* ── Découvrir : recettes de la communauté (route /discover) ──────── */
+        <ElasticScroll style={{ flex: 1, padding: "12px 20px var(--page-pad-b)" }}>
+          <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
+        </ElasticScroll>
+      ) : (
+      /* ── À suivre : tableau de bord perso (route /home) ─────────────────── */
+      <ElasticScroll style={{ flex: 1, padding: "12px 20px var(--page-pad-b)" }}>
         {/* ── Mon foyer (en tête d'accueil) ───────────────────────────────── */}
         <FoyerSection />
 
@@ -378,9 +473,19 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           )}
         </section>
 
-        {/* ── Découvrir la communauté ─────────────────────────────────────── */}
-        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
+        {/* ── L'ingrédient du moment (engagement de saison) ────────────────── */}
+        {spotlight && (
+          <SpotlightIngredient
+            ingredient={spotlight}
+            onOpenIngredient={onOpenIngredient}
+            onExplore={onExploreSeason}
+          />
+        )}
+
+        {/* ── Notifications (activité du foyer) ────────────────────────────── */}
+        {!loading && <NotificationsSection activities={activities} />}
       </ElasticScroll>
+      )}
     </div>
   );
 }

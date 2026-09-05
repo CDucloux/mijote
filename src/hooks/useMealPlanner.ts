@@ -95,8 +95,11 @@ export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = 
       }
       return next;
     });
-    // Nombre de REPAS (plats), pas d'items : les accompagnements ne comptent pas double.
-    return { count: assignments.filter(a => a.role !== "accompagnement").length };
+    // Nombre de RECETTES distinctes (hors accompagnements) : une même recette
+    // étalée sur plusieurs jours (restes) ou posée à plusieurs créneaux ne compte
+    // qu'une fois, et les accompagnements ne gonflent pas le total.
+    const recettes = new Set(assignments.filter(a => a.role !== "accompagnement").map(a => a.recipeId));
+    return { count: recettes.size };
   }, [recipes, resolver, stock, preferences, mealPlan, setMealPlan]);
 
   const undo = useCallback((): boolean => {
