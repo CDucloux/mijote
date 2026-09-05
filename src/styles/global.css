@@ -1340,6 +1340,41 @@ select {
   border-color: rgba(224, 82, 82, 0.22);
 }
 
+/* Cartes autonomes (console admin, déconnexion) : une seule action indépendante
+   → forme pilule assumée. Le maintien/hover gris générique écraserait leur teinte,
+   on le remplace par une teinte accordée à la carte. Et la persistance du hover
+   n'est réservée qu'aux vrais pointeurs : sur tactile, l'onde (.ripple-ink) suffit
+   comme feedback et se résorbe seule (pas d'état gris « collé » après l'appui). */
+.account-group.is-special,
+.account-group.is-danger {
+  border-radius: 999px;
+}
+
+.account-group.is-special .menu-row,
+.account-group.is-danger .menu-row {
+  border-radius: 999px;
+}
+
+@media (hover: hover) {
+  .account-group.is-special .menu-row:hover,
+  .account-group.is-special .menu-row:active {
+    background-color: rgba(var(--admin-rgb), 0.16);
+  }
+  .account-group.is-danger .menu-row:hover,
+  .account-group.is-danger .menu-row:active {
+    background-color: rgba(var(--red-rgb), 0.14);
+  }
+}
+
+/* Tactile : pas de teinte de maintien « collée » sur ces cartes, seule l'onde
+   parle (le gris générique de .menu-row:active resterait figé après l'appui). */
+@media (hover: none) {
+  .account-group.is-special .menu-row:active,
+  .account-group.is-danger .menu-row:active {
+    background-color: transparent;
+  }
+}
+
 @keyframes editorSlideIn {
   from {
     opacity: 0;
