@@ -5,11 +5,11 @@ import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
 import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { SpotlightIngredient } from "../components/SpotlightIngredient.jsx";
-import { NotificationsSection } from "../components/NotificationsSection.jsx";
 import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
 import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { ElasticScroll } from "../components/ElasticScroll.jsx";
+import { useNavigate } from "react-router-dom";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { useCanHover } from "../hooks/useCanHover.js";
@@ -313,7 +313,7 @@ function SubviewPill({ mode, onNavigate }) {
 export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], activities = [], preferences, loading = false, mode = "home", onNavigateSubview, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, onOpenIngredient, onExploreSeason, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
   const canHover = useCanHover();
-  const [notifOpen, setNotifOpen] = useState(false);
+  const navigate = useNavigate();
   const hasActivity = activities.length > 0;
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
   const spotlight = useMemo(() => pickSpotlightIngredient(ingredientDB), [ingredientDB]);
@@ -367,7 +367,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, marginBottom: 12 }}>
           <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
           <button
-            type="button" className="pressable" onClick={() => setNotifOpen(true)}
+            type="button" className="pressable" onClick={() => navigate("/notifications")}
             aria-label="Notifications" title="Notifications"
             style={{ position: "relative", marginLeft: "auto", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
               display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
@@ -495,21 +495,6 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           />
         )}
       </ElasticScroll>
-      )}
-
-      {/* ── Notifications : panneau ouvert par le bouton rond de l'en-tête ──── */}
-      {notifOpen && (
-        <SwipeableSheet onClose={() => setNotifOpen(false)} style={{ maxHeight: "82dvh" }}>
-          {(close) => (
-            <div style={{ padding: "4px 20px 8px" }}>
-              <h2 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 18, fontWeight: 700, fontFamily: "var(--ff-display)", letterSpacing: "-0.01em", margin: "0 0 16px" }}>
-                <Icon name="bell" size={19} color="var(--accent)" weight="fill" />
-                Notifications
-              </h2>
-              <NotificationsSection activities={activities} onNavigated={close} />
-            </div>
-          )}
-        </SwipeableSheet>
       )}
     </div>
   );
