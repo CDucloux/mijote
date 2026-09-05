@@ -14,7 +14,7 @@
 export const ACTIVITY_TYPES = [
   "recipe.add", "recipe.edit", "recipe.delete", "recipe.import",
   "recipe.publish", "recipe.unpublish", "recipe.clone",
-  "shopping.add", "shopping.clear",
+  "shopping.create", "shopping.add", "shopping.clear",
   "mealplan.add", "mealplan.remove", "mealplan.generate",
 ] as const;
 
@@ -44,11 +44,17 @@ export interface ActivityEvent {
   ts: number;
 }
 
-/** Descripteur de rendu d'un évènement (icône métier + couleur + phrase). */
+/** Descripteur de rendu d'un évènement (icône métier + couleur + phrase + cible). */
 export interface ActivityView {
   icon: string;
   color: string;
   title: string;
+  /**
+   * Onglet vers lequel renvoyer au clic, ou `null` pour un évènement non
+   * navigable : une suppression (recette/repas retiré, liste vidée) ne mène
+   * nulle part, sa cible n'existe plus.
+   */
+  route: string | null;
 }
 
 const KNOWN = new Set<string>(ACTIVITY_TYPES);
@@ -119,32 +125,38 @@ export function actorLabel(ev: ActivityEvent, currentEmail: string | null | unde
   return prefix || "Le foyer";
 }
 
-// Icône + couleur + gabarit de phrase par type. La couleur reste dans le budget
-// tokens (accent/ok/red) ; l'orange des alertes de stock (#e8920a) sert aux courses.
-const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; title: (ev: ActivityEvent) => string }> = {
-  "recipe.add": { icon: "book", color: "var(--ok)", title: e => `Nouvelle recette : ${e.target}` },
-  "recipe.edit": { icon: "edit", color: "var(--accent)", title: e => `Recette modifiée : ${e.target}` },
-  "recipe.delete": { icon: "trash", color: "var(--red)", title: e => `Recette supprimée : ${e.target}` },
-  "recipe.import": { icon: "import", color: "var(--ok)", title: e => `${e.count} recette${plural(e.count)} importée${plural(e.count)}` },
-  "recipe.publish": { icon: "share", color: "var(--accent)", title: e => `Publiée dans la communauté : ${e.target}` },
-  "recipe.unpublish": { icon: "eyeOff", color: "var(--text3)", title: e => `Retirée de la communauté : ${e.target}` },
-  "recipe.clone": { icon: "plusCircle", color: "var(--ok)", title: e => `Ajoutée depuis la communauté : ${e.target}` },
-  "shopping.add": { icon: "shopping", color: "#e8920a", title: e => `${e.count} article${plural(e.count)} ajouté${plural(e.count)} aux courses${e.target ? ` · ${e.target}` : ""}` },
-  "shopping.clear": { icon: "eraser", color: "var(--text3)", title: () => "Liste de courses vidée" },
-  "mealplan.add": { icon: "calendar", color: "var(--accent)", title: e => `Planifié : ${e.target}` },
-  "mealplan.remove": { icon: "calendar", color: "var(--text3)", title: e => `Retiré du planning : ${e.target}` },
-  "mealplan.generate": { icon: "sparkle", color: "var(--accent)", title: e => `Semaine générée : ${e.count} repas` },
+// Onglets cibles (cf. constants/tabs.js). Une suppression n'a pas de cible : `null`.
+const RECIPES = "/recipes", SHOPPING = "/shopping-lists", PLANNING = "/meal-plan";
+
+// Icône + couleur + gabarit de phrase + onglet cible par type. La couleur reste
+// dans le budget tokens (accent/ok/red) ; l'orange des alertes de stock (#e8920a)
+// sert aux courses. `route: null` pour un évènement de suppression (non navigable).
+const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: string | null; title: (ev: ActivityEvent) => string }> = {
+  "recipe.add": { icon: "book", color: "var(--ok)", route: RECIPES, title: e => `Nouvelle recette : ${e.target}` },
+  "recipe.edit": { icon: "edit", color: "var(--accent)", route: RECIPES, title: e => `Recette modifiée : ${e.target}` },
+  "recipe.delete": { icon: "trash", color: "var(--red)", route: null, title: e => `Recette supprimée : ${e.target}` },
+  "recipe.import": { icon: "import", color: "var(--ok)", route: RECIPES, title: e => `${e.count} recette${plural(e.count)} importée${plural(e.count)}` },
+  "recipe.publish": { icon: "share", color: "var(--accent)", route: RECIPES, title: e => `Publiée dans la communauté : ${e.target}` },
+  "recipe.unpublish": { icon: "eyeOff", color: "var(--text3)", route: RECIPES, title: e => `Retirée de la communauté : ${e.target}` },
+  "recipe.clone": { icon: "plusCircle", color: "var(--ok)", route: RECIPES, title: e => `Ajoutée depuis la communauté : ${e.target}` },
+  "shopping.create": { icon: "plusCircle", color: "var(--ok)", route: SHOPPING, title: e => `Liste de courses créée${e.target ? ` : ${e.target}` : ""}` },
+  "shopping.add": { icon: "shopping", color: "#e8920a", route: SHOPPING, title: e => `${e.count} article${plural(e.count)} ajouté${plural(e.count)} aux courses${e.target ? ` · ${e.target}` : ""}` },
+  "shopping.clear": { icon: "eraser", color: "var(--text3)", route: null, title: () => "Liste de courses vidée" },
+  "mealplan.add": { icon: "calendar", color: "var(--accent)", route: PLANNING, title: e => `Recette planifiée : ${e.target}` },
+  "mealplan.remove": { icon: "calendar", color: "var(--text3)", route: null, title: e => `Retiré du planning : ${e.target}` },
+  "mealplan.generate": { icon: "sparkle", color: "var(--accent)", route: PLANNING, title: e => `Semaine générée : ${e.count} repas` },
 };
 
 /**
- * Descripteur de rendu d'un évènement : icône métier, couleur (token) et phrase
- * prête à afficher. L'auteur et l'horodatage relatif sont composés à part par l'UI.
+ * Descripteur de rendu d'un évènement : icône métier, couleur (token), phrase
+ * prête à afficher et onglet cible (`route`, `null` si non navigable). L'auteur et
+ * l'horodatage relatif sont composés à part par l'UI.
  *
  * @param ev - Évènement à décrire.
  */
 export function describeActivity(ev: ActivityEvent): ActivityView {
   const d = DESCRIPTORS[ev.type];
-  return { icon: d.icon, color: d.color, title: d.title(ev) };
+  return { icon: d.icon, color: d.color, route: d.route, title: d.title(ev) };
 }
 
 const MINUTE = 60_000, HOUR = 3_600_000, DAY = 86_400_000;

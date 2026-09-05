@@ -20,7 +20,7 @@ import { ListConfigSheet } from "../components/shopping/ListConfigSheet.jsx";
 
 export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }) {
   const navigate = useNavigate();
-  const { notify } = useAppShell();
+  const { notify, logActivity } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
 
@@ -55,7 +55,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
 
   const saveConfig = () => {
     const name = configList.name.trim();
-    if (configList.isNew) shop.createList(name, !!configList.hideClear);
+    if (configList.isNew) { shop.createList(name, !!configList.hideClear); logActivity?.({ type: "shopping.create", target: name }); }
     else shop.updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear }));
     // `close(cb)` exécute cb À LA PLACE de `onClose` → on ferme nous-mêmes.
     setConfigList(null);

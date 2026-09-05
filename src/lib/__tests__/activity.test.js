@@ -78,6 +78,29 @@ describe("describeActivity", () => {
     expect(describeActivity(ev({ type: "shopping.add", count: 1, target: "" })).title)
       .toBe("1 article ajouté aux courses");
   });
+  it("nomme un repas planifié « Recette planifiée »", () => {
+    expect(describeActivity(ev({ type: "mealplan.add", target: "Tarte au Comté" })).title)
+      .toBe("Recette planifiée : Tarte au Comté");
+  });
+  it("décrit la création d'une liste de courses (avec ou sans nom)", () => {
+    expect(describeActivity(ev({ type: "shopping.create", target: "Marché" })).title)
+      .toBe("Liste de courses créée : Marché");
+    expect(describeActivity(ev({ type: "shopping.create", target: "" })).title)
+      .toBe("Liste de courses créée");
+  });
+  it("route chaque type vers le bon onglet, sauf les suppressions (route null)", () => {
+    const routeOf = t => describeActivity(ev({ type: t })).route;
+    expect(routeOf("recipe.add")).toBe("/recipes");
+    expect(routeOf("recipe.import")).toBe("/recipes");
+    expect(routeOf("shopping.create")).toBe("/shopping-lists");
+    expect(routeOf("shopping.add")).toBe("/shopping-lists");
+    expect(routeOf("mealplan.add")).toBe("/meal-plan");
+    expect(routeOf("mealplan.generate")).toBe("/meal-plan");
+    // Suppressions : pas de cible où renvoyer.
+    expect(routeOf("recipe.delete")).toBeNull();
+    expect(routeOf("shopping.clear")).toBeNull();
+    expect(routeOf("mealplan.remove")).toBeNull();
+  });
   it("couvre tous les types sans lever", () => {
     for (const t of ACTIVITY_TYPES) {
       const v = describeActivity(ev({ type: t, count: 2 }));
@@ -85,6 +108,7 @@ describe("describeActivity", () => {
       expect(v.title.length).toBeGreaterThan(0);
       expect(v.icon).toBeTruthy();
       expect(v.color).toBeTruthy();
+      expect(v.route === null || typeof v.route === "string").toBe(true);
     }
   });
 });

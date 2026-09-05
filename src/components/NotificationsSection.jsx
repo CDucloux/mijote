@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { describeActivity, actorLabel, relativeTime } from "@/lib/notifications/activity.js";
@@ -8,13 +9,14 @@ import { describeActivity, actorLabel, relativeTime } from "@/lib/notifications/
 const COLLAPSED = 6;
 
 // Une ligne d'activité : pastille (icône teintée) + phrase + méta (auteur · quand).
-// Non actionnable → un simple <div> (pas de card actionnable, cf. règles UI).
-function ActivityRow({ event, currentEmail, animationDelay }) {
-  const { icon, color, title } = describeActivity(event);
+// Navigable (route non nulle) → bouton pressable qui renvoie vers l'onglet concerné,
+// avec un chevron d'affordance ; sinon (suppression) un simple <div> statique.
+function ActivityRow({ event, currentEmail, animationDelay, onNavigate }) {
+  const { icon, color, title, route } = describeActivity(event);
   const who = actorLabel(event, currentEmail);
   const when = relativeTime(event.ts);
-  return (
-    <div className="slide-up" style={{ animationDelay, display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 2px" }}>
+  const inner = (
+    <>
       <span style={{
         width: 34, height: 34, borderRadius: 11, flexShrink: 0, marginTop: 1,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -31,7 +33,20 @@ function ActivityRow({ event, currentEmail, animationDelay }) {
           {" · "}{when}
         </span>
       </span>
-    </div>
+      {route && <Icon name="forward" size={15} color="var(--text3)" />}
+    </>
+  );
+  const base = { display: "flex", alignItems: "center", gap: 12, padding: "11px 2px", width: "100%" };
+  if (!route) {
+    return <div className="slide-up" style={{ ...base, animationDelay }}>{inner}</div>;
+  }
+  return (
+    <button
+      type="button" className="slide-up pressable" onClick={() => onNavigate(route)}
+      style={{ ...base, animationDelay, background: "none", border: "none", textAlign: "left", cursor: "pointer", font: "inherit", color: "inherit" }}
+    >
+      {inner}
+    </button>
   );
 }
 
@@ -43,6 +58,7 @@ function ActivityRow({ event, currentEmail, animationDelay }) {
  */
 export function NotificationsSection({ activities = [] }) {
   const { user } = useAppShell();
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [, setTick] = useState(0);
 
@@ -59,14 +75,17 @@ export function NotificationsSection({ activities = [] }) {
 
   return (
     <section style={{ marginTop: 26 }}>
-      <h2 className="slide-up" style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Notifications</h2>
+      <h2 className="slide-up" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
+        <Icon name="bell" size={17} color="var(--accent)" weight="fill" />
+        Notifications
+      </h2>
       <div style={{
         background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18,
         padding: "4px 16px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
       }}>
         {shown.map((event, i) => (
           <div key={event.id} style={i > 0 ? { borderTop: "1px solid var(--border)" } : undefined}>
-            <ActivityRow event={event} currentEmail={currentEmail} animationDelay={`${Math.min(i, 6) * 0.04}s`} />
+            <ActivityRow event={event} currentEmail={currentEmail} animationDelay={`${Math.min(i, 6) * 0.04}s`} onNavigate={navigate} />
           </div>
         ))}
       </div>
