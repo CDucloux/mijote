@@ -45,7 +45,7 @@ describe("useMealPlanner", () => {
     expect(result.current.undoKey).toBe(null);
   });
 
-  it("ne compte pas les accompagnements comme des repas", () => {
+  it("ne compte pas les accompagnements comme des recettes", () => {
     generateWeek.mockReturnValue([
       { date: "2026-01-01", slot: "midi", recipeId: "r1", role: "plat", groupId: "g1" },
       { date: "2026-01-01", slot: "midi", recipeId: "r2", role: "accompagnement", groupId: "g1" },
@@ -54,6 +54,18 @@ describe("useMealPlanner", () => {
     let res;
     act(() => { res = result.current.generate(["2026-01-01"], ["midi"], { compose: true }); });
     expect(res.count).toBe(1);
+  });
+
+  it("compte une recette étalée sur plusieurs jours (restes) une seule fois", () => {
+    generateWeek.mockReturnValue([
+      { date: "2026-01-01", slot: "midi", recipeId: "r1", role: "plat" },
+      { date: "2026-01-02", slot: "midi", recipeId: "r1", role: "plat" }, // reste du même plat
+      { date: "2026-01-02", slot: "soir", recipeId: "r2", role: "plat" },
+    ]);
+    const { result } = setup();
+    let res;
+    act(() => { res = result.current.generate(["2026-01-01", "2026-01-02"], ["midi", "soir"]); });
+    expect(res.count).toBe(2); // r1 (2 jours) + r2 = 2 recettes distinctes
   });
 
   it("ne touche à rien et n'active pas l'undo si aucune assignation", () => {
