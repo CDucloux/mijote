@@ -355,7 +355,9 @@ function AppInner({ user, isDark, toggleTheme }) {
       log[day] = [...(log[day] || []), recipeId].slice(-50); // borne raisonnable par jour
       return { ...base, cookLog: log };
     });
-  }, [setPreferences]);
+    const cooked = recipes.find(r => r.id === recipeId);
+    if (cooked) logActivity({ type: "recipe.cooked", target: cooked.name });
+  }, [setPreferences, recipes, logActivity]);
 
   // Duplique une recette : copie privée (pas de lien public), nom suffixé, en tête
   // de liste ; recalcule les compteurs de carnets (la copie hérite des carnets).

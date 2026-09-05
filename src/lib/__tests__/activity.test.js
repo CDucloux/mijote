@@ -95,6 +95,11 @@ describe("describeActivity", () => {
     expect(describeActivity(ev({ type: "shopping.delete", target: "" })).title)
       .toBe("Liste de courses supprimée");
   });
+  it("nomme une recette cuisinée (mode pas à pas terminé)", () => {
+    const v = describeActivity(ev({ type: "recipe.cooked", target: "Curry" }));
+    expect(v.title).toBe("Recette cuisinée : Curry");
+    expect(v.route).toBe("/recipes");
+  });
   it("décrit les mouvements de stock", () => {
     expect(describeActivity(ev({ type: "stock.add", target: "Riz" })).title).toBe("Riz ajouté au stock");
     expect(describeActivity(ev({ type: "stock.low", target: "Huile d'olive" })).title).toBe("Huile d'olive bientôt épuisé");

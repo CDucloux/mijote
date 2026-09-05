@@ -13,7 +13,7 @@
 /** Types d'évènements suivis. Toute valeur hors de cette liste est ignorée. */
 export const ACTIVITY_TYPES = [
   "recipe.add", "recipe.edit", "recipe.delete", "recipe.import",
-  "recipe.publish", "recipe.unpublish", "recipe.clone",
+  "recipe.publish", "recipe.unpublish", "recipe.clone", "recipe.cooked",
   "shopping.create", "shopping.add", "shopping.clear", "shopping.delete",
   "stock.add", "stock.low", "stock.out",
   "mealplan.add", "mealplan.remove", "mealplan.generate",
@@ -140,6 +140,7 @@ const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: st
   "recipe.publish": { icon: "share", color: "var(--accent)", route: RECIPES, title: e => `Publiée dans la communauté : ${e.target}` },
   "recipe.unpublish": { icon: "eyeOff", color: "var(--text3)", route: RECIPES, title: e => `Retirée de la communauté : ${e.target}` },
   "recipe.clone": { icon: "plusCircle", color: "var(--ok)", route: RECIPES, title: e => `Ajoutée depuis la communauté : ${e.target}` },
+  "recipe.cooked": { icon: "fire", color: "#e8920a", route: RECIPES, title: e => `Recette cuisinée : ${e.target}` },
   "shopping.create": { icon: "plusCircle", color: "var(--ok)", route: SHOPPING, title: e => `Liste de courses créée${e.target ? ` : ${e.target}` : ""}` },
   "shopping.add": { icon: "shopping", color: "#e8920a", route: SHOPPING, title: e => `${e.count} article${plural(e.count)} ajouté${plural(e.count)} aux courses${e.target ? ` · ${e.target}` : ""}` },
   "shopping.clear": { icon: "eraser", color: "var(--text3)", route: null, title: () => "Liste de courses vidée" },
