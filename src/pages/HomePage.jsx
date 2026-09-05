@@ -313,6 +313,8 @@ function SubviewPill({ mode, onNavigate }) {
 export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], activities = [], preferences, loading = false, mode = "home", onNavigateSubview, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, onOpenIngredient, onExploreSeason, discoverSeed = "", onDiscoverSeedConsumed }) {
   const { user } = useAppShell();
   const canHover = useCanHover();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const hasActivity = activities.length > 0;
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
   const spotlight = useMemo(() => pickSpotlightIngredient(ingredientDB), [ingredientDB]);
 
@@ -362,19 +364,30 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           </div>
           <UserAvatar />
         </div>
-        <div style={{ marginTop: 14, paddingBottom: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, marginBottom: 12 }}>
           <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
+          <button
+            type="button" className="pressable" onClick={() => setNotifOpen(true)}
+            aria-label="Notifications" title="Notifications"
+            style={{ position: "relative", marginLeft: "auto", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
+              display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+              background: "var(--surface2)", border: "1px solid var(--border)" }}>
+            <Icon name="bell" size={18} color="var(--text2)" />
+            {hasActivity && (
+              <span aria-hidden="true" style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: "50%", background: "var(--accent)", border: "2px solid var(--bg)" }} />
+            )}
+          </button>
         </div>
       </div>
 
       {mode === "discover" ? (
         /* ── Découvrir : recettes de la communauté (route /discover) ──────── */
-        <ElasticScroll style={{ flex: 1, padding: "12px 20px var(--page-pad-b)" }}>
+        <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
           <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
         </ElasticScroll>
       ) : (
       /* ── À suivre : tableau de bord perso (route /home) ─────────────────── */
-      <ElasticScroll style={{ flex: 1, padding: "12px 20px var(--page-pad-b)" }}>
+      <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
         {/* ── Mon foyer (en tête d'accueil) ───────────────────────────────── */}
         <FoyerSection />
 
@@ -481,10 +494,22 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             onExplore={onExploreSeason}
           />
         )}
-
-        {/* ── Notifications (activité du foyer) ────────────────────────────── */}
-        {!loading && <NotificationsSection activities={activities} />}
       </ElasticScroll>
+      )}
+
+      {/* ── Notifications : panneau ouvert par le bouton rond de l'en-tête ──── */}
+      {notifOpen && (
+        <SwipeableSheet onClose={() => setNotifOpen(false)} style={{ maxHeight: "82dvh" }}>
+          {(close) => (
+            <div style={{ padding: "4px 20px 8px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 18, fontWeight: 700, fontFamily: "var(--ff-display)", letterSpacing: "-0.01em", margin: "0 0 16px" }}>
+                <Icon name="bell" size={19} color="var(--accent)" weight="fill" />
+                Notifications
+              </h2>
+              <NotificationsSection activities={activities} onNavigated={close} />
+            </div>
+          )}
+        </SwipeableSheet>
       )}
     </div>
   );
