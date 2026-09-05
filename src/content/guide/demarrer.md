@@ -2,6 +2,8 @@
 short: Premiers pas et grands principes
 icon: sparkle
 title: Démarrer avec Cardamome
+color: "#6e9a3f"
+lead: Comprendre la logique de l'app en cinq minutes, pour que tout le reste coule de source.
 order: 1
 ---
 

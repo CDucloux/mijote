@@ -5,9 +5,12 @@ import { GUIDE_DOCS, GUIDE_BY_ID } from "../constants/guideDocs.js";
 
 // ─── GUIDE D'UTILISATION ────────────────────────────────────────────────────────
 // Page dédiée /guide : le « comment qu'on fait » de Cardamome. /guide → index des
-// thèmes ; /guide/<id> → lecture d'un thème. Même patron que LegalPage (index de
-// cartes + vue lecture), styles de prose réutilisés (.legal-md, .legal-row) pour
-// ne pas dupliquer la mise en forme Markdown.
+// thèmes ; /guide/<id> → lecture d'un thème. Chaque thème porte sa couleur (voir
+// front-matter) reprise sur la carte d'index, le hero et la prose (.guide-md), à la
+// manière des slides d'onboarding : la page respire au lieu d'aligner du Markdown brut.
+const softTile = (color) => color.startsWith("#") ? `color-mix(in srgb, ${color} 14%, transparent)` : "rgba(var(--accent-rgb),0.14)";
+const borderTile = (color) => color.startsWith("#") ? `color-mix(in srgb, ${color} 34%, transparent)` : "rgba(var(--accent-rgb),0.3)";
+
 export function GuidePage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,14 +24,14 @@ export function GuidePage() {
           style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
         </button>
-        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>
+        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {doc ? doc.title : "Guide"}
         </h1>
       </div>
 
       <ElasticScroll style={{ flex: 1, padding: "18px 20px var(--page-pad-b)" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          {doc ? <Document doc={doc} /> : <Index navigate={navigate} />}
+          {doc ? <Document doc={doc} navigate={navigate} /> : <Index navigate={navigate} />}
         </div>
       </ElasticScroll>
     </div>
@@ -38,15 +41,15 @@ export function GuidePage() {
 function Index({ navigate }) {
   return (
     <>
-      <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: "0 0 20px" }}>
-        Tout ce que Cardamome sait faire, expliqué pas à pas. Choisis un sujet.
+      <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: "0 0 20px" }}>
+        Tout ce que Cardamome sait faire, expliqué pas à pas. Choisis un sujet pour commencer.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {GUIDE_DOCS.map(d => (
           <button key={d.id} onClick={() => navigate(`/guide/${d.id}`)} className="legal-row"
             style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
-            <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.14)", border: "1px solid rgba(var(--accent-rgb),0.3)" }}>
-              <Icon name={d.icon} size={18} color="var(--accent)" />
+            <span style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: softTile(d.color), border: `1px solid ${borderTile(d.color)}` }}>
+              <Icon name={d.icon} size={19} color={d.color} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14.5, fontWeight: 600 }}>{d.title}</span>
@@ -60,10 +63,33 @@ function Index({ navigate }) {
   );
 }
 
-function Document({ doc }) {
+function Document({ doc, navigate }) {
+  const idx = GUIDE_DOCS.findIndex(d => d.id === doc.id);
+  const next = idx >= 0 ? GUIDE_DOCS[idx + 1] : null;
   return (
-    <article className="legal-md">
-      <div dangerouslySetInnerHTML={{ __html: doc.html }} />
-    </article>
+    <div className="guide-doc" style={{ "--guide-accent": doc.color }}>
+      {doc.lead && (
+        <div className="guide-hero">
+          <span className="guide-hero-icon"><Icon name={doc.icon} size={26} color="#fff" /></span>
+          <p className="guide-hero-lead">{doc.lead}</p>
+        </div>
+      )}
+      <article className="guide-md">
+        <div dangerouslySetInnerHTML={{ __html: doc.html }} />
+      </article>
+      {next && (
+        <button className="guide-next" onClick={() => navigate(`/guide/${next.id}`)}
+          style={{ "--guide-accent": next.color }}>
+          <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: softTile(next.color), border: `1px solid ${borderTile(next.color)}` }}>
+            <Icon name={next.icon} size={17} color={next.color} />
+          </span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontSize: 11, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Sujet suivant</span>
+            <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{next.title}</span>
+          </span>
+          <Icon name="forward" size={15} color="var(--text3)" />
+        </button>
+      )}
+    </div>
   );
 }

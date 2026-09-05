@@ -29,6 +29,10 @@ export const GUIDE_DOCS = Object.entries(modules)
       short: meta.short || meta.title || id,
       icon: meta.icon || "bulb",
       title: meta.title || id,
+      // Couleur d'accent du thème (front-matter), reprise sur la carte d'index,
+      // le hero et les repères de la prose. Défaut : l'accent global de l'app.
+      color: meta.color || "var(--accent)",
+      lead: meta.lead || meta.short || "",
       order: meta.order ?? 99,
       html: marked.parse(body.trim()),
     };
