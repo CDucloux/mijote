@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.29.0 – Cardamome · Mise en place et finitions
+
+### Mode cuisine
+- **Découpe illustrée** : les postes de la mise en place « Découpe » affichent l'image de l'ingrédient concerné, comme la partie « Ingrédients », pour repérer d'un coup d'œil ce qu'on taille.
+
+### Guide et informations légales
+- **Onde tactile** : les cartes de navigation du guide et des informations légales (et le lien « sujet suivant ») répondent au toucher par une onde, plutôt qu'un simple retour d'appui.
+
+### Application Android
+- **Démarrage sans double logo** : le splash natif se réduit à un fond plat et laisse le splash animé porter le logo, supprimant l'effet de double chargement.
+- **Splash adaptatif clair/sombre** : le fond du démarrage natif suit le thème du système, calé sur le fond du splash web pour un enchaînement sans coupure de couleur.
+
 ## v4.28.1 – Cardamome · Correctif du guide
 
 ### Corrigé
