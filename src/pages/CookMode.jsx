@@ -463,6 +463,11 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const renderPosteRow = (poste) => {
     const done = checkedCutKeys.has(poste.key);
     const toggle = () => toggleCutChecked(poste.key);
+    // Image de l'ingrédient concerné, comme dans la mise en place « Ingrédients » :
+    // dbId résolu depuis la première ligne du groupe (repli sur le nom du poste).
+    const firstId = poste.ingredientIds[0];
+    const line = firstId ? (recipe.ingredients || []).find(i => i.id === firstId) : null;
+    const imgSrc = getIngImage(line?.dbId, poste.name);
     return (
       <div key={poste.key} role="button" tabIndex={0} onClick={toggle}
         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
@@ -470,6 +475,9 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", cursor: "pointer", borderRadius: 10 }}>
         <span style={{ width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: "grid", placeItems: "center", border: `2px solid ${done ? "var(--ok)" : "var(--border)"}`, background: done ? "var(--ok)" : "transparent", transition: "background 0.15s, border-color 0.15s" }}>
           {done && <Icon name="check" size={13} color="#fff" />}
+        </span>
+        <span style={{ flexShrink: 0, display: "inline-flex", opacity: done ? 0.5 : 1, transition: "opacity 0.15s" }}>
+          <IngImage src={imgSrc} alt={poste.name} size={42} />
         </span>
         <span style={{ flex: 1, fontSize: 14, color: "var(--text)", textDecoration: done ? "line-through" : "none", opacity: done ? 0.55 : 1, transition: "opacity 0.15s" }}>
           {posteLabel(poste)}
