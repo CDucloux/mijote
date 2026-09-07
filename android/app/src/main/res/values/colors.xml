@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fond du splash natif : calé sur le fond du splash web (#boot-splash, cf.
+         index.html) et sur capacitor.config.json (android.backgroundColor) pour
+         un enchainement continu, sans coupure de couleur, vers le logo anime. -->
+    <color name="splash_background">#0f110d</color>
+</resources>
