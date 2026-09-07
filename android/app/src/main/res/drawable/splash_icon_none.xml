@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icone transparente : le splash natif ne peint AUCUN logo, seulement un fond
+     plat. Le logo (avec l'onde) est porte par le splash web anime (#boot-splash,
+     cf. index.html), ce qui evite le double affichage du logo au demarrage. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+</shape>

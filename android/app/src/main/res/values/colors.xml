@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fond du splash natif (valeur claire par defaut) : cale sur le fond du
+         splash web (#boot-splash en theme clair, cf. index.html) pour un
+         enchainement continu vers le logo anime. La variante sombre vit dans
+         values-night/colors.xml et suit le theme systeme. -->
+    <color name="splash_background">#f3f4ec</color>
+</resources>

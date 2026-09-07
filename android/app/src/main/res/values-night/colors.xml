@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fond du splash natif en theme sombre : cale sur le fond du splash web
+         (#boot-splash par defaut, cf. index.html) et sur capacitor.config.json
+         (android.backgroundColor). Applique automatiquement par l'OS en dark. -->
+    <color name="splash_background">#0f110d</color>
+</resources>
