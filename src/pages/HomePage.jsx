@@ -394,10 +394,11 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
       </div>
 
       {mode === "discover" ? (
-        /* ── Découvrir : recettes de la communauté (route /discover) ──────── */
-        <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
-          <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
-        </ElasticScroll>
+        /* ── Découvrir : recettes de la communauté (route /discover) ──────────
+            La section gère elle-même son en-tête FIXE et sa zone défilante : plus
+            de wrapper ElasticScroll ici (sinon l'en-tête défilerait et laisserait
+            voir les cartes derrière lui). */
+        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
       ) : (
       /* ── À suivre : tableau de bord perso (route /home) ─────────────────── */
       <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
