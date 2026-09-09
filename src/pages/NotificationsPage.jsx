@@ -27,7 +27,7 @@ export function NotificationsPage({ activities = [] }) {
           résiduel sur son contenu après un overscroll, ce qui casse `position: sticky`
           des libellés de jour (ils cessent de coller, les lignes défilent alors à nu
           sous l'en-tête). Un scroll simple préserve le sticky, donc le masquage. */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "4px 20px var(--page-pad-b)" }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 20px var(--page-pad-b)" }}>
         <NotificationsSection activities={activities} />
       </div>
     </div>
