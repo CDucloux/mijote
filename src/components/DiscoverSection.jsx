@@ -237,8 +237,10 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      {/* En-tête FIXE (hors défilement) : recherche + pastilles, sans filet gris. */}
-      <div style={{ flexShrink: 0, background: "var(--bg)", padding: "0 20px 10px" }}>
+      {/* En-tête FIXE (hors défilement) : recherche + pastilles, sans filet gris.
+          Le padding-bas des pastilles (ci-dessous) réserve la place de la barre de
+          scroll horizontale sur desktop, pour qu'elle passe SOUS les pills. */}
+      <div style={{ flexShrink: 0, background: "var(--bg)", padding: "0 20px 4px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)", display: "flex", alignItems: "center", gap: 7 }}>
             <Icon name="sparkle" size={15} color="var(--accent)" /> Recettes de la communauté
@@ -268,7 +270,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
             défilantes, puis préférences / créateur. Débord latéral pour défiler
             d'un bord à l'autre. */}
         {!noPublic && !error && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", margin: "0 -20px", padding: "0 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", margin: "0 -20px", padding: "0 20px 10px" }}>
             <button className="ripple" onClick={() => setFilterOpen(true)} title="Filtrer"
               style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${nActiveFilters > 0 ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: nActiveFilters > 0 ? TINT : "var(--surface)", color: nActiveFilters > 0 ? "var(--accent)" : "var(--text2)" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
