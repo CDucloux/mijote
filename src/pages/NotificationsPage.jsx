@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
-import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { NotificationsSection } from "../components/NotificationsSection.jsx";
 
 // ─── NOTIFICATIONS ──────────────────────────────────────────────────────────────
@@ -24,9 +23,13 @@ export function NotificationsPage({ activities = [] }) {
         </div>
       </div>
 
-      <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
+      {/* Défilement natif SANS ElasticScroll : celui-ci laisse un `transform:scaleY(1)`
+          résiduel sur son contenu après un overscroll, ce qui casse `position: sticky`
+          des libellés de jour (ils cessent de coller, les lignes défilent alors à nu
+          sous l'en-tête). Un scroll simple préserve le sticky, donc le masquage. */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "4px 20px var(--page-pad-b)" }}>
         <NotificationsSection activities={activities} />
-      </ElasticScroll>
+      </div>
     </div>
   );
 }
