@@ -4277,7 +4277,10 @@ select {
   top: 0;
   z-index: 2;
   padding: 14px 0 8px;
-  background: linear-gradient(var(--bg) 62%, transparent);
+  /* Fond OPAQUE (et non un dégradé vers le transparent) : le libellé épinglé en
+     haut masque réellement les lignes qui défilent dessous, sinon leur texte
+     transparaît sous l'en-tête (bleed). */
+  background: var(--bg);
 }
 .notif-daylabel span {
   font-size: 11.5px;
