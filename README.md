@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.29.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.30.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -91,8 +91,10 @@ toujours avec vous.
   d'activité** (page dédiée, accessible d'un bouton sur l'accueil) retrace les
   dernières actions du foyer, attribuées à leur auteur, chaque entrée renvoyant
   vers l'onglet concerné.
-- 🧭 **Découvrir & partager** : recettes publiées par la communauté, filtrables
-  et clonables en un geste ; publication depuis vos propres recettes. Le partage
+- 🧭 **Découvrir & partager** : recettes publiées par la communauté, avec un feed
+  éditorial (favoris, tendances, bases, de saison, rapides, mosaïque par cuisine),
+  des catégories défilantes et des **favoris** propres à chaque utilisateur ;
+  clonables en un geste ; publication depuis vos propres recettes. Le partage
   d'une recette publique génère un lien à l'**aperçu riche** (photo + titre, rendu
   côté serveur pour WhatsApp / iMessage…), lisible même sans compte.
 - 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable

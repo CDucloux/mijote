@@ -350,16 +350,12 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
       <div style={{ padding: "20px 20px 0", flexShrink: 0, position: "relative", zIndex: 1, background: "var(--bg)" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
-            {mode === "discover" ? (
-              <h1 style={HOME_TITLE_STYLE}>Découvrir</h1>
-            ) : (
-              <>
-                <h1 style={HOME_TITLE_STYLE}>{firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`}</h1>
-                <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
-                  Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color: "var(--text2)" }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
-                </span>
-              </>
-            )}
+            <h1 style={HOME_TITLE_STYLE}>{mode === "discover" ? "Découvrir" : (firstName ? `${greeting()}, ${firstName} !` : `${greeting()} !`)}</h1>
+            {/* Même sous-titre « Bienvenue sur Cardamome » dans les deux sous-vues
+                (À suivre / Découvrir) pour uniformiser l'en-tête d'accueil. */}
+            <span style={{ fontSize: 12.5, color: "var(--text3)", fontWeight: 500, marginTop: 3 }}>
+              Bienvenue sur <span style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color: "var(--text2)" }}>Cardam<span style={{ color: "var(--accent)" }}>o</span>me<span style={{ color: "var(--accent)" }}>·</span></span>
+            </span>
           </div>
           <UserAvatar />
         </div>
@@ -394,10 +390,11 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
       </div>
 
       {mode === "discover" ? (
-        /* ── Découvrir : recettes de la communauté (route /discover) ──────── */
-        <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
-          <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
-        </ElasticScroll>
+        /* ── Découvrir : recettes de la communauté (route /discover) ──────────
+            La section gère elle-même son en-tête FIXE et sa zone défilante : plus
+            de wrapper ElasticScroll ici (sinon l'en-tête défilerait et laisserait
+            voir les cartes derrière lui). */
+        <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
       ) : (
       /* ── À suivre : tableau de bord perso (route /home) ─────────────────── */
       <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>

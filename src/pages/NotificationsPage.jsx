@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
-import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { NotificationsSection } from "../components/NotificationsSection.jsx";
 
 // ─── NOTIFICATIONS ──────────────────────────────────────────────────────────────
@@ -11,7 +10,7 @@ export function NotificationsPage({ activities = [] }) {
   const navigate = useNavigate();
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ padding: "20px 20px 14px", flexShrink: 0, display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ padding: "20px 20px 14px", flexShrink: 0, position: "relative", zIndex: 5, background: "var(--bg)", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={() => navigate("/home")} aria-label="Retour"
           style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
@@ -24,9 +23,13 @@ export function NotificationsPage({ activities = [] }) {
         </div>
       </div>
 
-      <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
+      {/* Défilement natif SANS ElasticScroll : celui-ci laisse un `transform:scaleY(1)`
+          résiduel sur son contenu après un overscroll, ce qui casse `position: sticky`
+          des libellés de jour (ils cessent de coller, les lignes défilent alors à nu
+          sous l'en-tête). Un scroll simple préserve le sticky, donc le masquage. */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 20px var(--page-pad-b)" }}>
         <NotificationsSection activities={activities} />
-      </ElasticScroll>
+      </div>
     </div>
   );
 }

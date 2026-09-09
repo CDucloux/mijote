@@ -10,7 +10,10 @@ import { fmtTime } from "../lib/format.js";
 
 // `nutriLetter` (optionnel) : lettre recalculée EN DIRECT par l'appelant, pour rester
 // alignée sur la fiche détail. Repli sur la valeur figée de la recette si absente.
-export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = false, animate = true, nutriLetter }) {
+// `onToggleFavorite` (optionnel) : affiche le bouton cœur en haut-gauche de la
+// vignette (favori propre à l'utilisateur, distinct des préférences). `favorite`
+// pilote son état rempli/vide.
+export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = false, animate = true, nutriLetter, favorite = false, onToggleFavorite }) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const [showBaseInfo, setShowBaseInfo] = useState(false);
   return (
@@ -20,6 +23,17 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
       style={{ width: "100%", display: "block", background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 6px 16px -10px rgba(120,70,30,0.20)", cursor: "pointer", ...style }}>
       <div className="recipe-card-thumb" style={{ width: "100%", aspectRatio: "16/10", position: "relative" }}>
         <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} style={{ width: "100%", height: "100%" }} />} />
+        {onToggleFavorite && (
+          <button className="fav-heart ripple ripple-light" data-ripple-light="1"
+            onClick={e => { e.stopPropagation(); onToggleFavorite(e); }}
+            aria-label={favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            aria-pressed={favorite}
+            style={{ position: "absolute", top: 8, left: 8, width: 33, height: 33, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: favorite ? "rgba(20,18,16,0.55)" : "rgba(20,18,16,0.42)", border: "1px solid rgba(255,255,255,0.28)", cursor: "pointer", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={favorite ? "#ff6b61" : "none"} stroke={favorite ? "#ff6b61" : "#fff"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20.3 4.2 12.5a4.6 4.6 0 0 1 0-6.5 4.6 4.6 0 0 1 6.5 0l1.3 1.3 1.3-1.3a4.6 4.6 0 0 1 6.5 0 4.6 4.6 0 0 1 0 6.5z" />
+            </svg>
+          </button>
+        )}
         {/* Badges empilés en haut à droite */}
         {(vegan || inSeason || recipe.isComponent) && (
           <div style={{ position: "absolute", top: 8, right: 8, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>

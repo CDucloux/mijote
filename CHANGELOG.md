@@ -1,5 +1,16 @@
 # Changelog – Cardamome
 
+## v4.30.0 – Cardamome · Découvrir, repensé
+
+### Découvrir
+- **Une page entièrement repensée** : sous la recherche, une rangée de pastilles réunit les filtres et des catégories défilantes (Tout, Favoris, Vegan, De saison, Rapide, Préparations de base, puis les cuisines présentes). En navigation, un feed éditorial déroule Mes favoris, Tendances, Préparations de base, De saison, Recettes rapides, et une mosaïque « Par cuisine ».
+- **Des favoris à toi** : un cœur sur chaque recette de la communauté, distinct des préférences alimentaires, alimente en direct la rangée « Mes favoris » (persistés par compte).
+- **Un en-tête cohérent** : le sous-titre « Bienvenue sur Cardamome » s'affiche aussi sous « Découvrir », comme sous « À suivre ».
+- **Plus de contrôle de tri** : le classement se fait via les pastilles ; les recettes restent présentées au plus récent.
+
+### Notifications
+- **Fin du texte qui défilait sous l'en-tête** (mobile) : les libellés de jour restent épinglés en continu et masquent les lignes, sans bande résiduelle sous l'en-tête.
+
 ## v4.29.0 – Cardamome · Mise en place et finitions
 
 ### Mode cuisine
