@@ -17,7 +17,7 @@ import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters } from "@/lib/recipes/recipeFilters.js";
-import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "@/lib/recipes/recipeSort.js";
+import { DEFAULT_SORT_KEY, defaultDirFor, makeComparator } from "@/lib/recipes/recipeSort.js";
 import { STATIC_CATEGORIES, matchesDiscoverCategory, isQuickRecipe } from "@/lib/recipes/discoverFeed.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
@@ -145,15 +145,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   }, [initialSearch, onSeedConsumed]);
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
   const [filterOpen, setFilterOpen] = useState(false);
-  const [sortBy, setSortBy] = useState(DEFAULT_SORT_KEY);
-  const [sortDir, setSortDir] = useState(defaultDirFor(DEFAULT_SORT_KEY));
   const [activeCat, setActiveCat] = useState("tout");
-  const cycleSort = () => {
-    const keys = SORT_OPTIONS.map(o => o.key);
-    const next = keys[(keys.indexOf(sortBy) + 1) % keys.length];
-    setSortBy(next); setSortDir(defaultDirFor(next));
-  };
-  const toggleSortDir = () => setSortDir(d => (d === "asc" ? "desc" : "asc"));
   const [usePrefs, setUsePrefs] = useState(false);
   const [authorUid, setAuthorUid] = useState(null);
   const [spinning, setSpinning] = useState(false);
@@ -193,7 +185,9 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
   const filtered = useMemo(() => {
     const q = normalizeStr(text);
-    const cmp = makeComparator({ sortBy, sortDir, techniques, techIndex, recipes: [] });
+    // Tri fixe (le plus récent d'abord) : la vue Découvrir n'expose plus de contrôle
+    // de tri, le classement se fait via les pastilles/catégories.
+    const cmp = makeComparator({ sortBy: DEFAULT_SORT_KEY, sortDir: defaultDirFor(DEFAULT_SORT_KEY), techniques, techIndex, recipes: [] });
     return pubs
       .filter(p => {
         if (q) {
@@ -208,7 +202,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       .map(p => ({ p, view: { ...p.recipe, id: p.pubId, createdAt: p.createdAt } }))
       .sort((a, b) => cmp(a.view, b.view))
       .map(x => x.p);
-  }, [pubs, text, authorUid, usePrefs, preferences, filters, activeCat, favorites, sortBy, sortDir, resolver, techniques, techIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pubs, text, authorUid, usePrefs, preferences, filters, activeCat, favorites, resolver, techniques, techIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const usedCuisines = useMemo(() => CUISINES.filter(c => pubs.some(p => p.cuisine === c.label)), [pubs]);
   // Catégories = statiques + cuisines réellement présentes (chips collants).
@@ -239,9 +233,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     />
   );
 
-  const chip = (active, onClick, content, key) => (
-    <button key={key} onClick={onClick} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: active ? "rgba(var(--accent-rgb),0.2)" : "var(--surface2)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}` }}>{content}</button>
-  );
   const noPublic = pubs.length === 0;
 
   return (
@@ -271,29 +262,6 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
             style={{ paddingLeft: 44, paddingRight: text ? 40 : 16 }} />
           {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-            Filtres
-            {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
-          </button>
-          <div className="sort-control">
-            <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
-              <Icon name="updown" size={15} color="currentColor" />
-              <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
-              <strong style={{ fontWeight: 600 }}>{sortOption(sortBy).label}</strong>
-            </button>
-            <button className="toolbar-pill sort-dir" onClick={toggleSortDir}
-              aria-label={`Sens : ${dirLabel(sortBy, sortDir)}`} title={`Sens : ${dirLabel(sortBy, sortDir)} (inverser)`}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transition: "transform 0.2s ease", transform: sortDir === "asc" ? "rotate(180deg)" : "none" }}>
-                <path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
-          {!!((preferences?.diet && preferences.diet !== "omnivore") || preferences?.allergens?.length || preferences?.excludedCategories?.length) && chip(usePrefs, () => setUsePrefs(v => !v), <><Icon name="heart" size={13} color="currentColor" /> Mes préférences</>)}
-          {authorUid && chip(true, () => setAuthorUid(null), <><Icon name="close" size={11} color="var(--accent)" /> Créateur</>)}
-        </div>
       </div>
 
       {filterOpen && (
@@ -308,13 +276,34 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       <ElasticScroll style={{ flex: 1, padding: "0 20px var(--page-pad-b)" }}>
         {!noPublic && !error && (
           <div style={{ position: "sticky", top: 0, zIndex: 5, background: "var(--bg)", padding: "14px 0 12px", margin: "0 -20px" }}>
-            <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "0 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", padding: "0 20px" }}>
+              {/* Filtres : action (ouvre la feuille), distincte des catégories. */}
+              <button className="ripple" onClick={() => setFilterOpen(true)} title="Filtrer"
+                style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${nActiveFilters > 0 ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: nActiveFilters > 0 ? TINT : "var(--surface)", color: nActiveFilters > 0 ? "var(--accent)" : "var(--text2)" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                Filtres
+                {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
+              </button>
+              {/* Séparateur discret entre l'action Filtres et les catégories. */}
+              <span style={{ flex: "0 0 auto", width: 1, height: 20, background: "var(--border)", borderRadius: 1 }} />
               {categories.map(c => (
                 <button key={c.key} className="ripple" onClick={() => setActiveCat(c.key)}
                   style={{ flex: "0 0 auto", padding: "8px 15px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${activeCat === c.key ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: activeCat === c.key ? TINT : "var(--surface)", color: activeCat === c.key ? "var(--accent)" : "var(--text2)", transition: "background .16s, color .16s, border-color .16s" }}>
                   {c.label}
                 </button>
               ))}
+              {!!((preferences?.diet && preferences.diet !== "omnivore") || preferences?.allergens?.length || preferences?.excludedCategories?.length) && (
+                <button className="ripple" onClick={() => setUsePrefs(v => !v)} title="Selon mes préférences alimentaires"
+                  style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${usePrefs ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: usePrefs ? TINT : "var(--surface)", color: usePrefs ? "var(--accent)" : "var(--text2)" }}>
+                  <Icon name="heart" size={13} color="currentColor" /> Mes préférences
+                </button>
+              )}
+              {authorUid && (
+                <button className="ripple" onClick={() => setAuthorUid(null)}
+                  style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: "1px solid rgba(var(--accent-rgb),0.5)", background: TINT, color: "var(--accent)" }}>
+                  <Icon name="close" size={11} color="var(--accent)" /> Créateur
+                </button>
+              )}
             </div>
           </div>
         )}

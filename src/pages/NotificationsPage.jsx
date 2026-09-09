@@ -11,7 +11,7 @@ export function NotificationsPage({ activities = [] }) {
   const navigate = useNavigate();
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ padding: "20px 20px 14px", flexShrink: 0, display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ padding: "20px 20px 14px", flexShrink: 0, position: "relative", zIndex: 2, background: "var(--bg)", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={() => navigate("/home")} aria-label="Retour"
           style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
