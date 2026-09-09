@@ -4270,7 +4270,12 @@ select {
 }
 @keyframes notifFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.notif-group { position: relative; }
+/* Pas de `position: relative` ici : confiner chaque libellé de jour à son groupe
+   le fait partir avec le groupe, laissant un trou entre deux dates où la dernière
+   ligne défile à nu sous l'en-tête (bleed). Sans confinement, le libellé colle au
+   conteneur défilant façon « en-têtes de section continus » et masque toujours le
+   haut. Le desktop (grille 2 colonnes) rétablit `relative`, il n'a pas ce souci. */
+.notif-group { }
 
 .notif-daylabel {
   position: sticky;
@@ -4427,7 +4432,7 @@ select {
 /* Desktop « registre » : colonne lisible centrée, date dans la marge gauche. */
 @media (min-width: 768px) {
   .notif-feed { max-width: 820px; margin: 0 auto; width: 100%; }
-  .notif-group { display: grid; grid-template-columns: 150px 1fr; align-items: start; }
+  .notif-group { position: relative; display: grid; grid-template-columns: 150px 1fr; align-items: start; }
   .notif-daylabel { position: sticky; top: 8px; background: none; padding: 22px 0 0; }
   .notif-daylabel span { font-size: 12px; }
   .notif-row { max-width: 620px; }
