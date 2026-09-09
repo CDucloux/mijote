@@ -4270,12 +4270,14 @@ select {
 }
 @keyframes notifFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* Pas de `position: relative` ici : confiner chaque libellé de jour à son groupe
-   le fait partir avec le groupe, laissant un trou entre deux dates où la dernière
-   ligne défile à nu sous l'en-tête (bleed). Sans confinement, le libellé colle au
-   conteneur défilant façon « en-têtes de section continus » et masque toujours le
-   haut. Le desktop (grille 2 colonnes) rétablit `relative`, il n'a pas ce souci. */
-.notif-group { }
+/* `display: contents` (mobile) : le bloc `.notif-group` disparaît de l'arbre de
+   rendu, si bien que son libellé de jour et sa pile de lignes deviennent enfants
+   directs de `.notif-feed`. Le bloc conteneur du libellé sticky n'est donc plus le
+   groupe (qui l'emmènerait avec lui en défilant, laissant un trou où une ligne
+   passe sous l'en-tête) mais tout le feed : les libellés collent en « en-têtes de
+   section continus », un libellé opaque occupe toujours le haut et masque les
+   lignes. Le desktop rétablit `display: grid` (registre 2 colonnes), pas concerné. */
+.notif-group { display: contents; }
 
 .notif-daylabel {
   position: sticky;
