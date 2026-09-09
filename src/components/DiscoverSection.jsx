@@ -237,8 +237,8 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      {/* En-tête FIXE (hors défilement) : plus rien ne défile derrière lui. */}
-      <div style={{ flexShrink: 0, background: "var(--bg)", padding: "0 20px 12px", borderBottom: "1px solid var(--border)" }}>
+      {/* En-tête FIXE (hors défilement) : recherche + pastilles, sans filet gris. */}
+      <div style={{ flexShrink: 0, background: "var(--bg)", padding: "0 20px 10px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)", display: "flex", alignItems: "center", gap: 7 }}>
             <Icon name="sparkle" size={15} color="var(--accent)" /> Recettes de la communauté
@@ -262,6 +262,40 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
             style={{ paddingLeft: 44, paddingRight: text ? 40 : 16 }} />
           {text && <button onClick={() => setText("")} aria-label="Effacer" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}><Icon name="close" size={13} /></button>}
         </div>
+
+        {/* Pastilles DIRECTEMENT sous la recherche (dans l'en-tête fixe, pas de barre
+            grise ni de zone collante à part) : action Filtres, puis catégories
+            défilantes, puis préférences / créateur. Débord latéral pour défiler
+            d'un bord à l'autre. */}
+        {!noPublic && !error && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", margin: "0 -20px", padding: "0 20px" }}>
+            <button className="ripple" onClick={() => setFilterOpen(true)} title="Filtrer"
+              style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${nActiveFilters > 0 ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: nActiveFilters > 0 ? TINT : "var(--surface)", color: nActiveFilters > 0 ? "var(--accent)" : "var(--text2)" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+              Filtres
+              {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
+            </button>
+            <span style={{ flex: "0 0 auto", width: 1, height: 20, background: "var(--border)", borderRadius: 1 }} />
+            {categories.map(c => (
+              <button key={c.key} className="ripple" onClick={() => setActiveCat(c.key)}
+                style={{ flex: "0 0 auto", padding: "8px 15px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${activeCat === c.key ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: activeCat === c.key ? TINT : "var(--surface)", color: activeCat === c.key ? "var(--accent)" : "var(--text2)", transition: "background .16s, color .16s, border-color .16s" }}>
+                {c.label}
+              </button>
+            ))}
+            {!!((preferences?.diet && preferences.diet !== "omnivore") || preferences?.allergens?.length || preferences?.excludedCategories?.length) && (
+              <button className="ripple" onClick={() => setUsePrefs(v => !v)} title="Selon mes préférences alimentaires"
+                style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${usePrefs ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: usePrefs ? TINT : "var(--surface)", color: usePrefs ? "var(--accent)" : "var(--text2)" }}>
+                <Icon name="heart" size={13} color="currentColor" /> Mes préférences
+              </button>
+            )}
+            {authorUid && (
+              <button className="ripple" onClick={() => setAuthorUid(null)}
+                style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: "1px solid rgba(var(--accent-rgb),0.5)", background: TINT, color: "var(--accent)" }}>
+                <Icon name="close" size={11} color="var(--accent)" /> Créateur
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {filterOpen && (
@@ -272,42 +306,8 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         </SwipeableSheet>
       )}
 
-      {/* Zone défilante : catégories collantes + feed/grille */}
-      <ElasticScroll style={{ flex: 1, padding: "0 20px var(--page-pad-b)" }}>
-        {!noPublic && !error && (
-          <div style={{ position: "sticky", top: 0, zIndex: 5, background: "var(--bg)", padding: "14px 0 12px", margin: "0 -20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", padding: "0 20px" }}>
-              {/* Filtres : action (ouvre la feuille), distincte des catégories. */}
-              <button className="ripple" onClick={() => setFilterOpen(true)} title="Filtrer"
-                style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${nActiveFilters > 0 ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: nActiveFilters > 0 ? TINT : "var(--surface)", color: nActiveFilters > 0 ? "var(--accent)" : "var(--text2)" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                Filtres
-                {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
-              </button>
-              {/* Séparateur discret entre l'action Filtres et les catégories. */}
-              <span style={{ flex: "0 0 auto", width: 1, height: 20, background: "var(--border)", borderRadius: 1 }} />
-              {categories.map(c => (
-                <button key={c.key} className="ripple" onClick={() => setActiveCat(c.key)}
-                  style={{ flex: "0 0 auto", padding: "8px 15px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${activeCat === c.key ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: activeCat === c.key ? TINT : "var(--surface)", color: activeCat === c.key ? "var(--accent)" : "var(--text2)", transition: "background .16s, color .16s, border-color .16s" }}>
-                  {c.label}
-                </button>
-              ))}
-              {!!((preferences?.diet && preferences.diet !== "omnivore") || preferences?.allergens?.length || preferences?.excludedCategories?.length) && (
-                <button className="ripple" onClick={() => setUsePrefs(v => !v)} title="Selon mes préférences alimentaires"
-                  style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${usePrefs ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: usePrefs ? TINT : "var(--surface)", color: usePrefs ? "var(--accent)" : "var(--text2)" }}>
-                  <Icon name="heart" size={13} color="currentColor" /> Mes préférences
-                </button>
-              )}
-              {authorUid && (
-                <button className="ripple" onClick={() => setAuthorUid(null)}
-                  style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: "1px solid rgba(var(--accent-rgb),0.5)", background: TINT, color: "var(--accent)" }}>
-                  <Icon name="close" size={11} color="var(--accent)" /> Créateur
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
+      {/* Zone défilante : feed éditorial / grille */}
+      <ElasticScroll style={{ flex: 1, padding: "14px 20px var(--page-pad-b)" }}>
         {(loading && !loadedOnce) || spinning ? (
           <DiscoverSkeleton />
         ) : error ? (

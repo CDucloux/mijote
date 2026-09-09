@@ -4270,13 +4270,25 @@ select {
 }
 @keyframes notifFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* `display: contents` (mobile) : le bloc `.notif-group` disparaît de l'arbre de
-   rendu, si bien que son libellé de jour et sa pile de lignes deviennent enfants
-   directs de `.notif-feed`. Le bloc conteneur du libellé sticky n'est donc plus le
-   groupe (qui l'emmènerait avec lui en défilant, laissant un trou où une ligne
-   passe sous l'en-tête) mais tout le feed : les libellés collent en « en-têtes de
-   section continus », un libellé opaque occupe toujours le haut et masque les
-   lignes. Le desktop rétablit `display: grid` (registre 2 colonnes), pas concerné. */
+/* ⚠️ LEÇON STICKY (ne plus refaire l'erreur) — deux règles qui ont coûté plusieurs
+   allers-retours sur le « bleed » des notifications (texte qui défilait à nu sous
+   l'en-tête sur mobile) :
+
+   1. Un élément `position: sticky` est contraint par son BLOC CONTENEUR = son bloc
+      PARENT direct, PAS par `position: relative`. Tant que chaque libellé de jour
+      vivait dans `.notif-group`, il restait prisonnier de ce groupe et repartait
+      avec lui en défilant, laissant un trou entre deux dates. Retirer le
+      `position: relative` du groupe n'y change RIEN (ce n'est pas ça qui confine un
+      sticky). La solution : `display: contents` sur `.notif-group` (mobile) fait
+      DISPARAÎTRE son bloc de l'arbre de rendu → libellé et pile deviennent enfants
+      directs de `.notif-feed`, dont le bloc devient le conteneur du sticky : les
+      libellés collent alors en « en-têtes de section continus », un libellé opaque
+      occupe TOUJOURS le haut et masque les lignes. (Desktop rétablit `display:grid`.)
+
+   2. Un ancêtre TRANSFORMÉ casse `position: sticky` de ses descendants. `ElasticScroll`
+      laisse un `transform: scaleY(1)` résiduel sur son contenu après un overscroll
+      → sticky mort sur mobile. D'où le scroll NATIF (sans ElasticScroll) sur la page
+      notifications, cf. NotificationsPage.jsx. */
 .notif-group { display: contents; }
 
 .notif-daylabel {
