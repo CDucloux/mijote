@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.32.0 – Cardamome · Courses et retours d'appui
+
+### Courses
+- **Planifier depuis le menu d'une liste** : une entrée « Planifier la recette » apparaît dans le menu d'une liste issue d'une recette (quand la recette source existe encore), à côté de « Paramètres » et « Supprimer », et ouvre directement la feuille de planification.
+
+### Interface
+- **L'onde tactile prime sur mobile** : dans les menus (feuille d'une liste, panneau compte, menu carnet…), le retour d'appui gris ne s'applique plus au toucher, seule l'onde parle ; il ne vient plus non plus griser une action de suppression, qui garde sa teinte rouge.
+
 ## v4.31.0 – Cardamome · Créneaux au même langage
 
 ### Planning
