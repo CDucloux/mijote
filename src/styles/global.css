@@ -1140,8 +1140,12 @@ select {
    teinte donne la PERSISTANCE tant que le doigt/la souris reste pressé (comme les
    apps natives). Le hover, lui, reste réservé aux pointeurs. */
 .menu-row:active {
-  background-color: var(--surface2);
-  transition-duration: 0.06s;
+  /* MÊME teinte que l'onde (.ripple-ink : rgba(120,110,100,...)) pour que maintien
+     et onde se confondent, et arrivée EN DOUCEUR (l'apparition à 0.06s paraissait
+     sèche et d'un gris différent de l'onde). */
+  background-color: rgba(120, 110, 100, 0.16);
+  transition-duration: 0.22s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (hover: hover) {
   .menu-row:hover {
@@ -1152,7 +1156,11 @@ select {
    (le gris générique n'a aucun sens sur une action destructrice). Plus spécifique
    que `.menu-row:active`, donc l'emporte. */
 .menu-row-danger:active {
-  background-color: rgba(var(--red-rgb), 0.1);
+  /* Teinte accordée à l'onde rouge de la rangée (.menu-row-danger > .ripple-ink),
+     même arrivée douce que ci-dessus. */
+  background-color: rgba(var(--red-rgb), 0.14);
+  transition-duration: 0.22s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (hover: hover) {
   .menu-row-danger:hover {
