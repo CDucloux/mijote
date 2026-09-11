@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.31.0 – Cardamome · Créneaux au même langage
+
+### Planning
+- **Les créneaux parlent le langage d'icônes de l'application** : dans les feuilles « Ajouter au planning », « Replanifier » et « Dupliquer », le petit-déj, le midi et le soir s'affichent avec les icônes du set maison au lieu d'emojis, en phase avec la feuille « Ajouter une recette » qui les portait déjà. Le petit-déj a désormais sa propre icône (soleil levant), distincte du midi.
+
 ## v4.30.0 – Cardamome · Découvrir, repensé
 
 ### Découvrir

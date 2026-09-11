@@ -764,7 +764,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 <button key={s.id} onClick={() => setMoveTarget(t => ({ ...t, slot: s.id }))} className="pressable"
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 4px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
                     background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "var(--accent)" : "var(--text3)" }}>
-                  <span style={{ fontSize: 15 }}>{s.emoji}</span>{s.label}
+                  <Icon name={s.icon} size={16} color="currentColor" />{s.label}
                 </button>
               );
             })}
@@ -829,7 +829,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 <button key={s.id} onClick={() => setDupSlot(s.id)} className="pressable"
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 4px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
                     background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "var(--accent)" : "var(--text3)" }}>
-                  <span style={{ fontSize: 15 }}>{s.emoji}</span>{s.label}
+                  <Icon name={s.icon} size={16} color="currentColor" />{s.label}
                 </button>
               );
             })}

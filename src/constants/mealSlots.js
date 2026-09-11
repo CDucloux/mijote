@@ -2,7 +2,7 @@
 // Source unique des créneaux du planning (auparavant codés en dur, midi/soir).
 // Chaque item porte ses libellés, sa couleur et sa plage horaire (export ICS).
 export const MEAL_SLOTS = [
-  { id: "matin", order: 0, label: "Petit-déj", meal: "Petit-déjeuner", today: "Ce matin", emoji: "🥐", icon: "sun",
+  { id: "matin", order: 0, label: "Petit-déj", meal: "Petit-déjeuner", today: "Ce matin", emoji: "🥐", icon: "sunrise",
     color: "var(--slot-matin)", text: "var(--slot-matin-text)", accent: "#d7a53e", ics: { start: "080000", end: "083000" } },
   { id: "midi", order: 1, label: "Midi", meal: "Déjeuner", today: "Ce midi", emoji: "🌤", icon: "sun",
     color: "var(--slot-midi)", text: "var(--slot-midi-text)", accent: "#e0a23e", ics: { start: "120000", end: "133000" } },

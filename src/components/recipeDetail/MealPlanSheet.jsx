@@ -43,7 +43,7 @@ export function MealPlanSheet({ mealDate, setMealDate, mealSlot, setMealSlot, on
                   background: "transparent", color: active ? s.text : "var(--text3)",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                   transition: "color 0.3s ease" }}>
-                <span style={{ fontSize: 14 }}>{s.emoji}</span>{s.label}
+                <Icon name={s.icon} size={16} color="currentColor" />{s.label}
               </button>
             );
           })}
