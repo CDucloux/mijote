@@ -1136,16 +1136,21 @@ select {
   overflow: hidden;
   border-radius: 10px;
 }
-/* Appui maintenu : la rangée garde une teinte de fond TANT QUE le doigt reste posé
-   (l'onde .ripple-ink donne l'impulsion, cette teinte donne la persistance) → plus de
-   « retour instantané à l'état initial » au maintien. Apparition quasi immédiate. */
-.menu-row:active {
-  background-color: var(--surface2);
-  transition-duration: 0.06s;
-}
+/* Retour d'appui RÉSERVÉ AUX POINTEURS (desktop) : hover ET maintien teintent le
+   fond. Sur TACTILE, c'est l'onde (.ripple-ink) qui fait le retour, seule : pas de
+   `:active` gris qui « colle » après le tap ni ne vient griser une action rouge
+   (cf. le même parti pris sur les cartes du panneau compte). */
 @media (hover: hover) {
-  .menu-row:hover {
+  .menu-row:hover,
+  .menu-row:active {
     background-color: var(--surface2);
+    transition-duration: 0.06s;
+  }
+  /* Sur une rangée rouge (suppression), le maintien/hover se teinte en rouge, pas
+     en gris : le gris générique n'a aucun sens sur une action destructrice. */
+  .menu-row-danger:hover,
+  .menu-row-danger:active {
+    background-color: rgba(var(--red-rgb), 0.1);
   }
 }
 .menu-row-danger {
