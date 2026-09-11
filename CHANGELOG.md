@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.32.2 – Cardamome · Maintien accordé à l'onde
+
+### Corrigé
+- **Teinte de maintien alignée sur l'onde** : dans les menus, le fond affiché quand on garde le doigt posé reprend exactement la couleur de l'onde tactile (rouge sur une suppression) et apparaît en douceur, au lieu d'un gris différent qui surgissait trop vite.
+
 ## v4.32.1 – Cardamome · Retour d'appui maintenu
 
 ### Corrigé
