@@ -4,10 +4,14 @@ import { spawnRipple } from "@/lib/ui/ripple.js";
 
 /**
  * Feuille du menu d'une liste (⋯ de la pastille active ou appui long) : rappel
- * du contexte (type + nombre d'articles), puis accès aux paramètres et à la
- * suppression. Les deux actions remontent au parent.
+ * du contexte (type + nombre d'articles), puis accès aux paramètres, à la
+ * planification (listes issues d'une recette) et à la suppression. Les actions
+ * remontent au parent.
+ *
+ * @param onPlan - Fourni uniquement pour une liste « recette » dont la recette
+ *   source existe encore : ajoute l'entrée « Planifier la recette ».
  */
-export function ListMenuSheet({ list, onClose, onSettings, onDelete }) {
+export function ListMenuSheet({ list, onClose, onSettings, onPlan, onDelete }) {
   return (
     <SwipeableSheet onClose={onClose}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
@@ -23,6 +27,11 @@ export function ListMenuSheet({ list, onClose, onSettings, onDelete }) {
         <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { onSettings(list); onClose(); }}>
           <Icon name="settings" size={19} color="var(--text2)" /> Paramètres de la liste
         </button>
+        {onPlan && (
+          <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { onClose(); onPlan(list); }}>
+            <Icon name="calendar" size={19} color="var(--text2)" /> Planifier la recette
+          </button>
+        )}
         <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }}
           onPointerDown={spawnRipple}
           onClick={() => { onClose(); onDelete(list); }}>

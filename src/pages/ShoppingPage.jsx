@@ -18,7 +18,7 @@ import { ConfirmClearSheet } from "../components/shopping/ConfirmClearSheet.jsx"
 import { AddItemSheet } from "../components/shopping/AddItemSheet.jsx";
 import { ListConfigSheet } from "../components/shopping/ListConfigSheet.jsx";
 
-export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }) {
+export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, recipes = [], categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }) {
   const navigate = useNavigate();
   const { notify, logActivity } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
@@ -126,6 +126,9 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, ca
       {listMenu && (
         <ListMenuSheet list={listMenu} onClose={() => setListMenu(null)}
           onSettings={list => setConfigList({ ...list })}
+          onPlan={listMenu.type === "recipe" && listMenu.recipeId && recipes.some(r => r.id === listMenu.recipeId)
+            ? list => navigate(`/recipes/${list.recipeId}`, { state: { intent: "plan" } })
+            : undefined}
           onDelete={list => list.type === "free" ? setConfirmDeleteId(list.id) : deleteList(list.id)} />
       )}
 
