@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.32.1 – Cardamome · Retour d'appui maintenu
+
+### Corrigé
+- **État maintenu rétabli sur tactile** : dans les menus, garder le doigt posé sur une action reteinte le fond (l'onde donne l'impulsion, la teinte la persistance), comme les apps natives. La rangée de suppression tient en rouge, jamais en gris.
+
 ## v4.32.0 – Cardamome · Courses et retours d'appui
 
 ### Courses
