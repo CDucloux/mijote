@@ -107,7 +107,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
                   onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   style={{ display: "flex", alignItems: "center", gap: 8, cursor: "grab" }}>
                   <div style={{ width: composed ? 38 : 46, height: composed ? 38 : 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                  <button onClick={() => { if (wasLongPress()) return; onSelectRecipe(r.id); }} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                  <button onClick={() => { if (wasLongPress()) return; onSelectRecipe(r.id, date); }} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
                     <div style={{ fontSize: 9.5, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{label}</div>
                     {item.portions > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{item.portions}</div>}
@@ -138,6 +138,12 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 });
 
 // ─── MEAL PLAN TAB ────────────────────────────────────────────────────────────
+// Jour d'où une recette a été ouverte : ouvrir une fiche démonte le planning, on
+// mémorise donc au niveau module la date tapée pour y revenir (bonne semaine +
+// défilement sur la carte du jour) plutôt qu'en haut de la semaine courante.
+// Réinitialisé après usage et au rechargement complet.
+let mealPlanReturnDate = null;
+
 export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
   const { notify, user, isPlus, logActivity } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
@@ -146,7 +152,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const goPlus = () => gotoRoute("/plan");
   const { household } = useHousehold();
   const [viewMode] = useState("week");
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Au retour d'une fiche ouverte depuis le planning, on rouvre directement la
+  // semaine du jour concerné (le défilement vers la carte se fait dans un effet).
+  const [currentDate, setCurrentDate] = useState(() => mealPlanReturnDate ? new Date(mealPlanReturnDate + "T12:00") : new Date());
   const [dragInfo, setDragInfo] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [addModal, setAddModal] = useState(null);
@@ -427,6 +435,31 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const { scrollRef, contentRef } = useElasticScroll();
 
+  // Ouverture d'une recette depuis le planning : on note le jour d'origine avant de
+  // déléguer la navigation, pour y revenir au recul (cf. mealPlanReturnDate).
+  const selectRecipe = useCallback((id, date) => {
+    mealPlanReturnDate = date || null;
+    onSelectRecipe(id);
+  }, [onSelectRecipe]);
+
+  // Retour depuis une fiche : la semaine du jour est déjà ouverte (état initial),
+  // on défile jusqu'à sa carte (sans animation, pour un retour instantané) puis on
+  // purge la mémoire. Double rAF : on attend que la semaine soit peinte avant de mesurer.
+  useEffect(() => {
+    const date = mealPlanReturnDate;
+    if (!date) return;
+    mealPlanReturnDate = null;
+    const raf1 = requestAnimationFrame(() => requestAnimationFrame(() => {
+      const container = scrollRef.current;
+      const el = container?.querySelector(`[data-date="${date}"]`);
+      if (!container || !el) return;
+      const delta = el.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      container.scrollTo({ top: container.scrollTop + delta - 12, behavior: "auto" });
+    }));
+    return () => cancelAnimationFrame(raf1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // « Auj. » : revient sur la semaine courante ET défile jusqu'à la carte du jour.
   // Double rAF : on attend que la bonne semaine soit rendue avant de mesurer/scroller,
   // et on borne le défilement au conteneur (pas la fenêtre).
@@ -509,7 +542,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {MEAL_SLOTS.filter(s => s.id !== "matin" || getMeals(date, s.id).length).map(s => (
-                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={onSelectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOpenItemMenu={openItemMenu} onAdd={openAdd} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
+                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={selectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOpenItemMenu={openItemMenu} onAdd={openAdd} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
                     ))}
                   </div>
                 </div>
@@ -693,7 +726,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {r && (
-              <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { onSelectRecipe(r.id); close(); }}>
+              <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { selectRecipe(r.id, it.date); close(); }}>
                 <Icon name="forward" size={19} color="var(--text2)" /> Ouvrir
               </button>
             )}
@@ -1037,7 +1070,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   {secHead("🧩", "À préparer d'avance", "Les bases partagées entre plusieurs plats.")}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {batch.bases.map(b => (
-                      <button key={b.recipe.id} onClick={() => { onSelectRecipe(b.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", background: b.shared ? "rgba(var(--ok-rgb),0.07)" : "var(--surface)", borderRadius: 14, border: `1px solid ${b.shared ? "rgba(var(--ok-rgb),0.35)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                      <button key={b.recipe.id} onClick={() => { selectRecipe(b.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", background: b.shared ? "rgba(var(--ok-rgb),0.07)" : "var(--surface)", borderRadius: 14, border: `1px solid ${b.shared ? "rgba(var(--ok-rgb),0.35)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, fontWeight: 600 }}>{b.recipe.name}</div>
                           <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>Pour {b.usedBy.join(", ")}</div>
@@ -1054,7 +1087,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {secHead("🍽️", "À cuisiner", null)}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {batch.dishes.map(d => (
-                  <button key={d.recipe.id} onClick={() => { onSelectRecipe(d.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                  <button key={d.recipe.id} onClick={() => { selectRecipe(d.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                     <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={d.recipe.image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{d.recipe.name}</div>

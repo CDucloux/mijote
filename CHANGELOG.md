@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.35.1 – Cardamome · Retour au bon endroit depuis le planning
+
+### Corrigé
+- **Retour cohérent au recul d'une fiche** : ouvrir une recette depuis le planning (ou l'accueil) et reculer ramène désormais sur la page d'origine, au lieu d'atterrir sur la liste des recettes.
+- **Retour sur le jour dans le planning** : au recul, on revient sur la semaine et la carte du jour d'où la recette a été ouverte, plutôt qu'en haut de la semaine courante.
+
 ## v4.35.0 – Cardamome · Reprise du fil dans les recettes
 
 ### Recettes
