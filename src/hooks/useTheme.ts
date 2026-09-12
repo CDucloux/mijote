@@ -10,14 +10,14 @@ type ViewTransitionDocument = Document & {
   startViewTransition?: (cb: () => void) => { finished?: Promise<unknown> };
 };
 
-/** Applique le thème au DOM : classe `<html>` + `theme-color` de la barre PWA +
- * `color-scheme` (canvas des zones système, cf. bandes noires DuckDuckGo). */
+/** Applique le thème au DOM : classe `<html>` (qui porte le `color-scheme` CSS par
+ * thème, cf. global.css) + `theme-color` de la barre système. Pas de pilotage de
+ * meta `color-scheme` : déclarée en dur, elle faisait retomber la barre PWA sur le
+ * `theme_color` figé du manifest ; le schéma de couleur vit désormais côté CSS. */
 function applyThemeToDOM(dark: boolean): void {
   document.documentElement.classList.toggle("light", !dark);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", dark ? "#0f110d" : "#f3f4ec");
-  const cs = document.querySelector('meta[name="color-scheme"]');
-  if (cs) cs.setAttribute("content", dark ? "dark" : "light");
 }
 
 /**
