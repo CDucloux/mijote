@@ -332,7 +332,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           ].map(p => {
             const active = view === p.key;
             return (
-              <button key={p.key} onClick={() => setView(p.key)}
+              <button key={p.key} onClick={() => setView(p.key)} className="ripple"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
