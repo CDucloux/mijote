@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.34.0 – Cardamome · Feuilles et retours soignés
+
+### Interface
+- **Feuille « Valider l'achat » au même standard que les autres** : titre en serif avec sous-titre, pastille d'icône teintée et boutons pleinement arrondis (pill), comme la feuille « Nouvelle liste ».
+- **Flèche de retour sur les boutons « Annuler »** : partout dans l'app, le bouton Annuler affiche désormais une vraie flèche de retour au lieu du chevron qui se lisait comme un simple « < ».
+
+### Corrigé
+- **Plus de clignotement de l'état vide des notifications** : le squelette reste affiché jusqu'à l'arrivée réelle du premier lot de données, au lieu de flasher « Rien à signaler » une fraction de seconde avant le journal.
+
 ## v4.33.0 – Cardamome · Stock, notifications et barre système
 
 ### Planning
