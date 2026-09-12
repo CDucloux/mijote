@@ -175,9 +175,15 @@ function AppInner({ user, isDark, toggleTheme }) {
     : decodeURIComponent(routeSuffix ? recipeSeg.slice(0, -routeSuffix.length) : recipeSeg) || undefined;
   const selectedRecipe = recipeIdParam || null;
   const setSelectedRecipe = useCallback((id) => {
-    if (id) navigate(`/recipes/${id}`);
-    else navigate(location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname, { replace: true });
-  }, [navigate, location.pathname, recipeIdParam]);
+    // Ouverture : on mémorise la page d'origine (planning, accueil, recettes…) dans
+    // l'état de navigation, pour y revenir au recul plutôt que d'atterrir sur /recipes.
+    if (id) navigate(`/recipes/${id}`, { state: { from: location.pathname } });
+    else {
+      const from = location.state?.from;
+      const fallback = location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname;
+      navigate(from && from !== location.pathname ? from : fallback, { replace: true });
+    }
+  }, [navigate, location.pathname, location.state, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const DRAFT_KEY = "mijote_draft";
   // Ouvre l'éditeur sur un brouillon (nouvelle recette / import IA) et pose l'URL
