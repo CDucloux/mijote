@@ -176,12 +176,14 @@ function AppInner({ user, isDark, toggleTheme }) {
   const selectedRecipe = recipeIdParam || null;
   const setSelectedRecipe = useCallback((id) => {
     // Ouverture : on mémorise la page d'origine (planning, accueil, recettes…) dans
-    // l'état de navigation, pour y revenir au recul plutôt que d'atterrir sur /recipes.
-    if (id) navigate(`/recipes/${id}`, { state: { from: location.pathname } });
+    // l'état de navigation sous `originPath`, pour y revenir au recul plutôt que
+    // d'atterrir sur /recipes. Clé distincte de `from`/`fromPath` que RecipeDetail
+    // interprète autrement (id de recette parente / chemin à rejoindre directement).
+    if (id) navigate(`/recipes/${id}`, { state: { originPath: location.pathname } });
     else {
-      const from = location.state?.from;
+      const origin = location.state?.originPath;
       const fallback = location.pathname === `/recipes/${recipeIdParam}` ? "/recipes" : location.pathname;
-      navigate(from && from !== location.pathname ? from : fallback, { replace: true });
+      navigate(origin && origin !== location.pathname ? origin : fallback, { replace: true });
     }
   }, [navigate, location.pathname, location.state, recipeIdParam]);
   const [editingRecipe, setEditingRecipe] = useState(null);
