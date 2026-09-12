@@ -309,7 +309,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                 : "Ces données seront définitivement effacées. Cette action est irréversible."}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="arrowLeft" size={15} /> Annuler</button>
               <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => close(() => onPurge?.(purgeScope.scope))}>Effacer</button>
             </div>
           </>)}

@@ -27,19 +27,27 @@ export interface ActivityLogDeps {
  */
 export function useActivityLog({ user, householdId, workspaceReady, actorName }: ActivityLogDeps): {
   activities: ActivityEvent[];
+  activitiesLoading: boolean;
   logActivity: (input: ActivityInput) => void;
 } {
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
+  // Vrai tant que le premier snapshot Firestore n'est pas arrivé. Distinct de la
+  // disponibilité du workspace : l'abonnement ne se déclenche qu'une fois le workspace
+  // prêt, et son premier snapshot arrive un instant APRÈS. Sans ce drapeau, l'UI verrait
+  // `activities=[]` sur ce laps de temps et flasherait l'état vide avant le journal.
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
   const ws = useMemo<Workspace | null>(
     () => (user ? (householdId ? householdWorkspace(householdId) : soloWorkspace(user.uid)) : null),
     [user, householdId]
   );
 
   useEffect(() => {
-    if (!user || !ws || !workspaceReady) { setActivities([]); return; }
+    if (!user || !ws || !workspaceReady) { setActivities([]); setActivitiesLoading(true); return; }
+    setActivitiesLoading(true);
     const unsub = subscribeActivity(ws, docs => {
       const now = Date.now();
       setActivities(docs.map(d => parseActivity(d.id, d.data, now)).filter((e): e is ActivityEvent => e !== null));
+      setActivitiesLoading(false);
     });
     return () => unsub();
   }, [user, ws, workspaceReady]);
@@ -64,5 +72,5 @@ export function useActivityLog({ user, householdId, workspaceReady, actorName }:
     }).catch(() => { /* notification manquée : ne jamais casser l'action métier */ });
   }, [user, ws]);
 
-  return { activities, logActivity };
+  return { activities, activitiesLoading, logActivity };
 }

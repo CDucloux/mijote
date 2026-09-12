@@ -6,7 +6,7 @@
 import {
   House, MagnifyingGlass, CalendarBlank, BookOpen, Plus, PlusCircle, PencilSimple,
   Trash, DownloadSimple, ShareNetwork, Clock, Fire, Check, FloppyDisk, CaretLeft,
-  CaretRight, ArrowUUpLeft, CaretUp, CaretDown, X, Copy, TrayArrowDown, LinkSimple,
+  CaretRight, ArrowUUpLeft, ArrowLeft, CaretUp, CaretDown, X, Copy, TrayArrowDown, LinkSimple,
   ShoppingCartSimple, GearSix, DotsSixVertical, FilePdf, Image, GridFour, ListBullets,
   Sun, SunHorizon, Moon, SignOut, Warning, Flag, Stack, ForkKnife, ShieldCheck, Terminal, Sparkle,
   Star, User, Lightbulb, ArrowSquareOut, Leaf, FileText, EnvelopeSimple, Package,
@@ -48,6 +48,7 @@ const ICONS = {
   check: Check,
   save: FloppyDisk,
   back: CaretLeft,
+  arrowLeft: ArrowLeft,
   forward: CaretRight,
   undo: ArrowUUpLeft,
   chevronUp: CaretUp,

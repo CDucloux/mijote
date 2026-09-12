@@ -776,7 +776,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             );
           })()}
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="back" size={15} /> Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="arrowLeft" size={15} /> Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
               if (!newCarnet.name.trim()) return;
               if (newCarnet.editing) {
