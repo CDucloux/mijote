@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, memo } from "react";
 import { Icon } from "../components/Icon.jsx";
 import { EmptyArt } from "../components/EmptyArt.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -31,6 +31,13 @@ const RECIPES_PAGE = 12;
 // temps d'arriver avant de révéler les cartes avec leur animation d'entrée.
 let recipeSkeletonSeen = false;
 const SKELETON_MS = 550;
+
+// Position de défilement + pagination mémorisées entre deux visites de l'onglet :
+// ouvrir une fiche démonte RecipesPage, donc l'état de scroll ne peut pas vivre
+// dans le composant. Conservé au niveau module (réinitialisé au rechargement
+// complet) et rejoué au retour, à condition que le jeu de résultats (`key`) soit
+// identique, sinon la position n'a plus de sens.
+let recipesScrollMemo = { key: null, top: 0, count: RECIPES_PAGE };
 
 // Titre de section « fantôme » (barre courte à la place de « Carnets »/« Recettes »).
 function SectionTitleSkeleton({ width = 96 }) {
@@ -242,7 +249,10 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   // déclencheur du reset de pagination (nouvelle recherche / tri / carnet → on
   // repart du 1er lot).
   const gridKey = `${filterCol || "all"}|${normalizeStr(search)}|${sortBy}|${sortDir}`;
-  const [visibleCount, setVisibleCount] = useState(RECIPES_PAGE);
+  // Au retour d'une fiche (même jeu de résultats), on repart avec la pagination
+  // atteinte, faute de quoi les cartes sous la position mémorisée ne seraient pas
+  // montées et le scroll ne pourrait pas être restauré.
+  const [visibleCount, setVisibleCount] = useState(() => recipesScrollMemo.key === gridKey ? recipesScrollMemo.count : RECIPES_PAGE);
   // Reset de pagination quand le jeu de résultats change : ajustement d'état PENDANT
   // le rendu (pattern React recommandé), pas un effet, pour ne pas déclencher un
   // rendu en cascade.
@@ -260,6 +270,19 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   };
 
   const { scrollRef, contentRef } = useElasticScroll();
+
+  // Restaure la position mémorisée au montage (retour depuis une fiche), avant la
+  // peinture pour éviter tout saut visible. La pagination a déjà été restaurée dans
+  // l'état initial, donc les cartes sous la position sont montées.
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (el && recipesScrollMemo.key === gridKey && recipesScrollMemo.top > 0) el.scrollTop = recipesScrollMemo.top;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Mémorise en continu la position et la pagination courantes pour la prochaine visite.
+  const rememberScroll = useCallback((e) => {
+    recipesScrollMemo = { key: gridKey, top: e.currentTarget.scrollTop, count: visibleCount };
+  }, [gridKey, visibleCount]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -323,7 +346,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           )}
         </SwipeableSheet>
       )}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "4px 20px var(--page-pad-b)" }}>
+      <div ref={scrollRef} onScroll={rememberScroll} style={{ flex: 1, overflowY: "auto", padding: "4px 20px var(--page-pad-b)" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
         {(booting || loading) ? (
           // Squelette pendant le boot de l'onglet OU tant que le workspace n'est pas

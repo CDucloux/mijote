@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.35.0 – Cardamome · Reprise du fil dans les recettes
+
+### Recettes
+- **Position de défilement conservée** : en revenant d'une fiche recette vers la liste, on retrouve l'endroit exact où on avait scrollé (et le nombre de recettes déjà chargées), au lieu de repartir du haut. La reprise ne s'applique que si le filtre, la recherche et le tri sont inchangés.
+
 ## v4.34.1 – Cardamome · Onde tactile complétée
 
 ### Corrigé
