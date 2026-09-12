@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreRecipe, effortScore, simplicityScore, dishSeasonScore, eligibleForSlot, generateWeek, GEN_STYLES } from "@/lib/planning/mealPlanner.js";
+import { scoreRecipe, stockAffinity, effortScore, simplicityScore, dishSeasonScore, eligibleForSlot, generateWeek, GEN_STYLES } from "@/lib/planning/mealPlanner.js";
 
 const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const DB = [
@@ -7,6 +7,8 @@ const DB = [
   { id: "potiron", name: "Potiron", category: "vegetable", months: [10, 11, 12] },
   { id: "boeuf", name: "Bœuf", category: "meat" },
   { id: "riz", name: "Riz", category: "grain" },
+  { id: "sel", name: "Sel", category: "condiment" },
+  { id: "divers", name: "Divers", category: "other" },
 ];
 const resolver = (name) => DB.find(i => norm(i.name) === norm(name)) || null;
 const ctx = { resolver, month: 7, stockSet: new Set(), preferences: {} };
@@ -47,6 +49,33 @@ describe("scoreRecipe", () => {
     const r = R("s", { ingredients: [{ name: "Riz" }] });
     const inStock = scoreRecipe(r, { ...ctx, stockSet: new Set(["riz"]) });
     expect(inStock).toBeGreaterThan(scoreRecipe(r, ctx));
+  });
+});
+
+describe("stockAffinity (priorité au stock, hors basiques de placard)", () => {
+  it("ratio sur les vrais ingrédients en stock", () => {
+    const r = R("s", { ingredients: [{ name: "Riz" }, { name: "Courgette" }] });
+    expect(stockAffinity(r, { ...ctx, stockSet: new Set(["riz"]) })).toBe(0.5);
+    expect(stockAffinity(r, { ...ctx, stockSet: new Set(["riz", "courgette"]) })).toBe(1);
+  });
+  it("ignore les condiments et « autres » (ni au numérateur ni au dénominateur)", () => {
+    // Riz en stock + sel/divers en stock : sans exclusion, 3/3 ; avec, 1/1.
+    const r = R("s", { ingredients: [{ name: "Riz" }, { name: "Sel" }, { name: "Divers" }] });
+    expect(stockAffinity(r, { ...ctx, stockSet: new Set(["riz", "sel", "divers"]) })).toBe(1);
+    // Riz absent : le sel/divers en stock ne gonflent plus l'affinité.
+    expect(stockAffinity(r, { ...ctx, stockSet: new Set(["sel", "divers"]) })).toBe(0);
+  });
+  it("recette de seuls basiques ⇒ 0 (rien de significatif à écouler)", () => {
+    const r = R("s", { ingredients: [{ name: "Sel" }, { name: "Divers" }] });
+    expect(stockAffinity(r, { ...ctx, stockSet: new Set(["sel", "divers"]) })).toBe(0);
+  });
+  it("stock vide ou aucun ingrédient ⇒ 0", () => {
+    expect(stockAffinity(R("a", { ingredients: [{ name: "Riz" }] }), ctx)).toBe(0);
+    expect(stockAffinity(R("b"), { ...ctx, stockSet: new Set(["riz"]) })).toBe(0);
+  });
+  it("compte les composants (préparations de base) sans les exclure", () => {
+    const r = R("s", { ingredients: [{ recipeId: "sauce-base" }, { name: "Sel" }] });
+    expect(stockAffinity(r, { ...ctx, stockSet: new Set(["sauce-base"]) })).toBe(1);
   });
 });
 

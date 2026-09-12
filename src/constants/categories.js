@@ -40,6 +40,13 @@ export const STOCK_CATEGORIES = new Set([
   "nuts_seeds", "sugar", "baking", "alcohol", "other",
 ]);
 
+// Basiques de placard, quasi toujours disponibles (condiments/épices, et le
+// fourre-tout « Autres ») : ils ne signalent RIEN sur « ai-je de quoi cuisiner ce
+// plat ». Exclus du calcul d'affinité stock du planning, pour que la priorité au
+// stock reflète les vrais ingrédients (frais, bases, féculents…) et ne soit pas
+// gonflée par le sel, l'huile ou une épice qu'on a de toute façon.
+export const PANTRY_STAPLE_CATEGORIES = new Set(["condiment", "other"]);
+
 // Catégories comptées comme « fruits & légumes » dans la composante POSITIVE du
 // Nutri-Score (fruits, légumes, légumineuses, fruits à coque, auxquels s'ajoutent
 // herbes et champignons). Inclure les FRUITS est essentiel : sans eux, un plat à
