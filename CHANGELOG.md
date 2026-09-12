@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.34.1 – Cardamome · Onde tactile complétée
+
+### Corrigé
+- **Onde tactile sur les dernières pastilles qui l'oubliaient** : la pastille « Valider l'achat » et les filtres de stock (« En stock », « Bientôt vide », « Catalogue ») réagissent désormais au toucher avec la même onde que le reste de l'app.
+
 ## v4.34.0 – Cardamome · Feuilles et retours soignés
 
 ### Interface
