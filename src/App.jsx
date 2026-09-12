@@ -538,7 +538,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
       {tab === "legal" && <LegalPage />}
       {tab === "guide" && <GuidePage />}
-      {tab === "notifications" && <NotificationsPage activities={activities} />}
+      {tab === "notifications" && <NotificationsPage activities={activities} loading={!workspaceReady || sharedHydrating} />}
       </div>
       </Profiler>
     </div>
