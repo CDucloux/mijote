@@ -113,7 +113,7 @@ export function NotificationsSection({ activities = [], loading = false, onNavig
   if (activities.length === 0) {
     return (
       <div className="notif-empty">
-        <EmptyArt name="casserole" size={128} style={{ marginBottom: 8 }} />
+        <EmptyArt name="cloche" size={128} style={{ marginBottom: 8 }} />
         <h3 className="notif-empty-t">Rien à signaler pour l'instant</h3>
         <p className="notif-empty-s">Les actions de ton foyer apparaîtront ici : recettes ajoutées, courses, stock, planning.</p>
       </div>

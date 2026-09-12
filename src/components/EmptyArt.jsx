@@ -138,6 +138,28 @@ const ARTS = {
       <path className="ink-accent" fill="var(--accent)" d="M55.5 54 L59 54 L59 78 L57.25 74.5 L55.5 78 Z" />
     </>
   ),
+  // Cloche au trait de pinceau : corps en cloche (contour effilé + lavis d'intérieur
+  // pour le volume), anse en arc au sommet, double lèvre au bas, et le battant en
+  // accent chaud qui pend, immobile. « Rien à signaler » : la cloche est au repos,
+  // pas de vibration ni d'onde (elle ne sonne pas). État vide du journal du foyer.
+  cloche: (
+    <>
+      <g className="ink-body" fill="currentColor">
+        {/* ombre au sol */}
+        <ellipse cx="60" cy="95" rx="26" ry="3" opacity="0.1" />
+        {/* lavis d'intérieur (volume) */}
+        <path opacity="0.07" d="M60 37 C50 37 46 47 43 59 C41 68 38 74 37 79 L83 79 C82 74 79 68 77 59 C74 47 70 37 60 37 Z" />
+        {/* corps de la cloche : contour effilé, épaules douces, jupe évasée */}
+        <path fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" d="M60 33 C48 33 43 44 40 58 C38 68 34 74 33 80 L87 80 C86 74 82 68 80 58 C77 44 72 33 60 33 Z" />
+        {/* seconde lèvre : trait fin sous le rebord (double bord) */}
+        <path fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M31 80 C45 84 75 84 89 80" />
+        {/* anse au sommet */}
+        <path fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" d="M55 32 C54 24 66 24 65 32" />
+      </g>
+      {/* accent unique : le battant, une goutte chaude qui pend sous la cloche */}
+      <circle className="ink-accent" cx="60" cy="87" r="4.2" fill="var(--accent)" />
+    </>
+  ),
   // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
   // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
   liste: (
@@ -161,7 +183,7 @@ const ARTS = {
 /**
  * Illustration d'état vide au trait, avec le rendu « encre » commun.
  *
- * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `liste`, `bibliotheque`).
+ * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `cloche`, `liste`, `bibliotheque`).
  * @param size Côté du carré de rendu en pixels (viewBox interne fixe).
  * @param style Styles complémentaires posés sur le `<svg>` (ex. marge basse).
  */
