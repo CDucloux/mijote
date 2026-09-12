@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.35.2 – Cardamome · Retour planning corrigé et écran soigné
+
+### Corrigé
+- **Retour depuis une recette du planning réparé** : le recul ramène de nouveau au planning (sur le jour concerné), au lieu d'afficher « Recette introuvable ».
+
+### Interface
+- **Écran « Recette introuvable » modernisé** : illustration dessinée à l'encre, bouton pill, et retrait du code technique affiché à l'utilisateur.
+
 ## v4.35.1 – Cardamome · Retour au bon endroit depuis le planning
 
 ### Corrigé
