@@ -228,7 +228,7 @@ function AppInner({ user, isDark, toggleTheme }) {
 
   // Journal d'activité (notifications du tableau de bord) : abonnement au workspace
   // actif + `logActivity` co-localisé avec les toasts des actions métier.
-  const { activities, logActivity } = useActivityLog({
+  const { activities, activitiesLoading, logActivity } = useActivityLog({
     user, householdId: householdPointer?.id || null, workspaceReady,
     actorName: preferences?.displayName || user?.displayName || "",
   });
@@ -538,7 +538,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
       {tab === "legal" && <LegalPage />}
       {tab === "guide" && <GuidePage />}
-      {tab === "notifications" && <NotificationsPage activities={activities} loading={!workspaceReady || sharedHydrating} />}
+      {tab === "notifications" && <NotificationsPage activities={activities} loading={activitiesLoading} />}
       </div>
       </Profiler>
     </div>
