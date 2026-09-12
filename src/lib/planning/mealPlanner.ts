@@ -15,6 +15,7 @@ import { recipeSeasonScore, currentMonth } from "@/lib/food/seasonality.js";
 import { collectIngredientSignals, isEligible, type DietPreferences } from "@/lib/food/dietFilter.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { roleForCategory, newGroupId, platNeedsSide, type RoleId } from "@/lib/planning/composedMeal.js";
+import { PANTRY_STAPLE_CATEGORIES } from "@/constants/categories.js";
 
 /** Résolveur nom d'ingrédient → entrée de base. */
 export type IngredientResolver = (name: string | undefined) => { id: string; category?: string; months?: unknown } | null;
@@ -147,9 +148,15 @@ function difficultyScore(recipe: PlannerRecipe): number {
 /**
  * Fraction des ingrédients résolus déjà en stock (composants inclus).
  *
+ * Les basiques de placard (condiments/épices, « Autres », cf.
+ * `PANTRY_STAPLE_CATEGORIES`) sont IGNORÉS des deux termes du ratio : on les a de
+ * toute façon, les compter gonflerait l'affinité sans rien dire de « puis-je
+ * cuisiner ce plat avec ce que j'ai ». La priorité au stock porte ainsi sur les
+ * vrais ingrédients (frais, bases préparées, féculents…).
+ *
  * @param recipe - La recette évaluée.
  * @param ctx - Contexte de scoring (résolveur d'ingrédients + set du stock).
- * @returns La proportion d'ingrédients en stock, entre 0 et 1.
+ * @returns La proportion d'ingrédients (hors basiques) en stock, entre 0 et 1.
  */
 export function stockAffinity(recipe: PlannerRecipe, ctx: PlannerContext): number {
   const { resolver, stockSet } = ctx;
@@ -158,7 +165,7 @@ export function stockAffinity(recipe: PlannerRecipe, ctx: PlannerContext): numbe
   for (const ing of recipe.ingredients || []) {
     if (ing.recipeId) { total++; if (stockSet.has(ing.recipeId)) have++; continue; }
     const item = resolver ? resolver(ing.name) : null;
-    if (!item) continue;
+    if (!item || PANTRY_STAPLE_CATEGORIES.has(item.category ?? "")) continue;
     total++; if (stockSet.has(item.id)) have++;
   }
   return total ? have / total : 0;

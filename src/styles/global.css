@@ -4436,27 +4436,43 @@ select {
   color: var(--accent);
 }
 
+/* État vide au croquis « encre » (EmptyArt), aligné sur les autres écrans vides de
+   l'app : illustration fait-main, titre serif, sous-titre discret. */
 .notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 54px 24px;
+  padding: 44px 24px;
   color: var(--text3);
-  max-width: 340px;
+  max-width: 360px;
   margin: 0 auto;
 }
-.notif-empty-ic {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text3);
-  margin-bottom: 14px;
+.notif-empty-t {
+  margin: 0;
+  font-family: var(--ff-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
-.notif-empty-t { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--text2); }
-.notif-empty-s { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; }
+.notif-empty-s { margin: 7px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--text2); }
+
+/* Squelette de la timeline (hydratation) : réutilise `.skeleton` (shimmer) sur
+   l'ossature réelle du feed pour un chargement sans saut ni flash d'état vide. */
+.notif-skel-day {
+  display: block;
+  width: 84px;
+  height: 11px;
+  border-radius: 6px;
+  margin: 14px 0 12px;
+}
+.notif-skel-line {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+}
+.notif-skel-line--sm { width: 42%; height: 10px; margin-top: 8px; }
 
 @media (prefers-reduced-motion: reduce) {
   .notif-feed { animation: none; }

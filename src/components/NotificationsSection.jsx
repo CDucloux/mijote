@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
+import { EmptyArt } from "./EmptyArt.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { describeActivity, actorLabel, relativeTime, dayBucketLabel } from "@/lib/notifications/activity.js";
 
@@ -42,13 +43,40 @@ function ActivityRow({ event, currentEmail, onNavigate }) {
   );
 }
 
+// Squelette de la timeline pendant l'hydratation Firestore : même ossature (libellé
+// de jour + pastilles sur la spine + deux lignes de texte) que le vrai feed, pour
+// éviter le saut de mise en page et NE PAS flasher l'état vide avant l'arrivée des
+// données. Largeurs alternées pour un rythme naturel, non mécanique.
+const SKELETON_ROWS = [82, 64, 74, 58];
+function NotificationsSkeleton() {
+  return (
+    <div className="notif-feed notif-skel" aria-hidden="true">
+      <span className="notif-skel-day skeleton" />
+      <div className="notif-stack">
+        {SKELETON_ROWS.map((w, i) => (
+          <div className="notif-row" key={i}>
+            <span className="notif-spine-wrap"><span className="notif-node skeleton" /></span>
+            <span className="notif-body">
+              <span className="notif-skel-line skeleton" style={{ width: `${w}%` }} />
+              <span className="notif-skel-line notif-skel-line--sm skeleton" />
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Section « Notifications » du tableau de bord : journal des dernières modifications
  * du foyer (ajout/édition/suppression de recettes, courses, planning...), attribuées
  * à leur auteur, présenté en timeline « journal du foyer » regroupée par jour. Un tick
  * périodique rafraîchit les horodatages relatifs sans re-souscrire.
+ *
+ * @param loading - Données partagées encore en cours d'hydratation : on montre le
+ *   squelette plutôt que l'état vide (qui flasherait avant l'arrivée du journal).
  */
-export function NotificationsSection({ activities = [], onNavigated }) {
+export function NotificationsSection({ activities = [], loading = false, onNavigated }) {
   const { user } = useAppShell();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
@@ -78,11 +106,15 @@ export function NotificationsSection({ activities = [], onNavigated }) {
     return out;
   }, [shown]);
 
+  // Hydratation en cours et rien en cache : squelette (jamais l'état vide, qui
+  // flasherait le temps que le journal arrive de Firestore).
+  if (loading && activities.length === 0) return <NotificationsSkeleton />;
+
   if (activities.length === 0) {
     return (
       <div className="notif-empty">
-        <span className="notif-empty-ic"><Icon name="bell" size={22} color="var(--text3)" /></span>
-        <p className="notif-empty-t">Rien à signaler pour l'instant</p>
+        <EmptyArt name="cloche" size={128} style={{ marginBottom: 8 }} />
+        <h3 className="notif-empty-t">Rien à signaler pour l'instant</h3>
         <p className="notif-empty-s">Les actions de ton foyer apparaîtront ici : recettes ajoutées, courses, stock, planning.</p>
       </div>
     );

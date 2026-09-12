@@ -6,7 +6,7 @@ import { NotificationsSection } from "../components/NotificationsSection.jsx";
 // Page dédiée /notifications : le journal d'activité du foyer, accessible depuis le
 // bouton rond de l'en-tête d'accueil. En-tête standard (titre serif 26/600) avec un
 // retour vers l'accueil ; le contenu (liste + état vide) vit dans NotificationsSection.
-export function NotificationsPage({ activities = [] }) {
+export function NotificationsPage({ activities = [], loading = false }) {
   const navigate = useNavigate();
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -28,7 +28,7 @@ export function NotificationsPage({ activities = [] }) {
           des libellés de jour (ils cessent de coller, les lignes défilent alors à nu
           sous l'en-tête). Un scroll simple préserve le sticky, donc le masquage. */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 20px var(--page-pad-b)" }}>
-        <NotificationsSection activities={activities} />
+        <NotificationsSection activities={activities} loading={loading} />
       </div>
     </div>
   );

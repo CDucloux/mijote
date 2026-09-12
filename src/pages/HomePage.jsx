@@ -397,7 +397,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
         <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
       ) : (
       /* ── À suivre : tableau de bord perso (route /home) ─────────────────── */
-      <ElasticScroll style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
+      <ElasticScroll armWhenUnscrollable style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>
         {/* ── Mon foyer (en tête d'accueil) ───────────────────────────────── */}
         <FoyerSection />
 

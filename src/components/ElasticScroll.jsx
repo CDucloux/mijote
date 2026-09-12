@@ -17,14 +17,17 @@ import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
 /**
  * @param max - Amplitude max du rubber-band (px).
+ * @param armWhenUnscrollable - Arme le rebond même quand le contenu tient à l'écran
+ *   (page courte, rien à défiler) : le geste vers le haut reste élastique. Faux par
+ *   défaut (l'effet ne joue qu'en butée basse d'un contenu réellement défilant).
  * @param className - Classe(s) sur le conteneur scrollable.
  * @param style - Styles additionnels du conteneur scrollable (`overflow-y` déjà posé).
  * @param contentStyle - Styles additionnels de l'enfant transformé.
  * @param children - Le contenu défilant.
  */
-export function ElasticScroll({ max = 90, className, style, contentStyle, children }) {
+export function ElasticScroll({ max = 90, armWhenUnscrollable = false, className, style, contentStyle, children }) {
   const isDesktop = useIsDesktop();
-  const { scrollRef, contentRef } = useElasticScroll({ max, disabled: isDesktop });
+  const { scrollRef, contentRef } = useElasticScroll({ max, disabled: isDesktop, armWhenUnscrollable });
   return (
     <div ref={scrollRef} className={className} style={{ overflowY: "auto", ...style }}>
       <div ref={contentRef} style={{ minHeight: "100%", ...contentStyle }}>
