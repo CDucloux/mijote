@@ -1,5 +1,20 @@
 # Changelog – Cardamome
 
+## v4.33.0 – Cardamome · Stock, notifications et barre système
+
+### Planning
+- **Priorité au stock, hors basiques de placard** : la génération de semaine privilégie les recettes dont tu as déjà les ingrédients, en ignorant désormais les condiments/épices et la catégorie « Autres » (qu'on a de toute façon). La priorité porte ainsi sur les vrais ingrédients (frais, bases, féculents…), pas sur le sel ou l'huile.
+
+### Notifications
+- **État vide au croquis maison** : l'onglet Notifications a droit à sa propre illustration dessinée à l'encre (une cloche au repos), dans le style fait main des autres écrans vides, au lieu d'une simple icône.
+- **Squelette au chargement** : pendant l'arrivée des données, un squelette de timeline s'affiche au lieu de faire clignoter « Rien à signaler ».
+
+### Accueil
+- **Rebond élastique sur « À suivre »** : l'onglet garde le ressenti élastique au geste même quand son contenu tient à l'écran.
+
+### Corrigé
+- **Barre système de nouveau accordée au thème (PWA installée)** : en thème clair, la barre du haut n'apparaît plus en sombre. Elle suit à nouveau le thème clair/sombre de l'application.
+
 ## v4.32.2 – Cardamome · Maintien accordé à l'onde
 
 ### Corrigé
