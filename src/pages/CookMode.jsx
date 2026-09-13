@@ -444,7 +444,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       <div key={ing.id} role="button" tabIndex={0} onClick={toggle}
         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
         className="pressable"
-        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", cursor: "pointer", borderRadius: 10 }}>
+        // padding + margin qui s'annulent : la boîte de rognage (overflow:hidden posé
+        // sur `.pressable` au tactile pour borner l'onde) s'élargit de 8px sans rien
+        // déplacer, pour ne plus couper le ConvertBadge (débord + ombre) en bas à droite.
+        style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", cursor: "pointer", borderRadius: 10, padding: 8, margin: -8 }}>
         <span style={{ width: 22, height: 22, flexShrink: 0, borderRadius: 7, display: "grid", placeItems: "center", border: `2px solid ${gathered ? "var(--ok)" : "var(--border)"}`, background: gathered ? "var(--ok)" : "transparent", transition: "background 0.15s, border-color 0.15s" }}>
           {gathered && <Icon name="check" size={13} color="#fff" />}
         </span>
