@@ -12,22 +12,18 @@ const seenKey = (uid) => `mijote_onboarded_${uid}`;
 
 // ── Illustrations SVG maison (test de style, 2 slides sur 7) ──────────────────
 const IL = { width: 116, height: 116, viewBox: "0 0 120 120", fill: "none" };
-function PotIllustration() {
+// Gousse de cardamome : le mot-symbole de la marque, décliné au format des
+// illustrations d'onboarding (cf. LogoPod, tracé mis à l'échelle et centré).
+function PodIllustration() {
   return (
     <svg {...IL}>
-      {/* vapeur */}
-      <path d="M50 30 C44 24 44 18 50 12" stroke="#f0a875" strokeWidth="4" strokeLinecap="round" />
-      <path d="M62 31 C56 23 56 16 62 8" stroke="#f0a875" strokeWidth="4" strokeLinecap="round" />
-      <path d="M74 30 C68 24 68 18 74 12" stroke="#f0a875" strokeWidth="4" strokeLinecap="round" />
-      {/* anses */}
-      <ellipse cx="25" cy="67" rx="8" ry="10" stroke="#c85a2a" strokeWidth="6" />
-      <ellipse cx="95" cy="67" rx="8" ry="10" stroke="#c85a2a" strokeWidth="6" />
-      {/* corps */}
-      <path d="M28 55 H92 L87 92 C86.5 96 83 98 79 98 H41 C37 98 33.5 96 33 92 Z" fill="#e8703a" />
-      <path d="M42 63 C41 74 41 82 45 90" stroke="rgba(255,255,255,0.4)" strokeWidth="5" strokeLinecap="round" />
-      {/* couvercle */}
-      <rect x="24" y="47" width="72" height="12" rx="6" fill="#f0a875" />
-      <rect x="53" y="39" width="14" height="10" rx="4" fill="#c85a2a" />
+      <path d="M60 20 C86 41 94.5 67 84.5 88 C78 103.5 68 112 60 119 C52 112 42 103.5 35.5 88 C25.5 67 34 41 60 20 Z" fill="#6fce9b" />
+      <path d="M60 20 C50 34 46 60 52 100 C55 108 57.5 112 60 116 C52 109 42 100 35.5 88 C25.5 67 34 41 60 20 Z" fill="#4caf7d" />
+      <g stroke="#2f8a5c" strokeLinecap="round" fill="none">
+        <path d="M60 33 C60 56 60 88 60 109" strokeWidth="5" />
+        <path d="M48.5 42 C45 63 47 84 55.5 104" strokeWidth="4.4" />
+        <path d="M71.5 42 C75 63 73 84 64.5 104" strokeWidth="4.4" />
+      </g>
     </svg>
   );
 }
@@ -167,7 +163,7 @@ function HouseIllustration() {
 
 const SLIDES = [
   {
-    illustration: PotIllustration, color: "#6e9a3f",
+    illustration: PodIllustration, color: "#6e9a3f",
     title: "Bienvenue sur Cardamome",
     text: <>Bien plus qu'un carnet de recettes : une vraie base d'<em>ingrédients</em>, d'<em>ustensiles</em> et de <em>techniques</em> pour <strong>comprendre ce que tu cuisines</strong>, et progresser à chaque plat.</>,
   },
@@ -184,7 +180,7 @@ const SLIDES = [
   {
     illustration: PlanningIllustration, color: "#5b9cf6",
     title: "Ta semaine se planifie toute seule",
-    text: <>Génère une semaine complète en un tap : Cardamome compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Une <em>session batch</em> te dit quoi préparer d'avance, et tout s'exporte vers ton agenda.</>,
+    text: <>Cardamome compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Tout s'exporte ensuite vers ton agenda.</>,
   },
   {
     illustration: BasketIllustration, color: "#c8912f",
