@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.35.3 – Cardamome · Onboarding fignolé
+
+### Interface
+- **Slide d'accueil à l'image de la marque** : la marmite orange laisse place à la gousse de cardamome (le mot-symbole de Cardamome), plus cohérente avec l'identité.
+- **Texte du planning allégé** : la slide « Ta semaine se planifie toute seule » va droit au but (retrait de l'accroche et du passage sur la session batch).
+
 ## v4.35.2 – Cardamome · Retour planning corrigé et écran soigné
 
 ### Corrigé
