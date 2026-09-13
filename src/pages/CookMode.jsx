@@ -15,6 +15,8 @@ import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { consumptionFraction } from "@/lib/recipes/recipeComponents.js";
 import { formatParamSummary } from "@/lib/utensils/appliances.js";
+import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
+import { PrecautionInfoBadge, UtensilPrecautionSheet } from "../components/QualityHints.jsx";
 import { capitalize, fmtQtyUnit } from "../lib/format.js";
 import { spoonConversions } from "@/lib/food/calculators.js";
 import { QuantityConvertSheet, ConvertBadge } from "../components/QuantityConvertSheet.jsx";
@@ -76,6 +78,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   // Fermeture animée : joue la sortie (fondu + glissé) avant de démonter réellement.
   const requestClose = () => { if (closing) return; setClosing(true); setTimeout(() => onClose(), 280); };
   const [subCook, setSubCook] = useState(null); // { recipe, mult }
+  const [precSheet, setPrecSheet] = useState(null); // { name, prec } précaution ustensile ouverte
   const [doneComponents, setDoneComponents] = useState(new Set());
   // Checklist de « mise en place » (ingrédients/ustensiles rassemblés) : propre à
   // CETTE session de cuisine, jamais persistée (elle n'a plus de sens à la prochaine).
@@ -236,6 +239,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
+  // Précaution d'utilisation d'un ustensile (résolu à la base par dbId, sinon nom).
+  const getUtPrecaution = (u) => resolveUsagePrecaution((utensilDB || []).find(d => d.id === u.dbId) || (u.name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(u.name)) : null));
   // Équivalent cuillères d'un ingrédient (null si non convertible : sert de garde
   // d'affichage du badge ET de payload d'ouverture de la feuille).
   const convOf = (ing, amount) => spoonConversions(amount, ing.unit, ing.name);
@@ -780,11 +785,13 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {linkedUts.map(u => {
                           const detail = formatParamSummary((utensilDB || []).find(d => d.id === u.dbId)?.appliance, step.utensilParams?.[u.id]);
+                          const prec = getUtPrecaution(u);
                           return (
-                          <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
+                          <span key={u.id} onClick={prec ? () => setPrecSheet({ name: u.name, prec }) : undefined} className={prec ? "pressable" : undefined} style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: prec ? "5px 30px 5px 5px" : "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)", cursor: prec ? "pointer" : "default" }}>
                             <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
                             {u.name}
                             {detail && <span style={{ color: "var(--text3)", fontWeight: 400 }}>{detail}</span>}
+                            {prec && <PrecautionInfoBadge tone={prec.tone} style={{ top: "50%", right: 6, transform: "translateY(-50%)", width: 20, height: 20 }} />}
                           </span>
                           );
                         })}
@@ -886,6 +893,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           onClose={() => setConvIng(null)}
         />
       )}
+      {precSheet && <UtensilPrecautionSheet utensilName={precSheet.name} precaution={precSheet.prec} onClose={() => setPrecSheet(null)} />}
     </>,
     document.body
   );

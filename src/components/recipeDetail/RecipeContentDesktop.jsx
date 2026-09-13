@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { Icon } from "../Icon.jsx";
 import { Img, IngImage } from "../Img.jsx";
 import { UtImage } from "../StepPills.jsx";
 import { BaseIcon } from "../BaseIcon.jsx";
 import { StepTip } from "../StepTip.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
-import { IngredientRecoHint, UtensilPrecautionCard } from "../QualityHints.jsx";
+import { IngredientRecoHint, PrecautionInfoBadge, UtensilPrecautionSheet } from "../QualityHints.jsx";
 import { groupBy, sectionRuns, hasGroups, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
 import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../../lib/format.js";
 
@@ -15,6 +16,7 @@ import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "..
  */
 export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
   const { mult, recipesById, getIngImage, getUtImage, getIngReco, getUtPrecaution, resolveComp, navigate } = view;
+  const [precSheet, setPrecSheet] = useState(null);
   return (
     <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: "12px 16px 16px", gap: 16 }}>
       {/* Left col: ingrédients + ustensiles (card) */}
@@ -68,21 +70,18 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
           <div>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", marginBottom: 12 }}>Ustensiles</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {recipe.utensils.map(u => (
-                <div key={u.id} className="ut-pill-desktop" style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: "7px 14px 7px 8px", border: "1px solid var(--border)" }}>
+              {recipe.utensils.map(u => {
+                const prec = getUtPrecaution?.(u);
+                return (
+                <div key={u.id} onClick={prec ? () => setPrecSheet({ name: u.name, prec }) : undefined} className="ut-pill-desktop" style={{ position: "relative", display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: prec ? "7px 32px 7px 8px" : "7px 14px 7px 8px", border: "1px solid var(--border)", cursor: prec ? "pointer" : "default" }}>
                   <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={28} radius={7} />
                   <span style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</span>
+                  {prec && <PrecautionInfoBadge tone={prec.tone} style={{ top: "50%", right: 8, transform: "translateY(-50%)", width: 20, height: 20 }} />}
                 </div>
-              ))}
+                );
+              })}
             </div>
-            {(() => {
-              const precs = recipe.utensils.map(u => ({ u, p: getUtPrecaution?.(u) })).filter(x => x.p);
-              return precs.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
-                  {precs.map(({ u, p }) => <UtensilPrecautionCard key={u.id} precaution={p} />)}
-                </div>
-              );
-            })()}
+            {precSheet && <UtensilPrecautionSheet utensilName={precSheet.name} precaution={precSheet.prec} onClose={() => setPrecSheet(null)} />}
           </div>
         )}
 
