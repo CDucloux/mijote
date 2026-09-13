@@ -15,6 +15,8 @@ import { ING_MD_BOUNDS } from "@/lib/food/ingredientsMarkdown.js";
 import { TIP_TYPES } from "@/constants/tipTypes.js";
 import { isFruitVeg } from "@/constants/categories.js";
 import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
+import { INGREDIENT_FORMS, normalizePreferredForms } from "@/lib/food/qualityRecommendation.js";
+import { PRECAUTION_TONES, isPrecautionTone } from "@/lib/utensils/usagePrecaution.js";
 
 /** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
 export interface ParseResult<T = Record<string, unknown>> {
@@ -351,6 +353,7 @@ interface IngredientRow {
   image?: string;
   tips?: { type: string; text: string }[];
   nutrition?: Record<string, number>;
+  qualityRecommendation?: { preferredForms?: unknown[]; message?: string };
 }
 
 // ─── EXPORTS YAML (réimportables, pour versionner dans data/) ──────────────────
@@ -383,6 +386,13 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
       if (d.gramsPerPiece != null) o.gramsPerPiece = d.gramsPerPiece;
       if (d.image) o.image = d.image;
       if (d.tips?.length) o.tips = d.tips.map(t => ({ type: t.type, text: t.text }));
+      const forms = d.qualityRecommendation ? normalizePreferredForms(d.qualityRecommendation.preferredForms || []) : [];
+      if (forms.length) {
+        const qr: Record<string, unknown> = { preferredForms: forms };
+        const msg = str(d.qualityRecommendation?.message);
+        if (msg) qr.message = msg;
+        o.qualityRecommendation = qr;
+      }
       if (d.nutrition) {
         const n: Record<string, number> = {};
         for (const k of NUT_KEYS) if (d.nutrition[k] != null) n[k] = d.nutrition[k];
@@ -394,7 +404,7 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
 }
 
 /** Ustensile (forme minimale utilisée par l'export). */
-interface UtensilRow { id?: string; name?: string; category?: string; appliance?: string; image?: string }
+interface UtensilRow { id?: string; name?: string; category?: string; appliance?: string; image?: string; usagePrecaution?: { tone?: string; title?: string; description?: string; tip?: string } }
 
 /**
  * Rend la base d'ustensiles en YAML réimportable, trié par nom. La catégorie est
@@ -406,7 +416,26 @@ interface UtensilRow { id?: string; name?: string; category?: string; appliance?
 export function formatUtensilsYaml(list: UtensilRow[]): string {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
-    .map(d => { const o: Record<string, unknown> = {}; if (d.id) o.id = d.id; o.name = d.name; if (d.category) o.category = d.category; if (d.appliance) o.appliance = d.appliance; if (d.image) o.image = d.image; return o; });
+    .map(d => {
+      const o: Record<string, unknown> = {};
+      if (d.id) o.id = d.id;
+      o.name = d.name;
+      if (d.category) o.category = d.category;
+      if (d.appliance) o.appliance = d.appliance;
+      if (d.image) o.image = d.image;
+      const p = d.usagePrecaution;
+      const title = str(p?.title), description = str(p?.description);
+      if (title && description) {
+        const up: Record<string, unknown> = {};
+        if (isPrecautionTone(p?.tone)) up.tone = p.tone;
+        up.title = title;
+        up.description = description;
+        const tip = str(p?.tip);
+        if (tip) up.tip = tip;
+        o.usagePrecaution = up;
+      }
+      return o;
+    });
   return dumpYaml(rows, `# Base d'ustensiles Cardamome (${rows.length}) – généré, réimportable.\n`);
 }
 
@@ -472,6 +501,24 @@ export function parseIngredientsYaml(text: string, { validCategories }: { validC
       const [min, max] = ING_MD_BOUNDS.gramsPerPiece;
       if (!Number.isFinite(v) || v < min || v > max) errors.push(`${where} : gramsPerPiece = ${raw.gramsPerPiece} hors bornes (${min}–${max}).`);
       else row.gramsPerPiece = v;
+    }
+    if (raw.qualityRecommendation != null) {
+      const qr = raw.qualityRecommendation;
+      if (!isObj(qr)) errors.push(`${where} : « qualityRecommendation » doit être un objet.`);
+      else if (!Array.isArray(qr.preferredForms)) errors.push(`${where} : « preferredForms » doit être une liste.`);
+      else {
+        const forms = normalizePreferredForms(qr.preferredForms);
+        if (forms.length !== qr.preferredForms.length) errors.push(`${where} : « preferredForms » contient une forme inconnue ou dupliquée (${Object.keys(INGREDIENT_FORMS).join(", ")}).`);
+        else if (!forms.length) errors.push(`${where} : « preferredForms » ne peut pas être vide.`);
+        else {
+          const out: Record<string, unknown> = { preferredForms: forms };
+          const msg = str(qr.message);
+          if (qr.message != null && !msg) errors.push(`${where} : « message » vide.`);
+          else if (msg.length > 280) errors.push(`${where} : « message » trop long (max 280).`);
+          else if (msg) out.message = msg;
+          row.qualityRecommendation = out;
+        }
+      }
     }
     if (raw.nutrition != null) {
       if (!isObj(raw.nutrition)) errors.push(`${where} : « nutrition » doit être un objet.`);
@@ -542,6 +589,28 @@ export function parseUtensilsYaml(text: string): ParseResult {
     const row: Record<string, unknown> = { id, name, category: category || "divers" };
     if (appliance && appliance in APPLIANCE_LABELS) row.appliance = appliance;
     if (raw.image != null) row.image = str(raw.image);
+    if (raw.usagePrecaution != null) {
+      const p = raw.usagePrecaution;
+      if (!isObj(p)) errors.push(`${where} : « usagePrecaution » doit être un objet.`);
+      else {
+        const title = str(p.title), description = str(p.description);
+        if (!title) errors.push(`${where} : précaution sans « title ».`);
+        else if (title.length > 120) errors.push(`${where} : « title » de précaution trop long (max 120).`);
+        else if (!description) errors.push(`${where} : précaution sans « description ».`);
+        else if (description.length > 400) errors.push(`${where} : « description » de précaution trop longue (max 400).`);
+        else if (p.tone != null && !isPrecautionTone(p.tone)) errors.push(`${where} : tonalité de précaution inconnue « ${str(p.tone) || "?"} » (${Object.keys(PRECAUTION_TONES).join(", ")}).`);
+        else {
+          const up: Record<string, unknown> = {};
+          if (isPrecautionTone(p.tone)) up.tone = p.tone;
+          up.title = title;
+          up.description = description;
+          const tip = str(p.tip);
+          if (tip.length > 280) errors.push(`${where} : « tip » de précaution trop long (max 280).`);
+          else if (tip) up.tip = tip;
+          row.usagePrecaution = up;
+        }
+      }
+    }
     items.push(row);
   });
   return { items: errors.length ? [] : items, errors };
