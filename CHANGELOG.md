@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.36.0 – Cardamome · Qualité des ingrédients et précautions ustensiles
+
+### Ingrédients
+- **Recommandation de forme à l'achat** : certains ingrédients indiquent désormais discrètement la forme à privilégier (« 💡 Frais ou surgelé recommandé »), sur la fiche recette et dans la liste de courses. Un conseil culinaire, ingrédient par ingrédient, pas une règle générale. Premiers concernés : carotte, petits pois, épinards.
+
+### Ustensiles
+- **Précautions d'utilisation** : un ustensile peut porter un conseil éditorial (chaleur, revêtement…) affiché dans sa fiche et, en contexte, sur la recette. Tonalité adaptée (conseil, chaleur, attention) pour ne pas transformer chaque conseil en alerte. Premiers concernés : cocotte en fonte, poêle inox, poêle antiadhésive.
+
 ## v4.35.3 – Cardamome · Onboarding fignolé
 
 ### Interface
