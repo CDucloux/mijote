@@ -306,9 +306,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqas7lq03q90zf.png?alt=media&token=761afab1-7933-4ef1-8364-2e7d5d2d797d
   usagePrecaution:
     tone: heat
-    title: "Préchauffe avant d'huiler, sans chauffer trop fort"
-    description: "Une poêle inox bien chaude devient quasi antiadhésive. Trop tôt, ça colle ; poussée au maximum, elle brûle l'huile. Inutile de dépasser les deux tiers de la puissance maximale de la plaque."
-    tip: "Fais le test de la goutte d'eau (elle doit perler et glisser) avant d'huiler, et ne dépasse pas les deux tiers de la puissance (environ 4 sur 6)."
+    title: "Chauffe juste ce qu'il faut"
+    description: "Bien chaude, l'inox devient quasi antiadhésive ; poussé à fond, il brûle l'huile. Puissance conseillée selon l'usage (en fraction du maximum) :\nMijoter, maintenir : 1/5 à 1/3\nCuisson douce : 1/3 à 1/2\nSauté, cuisson normale : 1/2 à 2/3\nPréchauffage rapide : 1/2 à 2/3\nSaisie très courte : 2/3 à fond\nÀ éviter : chauffer à vide à pleine puissance"
+    tip: "Fais le test de la goutte d'eau (elle doit perler et glisser) avant d'huiler."
 
 - id: db_u_presse_agrumes
   name: Presse-agrumes

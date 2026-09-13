@@ -56,7 +56,7 @@ export function UtensilPrecautionSheet({ utensilName, precaution, onClose, zInde
         </div>
       </div>
       <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 10px", color: "var(--text)" }}>{precaution.title}</h3>
-      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>{precaution.description}</p>
+      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-line" }}>{precaution.description}</p>
       {precaution.tip && (
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 16, padding: "12px 14px", borderRadius: 14, background: accent + "14", border: `1px solid ${accent}33` }}>
           <Icon name="bulb" size={16} color={accent} style={{ flexShrink: 0, marginTop: 1 }} />
