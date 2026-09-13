@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.36.3 – Cardamome · Badge de conversion en cuillères non rogné
+
+### Corrigé
+- **Badge « cuillère » entier en mise en place** : sur mobile, la pastille de conversion en cuillères posée sur l'image d'un ingrédient était coupée en bas (le rognage de l'onde tactile de la rangée mordait sur le débord du badge). La rangée réserve désormais la place nécessaire, le badge s'affiche en entier.
+
 ## v4.36.2 – Cardamome · Précautions ustensiles peaufinées
 
 ### Corrigé
