@@ -43,11 +43,11 @@ export function PrecautionInfoBadge({ tone, style }) {
  * recette) ou sur l'ustensile d'une étape (mode pas à pas). En-tête au ton de la
  * précaution, puis titre, description et « bon réflexe ».
  */
-export function UtensilPrecautionSheet({ utensilName, precaution, onClose }) {
+export function UtensilPrecautionSheet({ utensilName, precaution, onClose, zIndex }) {
   if (!precaution) return null;
   const { icon, label, accent } = precautionVisual(precaution.tone);
   return (
-    <SwipeableSheet onClose={onClose}>
+    <SwipeableSheet onClose={onClose} zIndex={zIndex}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
         <span style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 14, background: accent + "1f", display: "grid", placeItems: "center", fontSize: 22 }} aria-hidden="true">{icon}</span>
         <div style={{ minWidth: 0 }}>
@@ -56,7 +56,7 @@ export function UtensilPrecautionSheet({ utensilName, precaution, onClose }) {
         </div>
       </div>
       <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 10px", color: "var(--text)" }}>{precaution.title}</h3>
-      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>{precaution.description}</p>
+      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-line" }}>{precaution.description}</p>
       {precaution.tip && (
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 16, padding: "12px 14px", borderRadius: 14, background: accent + "14", border: `1px solid ${accent}33` }}>
           <Icon name="bulb" size={16} color={accent} style={{ flexShrink: 0, marginTop: 1 }} />

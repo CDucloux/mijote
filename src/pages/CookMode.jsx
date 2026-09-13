@@ -893,7 +893,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           onClose={() => setConvIng(null)}
         />
       )}
-      {precSheet && <UtensilPrecautionSheet utensilName={precSheet.name} precaution={precSheet.prec} onClose={() => setPrecSheet(null)} />}
+      {precSheet && <UtensilPrecautionSheet utensilName={precSheet.name} precaution={precSheet.prec} zIndex={isNested ? 720 : 620} onClose={() => setPrecSheet(null)} />}
     </>,
     document.body
   );
