@@ -1,11 +1,11 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { Icon } from "../Icon.jsx";
 import { Img, IngImage } from "../Img.jsx";
 import { IngredientPill, UtensilPill, UtImage } from "../StepPills.jsx";
 import { BaseIcon } from "../BaseIcon.jsx";
 import { StepTip } from "../StepTip.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
-import { IngredientRecoHint, UtensilPrecautionCard } from "../QualityHints.jsx";
+import { IngredientRecoHint, PrecautionInfoBadge, UtensilPrecautionSheet } from "../QualityHints.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { isIngredientInSeason } from "@/lib/food/seasonality.js";
@@ -19,6 +19,7 @@ import { capitalize, fmtQty, pluralizeUnit, pluralizeName } from "../../lib/form
  */
 export function RecipeContentMobile({ recipe, activeTab, view, servings, setServings, bump, setBump, panFactor, setShowCalc, baseSteps, setCookMode }) {
   const { mult, recipesById, getIngImage, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, isInStock, seasonResolver, ingredientDB, navigate } = view;
+  const [precSheet, setPrecSheet] = useState(null);
   return (
     <>
       {activeTab === "Ingrédients" && (
@@ -104,22 +105,19 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
       {activeTab === "Ustensiles" && (
         <div style={{ padding: "16px 16px 32px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {(recipe.utensils || []).map(u => (
-              <div key={u.id} className="tap tap-soft" style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
+            {(recipe.utensils || []).map(u => {
+              const prec = getUtPrecaution?.(u);
+              return (
+              <div key={u.id} onClick={prec ? () => setPrecSheet({ name: u.name, prec }) : undefined} onPointerDown={prec ? spawnRipple : undefined} className={prec ? "tap-row" : "tap tap-soft"} style={{ position: "relative", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: 14, gap: 8, cursor: prec ? "pointer" : "default" }}>
+                {prec && <PrecautionInfoBadge tone={prec.tone} />}
                 <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={56} radius={12} />
                 <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{u.name}</span>
               </div>
-            ))}
+              );
+            })}
             {(!recipe.utensils || recipe.utensils.length === 0) && <p style={{ color: "var(--text3)", fontSize: 14, gridColumn: "1/-1" }}>Aucun ustensile.</p>}
           </div>
-          {(() => {
-            const precs = (recipe.utensils || []).map(u => ({ u, p: getUtPrecaution?.(u) })).filter(x => x.p);
-            return precs.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
-                {precs.map(({ u, p }) => <UtensilPrecautionCard key={u.id} precaution={p} />)}
-              </div>
-            );
-          })()}
+          {precSheet && <UtensilPrecautionSheet utensilName={precSheet.name} precaution={precSheet.prec} onClose={() => setPrecSheet(null)} />}
         </div>
       )}
       {activeTab === "Étapes" && (
