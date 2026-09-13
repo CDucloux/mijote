@@ -62,6 +62,28 @@ export interface IngredientLine {
   cut?: Cut | null;
 }
 
+/**
+ * Forme d'approvisionnement / conservation d'un ingrédient (vocabulaire fermé).
+ * Sert de base à la recommandation qualité (« privilégier frais ou surgelé »).
+ * Distinct de {@link FormeDecoupe} (découpe) : ici on parle du produit acheté.
+ */
+export type IngredientForm =
+  | "fresh"
+  | "frozen"
+  | "canned"
+  | "jarred"
+  | "dried";
+
+/**
+ * Recommandation culinaire, ingrédient par ingrédient, sur la forme à privilégier
+ * à l'achat (pas une règle nutritionnelle). Optionnelle : la majorité des ingrédients
+ * n'en portent pas. `message` éditorialise ; à défaut on dérive un libellé des formes.
+ */
+export interface QualityRecommendation {
+  preferredForms: IngredientForm[];
+  message?: string;
+}
+
 /** Ustensile lié à une recette (résolu à la base par `dbId`). */
 export interface Utensil {
   id?: string;
@@ -85,7 +107,27 @@ export interface UtensilDbItem {
   /** Appareil associé (clé de `APPLIANCE_SCHEMAS`) ; absent = ustensile simple. */
   appliance?: string;
   _ro?: boolean;
+  /** Précaution d'utilisation éditoriale (chaleur, revêtement…) ; absent = rien à signaler. */
+  usagePrecaution?: UsagePrecaution;
   [k: string]: unknown;
+}
+
+/**
+ * Tonalité d'une précaution d'utilisation : conseil neutre, conseil de cuisson lié
+ * à la chaleur, ou véritable attention. Pilote l'icône/couleur d'affichage : toutes
+ * les précautions ne sont pas des risques (cf. spec « ne pas tout transformer en alerte »).
+ */
+export type PrecautionTone = "info" | "heat" | "warning";
+
+/**
+ * Précaution d'utilisation d'un ustensile, éditorialisée directement au niveau de
+ * l'ustensile (pas de moteur de règles). `tip` porte le « bon réflexe » optionnel.
+ */
+export interface UsagePrecaution {
+  tone?: PrecautionTone;
+  title: string;
+  description: string;
+  tip?: string;
 }
 
 /** Étape de préparation, avec liaisons optionnelles vers ingrédients/ustensiles. */
@@ -165,5 +207,7 @@ export interface IngredientDbItem {
   gramsPerPiece?: number;
   months?: number[];
   nutrition?: Record<string, number> & { isVegetable?: boolean };
+  /** Recommandation de forme à privilégier (frais/surgelé…) ; absent = aucune. */
+  qualityRecommendation?: QualityRecommendation;
   [k: string]: unknown;
 }

@@ -4,6 +4,7 @@ import { UtImage } from "../StepPills.jsx";
 import { BaseIcon } from "../BaseIcon.jsx";
 import { StepTip } from "../StepTip.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
+import { IngredientRecoHint, UtensilPrecautionCard } from "../QualityHints.jsx";
 import { groupBy, sectionRuns, hasGroups, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
 import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../../lib/format.js";
 
@@ -13,7 +14,7 @@ import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "..
  * via `view` (contexte de rendu partagé avec la version mobile).
  */
 export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
-  const { mult, recipesById, getIngImage, getUtImage, resolveComp, navigate } = view;
+  const { mult, recipesById, getIngImage, getUtImage, getIngReco, getUtPrecaution, resolveComp, navigate } = view;
   return (
     <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: "12px 16px 16px", gap: 16 }}>
       {/* Left col: ingrédients + ustensiles (card) */}
@@ -52,7 +53,10 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                   <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
                   <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
                 </div>
-                <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.unit ? ing.name : pluralizeName(ing.amount * mult, ing.name))}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.unit ? ing.name : pluralizeName(ing.amount * mult, ing.name))}</div>
+                  {(() => { const reco = getIngReco?.(ing); return reco && <IngredientRecoHint label={reco.label} style={{ marginTop: 2 }} />; })()}
+                </div>
               </div>
               );
             })}
@@ -71,6 +75,14 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                 </div>
               ))}
             </div>
+            {(() => {
+              const precs = recipe.utensils.map(u => ({ u, p: getUtPrecaution?.(u) })).filter(x => x.p);
+              return precs.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+                  {precs.map(({ u, p }) => <UtensilPrecautionCard key={u.id} precaution={p} />)}
+                </div>
+              );
+            })()}
           </div>
         )}
 

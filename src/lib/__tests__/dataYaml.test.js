@@ -450,3 +450,86 @@ describe("parseUtensilsYaml", () => {
     expect(errors.join(" ")).toMatch(/appareil inconnu/);
   });
 });
+
+describe("parseIngredientsYaml – qualityRecommendation", () => {
+  it("parses, normalizes forms and round-trips", () => {
+    const { items, errors } = parseIngredientsYaml(`
+- name: Petits pois
+  qualityRecommendation:
+    preferredForms: [frozen, fresh]
+    message: Privilégiez frais ou surgelé.
+`);
+    expect(errors).toEqual([]);
+    expect(items[0].qualityRecommendation).toEqual({ preferredForms: ["fresh", "frozen"], message: "Privilégiez frais ou surgelé." });
+    const round = parseIngredientsYaml(formatIngredientsYaml(items)).items[0];
+    expect(round.qualityRecommendation).toEqual({ preferredForms: ["fresh", "frozen"], message: "Privilégiez frais ou surgelé." });
+  });
+
+  it("omits qualityRecommendation when absent", () => {
+    const { items } = parseIngredientsYaml(`- name: Tomate`);
+    expect(items[0]).not.toHaveProperty("qualityRecommendation");
+  });
+
+  it("rejects an unknown form", () => {
+    const { items, errors } = parseIngredientsYaml(`
+- name: X
+  qualityRecommendation:
+    preferredForms: [fresh, gaseous]
+`);
+    expect(items).toEqual([]);
+    expect(errors.join(" ")).toMatch(/preferredForms/);
+  });
+
+  it("rejects an empty preferredForms list", () => {
+    const { errors } = parseIngredientsYaml(`
+- name: X
+  qualityRecommendation:
+    preferredForms: []
+`);
+    expect(errors.join(" ")).toMatch(/vide/);
+  });
+});
+
+describe("parseUtensilsYaml – usagePrecaution", () => {
+  it("parses a full precaution and round-trips", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: Cocotte en fonte
+  usagePrecaution:
+    tone: heat
+    title: Évitez le feu maximum
+    description: La fonte accumule la chaleur.
+    tip: Commencez à feu moyen.
+`);
+    expect(errors).toEqual([]);
+    expect(items[0].usagePrecaution).toEqual({ tone: "heat", title: "Évitez le feu maximum", description: "La fonte accumule la chaleur.", tip: "Commencez à feu moyen." });
+    const round = parseUtensilsYaml(formatUtensilsYaml(items)).items[0];
+    expect(round.usagePrecaution).toEqual(items[0].usagePrecaution);
+  });
+
+  it("omits usagePrecaution when absent", () => {
+    const { items } = parseUtensilsYaml(`- name: Fouet`);
+    expect(items[0]).not.toHaveProperty("usagePrecaution");
+  });
+
+  it("requires both title and description", () => {
+    const a = parseUtensilsYaml(`
+- name: X
+  usagePrecaution:
+    title: Titre seul
+`);
+    expect(a.items).toEqual([]);
+    expect(a.errors.join(" ")).toMatch(/description/);
+  });
+
+  it("rejects an unknown tone", () => {
+    const { items, errors } = parseUtensilsYaml(`
+- name: X
+  usagePrecaution:
+    tone: danger
+    title: T
+    description: D
+`);
+    expect(items).toEqual([]);
+    expect(errors.join(" ")).toMatch(/tonalité/);
+  });
+});

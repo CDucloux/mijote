@@ -5,6 +5,7 @@ import { IngredientPill, UtensilPill, UtImage } from "../StepPills.jsx";
 import { BaseIcon } from "../BaseIcon.jsx";
 import { StepTip } from "../StepTip.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
+import { IngredientRecoHint, UtensilPrecautionCard } from "../QualityHints.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { isIngredientInSeason } from "@/lib/food/seasonality.js";
@@ -17,7 +18,7 @@ import { capitalize, fmtQty, pluralizeUnit, pluralizeName } from "../../lib/form
  * portions/pas-à-pas. Le rendu suit strictement l'onglet actif.
  */
 export function RecipeContentMobile({ recipe, activeTab, view, servings, setServings, bump, setBump, panFactor, setShowCalc, baseSteps, setCookMode }) {
-  const { mult, recipesById, getIngImage, getUtImage, getUtDetail, resolveComp, isInStock, seasonResolver, ingredientDB, navigate } = view;
+  const { mult, recipesById, getIngImage, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, isInStock, seasonResolver, ingredientDB, navigate } = view;
   return (
     <>
       {activeTab === "Ingrédients" && (
@@ -64,6 +65,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               // `dbId` figé à l'enregistrement peut être vide pour un ingrédient
               // reconnu après coup → on le résout par nom pour rendre la ligne
               // cliquable (accès au détail sans passer par « Modifier »).
+              const reco = isComp ? null : getIngReco?.(ing);
               const effDbId = isComp ? "" : (ing.dbId || findIngredientMatch(ing.name, ingredientDB)?.id || "");
               const clickable = isComp ? !!rc.comp : !!effDbId;
               const onClick = () => {
@@ -83,6 +85,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
                       {isComp && <span style={{ fontSize: 9.5, fontWeight: 600, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
                     </div>
                     {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name={badge.icon} size={12} color={badge.color} />{badge.text}</div>}
+                    {reco && <IngredientRecoHint label={reco.label} style={{ marginTop: 3 }} />}
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
                     <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
@@ -109,6 +112,14 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
             ))}
             {(!recipe.utensils || recipe.utensils.length === 0) && <p style={{ color: "var(--text3)", fontSize: 14, gridColumn: "1/-1" }}>Aucun ustensile.</p>}
           </div>
+          {(() => {
+            const precs = (recipe.utensils || []).map(u => ({ u, p: getUtPrecaution?.(u) })).filter(x => x.p);
+            return precs.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+                {precs.map(({ u, p }) => <UtensilPrecautionCard key={u.id} precaution={p} />)}
+              </div>
+            );
+          })()}
         </div>
       )}
       {activeTab === "Étapes" && (

@@ -20,6 +20,7 @@ import {
   TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES, buildTechniqueFromDraft,
 } from "@/lib/household/dataYaml.js";
 import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
+import { PRECAUTION_TONES } from "@/lib/utensils/usagePrecaution.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { formatMonths } from "@/lib/food/seasonality.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
@@ -238,7 +239,19 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     if (item?.image) deleteImageByUrl(item.image);
     setIngredientDB(prev => prev.filter(d => d.id !== id));
   };
-  const saveUt = item => {
+  const saveUt = raw => {
+    // Précaution éditoriale : on ne persiste que si titre ET description sont remplis
+    // (sinon on retire le champ pour ne pas stocker de fiche vide).
+    const p = raw.usagePrecaution;
+    const item = { ...raw };
+    if (p && (p.title || "").trim() && (p.description || "").trim()) {
+      item.usagePrecaution = {
+        tone: p.tone || "heat",
+        title: p.title.trim(),
+        description: p.description.trim(),
+        ...((p.tip || "").trim() ? { tip: p.tip.trim() } : {}),
+      };
+    } else delete item.usagePrecaution;
     if (utensilDB.find(d => d.id === item.id)) setUtensilDB(prev => prev.map(d => d.id === item.id ? item : d));
     else setUtensilDB(prev => [...prev, { ...item, id: "db_u" + Date.now() }]);
     setEditUt(null);
@@ -909,6 +922,21 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           </>)}
           <div className="field-label">Photo</div>
           <ImageUpload value={editUt.image} onChange={v => setEditUt(p => ({ ...p, image: v }))} style={{ marginBottom: 14, height: 100 }} pathPrefix={isAdmin ? "master/utensils" : "utensils"} />
+          {/* Précaution d'utilisation (facultative) : conseil éditorial affiché sur la
+              fiche et en recette. Vide → non enregistré (cf. saveUt). */}
+          {(() => {
+            const prec = editUt.usagePrecaution || {};
+            const upPrec = patch => setEditUt(p => ({ ...p, usagePrecaution: { ...(p.usagePrecaution || {}), ...patch } }));
+            return (<>
+              <div className="field-label">Précaution d'utilisation <span style={{ color: "var(--text3)", fontWeight: 400 }}>(facultatif)</span></div>
+              <select className="field-input" value={prec.tone || "heat"} onChange={e => upPrec({ tone: e.target.value })} style={{ marginBottom: 10 }}>
+                {Object.entries(PRECAUTION_TONES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+              </select>
+              <input className="field-input" placeholder="Titre (ex: Évitez le feu maximum)" value={prec.title || ""} onChange={e => upPrec({ title: e.target.value })} style={{ marginBottom: 10 }} />
+              <textarea className="field-input" placeholder="Description courte (1 à 3 phrases)" rows={3} value={prec.description || ""} onChange={e => upPrec({ description: e.target.value })} style={{ marginBottom: 10, resize: "vertical" }} />
+              <input className="field-input" placeholder="Bon réflexe (facultatif)" value={prec.tip || ""} onChange={e => upPrec({ tip: e.target.value })} style={{ marginBottom: 14 }} />
+            </>);
+          })()}
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="arrowLeft" size={15} /> Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}><Icon name="save" size={15} /> Sauvegarder</button>

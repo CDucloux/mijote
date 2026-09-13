@@ -2,6 +2,7 @@ import { Icon } from "../Icon.jsx";
 import { EmptyArt } from "../EmptyArt.jsx";
 import { ShoppingItemRow } from "../ShoppingItemRow.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { resolveQualityRecommendation } from "@/lib/food/qualityRecommendation.js";
 import { buildShoppingSections } from "@/lib/food/shoppingList.js";
 import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.jsx";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";
@@ -20,11 +21,15 @@ export function ShoppingListView({
   // changement de liste (clé = activeList.id), les listeners se réarment pour
   // CHAQUE liste (le hook au niveau page restait collé à la première).
   const { scrollRef, contentRef } = useElasticScroll();
-  const renderItem = item => (
-    <ShoppingItemRow key={item.id} item={item} striking={pending.has(item.id)} unstriking={unchecking.has(item.id)}
-      imageSrc={item.image || findIngredientMatch(item.name, ingredientDB)?.image || ""}
-      onBuy={onBuy} onDelete={it => onDeleteItem(activeList.id, it.id)} />
-  );
+  const renderItem = item => {
+    const dbItem = ingredientDB.find(d => d.id === item.dbId) || (item.name ? findIngredientMatch(item.name, ingredientDB) : null);
+    const reco = resolveQualityRecommendation(dbItem);
+    return (
+      <ShoppingItemRow key={item.id} item={item} striking={pending.has(item.id)} unstriking={unchecking.has(item.id)}
+        imageSrc={item.image || dbItem?.image || ""} subtitle={reco?.label}
+        onBuy={onBuy} onDelete={it => onDeleteItem(activeList.id, it.id)} />
+    );
+  };
   const { sections, done } = buildShoppingSections(activeList.items, categories, it => catOf(it.name));
   return (
     <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>

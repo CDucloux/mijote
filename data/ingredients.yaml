@@ -32,6 +32,27 @@
     saturatedFat: 0.04
     fiber: 2.8
     salt: 0.07
+  qualityRecommendation:
+    preferredForms: [fresh, frozen]
+    message: Pour un meilleur résultat, privilégiez les carottes fraîches ou surgelées.
+
+- id: db_i_petits_pois
+  name: Petits pois
+  aliases: [petit pois, pois]
+  category: vegetable
+  months: [5, 6, 7]
+  qualityRecommendation:
+    preferredForms: [fresh, frozen]
+    message: Pour un meilleur résultat, privilégiez les petits pois frais ou surgelés.
+
+- id: db_i_epinards
+  name: Épinards
+  aliases: [epinards, épinard]
+  category: vegetable
+  months: [3, 4, 5, 9, 10, 11]
+  qualityRecommendation:
+    preferredForms: [fresh, frozen]
+    message: Pour un meilleur résultat, privilégiez les épinards frais ou surgelés.
 
 - id: db_i_oignon
   name: Oignon
