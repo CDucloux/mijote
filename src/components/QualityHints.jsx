@@ -43,11 +43,11 @@ export function PrecautionInfoBadge({ tone, style }) {
  * recette) ou sur l'ustensile d'une étape (mode pas à pas). En-tête au ton de la
  * précaution, puis titre, description et « bon réflexe ».
  */
-export function UtensilPrecautionSheet({ utensilName, precaution, onClose }) {
+export function UtensilPrecautionSheet({ utensilName, precaution, onClose, zIndex }) {
   if (!precaution) return null;
   const { icon, label, accent } = precautionVisual(precaution.tone);
   return (
-    <SwipeableSheet onClose={onClose}>
+    <SwipeableSheet onClose={onClose} zIndex={zIndex}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
         <span style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 14, background: accent + "1f", display: "grid", placeItems: "center", fontSize: 22 }} aria-hidden="true">{icon}</span>
         <div style={{ minWidth: 0 }}>
