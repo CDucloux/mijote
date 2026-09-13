@@ -1,53 +1,407 @@
-# ─── Base d'ustensiles (échantillon de format) ────────────────────────────────
-# Source de vérité versionnée pour master/utensils. Format de l'import YAML
-# (Configuration › Ustensiles) et de `npm run seed`.
-#
-# Schéma : { id?, name, category?, appliance?, image?, usagePrecaution? }
-#   id              dbid stable (facultatif ; généré si absent).
-#   name            nom affiché (requis).
-#   usagePrecaution précaution d'utilisation éditoriale (facultative) :
-#                   { tone?, title, description, tip? }. tone ∈ info|heat|warning
-#                   (défaut heat) pilote l'icône/couleur ; tip = « bon réflexe ».
-#   image           URL (facultatif).
+# Base d'ustensiles Cardamome (69) – généré, réimportable.
 
-- id: db_u_casserole
-  name: Casserole
+- id: db_u1782069690803
+  name: Balance de cuisine
+  category: mesure
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6a1cgg1gfs0.jpg?alt=media&token=146662e6-af5b-4d2b-a60d-f9663ec7d0e7
 
-- id: db_u_cocotte_fonte
-  name: Cocotte en fonte
+- id: db_u1782070332939
+  name: Batteur électrique
+  category: appareils
+  appliance: batteur
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6oto9ty7wc0.jpg?alt=media&token=ec063621-12c4-48be-a0f1-79f3e43aad53
+
+- id: db_u_blender
+  name: Blender
+  category: appareils
+  appliance: blender
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsejtj460uff0q.jpg?alt=media&token=409164e9-e775-4961-bc06-bf708685ac73
+
+- id: db_u1781259094015
+  name: Bol
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqaro6m9xxc9sz.png?alt=media&token=c7441955-7fa0-4b6c-8d53-81e56ef17df4
+
+- id: db_u1781259932603
+  name: Casserole Inox
   category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqas64t2sdc598.png?alt=media&token=6452cbe7-4188-4e5c-8aee-c7da9f947e88
   usagePrecaution:
     tone: heat
-    title: Évitez le feu maximum
-    description: La fonte accumule fortement la chaleur et la restitue longtemps. Chauffez progressivement à feu moyen pour mieux contrôler la cuisson et éviter de surchauffer la surface.
-    tip: Commencez à feu moyen puis ajustez si nécessaire.
+    title: "Pas besoin de feu maximum"
+    description: "L'inox conduit vite et fort. Une flamme qui déborde du fond chauffe les parois à vide et fait accrocher aliments et matières grasses."
+    tip: "Préchauffe à feu moyen et ajuste la flamme à la taille du fond."
 
-- id: db_u_poele_inox
-  name: Poêle inox
-  category: cuisson
-  usagePrecaution:
-    tone: heat
-    title: Pas besoin de feu maximum
-    description: L'inox peut devenir très chaud. Une chaleur excessive favorise l'accroche des aliments et peut brûler les matières grasses.
-    tip: Préchauffez progressivement à feu moyen puis ajustez.
-
-- id: db_u_poele_antiadhesive
-  name: Poêle antiadhésive
-  category: cuisson
-  usagePrecaution:
-    tone: warning
-    title: Évitez la surchauffe
-    description: Une température excessive peut détériorer le revêtement antiadhésif, notamment si l'ustensile chauffe longtemps à vide.
-    tip: Utilisez plutôt une chaleur faible à moyenne et évitez de chauffer longtemps à vide.
-
-- id: db_u_fouet
-  name: Fouet
+- id: db_u_cercle_a_patisserie
+  name: Cercle à pâtisserie
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsod7d5rdpgrln.jpg?alt=media&token=b3258295-829d-4f41-9275-4a2d3f8da5b1
 
 - id: db_u_chinois
   name: Chinois
+  category: filtrage
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsel41pkep9vwp.png?alt=media&token=3115ba5d-8598-405b-a998-b13ec42abd28
 
-- id: db_u_etamine
-  name: Étamine
+- id: db_u1781461393487
+  name: Ciseaux de cuisine
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqe445tz4s9m2q.jpg?alt=media&token=7fdb5e9d-62e9-4f40-a9d3-ce19e882641d
+
+- id: db_u_cocotte_en_fonte
+  name: Cocotte en fonte
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsocukkv0w3g8u.jpg?alt=media&token=21bffee9-8754-4434-9312-b004ed44a318
+  usagePrecaution:
+    tone: heat
+    title: "Montée en température progressive"
+    description: "La fonte accumule fortement la chaleur et la restitue longtemps. À feu vif elle surchauffe et attache."
+    tip: "Démarre à feu moyen, puis baisse une fois chaude : elle tient la température seule."
+
+- id: db_u_cocotte_minute
+  name: Cocotte-minute
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsod50ff0za1rh.jpg?alt=media&token=e74c51bf-ab08-4505-9ed0-38dbdd7451e8
+  usagePrecaution:
+    tone: warning
+    title: "Vérifie soupape et joint"
+    description: "Sous pression, une soupape encrassée ou un joint fatigué devient dangereux, et on ne force jamais l'ouverture tant que la pression n'est pas retombée."
+    tip: "Contrôle le joint, ne remplis pas au-delà des deux tiers, et laisse la pression chuter avant d'ouvrir."
+
+- id: db_u_corne_a_patisserie
+  name: Corne à pâtisserie
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsocs3q2ylaglo.jpg?alt=media&token=8177e5f1-5153-4a5e-beb2-6c8eed775997
+
+- id: db_u1781258886066
+  name: Couteau
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqarjpruqj0c08.png?alt=media&token=efbad214-b62c-4afe-8aee-2f9b5a936674
+
+- id: db_u1782070017619
+  name: Couteau d'office
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6h2lx0y9spj.jpg?alt=media&token=461b59da-0d0b-4672-bb4e-dae081d87a94
+
+- id: db_u1782069911394
+  name: Couteau de chef
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6esbui99qd6.jpg?alt=media&token=a3b0da67-5adb-48d7-a577-ad11156b24d2
+
+- id: db_u_crepiere
+  name: Crêpière
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsochiikydx1t4.jpg?alt=media&token=36c17c28-0b2a-45f2-83ad-938c2f3c5878
+  usagePrecaution:
+    tone: heat
+    title: "Chaleur vive mais constante"
+    description: "Une crêpière chauffe vite et supporte mal la surchauffe à vide, surtout si elle est antiadhésive."
+    tip: "Chauffe à feu moyen-vif, graisse légèrement et garde une flamme régulière entre deux crêpes."
+
+- id: db_u_cuillere_en_bois
+  name: Cuillère en bois
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fms4ezxnzwlvvrp.jpg?alt=media&token=9eb894f1-0950-4ed8-b5b1-988c2047a102
+
+- id: db_u_cuilleres_doseuses
+  name: Cuillères doseuses
+  category: mesure
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsocn20oo9zhm2.jpg?alt=media&token=0bf77cb0-11c9-4023-89f6-489fc76f6f08
+
+- id: db_u1781432396290
+  name: Cuiseur à riz
+  category: appareils
+  appliance: cuiseur_riz
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmselqe2idytffm.jpg?alt=media&token=970027cb-5bfd-4cc1-8183-955dceea894d
+
+- id: db_u1781461473635
+  name: Cul de poule
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqe45wdmwdxbjd.jpg?alt=media&token=709c508d-0c49-4291-a62c-301532677ca5
+
+- id: db_u_ecumoire
+  name: Écumoire
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsodbywq1m1roc.jpg?alt=media&token=8c182165-1feb-4752-80a2-bd55e8d4cdc2
+
+- id: db_u1781281720467
+  name: Eplucheur
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqb5555safhagi.png?alt=media&token=11983623-84ff-4f63-9ccf-1944f23c653c
+
+- id: db_u_essoreuse_a_salade
+  name: Essoreuse à salade
+  category: filtrage
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsejmdx6gj70mt.jpg?alt=media&token=21b49280-9e00-45d0-aee6-6acb8663c789
+
+- id: db_u1781433510186
+  name: Faitout en fonte
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqdnig9i9sbff2.png?alt=media&token=f02ba0c9-28a6-4b45-bba7-c43055787de8
+  usagePrecaution:
+    tone: heat
+    title: "Parfait pour mijoter doucement"
+    description: "La fonte garde la chaleur : une fois à température, un tout petit feu suffit à entretenir le frémissement d'un bouillon ou d'une sauce."
+    tip: "Porte à ébullition puis réduis au minimum pour mijoter sans déborder."
+
+- id: db_u1781461063647
+  name: Film alimentaire
+  category: divers
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqe3x2apwkma6z.jpg?alt=media&token=e2990e62-f868-4473-b1d4-84121b033d55
+
+- id: db_u1781260347349
+  name: Fouet
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqe05am0imzo3h.jpg?alt=media&token=622b42d0-efc6-4502-bd66-a08cd868d8f7
+
+- id: db_u1787040053960
+  name: Four
+  category: appareils
+  appliance: four
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsyds3ew9bbmzc.jpg?alt=media&token=7677cf04-dee0-4730-8e58-3e1c105019b3
+
+- id: db_u1781260839626
+  name: Fourchette
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqaspjh5m8gfe0.png?alt=media&token=0bee2863-7397-43f3-b228-166a0a56e856
+
+- id: db_u1781260504697
+  name: Grande Passoire
+  category: filtrage
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqasico41xawyx.png?alt=media&token=dd88b562-fff2-4db8-a1ad-7fa75937035d
+
+- id: db_u_grille_de_refroidissement
+  name: Grille de refroidissement
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsod6ia39pvw4l.jpg?alt=media&token=0b0f8b56-fa79-46f2-bc6b-d36be110a584
+
+- id: db_u1781260209571
+  name: Louche
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqasc2i3chucau.png?alt=media&token=7fbe2ce7-4757-45ea-89db-200b3037bd41
+
+- id: db_u_mandoline
+  name: Mandoline
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsej8axe790912.jpg?alt=media&token=08747585-104a-43d8-9f22-eb1c6949f6d0
+
+- id: db_u1781461552617
+  name: Maryse
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqe47ldb0lh0jj.jpg?alt=media&token=c7c32fe0-7040-42f2-a447-c483f62429f3
+
+- id: db_u1781430915409
+  name: Microplane
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqdlyv9rhv7i49.png?alt=media&token=45f225ad-e63f-468c-9a0d-f16bff74d112
+
+- id: db_u1781900660507
+  name: Mixeur plongeant
+  category: appareils
+  appliance: mixeur_plongeant
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqldn73wqmuhhs.jpg?alt=media&token=34fecb07-a315-4680-860d-6b8fc44dd104
+
+- id: db_u1782070659283
+  name: Mortier et pilon
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6uteg10ak4m.jpg?alt=media&token=ee6f303e-cfb8-4eac-baf1-54f8e35c9873
+
+- id: db_u1782070117181
+  name: Moule à cake en verre
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6j71vod04fy.png?alt=media&token=ce8ba320-7723-456b-80f9-48d857f123a1
+
+- id: db_u_moule_a_charniere
+  name: Moule à charnière
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsoevoo4pk6az3.jpg?alt=media&token=93621821-f5e6-4b6d-83b1-775a746ac396
+
+- id: db_u1781461650988
+  name: Moule à madeleines
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsodao9dcopgpj.png?alt=media&token=0379830e-c3d8-47c8-a696-9b222012a41a
+
+- id: db_u_moule_a_muffins
+  name: Moule à muffins
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsocg07nbxul08.jpg?alt=media&token=58872da0-e621-4f9f-8127-ceb26eab7273
+
+- id: db_u_moule_a_savarin
+  name: Moule à savarin
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsocdgb3b7le2x.jpg?alt=media&token=9880807c-b1c2-4851-b93b-f94ee39cbb27
+
+- id: db_u_moule_a_tarte
+  name: Moule à tarte
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsekpbz7gd0nnf.jpg?alt=media&token=c206b116-52c5-4b95-b1ea-0e49b0a809f3
+
+- id: db_u1782070993475
+  name: Papier aluminium
+  category: divers
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo71zguyo63nm.jpg?alt=media&token=39305ea3-c45a-4ade-a626-651c5a182583
+
+- id: db_u1782070205135
+  name: Papier cuisson
+  category: divers
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6l2x8gk37t8.jpg?alt=media&token=f08be8ce-ae91-49b3-946a-d9cd4d6bef42
+
+- id: db_u1781260583715
+  name: Petite Passoire
+  category: filtrage
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqask3yefk7k9b.png?alt=media&token=1c588bb4-ebef-46bb-ae03-3981e1854cdd
+
+- id: db_u1782069787246
+  name: Pince de cuisine
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6c4aeg7s746.jpg?alt=media&token=f0f080d6-ad22-4466-92f2-a55f28c3a896
+
+- id: db_u1782070723844
+  name: Pinceau de cuisine
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6w7a53ldz77.jpg?alt=media&token=c6dfd268-2423-489e-8cea-583d610ded98
+
+- id: db_u1781259021638
+  name: Planche à découper
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqarmm6uuis7tx.png?alt=media&token=5b06a4ee-97b1-4dd7-91bb-28620da38cd6
+
+- id: db_u1781433449491
+  name: Plaque de cuisson
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqdnh6nwrruh4i.png?alt=media&token=c4defd73-aed8-4093-a454-3fa11c2c723b
+  usagePrecaution:
+    tone: warning
+    title: "Attention au choc thermique"
+    description: "Passer une plaque brûlante sous l'eau froide la voile durablement, et une plaque déformée cuit ensuite de façon inégale."
+    tip: "Laisse-la refroidir à l'air avant de la laver."
+
+- id: db_u1781433337569
+  name: Plaque de cuisson perforée
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqdne7n6qh6oj3.png?alt=media&token=49fa001f-bb7f-4ce6-a10d-647320dbe84e
+  usagePrecaution:
+    tone: info
+    title: "Pensée pour la circulation d'air"
+    description: "Les perforations dorent le dessous des pâtes et des pains. Un papier cuisson plein posé dessus annule complètement cet effet."
+    tip: "Utilise-la nue ou avec un tapis perforé, jamais avec du papier cuisson classique."
+
+- id: db_u1781433036296
+  name: Plat à gratin
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmselivcf1xu9z1.jpg?alt=media&token=321a036e-6c55-400d-8c9a-4d4e942cc184
+  usagePrecaution:
+    tone: warning
+    title: "Évite les chocs thermiques"
+    description: "Un plat en verre ou céramique sorti du four et posé sur une surface froide ou humide peut se fissurer d'un coup."
+    tip: "Pose-le sur un dessous sec ou un torchon plié, et évite d'y verser un liquide froid quand il est brûlant."
+
+- id: db_u_poche_a_douille
+  name: Poche à douille
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmselfk71eqhqtu.jpg?alt=media&token=c953661e-baf3-40bf-a434-daa442189d4f
+
+- id: db_u1781260000909
+  name: Poêle Inox
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqas7lq03q90zf.png?alt=media&token=761afab1-7933-4ef1-8364-2e7d5d2d797d
+  usagePrecaution:
+    tone: heat
+    title: "Préchauffe avant d'huiler"
+    description: "Une poêle inox bien chaude devient quasi antiadhésive. Trop tôt, ça colle ; chauffée à vide trop longtemps, elle bleuit et brûle l'huile."
+    tip: "Fais le test de la goutte d'eau : elle doit perler et glisser avant que tu verses l'huile."
+
+- id: db_u_presse_agrumes
+  name: Presse-agrumes
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsod01pcrgi32g.png?alt=media&token=a8383c46-08ed-4743-900b-973f8e3094fb
+
+- id: db_u_presse_ail
+  name: Presse-ail
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsejl5hbil5scd.jpg?alt=media&token=14ec0f86-09fc-4aa4-b7a2-0db93bc596f1
+
+- id: db_u_presse_puree
+  name: Presse-purée
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmseky96tgw30ac.jpg?alt=media&token=0e166e0a-7e03-4710-b8f0-e9fb7f297ee2
+
+- id: db_u_ramequin
+  name: Ramequin
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmselk3nv1r8zwg.jpg?alt=media&token=a2d44ffb-aa90-4904-b308-c1e529e525bc
+
+- id: db_u1782070818824
+  name: Râpe
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6y8i80h5nam.jpg?alt=media&token=3c962eda-f310-456e-9571-df32cf15396a
+
+- id: db_u_robot_patissier
+  name: Robot pâtissier
+  category: appareils
+  appliance: robot_patissier
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsocbmn2370iq9.jpg?alt=media&token=e78329fc-793f-427c-93cb-88877009028c
+
+- id: db_u1782070556489
+  name: Rouleau à pâtisserie
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqo6sm5cot28i2.jpg?alt=media&token=bedaa3a5-d4e8-4f0e-9d74-285b64ae7576
+
+- id: db_u_saladier
+  name: Saladier
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fms5qzr0o41vol8.jpg?alt=media&token=6178e152-f781-407d-a55f-30064712a115
 
 - id: db_u_sauteuse
   name: Sauteuse
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fms5qyy9h5eaqae.jpg?alt=media&token=0f5c06ae-c972-489c-bb09-a9ceecb68174
+  usagePrecaution:
+    tone: heat
+    title: "Préchauffe et ne surcharge pas"
+    description: "Large et pratique pour saisir, la sauteuse perd vite sa chaleur quand on la remplit. Trop froide ou trop chargée, les aliments rendent leur eau au lieu de dorer."
+    tip: "Préchauffe à feu moyen-vif et saisis en plusieurs fois si la quantité est importante."
+
+- id: db_u1781260056927
+  name: Spatule
+  category: preparation
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqas8t75okll36.png?alt=media&token=4764893f-3d61-4a86-ac9c-7b693cff55a9
+
+- id: db_u_spatule_coudee
+  name: Spatule coudée
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsoddv2dv7auls.jpg?alt=media&token=50321b19-c4c9-4419-999f-b7cd7513749f
+
+- id: db_u_tamis
+  name: Tamis
+  category: filtrage
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmseku4vpsgtwfi.jpg?alt=media&token=a6954d73-45c2-4249-ab4d-424cce631ca9
+
+- id: db_u_tapis_de_cuisson_silicone
+  name: Tapis de cuisson en silicone
+  category: patisserie
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsoew7wciy2e85.jpg?alt=media&token=32fce06d-1cb9-4111-a81f-73a73b392530
+
+- id: db_u_thermometre_de_cuisson
+  name: Thermomètre de cuisson
+  category: mesure
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsejceq7w80m2x.jpg?alt=media&token=2ff4cc60-4b6d-4124-940a-49ed8c0f1ed8
+
+- id: db_u1781435238540
+  name: Verre doseur
+  category: mesure
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqe07h9pj612hh.jpg?alt=media&token=bc17647e-a1ca-4c4d-9113-f01ca07e4aaa
+
+- id: db_u_vide_pomme
+  name: Vide-pomme
+  category: decoupe
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsekvn01aen4um.jpg?alt=media&token=ea227441-af1f-491b-a88f-2a311a141236
+
+- id: db_u_wok
+  name: Wok
+  category: cuisson
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsekmy12ve7rty.jpg?alt=media&token=bb5997e6-6248-42be-a25a-aa420339fa4e
+  usagePrecaution:
+    tone: heat
+    title: "Fais-le fumer avant de saisir"
+    description: "Le wok se cuisine à feu vif : il doit être brûlant pour saisir sans que les aliments bouillent. Mais l'huile versée trop tôt fume et rancit."
+    tip: "Chauffe le wok à vide jusqu'au léger filet de fumée, puis verse l'huile juste avant les aliments."
