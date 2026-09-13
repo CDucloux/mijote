@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.36.2 – Cardamome · Précautions ustensiles peaufinées
+
+### Corrigé
+- **Précaution accessible en mode pas à pas** : la fiche de précaution ouverte depuis un ustensile d'étape passait sous l'écran plein cadre et restait inaccessible. Elle s'affiche désormais correctement au-dessus.
+
+### Interface
+- **Précautions plus lisibles** : les descriptions peuvent s'afficher sur plusieurs lignes. La poêle inox propose un barème de puissance selon l'usage (mijoter, cuisson douce, sauté, saisie), et les conseils inox parlent de « puissance de la plaque » plutôt que de « flamme », adaptée à toutes les plaques.
+
 ## v4.36.1 – Cardamome · Précautions ustensiles accessibles d'un tap
 
 ### Interface
