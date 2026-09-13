@@ -28,9 +28,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqas64t2sdc598.png?alt=media&token=6452cbe7-4188-4e5c-8aee-c7da9f947e88
   usagePrecaution:
     tone: heat
-    title: "Pas besoin de feu maximum"
-    description: "L'inox conduit vite et fort. Une flamme qui déborde du fond chauffe les parois à vide et fait accrocher aliments et matières grasses."
-    tip: "Préchauffe à feu moyen et ajuste la flamme à la taille du fond."
+    title: "Pas besoin de puissance maximale"
+    description: "L'inox conduit vite et fort : au-delà des deux tiers de la puissance, on surchauffe le fond à vide et on fait accrocher aliments et matières grasses, sans cuire plus vite pour autant."
+    tip: "Reste sous les deux tiers de la puissance (autour de 4 sur 6) et adapte-la à la taille du fond."
 
 - id: db_u_cercle_a_patisserie
   name: Cercle à pâtisserie
@@ -95,7 +95,7 @@
     tone: heat
     title: "Chaleur vive mais constante"
     description: "Une crêpière chauffe vite et supporte mal la surchauffe à vide, surtout si elle est antiadhésive."
-    tip: "Chauffe à feu moyen-vif, graisse légèrement et garde une flamme régulière entre deux crêpes."
+    tip: "Chauffe à feu moyen-vif, graisse légèrement et garde une chaleur régulière entre deux crêpes."
 
 - id: db_u_cuillere_en_bois
   name: Cuillère en bois
@@ -306,9 +306,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqas7lq03q90zf.png?alt=media&token=761afab1-7933-4ef1-8364-2e7d5d2d797d
   usagePrecaution:
     tone: heat
-    title: "Préchauffe avant d'huiler"
-    description: "Une poêle inox bien chaude devient quasi antiadhésive. Trop tôt, ça colle ; chauffée à vide trop longtemps, elle bleuit et brûle l'huile."
-    tip: "Fais le test de la goutte d'eau : elle doit perler et glisser avant que tu verses l'huile."
+    title: "Préchauffe avant d'huiler, sans excès"
+    description: "Une poêle inox bien chaude devient quasi antiadhésive. Trop tôt, ça colle ; poussée au maximum, elle bleuit et brûle l'huile. Les deux tiers de la puissance suffisent presque toujours."
+    tip: "Fais le test de la goutte d'eau (elle doit perler et glisser) avant d'huiler, et reste autour de 4 sur 6."
 
 - id: db_u_presse_agrumes
   name: Presse-agrumes
