@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.36.1 – Cardamome · Précautions ustensiles accessibles d'un tap
+
+### Interface
+- **Précaution d'ustensile à la demande** : la précaution d'utilisation n'occupe plus un bloc sous la liste. Une pastille d'info signale les ustensiles concernés ; un tap sur la card (ou sur l'ustensile d'une étape en mode pas à pas) ouvre le détail (titre, description, bon réflexe).
+
 ## v4.36.0 – Cardamome · Qualité des ingrédients et précautions ustensiles
 
 ### Ingrédients
