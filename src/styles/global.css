@@ -161,19 +161,18 @@ html.light .ut-pill-desktop {
   background: #ffffff !important;
 }
 
-/* Pills ustensiles cliquables (une précaution est attachée) : retour visuel au
-   survol desktop pour signaler qu'un clic ouvre l'info-bulle des précautions. */
+/* Pills ustensiles cliquables (une précaution est attachée) : retour visuel neutre
+   au survol desktop pour signaler qu'un clic ouvre l'info-bulle des précautions. */
 .ut-pill-clickable {
-  transition: border-color .16s ease, background-color .16s ease, transform .16s ease;
+  transition: border-color .16s ease, background-color .16s ease;
 }
 @media (hover: hover) {
   .ut-pill-clickable:hover {
-    border-color: var(--accent) !important;
-    background: color-mix(in srgb, var(--accent) 8%, var(--surface2)) !important;
-    transform: translateY(-1px);
+    border-color: var(--text3) !important;
+    background: var(--surface) !important;
   }
   html.light .ut-pill-clickable:hover {
-    background: color-mix(in srgb, var(--accent) 8%, #ffffff) !important;
+    background: #f3f4ec !important;
   }
 }
 
