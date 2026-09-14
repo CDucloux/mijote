@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ElasticScroll } from "../components/ElasticScroll.jsx";
+import { useInternalNav } from "../hooks/useInternalNav.js";
 import { GUIDE_DOCS, GUIDE_BY_ID } from "../constants/guideDocs.js";
 
 // ─── GUIDE D'UTILISATION ────────────────────────────────────────────────────────
@@ -13,6 +14,7 @@ const softTile = (color) => color.startsWith("#") ? `color-mix(in srgb, ${color}
 export function GuidePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const onProseClick = useInternalNav();
   const seg = location.pathname.replace(/^\/guide\/?/, "").replace(/\/$/, "");
   const doc = seg ? GUIDE_BY_ID[seg] : null;
 
@@ -28,8 +30,8 @@ export function GuidePage() {
         </h1>
       </div>
 
-      <ElasticScroll style={{ flex: 1, padding: "18px 20px var(--page-pad-b)" }}>
-        <div key={seg || "index"} className="page-slide-in" style={{ maxWidth: 680, margin: "0 auto" }}>
+      <ElasticScroll style={{ flex: 1, padding: "18px 20px var(--page-pad-b)" }} resetKey={seg || "index"}>
+        <div key={seg || "index"} className="page-slide-in" onClick={onProseClick} style={{ maxWidth: 680, margin: "0 auto" }}>
           {doc ? <Document doc={doc} navigate={navigate} /> : <Index navigate={navigate} />}
         </div>
       </ElasticScroll>

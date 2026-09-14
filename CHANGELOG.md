@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.39.0 – Cardamome · Guide plus vivant et navigation fluide
+
+### Interface
+- **Retour en haut de page à chaque navigation** : dans le Guide et les Informations légales, ouvrir une section (« Sujet suivant », lien interne) ne laisse plus l'écran bloqué en bas de la page précédente ; le contenu repart proprement en haut.
+- **Liens internes fluides** : les liens vers une autre section du Guide ou un document légal (ex. « Tes recettes ») passent désormais par une transition interne au lieu d'un rechargement complet de l'application.
+
+### Contenu
+- **Accroche du Guide « Démarrer » retravaillée** : ton plus direct, Cardamome positionnée comme un compagnon qui allège la charge mentale plutôt qu'un simple carnet de recettes ; renvoi cliquable vers le sujet « Tes recettes ».
+
 ## v4.38.0 – Cardamome · Drapeaux fiables et Guide modernisé
 
 ### Corrigé

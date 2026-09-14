@@ -7,7 +7,7 @@ lead: Comprendre la logique de l'app en cinq minutes, pour que tout le reste cou
 order: 1
 ---
 
-Cardamome n'est pas juste un carnet où recopier des recettes. C'est une cuisine qui te comprend : derrière chaque plat, une vraie base d'**ingrédients**, d'**ustensiles** et de **techniques** relie tout ce que tu fais. C'est ce qui permet à l'app de calculer une difficulté, une saison ou un Nutri-Score toute seule, de te planifier une semaine cohérente et de tenir tes courses et ton stock à jour sans que tu aies à y penser.
+Cardamome n'est pas une énième appli où recopier des recettes. C'est un compagnon de cuisine qui pense avec toi et allège ta charge mentale : derrière chaque plat, un moteur d'**ingrédients**, d'**ustensiles** et de **techniques** relie tout ce que tu fais. Résultat, l'app calcule seule la difficulté, la saison et le Nutri-Score, te génère une semaine cohérente et tient tes courses et ton stock à jour, sans que tu aies à y penser. Toi, tu cuisines ; elle gère le reste.
 
 Ce guide explique, sujet par sujet, comment en tirer parti. Si tu débutes, lis cette page en entier : elle donne la logique d'ensemble, le reste coule de source.
 
@@ -25,11 +25,11 @@ En bas de l'écran, cinq onglets, du plus quotidien au plus ponctuel :
 
 Trois façons de remplir ta bibliothèque, selon ce que tu as sous la main :
 
-1. **Créer une recette** depuis l'onglet Recettes, avec le bouton **Nouvelle recette**. Tu saisis les ingrédients et les étapes ; Cardamome reconnaît les ingrédients connus au passage.
-2. **Importer** une recette que tu as ailleurs (un lien, un texte collé, une photo). Voir le sujet *Tes recettes* pour le détail.
+1. **Créer une recette** depuis l'onglet Recettes, avec le bouton **Nouvelle recette**. Tu saisis les ingrédients et les étapes ; son moteur de reconnaissance d'ingrédients identifie au passage ceux qu'il connaît.
+2. **Importer une recette** que tu as ailleurs (un lien, un texte collé, une photo). Voir le sujet [Tes recettes](/guide/recettes) pour le détail.
 3. **Explorer la communauté** depuis Accueil > Découvrir, et **cloner** une recette qui te plaît : elle atterrit dans ta bibliothèque, prête à être cuisinée ou adaptée.
 
-Une fois quelques recettes en place, tout le reste s'enchaîne : tu planifies ta semaine, la liste de courses se génère, et ce que tu achètes vient garnir ton stock.
+Une fois quelques recettes en place, tout le reste s'enchaîne : tu planifies ta semaine, la liste de courses se génère, et ce que tu achètes vient enrichir ton stock.
 
 ## Le fil rouge : tout est relié
 

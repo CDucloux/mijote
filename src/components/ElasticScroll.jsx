@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "react";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 
@@ -23,11 +24,17 @@ import { useIsDesktop } from "../hooks/useIsDesktop.js";
  * @param className - Classe(s) sur le conteneur scrollable.
  * @param style - Styles additionnels du conteneur scrollable (`overflow-y` déjà posé).
  * @param contentStyle - Styles additionnels de l'enfant transformé.
+ * @param resetKey - Quand sa valeur change, le conteneur repart en haut (scrollTop 0) :
+ *   utile lors d'une navigation interne (sujet suivant, lien de prose) pour ne pas
+ *   rester bloqué en bas de la page précédente.
  * @param children - Le contenu défilant.
  */
-export function ElasticScroll({ max = 90, armWhenUnscrollable = false, className, style, contentStyle, children }) {
+export function ElasticScroll({ max = 90, armWhenUnscrollable = false, className, style, contentStyle, resetKey, children }) {
   const isDesktop = useIsDesktop();
   const { scrollRef, contentRef } = useElasticScroll({ max, disabled: isDesktop, armWhenUnscrollable });
+  useLayoutEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [resetKey, scrollRef]);
   return (
     <div ref={scrollRef} className={className} style={{ overflowY: "auto", ...style }}>
       <div ref={contentRef} style={{ minHeight: "100%", ...contentStyle }}>
