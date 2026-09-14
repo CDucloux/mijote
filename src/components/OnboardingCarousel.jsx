@@ -18,7 +18,7 @@ const IL = { width: 116, height: 116, viewBox: "0 0 120 120", fill: "none" };
 function PodIllustration() {
   return (
     <svg width={116} height={116} viewBox="0 0 120 120" fill="none" aria-hidden="true">
-      <g transform="translate(60 60) rotate(135) scale(1.4) translate(-50 -50)">
+      <g transform="translate(60 60) rotate(45) scale(1.4) translate(-50 -50)">
         <path d="M50 15 C68 30 74 48 67 63 C62.5 74 55.5 80 50 85 C44.5 80 37.5 74 33 63 C26 48 32 30 50 15 Z" fill="var(--accent2)" />
         <g stroke="var(--accent-strong)" strokeLinecap="round" fill="none">
           <path d="M50 24 C50 40 50 62 50 77" strokeWidth="4" />
