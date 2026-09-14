@@ -15,7 +15,7 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
       {hasAgg && (() => {
         const aggChecked = aggregated.filter(a => a.checked).length;
         return (
-          <button onClick={onSelectAll} className={`slide-up ripple${allMode ? "" : " hov-pill"}`}
+          <button onClick={onSelectAll} className="slide-up ripple"
             style={{
               flexShrink: 0, display: "flex", alignItems: "center", gap: 6, height: 34, boxSizing: "border-box", padding: "0 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
               background: allMode ? "var(--accent)" : "var(--surface)",

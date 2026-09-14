@@ -187,8 +187,11 @@ html.light .ut-pill-desktop {
 .hov-tint { transition: background-color .16s ease; border-radius: 8px; }
 @media (hover: hover) {
   .hov-surface:hover { background: var(--surface2) !important; }
-  .hov-pill:hover { background: var(--surface2) !important; border-color: var(--text3) !important; }
+  .hov-pill:hover { background: var(--surface2) !important; }
   .hov-tint:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
+  /* Bouton teinté « ok » (Valider l'achat) : le survol renforce sa propre teinte,
+     jamais un gris qui casserait la couleur. */
+  .hov-ok:hover { background: rgba(var(--ok-rgb), 0.24) !important; border-color: rgba(var(--ok-rgb), 0.5) !important; }
 }
 
 html.light .field-input {
