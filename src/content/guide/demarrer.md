@@ -7,7 +7,7 @@ lead: Comprendre la logique de l'app en cinq minutes, pour que tout le reste cou
 order: 1
 ---
 
-Cardamome n'est pas juste un carnet où recopier des recettes. C'est une cuisine qui te comprend : derrière chaque plat, une vraie base d'**ingrédients**, d'**ustensiles** et de **techniques** relie tout ce que tu fais. C'est ce qui permet à l'app de calculer une difficulté, une saison ou un Nutri-Score toute seule, de te planifier une semaine cohérente et de tenir tes courses et ton stock à jour sans que tu aies à y penser.
+Cardamome n'est pas une énième appli où recopier des recettes. C'est un compagnon de cuisine qui pense avec toi et te retire la charge mentale des mains : derrière chaque plat, une vraie base d'**ingrédients**, d'**ustensiles** et de **techniques** relie tout ce que tu fais. Résultat, l'app calcule seule la difficulté, la saison et le Nutri-Score, te monte une semaine cohérente et tient tes courses et ton stock à jour, sans que tu aies à y penser. Toi, tu cuisines ; elle gère le reste.
 
 Ce guide explique, sujet par sujet, comment en tirer parti. Si tu débutes, lis cette page en entier : elle donne la logique d'ensemble, le reste coule de source.
 
