@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.37.0 – Cardamome · Guide à portée de main et annulation plus lisible
+
+### Interface
+- **Guide utilisateur dans la sidebar (desktop)** : la barre latérale met désormais en avant un accès direct au guide utilisateur, là où figuraient les informations légales. Plus utile au quotidien, présenté comme une entrée de navigation à part entière (les liens légaux restent joignables depuis le pied de page et leur page dédiée).
+- **Flèche d'annulation dédiée** : tous les boutons « Annuler » adoptent une flèche courbée de retour arrière, plus parlante pour une annulation qu'une simple flèche de navigation.
+
 ## v4.36.3 – Cardamome · Badge de conversion en cuillères non rogné
 
 ### Corrigé
