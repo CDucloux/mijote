@@ -8,8 +8,7 @@ import { GUIDE_DOCS, GUIDE_BY_ID } from "../constants/guideDocs.js";
 // thèmes ; /guide/<id> → lecture d'un thème. Chaque thème porte sa couleur (voir
 // front-matter) reprise sur la carte d'index, le hero et la prose (.guide-md), à la
 // manière des slides d'onboarding : la page respire au lieu d'aligner du Markdown brut.
-const softTile = (color) => color.startsWith("#") ? `color-mix(in srgb, ${color} 14%, transparent)` : "rgba(var(--accent-rgb),0.14)";
-const borderTile = (color) => color.startsWith("#") ? `color-mix(in srgb, ${color} 34%, transparent)` : "rgba(var(--accent-rgb),0.3)";
+const softTile = (color) => color.startsWith("#") ? `color-mix(in srgb, ${color} 18%, transparent)` : "rgba(var(--accent-rgb),0.18)";
 
 export function GuidePage() {
   const navigate = useNavigate();
@@ -30,7 +29,7 @@ export function GuidePage() {
       </div>
 
       <ElasticScroll style={{ flex: 1, padding: "18px 20px var(--page-pad-b)" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+        <div key={seg || "index"} className="page-slide-in" style={{ maxWidth: 680, margin: "0 auto" }}>
           {doc ? <Document doc={doc} navigate={navigate} /> : <Index navigate={navigate} />}
         </div>
       </ElasticScroll>
@@ -48,7 +47,7 @@ function Index({ navigate }) {
         {GUIDE_DOCS.map(d => (
           <button key={d.id} onClick={() => navigate(`/guide/${d.id}`)} className="legal-row ripple"
             style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
-            <span style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: softTile(d.color), border: `1px solid ${borderTile(d.color)}` }}>
+            <span style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: softTile(d.color) }}>
               <Icon name={d.icon} size={19} color={d.color} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
@@ -80,7 +79,7 @@ function Document({ doc, navigate }) {
       {next && (
         <button className="guide-next ripple" onClick={() => navigate(`/guide/${next.id}`)}
           style={{ "--guide-accent": next.color }}>
-          <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: softTile(next.color), border: `1px solid ${borderTile(next.color)}` }}>
+          <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: softTile(next.color) }}>
             <Icon name={next.icon} size={17} color={next.color} />
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>

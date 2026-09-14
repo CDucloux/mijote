@@ -2177,6 +2177,30 @@ select {
   transition: transform .18s ease, box-shadow .18s ease;
 }
 
+/* Entrée de page glissée (gauche vers la droite) : rejouée à chaque navigation
+   dans le Guide / les Informations légales via un `key` qui remonte le contenu. */
+@keyframes page-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.page-slide-in {
+  animation: page-slide-in .3s cubic-bezier(.22, .61, .36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-slide-in {
+    animation: none;
+  }
+}
+
 @media (hover:hover) {
   .legal-row:hover {
     border-color: var(--accent) !important;
