@@ -2165,13 +2165,6 @@ select {
 }
 
 @media (hover:hover) {
-  .sidebar-legal-link:hover {
-    color: var(--accent) !important;
-    background: var(--surface2);
-  }
-}
-
-@media (hover:hover) {
   .legal-row:hover {
     border-color: var(--accent) !important;
   }

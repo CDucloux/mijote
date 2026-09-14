@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import { Icon } from "./Icon.jsx";
 import { TABS } from "../constants/tabs.js";
-import { LEGAL_DOCS } from "../constants/legalDocs.js";
 
 // ─── DESKTOP SIDEBAR ──────────────────────────────────────────────────────────
 export function DesktopSidebar({ tab, setTab }) {
+  const navigate = useNavigate();
+  const guideActive = tab === "guide";
   return (
     <div className="desktop-sidebar">
       <div className="desktop-sidebar-logo">
@@ -28,18 +30,21 @@ export function DesktopSidebar({ tab, setTab }) {
           );
         })}
       </nav>
-      <div style={{ borderTop: "1px solid var(--border)", margin: "0 10px 12px" }} />
-      {/* Liens légaux : documents publics, ouverts dans un nouvel onglet. */}
-      <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 1 }}>
-        <div style={{ padding: "0 8px 6px", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text3)" }}>Informations légales</div>
-        {LEGAL_DOCS.map(d => (
-          <a key={d.id} href={`/legal/${d.id}`} target="_blank" rel="noopener noreferrer" className="sidebar-legal-link"
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "7px 8px", borderRadius: 8, fontSize: 12, color: "var(--text3)", textDecoration: "none" }}>
-            <span>{d.short}</span>
-            <Icon name="externalLink" size={12} color="currentColor" />
-          </a>
-        ))}
-      </div>
+      <div style={{ borderTop: "1px solid var(--border)", margin: "0 10px 10px" }} />
+      {/* Accès direct au guide utilisateur : plus utile au quotidien que les liens
+          légaux, qui restent joignables depuis le pied de page / le menu profil. */}
+      <button
+        className={`desktop-nav-item sidebar-guide${guideActive ? " active" : ""}`}
+        onClick={() => navigate("/guide")}
+        aria-current={guideActive ? "page" : undefined}
+        style={{ marginBottom: 12, height: "auto", alignItems: "flex-start" }}
+      >
+        <Icon name="help" size={20} weight="duotone" color={guideActive ? "var(--accent)" : "var(--text2)"} />
+        <span style={{ display: "flex", flexDirection: "column", gap: 1, lineHeight: 1.25 }}>
+          <span style={{ fontWeight: 600 }}>Guide utilisateur</span>
+          <span style={{ fontSize: 11.5, fontWeight: 500, color: "var(--text3)" }}>Prise en main &amp; astuces</span>
+        </span>
+      </button>
     </div>
   );
 }
