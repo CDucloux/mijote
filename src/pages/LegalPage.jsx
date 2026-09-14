@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ElasticScroll } from "../components/ElasticScroll.jsx";
+import { useInternalNav } from "../hooks/useInternalNav.js";
 import { LEGAL_DOCS, LEGAL_BY_ID, LEGAL_UPDATED } from "../constants/legalDocs.js";
 
 // ─── INFORMATIONS LÉGALES ───────────────────────────────────────────────────────
@@ -11,6 +12,7 @@ import { LEGAL_DOCS, LEGAL_BY_ID, LEGAL_UPDATED } from "../constants/legalDocs.j
 export function LegalPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const onProseClick = useInternalNav();
   const seg = location.pathname.replace(/^\/legal\/?/, "").replace(/\/$/, "");
   const doc = seg ? LEGAL_BY_ID[seg] : null;
 
@@ -27,8 +29,8 @@ export function LegalPage() {
         </h1>
       </div>
 
-      <ElasticScroll style={{ flex: 1, padding: "18px 20px var(--page-pad-b)" }}>
-        <div key={seg || "index"} className="page-slide-in" style={{ maxWidth: 680, margin: "0 auto" }}>
+      <ElasticScroll style={{ flex: 1, padding: "18px 20px var(--page-pad-b)" }} resetKey={seg || "index"}>
+        <div key={seg || "index"} className="page-slide-in" onClick={onProseClick} style={{ maxWidth: 680, margin: "0 auto" }}>
           {doc ? <Document doc={doc} /> : <Index navigate={navigate} />}
         </div>
       </ElasticScroll>
