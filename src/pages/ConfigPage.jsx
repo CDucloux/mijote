@@ -873,7 +873,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           <div className="field-label">Source (optionnel)</div>
           <input className="field-input" placeholder="ex: Escoffier, Le Guide Culinaire" value={editTech.source || ""} onChange={e => setEditTech(p => ({ ...p, source: e.target.value }))} style={{ marginBottom: 16 }} />
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="arrowLeft" size={15} /> Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveTech(editTech)}><Icon name="save" size={15} /> Sauvegarder</button>
           </div>
           </>); }}
@@ -938,7 +938,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             </>);
           })()}
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="arrowLeft" size={15} /> Annuler</button>
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => saveUt(editUt)}><Icon name="save" size={15} /> Sauvegarder</button>
           </div>
           </>)}
