@@ -1,6 +1,19 @@
 /* Polices Source Serif 4 + Hanken Grotesk : chargées via <link> dans index.html (plus
    fiable que @import, notamment sur mobile/iOS). Ne pas remettre d'@import ici. */
 
+/* Drapeaux : Windows/Chrome n'embarque aucune police d'emoji drapeaux, les paires
+   d'indicateurs régionaux (🇫🇷…) y tombent alors en deux lettres (« FR »). Cette
+   police Twemoji, restreinte par unicode-range aux indicateurs régionaux, n'est
+   téléchargée et appliquée QUE pour ces glyphes ; tout le reste retombe sur la
+   pile normale. Auto-hébergée pour rester dispo hors-ligne (PWA).
+   Police : Twemoji (Twitter/Discord), CC-BY 4.0. */
+@font-face {
+  font-family: 'Twemoji Country Flags';
+  src: url('/fonts/TwemojiCountryFlags.woff2') format('woff2');
+  font-display: swap;
+  unicode-range: U+1F1E6-1F1FF;
+}
+
 *,
 *::before,
 *::after {
@@ -69,8 +82,8 @@
   --tooltip-bg: #f1f0e7;
   --tooltip-fg: #23221c;
   --tooltip-border: rgba(0, 0, 0, 0.05);
-  --ff-display: 'Source Serif 4', Georgia, serif;
-  --ff-body: 'Hanken Grotesk', sans-serif;
+  --ff-display: 'Twemoji Country Flags', 'Source Serif 4', Georgia, serif;
+  --ff-body: 'Twemoji Country Flags', 'Hanken Grotesk', sans-serif;
   --ff-hand: 'Caveat', 'Segoe Print', cursive;
   --tab-h: 72px;
   --page-pad-b: 24px;        /* respiration en bas des pages a onglet, au-dessus de la TabBar (source unique) */
