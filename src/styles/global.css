@@ -176,6 +176,21 @@ html.light .ut-pill-desktop {
   }
 }
 
+/* ── Survol desktop générique (feel de la page Profil) ────────────────────────
+   Rangées et pastilles interactives à fond neutre : au survol pointeur, le fond
+   vire vers surface2 (comme les rangées du profil) et le liseré des pastilles
+   s'affirme. Scopé aux pointeurs (jamais au tactile) ; `!important` pour l'emporter
+   sur les fonds posés en inline. `.hov-tint` : survol pour un élément déjà teinté
+   (carte dans une bande colorée) sans écraser sa couleur. */
+.hov-surface { transition: background-color .16s ease, border-color .16s ease; }
+.hov-pill { transition: background-color .16s ease, border-color .16s ease; }
+.hov-tint { transition: background-color .16s ease; border-radius: 8px; }
+@media (hover: hover) {
+  .hov-surface:hover { background: var(--surface2) !important; }
+  .hov-pill:hover { background: var(--surface2) !important; border-color: var(--text3) !important; }
+  .hov-tint:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
+}
+
 html.light .field-input {
   color: #23281d;
   background: #e9ebdf;
