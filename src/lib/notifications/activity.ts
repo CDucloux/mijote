@@ -16,7 +16,7 @@ export const ACTIVITY_TYPES = [
   "recipe.publish", "recipe.unpublish", "recipe.clone", "recipe.cooked",
   "shopping.create", "shopping.add", "shopping.clear", "shopping.delete",
   "stock.add", "stock.low", "stock.out",
-  "mealplan.add", "mealplan.remove", "mealplan.generate",
+  "mealplan.add", "mealplan.remove", "mealplan.generate", "mealplan.reschedule",
 ] as const;
 
 /** Type d'un évènement d'activité. */
@@ -159,6 +159,7 @@ const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: st
   "mealplan.add": { icon: "calendar", color: "var(--accent)", route: PLANNING, title: e => `Recette planifiée : ${e.target}` },
   "mealplan.remove": { icon: "calendar", color: "var(--text3)", route: null, title: e => `Retiré du planning : ${e.target}` },
   "mealplan.generate": { icon: "sparkle", color: "var(--accent)", route: PLANNING, title: e => `${e.target || "Semaine"} générée : ${e.count} recette${plural(e.count)}` },
+  "mealplan.reschedule": { icon: "calendar", color: "var(--accent)", route: PLANNING, title: e => `Repas replanifié : ${e.target}` },
 };
 
 /**

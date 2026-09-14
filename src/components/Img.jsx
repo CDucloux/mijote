@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Icon } from "./Icon.jsx";
+import { imgAlreadyLoaded } from "../lib/ui/imageLoad.js";
 
 // ─── IMAGE (with fallback) ────────────────────────────────────────────────────
 // `fallback` (facultatif) : rendu de repli (ex. `RecipePlaceholder`). Quand il est
@@ -11,7 +12,14 @@ import { Icon } from "./Icon.jsx";
 export const Img = ({ src, alt, style, fallback }) => {
   const [err, setErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef(null);
   useEffect(() => { setErr(false); setLoaded(false); }, [src]);
+  // Image servie depuis le cache : son évènement `load` a pu partir avant que le
+  // handler onLoad ne soit attaché. On révèle donc l'image dès le montage si elle
+  // est déjà complète (avant peinture, sans clignotement du placeholder).
+  useLayoutEffect(() => {
+    if (imgAlreadyLoaded(imgRef.current)) setLoaded(true);
+  }, [src]);
 
   const placeholder = fallback ?? (
     <div style={{ background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text3)", ...style }}>
@@ -26,7 +34,7 @@ export const Img = ({ src, alt, style, fallback }) => {
   return (
     <div style={{ position: "relative", overflow: "hidden", ...style }}>
       {!loaded && <div style={{ position: "absolute", inset: 0 }}>{placeholder}</div>}
-      <img src={src} alt={alt || ""} onLoad={() => setLoaded(true)} onError={() => setErr(true)}
+      <img ref={imgRef} src={src} alt={alt || ""} onLoad={() => setLoaded(true)} onError={() => setErr(true)}
         referrerPolicy="no-referrer" loading="lazy" decoding="async"
         style={{ display: "block", width: "100%", height: "100%", objectFit: "cover", opacity: loaded ? 1 : 0, transition: "opacity 0.25s ease" }} />
     </div>

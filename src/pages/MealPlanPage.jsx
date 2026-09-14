@@ -322,7 +322,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     moveMeal(moveFor.date, moveFor.idx, moveTarget.date, moveTarget.slot);
     setMoveFor(null);
     notify("Repas replanifié");
-  }, [moveFor, moveTarget, moveMeal, notify]);
+    logActivity?.({ type: "mealplan.reschedule", target: recipesById.get(moveFor.recipeId)?.name || "" });
+  }, [moveFor, moveTarget, moveMeal, notify, logActivity, recipesById]);
   // « Dupliquer » : poser la même recette sur plusieurs jours (le jour d'origine
   // est présélectionné et verrouillé, on ne duplique que vers d'autres jours).
   const openDuplicate = useCallback((info) => {

@@ -91,6 +91,11 @@ describe("describeActivity", () => {
     expect(describeActivity(ev({ type: "mealplan.add", target: "Tarte au Comté" })).title)
       .toBe("Recette planifiée : Tarte au Comté");
   });
+  it("nomme un repas replanifié « Repas replanifié » et renvoie vers le planning", () => {
+    const view = describeActivity(ev({ type: "mealplan.reschedule", target: "Tarte au Comté" }));
+    expect(view.title).toBe("Repas replanifié : Tarte au Comté");
+    expect(view.route).toBe("/meal-plan");
+  });
   it("décrit la création d'une liste de courses (avec ou sans nom)", () => {
     expect(describeActivity(ev({ type: "shopping.create", target: "Marché" })).title)
       .toBe("Liste de courses créée : Marché");
