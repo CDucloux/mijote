@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.38.0 – Cardamome · Drapeaux fiables et Guide modernisé
+
+### Corrigé
+- **Drapeaux de cuisine affichés partout** : sous Chrome/Windows, les drapeaux (🇫🇷, 🇮🇹…) tombaient en deux lettres (« FR »), Windows n'embarquant aucune police d'emoji drapeaux. Une police de drapeaux légère est désormais embarquée (auto-hébergée, dispo hors-ligne) et n'affecte que ces glyphes : les drapeaux s'affichent de façon identique sur tous les navigateurs.
+
+### Interface
+- **Guide et Informations légales modernisés** : les pastilles d'icônes perdent leur bordure au profit d'un fond plus doux et épuré. À chaque navigation (ouverture d'une section, retour à l'index), le contenu entre par une animation glissée de la gauche vers la droite (désactivée si l'utilisateur réduit les animations).
+
 ## v4.37.0 – Cardamome · Guide à portée de main et annulation plus lisible
 
 ### Interface

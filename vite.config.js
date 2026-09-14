@@ -12,10 +12,10 @@ export default defineConfig({
       // Manifest fourni en statique (public/manifest.webmanifest) : le plugin ne
       // gère que le service worker de cache.
       manifest: false,
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable-512.png', 'manifest.webmanifest'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable-512.png', 'manifest.webmanifest', 'fonts/TwemojiCountryFlags.woff2'],
       workbox: {
-        // Cache JS/CSS/HTML app shell (+ icônes PWA & manifest)
-        globPatterns: ['**/*.{js,css,html,svg,ico,png,webmanifest}'],
+        // Cache JS/CSS/HTML app shell (+ icônes PWA, manifest & police drapeaux)
+        globPatterns: ['**/*.{js,css,html,svg,ico,png,woff2,webmanifest}'],
         // Toute navigation hors ligne (y compris /profile, /config…) sert le shell.
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
