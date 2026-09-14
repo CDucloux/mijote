@@ -25,11 +25,11 @@ En bas de l'écran, cinq onglets, du plus quotidien au plus ponctuel :
 
 Trois façons de remplir ta bibliothèque, selon ce que tu as sous la main :
 
-1. **Créer une recette** depuis l'onglet Recettes, avec le bouton **Nouvelle recette**. Tu saisis les ingrédients et les étapes ; Cardamome reconnaît les ingrédients connus au passage.
-2. **Importer** une recette que tu as ailleurs (un lien, un texte collé, une photo). Voir le sujet *Tes recettes* pour le détail.
+1. **Créer une recette** depuis l'onglet Recettes, avec le bouton **Nouvelle recette**. Tu saisis les ingrédients et les étapes ; son moteur de reconnaissance d'ingrédients identifie au passage ceux qu'il connaît.
+2. **Importer une recette** que tu as ailleurs (un lien, un texte collé, une photo). Voir le sujet [Tes recettes](/guide/recettes) pour le détail.
 3. **Explorer la communauté** depuis Accueil > Découvrir, et **cloner** une recette qui te plaît : elle atterrit dans ta bibliothèque, prête à être cuisinée ou adaptée.
 
-Une fois quelques recettes en place, tout le reste s'enchaîne : tu planifies ta semaine, la liste de courses se génère, et ce que tu achètes vient garnir ton stock.
+Une fois quelques recettes en place, tout le reste s'enchaîne : tu planifies ta semaine, la liste de courses se génère, et ce que tu achètes vient enrichir ton stock.
 
 ## Le fil rouge : tout est relié
 
