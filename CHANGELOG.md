@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.42.0 – Cardamome · Carte foyer épurée
+
+### Interface
+- **Survol de la carte foyer (accueil)** : plus de surbrillance de bordure au survol desktop. L'icône d'action est nue au repos (sans cercle) et un disque accent apparaît derrière elle au survol, sans bordure.
+
 ## v4.41.0 – Cardamome · Survols desktop affinés et accueil soigné
 
 ### Interface

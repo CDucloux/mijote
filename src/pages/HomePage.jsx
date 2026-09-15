@@ -196,13 +196,12 @@ function FoyerSection() {
     <section style={{ marginBottom: 26 }}>
       {/* Carte foyer : surface neutre + liseré accent à gauche (inset box-shadow,
           épouse les coins) + perforation pointillée comme séparateur distinctif. */}
-      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable ripple hov-foyer"
+      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable ripple foyer-card"
         style={{
           position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
           display: "flex", alignItems: "stretch", gap: 0, padding: 0,
           borderRadius: 18, border: "1px solid var(--border)",
           background: "var(--surface)",
-          transition: "border-color 0.16s ease",
           boxShadow: "inset 4px 0 0 var(--accent), 0 4px 16px rgba(0,0,0,0.06)", overflow: "hidden",
         }}>
         {/* Souche gauche : pictogramme (sans foyer) ou pile d'avatars (foyer actif) */}
@@ -234,7 +233,7 @@ function FoyerSection() {
               {summary}
             </span>
           </span>
-          <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(var(--accent-rgb),0.14)", border: "1px solid rgba(var(--accent-rgb),0.32)" }}>
+          <span className="foyer-affordance" style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none" }}>
             <Icon name={household ? "forward" : hasInvite ? "forward" : "plus"} size={16} color="var(--accent)" />
           </span>
         </span>
