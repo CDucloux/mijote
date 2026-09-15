@@ -49,7 +49,7 @@ function NotifRow({ icon, color, title, subtitle, onClick, animationDelay, canHo
       <span style={{
         width: 44, height: 44, borderRadius: 13, flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: `${color}1a`, border: `1px solid ${color}30`,
+        background: `color-mix(in srgb, ${color} 14%, transparent)`,
       }}>
         <Icon name={icon} size={20} color={color} />
       </span>
@@ -305,10 +305,10 @@ function SubviewPill({ mode, onNavigate }) {
     );
   };
   return (
-    <div role="tablist" aria-label="Vue de l'accueil" style={{ position: "relative", display: "inline-flex", gap: 3, padding: 3, borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)" }}>
-      <span ref={thumbRef} aria-hidden="true" style={{
+    <div role="tablist" aria-label="Vue de l'accueil" className="subview-pill" style={{ position: "relative", display: "inline-flex", gap: 3, padding: 3, borderRadius: 999, border: "1px solid var(--border)" }}>
+      <span ref={thumbRef} aria-hidden="true" className="subview-thumb" style={{
         position: "absolute", top: 3, left: 0, zIndex: 0, height: "calc(100% - 6px)", borderRadius: 999,
-        background: "var(--bg)", boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
         transition: "transform 0.28s cubic-bezier(0.4,0.08,0.16,1), width 0.28s cubic-bezier(0.4,0.08,0.16,1)",
       }} />
       {seg("home", "À suivre", homeRef)}

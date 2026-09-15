@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.43.0 – Cardamome · Sélecteur et tuiles d'icônes soignés
+
+### Interface
+- **Sélecteur « À suivre / Découvrir » (accueil)** : en thème clair, le conteneur passe en blanc (plus net que le gris-vert) et le segment actif est porté par une pastille discrète. Le thème sombre est inchangé.
+
+### Corrigé
+- **Tuiles d'icônes des cartes d'accueil (courses, stock bas)** : le fond teinté ne s'affichait pas sur l'icône d'accent (couleur combinée à une opacité de façon invalide), laissant la tuile vide. Les tuiles ont désormais un fond cohérent, sans bordure, quelle que soit la couleur.
+
 ## v4.42.0 – Cardamome · Carte foyer épurée
 
 ### Interface
