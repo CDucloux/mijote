@@ -88,6 +88,27 @@ export async function importRecipeFromText(text: string, knownUtensils: string[]
   }
 }
 
+/**
+ * Import de recette depuis le TEXTE d'un PDF (extrait côté client). Appelle la
+ * Cloud Function `importRecipeFromPdf` (extraction Haiku, quota `pdf` dédié). Le
+ * binaire ne quitte jamais le navigateur : seul le texte est transmis.
+ *
+ * @param text - Le texte extrait du PDF (couche texte, aucune vision).
+ * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
+ * @param appliances - Descripteurs d'appareils connus (réglages à déduire par étape).
+ * @returns La charge utile serveur `{ recipe, method: "pdf" }`.
+ * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
+ */
+export async function importRecipeFromPdf(text: string, knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
+  const call = httpsCallable(functions, "importRecipeFromPdf", { timeout: 70000 });
+  try {
+    const res = await call({ text, knownUtensils, appliances });
+    return res.data;
+  } catch (e) {
+    throw mapImportError(e);
+  }
+}
+
 /** Partie image envoyée au serveur : type MIME + données base64 (sans préfixe). */
 export interface ImagePart { mediaType: string; data: string }
 

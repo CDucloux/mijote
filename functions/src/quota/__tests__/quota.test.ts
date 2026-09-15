@@ -56,4 +56,9 @@ describe("quotaError", () => {
     expect(quotaError({ dayCount: 5, monthCount: 0 }, "text")).toMatch(/par jour/);
     expect(quotaError({ dayCount: 0, monthCount: 60 }, "text")).toMatch(/ce mois-ci/);
   });
+  it("gère le type pdf (5/jour, 60/mois) avec son libellé", () => {
+    expect(quotaError({ dayCount: LIMITS.pdf.day - 1, monthCount: 0 }, "pdf")).toBeNull();
+    expect(quotaError({ dayCount: LIMITS.pdf.day, monthCount: 0 }, "pdf")).toMatch(/PDF par jour/);
+    expect(quotaError({ dayCount: 0, monthCount: LIMITS.pdf.month }, "pdf")).toMatch(/ce mois-ci/);
+  });
 });

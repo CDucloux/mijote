@@ -14,6 +14,7 @@ export const LEDE = {
   lien: { h: "Colle un lien de recette", p: "L'import intelligent lit la page et met tout en forme. Tu relis et corriges avant d'enregistrer." },
   photo: { h: "Photographie la recette", p: "Prends une recette de livre en photo, jusqu'à 2 pages. Tu relis tout avant d'enregistrer." },
   texte: { h: "Colle ta recette", p: "Un mail, une note, un message : l'import intelligent met le texte en forme. Tu relis avant d'enregistrer." },
+  pdf: { h: "Importe un PDF", p: "Une fiche ou un livre en PDF : l'import intelligent lit le texte et met la recette en forme. Tu relis avant d'enregistrer." },
 };
 
 /** Conseils propres à chaque mode (rail contextuel). */
@@ -33,12 +34,18 @@ export const TIPS = {
     ["Garde ingrédients et étapes", " : le minimum pour reconstruire la recette."],
     ["Quantités approximatives ?", " Tu ajustes après relecture."],
   ] },
+  pdf: { h: "Pour un bon import", items: [
+    ["Un PDF avec du texte", " : une fiche, un ebook, un export. Le texte doit être sélectionnable."],
+    ["PDF scanné ou photo ?", " Là c'est une image : passe par l'onglet Photo."],
+    ["Plusieurs recettes ?", " Découpe le PDF pour ne garder que la recette voulue."],
+  ] },
 };
 
 const MODES = [
   { key: "lien", label: "Lien", icon: "link" },
   { key: "photo", label: "Photo", icon: "photo" },
   { key: "texte", label: "Texte", icon: null },
+  { key: "pdf", label: "PDF", icon: "pdf" },
 ];
 
 /** Icône « texte » (trois lignes) : absente du set, inline pour coller à la maquette. */
@@ -196,6 +203,7 @@ const GATE_PITCH = {
   lien: "Colle n'importe quel lien : l'import intelligent lit la page et met la recette en forme.",
   photo: "Photographie une recette de livre, jusqu'à 2 pages : l'import intelligent la reconstruit.",
   texte: "Un mail, une note, un message : l'import intelligent en fait une vraie recette, prête à relire.",
+  pdf: "Une fiche ou un livre en PDF : l'import intelligent lit le texte et en fait une vraie recette, prête à relire.",
 };
 
 /**

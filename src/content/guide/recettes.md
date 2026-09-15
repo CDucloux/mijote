@@ -19,11 +19,12 @@ Depuis l'onglet Recettes, touche **Nouvelle recette**. Tu renseignes le titre, l
 
 > **À noter** : l'import intelligent fait partie de **Cardamome+**. Voir le sujet *Gratuit et Cardamome+*.
 
-Tu as déjà une recette ailleurs ? Trois chemins, au choix :
+Tu as déjà une recette ailleurs ? Quatre chemins, au choix :
 
 1. **Depuis un lien** : colle l'adresse d'une page de recette, Cardamome en extrait les ingrédients et les étapes.
 2. **Depuis un texte** : copie-colle une recette brute (un mail, une note, un blog), elle est structurée automatiquement.
 3. **Depuis une photo** : prends en photo une recette d'un livre ou d'une fiche, le texte est lu et mis en forme.
+4. **Depuis un PDF** : importe une fiche ou un livre en PDF, le texte est lu et mis en forme (le PDF doit contenir du texte, pas seulement des images scannées).
 
 Après import, relis toujours : tu peux corriger un ingrédient mal reconnu ou ajuster une étape avant d'enregistrer.
 

@@ -159,7 +159,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // partageable / navigable au bouton retour).
   const recipeSeg = location.pathname.startsWith("/recipes/") ? location.pathname.slice(9) : "";
   // Pages d'import IA (routes dédiées) : ne correspondent à aucune recette.
-  const importRoute = recipeSeg === "import-from-url" ? "url" : recipeSeg === "import-from-picture" ? "picture" : recipeSeg === "import-from-text" ? "text" : null;
+  const importRoute = recipeSeg === "import-from-url" ? "url" : recipeSeg === "import-from-picture" ? "picture" : recipeSeg === "import-from-text" ? "text" : recipeSeg === "import-from-pdf" ? "pdf" : null;
   // Éditeur d'une NOUVELLE recette (création manuelle ou brouillon d'import IA) :
   // route dédiée pour lui donner une URL stable, le retour arrière / rafraîchis-
   // sement ont un comportement défini et le brouillon extrait n'est plus perdu par
@@ -203,7 +203,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     if (to) navigate(to, { replace: true });
   }, [navigate]);
   // Import de recette (URL / photos) → ouvre l'éditeur sur le brouillon (useRecipeImport).
-  const { importFromUrl, importFromImages, importFromText } = useRecipeImport({ ingredientDB, utensilDB, openEditor: openDraftEditor });
+  const { importFromUrl, importFromImages, importFromText, importFromPdf } = useRecipeImport({ ingredientDB, utensilDB, openEditor: openDraftEditor });
   // Restauration du brouillon : on arrive sur /recipes/new sans brouillon en
   // mémoire (rafraîchissement, retour arrière) → on rejoue le cache s'il existe,
   // sinon la route n'a plus d'objet → retour propre à la bibliothèque.
@@ -270,6 +270,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     importFromUrl: (...a) => shellApiRef.current.importFromUrl?.(...a),
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
     importFromText: (...a) => shellApiRef.current.importFromText?.(...a),
+    importFromPdf: (...a) => shellApiRef.current.importFromPdf?.(...a),
     logActivity: (...a) => shellApiRef.current.logActivity?.(...a),
   }), []);
   // Accès à l'offre Cardamome+ : abonnement Stripe actif (extension Firebase) OU
@@ -569,7 +570,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     // navigation, sans remonter la page — le pouce du segmented glisse au lieu d'un
     // slide plein écran, et la saisie en cours (URL, photos, texte) est préservée.
     <div key="import" className={`page-slide-in-right${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
-      <ImportPage mode={importRoute === "url" ? "lien" : importRoute === "text" ? "texte" : "photo"} />
+      <ImportPage mode={importRoute === "url" ? "lien" : importRoute === "text" ? "texte" : importRoute === "pdf" ? "pdf" : "photo"} />
     </div>
   ) : planRoute ? (
     <div className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
@@ -628,7 +629,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // bord, et ces fonctions ne sont appelées que sur action utilisateur (jamais au
   // render ni dans un effet de montage), donc jamais lue avant d'être remplie.
   // eslint-disable-next-line react-hooks/refs
-  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages, importFromText, logActivity };
+  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages, importFromText, importFromPdf, logActivity };
 
   return (
     <AppShellProvider value={shellValue}>

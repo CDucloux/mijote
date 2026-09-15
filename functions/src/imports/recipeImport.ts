@@ -5,7 +5,10 @@
  * abonné Cardamome+ avec quota, cf. {@link assertImportAllowed}), jamais en masquant
  * un simple bouton :
  * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 4.5) ;
- * - {@link importRecipeFromImages} : extraction depuis 1–2 photos de livre (Sonnet).
+ * - {@link importRecipeFromImages} : extraction depuis 1–2 photos de livre (Sonnet) ;
+ * - {@link importRecipeFromText} : extraction depuis un texte collé (Haiku) ;
+ * - {@link importRecipeFromPdf} : extraction depuis le texte d'un PDF, extrait
+ *   côté client puis passé au même pipeline Haiku (aucune vision).
  *
  * Le résultat brut du modèle est mis en forme par le module `recipeExtract`
  * ({@link assignIdsAndLink} : ids stables, `_raw` éditable, liaisons ingrédients/
@@ -351,11 +354,11 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
  * @throws HttpsError `failed-precondition` si la clé IA manque, `internal` si la
  *   réponse est vide ou illisible.
  */
-async function extractFromText(text: string, knownUtensils: string[], applianceInfos: ApplianceInfo[]): Promise<Intermediate> {
+async function extractFromText(text: string, knownUtensils: string[], applianceInfos: ApplianceInfo[], originPhrase = "depuis le texte brut d'une recette collée par l'utilisateur", traceKind = "text"): Promise<Intermediate> {
   const key = ANTHROPIC_API_KEY.value();
   if (!key || !key.startsWith("sk-ant-")) throw new HttpsError("failed-precondition", "L'extraction IA n'est pas encore configurée (clé API Anthropic à renseigner).");
   const system = PROMPT_TEMPLATE
-    .replace("depuis le texte brut d'une page web", "depuis le texte brut d'une recette collée par l'utilisateur")
+    .replace("depuis le texte brut d'une page web", originPhrase)
     .replace("{{UTENSILS}}", knownUtensils.length ? knownUtensils.join(", ") : "(aucun)")
     .replace("{{APPLIANCES}}", formatAppliancesForPrompt(applianceInfos));
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
@@ -371,10 +374,10 @@ async function extractFromText(text: string, knownUtensils: string[], applianceI
     });
   } catch (e) {
     const err = e as { status?: number; name?: string; message?: string };
-    logger.error("Anthropic API error (text):", err?.status, err?.name, err?.message);
+    logger.error(`Anthropic API error (${traceKind}):`, err?.status, err?.name, err?.message);
     throw new HttpsError("internal", `Extraction IA échouée : ${err?.message || "erreur API"}`);
   }
-  return llmToIntermediate(parseModelResponse(response, "text"), "");
+  return llmToIntermediate(parseModelResponse(response, traceKind), "");
 }
 
 /** Trace dans Cloud Logging les sections (`group`) renvoyées par le modèle, pour
@@ -537,6 +540,42 @@ export const importRecipeFromText = onCall(
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       logger.error("importRecipeFromText, erreur inattendue:", e);
+      throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
+    }
+  }
+);
+
+/**
+ * Importe une recette depuis le TEXTE d'un fichier PDF. Le texte est extrait CÔTÉ
+ * CLIENT (couche texte du PDF, aucune vision) puis transmis ici : le serveur ne
+ * reçoit jamais le binaire. Même extraction Haiku que le texte collé, mais garde
+ * quota `pdf` dédiée et libellé d'origine adapté. Un PDF scanné (sans couche texte)
+ * ne produit rien côté client : l'appel est alors évité en amont.
+ *
+ * @returns `{ recipe, method: "pdf" }`.
+ * @throws HttpsError selon l'échec (accès/quota, texte vide, extraction).
+ */
+export const importRecipeFromPdf = onCall(
+  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
+  async (request) => {
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "pdf");
+
+    const text = String((request.data as { text?: unknown })?.text || "").trim();
+    if (text.length < MIN_TEXT_LEN) throw new HttpsError("invalid-argument", "Ce PDF ne contient pas de texte exploitable (document scanné ?). Essaie plutôt l'import Photo.");
+    const knownUtensils = knownUtensilsFrom(request);
+    const applianceInfos = applianceInfosFrom(request);
+
+    try {
+      const inter = await extractFromText(text, knownUtensils, applianceInfos, "depuis le texte brut d'une recette extraite d'un fichier PDF", "pdf");
+      inter.image = "";
+      inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
+      for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un PDF texte
+      const recipe = assignIdsAndLink(inter);
+      if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée dans ce PDF.");
+      return { recipe, method: "pdf" };
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      logger.error("importRecipeFromPdf, erreur inattendue:", e);
       throw new HttpsError("internal", `Erreur inattendue : ${e instanceof Error ? e.message : e}`);
     }
   }

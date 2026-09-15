@@ -5,12 +5,12 @@ import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { PlusBadge } from "./PlusBadge.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
-// ─── BOUTON « NOUVELLE » (choix : import intelligent lien/photo/texte, ou saisie
-// manuelle) ─────────────────────────────────────────────────────────────────────
+// ─── BOUTON « NOUVELLE » (choix : import intelligent lien/photo/texte/pdf, ou
+// saisie manuelle) ───────────────────────────────────────────────────────────────
 // Le sélecteur est visible par tous. L'import intelligent est une fonctionnalité
 // Cardamome+ : en plan gratuit ses options portent un badge indicatif mais
 // ouvrent quand même leur page dédiée (/recipes/import-from-url | -picture |
-// -text). Le mur d'offre n'apparaît qu'au moment d'essayer l'import (cf.
+// -text | -pdf). Le mur d'offre n'apparaît qu'au moment d'essayer l'import (cf.
 // ImportPage) : on laisse d'abord découvrir l'écran, on ne bloque pas l'entrée.
 
 // Pastille « import intelligent » : pastille orange, anneau blanc fin (net dans
@@ -101,6 +101,7 @@ export function NewRecipeButton({ onManual }) {
             <Choice icon="link" accent smart badge={plusBadge} title="Importer depuis un lien" subtitle="Colle une URL : l'import intelligent extrait et met en forme la recette." onClick={() => goImport("/recipes/import-from-url")} />
             <Choice icon="photo" accent smart badge={plusBadge} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImport("/recipes/import-from-picture")} />
             <Choice icon="paste" accent smart badge={plusBadge} title="Coller un texte" subtitle="Un mail, une note, un message : colle le texte, il est mis en forme." onClick={() => goImport("/recipes/import-from-text")} />
+            <Choice icon="pdf" accent smart badge={plusBadge} title="Importer un PDF" subtitle="Une fiche ou un livre en PDF : le texte est lu et mis en forme." onClick={() => goImport("/recipes/import-from-pdf")} />
             <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
               <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
               <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>

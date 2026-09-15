@@ -11,12 +11,12 @@
 .imp-hdr h1 { font-family: var(--ff-display); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
 .imp-desktop .imp-hdr { padding: 22px 40px 16px; }
 .imp-desktop .imp-hdr h1 { font-size: 30px; }
-.imp-hdr .imp-seg { margin-left: auto; width: 300px; flex-shrink: 0; }
+.imp-hdr .imp-seg { margin-left: auto; width: 360px; flex-shrink: 0; }
 
-/* Contrôle segmenté (Lien / Photo / Texte) avec pouce glissant */
-.imp-seg { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--surface2); border-radius: 14px; padding: 4px; }
-.imp-seg__thumb { position: absolute; top: 4px; left: 4px; height: calc(100% - 8px); width: calc((100% - 8px) / 3); background: var(--surface); border-radius: 11px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); transition: transform 0.26s cubic-bezier(0.4, 0.9, 0.3, 1); }
-.imp-seg button { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 7px; background: none; border: none; cursor: pointer; padding: 9px 4px; border-radius: 11px; font-family: var(--ff-body); font-size: 13.5px; font-weight: 600; color: var(--text3); transition: color 0.2s; }
+/* Contrôle segmenté (Lien / Photo / Texte / PDF) avec pouce glissant */
+.imp-seg { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; background: var(--surface2); border-radius: 14px; padding: 4px; }
+.imp-seg__thumb { position: absolute; top: 4px; left: 4px; height: calc(100% - 8px); width: calc((100% - 8px) / 4); background: var(--surface); border-radius: 11px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); transition: transform 0.26s cubic-bezier(0.4, 0.9, 0.3, 1); }
+.imp-seg button { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 6px; background: none; border: none; cursor: pointer; padding: 9px 2px; border-radius: 11px; font-family: var(--ff-body); font-size: 13px; font-weight: 600; color: var(--text3); transition: color 0.2s; }
 .imp-seg button.on { color: var(--accent); }
 
 /* Corps scrollable (mobile) : overscroll élastique borné (rebond iOS/PWA sans
@@ -79,6 +79,15 @@
 .imp-dropzone .plus { width: 52px; height: 52px; border-radius: 50%; background: rgba(var(--accent-rgb), 0.14); display: grid; place-items: center; color: var(--accent); }
 .imp-dropzone .l { font-size: 15px; font-weight: 600; color: var(--text); }
 .imp-dropzone .h { font-size: 12px; color: var(--text3); }
+
+/* PDF : carte du fichier sélectionné */
+.imp-pdfcard { display: flex; align-items: center; gap: 13px; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); }
+.imp-pdfcard .ic { flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; background: rgba(var(--accent-rgb), 0.12); display: grid; place-items: center; }
+.imp-pdfcard .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.imp-pdfcard .meta b { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imp-pdfcard .meta span { font-size: 12px; color: var(--text3); margin-top: 1px; }
+.imp-pdfcard .rm { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--surface2); color: var(--text3); display: grid; place-items: center; cursor: pointer; transition: background-color .16s ease; }
+@media (hover: hover) { .imp-pdfcard .rm:hover { background: var(--surface3); } }
 
 /* Texte : coller + zone */
 .imp-pastebtn { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; padding: 9px 15px; border-radius: 999px; cursor: pointer; background: rgba(var(--accent-rgb), 0.08); border: 1px solid rgba(var(--accent-rgb), 0.3); color: var(--accent); font-family: var(--ff-body); font-size: 13px; font-weight: 600; }
