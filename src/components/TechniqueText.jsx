@@ -38,7 +38,7 @@ const TECH_CAT = {
   cuisson: { icon: "fire", color: "#e0524f" },
   liaison: { icon: "spoon", color: "#c8951f" },
   preparation: { icon: "utensils", color: "#5b9cf6" },
-  dressage: { icon: "sparkle", color: "#9b87f5" },
+  dressage: { icon: "dish", color: "#9b87f5" },
 };
 const techCat = (c) => TECH_CAT[c] || { icon: "utensils", color: "var(--accent)" };
 
