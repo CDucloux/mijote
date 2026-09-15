@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.41.0 – Cardamome · Survols desktop affinés et accueil soigné
+
+### Interface
+- **Empty state d'accueil retravaillé** : l'écran « Ta cuisine démarre ici » passe en deux colonnes sur desktop (contenu en pleine largeur, icône intégrée en ligne avec le titre, accroche élargie) et le parcours Recette / Planning / Courses devient un rail vertical à droite ; colonne unique avec rail en pied sur mobile. Chaque étape gagne une micro-description.
+- **Survols desktop de l'accueil** : disques discrets au survol des accès Guide et Notifications, liseré accent sur la bande foyer, et éclaircissement du segment inactif du sélecteur « À suivre / Découvrir ».
+- **Survol sur les options de liste (Courses)** : le bouton ⋯ d'une liste active réagit désormais au survol.
+
+### Corrigé
+- **Survol des lignes de courses retiré** : le fond grisé au survol des articles, jugé peu esthétique, a été supprimé.
+
 ## v4.40.0 – Cardamome · Notifications, survols desktop et détails soignés
 
 ### Ajouté
