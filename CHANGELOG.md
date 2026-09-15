@@ -1,5 +1,18 @@
 # Changelog – Cardamome
 
+## v4.40.0 – Cardamome · Notifications, survols desktop et détails soignés
+
+### Ajouté
+- **Notification de replanification** : replanifier un repas alimente désormais le journal d'activité du foyer, au même titre que l'ajout ou le retrait d'un repas.
+
+### Interface
+- **Survols desktop cohérents** : les éléments interactifs des pages Courses et Planning réagissent au survol à la souris, dans l'esprit de la page Profil (pastilles de listes, bandes d'ingrédients, bandeau session batch, navigation du planning, cartes-repas, bouton « Valider l'achat »).
+- **Survol des ustensiles (desktop)** : sur une fiche recette, les ustensiles porteurs d'une précaution signalent au survol qu'un clic ouvre leur info-bulle.
+- **Gousse d'onboarding** : reprend le tracé exact du logo, incliné et centré, aux couleurs de la marque.
+
+### Corrigé
+- **Placeholder d'image bloqué** : sur les recettes (liste et fiche), l'image restait parfois masquée par son placeholder alors qu'elle était déjà chargée (image servie depuis le cache). Elle s'affiche maintenant dès qu'elle est prête.
+
 ## v4.39.0 – Cardamome · Guide plus vivant et navigation fluide
 
 ### Interface
