@@ -189,12 +189,13 @@ function FoyerSection() {
     <section style={{ marginBottom: 26 }}>
       {/* Carte foyer : surface neutre + liseré accent à gauche (inset box-shadow,
           épouse les coins) + perforation pointillée comme séparateur distinctif. */}
-      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable ripple"
+      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable ripple hov-foyer"
         style={{
           position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
           display: "flex", alignItems: "stretch", gap: 0, padding: 0,
           borderRadius: 18, border: "1px solid var(--border)",
           background: "var(--surface)",
+          transition: "border-color 0.16s ease",
           boxShadow: "inset 4px 0 0 var(--accent), 0 4px 16px rgba(0,0,0,0.06)", overflow: "hidden",
         }}>
         {/* Souche gauche : pictogramme (sans foyer) ou pile d'avatars (foyer actif) */}
@@ -285,7 +286,7 @@ function SubviewPill({ mode, onNavigate }) {
     return (
       <button ref={ref}
         role="tab" aria-selected={active} onClick={() => onNavigate?.(id)}
-        className="pressable"
+        className={`pressable${active ? "" : " hov-seg"}`}
         style={{
           position: "relative", zIndex: 1, flex: "0 0 auto", padding: "7px 16px", borderRadius: 999,
           border: "none", cursor: "pointer", background: "transparent",
@@ -362,7 +363,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, marginBottom: 12 }}>
           <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
           <button
-            type="button" className="pressable" onClick={() => navigate("/guide")}
+            type="button" className="pressable hov-circle" onClick={() => navigate("/guide")}
             aria-label="Guide d'utilisation" title="Guide d'utilisation"
             style={{ marginLeft: "auto", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
               display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
@@ -370,7 +371,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             <Icon name="help" size={22} color="var(--text2)" />
           </button>
           <button
-            type="button" className="pressable" onClick={() => navigate("/notifications")}
+            type="button" className="pressable hov-circle" onClick={() => navigate("/notifications")}
             aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "Notifications"}
             title="Notifications"
             style={{ position: "relative", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
