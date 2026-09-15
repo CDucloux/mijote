@@ -215,6 +215,15 @@ html.light .ut-pill-desktop {
 }
 .foyer-affordance { transition: background-color .16s ease; }
 
+/* Sélecteur « À suivre / Découvrir » de l'accueil. En thème clair, le conteneur
+   passe en blanc (plus net que le gris-vert surface2) et le segment actif est
+   porté par une pastille surface2 ; le thème sombre garde sa hiérarchie de
+   surfaces (conteneur surface2, pastille active sur le fond de page). */
+.subview-pill { background: var(--surface2); }
+.subview-thumb { background: var(--bg); }
+html.light .subview-pill { background: #fff; }
+html.light .subview-thumb { background: var(--surface2); }
+
 /* Empty state d'accueil (« Ta cuisine démarre ici ») : mobile en colonne, le rail
    « parcours » en pied ; desktop en deux colonnes, le contenu occupe toute la
    largeur et le rail passe à la verticale à droite, séparé par un simple filet. */
