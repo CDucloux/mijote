@@ -57,7 +57,7 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
             {/* Options : uniquement sur la liste active. La hauteur fixe de la
                 pastille empêche le bouton (22px) de la faire grandir. */}
             {isActive && (
-              <button onClick={e => { e.stopPropagation(); onOpenMenu(l); }} aria-label="Options de la liste"
+              <button onClick={e => { e.stopPropagation(); onOpenMenu(l); }} aria-label="Options de la liste" className="hov-white"
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", flexShrink: 0, border: "none", background: "rgba(255,255,255,0.22)", cursor: "pointer", padding: 0 }}>
                 <Icon name="ellipsis" size={14} color="#fff" />
               </button>

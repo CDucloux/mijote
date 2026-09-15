@@ -194,6 +194,36 @@ html.light .ut-pill-desktop {
   .hov-ok:hover { background: rgba(var(--ok-rgb), 0.24) !important; border-color: rgba(var(--ok-rgb), 0.5) !important; }
 }
 
+/* Boutons-icônes ronds « nus » (accès guide / notifications de l'accueil) : au
+   survol desktop, un disque discret apparaît DERRIÈRE l'icône, comme sur la barre
+   de profil. `!important` pour l'emporter sur le `background: none` inline. */
+.hov-circle { transition: background-color .16s ease; }
+/* Pastille ronde ⋯ posée sur un fond accent (options d'une liste active) : le
+   survol renforce le voile blanc du disque. */
+.hov-white { transition: background-color .16s ease; }
+/* Segments inactifs d'un sélecteur (À suivre / Découvrir) : le libellé s'éclaircit
+   au survol pour signaler qu'il est cliquable, sans toucher au segment actif. */
+.hov-seg { transition: color .16s ease; }
+@media (hover: hover) {
+  .hov-circle:hover { background: var(--surface2) !important; }
+  .hov-white:hover { background: rgba(255,255,255,0.4) !important; }
+  .hov-seg:hover { color: var(--text2) !important; }
+  /* Bande foyer de l'accueil : le liseré vire vers l'accent au survol (la box-shadow
+     inline, avec son filet accent à gauche, est préservée). */
+  .hov-foyer:hover { border-color: rgba(var(--accent-rgb),0.55) !important; }
+}
+
+/* Empty state d'accueil (« Ta cuisine démarre ici ») : mobile en colonne, le rail
+   « parcours » en pied ; desktop en deux colonnes, le contenu occupe toute la
+   largeur et le rail passe à la verticale à droite, séparé par un simple filet. */
+.onboard-grid { display: grid; gap: 20px; }
+.onboard-rail { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.onboard-step { display: flex; align-items: center; gap: 10px; min-width: 0; }
+@media (min-width: 700px) {
+  .onboard-grid { grid-template-columns: minmax(0, 1fr) 210px; align-items: center; gap: 28px; }
+  .onboard-rail { flex-direction: column; align-items: stretch; margin-top: 0; padding-top: 0; padding-left: 24px; border-top: none; border-left: 1px solid var(--border); }
+}
+
 html.light .field-input {
   color: #23281d;
   background: #e9ebdf;
