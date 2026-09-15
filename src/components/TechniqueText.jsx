@@ -32,15 +32,15 @@ const wordBtn = (active) => ({
 const POP_MARGIN = 10;   // marge minimale avec les bords de l'écran
 const POP_MAX_W = 306;   // largeur maximale de la bulle
 
-// Identité visuelle par catégorie de technique : pastille emoji + couleur.
+// Identité visuelle par catégorie de technique : icône du set maison + couleur.
 const TECH_CAT = {
-  decoupe: { emoji: "🔪", color: "#e0894a" },
-  cuisson: { emoji: "🔥", color: "#e0524f" },
-  liaison: { emoji: "🥣", color: "#c8951f" },
-  preparation: { emoji: "🧑‍🍳", color: "#5b9cf6" },
-  dressage: { emoji: "🍽️", color: "#9b87f5" },
+  decoupe: { icon: "knife", color: "#e0894a" },
+  cuisson: { icon: "fire", color: "#e0524f" },
+  liaison: { icon: "spoon", color: "#c8951f" },
+  preparation: { icon: "utensils", color: "#5b9cf6" },
+  dressage: { icon: "sparkle", color: "#9b87f5" },
 };
-const techCat = (c) => TECH_CAT[c] || { emoji: "🍳", color: "var(--accent)" };
+const techCat = (c) => TECH_CAT[c] || { icon: "utensils", color: "var(--accent)" };
 
 const popList = { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 };
 
@@ -96,7 +96,7 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
       {(close) => (
         <div ref={topRef}>
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 27, background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}>{c.emoji}</span>
+            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}><Icon name={c.icon} size={27} color={c.color} /></span>
             <div style={{ minWidth: 0, flex: 1 }}>
               <h2 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{tech.name}</h2>
               {diff > 0 && (
@@ -262,7 +262,7 @@ export function TechniqueText({ text, index: indexProp }) {
                 {/* barre d'accent colorée en tête, selon la catégorie */}
                 <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "14px 14px 0 0", background: c.color }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
-                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 20, background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}>{c.emoji}</span>
+                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}><Icon name={c.icon} size={20} color={c.color} /></span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>{pop.tech.name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4 }}>
