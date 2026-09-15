@@ -9,7 +9,7 @@
  */
 import type { PrecautionTone, UsagePrecaution, UtensilDbItem } from "@/lib/types";
 
-/** Présentation d'une tonalité : emoji, libellé de rubrique, couleur d'accent (token). */
+/** Présentation d'une tonalité : nom d'icône (bibliothèque, jamais un emoji), libellé de rubrique, couleur d'accent (token). */
 export interface PrecautionVisual {
   icon: string;
   label: string;
@@ -18,12 +18,13 @@ export interface PrecautionVisual {
 
 /**
  * Tonalités reconnues. `heat` est le défaut (le gros du cas d'usage porte sur la
- * gestion du feu). `accent` réfère un token de couleur existant.
+ * gestion du feu). `icon` réfère un nom du set d'icônes maison (cf. `Icon.jsx`),
+ * jamais un emoji. `accent` réfère un token de couleur existant.
  */
 export const PRECAUTION_TONES: Record<PrecautionTone, PrecautionVisual> = {
-  info: { icon: "💡", label: "À savoir", accent: "var(--accent)" },
-  heat: { icon: "🔥", label: "Chaleur", accent: "#e0662f" },
-  warning: { icon: "⚠️", label: "Attention", accent: "#d99a10" },
+  info: { icon: "info", label: "À savoir", accent: "var(--accent)" },
+  heat: { icon: "fire", label: "Chaleur", accent: "#e0662f" },
+  warning: { icon: "warning", label: "Attention", accent: "#d99a10" },
 };
 
 /** Garde de type : `x` est une tonalité de précaution connue. */

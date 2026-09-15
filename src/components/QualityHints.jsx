@@ -49,7 +49,7 @@ export function UtensilPrecautionSheet({ utensilName, precaution, onClose, zInde
   return (
     <SwipeableSheet onClose={onClose} zIndex={zIndex}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-        <span style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 14, background: accent + "1f", display: "grid", placeItems: "center", fontSize: 22 }} aria-hidden="true">{icon}</span>
+        <span style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 14, background: accent + "1f", display: "grid", placeItems: "center" }} aria-hidden="true"><Icon name={icon} size={22} color={accent} /></span>
         <div style={{ minWidth: 0 }}>
           {utensilName && <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 1 }}>{utensilName}</div>}
           <div style={{ fontSize: 11, fontWeight: 600, color: accent, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
