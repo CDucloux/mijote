@@ -24,6 +24,13 @@ describe("precautionVisual", () => {
     expect(precautionVisual(undefined)).toBe(PRECAUTION_TONES.heat);
     expect(precautionVisual("nope")).toBe(PRECAUTION_TONES.heat);
   });
+  // Non-regression : les icones referencent le set maison (Icon.jsx), jamais un
+  // emoji. On verifie qu'aucune tonalite ne porte de caractere hors ASCII.
+  it("uses icon-set names, never emoji", () => {
+    for (const { icon } of Object.values(PRECAUTION_TONES)) {
+      expect(icon).toMatch(/^[a-z][a-z0-9-]*$/);
+    }
+  });
 });
 
 describe("resolveUsagePrecaution", () => {
