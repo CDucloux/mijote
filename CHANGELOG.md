@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.44.0 – Cardamome · Icônes cohérentes, fini les emojis
+
+### Interface
+- **Précautions d'utilisation des ustensiles** : l'en-tête de la fiche (fiche recette et mode pas à pas) affiche désormais une icône du set maison (chaleur, à savoir, attention) au lieu d'un emoji.
+- **Catégories de techniques** : les pastilles de catégorie (fiche et liste) utilisent le set d'icônes maison au lieu d'emojis (découpe, cuisson, liaison, préparation, dressage).
+
 ## v4.43.0 – Cardamome · Sélecteur et tuiles d'icônes soignés
 
 ### Interface
