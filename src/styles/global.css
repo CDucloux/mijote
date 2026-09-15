@@ -208,10 +208,12 @@ html.light .ut-pill-desktop {
   .hov-circle:hover { background: var(--surface2) !important; }
   .hov-white:hover { background: rgba(255,255,255,0.4) !important; }
   .hov-seg:hover { color: var(--text2) !important; }
-  /* Bande foyer de l'accueil : le liseré vire vers l'accent au survol (la box-shadow
-     inline, avec son filet accent à gauche, est préservée). */
-  .hov-foyer:hover { border-color: rgba(var(--accent-rgb),0.55) !important; }
+  /* Bande foyer de l'accueil : pas de surbrillance de bordure. Le seul retour au
+     survol desktop est le disque accent qui apparaît derrière l'icône d'action
+     (état de repos : icône nue, sans cercle). */
+  .foyer-card:hover .foyer-affordance { background: rgba(var(--accent-rgb),0.14) !important; }
 }
+.foyer-affordance { transition: background-color .16s ease; }
 
 /* Empty state d'accueil (« Ta cuisine démarre ici ») : mobile en colonne, le rail
    « parcours » en pied ; desktop en deux colonnes, le contenu occupe toute la
