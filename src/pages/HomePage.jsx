@@ -68,50 +68,57 @@ function NotifRow({ icon, color, title, subtitle, onClick, animationDelay, canHo
 // première recette débloque : la boucle propre à Cardamome, pas un vide générique.
 function OnboardingCard({ onNewRecipe, onOpenPublic }) {
   const steps = [
-    { icon: "book", label: "Recette", on: true },
-    { icon: "calendar", label: "Planning", on: false },
-    { icon: "shopping", label: "Courses", on: false },
+    { icon: "book", label: "Recette", desc: "Ta première fiche", on: true },
+    { icon: "calendar", label: "Planning", desc: "La semaine s'organise", on: false },
+    { icon: "shopping", label: "Courses", desc: "La liste se remplit", on: false },
   ];
   return (
-    <div className="slide-up" style={{ animationDelay: "0.04s",
+    <div className="slide-up onboard-card" style={{ animationDelay: "0.04s",
       background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20,
-      padding: "22px 20px 18px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
-      <span style={{ width: 48, height: 48, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(var(--accent-rgb),0.12)", border: "1px solid rgba(var(--accent-rgb),0.28)" }}>
-        <Icon name="book" size={24} color="var(--accent)" />
-      </span>
-      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "16px 0 6px" }}>
-        Ta cuisine démarre ici
-      </h3>
-      <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: 0, maxWidth: "44ch" }}>
-        Ajoute une première recette et tout s'enchaîne : le planning de la semaine, la liste de courses et le suivi du stock se remplissent ensuite pour toi.
-      </p>
-
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, marginTop: 18 }}>
-        <button onClick={onNewRecipe} className="btn btn-primary btn-pill pressable ripple" style={{ width: "auto" }}>
-          <Icon name="plus" size={16} color="#fff" /> Ajouter une recette
-        </button>
-        <button onClick={onOpenPublic} className="pressable" style={{ background: "none", border: "none", cursor: "pointer",
-          display: "inline-flex", alignItems: "center", gap: 4, padding: "8px 4px",
-          fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>
-          Explorer la communauté <Icon name="forward" size={14} color="var(--accent)" />
-        </button>
-      </div>
-
-      {/* Parcours : le geste suivant se débloque une fois la recette ajoutée. */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-        {steps.map((s, i) => (
-          <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, opacity: s.on ? 1 : 0.5 }}>
-              <span style={{ width: 24, height: 24, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                background: s.on ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)" }}>
-                <Icon name={s.icon} size={14} color={s.on ? "var(--accent)" : "var(--text3)"} />
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: s.on ? "var(--text)" : "var(--text3)", whiteSpace: "nowrap" }}>{s.label}</span>
+      padding: 24, boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
+      <div className="onboard-grid">
+        {/* Colonne principale : titre (icône intégrée en ligne), accroche large, actions */}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(var(--accent-rgb),0.12)" }}>
+              <Icon name="book" size={20} color="var(--accent)" />
             </span>
-            {i < steps.length - 1 && <span aria-hidden="true" style={{ flex: 1, minWidth: 12, height: 1, background: "var(--border)" }} />}
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
+              Ta cuisine démarre ici
+            </h3>
           </div>
-        ))}
+          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 18px", maxWidth: "62ch" }}>
+            Ajoute une première recette et tout s'enchaîne : le planning de la semaine, la liste de courses et le suivi du stock se remplissent ensuite pour toi.
+          </p>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <button onClick={onNewRecipe} className="btn btn-primary btn-pill pressable ripple" style={{ width: "auto" }}>
+              <Icon name="plus" size={16} color="#fff" /> Ajouter une recette
+            </button>
+            <button onClick={onOpenPublic} className="pressable" style={{ background: "none", border: "none", cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: 4, padding: "8px 4px",
+              fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>
+              Explorer la communauté <Icon name="forward" size={14} color="var(--accent)" />
+            </button>
+          </div>
+        </div>
+        {/* Rail « parcours » : le geste suivant se débloque une fois la recette ajoutée.
+            Vertical à droite sur desktop (le contenu remplit la largeur), en pied
+            horizontal sur mobile. Séparé par un simple filet, jamais une carte imbriquée. */}
+        <div className="onboard-rail">
+          {steps.map(s => (
+            <div key={s.label} className="onboard-step" style={{ opacity: s.on ? 1 : 0.5 }}>
+              <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                background: s.on ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)" }}>
+                <Icon name={s.icon} size={15} color={s.on ? "var(--accent)" : "var(--text3)"} />
+              </span>
+              <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: s.on ? "var(--text)" : "var(--text3)", whiteSpace: "nowrap" }}>{s.label}</span>
+                <span style={{ fontSize: 11, color: "var(--text3)", whiteSpace: "nowrap" }}>{s.desc}</span>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -213,6 +213,17 @@ html.light .ut-pill-desktop {
   .hov-foyer:hover { border-color: rgba(var(--accent-rgb),0.55) !important; }
 }
 
+/* Empty state d'accueil (« Ta cuisine démarre ici ») : mobile en colonne, le rail
+   « parcours » en pied ; desktop en deux colonnes, le contenu occupe toute la
+   largeur et le rail passe à la verticale à droite, séparé par un simple filet. */
+.onboard-grid { display: grid; gap: 20px; }
+.onboard-rail { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.onboard-step { display: flex; align-items: center; gap: 10px; min-width: 0; }
+@media (min-width: 700px) {
+  .onboard-grid { grid-template-columns: minmax(0, 1fr) 210px; align-items: center; gap: 28px; }
+  .onboard-rail { flex-direction: column; align-items: stretch; margin-top: 0; padding-top: 0; padding-left: 24px; border-top: none; border-left: 1px solid var(--border); }
+}
+
 html.light .field-input {
   color: #23281d;
   background: #e9ebdf;
