@@ -12,17 +12,19 @@ const seenKey = (uid) => `mijote_onboarded_${uid}`;
 
 // ── Illustrations SVG maison (test de style, 2 slides sur 7) ──────────────────
 const IL = { width: 116, height: 116, viewBox: "0 0 120 120", fill: "none" };
-// Gousse de cardamome : le mot-symbole de la marque, décliné au format des
-// illustrations d'onboarding (cf. LogoPod, tracé mis à l'échelle et centré).
+// Gousse de cardamome : le mot-symbole EXACT du logo (cf. LogoPod), repris tel
+// quel, centré dans la boîte d'onboarding et incliné « de travers » via une
+// rotation autour du centre du tracé pour un rendu vivant mais symétrique.
 function PodIllustration() {
   return (
-    <svg {...IL}>
-      <path d="M60 20 C86 41 94.5 67 84.5 88 C78 103.5 68 112 60 119 C52 112 42 103.5 35.5 88 C25.5 67 34 41 60 20 Z" fill="#6fce9b" />
-      <path d="M60 20 C50 34 46 60 52 100 C55 108 57.5 112 60 116 C52 109 42 100 35.5 88 C25.5 67 34 41 60 20 Z" fill="#4caf7d" />
-      <g stroke="#2f8a5c" strokeLinecap="round" fill="none">
-        <path d="M60 33 C60 56 60 88 60 109" strokeWidth="5" />
-        <path d="M48.5 42 C45 63 47 84 55.5 104" strokeWidth="4.4" />
-        <path d="M71.5 42 C75 63 73 84 64.5 104" strokeWidth="4.4" />
+    <svg width={116} height={116} viewBox="0 0 120 120" fill="none" aria-hidden="true">
+      <g transform="translate(60 60) rotate(45) scale(1.4) translate(-50 -50)">
+        <path d="M50 15 C68 30 74 48 67 63 C62.5 74 55.5 80 50 85 C44.5 80 37.5 74 33 63 C26 48 32 30 50 15 Z" fill="var(--accent2)" />
+        <g stroke="var(--accent-strong)" strokeLinecap="round" fill="none">
+          <path d="M50 24 C50 40 50 62 50 77" strokeWidth="4" />
+          <path d="M42 30 C39.5 45 41 60 47 74" strokeWidth="3.4" />
+          <path d="M58 30 C60.5 45 59 60 53 74" strokeWidth="3.4" />
+        </g>
       </g>
     </svg>
   );

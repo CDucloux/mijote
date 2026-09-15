@@ -99,7 +99,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
               const role = itemRole(item, r);
               const label = composed ? roleLabel(role) : MP_SLOT_LABEL[slot];
               return (
-                <div key={globalIdx} draggable
+                <div key={globalIdx} draggable className="hov-tint"
                   onDragStart={() => { cancelLongPress(); onSetDragInfo({ date, idx: globalIdx, slot }); }}
                   onDragEnd={() => onSetDragInfo(null)}
                   onContextMenu={e => { e.preventDefault(); onOpenItemMenu({ date, idx: globalIdx, slot, recipeId: item.recipeId }); }}
@@ -322,7 +322,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     moveMeal(moveFor.date, moveFor.idx, moveTarget.date, moveTarget.slot);
     setMoveFor(null);
     notify("Repas replanifié");
-  }, [moveFor, moveTarget, moveMeal, notify]);
+    logActivity?.({ type: "mealplan.reschedule", target: recipesById.get(moveFor.recipeId)?.name || "" });
+  }, [moveFor, moveTarget, moveMeal, notify, logActivity, recipesById]);
   // « Dupliquer » : poser la même recette sur plusieurs jours (le jour d'origine
   // est présélectionné et verrouillé, on ne duplique que vers d'autres jours).
   const openDuplicate = useCallback((info) => {
@@ -487,13 +488,13 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => navigate(-1)} className="pressable ripple" style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
+          <button onClick={() => navigate(-1)} className="pressable ripple hov-surface" style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
           <span style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
             {`${new Date(weekDays[0] + "T12:00").getDate()} – ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
           </span>
-          <button onClick={() => navigate(1)} className="pressable ripple" style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
+          <button onClick={() => navigate(1)} className="pressable ripple hov-surface" style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={goToday} className="pressable ripple" style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
-          <button onClick={exportICS} className="pressable ripple" title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", flexShrink: 0 }}>
+          <button onClick={exportICS} className="pressable ripple hov-surface" title="Ajouter le planning à ton agenda (Google Agenda, Apple Calendrier…)" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", flexShrink: 0 }}>
             <Icon name="calendar" size={13} color="var(--text2)" /> Agenda
           </button>
         </div>
@@ -507,7 +508,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                 seulement quand la semaine contient au moins un plat. Sortie du header
                 pour ne plus reléguer le titre sur deux lignes. */}
             {hasWeekDishes && (
-              <button onClick={() => isPlus ? openBatch() : goPlus()} className="pressable"
+              <button onClick={() => isPlus ? openBatch() : goPlus()} className="pressable hov-surface"
                 style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
                   padding: "12px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
                 <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--ok-rgb),0.18)" }}>

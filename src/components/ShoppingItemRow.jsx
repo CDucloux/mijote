@@ -68,7 +68,7 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
       {/* Avant-plan : la ligne elle-même. `.ripple` : onde tactile au toucher (feel
           natif), bornée à la carte par son overflow/border-radius. */}
       <div
-        className="ripple"
+        className={`ripple${item.checked ? "" : " hov-surface"}`}
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         style={{
           position: "relative", display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px",

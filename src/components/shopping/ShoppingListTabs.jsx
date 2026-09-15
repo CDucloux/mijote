@@ -36,7 +36,7 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
         const isActive = !allMode && effectiveId === l.id;
         const lChecked = l.items.filter(i => i.checked).length;
         return (
-          <div key={l.id} role="button" tabIndex={0} className="slide-up ripple"
+          <div key={l.id} role="button" tabIndex={0} className={`slide-up ripple${isActive ? "" : " hov-pill"}`}
             onClick={() => { if (wasLongPress()) return; onSelect(l.id); }}
             onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(l.id); } }}
             onPointerDown={e => startLongPress(e, () => onOpenMenu(l))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
