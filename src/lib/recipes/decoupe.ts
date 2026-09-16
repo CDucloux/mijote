@@ -24,7 +24,7 @@ import { normTech, type TechniqueEntry, type TechniqueIndex } from "@/lib/recipe
 export const FORMES: readonly FormeDecoupe[] = [
   "rape", "emince", "cisele", "hache", "chiffonade",
   "des", "brunoise", "mirepoix", "paysanne", "julienne", "batonnet",
-  "rondelle", "troncon", "quartier",
+  "lamelle", "rondelle", "troncon", "quartier",
 ];
 
 /** Libellé impératif d'un geste, pour une ligne de check-list (« Ciseler : 3 oignons »).
@@ -39,6 +39,7 @@ export const FORME_LABEL: Record<FormeDecoupe, string> = {
   paysanne: "Tailler en paysanne",
   julienne: "Tailler en julienne",
   batonnet: "Tailler en bâtonnets",
+  lamelle: "Tailler en lamelles",
   rondelle: "Détailler en rondelles",
   troncon: "Détailler en tronçons",
   quartier: "Tailler en quartiers",
@@ -58,6 +59,7 @@ const FORME_GESTE: Record<FormeDecoupe, string[]> = {
   paysanne: ["tailler en paysanne", "paysanne"],
   julienne: ["tailler en julienne", "julienne"],
   batonnet: ["tailler en bâtonnets", "bâtonnets"],
+  lamelle: ["tailler en lamelles", "en lamelles", "lamelles", "trancher"],
   rondelle: ["détailler en rondelles", "rondelles"],
   troncon: ["détailler en tronçons", "tronçons"],
   quartier: ["tailler en quartiers", "quartiers"],
@@ -78,7 +80,7 @@ const normPhrase = (s: string): string => normalizeStr(s).replace(/\s+/g, " ");
 /** Table alias → forme canonique (clés déjà normalisées, sans accent). */
 const FORME_ALIASES: Record<string, FormeDecoupe> = (() => {
   const raw: Record<FormeDecoupe, string[]> = {
-    emince: ["émincer", "émincé", "émincés", "émincé fin", "en lamelles", "lamelles", "fines lamelles", "en fines lamelles", "tranches fines", "en fines tranches", "tranches", "en tranches", "trancher", "trancher finement", "à la mandoline"],
+    emince: ["émincer", "émincé", "émincés", "émincé fin", "finement émincé", "émincé finement"],
     cisele: ["ciseler", "ciselé", "ciselés", "ciselé fin", "ciselé finement"],
     des: ["dés", "en dés", "cubes", "en cubes", "coupé en dés", "petits dés", "dés moyens", "gros dés", "macédoine"],
     brunoise: ["brunoise", "en brunoise", "très petits dés"],
@@ -86,6 +88,7 @@ const FORME_ALIASES: Record<string, FormeDecoupe> = (() => {
     paysanne: ["paysanne", "en paysanne"],
     julienne: ["julienne", "en julienne", "tailler en julienne", "filaments"],
     batonnet: ["bâtonnet", "bâtonnets", "en bâtonnets", "bâtons", "jardinière"],
+    lamelle: ["lamelle", "lamelles", "en lamelles", "fines lamelles", "en fines lamelles", "tranches", "en tranches", "tranches fines", "en fines tranches", "trancher", "trancher finement", "tranché", "tranché finement", "à la mandoline", "à la trancheuse"],
     rondelle: ["rondelle", "rondelles", "en rondelles", "rouelle", "rouelles", "en rouelles"],
     troncon: ["tronçon", "tronçons", "en tronçons", "sifflet", "en sifflet", "biseau", "en biseau"],
     quartier: ["quartier", "quartiers", "en quartiers"],

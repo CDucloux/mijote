@@ -16,22 +16,25 @@ describe("parseCut", () => {
 
   it("ramène les formulations libres (accents/casse ignorés) au vocabulaire fermé", () => {
     expect(parseCut("Émincé")).toEqual({ forme: "emince" });
-    expect(parseCut("en fines lamelles")).toEqual({ forme: "emince" });
+    expect(parseCut("en fines lamelles")).toEqual({ forme: "lamelle" });
     expect(parseCut("petits dés")).toEqual({ forme: "des" });
     expect(parseCut("en brunoise")).toEqual({ forme: "brunoise" });
     expect(parseCut("râpé")).toEqual({ forme: "rape" });
     expect(parseCut("en rondelles")).toEqual({ forme: "rondelle" });
   });
 
-  it("distingue les tranches fines (emince) des rondelles (rondelle)", () => {
-    // « lamelles » / « trancher finement » / mandoline = tranches fines plates → emince,
-    // JAMAIS rondelle (dont la conséquence sur la recette serait fâcheuse).
-    expect(parseCut("lamelles")).toEqual({ forme: "emince" });
-    expect(parseCut("en lamelles")).toEqual({ forme: "emince" });
-    expect(parseCut("tranches")).toEqual({ forme: "emince" });
-    expect(parseCut("en tranches")).toEqual({ forme: "emince" });
-    expect(parseCut("trancher finement")).toEqual({ forme: "emince" });
-    expect(parseCut("à la mandoline")).toEqual({ forme: "emince" });
+  it("distingue lamelles, émincé et rondelles (trois gestes de tranchage distincts)", () => {
+    // « lamelles » / « trancher » / mandoline = tranches plates → lamelle, JAMAIS
+    // rondelle (dont la conséquence sur la recette serait fâcheuse).
+    expect(parseCut("lamelles")).toEqual({ forme: "lamelle" });
+    expect(parseCut("en lamelles")).toEqual({ forme: "lamelle" });
+    expect(parseCut("tranches")).toEqual({ forme: "lamelle" });
+    expect(parseCut("en tranches")).toEqual({ forme: "lamelle" });
+    expect(parseCut("trancher finement")).toEqual({ forme: "lamelle" });
+    expect(parseCut("à la mandoline")).toEqual({ forme: "lamelle" });
+    // « émincer » nommé reste emince (fines lanières d'oignon, champignon…).
+    expect(parseCut("émincé")).toEqual({ forme: "emince" });
+    expect(parseCut("émincé finement")).toEqual({ forme: "emince" });
     // Seul le mot « rondelle » (ou « rouelle ») explicite reste rondelle.
     expect(parseCut("rondelles")).toEqual({ forme: "rondelle" });
     expect(parseCut("rouelles")).toEqual({ forme: "rondelle" });
