@@ -14,6 +14,7 @@
 - **Import intelligent** : l'overlay d'extraction patiente plus longtemps et sa progression grignote jusqu'à 99 % au lieu de se figer à 92 %.
 
 ### Import
+- **Import depuis un fichier PDF** : nouveau mode d'import intelligent qui extrait la recette d'un PDF (en plus des modes lien, photos et texte).
 - **Découpe mieux classée à l'extraction** : le prompt distingue explicitement « émincer », « en lamelles / trancher / mandoline » et « rondelles », pour ne plus ranger un tranchage à plat en rondelles (déploiement des Cloud Functions requis).
 
 ### Corrigé

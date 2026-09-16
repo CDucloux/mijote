@@ -56,14 +56,15 @@ toujours avec vous.
   réutilisable (sauce, pâte, appareil) avec un rendement ; les courses éclatent
   automatiquement la base en ingrédients bruts.
 - 🤖 **Import intelligent** : importez une recette depuis une **URL**, **1 à 2
-  photos** d'un livre ou un **texte collé** (mail, note, message) : extraction,
+  photos** d'un livre, un **texte collé** (mail, note, message) ou un **fichier
+  PDF** : extraction,
   structuration et liaison des ingrédients / ustensiles par Claude, qui
   **extrait aussi la découpe de chaque ingrédient** (émincé, ciselé, en dés,
   en lamelles, en rondelles, râpé…) pour alimenter le poste « Découpe » du
   mode cuisine (éditable ensuite dans l'éditeur), et
   **détecte les préparations de base** (caramel, pâte, fond…) et leur
   rendement estimé (réservé aux abonnés **Cardamome+**, quotas jour/mois ;
-  illimité pour l'administrateur). Les trois modes vivent sur un écran unique à
+  illimité pour l'administrateur). Les quatre modes vivent sur un écran unique à
   onglets, avec une sélection de **sources recommandées** (configurable en console
   admin) sur l'import depuis un lien.
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
