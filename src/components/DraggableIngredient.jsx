@@ -4,6 +4,9 @@ import { IngImage } from "./Img.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { MoveArrows } from "./MoveArrows.jsx";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
+import { FORMES, FORME_LABEL } from "@/lib/recipes/decoupe.js";
+
+const CALIBRES = [["fin", "Fin"], ["moyen", "Moyen"], ["gros", "Gros"]];
 
 // Ligne d'ingrédient réorganisable LIBREMENT dans la liste complète (index global).
 // Glisser au doigt sur mobile (poignée), flèches ↑/↓ sur desktop. La section est
@@ -11,7 +14,7 @@ import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
 export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
   ingredientDB, recipes, autoFocus, isDropTarget = false,
-  onRawChange, onUpdateAmount, onRemove, onMove, onTargetChange, onEnter, onBackspaceEmpty,
+  onRawChange, onUpdateAmount, onRemove, onMove, onTargetChange, onEnter, onBackspaceEmpty, onCutChange,
 }) {
   const [trashHover, setTrashHover] = useState(false);
   const inputRef = useRef(null);
@@ -93,6 +96,34 @@ export function DraggableIngredient({
           {ing.dbId
             ? <span style={{ fontSize: 11, background: "rgba(var(--ok-rgb),0.15)", color: "var(--ok)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Ingrédient reconnu</span>
             : ing.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✕ Non référencé</span> : null}
+        </div>
+      )}
+      {/* Édition de la découpe de mise en place : forme (vocabulaire fermé) + calibre.
+          Réservée aux ingrédients nommés ; « Aucune » retire la découpe. */}
+      {ing.name && onCutChange && (
+        <div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600 }}>Découpe</span>
+          <select className="field-input field-soft" value={ing.cut?.forme || ""}
+            onChange={e => {
+              const forme = e.target.value;
+              if (!forme) return onCutChange(ing.id, null);
+              onCutChange(ing.id, ing.cut?.calibre ? { forme, calibre: ing.cut.calibre } : { forme });
+            }}
+            style={{ marginBottom: 0, width: "auto", padding: "5px 10px", fontSize: 12, borderRadius: 999, background: "var(--surface2)" }}>
+            <option value="">Aucune</option>
+            {FORMES.map(f => <option key={f} value={f}>{FORME_LABEL[f]}</option>)}
+          </select>
+          {ing.cut?.forme && (
+            <select className="field-input field-soft" value={ing.cut?.calibre || ""}
+              onChange={e => {
+                const calibre = e.target.value;
+                onCutChange(ing.id, calibre ? { forme: ing.cut.forme, calibre } : { forme: ing.cut.forme });
+              }}
+              style={{ marginBottom: 0, width: "auto", padding: "5px 10px", fontSize: 12, borderRadius: 999, background: "var(--surface2)" }}>
+              <option value="">Calibre</option>
+              {CALIBRES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          )}
         </div>
       )}
     </div>
