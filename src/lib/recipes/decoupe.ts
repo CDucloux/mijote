@@ -250,10 +250,12 @@ const CUT_MARKERS: readonly string[] = [
 
 /**
  * Repère l'étape de la recette où la découpe d'un poste est décrite, pour permettre d'y
- * naviguer et de vérifier la classification. Cherche la PREMIÈRE étape qui à la fois
- * relie un ingrédient du poste ET mentionne un geste de découpe ({@link CUT_MARKERS}) ;
- * à défaut, la première étape qui relie simplement l'ingrédient. Ne devine rien de plus :
- * renvoie `-1` si aucune étape ne s'y rattache.
+ * naviguer et de vérifier la classification. Une étape « relie » le poste si elle le cite
+ * dans ses liens `ingredients` OU nomme le légume dans son `text` (beaucoup d'étapes ne
+ * remplissent pas les liens mais écrivent « couper l'aubergine »). Cherche la PREMIÈRE
+ * étape qui relie le poste ET mentionne un geste de découpe ({@link CUT_MARKERS}) ; à
+ * défaut, la première étape qui relie simplement le poste. Renvoie `-1` si aucune ne s'y
+ * rattache.
  *
  * @param poste - Le poste de découpe (porte les ids de lignes et le nom du légume).
  * @param ings - Les lignes d'ingrédients, pour résoudre les ids en noms liés dans les étapes.
@@ -274,8 +276,11 @@ export function findDecoupeStepIndex(
   }
   if (poste.name) names.add(normalizeStr(poste.name));
 
-  const linksIngredient = (step: Step): boolean =>
-    (step.ingredients || []).some((n) => names.has(normalizeStr(n)));
+  const linksIngredient = (step: Step): boolean => {
+    if ((step.ingredients || []).some((n) => names.has(normalizeStr(n)))) return true;
+    const t = normPhrase(step.text || "");
+    return [...names].some((n) => n.length > 0 && t.includes(n));
+  };
   const mentionsCut = (step: Step): boolean => {
     const t = normPhrase(step.text || "");
     return CUT_MARKERS.some((m) => t.includes(m));

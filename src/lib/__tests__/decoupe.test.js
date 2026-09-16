@@ -161,6 +161,14 @@ describe("findDecoupeStepIndex", () => {
     expect(findDecoupeStepIndex(poste(), ings, steps)).toBe(1);
   });
 
+  it("relie via le nom cité dans le texte quand step.ingredients est vide", () => {
+    const steps = [
+      { text: "Préchauffer le four.", ingredients: [] },
+      { text: "Détailler l'aubergine en rondelles régulières.", ingredients: [] },
+    ];
+    expect(findDecoupeStepIndex(poste(), ings, steps)).toBe(1);
+  });
+
   it("résout le nom lié via les ids de lignes autant que via le nom du poste", () => {
     const steps = [{ text: "Émincer finement le légume.", ingredients: ["aubergine"] }];
     expect(findDecoupeStepIndex(poste({ name: "" }), ings, steps)).toBe(0);
