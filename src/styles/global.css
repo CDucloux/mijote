@@ -219,10 +219,10 @@ html.light .ut-pill-desktop {
    passe en blanc (plus net que le gris-vert surface2) et le segment actif est
    porté par une pastille surface2 ; le thème sombre garde sa hiérarchie de
    surfaces (conteneur surface2, pastille active sur le fond de page). */
-.subview-pill { background: var(--surface2); }
-.subview-thumb { background: var(--bg); }
-html.light .subview-pill { background: #fff; }
-html.light .subview-thumb { background: var(--surface2); }
+.subview-pill { background: var(--bg); }
+.subview-thumb { background: var(--surface2); }
+html.light .subview-pill { background: var(--surface2); }
+html.light .subview-thumb { background: #fff; }
 
 /* Empty state d'accueil (« Ta cuisine démarre ici ») : mobile en colonne, le rail
    « parcours » en pied ; desktop en deux colonnes, le contenu occupe toute la
