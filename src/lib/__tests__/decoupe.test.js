@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseCut, buildPostesDecoupe, posteLabel, FORMES, FORME_LABEL } from "@/lib/recipes/decoupe.js";
+import { parseCut, buildPostesDecoupe, posteLabel, findDecoupeStepIndex, FORMES, FORME_LABEL } from "@/lib/recipes/decoupe.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 
 describe("FORME_LABEL", () => {
@@ -16,11 +16,28 @@ describe("parseCut", () => {
 
   it("ramène les formulations libres (accents/casse ignorés) au vocabulaire fermé", () => {
     expect(parseCut("Émincé")).toEqual({ forme: "emince" });
-    expect(parseCut("en fines lamelles")).toEqual({ forme: "emince" });
+    expect(parseCut("en fines lamelles")).toEqual({ forme: "lamelle" });
     expect(parseCut("petits dés")).toEqual({ forme: "des" });
     expect(parseCut("en brunoise")).toEqual({ forme: "brunoise" });
     expect(parseCut("râpé")).toEqual({ forme: "rape" });
     expect(parseCut("en rondelles")).toEqual({ forme: "rondelle" });
+  });
+
+  it("distingue lamelles, émincé et rondelles (trois gestes de tranchage distincts)", () => {
+    // « lamelles » / « trancher » / mandoline = tranches plates → lamelle, JAMAIS
+    // rondelle (dont la conséquence sur la recette serait fâcheuse).
+    expect(parseCut("lamelles")).toEqual({ forme: "lamelle" });
+    expect(parseCut("en lamelles")).toEqual({ forme: "lamelle" });
+    expect(parseCut("tranches")).toEqual({ forme: "lamelle" });
+    expect(parseCut("en tranches")).toEqual({ forme: "lamelle" });
+    expect(parseCut("trancher finement")).toEqual({ forme: "lamelle" });
+    expect(parseCut("à la mandoline")).toEqual({ forme: "lamelle" });
+    // « émincer » nommé reste emince (fines lanières d'oignon, champignon…).
+    expect(parseCut("émincé")).toEqual({ forme: "emince" });
+    expect(parseCut("émincé finement")).toEqual({ forme: "emince" });
+    // Seul le mot « rondelle » (ou « rouelle ») explicite reste rondelle.
+    expect(parseCut("rondelles")).toEqual({ forme: "rondelle" });
+    expect(parseCut("rouelles")).toEqual({ forme: "rondelle" });
   });
 
   it("accepte l'objet { forme, calibre } et normalise le calibre", () => {
@@ -123,6 +140,57 @@ describe("buildPostesDecoupe", () => {
     expect(buildPostesDecoupe([])).toEqual([]);
     expect(buildPostesDecoupe(null)).toEqual([]);
     expect(buildPostesDecoupe(undefined)).toEqual([]);
+  });
+});
+
+describe("findDecoupeStepIndex", () => {
+  const poste = (over) => ({ key: "k", forme: "rondelle", calibre: null, name: "aubergine", amount: null, unit: "", ingredientIds: ["i1"], technique: null, ...over });
+  const ings = [{ id: "i1", name: "aubergine" }, { id: "i2", name: "ail" }];
+
+  it("privilégie l'étape qui relie l'ingrédient ET décrit une découpe", () => {
+    const steps = [
+      { text: "Préchauffer le four.", ingredients: [] },
+      { text: "Rincer l'aubergine.", ingredients: ["aubergine"] },
+      { text: "Détailler l'aubergine en rondelles.", ingredients: ["aubergine"] },
+    ];
+    expect(findDecoupeStepIndex(poste(), ings, steps)).toBe(2);
+  });
+
+  it("retombe sur la première étape reliant l'ingrédient si aucune ne parle de découpe", () => {
+    const steps = [
+      { text: "Préchauffer le four.", ingredients: [] },
+      { text: "Disposer l'aubergine dans le plat.", ingredients: ["aubergine"] },
+    ];
+    expect(findDecoupeStepIndex(poste(), ings, steps)).toBe(1);
+  });
+
+  it("relie via le nom cité dans le texte quand step.ingredients est vide", () => {
+    const steps = [
+      { text: "Préchauffer le four.", ingredients: [] },
+      { text: "Détailler l'aubergine en rondelles régulières.", ingredients: [] },
+    ];
+    expect(findDecoupeStepIndex(poste(), ings, steps)).toBe(1);
+  });
+
+  it("tolère le pluriel, y compris interne à un nom composé", () => {
+    const pdtPoste = poste({ name: "pomme de terre", ingredientIds: ["p1"] });
+    const pdtIngs = [{ id: "p1", name: "pomme de terre" }];
+    const steps = [
+      { text: "Préchauffer le four.", ingredients: [] },
+      { text: "Éplucher et couper les pommes de terre en lamelles de 5 mm.", ingredients: [] },
+    ];
+    expect(findDecoupeStepIndex(pdtPoste, pdtIngs, steps)).toBe(1);
+  });
+
+  it("résout le nom lié via les ids de lignes autant que via le nom du poste", () => {
+    const steps = [{ text: "Émincer finement le légume.", ingredients: ["aubergine"] }];
+    expect(findDecoupeStepIndex(poste({ name: "" }), ings, steps)).toBe(0);
+  });
+
+  it("renvoie -1 sans étape rattachée (ou sans étapes)", () => {
+    expect(findDecoupeStepIndex(poste(), ings, [{ text: "Faire bouillir l'eau.", ingredients: ["eau"] }])).toBe(-1);
+    expect(findDecoupeStepIndex(poste(), ings, [])).toBe(-1);
+    expect(findDecoupeStepIndex(poste(), ings, null)).toBe(-1);
   });
 });
 

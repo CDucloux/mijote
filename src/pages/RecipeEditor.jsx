@@ -524,6 +524,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                         isDropTarget={ingDropIdx === gi} onTargetChange={setIngDropIdx}
                         onRawChange={handleRawChange}
                         onUpdateAmount={(id, v) => updIng(id, "amount", v)}
+                        onCutChange={(id, cut) => updIng(id, "cut", cut)}
                         onRemove={remIng} onMove={moveIngGlobal} onEnter={() => addIngAt(gi + 1, g || "")} onBackspaceEmpty={removeIngBackspace} />
                     );
                   })}

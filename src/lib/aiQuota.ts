@@ -6,7 +6,7 @@
 // indicatifs. Les limites DOIVENT rester alignées avec functions/quota.js.
 
 /** Type d'import IA soumis à quota. */
-export type ImportKind = "url" | "photo" | "text";
+export type ImportKind = "url" | "photo" | "text" | "pdf";
 
 /** Compteurs stockés pour un type dans `aiUsage/{uid}`. */
 export interface KindUsage {
@@ -35,6 +35,7 @@ export const LIMITS: Record<ImportKind, { day: number; month: number }> = {
   url: { day: 5, month: 60 },
   photo: { day: 3, month: 30 },
   text: { day: 5, month: 60 },
+  pdf: { day: 5, month: 60 },
 };
 
 /**

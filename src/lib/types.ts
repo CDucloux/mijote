@@ -28,6 +28,7 @@ export type FormeDecoupe =
   | "paysanne"
   | "julienne"
   | "batonnet"
+  | "lamelle"
   | "rondelle"
   | "troncon"
   | "quartier"

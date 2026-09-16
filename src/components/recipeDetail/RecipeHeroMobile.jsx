@@ -49,8 +49,10 @@ export function RecipeHeroMobile({
           items={menuItems} />
       </div>
       )}
-      {/* Titre + source + tags, départ étagé piloté par le hook (refs). */}
-      <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
+      {/* Titre + source + tags, départ étagé piloté par le hook (refs). Décalé nettement
+          du bas : la carte de stats chevauche le hero de 20px (voir RecipeStatsMobile),
+          on laisse ~20px d'image respirer entre les badges et le haut de la carte. */}
+      <div style={{ position: "absolute", bottom: 40, left: 18, right: 18 }}>
         <h1 ref={titleRef} style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff", transformOrigin: "left bottom", willChange: "transform, opacity" }}>{recipe.name}</h1>
         {attribution && <div ref={attribRef} style={{ willChange: "transform, opacity" }}>{attribution}</div>}
         {!publicMode && recipe.source && (

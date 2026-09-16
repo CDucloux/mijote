@@ -1,5 +1,5 @@
 import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
-import { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText, type ImagePart } from "@/lib/recipes/recipeUrlImport.js";
+import { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText, importRecipeFromPdf, type ImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import { uploadImage } from "@/lib/firebase/storage.js";
 import { applianceImportInfos, sanitizeStepUtensilParams } from "@/lib/utensils/appliances.js";
 import type { Recipe } from "@/lib/types.js";
@@ -25,7 +25,7 @@ export interface RecipeImportDeps {
  * le brouillon dans l'éditeur (jamais d'enregistrement direct, le créateur relit).
  *
  * @param deps - Bases d'ingrédients/ustensiles et `openEditor`.
- * @returns `{ importFromUrl, importFromImages, importFromText }`.
+ * @returns `{ importFromUrl, importFromImages, importFromText, importFromPdf }`.
  */
 export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeImportDeps) {
   // Ids stables sur les items + valeurs par défaut du schéma éditeur.
@@ -83,6 +83,11 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeI
     openImportedDraft(recipe);
     return { method };
   };
+  const importFromPdf = async (text: string): Promise<{ method: string }> => {
+    const { recipe, method } = await importRecipeFromPdf(text, utensilDB.map(u => u.name), appliancesOf()) as { recipe: Recipe; method: string };
+    openImportedDraft(recipe);
+    return { method };
+  };
   const importFromImages = async (images: ImagePart[]): Promise<{ method: string }> => {
     const { recipe, method, coverIndex } = await importRecipeFromImages(images, utensilDB.map(u => u.name), appliancesOf()) as { recipe: Recipe; method: string; coverIndex: number };
     // La page identifiée comme photo du plat devient l'image de couverture : on la
@@ -98,5 +103,5 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeI
     return { method };
   };
 
-  return { importFromUrl, importFromImages, importFromText };
+  return { importFromUrl, importFromImages, importFromText, importFromPdf };
 }

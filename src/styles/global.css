@@ -219,10 +219,10 @@ html.light .ut-pill-desktop {
    passe en blanc (plus net que le gris-vert surface2) et le segment actif est
    porté par une pastille surface2 ; le thème sombre garde sa hiérarchie de
    surfaces (conteneur surface2, pastille active sur le fond de page). */
-.subview-pill { background: var(--surface2); }
-.subview-thumb { background: var(--bg); }
-html.light .subview-pill { background: #fff; }
-html.light .subview-thumb { background: var(--surface2); }
+.subview-pill { background: var(--bg); }
+.subview-thumb { background: var(--surface2); }
+html.light .subview-pill { background: var(--surface2); }
+html.light .subview-thumb { background: #fff; }
 
 /* Empty state d'accueil (« Ta cuisine démarre ici ») : mobile en colonne, le rail
    « parcours » en pied ; desktop en deux colonnes, le contenu occupe toute la
@@ -1329,16 +1329,6 @@ select {
    Piloté en CSS, INDÉPENDANT des rendus React, pour rester fluide même quand
    le thread principal est occupé par l'extraction. `pathLength=100` sur le cercle
    fait que l'offset s'exprime en pourcentage. */
-@keyframes ringFill {
-  from {
-    stroke-dashoffset: 100;
-  }
-
-  to {
-    stroke-dashoffset: 8;
-  }
-}
-
 @keyframes expandDown {
   from {
     opacity: 0;
@@ -1629,26 +1619,8 @@ select {
 
 /* Caret : petit carré tourné, couleur de la bulle, aligné au centre de la cible
    (--caret-x calculé en JS). Le décalage d'une moitié le fait chevaucher le bord. */
-.app-tooltip::after {
-  content: "";
-  position: absolute;
-  left: var(--caret-x, 50%);
-  width: 8px;
-  height: 8px;
-  background: var(--tooltip-bg);
-  border: 1px solid var(--tooltip-border);
-  transform: translateX(-50%) rotate(45deg);
-}
-.app-tooltip[data-placement="top"]::after {
-  bottom: -5px;
-  border-top: none;
-  border-left: none;
-}
-.app-tooltip[data-placement="bottom"]::after {
-  top: -5px;
-  border-bottom: none;
-  border-right: none;
-}
+/* Pas de caret : une bulle flottante nette, sans flèche de rattachement (choix
+   d'UI moderne). Le décalage vertical de la transition suffit à lier visuellement. */
 
 @media (prefers-reduced-motion: reduce) {
   .app-tooltip {

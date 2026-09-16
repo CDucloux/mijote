@@ -3,7 +3,7 @@
 // l'enforcement (transaction Firestore) pour être testable sans I/O.
 
 /** Type d'import IA soumis à quota. */
-export type ImportKind = "url" | "photo" | "text";
+export type ImportKind = "url" | "photo" | "text" | "pdf";
 
 /** Compteurs stockés pour un type d'import dans `aiUsage/{uid}`. */
 export interface KindUsage {
@@ -24,10 +24,11 @@ export const LIMITS: Record<ImportKind, { day: number; month: number }> = {
   url: { day: 5, month: 60 },
   photo: { day: 3, month: 30 },
   text: { day: 5, month: 60 },
+  pdf: { day: 5, month: 60 },
 };
 
 /** Libellé humain par type (messages d'erreur). */
-export const KIND_LABEL: Record<ImportKind, string> = { url: "depuis un lien", photo: "photo", text: "depuis un texte" };
+export const KIND_LABEL: Record<ImportKind, string> = { url: "depuis un lien", photo: "photo", text: "depuis un texte", pdf: "depuis un PDF" };
 
 /**
  * Clés de période (jour `YYYY-MM-DD` et mois `YYYY-MM`) en fuseau Europe/Paris,

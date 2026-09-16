@@ -9,12 +9,13 @@ import { fmtTime } from "../../lib/format.js";
 export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, onOpenNutrition, onOpenShopping, onOpenMealPlan }) {
   return (
     <div style={{
-      // Léger chevauchement du bas du hero + coins hauts arrondis : la transition
-      // image / contenu s'adoucit et l'image reste visible entre les badges et le bord.
-      // Remontée volontairement faible (les badges du hero sont proches du bas).
+      // Chevauchement du bas du hero AU MOINS égal au rayon des coins (20px) : sinon le
+      // bord droit et net de l'image reste visible au niveau des arrondis (raccord bizarre
+      // « coin arrondi + ligne droite »). Ici l'image passe entièrement sous la carte, les
+      // arrondis ne révèlent que de l'image.
       padding: "20px 16px 14px", flexShrink: 0,
       position: "relative", zIndex: 1, background: "var(--bg)",
-      marginTop: -8, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+      marginTop: -20, borderTopLeftRadius: 20, borderTopRightRadius: 20,
     }}>
       <div style={{ display: "flex", alignItems: "center", background: "var(--surface)", borderRadius: 16, padding: "14px 8px", marginBottom: 12, border: "1px solid var(--border)" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>

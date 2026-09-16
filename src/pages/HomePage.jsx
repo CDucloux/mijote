@@ -66,7 +66,7 @@ function NotifRow({ icon, color, title, subtitle, onClick, animationDelay, canHo
 // quand il n'y a RIEN à faire faute de contenu), on invite à démarrer. Le parcours
 // Recette → Planning → Courses en pied dit POURQUOI l'accueil est vide et ce que la
 // première recette débloque : la boucle propre à Cardamome, pas un vide générique.
-function OnboardingCard({ onNewRecipe, onOpenPublic }) {
+function OnboardingCard({ onNewRecipe, onExplore }) {
   const steps = [
     { icon: "book", label: "Recette", desc: "Ta première fiche", on: true },
     { icon: "calendar", label: "Planning", desc: "La semaine s'organise", on: false },
@@ -95,9 +95,9 @@ function OnboardingCard({ onNewRecipe, onOpenPublic }) {
             <button onClick={onNewRecipe} className="btn btn-primary btn-pill pressable ripple" style={{ width: "auto" }}>
               <Icon name="plus" size={16} color="#fff" /> Ajouter une recette
             </button>
-            <button onClick={onOpenPublic} className="pressable" style={{ background: "none", border: "none", cursor: "pointer",
-              display: "inline-flex", alignItems: "center", gap: 4, padding: "8px 4px",
-              fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>
+            <button onClick={onExplore} className="pressable hov-pill" style={{ background: "none", border: "none", cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: 4, padding: "10px 16px", borderRadius: 999,
+              fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>
               Explorer la communauté <Icon name="forward" size={14} color="var(--accent)" />
             </button>
           </div>
@@ -426,7 +426,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
               <div className="skeleton" style={{ height: 62, borderRadius: 14 }} />
             </div>
           ) : isEmpty ? (
-            <OnboardingCard onNewRecipe={onNewRecipe} onOpenPublic={onOpenPublic} />
+            <OnboardingCard onNewRecipe={onNewRecipe} onExplore={() => onNavigateSubview?.("discover")} />
           ) : isCalm ? (
             <button className="slide-up pressable ripple" onClick={() => setTab?.("meal-plan")}
               style={{ animationDelay: "0.04s", display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>

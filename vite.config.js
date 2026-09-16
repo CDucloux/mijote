@@ -16,6 +16,9 @@ export default defineConfig({
       workbox: {
         // Cache JS/CSS/HTML app shell (+ icônes PWA, manifest & police drapeaux)
         globPatterns: ['**/*.{js,css,html,svg,ico,png,woff2,webmanifest}'],
+        // pdfjs (chunk + worker) n'est chargé qu'à la demande, pour l'import PDF qui
+        // exige d'être en ligne : inutile de l'imposer au précache de tous (~330 Kio).
+        globIgnores: ['**/pdf-*.js', '**/pdf.worker*.mjs'],
         // Toute navigation hors ligne (y compris /profile, /config…) sert le shell.
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,

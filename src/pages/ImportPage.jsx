@@ -8,6 +8,8 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { fileToImagePart } from "@/lib/recipes/recipeUrlImport.js";
+import { extractPdfText } from "@/lib/recipes/pdfImport.js";
+import { hasUsablePdfText } from "@/lib/recipes/pdfText.js";
 import { visibleSources, prettyHost } from "@/lib/sources/recommendedSources.js";
 import { DEFAULT_SOURCES } from "@/constants/recommendedSources.js";
 import "../styles/import.css";
@@ -20,15 +22,16 @@ import "../styles/import.css";
 // le mur d'offre ne se lève qu'à la tentative d'import (cf. `go`). La garde réelle
 // reste serveur (Cardamome+), quota par mode.
 
-const ROUTE_BY_MODE = { lien: "import-from-url", photo: "import-from-picture", texte: "import-from-text" };
-const KIND_BY_MODE = { lien: "url", photo: "photo", texte: "text" };
-const CTA_LABEL = { lien: "Importer", photo: "Extraire", texte: "Extraire" };
+const ROUTE_BY_MODE = { lien: "import-from-url", photo: "import-from-picture", texte: "import-from-text", pdf: "import-from-pdf" };
+const KIND_BY_MODE = { lien: "url", photo: "photo", texte: "text", pdf: "pdf" };
+const CTA_LABEL = { lien: "Importer", photo: "Extraire", texte: "Extraire", pdf: "Extraire" };
 const URL_RE = /^https?:\/\/.+/i;
 const MIN_TEXT_LEN = 40;
 const MAX_PHOTOS = 2;
+const MAX_PDF_BYTES = 20_000_000;
 
 export function ImportPage({ mode = "lien" }) {
-  const { importFromUrl, importFromImages, importFromText, sources, notify, isPlus, isAdmin, user } = useAppShell();
+  const { importFromUrl, importFromImages, importFromText, importFromPdf, sources, notify, isPlus, isAdmin, user } = useAppShell();
   const { unlimited, remaining } = useAiUsage(user?.uid, isAdmin);
   const rem = remaining(KIND_BY_MODE[mode]);
   const navigate = useNavigate();
@@ -39,6 +42,7 @@ export function ImportPage({ mode = "lien" }) {
   const [clip, setClip] = useState("");            // URL détectée dans le presse-papiers
   const [photos, setPhotos] = useState([]);        // [{ file, preview, part }]
   const [text, setText] = useState("");
+  const [pdf, setPdf] = useState(null);            // { file, name } sélectionné
   const [error, setError] = useState("");          // hint de saisie (inline)
   const [importError, setImportError] = useState(null); // échec réel → popup
   const [gate, setGate] = useState(false);         // mur d'offre (non-abonné)
@@ -47,6 +51,7 @@ export function ImportPage({ mode = "lien" }) {
   const urlRef = useRef(null);
   const textRef = useRef(null);
   const fileRef = useRef(null);
+  const pdfRef = useRef(null);
   const photosRef = useRef(photos);
   useEffect(() => { photosRef.current = photos; }, [photos]);
 
@@ -105,6 +110,14 @@ export function ImportPage({ mode = "lien" }) {
   };
   const removePhoto = (i) => setPhotos(p => { const c = p[i]; if (c) URL.revokeObjectURL(c.preview); return p.filter((_, k) => k !== i); });
 
+  const addPdf = (fileList) => {
+    setError("");
+    const file = Array.from(fileList || []).find(f => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
+    if (!file) { setError("Choisis un fichier PDF."); return; }
+    if (file.size > MAX_PDF_BYTES) { setError("PDF trop volumineux (max 20 Mo)."); return; }
+    setPdf({ file, name: file.name });
+  };
+
   const pasteFromClipboard = async () => {
     try {
       const t = await navigator.clipboard?.readText?.();
@@ -114,6 +127,7 @@ export function ImportPage({ mode = "lien" }) {
 
   const ready = mode === "lien" ? URL_RE.test(url.trim())
     : mode === "photo" ? photos.length > 0
+    : mode === "pdf" ? pdf != null
     : text.trim().length >= MIN_TEXT_LEN;
   const blocked = !unlimited && rem?.blocked;
 
@@ -128,6 +142,17 @@ export function ImportPage({ mode = "lien" }) {
     try {
       if (mode === "lien") { await importFromUrl(url.trim()); notify?.("Recette extraite, à relire"); }
       else if (mode === "photo") { await importFromImages(photos.map(p => p.part)); notify?.("Recette extraite, à relire"); }
+      else if (mode === "pdf") {
+        // Extraction de la couche texte côté client (aucune vision) : on n'appelle
+        // le serveur (et ne consomme un quota) que si le PDF contient du texte.
+        const pdfText = await extractPdfText(pdf.file);
+        if (!hasUsablePdfText(pdfText)) {
+          setLoading(false);
+          setError("Ce PDF ne contient pas de texte exploitable (document scanné ?). Essaie plutôt l'onglet Photo.");
+          return;
+        }
+        await importFromPdf(pdfText); notify?.("Recette extraite, à relire");
+      }
       else { await importFromText(text.trim()); notify?.("Recette extraite, à relire"); }
     } catch (e) {
       setLoading(false);
@@ -135,7 +160,7 @@ export function ImportPage({ mode = "lien" }) {
     }
   };
 
-  const estimateMs = mode === "photo" ? 11000 + photos.length * 7000 : mode === "texte" ? 12000 : 14000;
+  const estimateMs = mode === "photo" ? 20000 + photos.length * 7000 : mode === "texte" ? 22000 : mode === "pdf" ? 23000 : 24000;
 
   // ── Briques partagées entre les deux mises en page ──
   const linkField = (
@@ -197,6 +222,28 @@ export function ImportPage({ mode = "lien" }) {
         value={text} onChange={e => { setText(e.target.value); if (error) setError(""); }} />
     </>
   );
+  const pdfInput = (
+    <input ref={pdfRef} type="file" accept="application/pdf,.pdf" hidden
+      onChange={e => { addPdf(e.target.files); e.target.value = ""; }} />
+  );
+  const pdfPicker = pdf ? (
+    <div className="imp-pdfcard">
+      <span className="ic"><Icon name="pdf" size={20} color="var(--accent)" /></span>
+      <span className="meta"><b>{pdf.name}</b><span>Prêt à extraire</span></span>
+      <button className="rm" aria-label="Retirer le PDF" onClick={() => { setPdf(null); setError(""); }}>
+        <Icon name="close" size={15} color="currentColor" />
+      </button>
+    </div>
+  ) : (
+    <div className={`imp-dropzone${drag ? " drag" : ""}`} onClick={() => pdfRef.current?.click()}
+      onDragOver={e => { e.preventDefault(); setDrag(true); }}
+      onDragLeave={() => setDrag(false)}
+      onDrop={e => { e.preventDefault(); setDrag(false); addPdf(e.dataTransfer.files); }}>
+      <span className="plus"><Icon name="pdf" size={26} color="currentColor" /></span>
+      <span className="l">Glisse ton PDF ou clique pour choisir</span>
+      <span className="h">Une fiche ou un livre, avec du texte sélectionnable</span>
+    </div>
+  );
   // Le quota ne concerne que les abonnés ; pour un non-abonné il afficherait un
   // reliquat trompeur (il ne peut pas encore importer). Le CTA, lui, reste
   // cliquable pour un non-abonné : le clic lève le mur d'offre.
@@ -243,6 +290,7 @@ export function ImportPage({ mode = "lien" }) {
               <Lede mode={mode} />
               {mode === "lien" && <>{linkField}{clipBtn}</>}
               {mode === "photo" && <>{photoInput}{photos.length ? photoGrid : dropzone}</>}
+              {mode === "pdf" && <>{pdfInput}{pdfPicker}</>}
               {mode === "texte" && textArea}
               {inlineErr}
               <div className="imp-dact">{quota}{cta}</div>
@@ -267,6 +315,7 @@ export function ImportPage({ mode = "lien" }) {
           <Lede mode={mode} />
           {mode === "lien" && <>{linkField}{clipBtn}<SourcesShelf sources={sourceList} layout="shelf" /></>}
           {mode === "photo" && <>{photoInput}{photoGrid}</>}
+          {mode === "pdf" && <>{pdfInput}{pdfPicker}</>}
           {mode === "texte" && textArea}
           {inlineErr}
           <Tips mode={mode} />

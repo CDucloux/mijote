@@ -17,7 +17,7 @@ Cardamome est pleinement utilisable **gratuitement** : bibliothèque de recettes
 | Planning repas et liste de courses | Oui | Oui |
 | Nutri-Score et saisonnalité | Oui | Oui |
 | Mode hors-ligne | Oui | Oui |
-| Import intelligent (lien, photo, texte) | - | Oui |
+| Import intelligent (lien, photo, texte, PDF) | - | Oui |
 | Foyer partagé | - | Oui |
 | Génération de planning | - | Oui |
 | Batch cooking | - | Oui |
