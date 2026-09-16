@@ -169,6 +169,16 @@ describe("findDecoupeStepIndex", () => {
     expect(findDecoupeStepIndex(poste(), ings, steps)).toBe(1);
   });
 
+  it("tolère le pluriel, y compris interne à un nom composé", () => {
+    const pdtPoste = poste({ name: "pomme de terre", ingredientIds: ["p1"] });
+    const pdtIngs = [{ id: "p1", name: "pomme de terre" }];
+    const steps = [
+      { text: "Préchauffer le four.", ingredients: [] },
+      { text: "Éplucher et couper les pommes de terre en lamelles de 5 mm.", ingredients: [] },
+    ];
+    expect(findDecoupeStepIndex(pdtPoste, pdtIngs, steps)).toBe(1);
+  });
+
   it("résout le nom lié via les ids de lignes autant que via le nom du poste", () => {
     const steps = [{ text: "Émincer finement le légume.", ingredients: ["aubergine"] }];
     expect(findDecoupeStepIndex(poste({ name: "" }), ings, steps)).toBe(0);

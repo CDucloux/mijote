@@ -276,11 +276,17 @@ export function findDecoupeStepIndex(
   }
   if (poste.name) names.add(normalizeStr(poste.name));
 
-  const linksIngredient = (step: Step): boolean => {
-    if ((step.ingredients || []).some((n) => names.has(normalizeStr(n)))) return true;
-    const t = normPhrase(step.text || "");
-    return [...names].some((n) => n.length > 0 && t.includes(n));
-  };
+  // Appariement tolérant au pluriel : chaque mot du nom peut porter un « s » final, y
+  // compris au milieu d'un nom composé (« pomme de terre » ↔ « pommes de terre »). Le
+  // simple `includes` échouait sur ce pluriel interne.
+  const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const nameRes = [...names]
+    .filter((n) => n.length > 0)
+    .map((n) => new RegExp(`(^|[^a-z0-9])${n.split(" ").map((w) => escapeRe(w) + "s?").join("\\s+")}([^a-z0-9]|$)`));
+  const matchesName = (haystack: string): boolean => nameRes.some((re) => re.test(haystack));
+
+  const linksIngredient = (step: Step): boolean =>
+    (step.ingredients || []).some((n) => matchesName(normPhrase(n))) || matchesName(normPhrase(step.text || ""));
   const mentionsCut = (step: Step): boolean => {
     const t = normPhrase(step.text || "");
     return CUT_MARKERS.some((m) => t.includes(m));
