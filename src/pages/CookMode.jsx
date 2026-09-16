@@ -10,7 +10,7 @@ import { Img, IngImage } from "../components/Img.jsx";
 import { TechniqueText } from "../components/TechniqueText.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
-import { buildPostesDecoupe, posteLabel } from "@/lib/recipes/decoupe.js";
+import { buildPostesDecoupe, posteLabel, findDecoupeStepIndex } from "@/lib/recipes/decoupe.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { consumptionFraction } from "@/lib/recipes/recipeComponents.js";
@@ -204,6 +204,15 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     });
     return buildPostesDecoupe(scaled, techIndex);
   }, [recipe.ingredients, mult, techIndex]);
+  // Étape réelle où chaque découpe a été détectée (clé du poste → index d'étape, -1 si
+  // aucune) : permet d'y naviguer pour vérifier la classification d'une taille douteuse.
+  const posteStepByKey = useMemo(() => {
+    const m = new Map();
+    for (const poste of postesDecoupe) {
+      m.set(poste.key, findDecoupeStepIndex(poste, recipe.ingredients, recipe.steps));
+    }
+    return m;
+  }, [postesDecoupe, recipe.ingredients, recipe.steps]);
 
   const realStepCount = (recipe.steps || []).length;
   const pages = useMemo(() => {
@@ -236,6 +245,12 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   };
   const goNext = () => { if (stepIdx < totalSteps - 1) goTo(stepIdx + 1); };
   const goPrev = () => goTo(stepIdx - 1);
+  // Saute à une étape réelle (index dans recipe.steps) en la retrouvant dans les pages.
+  const goToStep = (realStepIdx) => {
+    if (realStepIdx < 0) return;
+    const pageIdx = pages.findIndex(p => p.kind === "step" && p.realIdx === realStepIdx);
+    if (pageIdx >= 0) goTo(pageIdx);
+  };
 
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
@@ -476,6 +491,9 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     const firstId = poste.ingredientIds[0];
     const line = firstId ? (recipe.ingredients || []).find(i => i.id === firstId) : null;
     const imgSrc = getIngImage(line?.dbId, poste.name);
+    // Étape où cette découpe a été détectée : chip de navigation pour lever un doute
+    // de classification. `stopPropagation` : cliquer le chip ne coche pas le poste.
+    const srcStepIdx = posteStepByKey.get(poste.key) ?? -1;
     return (
       <div key={poste.key} role="button" tabIndex={0} onClick={toggle}
         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
@@ -490,6 +508,15 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         <span style={{ flex: 1, fontSize: 14, color: "var(--text)", textDecoration: done ? "line-through" : "none", opacity: done ? 0.55 : 1, transition: "opacity 0.15s" }}>
           {posteLabel(poste)}
         </span>
+        {srcStepIdx >= 0 && (
+          <button type="button" title="Voir l'étape d'origine de cette découpe"
+            onClick={e => { e.stopPropagation(); goToStep(srcStepIdx); }}
+            className="pressable"
+            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.10)", border: "none", borderRadius: 999, padding: "4px 9px 4px 10px", cursor: "pointer", opacity: done ? 0.55 : 1, transition: "opacity 0.15s" }}>
+            Étape {srcStepIdx + 1}
+            <Icon name="forward" size={12} color="var(--accent)" />
+          </button>
+        )}
       </div>
     );
   };

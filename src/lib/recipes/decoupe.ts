@@ -13,7 +13,7 @@
  * @module decoupe
  */
 
-import type { Calibre, Cut, FormeDecoupe, IngredientLine } from "@/lib/types.js";
+import type { Calibre, Cut, FormeDecoupe, IngredientLine, Step } from "@/lib/types.js";
 import { fmtQtyUnit, pluralizeName } from "@/lib/format.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { normTech, type TechniqueEntry, type TechniqueIndex } from "@/lib/recipes/techniques.js";
@@ -236,6 +236,58 @@ export function buildPostesDecoupe(
     a.name.localeCompare(b.name, "fr"),
   );
   return postes;
+}
+
+/** Marqueurs de découpe (verbes et formes non ambiguës) pour reconnaître l'étape où une
+ *  taille est décrite. Volontairement sans les mots courts homographes du français
+ *  courant (« dés » → « des ») qui déclencheraient de faux positifs. */
+const CUT_MARKERS: readonly string[] = [
+  "couper", "tailler", "detailler", "decouper", "trancher",
+  "emincer", "eminc", "ciseler", "cisel", "hacher", "hach", "raper", "rape",
+  "rondelle", "lamelle", "tranche", "julienne", "brunoise", "mirepoix",
+  "paysanne", "chiffonade", "batonnet", "troncon", "quartier",
+];
+
+/**
+ * Repère l'étape de la recette où la découpe d'un poste est décrite, pour permettre d'y
+ * naviguer et de vérifier la classification. Cherche la PREMIÈRE étape qui à la fois
+ * relie un ingrédient du poste ET mentionne un geste de découpe ({@link CUT_MARKERS}) ;
+ * à défaut, la première étape qui relie simplement l'ingrédient. Ne devine rien de plus :
+ * renvoie `-1` si aucune étape ne s'y rattache.
+ *
+ * @param poste - Le poste de découpe (porte les ids de lignes et le nom du légume).
+ * @param ings - Les lignes d'ingrédients, pour résoudre les ids en noms liés dans les étapes.
+ * @param steps - Les étapes de la recette, dans l'ordre.
+ * @returns L'index de l'étape dans `steps`, ou `-1` si aucune ne correspond.
+ */
+export function findDecoupeStepIndex(
+  poste: PosteDecoupe,
+  ings: readonly IngredientLine[] | null | undefined,
+  steps: readonly Step[] | null | undefined,
+): number {
+  if (!steps || steps.length === 0) return -1;
+  const names = new Set<string>();
+  const byId = new Map((ings || []).map((i) => [i.id, i]));
+  for (const id of poste.ingredientIds) {
+    const line = byId.get(id);
+    if (line?.name) names.add(normalizeStr(line.name));
+  }
+  if (poste.name) names.add(normalizeStr(poste.name));
+
+  const linksIngredient = (step: Step): boolean =>
+    (step.ingredients || []).some((n) => names.has(normalizeStr(n)));
+  const mentionsCut = (step: Step): boolean => {
+    const t = normPhrase(step.text || "");
+    return CUT_MARKERS.some((m) => t.includes(m));
+  };
+
+  let firstLink = -1;
+  for (let i = 0; i < steps.length; i++) {
+    const linked = linksIngredient(steps[i]);
+    if (linked && mentionsCut(steps[i])) return i;
+    if (linked && firstLink < 0) firstLink = i;
+  }
+  return firstLink;
 }
 
 /**

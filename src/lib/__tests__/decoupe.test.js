@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseCut, buildPostesDecoupe, posteLabel, FORMES, FORME_LABEL } from "@/lib/recipes/decoupe.js";
+import { parseCut, buildPostesDecoupe, posteLabel, findDecoupeStepIndex, FORMES, FORME_LABEL } from "@/lib/recipes/decoupe.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 
 describe("FORME_LABEL", () => {
@@ -137,6 +137,39 @@ describe("buildPostesDecoupe", () => {
     expect(buildPostesDecoupe([])).toEqual([]);
     expect(buildPostesDecoupe(null)).toEqual([]);
     expect(buildPostesDecoupe(undefined)).toEqual([]);
+  });
+});
+
+describe("findDecoupeStepIndex", () => {
+  const poste = (over) => ({ key: "k", forme: "rondelle", calibre: null, name: "aubergine", amount: null, unit: "", ingredientIds: ["i1"], technique: null, ...over });
+  const ings = [{ id: "i1", name: "aubergine" }, { id: "i2", name: "ail" }];
+
+  it("privilégie l'étape qui relie l'ingrédient ET décrit une découpe", () => {
+    const steps = [
+      { text: "Préchauffer le four.", ingredients: [] },
+      { text: "Rincer l'aubergine.", ingredients: ["aubergine"] },
+      { text: "Détailler l'aubergine en rondelles.", ingredients: ["aubergine"] },
+    ];
+    expect(findDecoupeStepIndex(poste(), ings, steps)).toBe(2);
+  });
+
+  it("retombe sur la première étape reliant l'ingrédient si aucune ne parle de découpe", () => {
+    const steps = [
+      { text: "Préchauffer le four.", ingredients: [] },
+      { text: "Disposer l'aubergine dans le plat.", ingredients: ["aubergine"] },
+    ];
+    expect(findDecoupeStepIndex(poste(), ings, steps)).toBe(1);
+  });
+
+  it("résout le nom lié via les ids de lignes autant que via le nom du poste", () => {
+    const steps = [{ text: "Émincer finement le légume.", ingredients: ["aubergine"] }];
+    expect(findDecoupeStepIndex(poste({ name: "" }), ings, steps)).toBe(0);
+  });
+
+  it("renvoie -1 sans étape rattachée (ou sans étapes)", () => {
+    expect(findDecoupeStepIndex(poste(), ings, [{ text: "Faire bouillir l'eau.", ingredients: ["eau"] }])).toBe(-1);
+    expect(findDecoupeStepIndex(poste(), ings, [])).toBe(-1);
+    expect(findDecoupeStepIndex(poste(), ings, null)).toBe(-1);
   });
 });
 
