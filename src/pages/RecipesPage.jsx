@@ -32,6 +32,12 @@ const RECIPES_PAGE = 12;
 let recipeSkeletonSeen = false;
 const SKELETON_MS = 550;
 
+// Dernier jeu de résultats déjà révélé avec l'animation d'entrée (clé de grille).
+// Persistant à l'échelle du module (survit au démontage/remontage de la page) : on
+// n'anime QUE lorsque les résultats changent (recherche, tri, carnet), jamais sur un
+// simple retour depuis la fiche détail (remontage à résultats identiques).
+let lastAnimatedGridKey = null;
+
 // Position de défilement + pagination mémorisées entre deux visites de l'onglet :
 // ouvrir une fiche démonte RecipesPage, donc l'état de scroll ne peut pas vivre
 // dans le composant. Conservé au niveau module (réinitialisé au rechargement
@@ -249,6 +255,13 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   // déclencheur du reset de pagination (nouvelle recherche / tri / carnet → on
   // repart du 1er lot).
   const gridKey = `${filterCol || "all"}|${normalizeStr(search)}|${sortBy}|${sortDir}`;
+  // La cascade d'entrée ne se joue que lorsque le jeu de résultats CHANGE (ou à la 1ère
+  // révélation), pas sur un simple remontage à résultats identiques (retour depuis une
+  // fiche). On enregistre la clé révélée après coup, une fois le squelette passé.
+  const animateGrid = lastAnimatedGridKey !== gridKey;
+  useEffect(() => {
+    if (!booting && !loading) lastAnimatedGridKey = gridKey;
+  }, [gridKey, booting, loading]);
   // Au retour d'une fiche (même jeu de résultats), on repart avec la pagination
   // atteinte, faute de quoi les cartes sous la position mémorisée ne seraient pas
   // montées et le scroll ne pourrait pas être restauré.
@@ -466,7 +479,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             return (
               <RecipeGridItem key={r.id} recipe={r}
                 inSeason={sv?.inSeason || false} vegan={sv?.vegan || false} nutriLetter={sv?.nutriLetter}
-                animate animDelay={`${Math.min((idx % RECIPES_PAGE) * 0.045, MAX_STAGGER)}s`}
+                animate={animateGrid} animDelay={`${Math.min((idx % RECIPES_PAGE) * 0.045, MAX_STAGGER)}s`}
                 onOpen={openRecipe} onMenu={openRecipeMenu}
                 startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} />
             );
