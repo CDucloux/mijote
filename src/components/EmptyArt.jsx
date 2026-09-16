@@ -160,6 +160,37 @@ const ARTS = {
       <circle className="ink-accent" cx="60" cy="87" r="4.2" fill="var(--accent)" />
     </>
   ),
+  // Deux planches de rangement VIDES (équerres aux extrémités, lavis d'épaisseur),
+  // et une petite étiquette qui pend de la planche haute (accent chaud) : le placard
+  // est prêt mais rien n'y est rangé. État vide du stock (« aucun article en stock »).
+  etagere: (
+    <>
+      <g className="ink-body" fill="currentColor">
+        {/* ombre au sol */}
+        <ellipse cx="60" cy="99" rx="24" ry="2.6" opacity="0.1" />
+        {/* lavis : épaisseur des planches */}
+        <path opacity="0.07" d="M30 50 L90 50 L90 55 L30 55 Z" />
+        <path opacity="0.07" d="M30 76 L90 76 L90 81 L30 81 Z" />
+        {/* planche haute : trait épais légèrement ondulé + fil de sous-épaisseur */}
+        <path fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" d="M29 50 C45 49 75 49 91 50" />
+        <path fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" d="M31 54 C46 55 74 55 89 54" />
+        {/* planche basse */}
+        <path fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" d="M29 76 C45 75 75 75 91 76" />
+        <path fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" d="M31 80 C46 81 74 81 89 80" />
+        {/* équerres (supports) sous chaque planche, un peu inégales */}
+        <path fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="M37 55 L37 63 L45 55" />
+        <path fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="M83 55 L83 63 L75 55" />
+        <path fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="M37 81 L37 89 L45 81" />
+        <path fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="M83 81 L83 89 L75 81" />
+      </g>
+      {/* accent unique : l'étiquette qui pend, prête à nommer ce qu'on rangera */}
+      <g className="ink-accent" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M60 50 L60 60" />
+        <path d="M54 60 L66 60 L66 68 L60 73 L54 68 Z" />
+      </g>
+      <circle className="ink-accent" cx="60" cy="63.5" r="1.5" fill="var(--accent)" />
+    </>
+  ),
   // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
   // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
   liste: (
@@ -183,7 +214,7 @@ const ARTS = {
 /**
  * Illustration d'état vide au trait, avec le rendu « encre » commun.
  *
- * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `cloche`, `liste`, `bibliotheque`).
+ * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `etagere`, `cloche`, `liste`, `bibliotheque`).
  * @param size Côté du carré de rendu en pixels (viewBox interne fixe).
  * @param style Styles complémentaires posés sur le `<svg>` (ex. marge basse).
  */

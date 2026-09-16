@@ -379,7 +379,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           }
           const low = view === "low";
           return (
-            <StockEmpty icon="box" art={low ? "liste" : undefined}
+            <StockEmpty icon="box" art={low ? "liste" : "etagere"}
               title={low ? "Rien à racheter" : "Aucun article en stock"}
               body={low ? "Marque un ingrédient « bientôt vide » en tapant deux fois dessus." : "Ajoute des ingrédients depuis l'onglet « Catalogue »."}
               action={
