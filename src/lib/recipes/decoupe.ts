@@ -78,7 +78,7 @@ const normPhrase = (s: string): string => normalizeStr(s).replace(/\s+/g, " ");
 /** Table alias → forme canonique (clés déjà normalisées, sans accent). */
 const FORME_ALIASES: Record<string, FormeDecoupe> = (() => {
   const raw: Record<FormeDecoupe, string[]> = {
-    emince: ["émincer", "émincé", "émincés", "émincé fin", "en lamelles", "lamelles", "fines lamelles", "en fines lamelles", "tranches fines", "en fines tranches"],
+    emince: ["émincer", "émincé", "émincés", "émincé fin", "en lamelles", "lamelles", "fines lamelles", "en fines lamelles", "tranches fines", "en fines tranches", "tranches", "en tranches", "trancher", "trancher finement", "à la mandoline"],
     cisele: ["ciseler", "ciselé", "ciselés", "ciselé fin", "ciselé finement"],
     des: ["dés", "en dés", "cubes", "en cubes", "coupé en dés", "petits dés", "dés moyens", "gros dés", "macédoine"],
     brunoise: ["brunoise", "en brunoise", "très petits dés"],
@@ -86,7 +86,7 @@ const FORME_ALIASES: Record<string, FormeDecoupe> = (() => {
     paysanne: ["paysanne", "en paysanne"],
     julienne: ["julienne", "en julienne", "tailler en julienne", "filaments"],
     batonnet: ["bâtonnet", "bâtonnets", "en bâtonnets", "bâtons", "jardinière"],
-    rondelle: ["rondelle", "rondelles", "en rondelles", "tranches", "en tranches", "rouelles"],
+    rondelle: ["rondelle", "rondelles", "en rondelles", "rouelle", "rouelles", "en rouelles"],
     troncon: ["tronçon", "tronçons", "en tronçons", "sifflet", "en sifflet", "biseau", "en biseau"],
     quartier: ["quartier", "quartiers", "en quartiers"],
     rape: ["râper", "râpé", "râpés", "râpée", "en fils"],

@@ -23,6 +23,20 @@ describe("parseCut", () => {
     expect(parseCut("en rondelles")).toEqual({ forme: "rondelle" });
   });
 
+  it("distingue les tranches fines (emince) des rondelles (rondelle)", () => {
+    // « lamelles » / « trancher finement » / mandoline = tranches fines plates → emince,
+    // JAMAIS rondelle (dont la conséquence sur la recette serait fâcheuse).
+    expect(parseCut("lamelles")).toEqual({ forme: "emince" });
+    expect(parseCut("en lamelles")).toEqual({ forme: "emince" });
+    expect(parseCut("tranches")).toEqual({ forme: "emince" });
+    expect(parseCut("en tranches")).toEqual({ forme: "emince" });
+    expect(parseCut("trancher finement")).toEqual({ forme: "emince" });
+    expect(parseCut("à la mandoline")).toEqual({ forme: "emince" });
+    // Seul le mot « rondelle » (ou « rouelle ») explicite reste rondelle.
+    expect(parseCut("rondelles")).toEqual({ forme: "rondelle" });
+    expect(parseCut("rouelles")).toEqual({ forme: "rondelle" });
+  });
+
   it("accepte l'objet { forme, calibre } et normalise le calibre", () => {
     expect(parseCut({ forme: "cisele", calibre: "fin" })).toEqual({ forme: "cisele", calibre: "fin" });
     expect(parseCut({ forme: "des", calibre: "petit" })).toEqual({ forme: "des", calibre: "fin" });
