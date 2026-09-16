@@ -716,9 +716,9 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   )}
                   {postesDecoupe.length > 0 && (
                     <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
-                      {/* Hauteur fixe : le badge (1/1) apparaît sans réhausser l'en-tête
-                          ni décaler la liste au cochage. */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, height: 20 }}>
+                      {/* Hauteur fixe : le badge (1/1) apparaît au cochage sans réhausser
+                          l'en-tête ; marge alignée sur la carte « Ingrédients ». */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, height: 18, marginBottom: 12 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Découpe</span>
                         {checkedCutKeys.size > 0 && (
                           <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--ok)", background: "rgba(var(--ok-rgb),0.12)", borderRadius: 999, padding: "1px 8px" }}>
@@ -726,7 +726,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                           </span>
                         )}
                       </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         {postesDecoupe.map(renderPosteRow)}
                       </div>
                     </div>
