@@ -1,5 +1,26 @@
 # Changelog – Cardamome
 
+## v4.45.0 – Cardamome · Découpe affinée et import plus patient
+
+### Interface
+- **Édition de la découpe dans l'éditeur** : chaque ingrédient nommé peut désormais se voir attribuer (ou retirer) une forme de découpe et un calibre, via deux sélecteurs pill. On peut ainsi corriger une classification après import.
+- **Étape d'origine d'une découpe (mode pas à pas)** : chaque poste de la mise en place affiche un chip « Étape N » qui saute à l'étape où la découpe a été détectée, pour vérifier une classification d'un coup d'œil.
+- **Nouvelle forme de découpe « lamelle »** : les tranches plates (aubergine, courgette, pomme de terre pour gratin ou moussaka) ont leur propre geste « Tailler en lamelles », distinct d'« Émincer » (fines lanières) et de « Détailler en rondelles » (tranches d'un cylindre).
+- **Sélecteur « À suivre / Découvrir » (accueil)** : segment actif en pastille claire sur une piste grisée en thème clair (relief inversé, plus lisible).
+- **Infobulles sans flèche** : les bulles d'aide n'ont plus de petit caret de rattachement, pour un rendu plus net.
+- **État vide du stock** : croquis à l'encre dédié (étagères vides) au lieu de l'icône générique, cohérent avec les autres états vides.
+- **Empty state d'accueil** : le lien « Explorer la communauté » gagne une pastille grisée au survol desktop et s'aligne en taille sur le bouton principal.
+- **Fiche recette (mobile)** : le raccord entre l'image de couverture et la carte d'infos ne laisse plus voir de bord net (l'image passe sous les coins arrondis) ; badges remontés pour respirer.
+- **Import intelligent** : l'overlay d'extraction patiente plus longtemps et sa progression grignote jusqu'à 99 % au lieu de se figer à 92 %.
+
+### Import
+- **Découpe mieux classée à l'extraction** : le prompt distingue explicitement « émincer », « en lamelles / trancher / mandoline » et « rondelles », pour ne plus ranger un tranchage à plat en rondelles (déploiement des Cloud Functions requis).
+
+### Corrigé
+- **Carte Découpe (mode pas à pas)** : le badge de progression n'décale plus le premier ingrédient au cochage, et le sous-titre superflu a été retiré ; espacement aligné sur la carte « Ingrédients ».
+- **« Explorer la communauté »** : menait vers `/discover/undefined`, mène désormais vers la sous-vue Découvrir.
+- **Cartes de recettes** : l'animation d'entrée ne se rejoue plus au retour depuis une fiche (uniquement à la première révélation ou sur changement de recherche/tri/carnet).
+
 ## v4.44.0 – Cardamome · Icônes cohérentes, fini les emojis
 
 ### Interface

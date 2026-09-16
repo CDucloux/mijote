@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.44.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.45.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -59,7 +59,8 @@ toujours avec vous.
   photos** d'un livre ou un **texte collé** (mail, note, message) : extraction,
   structuration et liaison des ingrédients / ustensiles par Claude, qui
   **extrait aussi la découpe de chaque ingrédient** (émincé, ciselé, en dés,
-  râpé…) pour alimenter le poste « Découpe » du mode cuisine, et
+  en lamelles, en rondelles, râpé…) pour alimenter le poste « Découpe » du
+  mode cuisine (éditable ensuite dans l'éditeur), et
   **détecte les préparations de base** (caramel, pâte, fond…) et leur
   rendement estimé (réservé aux abonnés **Cardamome+**, quotas jour/mois ;
   illimité pour l'administrateur). Les trois modes vivent sur un écran unique à
