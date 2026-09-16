@@ -724,9 +724,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                           </span>
                         )}
                       </div>
-                      {/* Le geste est déjà dans chaque libellé : une seule ligne d'intro suffit. */}
-                      <p style={{ fontSize: 11.5, color: "var(--text3)", margin: "0 0 12px", lineHeight: 1.45 }}>Taille tout d'avance, dans l'ordre : planche propre jusqu'au bout.</p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
                         {postesDecoupe.map(renderPosteRow)}
                       </div>
                     </div>
