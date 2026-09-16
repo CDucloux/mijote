@@ -96,8 +96,8 @@ function OnboardingCard({ onNewRecipe, onOpenPublic }) {
               <Icon name="plus" size={16} color="#fff" /> Ajouter une recette
             </button>
             <button onClick={onOpenPublic} className="pressable hov-pill" style={{ background: "none", border: "none", cursor: "pointer",
-              display: "inline-flex", alignItems: "center", gap: 4, padding: "8px 14px", borderRadius: 999,
-              fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>
+              display: "inline-flex", alignItems: "center", gap: 4, padding: "10px 16px", borderRadius: 999,
+              fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>
               Explorer la communauté <Icon name="forward" size={14} color="var(--accent)" />
             </button>
           </div>
