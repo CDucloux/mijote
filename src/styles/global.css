@@ -1629,26 +1629,8 @@ select {
 
 /* Caret : petit carré tourné, couleur de la bulle, aligné au centre de la cible
    (--caret-x calculé en JS). Le décalage d'une moitié le fait chevaucher le bord. */
-.app-tooltip::after {
-  content: "";
-  position: absolute;
-  left: var(--caret-x, 50%);
-  width: 8px;
-  height: 8px;
-  background: var(--tooltip-bg);
-  border: 1px solid var(--tooltip-border);
-  transform: translateX(-50%) rotate(45deg);
-}
-.app-tooltip[data-placement="top"]::after {
-  bottom: -5px;
-  border-top: none;
-  border-left: none;
-}
-.app-tooltip[data-placement="bottom"]::after {
-  top: -5px;
-  border-bottom: none;
-  border-right: none;
-}
+/* Pas de caret : une bulle flottante nette, sans flèche de rattachement (choix
+   d'UI moderne). Le décalage vertical de la transition suffit à lier visuellement. */
 
 @media (prefers-reduced-motion: reduce) {
   .app-tooltip {
