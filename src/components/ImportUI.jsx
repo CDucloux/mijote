@@ -23,26 +23,29 @@ const RING_R = 45; // rayon de l'anneau (le tracé raisonne en % via pathLength)
  *
  * L'API Claude ne renvoie pas d'avancement en continu : la barre est donc
  * « calée » sur une durée ESTIMÉE (`estimateMs`, fonction du type d'import et du
- * nombre de photos). Elle progresse selon une courbe asymptotique, vite au
- * début, puis de plus en plus lentement, qui atteint ~90 % vers la fin estimée
- * sans jamais toucher 100 % tant que l'extraction n'est pas revenue. Quand la
- * promesse se résout, le composant est démonté : la disparition fait office de
- * « terminé ». Honnête (jamais bloqué à 100 %) et sans à-coups.
+ * nombre de photos). Elle progresse selon une courbe ASYMPTOTIQUE (1 - e^-t),
+ * vite au début puis de plus en plus lentement : elle atteint ~90 % vers la fin
+ * estimée, PUIS continue de grignoter vers un plafond de 99 % tant que
+ * l'extraction n'est pas revenue (une extraction plus longue que prévu n'est donc
+ * jamais « bloquée » à un palier). Elle ne touche jamais 100 % : quand la promesse
+ * se résout, le composant est démonté et sa disparition fait office de « terminé ».
  *
- * @param estimateMs - Durée estimée de l'extraction en ms (défaut 14000).
+ * @param estimateMs - Durée estimée de l'extraction en ms (défaut 24000).
  */
-export function LoadingOverlay({ estimateMs = 14000 }) {
+const CAP = 0.99;        // plafond affiché tant que l'extraction n'est pas revenue
+const CURVE_K = 2.4;     // pente : ~90 % atteint à la durée estimée, puis creep vers 99 %
+
+export function LoadingOverlay({ estimateMs = 24000 }) {
   const dur = Math.max(2000, estimateMs);
-  // L'ANNEAU est animé en CSS (voir `ringFill`), donc fluide même si React ne
-  // re-rend pas pendant l'extraction. Le compteur textuel, lui, suit la MÊME
-  // courbe (easeOutCubic) via un timer, secondaire : s'il saute, ce n'est que
-  // le chiffre, pas le cercle.
+  // L'anneau ET le compteur suivent la MÊME courbe asymptotique via ce timer. La
+  // requête d'extraction attend le réseau (thread libre), donc le timer 200 ms tourne
+  // sans à-coups ; une transition CSS lisse les paliers sur le cercle.
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     const start = performance.now();
     const id = setInterval(() => {
-      const x = Math.min(1, (performance.now() - start) / dur);
-      setProgress(0.92 * (1 - Math.pow(1 - x, 3))); // easeOutCubic, plafonné à 92 %
+      const t = (performance.now() - start) / dur;
+      setProgress(CAP * (1 - Math.exp(-CURVE_K * t))); // asymptote vers 99 %, jamais 100 %
     }, 200);
     return () => clearInterval(id);
   }, [dur]);
@@ -54,7 +57,7 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
   const ringFid = "ring" + useId().replace(/:/g, "");
   const [reduceMotion] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
 
-  const stepIdx = Math.min(LOADING_STEPS.length - 1, Math.floor((progress / 0.92) * LOADING_STEPS.length));
+  const stepIdx = Math.min(LOADING_STEPS.length - 1, Math.floor((progress / CAP) * LOADING_STEPS.length));
   const pct = Math.round(progress * 100);
 
   return createPortal(
@@ -82,9 +85,9 @@ export function LoadingOverlay({ estimateMs = 14000 }) {
             <g filter={`url(#${ringFid})`}>
               <circle cx="58" cy="58" r={RING_R} fill="none" stroke="var(--surface3)" strokeWidth="6" />
               <circle cx="58" cy="58" r={RING_R} fill="none" stroke="var(--accent)" strokeWidth="6" strokeLinecap="round"
-                pathLength="100" strokeDasharray="100" strokeDashoffset="100"
+                pathLength="100" strokeDasharray="100" strokeDashoffset={100 - pct}
                 transform="rotate(-90 58 58)"
-                style={{ animation: `ringFill ${dur}ms cubic-bezier(0.215,0.61,0.355,1) forwards` }} />
+                style={{ transition: "stroke-dashoffset 0.22s linear" }} />
             </g>
           </svg>
           <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>

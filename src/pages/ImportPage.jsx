@@ -160,7 +160,7 @@ export function ImportPage({ mode = "lien" }) {
     }
   };
 
-  const estimateMs = mode === "photo" ? 11000 + photos.length * 7000 : mode === "texte" ? 12000 : mode === "pdf" ? 13000 : 14000;
+  const estimateMs = mode === "photo" ? 20000 + photos.length * 7000 : mode === "texte" ? 22000 : mode === "pdf" ? 23000 : 24000;
 
   // ── Briques partagées entre les deux mises en page ──
   const linkField = (
