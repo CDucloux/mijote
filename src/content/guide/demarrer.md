@@ -37,7 +37,7 @@ Retiens ce principe, c'est la clé de Cardamome : **tu saisis une chose une seul
 
 ## Cuisiner à plusieurs
 
-Cardamome se vit aussi en foyer : crée un foyer, invite les tiens, et recettes, planning, courses et stock se partagent **en temps réel** entre vous. Le sujet *Cuisiner à plusieurs* détaille la mise en place.
+Cardamome se vit aussi en foyer : crée un foyer, invite les tiens, et recettes, planning, courses et stock se partagent **en temps réel** entre vous. Le sujet [Cuisiner à plusieurs](/guide/foyer) détaille la mise en place.
 
 ## Retrouver ce guide
 

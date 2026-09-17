@@ -9,7 +9,7 @@ order: 8
 
 Cardamome se vit aussi à plusieurs. Le **foyer** relie plusieurs comptes autour d'une même cuisine : recettes, planning, courses et stock deviennent communs et se mettent à jour **en temps réel** pour tout le monde.
 
-> **À noter** : le foyer partagé fait partie de **Cardamome+**. Voir le sujet *Gratuit et Cardamome+*.
+> **À noter** : le foyer partagé fait partie de **Cardamome+**. Voir le sujet [Gratuit et Cardamome+](/guide/offre).
 
 ## Créer ou rejoindre un foyer
 
