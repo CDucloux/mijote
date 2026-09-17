@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.48.0 – Cardamome · Crédits intelligents
+
+### Import intelligent
+- **Crédits intelligents mensuels** : les quotas d'import cloisonnés par type (lien, photo, texte, PDF) laissent place à un **pool mensuel unique de 100 crédits**, fongible entre tous les modes. **1 crédit** par import lien / texte / PDF, **2 crédits** par photo. Plus lisible et bien plus souple : un usage mono-type n'est plus plafonné par mode.
+- **Garde-fou journalier discret** : un plafond de crédits par jour borne les emballements et les abus, invisible en usage normal.
+- **Découverte dès l'accueil** : le bouton « Ajouter une recette » de l'écran d'accueil vide ouvre désormais la feuille « Nouvelle recette » (import intelligent en tête) au lieu d'aller droit à la saisie manuelle.
+- **Offre** : la page Formule affiche l'inclusion « 100 crédits d'import intelligent / mois ».
+
 ## v4.47.4 – Cardamome · Retouches de survol et de détail
 
 ### Interface

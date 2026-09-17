@@ -8,7 +8,7 @@ import { HttpsError, type CallableRequest } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { ACTIVE_STATUSES } from "../subscriptions/stripeHelpers.js";
-import { periodKeys, currentCounts, quotaError, type ImportKind, type KindUsage } from "./quota.js";
+import { periodKeys, currentCredits, creditsError, creditCost, type ImportKind, type CreditUsage } from "./quota.js";
 
 if (!getApps().length) initializeApp();
 const dbAdmin = getFirestore();
@@ -55,15 +55,16 @@ export async function assertPlusOrAdmin(request: CallableRequest, adminEmail: st
 }
 
 /**
- * Autorise un import IA et CONSOMME un crédit de quota (jour + mois) pour les
- * abonnés. L'admin est exempté. Lève `resource-exhausted` si une limite est
- * atteinte. Le crédit est consommé de façon atomique AVANT l'appel IA (contrôle
- * du coût : une tentative compte, même si l'extraction échoue).
+ * Autorise un import IA et DÉBITE le coût en crédits (1 pour lien/texte/PDF, 2
+ * pour une photo) du pool mensuel de l'abonné, avec un soft cap journalier.
+ * L'admin est exempté. Lève `resource-exhausted` si les crédits manquent. Les
+ * crédits sont débités de façon atomique AVANT l'appel IA (contrôle du coût :
+ * une tentative compte, même si l'extraction échoue).
  *
  * @param request - La requête onCall.
  * @param adminEmail - E-mail de l'admin.
- * @param kind - Type d'import : `"url"` | `"photo"`.
- * @throws HttpsError `resource-exhausted` si le quota est atteint.
+ * @param kind - Type d'import : `"url"` | `"photo"` | `"text"` | `"pdf"`.
+ * @throws HttpsError `resource-exhausted` si les crédits sont épuisés.
  */
 export async function assertImportAllowed(request: CallableRequest, adminEmail: string, kind: ImportKind): Promise<void> {
   const { admin } = await requireAccess(request, adminEmail);
@@ -72,14 +73,16 @@ export async function assertImportAllowed(request: CallableRequest, adminEmail: 
   const uid = request.auth!.uid;
   const ref = dbAdmin.doc(`aiUsage/${uid}`);
   const { day, month } = periodKeys();
+  const cost = creditCost(kind);
   await dbAdmin.runTransaction(async (tx) => {
     const s = await tx.get(ref);
-    const data = (s.exists ? (s.data() || {}) : {}) as Record<ImportKind, KindUsage | undefined>;
-    const counts = currentCounts(data[kind], day, month);
-    const err = quotaError(counts, kind);
+    const data = (s.exists ? (s.data() || {}) : {}) as CreditUsage;
+    const counts = currentCredits(data, day, month);
+    const err = creditsError(counts, kind);
     if (err) throw new HttpsError("resource-exhausted", err);
     tx.set(ref, {
-      [kind]: { day, dayCount: counts.dayCount + 1, month, monthCount: counts.monthCount + 1 },
+      creditsDay: day, creditsDayCount: counts.dayCount + cost,
+      creditsMonth: month, creditsMonthCount: counts.monthCount + cost,
       updated: FieldValue.serverTimestamp(),
     }, { merge: true });
   });

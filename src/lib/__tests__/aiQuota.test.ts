@@ -1,10 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { LIMITS, periodKeys, currentCounts, remainingFor } from "../aiQuota.js";
+import { MONTHLY_CREDITS, DAILY_CREDITS, CREDIT_COST, creditCost, periodKeys, currentCredits, creditState, canImport } from "../aiQuota.js";
 
-// Ces limites DOIVENT rester alignées avec functions/quota.js (autorité serveur).
-describe("LIMITS (parité serveur)", () => {
-  it("url 5/jour 60/mois · photo 3/jour 30/mois · texte 5/jour 60/mois", () => {
-    expect(LIMITS).toEqual({ url: { day: 5, month: 60 }, photo: { day: 3, month: 30 }, text: { day: 5, month: 60 }, pdf: { day: 5, month: 60 } });
+// Ces constantes DOIVENT rester alignées avec functions/quota.ts (autorité serveur).
+describe("constantes (parité serveur)", () => {
+  it("100 crédits/mois, soft cap 30/jour, photo = 2 crédits", () => {
+    expect(MONTHLY_CREDITS).toBe(100);
+    expect(DAILY_CREDITS).toBe(30);
+    expect(CREDIT_COST).toEqual({ url: 1, text: 1, pdf: 1, photo: 2 });
+    expect(creditCost("photo")).toBe(2);
+    expect(creditCost("url")).toBe(1);
   });
 });
 
@@ -14,43 +18,49 @@ describe("periodKeys (Europe/Paris)", () => {
   });
 });
 
-describe("currentCounts", () => {
+describe("currentCredits", () => {
   const day = "2026-08-06", month = "2026-08";
   it("0 sans données", () => {
-    expect(currentCounts(undefined, day, month)).toEqual({ dayCount: 0, monthCount: 0 });
+    expect(currentCredits(undefined, day, month)).toEqual({ dayCount: 0, monthCount: 0 });
   });
-  it("reset jour si la clé jour a changé", () => {
-    expect(currentCounts({ day: "2026-08-05", dayCount: 4, month, monthCount: 9 }, day, month))
-      .toEqual({ dayCount: 0, monthCount: 9 });
+  it("reset jour si la clé jour a changé (mois conservé)", () => {
+    expect(currentCredits({ creditsDay: "2026-08-05", creditsDayCount: 4, creditsMonth: month, creditsMonthCount: 40 }, day, month))
+      .toEqual({ dayCount: 0, monthCount: 40 });
+  });
+  it("voit un ancien document (quotas par type) à zéro", () => {
+    expect(currentCredits({ url: { day, dayCount: 3, month, monthCount: 30 } }, day, month))
+      .toEqual({ dayCount: 0, monthCount: 0 });
   });
 });
 
-describe("remainingFor", () => {
+describe("creditState", () => {
   const now = new Date("2026-08-06T10:00:00Z");
   it("reliquat plein sans usage", () => {
-    const r = remainingFor(null, "url", now);
-    expect(r).toMatchObject({ dayLeft: 5, dayLimit: 5, monthLeft: 60, monthLimit: 60, blocked: false });
+    expect(creditState(null, now)).toMatchObject({ monthUsed: 0, monthLeft: 100, monthLimit: 100, dayUsed: 0, dayLeft: 30, dayLimit: 30 });
   });
-  it("décompte l'usage du jour", () => {
-    const r = remainingFor({ url: { day: "2026-08-06", dayCount: 2, month: "2026-08", monthCount: 2 } }, "url", now);
-    expect(r).toMatchObject({ dayUsed: 2, dayLeft: 3, monthUsed: 2, monthLeft: 58, blocked: false });
+  it("décompte les crédits consommés", () => {
+    const s = creditState({ creditsDay: "2026-08-06", creditsDayCount: 4, creditsMonth: "2026-08", creditsMonthCount: 40 }, now);
+    expect(s).toMatchObject({ monthUsed: 40, monthLeft: 60, dayUsed: 4, dayLeft: 26 });
   });
-  it("blocked quand le jour est épuisé", () => {
-    const r = remainingFor({ photo: { day: "2026-08-06", dayCount: 3, month: "2026-08", monthCount: 5 } }, "photo", now);
-    expect(r).toMatchObject({ dayLeft: 0, blocked: true });
+  it("ne descend jamais sous zéro", () => {
+    const s = creditState({ creditsDay: "2026-08-06", creditsDayCount: 99, creditsMonth: "2026-08", creditsMonthCount: 999 }, now);
+    expect(s).toMatchObject({ monthLeft: 0, dayLeft: 0 });
   });
-  it("blocked quand le mois est épuisé (jour encore ok)", () => {
-    const r = remainingFor({ url: { day: "2026-08-06", dayCount: 1, month: "2026-08", monthCount: 60 } }, "url", now);
-    expect(r).toMatchObject({ dayLeft: 4, monthLeft: 0, blocked: true });
+});
+
+describe("canImport", () => {
+  const now = new Date("2026-08-06T10:00:00Z");
+  it("autorise tant qu'il reste assez de crédits (mois et jour)", () => {
+    expect(canImport(creditState(null, now), "url")).toBe(true);
+    expect(canImport(creditState(null, now), "photo")).toBe(true);
   });
-  it("type texte : reliquat plein et décompte comme l'url", () => {
-    expect(remainingFor(null, "text", now)).toMatchObject({ dayLeft: 5, dayLimit: 5, monthLeft: 60, monthLimit: 60, blocked: false });
-    const r = remainingFor({ text: { day: "2026-08-06", dayCount: 5, month: "2026-08", monthCount: 5 } }, "text", now);
-    expect(r).toMatchObject({ dayLeft: 0, blocked: true });
+  it("refuse la photo (2 crédits) quand il ne reste qu'1 crédit sur le mois", () => {
+    const s = creditState({ creditsDay: "2026-08-06", creditsDayCount: 0, creditsMonth: "2026-08", creditsMonthCount: MONTHLY_CREDITS - 1 }, now);
+    expect(canImport(s, "photo")).toBe(false);
+    expect(canImport(s, "url")).toBe(true);
   });
-  it("type pdf : reliquat plein et décompte propre", () => {
-    expect(remainingFor(null, "pdf", now)).toMatchObject({ dayLeft: 5, dayLimit: 5, monthLeft: 60, monthLimit: 60, blocked: false });
-    const r = remainingFor({ pdf: { day: "2026-08-06", dayCount: 5, month: "2026-08", monthCount: 5 } }, "pdf", now);
-    expect(r).toMatchObject({ dayLeft: 0, blocked: true });
+  it("refuse tout import quand le soft cap journalier est atteint", () => {
+    const s = creditState({ creditsDay: "2026-08-06", creditsDayCount: DAILY_CREDITS, creditsMonth: "2026-08", creditsMonthCount: 40 }, now);
+    expect(canImport(s, "url")).toBe(false);
   });
 });

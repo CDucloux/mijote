@@ -3,6 +3,7 @@ import { Icon } from "./Icon.jsx";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { PlusBadge } from "./PlusBadge.jsx";
 import { monogramOf, tintOf } from "@/lib/sources/recommendedSources.js";
+import { CREDIT_COST } from "@/lib/aiQuota.js";
 
 // ─── BRIQUES DE LA PAGE D'IMPORT INTELLIGENT ────────────────────────────────
 // Présentation pure (aucune I/O) : contrôle segmenté, intro par mode, quota
@@ -80,11 +81,13 @@ export function Lede({ mode }) {
 }
 
 /**
- * Quota linéaire, focalisé sur le reliquat du JOUR (se réinitialise à minuit).
- * Bascule en variante « limite du mois » si c'est le mois qui bloque, et en
- * variante admin (illimité). Purement indicatif : l'autorité reste le serveur.
+ * Jauge du pool mensuel de CRÉDITS intelligents (fongibles entre les types
+ * d'import : 1 crédit pour un lien / texte / PDF, 2 pour une photo). Affiche le
+ * reliquat du mois, avec une bascule discrète quand le soft cap journalier mord,
+ * et une variante admin (illimité). Purement indicatif : l'autorité reste le
+ * serveur. `kind` = type de l'onglet courant (pour le coût de cet import).
  */
-export function QuotaBar({ rem, unlimited }) {
+export function QuotaBar({ credits, kind, unlimited }) {
   if (unlimited) {
     return (
       <div className="imp-quota admin">
@@ -93,24 +96,27 @@ export function QuotaBar({ rem, unlimited }) {
       </div>
     );
   }
-  if (!rem) return null;
-  const monthBlocks = rem.dayLeft > 0 && rem.monthLeft === 0;
-  const left = monthBlocks ? rem.monthLeft : rem.dayLeft;
-  const limit = monthBlocks ? rem.monthLimit : rem.dayLimit;
-  const used = Math.max(0, limit - left);
-  const pct = limit ? Math.round((used / limit) * 100) : 100;
-  const low = !rem.blocked && left <= 1;
-  const period = monthBlocks ? "ce mois-ci" : "aujourd'hui";
-  const count = rem.blocked
-    ? (monthBlocks ? "Limite du mois atteinte" : "Limite du jour atteinte")
-    : `${left} import${left > 1 ? "s" : ""} restant${left > 1 ? "s" : ""} ${period}`;
-  const reset = rem.blocked
-    ? (monthBlocks ? "Se réinitialise le mois prochain, ou essaie une photo / un texte" : "Se réinitialise à minuit, ou essaie une photo / un texte")
-    : "Se réinitialise à minuit";
+  if (!credits) return null;
+  const cost = CREDIT_COST[kind] ?? 1;
+  const monthGone = credits.monthLeft < cost;
+  const dayGone = !monthGone && credits.dayLeft < cost;
+  const blocked = monthGone || dayGone;
+  const pct = credits.monthLimit ? Math.min(100, Math.round((credits.monthUsed / credits.monthLimit) * 100)) : 100;
+  const low = !blocked && credits.monthLeft <= 10;
+  const count = credits.monthLeft <= 0
+    ? "Crédits épuisés"
+    : `${credits.monthLeft} crédit${credits.monthLeft > 1 ? "s" : ""} ce mois-ci`;
+  const reset = credits.monthLeft <= 0
+    ? "Ça repart le 1er du mois"
+    : monthGone
+    ? `Il te reste ${credits.monthLeft} crédit, une photo en coûte 2`
+    : dayGone
+    ? "Beaucoup d'imports aujourd'hui, reprends demain (tes crédits du mois sont intacts)"
+    : "Lien, texte ou PDF : 1 crédit · photo : 2 crédits";
   return (
-    <div className={`imp-quota${low ? " low" : ""}${rem.blocked ? " blocked" : ""}`}>
+    <div className={`imp-quota${low ? " low" : ""}${blocked ? " blocked" : ""}`}>
       <div className="imp-q-top">
-        <span className="imp-q-label"><span className="spark"><Icon name="sparkle" size={13} color="currentColor" /></span>Import intelligent</span>
+        <span className="imp-q-label"><span className="spark"><Icon name="sparkle" size={13} color="currentColor" /></span>Crédits intelligents</span>
         <span className="imp-q-count">{count}</span>
       </div>
       <div className="imp-q-track"><div className="imp-q-fill" style={{ width: `${pct}%` }} /></div>

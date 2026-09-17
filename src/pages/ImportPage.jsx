@@ -6,6 +6,7 @@ import { LoadingOverlay } from "../components/ImportUI.jsx";
 import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate } from "../components/ImportModules.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
+import { CREDIT_COST } from "@/lib/aiQuota.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { fileToImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import { extractPdfText } from "@/lib/recipes/pdfImport.js";
@@ -20,7 +21,8 @@ import "../styles/import.css";
 // natif et le retour arrière ; le brouillon extrait s'ouvre ensuite dans l'éditeur.
 // L'écran est ACCESSIBLE à tous : un non-abonné le découvre et compose sa saisie,
 // le mur d'offre ne se lève qu'à la tentative d'import (cf. `go`). La garde réelle
-// reste serveur (Cardamome+), quota par mode.
+// reste serveur (Cardamome+), sur un pool mensuel de crédits (1 crédit par lien /
+// texte / PDF, 2 par photo).
 
 const ROUTE_BY_MODE = { lien: "import-from-url", photo: "import-from-picture", texte: "import-from-text", pdf: "import-from-pdf" };
 const KIND_BY_MODE = { lien: "url", photo: "photo", texte: "text", pdf: "pdf" };
@@ -32,8 +34,8 @@ const MAX_PDF_BYTES = 20_000_000;
 
 export function ImportPage({ mode = "lien" }) {
   const { importFromUrl, importFromImages, importFromText, importFromPdf, sources, notify, isPlus, isAdmin, user } = useAppShell();
-  const { unlimited, remaining } = useAiUsage(user?.uid, isAdmin);
-  const rem = remaining(KIND_BY_MODE[mode]);
+  const { unlimited, credits, canImport } = useAiUsage(user?.uid, isAdmin);
+  const kind = KIND_BY_MODE[mode];
   const navigate = useNavigate();
   const location = useLocation();
   const isDesktop = useIsDesktop();
@@ -129,14 +131,14 @@ export function ImportPage({ mode = "lien" }) {
     : mode === "photo" ? photos.length > 0
     : mode === "pdf" ? pdf != null
     : text.trim().length >= MIN_TEXT_LEN;
-  const blocked = !unlimited && rem?.blocked;
+  const blocked = !unlimited && !canImport(kind);
 
   const go = async () => {
     // Mur d'offre : c'est ICI, à la tentative d'import, qu'on bloque un non-abonné,
     // pas à l'entrée de l'écran (il a pu tout découvrir et composer sa saisie).
     if (!isPlus) { setGate(true); return; }
     if (!navigator.onLine) { setError("Pas de connexion internet. L'import intelligent a besoin d'être en ligne."); return; }
-    if (blocked) { setError(rem.dayLeft === 0 ? "Limite du jour atteinte. Réessaie demain." : "Limite du mois atteinte pour ce mode."); return; }
+    if (blocked) { setError(credits.monthLeft < CREDIT_COST[kind] ? "Tu as utilisé tous tes crédits d'import ce mois-ci. Ça repart le mois prochain." : "Beaucoup d'imports aujourd'hui. Reprends demain, tes crédits du mois sont intacts."); return; }
     if (!ready) return;
     setError(""); setLoading(true);
     try {
@@ -247,7 +249,7 @@ export function ImportPage({ mode = "lien" }) {
   // Le quota ne concerne que les abonnés ; pour un non-abonné il afficherait un
   // reliquat trompeur (il ne peut pas encore importer). Le CTA, lui, reste
   // cliquable pour un non-abonné : le clic lève le mur d'offre.
-  const quota = isPlus ? <QuotaBar rem={rem} unlimited={unlimited} /> : null;
+  const quota = isPlus ? <QuotaBar credits={credits} kind={kind} unlimited={unlimited} /> : null;
   const cta = (
     <button className="imp-cta" disabled={isPlus && (!ready || blocked)} onClick={go}>
       <Icon name="sparkle" size={16} color="#fff" /> {CTA_LABEL[mode]}
