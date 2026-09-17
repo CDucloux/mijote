@@ -6,6 +6,7 @@ import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { paginateStockShelves, compareIngredientName } from "@/lib/food/stockShelves.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
@@ -231,7 +232,8 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   }, [filtered, categories]);
 
   const inStockCount = stock.length;
-  const { scrollRef, contentRef } = useElasticScroll();
+  const isDesktop = useIsDesktop();
+  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
 
   // Largeur utile du mur -> nombre de bocaux par planche (une planche = une rangée).
   // Mesure AVANT peinture (useLayoutEffect + lecture synchrone de la largeur de

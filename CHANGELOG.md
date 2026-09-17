@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.46.0 – Cardamome · Finitions desktop et interactions soignées
+
+### Interface
+- **Overscroll élastique réservé au mobile** : l'effet rubber-band de bas de liste ne se déclenche plus à la souris sur les recettes, le planning et le stock (comportement tactile uniquement).
+- **Croix du panneau de filtres** : plus de rond gris permanent derrière la croix ; le fond n'apparaît qu'au survol souris (desktop), et par une onde tactile sur mobile.
+- **Page Notifications épurée** : le sous-titre « Ton activité récente » est retiré (trompeur en foyer partagé) ; le bouton « Voir N de plus » gagne une pastille au survol desktop.
+- **Animation de retour unifiée** : les flèches de retour des en-têtes (Guide et ses sections, Notifications, mentions légales, import) reprennent le même glissement au survol que sur le profil.
+- **Ingrédient du moment** : le bouton d'exploration devient « Découvrir des recettes avec cet ingrédient » et s'anime au survol desktop (fond ambré appuyé, chevron qui glisse).
+
+### Corrigé
+- **Recette introuvable** : le message parle désormais de « ta bibliothèque » au lieu de « tes carnets ».
+
 ## v4.45.0 – Cardamome · Découpe affinée et import plus patient
 
 ### Interface

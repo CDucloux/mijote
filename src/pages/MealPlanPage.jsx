@@ -27,6 +27,7 @@ import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { ElasticScroll } from "../components/ElasticScroll.jsx";
 
 // Rôles proposés pour compléter un repas (le plat existe déjà).
@@ -434,7 +435,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     notify?.("Planning exporté dans ton calendrier");
   };
 
-  const { scrollRef, contentRef } = useElasticScroll();
+  const isDesktop = useIsDesktop();
+  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
 
   // Ouverture d'une recette depuis le planning : on note le jour d'origine avant de
   // déléguer la navigation, pour y revenir au recul (cf. mealPlanReturnDate).

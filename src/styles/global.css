@@ -2666,6 +2666,24 @@ select {
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* « Découvrir des recettes » de l'ingrédient du moment : au survol souris
+   (desktop), le fond ambré s'appuie et le chevron glisse vers la droite. */
+.spotlight-explore {
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+.spotlight-explore .sx-chev {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@media (hover: hover) {
+  .spotlight-explore:hover {
+    background: rgba(232, 146, 10, 0.2) !important;
+    border-color: rgba(232, 146, 10, 0.55) !important;
+  }
+  .spotlight-explore:hover .sx-chev {
+    transform: translateX(3px);
+  }
+}
+
 /* Bouton « Ajouter » de l'éditeur : pastille pointillée, teinte accent. */
 /* Colonne unique de l'éditeur de recette : la barre d'action, les onglets et les
    quatre panneaux la partagent, pour que titres, en-têtes de section et champs
@@ -3352,9 +3370,13 @@ select {
     transition: background-color .18s ease, color .18s ease;
   }
 
-  .icon-btn-soft:hover {
-    background: var(--surface3) !important;
-    color: var(--text) !important;
+  /* Le rond de fond n'apparaît qu'au survol souris (desktop) : sur tactile, le
+     retour visuel passe par l'onde `.ripple`, pas par un hover qui resterait figé. */
+  @media (hover: hover) {
+    .icon-btn-soft:hover {
+      background: var(--surface3) !important;
+      color: var(--text) !important;
+    }
   }
 
   /* Hero back button: chevron nudges left + slight grow on hover */
@@ -4510,6 +4532,8 @@ select {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--accent);
+  border-radius: 999px;
+  transition: background-color .18s ease;
 }
 
 /* État vide au croquis « encre » (EmptyArt), aligné sur les autres écrans vides de
@@ -4561,7 +4585,8 @@ select {
   .notif-daylabel { position: sticky; top: 8px; background: none; padding: 22px 0 0; }
   .notif-daylabel span { font-size: 12px; }
   .notif-row { max-width: 620px; }
-  .notif-more { margin-left: 156px; }
+  .notif-more { margin-left: 156px; padding: 7px 14px; }
+  .notif-more:hover { background: var(--surface2); }
 }
 
 /* ─── DÉCOUVRIR : bouton cœur favori ─────────────────────────────────────────────

@@ -11,16 +11,13 @@ export function NotificationsPage({ activities = [], loading = false }) {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ padding: "20px 20px 14px", flexShrink: 0, position: "relative", zIndex: 5, background: "var(--bg)", display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={() => navigate("/home")} aria-label="Retour"
+        <button onClick={() => navigate("/home")} aria-label="Retour" className="import-back"
           style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0, border: "none", cursor: "pointer" }}>
           <Icon name="back" size={17} />
         </button>
-        <div>
-          <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, lineHeight: 1.1 }}>
-            Notifications
-          </h1>
-          <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--text3)" }}>Ton activité récente</p>
-        </div>
+        <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, lineHeight: 1.1 }}>
+          Notifications
+        </h1>
       </div>
 
       {/* Défilement natif SANS ElasticScroll : celui-ci laisse un `transform:scaleY(1)`

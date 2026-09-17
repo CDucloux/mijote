@@ -119,7 +119,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M3 5h18M6 12h12M10 19h4" stroke="var(--text)" strokeWidth="2" strokeLinecap="round" /></svg>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: 1 }}>Tous les filtres</h2>
         {nActive > 0 && <button onClick={reset} style={{ alignSelf: "center", background: "none", border: "none", color: "var(--accent)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, lineHeight: 1 }}>Réinitialiser</button>}
-        <button onClick={onClose} aria-label="Fermer" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "var(--surface2)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>
+        <button onClick={onClose} aria-label="Fermer" className="icon-btn-soft ripple" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "none", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>
       </div>
 
       {/* Type de recette (rôle dans le repas), le tri vit désormais hors du
