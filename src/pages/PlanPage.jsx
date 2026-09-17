@@ -166,10 +166,14 @@ export function PlanPage() {
 
                 {adminAccess ? (
                   <div className="plus-account-admin">
-                    <div className="plus-account-admin-t">
-                      <Icon name="shield" size={18} color="var(--accent)" /> Accès complet · compte admin
+                    <span className="plus-account-admin-chip"><Icon name="shield" size={20} color="var(--accent)" /></span>
+                    <div className="plus-account-admin-body">
+                      <div className="plus-account-admin-t">
+                        Accès complet
+                        <span className="plus-account-admin-tag">Compte admin</span>
+                      </div>
+                      <p>Tu as accès à toutes les fonctionnalités de Cardamome+ via ton compte administrateur. Aucun abonnement Stripe n'est rattaché à ce compte.</p>
                     </div>
-                    <p>Tu as accès à toutes les fonctionnalités de Cardamome+ via ton compte administrateur. Aucun abonnement Stripe n'est rattaché à ce compte.</p>
                   </div>
                 ) : (
                   <>

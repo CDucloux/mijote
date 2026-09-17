@@ -460,29 +460,60 @@
   text-underline-offset: 2px;
 }
 
-/* Accès admin : remplace le récap + le CTA + la réassurance. */
+/* Accès admin : remplace le récap + le CTA + la réassurance. Registre soigné,
+   puce d'icône accent + titre fort + tag, description discrète (une seule couleur
+   d'accent, hiérarchie claire, pas d'ombre ni de dégradé). */
 .plus-account-admin {
   width: 100%;
   margin-top: 22px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   border-radius: var(--radius);
-  background: var(--surface2);
+  background: var(--surface);
   border: 1px solid var(--border);
   text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.plus-account-admin-chip {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: rgba(var(--accent-rgb), 0.12);
+}
+.plus-account-admin-body {
+  min-width: 0;
 }
 .plus-account-admin-t {
   display: flex;
   align-items: center;
   gap: 9px;
+  flex-wrap: wrap;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
+  letter-spacing: -0.01em;
   color: var(--text);
 }
+.plus-account-admin-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
 .plus-account-admin p {
-  margin: 6px 0 0;
+  margin: 5px 0 0;
   font-size: 12.5px;
   color: var(--text3);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 /* Bouton « Gérer » : pilule ghost. Pas de lift au hover (jugé « cheap »). */
