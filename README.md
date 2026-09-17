@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.47.4-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.48.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -63,8 +63,9 @@ toujours avec vous.
   en lamelles, en rondelles, râpé…) pour alimenter le poste « Découpe » du
   mode cuisine (éditable ensuite dans l'éditeur), et
   **détecte les préparations de base** (caramel, pâte, fond…) et leur
-  rendement estimé (réservé aux abonnés **Cardamome+**, quotas jour/mois ;
-  illimité pour l'administrateur). Les quatre modes vivent sur un écran unique à
+  rendement estimé (réservé aux abonnés **Cardamome+**, sur un pool mensuel de
+  **100 crédits intelligents** : 1 crédit par lien / texte / PDF, 2 par photo,
+  avec un garde-fou journalier discret ; illimité pour l'administrateur). Les quatre modes vivent sur un écran unique à
   onglets, avec une sélection de **sources recommandées** (configurable en console
   admin) sur l'import depuis un lien.
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
