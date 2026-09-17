@@ -2583,8 +2583,10 @@ select {
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
+  /* `!important` : le bouton porte un `background: var(--surface2)` en style inline
+     qui, sinon, l'emporte sur ce survol (le fond ne changerait jamais). */
   .cook-close-btn:hover {
-    background: var(--surface3);
+    background: var(--surface3) !important;
     color: var(--text);
   }
 
