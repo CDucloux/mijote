@@ -4348,6 +4348,15 @@ select {
 .tech-confuse:active { background: var(--surface2); }
 @media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
 
+/* Bouton « Plus de détails » d'une pastille de technique : fond piloté en CSS (à
+   partir de la couleur de catégorie passée en `--tech-accent`) pour permettre un
+   survol desktop qui appuie le tabac de fond. */
+.tech-more { background: color-mix(in srgb, var(--tech-accent) 13%, transparent); transition: background-color 0.15s ease; }
+.tech-more:active { background: color-mix(in srgb, var(--tech-accent) 22%, transparent); }
+@media (hover: hover) {
+  .tech-more:hover { background: color-mix(in srgb, var(--tech-accent) 24%, transparent); }
+}
+
 /* Rangées de la feuille de conversion en cuillères (mode sélection d'unité) :
    fond piloté en CSS (et non inline) pour que le survol desktop puisse l'emporter.
    L'unité active porte un tabac d'accent ; au survol, chaque rangée se surligne

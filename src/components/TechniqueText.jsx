@@ -262,7 +262,7 @@ export function TechniqueText({ text, index: indexProp }) {
                 {/* barre d'accent colorée en tête, selon la catégorie */}
                 <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "14px 14px 0 0", background: c.color }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
-                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}><Icon name={c.icon} size={20} color={c.color} /></span>
+                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon} size={20} color={c.color} /></span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>{pop.tech.name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4 }}>
@@ -284,9 +284,9 @@ export function TechniqueText({ text, index: indexProp }) {
                   </div>
                 )}
                 {hasMore && (
-                  <button type="button" className="pressable"
+                  <button type="button" className="pressable tech-more"
                     onClick={e => { e.stopPropagation(); setDetail(t); setPop(null); setPinned(false); }}
-                    style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 11, padding: "6px 13px 6px 14px", borderRadius: 999, border: "none", cursor: "pointer", background: `color-mix(in srgb, ${c.color} 13%, transparent)`, color: c.color, fontSize: 11.5, fontWeight: 600 }}>
+                    style={{ "--tech-accent": c.color, display: "inline-flex", alignItems: "center", gap: 5, marginTop: 11, padding: "6px 13px 6px 14px", borderRadius: 999, border: "none", cursor: "pointer", color: c.color, fontSize: 11.5, fontWeight: 600 }}>
                     Plus de détails <Icon name="forward" size={13} color={c.color} />
                   </button>
                 )}
