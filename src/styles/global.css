@@ -4514,6 +4514,8 @@ select {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--accent);
+  border-radius: 999px;
+  transition: background-color .18s ease;
 }
 
 /* État vide au croquis « encre » (EmptyArt), aligné sur les autres écrans vides de
@@ -4565,7 +4567,8 @@ select {
   .notif-daylabel { position: sticky; top: 8px; background: none; padding: 22px 0 0; }
   .notif-daylabel span { font-size: 12px; }
   .notif-row { max-width: 620px; }
-  .notif-more { margin-left: 156px; }
+  .notif-more { margin-left: 156px; padding: 7px 14px; }
+  .notif-more:hover { background: var(--surface2); }
 }
 
 /* ─── DÉCOUVRIR : bouton cœur favori ─────────────────────────────────────────────
