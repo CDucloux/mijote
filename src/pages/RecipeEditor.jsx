@@ -163,6 +163,17 @@ function SectionAddBar({ onAddIngredient, components, canBase = true }) {
   );
 }
 
+// Pill de classement (type de recette / style de cuisine). Fond, liseré et survol
+// desktop vivent dans `.classement-pill` (cf. global.css) ; l'état retenu est porté
+// par `data-active`.
+function ClassementPill({ active, emoji, label, onClick }) {
+  return (
+    <button type="button" onClick={onClick} className="classement-pill pressable" data-active={active ? "1" : undefined}>
+      <span style={{ fontSize: 14, lineHeight: 1 }}>{emoji}</span>{label}
+    </button>
+  );
+}
+
 export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, recipes }) {
   const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", category: recipe.category || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
   const [section, setSection] = useState("info");
@@ -469,12 +480,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {(form.isComponent ? BASE_CATEGORIES : RECIPE_CATEGORIES).map(c => {
                     const active = form.category === c.id;
-                    return (
-                      <button key={c.id} type="button" onClick={() => up("category", active ? "" : c.id)}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, background: active ? "rgba(var(--accent-rgb),0.14)" : "var(--surface)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
-                        <span style={{ fontSize: 14, lineHeight: 1 }}>{c.emoji}</span>{c.label}
-                      </button>
-                    );
+                    return <ClassementPill key={c.id} active={active} emoji={c.emoji} label={c.label} onClick={() => up("category", active ? "" : c.id)} />;
                   })}
                 </div>
               </div>
@@ -483,12 +489,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {CUISINES.map(c => {
                     const active = form.cuisine === c.label;
-                    return (
-                      <button key={c.label} type="button" onClick={() => up("cuisine", active ? "" : c.label)}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, background: active ? "rgba(var(--accent-rgb),0.14)" : "var(--surface)", color: active ? "var(--accent)" : "var(--text2)", border: `1px solid ${active ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, transition: "all 0.15s" }}>
-                        <span style={{ fontSize: 14, lineHeight: 1 }}>{c.emoji}</span>{c.label}
-                      </button>
-                    );
+                    return <ClassementPill key={c.label} active={active} emoji={c.emoji} label={c.label} onClick={() => up("cuisine", active ? "" : c.label)} />;
                   })}
                 </div>
               </div>
