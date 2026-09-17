@@ -24,6 +24,7 @@ const FEATURES = [
   { label: "Import intelligent depuis un lien", free: false, plus: true },
   { label: "Import intelligent depuis une photo", free: false, plus: true },
   { label: "Import intelligent depuis un texte", free: false, plus: true },
+  { label: "Crédits d'import intelligent", free: "0", plus: "150 / mois" },
   { label: "Foyer partagé", free: false, plus: true },
   { label: "Génération de planning", free: false, plus: true },
   { label: "Batch cooking", free: false, plus: true },

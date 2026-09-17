@@ -1,38 +1,51 @@
-// ─── QUOTAS D'IMPORT IA (logique pure) ───────────────────────────────────────
-// Limites par utilisateur ABONNÉ (l'admin est illimité, cf. access.ts). Séparé de
+// ─── CRÉDITS D'IMPORT IA (logique pure) ──────────────────────────────────────
+// Un POOL MENSUEL de crédits partagé entre tous les types d'import (fongible), à
+// la place des quotas cloisonnés par type. 1 crédit = un import lien / texte /
+// PDF ; 2 crédits = un import photo (vision, plus coûteuse). Un soft cap
+// journalier borne les emballements et les abus sans être visible en usage
+// normal. Réservé aux abonnés (l'admin est illimité, cf. access.ts). Séparé de
 // l'enforcement (transaction Firestore) pour être testable sans I/O.
 
 /** Type d'import IA soumis à quota. */
 export type ImportKind = "url" | "photo" | "text" | "pdf";
 
-/** Compteurs stockés pour un type d'import dans `aiUsage/{uid}`. */
-export interface KindUsage {
-  day?: string;
-  dayCount?: number;
-  month?: string;
-  monthCount?: number;
+/** Crédits d'import inclus par mois pour un abonné. */
+export const MONTHLY_CREDITS = 150;
+
+/** Soft cap journalier (anti-abus) : invisible en usage normal. */
+export const DAILY_CREDITS = 30;
+
+/** Coût en crédits par type d'import (la photo mobilise la vision, plus coûteuse). */
+export const CREDIT_COST: Record<ImportKind, number> = { url: 1, text: 1, pdf: 1, photo: 2 };
+
+/**
+ * Coût en crédits d'un import.
+ *
+ * @param kind - Type d'import.
+ * @returns Le nombre de crédits débités par cet import.
+ */
+export function creditCost(kind: ImportKind): number {
+  return CREDIT_COST[kind];
 }
 
-/** Compteurs courants (après remise à zéro implicite de période). */
+/** Compteurs de crédits stockés dans `aiUsage/{uid}`. */
+export interface CreditUsage {
+  creditsDay?: string;
+  creditsDayCount?: number;
+  creditsMonth?: string;
+  creditsMonthCount?: number;
+}
+
+/** Crédits consommés sur la période courante (après remise à zéro implicite). */
 export interface Counts {
   dayCount: number;
   monthCount: number;
 }
 
-/** Limites par type d'import : `day` (par jour) et `month` (par mois). */
-export const LIMITS: Record<ImportKind, { day: number; month: number }> = {
-  url: { day: 5, month: 60 },
-  photo: { day: 3, month: 30 },
-  text: { day: 3, month: 30 },
-  pdf: { day: 3, month: 30 },
-};
-
-/** Libellé humain par type (messages d'erreur). */
-export const KIND_LABEL: Record<ImportKind, string> = { url: "depuis un lien", photo: "photo", text: "depuis un texte", pdf: "depuis un PDF" };
-
 /**
  * Clés de période (jour `YYYY-MM-DD` et mois `YYYY-MM`) en fuseau Europe/Paris,
- * pour que la « journée » de quota corresponde à la journée locale de l'utilisateur.
+ * pour que la « journée » et le « mois » de crédits correspondent au calendrier
+ * local de l'utilisateur.
  *
  * @param now - Instant de référence (défaut : maintenant).
  * @returns Les clés `day` et `month` de la période courante.
@@ -45,32 +58,36 @@ export function periodKeys(now: Date = new Date()): { day: string; month: string
 }
 
 /**
- * Compteurs courants d'un type, avec remise à zéro implicite si le jour / mois
- * stocké ne correspond plus à la période courante.
+ * Crédits consommés sur la période courante, avec remise à zéro implicite quand
+ * le jour / mois stocké ne correspond plus à la période courante. Un ancien
+ * document (quotas par type, sans champ `credits*`) est donc vu à zéro : les
+ * abonnés repartent proprement sur le pool de crédits.
  *
- * @param kindData - Données stockées pour ce type (`{ day, dayCount, month, monthCount }`).
+ * @param usage - Compteurs stockés (`{ creditsDay, creditsDayCount, ... }`).
  * @param day - Clé jour courante.
  * @param month - Clé mois courante.
- * @returns Les compteurs jour et mois effectifs.
+ * @returns Les crédits consommés effectifs (jour et mois).
  */
-export function currentCounts(kindData: KindUsage | undefined, day: string, month: string): Counts {
-  const k = kindData || {};
+export function currentCredits(usage: CreditUsage | undefined, day: string, month: string): Counts {
+  const u = usage || {};
   return {
-    dayCount: k.day === day ? (k.dayCount || 0) : 0,
-    monthCount: k.month === month ? (k.monthCount || 0) : 0,
+    dayCount: u.creditsDay === day ? (u.creditsDayCount || 0) : 0,
+    monthCount: u.creditsMonth === month ? (u.creditsMonthCount || 0) : 0,
   };
 }
 
 /**
- * Message d'erreur si la PROCHAINE utilisation dépasserait une limite, sinon null.
+ * Message d'erreur si débiter le coût de CE type dépasserait le pool mensuel ou
+ * le soft cap journalier, sinon null. Le mois (la vraie limite incluse) prime sur
+ * le jour (garde-fou) dans le message.
  *
- * @param counts - Compteurs courants (`{ dayCount, monthCount }`).
- * @param kind - Type d'import (`"url"` | `"photo"`).
+ * @param counts - Crédits déjà consommés (`{ dayCount, monthCount }`).
+ * @param kind - Type d'import tenté.
  * @returns Le message d'erreur, ou `null` si l'import est autorisé.
  */
-export function quotaError(counts: Counts, kind: ImportKind): string | null {
-  const lim = LIMITS[kind];
-  if (counts.dayCount >= lim.day) return `Limite atteinte : ${lim.day} imports ${KIND_LABEL[kind]} par jour. Réessaie demain.`;
-  if (counts.monthCount >= lim.month) return `Limite atteinte : ${lim.month} imports ${KIND_LABEL[kind]} ce mois-ci.`;
+export function creditsError(counts: Counts, kind: ImportKind): string | null {
+  const cost = creditCost(kind);
+  if (counts.monthCount + cost > MONTHLY_CREDITS) return `Plus assez de crédits d'import ce mois-ci (${MONTHLY_CREDITS} inclus). Ça repart le mois prochain.`;
+  if (counts.dayCount + cost > DAILY_CREDITS) return "Beaucoup d'imports aujourd'hui. Reprends demain, tes crédits du mois restent intacts.";
   return null;
 }
