@@ -8,6 +8,7 @@ import { SpotlightIngredient } from "../components/SpotlightIngredient.jsx";
 import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
 import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { NewRecipeSheet } from "../components/NewRecipeButton.jsx";
 import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { useNavigate } from "react-router-dom";
 import { useAppShell } from "../context/AppShellContext.jsx";
@@ -67,6 +68,10 @@ function NotifRow({ icon, color, title, subtitle, onClick, animationDelay, canHo
 // Recette → Planning → Courses en pied dit POURQUOI l'accueil est vide et ce que la
 // première recette débloque : la boucle propre à Cardamome, pas un vide générique.
 function OnboardingCard({ onNewRecipe, onExplore }) {
+  // Le CTA d'entrée ouvre la feuille de choix (import intelligent en tête) plutôt
+  // que d'aller droit à la saisie manuelle : le nouvel utilisateur découvre dès le
+  // premier geste qu'il peut importer un lien / une photo / un texte / un PDF.
+  const [newOpen, setNewOpen] = useState(false);
   const steps = [
     { icon: "book", label: "Recette", desc: "Ta première fiche", on: true },
     { icon: "calendar", label: "Planning", desc: "La semaine s'organise", on: false },
@@ -92,7 +97,7 @@ function OnboardingCard({ onNewRecipe, onExplore }) {
             Ajoute une première recette et tout s'enchaîne : le planning de la semaine, la liste de courses et le suivi du stock se remplissent ensuite pour toi.
           </p>
           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <button onClick={onNewRecipe} className="btn btn-primary btn-pill pressable ripple" style={{ width: "auto" }}>
+            <button onClick={() => setNewOpen(true)} className="btn btn-primary btn-pill pressable ripple" style={{ width: "auto" }}>
               <Icon name="plus" size={16} color="#fff" /> Ajouter une recette
             </button>
             <button onClick={onExplore} className="pressable hov-pill" style={{ background: "none", border: "none", cursor: "pointer",
@@ -120,6 +125,7 @@ function OnboardingCard({ onNewRecipe, onExplore }) {
           ))}
         </div>
       </div>
+      {newOpen && <NewRecipeSheet onClose={() => setNewOpen(false)} onManual={onNewRecipe} />}
     </div>
   );
 }
