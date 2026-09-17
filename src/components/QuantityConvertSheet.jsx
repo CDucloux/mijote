@@ -73,7 +73,7 @@ export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSele
       <div style={{ background: "var(--surface2)", borderRadius: 20, overflow: "hidden" }}>
         {ing.spoons.map((s, i) => {
           const active = selectable && selectedUnit === s.unit;
-          const rowStyle = { display: "flex", alignItems: "center", gap: 14, width: "100%", padding: "16px 18px", borderTop: i ? "1px solid var(--border)" : "none", textAlign: "left", background: active ? "rgba(var(--accent-rgb),0.09)" : "transparent" };
+          const rowStyle = { display: "flex", alignItems: "center", gap: 14, width: "100%", padding: "16px 18px", borderTop: i ? "1px solid var(--border)" : "none", textAlign: "left" };
           const inner = (
             <>
               <span style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.13)", display: "grid", placeItems: "center" }}>
@@ -95,13 +95,13 @@ export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSele
             </>
           );
           return selectable
-            ? <button key={s.unit} type="button" className="pressable" onClick={() => onSelectUnit(s.unit)} style={{ ...rowStyle, border: "none", borderTop: rowStyle.borderTop, cursor: "pointer" }}>{inner}</button>
-            : <div key={s.unit} style={rowStyle}>{inner}</div>;
+            ? <button key={s.unit} type="button" className={`pressable convert-row${active ? " is-active" : ""}`} onClick={() => onSelectUnit(s.unit)} style={{ ...rowStyle, border: "none", borderTop: rowStyle.borderTop, cursor: "pointer" }}>{inner}</button>
+            : <div key={s.unit} style={{ ...rowStyle, background: "transparent" }}>{inner}</div>;
         })}
       </div>
 
       {selectable && selectedUnit && (
-        <button type="button" className="pressable" onClick={onReset}
+        <button type="button" className="pressable convert-reset" onClick={onReset}
           style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, width: "100%", marginTop: 12, padding: "11px 0", borderRadius: 14, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
           <Icon name="undo" size={15} color="var(--text3)" /> Revenir à {fmtQty(ing.amount, ing.unit)} {pluralizeUnit(ing.amount, ing.unit)}
         </button>
