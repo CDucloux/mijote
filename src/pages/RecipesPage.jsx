@@ -458,7 +458,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 <Icon name="plus" size={16} color="#fff" /> Créer ma première recette
               </button>
               {setTab && (
-                <button className="btn btn-pill" style={{ fontSize: 14, background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }} onClick={() => setTab("home")}>
+                <button className="btn btn-ghost btn-pill" style={{ fontSize: 14 }} onClick={() => setTab("home")}>
                   <Icon name="sparkle" size={16} color="var(--accent)" /> Explorer les recettes publiques
                 </button>
               )}
