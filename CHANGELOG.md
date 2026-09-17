@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.47.2 – Cardamome · Fin de cuisson épurée
+
+### Corrigé
+- **Écran de fin du mode cuisine** : la cloche repose désormais franchement sur son assiette (plat servi, couvert), sans portion à deviner ni vapeur ; l'unique touche chaude est le bouton de préhension au sommet.
+
 ## v4.47.1 – Cardamome · Fin de cuisson corrigée
 
 ### Corrigé
