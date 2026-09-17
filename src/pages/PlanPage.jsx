@@ -166,7 +166,7 @@ export function PlanPage() {
 
                 {adminAccess ? (
                   <div className="plus-account-admin">
-                    <span className="plus-account-admin-chip"><Icon name="shield" size={20} color="var(--accent)" /></span>
+                    <span className="plus-account-admin-chip"><Icon name="shield" size={20} color="var(--admin)" /></span>
                     <div className="plus-account-admin-body">
                       <div className="plus-account-admin-t">
                         Accès complet

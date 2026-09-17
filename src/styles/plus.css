@@ -482,7 +482,7 @@
   border-radius: 13px;
   display: grid;
   place-items: center;
-  background: rgba(var(--accent-rgb), 0.12);
+  background: rgba(var(--admin-rgb), 0.13);
 }
 .plus-account-admin-body {
   min-width: 0;
@@ -502,9 +502,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.12);
-  border: 1px solid rgba(var(--accent-rgb), 0.28);
+  color: var(--admin);
+  background: rgba(var(--admin-rgb), 0.13);
+  border: 1px solid rgba(var(--admin-rgb), 0.30);
   padding: 2px 8px;
   border-radius: 999px;
   white-space: nowrap;
