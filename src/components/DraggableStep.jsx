@@ -131,11 +131,8 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
                 : (ing.name || "sans nom");
               const img = ingImg(ing);
               return (
-                <button key={ing.id} onClick={() => onUpdate(step.id, "ingredients", linked ? step.ingredients.filter(x => x !== ing.id) : [...(step.ingredients || []), ing.id])}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 12px 4px 4px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                    background: linked ? "rgba(var(--accent-rgb),0.14)" : "var(--surface2)",
-                    color: linked ? "var(--accent)" : "var(--text2)",
-                    border: `1px solid ${linked ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, transition: "background 0.15s, border-color 0.15s, color 0.15s" }}>
+                <button key={ing.id} className="step-link-pill" data-active={linked ? "1" : undefined}
+                  onClick={() => onUpdate(step.id, "ingredients", linked ? step.ingredients.filter(x => x !== ing.id) : [...(step.ingredients || []), ing.id])}>
                   {img
                     ? <IngImage src={img} alt={displayName} size={24} cover={!!ing.recipeId} />
                     : <span style={{ width: 24, height: 24, borderRadius: "50%", flexShrink: 0, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center" }}><Icon name="leaf" size={11} color="var(--text3)" /></span>}
@@ -157,11 +154,8 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
               const linked = step.utensils?.includes(u.id);
               const img = utImg(u);
               return (
-                <button key={u.id} onClick={() => onUpdate(step.id, "utensils", linked ? step.utensils.filter(x => x !== u.id) : [...(step.utensils || []), u.id])}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 12px 4px 4px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                    background: linked ? "rgba(var(--accent-rgb),0.14)" : "var(--surface2)",
-                    color: linked ? "var(--accent)" : "var(--text2)",
-                    border: `1px solid ${linked ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, transition: "background 0.15s, border-color 0.15s, color 0.15s" }}>
+                <button key={u.id} className="step-link-pill" data-active={linked ? "1" : undefined}
+                  onClick={() => onUpdate(step.id, "utensils", linked ? step.utensils.filter(x => x !== u.id) : [...(step.utensils || []), u.id])}>
                   {img
                     ? <UtImage src={img} alt={u.name} size={26} border />
                     : <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, background: "#fff", border: "1px solid rgba(0,0,0,0.08)", display: "grid", placeItems: "center" }}><Icon name="utensils" size={12} color="var(--text3)" /></span>}
