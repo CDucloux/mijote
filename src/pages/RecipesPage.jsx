@@ -17,6 +17,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
+import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { OverscrollRow } from "../components/OverscrollRow.jsx";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
@@ -282,7 +283,8 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
     setTimeout(() => { setVisibleCount(c => c + RECIPES_PAGE); setLoadingMore(false); }, 320);
   };
 
-  const { scrollRef, contentRef } = useElasticScroll();
+  const isDesktop = useIsDesktop();
+  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
 
   // Restaure la position mémorisée au montage (retour depuis une fiche), avant la
   // peinture pour éviter tout saut visible. La pagination a déjà été restaurée dans
