@@ -96,7 +96,7 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
       {(close) => (
         <div ref={topRef}>
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${c.color} 32%, transparent)` }}><Icon name={c.icon} size={27} color={c.color} /></span>
+            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon} size={27} color={c.color} /></span>
             <div style={{ minWidth: 0, flex: 1 }}>
               <h2 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{tech.name}</h2>
               {diff > 0 && (
@@ -107,7 +107,7 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
                 </span>
               )}
             </div>
-            <button type="button" onClick={() => close()} aria-label="Fermer" className="pressable" style={{ flexShrink: 0, alignSelf: "flex-start", width: 32, height: 32, borderRadius: "50%", border: "none", background: "var(--surface2)", display: "grid", placeItems: "center", cursor: "pointer" }}>
+            <button type="button" onClick={() => close()} aria-label="Fermer" className="pressable sheet-close-btn" style={{ flexShrink: 0, alignSelf: "flex-start", width: 32, height: 32, borderRadius: "50%", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}>
               <Icon name="close" size={16} color="var(--text2)" />
             </button>
           </div>

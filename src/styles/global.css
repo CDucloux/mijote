@@ -4356,6 +4356,13 @@ select {
 .tech-confuse:active { background: var(--surface2); }
 @media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
 
+/* Bouton croix d'une feuille (fiche technique...) : fond piloté en CSS pour un
+   survol desktop qui l'appuie d'un cran. */
+.sheet-close-btn { background: var(--surface2); transition: background-color 0.15s ease; }
+@media (hover: hover) {
+  .sheet-close-btn:hover { background: var(--surface3); }
+}
+
 /* Pills à bascule de l'éditeur d'étape (ingrédients liés, ustensiles liés) : fond,
    liseré et couleur pilotés en CSS pour un survol desktop (le fond/liseré inline
    bloquait tout :hover). État lié via [data-active] ; au survol, la pill s'appuie
