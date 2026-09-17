@@ -10,7 +10,7 @@
 export type ImportKind = "url" | "photo" | "text" | "pdf";
 
 /** Crédits d'import inclus par mois pour un abonné. */
-export const MONTHLY_CREDITS = 150;
+export const MONTHLY_CREDITS = 100;
 
 /** Soft cap journalier (anti-abus) : invisible en usage normal. */
 export const DAILY_CREDITS = 30;
