@@ -512,8 +512,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         {srcStepIdx >= 0 && (
           <button type="button" title="Voir l'étape d'origine de cette découpe"
             onClick={e => { e.stopPropagation(); goToStep(srcStepIdx); }}
-            className="pressable"
-            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.10)", border: "none", borderRadius: 999, padding: "4px 9px 4px 10px", cursor: "pointer", opacity: done ? 0.55 : 1, transition: "opacity 0.15s" }}>
+            className="pressable cook-step-link"
+            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "var(--accent)", border: "none", borderRadius: 999, padding: "4px 9px 4px 10px", cursor: "pointer", opacity: done ? 0.55 : 1, transition: "opacity 0.15s, background-color 0.15s" }}>
             Étape {srcStepIdx + 1}
             <Icon name="forward" size={12} color="var(--accent)" />
           </button>

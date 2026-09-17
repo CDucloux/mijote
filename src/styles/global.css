@@ -4348,6 +4348,14 @@ select {
 .tech-confuse:active { background: var(--surface2); }
 @media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
 
+/* Chip « Étape N » de la mise en place (saut vers l'étape d'origine d'une découpe) :
+   fond d'accent piloté en CSS (et non inline) pour un survol desktop qui l'appuie. */
+.cook-step-link { background: rgba(var(--accent-rgb), 0.10); }
+.cook-step-link:active { background: rgba(var(--accent-rgb), 0.20); }
+@media (hover: hover) {
+  .cook-step-link:hover { background: rgba(var(--accent-rgb), 0.20); }
+}
+
 /* Bouton « Minuteur N min » (mentions de temps d'une étape) : fond et liseré épice
    pilotés en CSS (et non inline) pour un survol desktop qui appuie le tabac et le
    liseré. */
