@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.47.4 – Cardamome · Retouches de survol et de détail
+
+### Interface
+- **États vides des recettes** : les boutons secondaires « Explorer les recettes publiques » et « Créer « … » » gagnent un survol desktop et retrouvent un fond blanc en thème clair.
+- **Fiche technique** : le carré d'icône de l'en-tête perd sa bordure (aplat teinté seul) et la croix de fermeture s'appuie au survol.
+
 ## v4.47.3 – Cardamome · Finitions desktop et détails soignés
 
 ### Interface

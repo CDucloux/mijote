@@ -827,6 +827,14 @@ select {
   box-shadow: none;
 }
 
+/* Variante « fond surface » d'une pastille fantôme : fond blanc en thème clair
+   (var(--surface)) plutôt que le gris-vert de surface2, pour les CTA secondaires
+   des états vides. Survol : un cran vers surface2. */
+.btn-ghost.btn-ghost-plain { background: var(--surface); }
+@media (hover: hover) {
+  .btn-ghost.btn-ghost-plain:hover { background: var(--surface2); }
+}
+
 /* Variante pleine SANS halo accent : pour les contextes où l'ombre colorée fait
    « tache » (ex. CTA plein écran du mode cuisine sur fond sombre). */
 .btn-pill.btn-flat,
@@ -4347,6 +4355,13 @@ select {
 .tech-confuse { transition: background-color 0.15s ease; }
 .tech-confuse:active { background: var(--surface2); }
 @media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
+
+/* Bouton croix d'une feuille (fiche technique...) : fond piloté en CSS pour un
+   survol desktop qui l'appuie d'un cran. */
+.sheet-close-btn { background: var(--surface2); transition: background-color 0.15s ease; }
+@media (hover: hover) {
+  .sheet-close-btn:hover { background: var(--surface3); }
+}
 
 /* Pills à bascule de l'éditeur d'étape (ingrédients liés, ustensiles liés) : fond,
    liseré et couleur pilotés en CSS pour un survol desktop (le fond/liseré inline
