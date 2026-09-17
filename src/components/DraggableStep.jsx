@@ -11,6 +11,16 @@ import { isApplianceKey } from "@/lib/utensils/appliances.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
 
+// Pill « Retirer » (photo / astuce d'une étape) : pastille fantôme avec survol
+// desktop, cf. `.step-remove-pill` dans global.css.
+function RemovePill({ onClick }) {
+  return (
+    <button type="button" onClick={onClick} className="step-remove-pill">
+      <Icon name="close" size={12} color="currentColor" /> Retirer
+    </button>
+  );
+}
+
 // Petit label de sous-bloc (Ingrédients liés / Ustensiles liés), épuré, sans capitales.
 function BlockLabel({ icon, color, children }) {
   return (
@@ -91,7 +101,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 7 }}><Icon name="photo" size={13} color="var(--text3)" /><span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text2)" }}>Photo</span></span>
-            <button onClick={() => { onUpdate(step.id, "image", ""); setShowPhoto(false); }} style={{ fontSize: 11.5, color: "var(--text3)", background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="close" size={12} color="var(--text3)" /> Retirer</button>
+            <RemovePill onClick={() => { onUpdate(step.id, "image", ""); setShowPhoto(false); }} />
           </div>
           <ImageUpload value={step.image} onChange={v => onUpdate(step.id, "image", v)} style={{ height: 130, borderRadius: 14 }} pathPrefix="steps" />
         </div>
@@ -102,7 +112,7 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 7 }}><Icon name="bulb" size={13} color="var(--blue)" /><span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text2)" }}>Astuce</span></span>
-            <button onClick={() => { onUpdate(step.id, "tip", ""); setShowTip(false); }} style={{ fontSize: 11.5, color: "var(--text3)", background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="close" size={12} color="var(--text3)" /> Retirer</button>
+            <RemovePill onClick={() => { onUpdate(step.id, "tip", ""); setShowTip(false); }} />
           </div>
           <input className="field-input" placeholder="Un conseil pour réussir cette étape…" value={step.tip || ""} onChange={e => onUpdate(step.id, "tip", e.target.value)}
             style={{ marginBottom: 0, background: "rgba(91,156,246,0.07)", border: "1px solid rgba(91,156,246,0.25)", borderRadius: 12 }} />
