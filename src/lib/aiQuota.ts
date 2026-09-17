@@ -34,8 +34,8 @@ export interface Remaining {
 export const LIMITS: Record<ImportKind, { day: number; month: number }> = {
   url: { day: 5, month: 60 },
   photo: { day: 3, month: 30 },
-  text: { day: 5, month: 60 },
-  pdf: { day: 5, month: 60 },
+  text: { day: 3, month: 30 },
+  pdf: { day: 3, month: 30 },
 };
 
 /**

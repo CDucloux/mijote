@@ -51,12 +51,12 @@ describe("quotaError", () => {
   it("priorise le message jour quand les deux limites sont atteintes", () => {
     expect(quotaError({ dayCount: 5, monthCount: 60 }, "url")).toMatch(/par jour/);
   });
-  it("gère le type texte (5/jour, 60/mois) comme l'url", () => {
+  it("gère le type texte (3/jour, 30/mois) comme la photo", () => {
     expect(quotaError({ dayCount: LIMITS.text.day - 1, monthCount: 0 }, "text")).toBeNull();
-    expect(quotaError({ dayCount: 5, monthCount: 0 }, "text")).toMatch(/par jour/);
-    expect(quotaError({ dayCount: 0, monthCount: 60 }, "text")).toMatch(/ce mois-ci/);
+    expect(quotaError({ dayCount: 3, monthCount: 0 }, "text")).toMatch(/par jour/);
+    expect(quotaError({ dayCount: 0, monthCount: 30 }, "text")).toMatch(/ce mois-ci/);
   });
-  it("gère le type pdf (5/jour, 60/mois) avec son libellé", () => {
+  it("gère le type pdf (3/jour, 30/mois) avec son libellé", () => {
     expect(quotaError({ dayCount: LIMITS.pdf.day - 1, monthCount: 0 }, "pdf")).toBeNull();
     expect(quotaError({ dayCount: LIMITS.pdf.day, monthCount: 0 }, "pdf")).toMatch(/PDF par jour/);
     expect(quotaError({ dayCount: 0, monthCount: LIMITS.pdf.month }, "pdf")).toMatch(/ce mois-ci/);

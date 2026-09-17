@@ -3,8 +3,8 @@ import { LIMITS, periodKeys, currentCounts, remainingFor } from "../aiQuota.js";
 
 // Ces limites DOIVENT rester alignées avec functions/quota.js (autorité serveur).
 describe("LIMITS (parité serveur)", () => {
-  it("url 5/jour 60/mois · photo 3/jour 30/mois · texte 5/jour 60/mois", () => {
-    expect(LIMITS).toEqual({ url: { day: 5, month: 60 }, photo: { day: 3, month: 30 }, text: { day: 5, month: 60 }, pdf: { day: 5, month: 60 } });
+  it("url 5/jour 60/mois · photo/texte/pdf 3/jour 30/mois", () => {
+    expect(LIMITS).toEqual({ url: { day: 5, month: 60 }, photo: { day: 3, month: 30 }, text: { day: 3, month: 30 }, pdf: { day: 3, month: 30 } });
   });
 });
 
@@ -43,14 +43,14 @@ describe("remainingFor", () => {
     const r = remainingFor({ url: { day: "2026-08-06", dayCount: 1, month: "2026-08", monthCount: 60 } }, "url", now);
     expect(r).toMatchObject({ dayLeft: 4, monthLeft: 0, blocked: true });
   });
-  it("type texte : reliquat plein et décompte comme l'url", () => {
-    expect(remainingFor(null, "text", now)).toMatchObject({ dayLeft: 5, dayLimit: 5, monthLeft: 60, monthLimit: 60, blocked: false });
-    const r = remainingFor({ text: { day: "2026-08-06", dayCount: 5, month: "2026-08", monthCount: 5 } }, "text", now);
+  it("type texte : reliquat plein et décompte comme la photo", () => {
+    expect(remainingFor(null, "text", now)).toMatchObject({ dayLeft: 3, dayLimit: 3, monthLeft: 30, monthLimit: 30, blocked: false });
+    const r = remainingFor({ text: { day: "2026-08-06", dayCount: 3, month: "2026-08", monthCount: 5 } }, "text", now);
     expect(r).toMatchObject({ dayLeft: 0, blocked: true });
   });
   it("type pdf : reliquat plein et décompte propre", () => {
-    expect(remainingFor(null, "pdf", now)).toMatchObject({ dayLeft: 5, dayLimit: 5, monthLeft: 60, monthLimit: 60, blocked: false });
-    const r = remainingFor({ pdf: { day: "2026-08-06", dayCount: 5, month: "2026-08", monthCount: 5 } }, "pdf", now);
+    expect(remainingFor(null, "pdf", now)).toMatchObject({ dayLeft: 3, dayLimit: 3, monthLeft: 30, monthLimit: 30, blocked: false });
+    const r = remainingFor({ pdf: { day: "2026-08-06", dayCount: 3, month: "2026-08", monthCount: 5 } }, "pdf", now);
     expect(r).toMatchObject({ dayLeft: 0, blocked: true });
   });
 });
