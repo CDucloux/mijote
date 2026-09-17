@@ -4348,6 +4348,19 @@ select {
 .tech-confuse:active { background: var(--surface2); }
 @media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
 
+/* Lien discret « Effacer la recherche » (état vide des recettes) : au survol desktop,
+   il prend un fond en pilule pour se signaler comme cliquable. */
+.empty-clear-link {
+  background: transparent;
+  color: var(--text3);
+  padding: 7px 14px;
+  border-radius: 999px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+@media (hover: hover) {
+  .empty-clear-link:hover { background: var(--surface2); color: var(--text2); }
+}
+
 /* Chip « Étape N » de la mise en place (saut vers l'étape d'origine d'une découpe) :
    fond d'accent piloté en CSS (et non inline) pour un survol desktop qui l'appuie. */
 .cook-step-link { background: rgba(var(--accent-rgb), 0.10); }

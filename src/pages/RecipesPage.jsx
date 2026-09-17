@@ -528,7 +528,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                     <Icon name="sparkle" size={16} color="#fff" /> Chercher dans la communauté
                   </button>
                 )}
-                <button className="btn btn-pill" style={{ fontSize: 14, background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }} onClick={() => onNewRecipe({ name: q })}>
+                <button className="btn btn-ghost btn-pill" style={{ fontSize: 14 }} onClick={() => onNewRecipe({ name: q })}>
                   <Icon name="plus" size={16} color="currentColor" /> Créer « {qShort} »
                 </button>
               </div>
@@ -541,7 +541,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             {/* Reset discret quand une recherche est active (les CTA principaux vont
                 de l'avant ; ce lien reste la porte de retour vers la bibliothèque). */}
             {q && (
-              <button onClick={reset} style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
+              <button onClick={reset} className="empty-clear-link" style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
                 <Icon name="eraser" size={15} color="var(--text3)" /> {hasFilters ? "Réinitialiser recherche et filtres" : "Effacer la recherche"}
               </button>
             )}
