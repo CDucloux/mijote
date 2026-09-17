@@ -104,10 +104,10 @@ export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore })
             <div style={{ height: 1, background: "var(--border)", margin: "14px 0 12px" }} />
             {/* Rebond vers « Découvrir » pré-semé sur ce produit : la saisonnalité
                 (tableau de bord) mène à l'exploration (communauté) d'un seul geste. */}
-            <button onClick={() => onExplore(ingredient)} className="pressable" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: `rgba(${AMBER_RGB}, 0.12)`, color: AMBER, border: `1px solid rgba(${AMBER_RGB}, 0.32)`, fontWeight: 600, fontSize: 13.5, borderRadius: 999, padding: "10px 16px", cursor: "pointer" }}>
+            <button onClick={() => onExplore(ingredient)} className="pressable spotlight-explore" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: `rgba(${AMBER_RGB}, 0.12)`, color: AMBER, border: `1px solid rgba(${AMBER_RGB}, 0.32)`, fontWeight: 600, fontSize: 13.5, borderRadius: 999, padding: "10px 16px", cursor: "pointer" }}>
               <Icon name="sparkle" size={15} color={AMBER} />
-              Des recettes avec {(ingredient.name || "").toLowerCase()}
-              <Icon name="forward" size={14} color={AMBER} />
+              Découvrir des recettes avec cet ingrédient
+              <span className="sx-chev" style={{ display: "inline-flex" }}><Icon name="forward" size={14} color={AMBER} /></span>
             </button>
           </>
         )}
