@@ -35,10 +35,10 @@ export function ImageUpload({ value, onChange, style, pathPrefix = "misc" }) {
       {value ? (
         <div style={{ position: "relative" }}>
           <Img src={value} style={{ width: "100%", height: style?.height || 120, borderRadius: 12 }} />
-          <button onClick={() => onChange("")} style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+          <button onClick={() => onChange("")} className="img-overlay-btn" style={{ position: "absolute", top: 6, right: 6, borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", border: "none", cursor: "pointer" }}>
             <Icon name="close" size={13} />
           </button>
-          <label htmlFor={inputId} style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: 8, padding: "4px 8px", fontSize: 11, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+          <label htmlFor={inputId} className="img-overlay-btn" style={{ position: "absolute", bottom: 6, right: 6, borderRadius: 999, padding: "5px 11px", fontSize: 11, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
             <Icon name="photo" size={12} color="#fff" /> {uploading ? "…" : "Changer"}
           </label>
         </div>

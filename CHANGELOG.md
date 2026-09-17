@@ -1,5 +1,21 @@
 # Changelog – Cardamome
 
+## v4.47.3 – Cardamome · Finitions desktop et détails soignés
+
+### Interface
+- **Survols desktop généralisés** : croix de fermeture du mode pas à pas, boutons minuteur, chip « Étape N » de la mise en place, pills de classement (type de recette, style de cuisine), pills à bascule ingrédients/ustensiles de l'éditeur, sélecteur d'unité en cuillères, boutons « Créer » et « Effacer la recherche » de l'état vide, onglets et sources recommandées de l'import, bouton « Plus de détails » d'une technique : tous gagnent un retour de survol à la souris.
+- **Éditeur d'étape** : les boutons « Retirer » (photo, astuce) deviennent des pastilles fantômes discrètes qui s'affichent au survol ; sur une photo, le « x » et « Changer » (désormais en pastille) s'appuient au survol.
+- **Feuille de conversion en cuillères** : choisir une unité ou revenir aux grammes referme la feuille avec l'animation de sortie au lieu de disparaître d'un coup.
+- **Paramètres d'appareil dans les étapes (desktop)** : la pastille d'un four, d'une plaque, etc. affiche son résumé de réglages (température, mode, durée) aussi en visualisation normale, comme en pas à pas.
+- **Pastille de technique** : carré d'icône sans bordure, plus net.
+- **À propos** : licence mise en avant, stack technique présentée en fiche sobre, et section « Nous contacter » rapatriée depuis le menu du compte.
+- **Formule** : la carte « Accès complet · compte admin » est retravaillée (puce d'icône, titre et tag) et passe au violet admin.
+- **Guide** : les renvois d'un sujet à un autre sont désormais de vrais liens cliquables.
+- **Fin du mode cuisine** : illustration à l'encre (cloche de service) au lieu des emojis.
+
+### Corrigé
+- **Publication d'une recette** : le message repasse au tutoiement, la voix de l'app.
+
 ## v4.47.2 – Cardamome · Fin de cuisson épurée
 
 ### Corrigé

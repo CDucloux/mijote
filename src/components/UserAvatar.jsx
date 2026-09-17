@@ -9,7 +9,6 @@ import { AccountSheet } from "./AccountSheet.jsx";
 import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useModalExit } from "../hooks/useModalExit.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
-import { CONTACT_MAILTO } from "../constants/contact.js";
 import { getRuntimeContext, isAppContext } from "../lib/ui/runtimeContext.js";
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
@@ -77,7 +76,6 @@ export function UserAvatar() {
     { items: [
       { icon: "info", label: "À propos", onClick: () => setAbout(true) },
       { icon: "fileText", label: "Informations légales", onClick: () => navigate("/legal") },
-      { icon: "mail", label: "Nous contacter", href: CONTACT_MAILTO },
     ] },
   ].filter(Boolean);
   const actions = groups.flatMap((g) => g.items); // dropdown web = liste à plat

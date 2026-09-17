@@ -200,25 +200,26 @@ const ARTS = {
   service: (
     <>
       <g className="ink-body" fill="currentColor">
-        {/* ombre au sol sous l'assiette */}
-        <ellipse cx="60" cy="101" rx="37" ry="3.8" opacity="0.1" />
-        {/* assiette : disque vu de trois quarts, plus large que la base de la cloche */}
-        <path d="M60 83 C85 83 101 86 101 89.5 C101 93 85 96 60 96 C35 96 19 93 19 89.5 C19 86 35 83 60 83 Z" />
-        {/* lavis du creux de l'assiette (volume) */}
-        <ellipse cx="60" cy="88" rx="30" ry="3" opacity="0.08" />
-        {/* intérieur de la cloche (lavis de volume) */}
-        <path opacity="0.1" d="M39 83 C39 55 49 38 60 38 C71 38 81 55 81 83 Z" />
-        {/* dôme de la cloche : paroi effilée (fine au sommet, épaisse au rebord),
-            un peu inégale, comme tirée au pinceau, reposant sur l'assiette */}
-        <path d="M35 83 C35 52 46 34 60 34 C74 34 85 52 85 83 C82 55 72 45 60 45 C48 45 38 55 35 83 Z" />
-        {/* rebord de la cloche posé sur l'assiette : lentille effilée */}
-        <path d="M35 83 C48 86 72 86 85 83 C72 85 48 85 35 83 Z" />
+        {/* ombre au sol, légère et large */}
+        <ellipse cx="60" cy="87" rx="35" ry="2.8" opacity="0.09" />
+        {/* assiette : fine lentille au trait (pas un disque plein), un peu plus
+            large que la cloche, sur laquelle le dôme repose */}
+        <path d="M20 78 C37 82 83 82 100 77 C84 80 36 80 20 78 Z" />
+        <ellipse cx="60" cy="78" rx="35" ry="2.4" opacity="0.06" />
+        {/* intérieur du dôme : lavis léger pour le volume (jamais une silhouette
+            pleine, qui virerait au gros aplat noir) */}
+        <path opacity="0.07" d="M31 76 C31 55 44 45 60 45 C76 45 89 55 89 76 Z" />
+        {/* dôme de service : BANDE-CONTOUR effilée (contour extérieur puis intérieur
+            refermés), franchement PLUS LARGE QUE HAUT, un peu inégale (fait main) */}
+        <path d="M29 76 C28 53 43 42 60 42 C78 42 91 53 91 76 C87 56 75 48 60 48 C45 48 33 55 29 76 Z" />
+        {/* rebord du dôme posé sur l'assiette : lentille effilée */}
+        <path d="M29 76 C43 79 77 79 91 76 C77 78 43 78 29 76 Z" />
         {/* tige courte reliant le dôme à sa prise */}
-        <path d="M57 35 C57 31 63 31 63 35 C62 33 58 33 57 35 Z" />
+        <path d="M57 42 C57 38 63 38 63 42 C62 40 58 40 57 42 Z" />
       </g>
       {/* accent unique : le bouton de préhension au sommet, la touche chaude qu'on
           saisit pour soulever la cloche (il « pose » à la fin, avec un léger rebond). */}
-      <path className="ink-accent" fill="var(--accent)" d="M53 33 C53 26 67 26 67 33 C63 30 57 30 53 33 Z" />
+      <path className="ink-accent" fill="var(--accent)" d="M54 39 C54 33 66 33 66 39 C62 36 58 36 54 39 Z" />
     </>
   ),
   // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est

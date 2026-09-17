@@ -2,21 +2,22 @@ import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { Icon } from "./Icon.jsx";
 import { ChangelogSection } from "./ChangelogSection.jsx";
 import { codenameFor } from "../constants/changelog.js";
-import { Row, Col, Pill, IconChip } from "./ui/primitives.jsx";
+import { CONTACT_EMAIL, CONTACT_MAILTO } from "../constants/contact.js";
+import { Row, Col, Pill } from "./ui/primitives.jsx";
 
-// ─── À PROPOS (licence · crédits · copyright) ────────────────────────────────
+// ─── À PROPOS (licence · stack · contact · copyright) ─────────────────────────
 // Volontairement hors de Config : la page vit dans la zone profil (avatar), qui
 // regroupe déjà le « méta » de l'app (compte, thème, synchro).
 const YEAR = new Date().getFullYear();
 const codename = codenameFor(__APP_VERSION__);
 
-const GITHUB_URL = "https://github.com/CDucloux";
-
-const CREDITS = [
-  { label: "React", detail: "Interface", glyph: "⚛" },
-  { label: "Vite", detail: "Build & dev", glyph: "⚡" },
-  { label: "Firebase", detail: "Auth · Sync · Storage", glyph: "🔥" },
-  { label: "React Router", detail: "Navigation", glyph: "🧭" },
+// Stack technique présentée sobrement (nom · version · rôle), sans emoji ni carte
+// tape-à-l'oeil : un registre « fiche technique » assumé.
+const STACK = [
+  { name: "React", version: "19", role: "Interface" },
+  { name: "Vite", version: "8", role: "Build & dev" },
+  { name: "Firebase", version: "12", role: "Backend & données" },
+  { name: "React Router", version: "7", role: "Navigation" },
 ];
 
 function Section({ icon, title, children }) {
@@ -61,42 +62,43 @@ export function AboutModal({ onClose }) {
 
         <div style={{ height: 1, background: "var(--border)" }} />
 
-        {/* Auteur */}
-        <Section icon="leaf" title="Conçu & développé par">
-          <Row as="a" justify="space-between" gap={10} href={GITHUB_URL} target="_blank" rel="noopener noreferrer"
-            style={{ padding: "11px 14px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", textDecoration: "none", transition: "border-color 0.15s, background 0.15s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.13)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.18)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.07)"; }}>
-            <Col>
-              <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>Corentin Ducloux</span>
-              <span style={{ fontSize: 11, color: "var(--text3)" }}>@CDucloux · GitHub</span>
-            </Col>
-            <Icon name="externalLink" size={16} color="var(--text3)" />
-          </Row>
-        </Section>
-
-        {/* Crédits */}
-        <Section icon="sparkle" title="Construit avec">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 }}>
-            {CREDITS.map(c => (
-              <Row key={c.label} gap={10} style={{ padding: "10px 12px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)" }}>
-                <IconChip size={30} radius={9} tint="var(--surface)" style={{ border: "1px solid rgba(var(--accent-rgb),0.18)", fontSize: 15 }}>{c.glyph}</IconChip>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", whiteSpace: "nowrap" }}>{c.label}</div>
-                  <div style={{ fontSize: 10.5, color: "var(--text3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.detail}</div>
-                </div>
-              </Row>
-            ))}
-          </div>
-        </Section>
-
-        {/* Licence */}
+        {/* Licence (en premier) */}
         <Section icon="fileText" title="Licence">
           <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6 }}>
             Logiciel propriétaire – <strong style={{ color: "var(--text)" }}>tous droits réservés</strong>. Le code
             source, le design et les contenus associés ne peuvent être copiés, distribués ou modifiés sans
             autorisation écrite.
           </div>
+        </Section>
+
+        {/* Stack technique (fiche sobre : nom · version · rôle) */}
+        <Section icon="terminal" title="Stack technique">
+          <Col style={{ background: "rgba(var(--accent-rgb),0.05)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+            {STACK.map((s, i) => (
+              <Row key={s.name} justify="space-between" gap={12}
+                style={{ padding: "10px 14px", borderTop: i ? "1px solid var(--border)" : "none" }}>
+                <Row gap={8} style={{ minWidth: 0 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{s.name}</span>
+                  <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 11, color: "var(--text3)", background: "var(--surface2)", padding: "1px 6px", borderRadius: 6 }}>v{s.version}</span>
+                </Row>
+                <span style={{ fontSize: 11.5, color: "var(--text3)", whiteSpace: "nowrap" }}>{s.role}</span>
+              </Row>
+            ))}
+          </Col>
+        </Section>
+
+        {/* Nous contacter */}
+        <Section icon="mail" title="Nous contacter">
+          <Row as="a" justify="space-between" gap={10} href={CONTACT_MAILTO}
+            style={{ padding: "11px 14px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", textDecoration: "none", transition: "border-color 0.15s, background 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.13)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.18)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.07)"; }}>
+            <Col style={{ minWidth: 0 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Une question, un bug, une idée ?</span>
+              <span style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{CONTACT_EMAIL}</span>
+            </Col>
+            <Icon name="mail" size={16} color="var(--text3)" />
+          </Row>
         </Section>
 
         <div style={{ height: 1, background: "var(--border)" }} />

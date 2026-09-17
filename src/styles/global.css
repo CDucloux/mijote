@@ -2583,8 +2583,10 @@ select {
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
+  /* `!important` : le bouton porte un `background: var(--surface2)` en style inline
+     qui, sinon, l'emporte sur ce survol (le fond ne changerait jamais). */
   .cook-close-btn:hover {
-    background: var(--surface3);
+    background: var(--surface3) !important;
     color: var(--text);
   }
 
@@ -4345,6 +4347,158 @@ select {
 .tech-confuse { transition: background-color 0.15s ease; }
 .tech-confuse:active { background: var(--surface2); }
 @media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
+
+/* Pills à bascule de l'éditeur d'étape (ingrédients liés, ustensiles liés) : fond,
+   liseré et couleur pilotés en CSS pour un survol desktop (le fond/liseré inline
+   bloquait tout :hover). État lié via [data-active] ; au survol, la pill s'appuie
+   d'un cran (l'inactive se réchauffe, l'active appuie son accent). */
+.step-link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.step-link-pill[data-active] {
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.5);
+}
+@media (hover: hover) {
+  .step-link-pill:hover { background: var(--surface3); border-color: var(--text3); color: var(--text); }
+  .step-link-pill[data-active]:hover { background: rgba(var(--accent-rgb), 0.2); border-color: var(--accent); color: var(--accent); }
+}
+
+/* Pill « Retirer » (éditeur d'étape : photo, astuce) : pastille fantôme sobre qui
+   s'appuie au survol desktop pour se signaler comme cliquable. */
+.step-remove-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+@media (hover: hover) {
+  .step-remove-pill:hover { background: var(--surface2); color: var(--text2); }
+}
+
+/* Boutons flottants sur une photo d'étape (le « x » et la pill « Changer ») : fond
+   sombre translucide piloté en CSS pour un survol desktop qui l'appuie. */
+.img-overlay-btn { background: rgba(0, 0, 0, 0.6); transition: background-color 0.15s ease; }
+@media (hover: hover) {
+  .img-overlay-btn:hover { background: rgba(0, 0, 0, 0.82); }
+}
+
+/* Pills de classement (éditeur : type de recette, style de cuisine) : fond, liseré
+   et couleur pilotés en CSS pour un survol desktop (le fond/liseré inline bloquait
+   tout :hover). État actif via [data-active] ; au survol, chaque pill s'appuie d'un
+   cran (l'inactive se réchauffe vers une surface plus claire, l'active vers l'accent). */
+.classement-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--text2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.classement-pill[data-active] {
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.5);
+}
+@media (hover: hover) {
+  .classement-pill:hover { background: var(--surface2); border-color: var(--text3); color: var(--text); }
+  .classement-pill[data-active]:hover { background: rgba(var(--accent-rgb), 0.2); border-color: var(--accent); color: var(--accent); }
+}
+
+/* Lien discret « Effacer la recherche » (état vide des recettes) : au survol desktop,
+   il prend un fond en pilule pour se signaler comme cliquable. */
+.empty-clear-link {
+  background: transparent;
+  color: var(--text3);
+  padding: 7px 14px;
+  border-radius: 999px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+@media (hover: hover) {
+  .empty-clear-link:hover { background: var(--surface2); color: var(--text2); }
+}
+
+/* Chip « Étape N » de la mise en place (saut vers l'étape d'origine d'une découpe) :
+   fond d'accent piloté en CSS (et non inline) pour un survol desktop qui l'appuie. */
+.cook-step-link { background: rgba(var(--accent-rgb), 0.10); }
+.cook-step-link:active { background: rgba(var(--accent-rgb), 0.20); }
+@media (hover: hover) {
+  .cook-step-link:hover { background: rgba(var(--accent-rgb), 0.20); }
+}
+
+/* Bouton « Minuteur N min » (mentions de temps d'une étape) : fond et liseré épice
+   pilotés en CSS (et non inline) pour un survol desktop qui appuie le tabac et le
+   liseré. */
+.cook-timer-btn {
+  background: rgba(var(--spice-rgb), 0.13);
+  border: 1px solid rgba(var(--spice-rgb), 0.38);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.cook-timer-btn:active { background: rgba(var(--spice-rgb), 0.22); }
+@media (hover: hover) {
+  .cook-timer-btn:hover { background: rgba(var(--spice-rgb), 0.22); border-color: rgba(var(--spice-rgb), 0.55); }
+}
+
+/* Bouton « Plus de détails » d'une pastille de technique : fond piloté en CSS (à
+   partir de la couleur de catégorie passée en `--tech-accent`) pour permettre un
+   survol desktop qui appuie le tabac de fond. */
+.tech-more { background: color-mix(in srgb, var(--tech-accent) 13%, transparent); transition: background-color 0.15s ease; }
+.tech-more:active { background: color-mix(in srgb, var(--tech-accent) 22%, transparent); }
+@media (hover: hover) {
+  .tech-more:hover { background: color-mix(in srgb, var(--tech-accent) 24%, transparent); }
+}
+
+/* Rangées de la feuille de conversion en cuillères (mode sélection d'unité) :
+   fond piloté en CSS (et non inline) pour que le survol desktop puisse l'emporter.
+   L'unité active porte un tabac d'accent ; au survol, chaque rangée se surligne
+   d'un cran (l'active un peu plus appuyée). L'appui tactile reprend le même cran. */
+.convert-row { background: transparent; transition: background-color 0.15s ease; }
+.convert-row.is-active { background: rgba(var(--accent-rgb), 0.09); }
+.convert-row:active { background: rgba(var(--accent-rgb), 0.06); }
+.convert-row.is-active:active { background: rgba(var(--accent-rgb), 0.14); }
+@media (hover: hover) {
+  .convert-row:hover { background: rgba(var(--accent-rgb), 0.06); }
+  .convert-row.is-active:hover { background: rgba(var(--accent-rgb), 0.14); }
+}
+
+/* Bouton « Revenir à N g » (retour à l'unité d'origine) : fond et liseré pilotés en
+   CSS (et non inline, qui bloquerait tout :hover) pour offrir un liseré d'accent au
+   survol desktop, comme les autres lignes sobres, texte qui s'affirme. */
+.convert-reset {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+@media (hover: hover) {
+  .convert-reset:hover { border-color: var(--accent); color: var(--text); }
+}
 
 /* Le nombre de portions « rebondit » à chaque changement. */
 .tap-bump {

@@ -58,7 +58,15 @@
 .imp-creator .row2 { display: flex; align-items: center; gap: 7px; margin-top: 3px; }
 .imp-tag { font-size: 10.5px; font-weight: 600; color: var(--text2); background: var(--surface2); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
 .imp-net { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; color: var(--ok); }
-.imp-extl { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface2); color: var(--text3); }
+.imp-extl { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface2); color: var(--text3); transition: background 0.15s ease, color 0.15s ease; }
+
+/* Survols desktop : onglets d'import (le texte se réchauffe comme le segment
+   « Découvrir / À suivre »), et lignes de sources recommandées (fond + puce de lien). */
+@media (hover: hover) {
+  .imp-seg button:not(.on):hover { color: var(--text2); }
+  .imp-creator:hover { background: rgba(var(--accent-rgb), 0.06); }
+  .imp-creator:hover .imp-extl { background: rgba(var(--accent-rgb), 0.14); color: var(--accent); }
+}
 .imp-shelf-foot { display: flex; justify-content: center; padding: 10px; border-top: 1px solid var(--border); }
 .imp-shelf-foot button { font-family: var(--ff-body); font-size: 12.5px; font-weight: 600; color: var(--accent); background: none; border: none; cursor: pointer; padding: 4px 10px; }
 

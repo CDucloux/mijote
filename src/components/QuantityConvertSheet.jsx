@@ -45,6 +45,9 @@ export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSele
   const selectable = typeof onSelectUnit === "function";
   return (
     <SwipeableSheet onClose={onClose} zIndex={zIndex}>
+      {(close) => (
+      <>{/* `close(cb)` rejoue la sortie animée PUIS exécute l'action : choisir une
+             unité ou revenir aux grammes ne fait plus disparaître la feuille d'un coup. */}
       {/* En-tête : vignette + nom en display, source de conversion en pilule accent. */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: selectable ? 14 : 22 }}>
         {ing.image
@@ -73,7 +76,7 @@ export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSele
       <div style={{ background: "var(--surface2)", borderRadius: 20, overflow: "hidden" }}>
         {ing.spoons.map((s, i) => {
           const active = selectable && selectedUnit === s.unit;
-          const rowStyle = { display: "flex", alignItems: "center", gap: 14, width: "100%", padding: "16px 18px", borderTop: i ? "1px solid var(--border)" : "none", textAlign: "left", background: active ? "rgba(var(--accent-rgb),0.09)" : "transparent" };
+          const rowStyle = { display: "flex", alignItems: "center", gap: 14, width: "100%", padding: "16px 18px", borderTop: i ? "1px solid var(--border)" : "none", textAlign: "left" };
           const inner = (
             <>
               <span style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.13)", display: "grid", placeItems: "center" }}>
@@ -95,14 +98,14 @@ export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSele
             </>
           );
           return selectable
-            ? <button key={s.unit} type="button" className="pressable" onClick={() => onSelectUnit(s.unit)} style={{ ...rowStyle, border: "none", borderTop: rowStyle.borderTop, cursor: "pointer" }}>{inner}</button>
-            : <div key={s.unit} style={rowStyle}>{inner}</div>;
+            ? <button key={s.unit} type="button" className={`pressable convert-row${active ? " is-active" : ""}`} onClick={() => close(() => onSelectUnit(s.unit))} style={{ ...rowStyle, border: "none", borderTop: rowStyle.borderTop, cursor: "pointer" }}>{inner}</button>
+            : <div key={s.unit} style={{ ...rowStyle, background: "transparent" }}>{inner}</div>;
         })}
       </div>
 
       {selectable && selectedUnit && (
-        <button type="button" className="pressable" onClick={onReset}
-          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, width: "100%", marginTop: 12, padding: "11px 0", borderRadius: 14, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
+        <button type="button" className="pressable convert-reset" onClick={() => close(onReset)}
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, width: "100%", marginTop: 12, padding: "11px 0", borderRadius: 14, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
           <Icon name="undo" size={15} color="var(--text3)" /> Revenir à {fmtQty(ing.amount, ing.unit)} {pluralizeUnit(ing.amount, ing.unit)}
         </button>
       )}
@@ -112,6 +115,8 @@ export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSele
         <span style={{ marginTop: 1, flexShrink: 0, display: "flex" }}><Icon name="info" size={13} color="var(--text3)" /></span>
         <span>Équivalences indicatives, cuillères rases. Pour les poudres, la conversion dépend de la densité et reste approximative.</span>
       </p>
+      </>
+      )}
     </SwipeableSheet>
   );
 }
