@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.47.1 – Cardamome · Fin de cuisson corrigée
+
+### Corrigé
+- **Écran de fin du mode cuisine** : le croquis montrait une cloche soulevée qui fumait au-dessus du vide. On dresse désormais une portion sur l'assiette, d'où monte la vapeur, et l'illustration est agrandie.
+
 ## v4.47.0 – Cardamome · Fin de cuisson soignée et guide bien relié
 
 ### Interface

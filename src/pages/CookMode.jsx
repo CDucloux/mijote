@@ -542,7 +542,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       {done && !subCook && (
         <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: "calc(32px + max(env(safe-area-inset-top) - 8px, 0px)) 32px calc(32px + max(env(safe-area-inset-bottom) - 8px, 0px))", textAlign: "center" }}>
           <div style={{ animation: "popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)", marginBottom: 20 }}>
-            <EmptyArt name="service" size={148} style={{ color: "var(--text)" }} />
+            <EmptyArt name="service" size={188} style={{ color: "var(--text)" }} />
           </div>
           <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em", marginBottom: 12, animation: "popIn 0.6s 0.2s both cubic-bezier(0.34,1.56,0.64,1)" }}>
             {isNested ? "Base terminée !" : "Félicitations !"}
