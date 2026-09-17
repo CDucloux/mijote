@@ -788,8 +788,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   {stepDurations.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
                       {stepDurations.map(d => (
-                        <button key={d.minutes} onClick={() => addTimer(d)} className="pressable"
-                          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(var(--spice-rgb),0.13)", color: "var(--spice)", border: "1px solid rgba(var(--spice-rgb),0.38)" }}>
+                        <button key={d.minutes} onClick={() => addTimer(d)} className="pressable cook-timer-btn"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--spice)" }}>
                           <Icon name="clock" size={14} color="var(--spice)" /> Minuteur {d.label}
                         </button>
                       ))}

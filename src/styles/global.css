@@ -4348,6 +4348,19 @@ select {
 .tech-confuse:active { background: var(--surface2); }
 @media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
 
+/* Bouton « Minuteur N min » (mentions de temps d'une étape) : fond et liseré épice
+   pilotés en CSS (et non inline) pour un survol desktop qui appuie le tabac et le
+   liseré. */
+.cook-timer-btn {
+  background: rgba(var(--spice-rgb), 0.13);
+  border: 1px solid rgba(var(--spice-rgb), 0.38);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.cook-timer-btn:active { background: rgba(var(--spice-rgb), 0.22); }
+@media (hover: hover) {
+  .cook-timer-btn:hover { background: rgba(var(--spice-rgb), 0.22); border-color: rgba(var(--spice-rgb), 0.55); }
+}
+
 /* Bouton « Plus de détails » d'une pastille de technique : fond piloté en CSS (à
    partir de la couleur de catégorie passée en `--tech-accent`) pour permettre un
    survol desktop qui appuie le tabac de fond. */
