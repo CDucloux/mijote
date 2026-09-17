@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.48.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.49.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -67,7 +67,9 @@ toujours avec vous.
   **100 crédits intelligents** : 1 crédit par lien / texte / PDF, 2 par photo,
   avec un garde-fou journalier discret ; illimité pour l'administrateur). Les quatre modes vivent sur un écran unique à
   onglets, avec une sélection de **sources recommandées** (configurable en console
-  admin) sur l'import depuis un lien.
+  admin) sur l'import depuis un lien. Un **premier import offert** accueille les
+  non-abonnés avec une recette découverte, pour goûter la fonctionnalité sans
+  abonnement.
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
   « intelligents », dérivés d'un filtre).
 - 🌍 **Style de cuisine** : un champ unique parmi une liste prédéfinie
