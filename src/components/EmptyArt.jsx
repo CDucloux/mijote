@@ -191,6 +191,37 @@ const ARTS = {
       <circle className="ink-accent" cx="60" cy="63.5" r="1.5" fill="var(--accent)" />
     </>
   ),
+  // Cloche de service SOULEVÉE au-dessus d'un plat qui fume : le geste du « c'est
+  // prêt, à table ». La cloche flotte, laissant un jour entre elle et l'assiette ;
+  // par ce jour s'échappe la vapeur, seul accent chaud, qui monte et se dissipe.
+  // Pas une célébration criarde (ni confettis ni emojis) : la fierté tranquille
+  // d'un plat servi. Écran de fin du mode cuisine (recette terminée).
+  service: (
+    <>
+      <g className="ink-body" fill="currentColor">
+        {/* ombre au sol sous l'assiette */}
+        <ellipse cx="60" cy="99" rx="30" ry="3.4" opacity="0.1" />
+        {/* creux de l'assiette (lavis de volume) */}
+        <ellipse cx="60" cy="86" rx="20" ry="2.8" opacity="0.08" />
+        {/* assiette : anneau plein vu de trois quarts (rebord effilé) */}
+        <path fillRule="evenodd" d="M60 79 C78 79 91 82 91 86 C91 90 78 93 60 93 C42 93 29 90 29 86 C29 82 42 79 60 79 Z M60 83 C49 83 41 84.4 41 86 C41 87.6 49 89 60 89 C71 89 79 87.6 79 86 C79 84.4 71 83 60 83 Z" />
+        {/* jour de lumière sous la cloche soulevée (le plat respire) */}
+        <path opacity="0.1" d="M40 66 C40 51 49 43 60 43 C71 43 80 51 80 66 Z" />
+        {/* dôme de la cloche : paroi effilée (fine au sommet, épaisse au rebord),
+            un peu inégale, comme tirée au pinceau */}
+        <path d="M38 66 C38 48 48 40 60 40 C72 40 82 48 82 66 C80 51 71 45 60 45 C49 45 40 51 38 66 Z" />
+        {/* rebord de la cloche : lentille effilée */}
+        <path d="M38 66 C49 69 71 69 82 66 C71 68 49 68 38 66 Z" />
+        {/* prise au sommet : petit dôme + tige courte */}
+        <path d="M56 40 C56 35 64 35 64 40 C62 37 58 37 56 40 Z" />
+        <path d="M58 36 C58 32 62 32 62 36 C61 34 59 34 58 36 Z" />
+      </g>
+      {/* accent unique : la vapeur qui s'échappe par le jour, montant le long des
+          flancs de la cloche puis se dissipant (jamais de va-et-vient). */}
+      <path className="ink-steam" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M50 74 C45 69 53 65 48 60 C45 56 50 53 47 49" />
+      <path className="ink-steam2" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M70 74 C75 69 67 65 72 60 C75 56 70 53 73 49" />
+    </>
+  ),
   // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
   // là. Pour l'état vide « bientôt vide » du stock quand rien n'est à racheter.
   liste: (
@@ -214,7 +245,7 @@ const ARTS = {
 /**
  * Illustration d'état vide au trait, avec le rendu « encre » commun.
  *
- * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `etagere`, `cloche`, `liste`, `bibliotheque`).
+ * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `etagere`, `cloche`, `service`, `liste`, `bibliotheque`).
  * @param size Côté du carré de rendu en pixels (viewBox interne fixe).
  * @param style Styles complémentaires posés sur le `<svg>` (ex. marge basse).
  */

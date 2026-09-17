@@ -17,7 +17,7 @@ Depuis l'onglet Recettes, touche **Nouvelle recette**. Tu renseignes le titre, l
 
 ## Importer une recette
 
-> **À noter** : l'import intelligent fait partie de **Cardamome+**. Voir le sujet *Gratuit et Cardamome+*.
+> **À noter** : l'import intelligent fait partie de **Cardamome+**. Voir le sujet [Gratuit et Cardamome+](/guide/offre).
 
 Tu as déjà une recette ailleurs ? Quatre chemins, au choix :
 

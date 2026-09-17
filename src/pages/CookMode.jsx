@@ -24,6 +24,7 @@ import { AutoResizeTextarea } from "../components/AutoResizeTextarea.jsx";
 import { RatingPicker } from "../components/RatingPicker.jsx";
 import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
+import { EmptyArt } from "../components/EmptyArt.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 
@@ -540,11 +541,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
       {done && !subCook && (
         <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: "calc(32px + max(env(safe-area-inset-top) - 8px, 0px)) 32px calc(32px + max(env(safe-area-inset-bottom) - 8px, 0px))", textAlign: "center" }}>
-          {["🍽️", "✨", "🎉", "👨‍🍳", "⭐", "🥳"].map((e, i) => (
-            <span key={i} style={{ position: "absolute", fontSize: 28 + i * 4, animation: `floatUp ${1.2 + i * 0.3}s ease forwards`, animationDelay: `${i * 0.15}s`, left: `${10 + i * 14}%`, top: `${60 + Math.sin(i) * 15}%`, pointerEvents: "none" }}>{e}</span>
-          ))}
-          <div style={{ animation: "popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)", marginBottom: 24 }}>
-            <div style={{ fontSize: 72, lineHeight: 1 }}>🍳</div>
+          <div style={{ animation: "popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)", marginBottom: 20 }}>
+            <EmptyArt name="service" size={148} style={{ color: "var(--text)" }} />
           </div>
           <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em", marginBottom: 12, animation: "popIn 0.6s 0.2s both cubic-bezier(0.34,1.56,0.64,1)" }}>
             {isNested ? "Base terminée !" : "Félicitations !"}

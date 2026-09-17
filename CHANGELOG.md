@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.47.0 – Cardamome · Fin de cuisson soignée et guide bien relié
+
+### Interface
+- **Écran de fin du mode cuisine** : la ribambelle d'emojis flottants (poêle, confettis, chef) laisse place à un croquis à l'encre dédié, une cloche de service soulevée sur un plat qui fume, dans le même style fait-main que les autres illustrations de l'app.
+- **Renvois du guide cliquables** : les mentions d'un sujet du guide vers un autre (« Voir le sujet Gratuit et Cardamome+ », « Cuisiner à plusieurs »…), jusqu'ici en simple italique, deviennent de vrais liens qui ouvrent la section concernée.
+
 ## v4.46.0 – Cardamome · Finitions desktop et interactions soignées
 
 ### Interface
