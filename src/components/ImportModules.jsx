@@ -4,6 +4,7 @@ import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { PlusBadge } from "./PlusBadge.jsx";
 import { monogramOf, tintOf } from "@/lib/sources/recommendedSources.js";
 import { CREDIT_COST } from "@/lib/aiQuota.js";
+import { GIFT_OFFER } from "@/lib/onboarding/giftRecipe.js";
 
 // ─── BRIQUES DE LA PAGE D'IMPORT INTELLIGENT ────────────────────────────────
 // Présentation pure (aucune I/O) : contrôle segmenté, intro par mode, quota
@@ -232,6 +233,41 @@ export function ImportPlusGate({ mode, onClose, onUpgrade }) {
           </p>
           <button onClick={() => close(onUpgrade)} className="btn btn-primary btn-pill" style={{ width: "100%", justifyContent: "center", padding: "13px 20px" }}>
             <Icon name="sparkle" size={16} color="#fff" /> Passer à Cardamome+
+          </button>
+          <button onClick={() => close()} className="pressable" style={{ marginTop: 8, width: "100%", padding: 11, background: "transparent", border: "none", color: "var(--text3)", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
+            Plus tard
+          </button>
+        </div>
+      )}
+    </SwipeableSheet>
+  );
+}
+
+/**
+ * Feuille d'OFFRE de la recette découverte : présentée à un non-abonné à sa
+ * première tentative d'import, à la place du mur d'offre, tant que le cadeau n'a
+ * pas été consommé. Le montage est ASSUMÉ (recette offerte, pas le résultat de sa
+ * saisie) : on nomme la recette et on invite à la découvrir. Présentation pure ;
+ * l'import et le marquage « déjà utilisé » sont délégués à `onAccept`.
+ */
+export function ImportGiftOffer({ onAccept, onClose }) {
+  return (
+    <SwipeableSheet onClose={onClose}>
+      {(close) => (
+        <div style={{ textAlign: "center", padding: "2px 2px 4px" }}>
+          <span style={{ width: 52, height: 52, borderRadius: 16, background: "var(--accent)", display: "inline-grid", placeItems: "center", boxShadow: "0 8px 20px -8px rgba(var(--accent-rgb),0.65)", marginBottom: 14 }}>
+            <Icon name="gift" size={24} color="#fff" weight="fill" />
+          </span>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 8px" }}>Ton premier import est offert</h3>
+          <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, maxWidth: 320, margin: "0 auto 6px" }}>
+            Pour te montrer la magie de l'import intelligent, on t'offre une recette découverte.
+          </p>
+          <p style={{ fontSize: 13.5, color: "var(--text1)", fontWeight: 600, lineHeight: 1.5, maxWidth: 320, margin: "0 auto 18px" }}>
+            {GIFT_OFFER.title}
+            <span style={{ display: "block", fontWeight: 500, color: "var(--text3)", fontSize: 12.5, marginTop: 2 }}>{GIFT_OFFER.teaser}</span>
+          </p>
+          <button onClick={() => close(onAccept)} className="btn btn-primary btn-pill" style={{ width: "100%", justifyContent: "center", padding: "13px 20px" }}>
+            <Icon name="sparkle" size={16} color="#fff" /> Importer la recette offerte
           </button>
           <button onClick={() => close()} className="pressable" style={{ marginTop: 8, width: "100%", padding: 11, background: "transparent", border: "none", color: "var(--text3)", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
             Plus tard

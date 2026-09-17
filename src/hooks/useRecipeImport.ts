@@ -2,6 +2,7 @@ import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImpo
 import { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText, importRecipeFromPdf, type ImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import { uploadImage } from "@/lib/firebase/storage.js";
 import { applianceImportInfos, sanitizeStepUtensilParams } from "@/lib/utensils/appliances.js";
+import { GIFT_RECIPE } from "@/lib/onboarding/giftRecipe.js";
 import type { Recipe } from "@/lib/types.js";
 
 /** base64 (sans préfixe) → Blob, pour ré-uploader une photo importée vers Storage. */
@@ -103,5 +104,10 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeI
     return { method };
   };
 
-  return { importFromUrl, importFromImages, importFromText, importFromPdf };
+  // Recette découverte OFFERTE (non-abonné, 1er import) : aucun appel serveur, on
+  // ouvre le brouillon pré-écrit via le même pipeline (dbId + Nutri-Score + tri des
+  // ustensiles) pour un rendu identique à un vrai import. Cf. `@/lib/onboarding`.
+  const importGift = (): void => { openImportedDraft(GIFT_RECIPE); };
+
+  return { importFromUrl, importFromImages, importFromText, importFromPdf, importGift };
 }

@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.49.0 – Cardamome · Recette découverte offerte
+
+### Import intelligent
+- **Un premier import offert aux non-abonnés** : à l'arrivée sur l'écran d'import, un non-abonné qui n'a encore rien importé se voit offrir une **recette découverte** (Tarte au citron meringuée). Il vit l'effet « import magique » de bout en bout (analyse animée puis brouillon complet dans l'éditeur, prêt à relire), pour goûter la fonctionnalité sans abonnement.
+- **Une seule fois, puis l'offre** : le cadeau consommé, la tentative d'import suivante ramène au mur d'offre Cardamome+ habituel. Le suivi est synchronisé entre appareils.
+- **Ouverture directe et discrète** : la feuille cadeau s'ouvre d'elle-même à l'entrée sur l'écran, calée sur l'animation de transition ; elle ne s'affiche jamais par erreur à un abonné.
+
 ## v4.48.0 – Cardamome · Crédits intelligents
 
 ### Import intelligent
