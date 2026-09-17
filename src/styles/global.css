@@ -4359,9 +4359,15 @@ select {
   .convert-row.is-active:hover { background: rgba(var(--accent-rgb), 0.14); }
 }
 
-/* Bouton « Revenir à N g » (retour à l'unité d'origine) : liseré d'accent au survol
-   desktop, comme les autres lignes sobres, texte qui s'affirme. */
-.convert-reset { transition: border-color 0.15s ease, color 0.15s ease; }
+/* Bouton « Revenir à N g » (retour à l'unité d'origine) : fond et liseré pilotés en
+   CSS (et non inline, qui bloquerait tout :hover) pour offrir un liseré d'accent au
+   survol desktop, comme les autres lignes sobres, texte qui s'affirme. */
+.convert-reset {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
 @media (hover: hover) {
   .convert-reset:hover { border-color: var(--accent); color: var(--text); }
 }
