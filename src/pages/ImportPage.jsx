@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { ErrorModal } from "../components/ErrorModal.jsx";
 import { LoadingOverlay } from "../components/ImportUI.jsx";
-import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate } from "../components/ImportModules.jsx";
+import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate, ImportGiftOffer } from "../components/ImportModules.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
 import { CREDIT_COST } from "@/lib/aiQuota.js";
@@ -31,9 +31,12 @@ const URL_RE = /^https?:\/\/.+/i;
 const MIN_TEXT_LEN = 40;
 const MAX_PHOTOS = 2;
 const MAX_PDF_BYTES = 20_000_000;
+// Durée de l'overlay pour la recette découverte offerte : aucun appel serveur, on
+// simule un temps d'analyse crédible pour préserver l'effet « import magique ».
+const GIFT_FAKE_MS = 6500;
 
 export function ImportPage({ mode = "lien" }) {
-  const { importFromUrl, importFromImages, importFromText, importFromPdf, sources, notify, isPlus, isAdmin, user } = useAppShell();
+  const { importFromUrl, importFromImages, importFromText, importFromPdf, importGift, giftImportUsed, markGiftImportUsed, sources, notify, isPlus, isAdmin, user } = useAppShell();
   const { unlimited, credits, canImport } = useAiUsage(user?.uid, isAdmin);
   const kind = KIND_BY_MODE[mode];
   const navigate = useNavigate();
@@ -48,6 +51,8 @@ export function ImportPage({ mode = "lien" }) {
   const [error, setError] = useState("");          // hint de saisie (inline)
   const [importError, setImportError] = useState(null); // échec réel → popup
   const [gate, setGate] = useState(false);         // mur d'offre (non-abonné)
+  const [giftOffer, setGiftOffer] = useState(false); // feuille d'offre cadeau (non-abonné)
+  const [gifting, setGifting] = useState(false);   // import cadeau en cours (overlay simulé)
   const [loading, setLoading] = useState(false);
   const [drag, setDrag] = useState(false);
   const urlRef = useRef(null);
@@ -134,9 +139,10 @@ export function ImportPage({ mode = "lien" }) {
   const blocked = !unlimited && !canImport(kind);
 
   const go = async () => {
-    // Mur d'offre : c'est ICI, à la tentative d'import, qu'on bloque un non-abonné,
-    // pas à l'entrée de l'écran (il a pu tout découvrir et composer sa saisie).
-    if (!isPlus) { setGate(true); return; }
+    // Non-abonné : à la tentative d'import, on lui OFFRE d'abord une recette
+    // découverte (une seule fois, cf. `giftImportUsed`). Le cadeau consommé, on
+    // bascule sur le mur d'offre Cardamome+ comme avant.
+    if (!isPlus) { if (giftImportUsed) setGate(true); else setGiftOffer(true); return; }
     if (!navigator.onLine) { setError("Pas de connexion internet. L'import intelligent a besoin d'être en ligne."); return; }
     if (blocked) { setError(credits.monthLeft < CREDIT_COST[kind] ? "Tu as utilisé tous tes crédits d'import ce mois-ci. Ça repart le mois prochain." : "Beaucoup d'imports aujourd'hui. Reprends demain, tes crédits du mois sont intacts."); return; }
     if (!ready) return;
@@ -162,7 +168,19 @@ export function ImportPage({ mode = "lien" }) {
     }
   };
 
-  const estimateMs = mode === "photo" ? 20000 + photos.length * 7000 : mode === "texte" ? 22000 : mode === "pdf" ? 23000 : 24000;
+  // Recette découverte offerte : overlay simulé puis ouverture du brouillon pré-écrit
+  // (aucun appel serveur). On marque le cadeau consommé AVANT l'ouverture de l'éditeur
+  // (qui démonte la page par navigation), pour que le flag soit posé de façon fiable.
+  const runGift = async () => {
+    setGiftOffer(false); setError(""); setGifting(true); setLoading(true);
+    await new Promise(r => setTimeout(r, GIFT_FAKE_MS));
+    markGiftImportUsed();
+    importGift();
+    notify?.("Recette offerte importée, à toi de la relire");
+  };
+
+  const estimateMs = gifting ? GIFT_FAKE_MS
+    : mode === "photo" ? 20000 + photos.length * 7000 : mode === "texte" ? 22000 : mode === "pdf" ? 23000 : 24000;
 
   // ── Briques partagées entre les deux mises en page ──
   const linkField = (
@@ -270,6 +288,9 @@ export function ImportPage({ mode = "lien" }) {
   const overlays = (
     <>
       {loading && <LoadingOverlay estimateMs={estimateMs} />}
+      {giftOffer && (
+        <ImportGiftOffer onAccept={runGift} onClose={() => setGiftOffer(false)} />
+      )}
       {gate && (
         <ImportPlusGate mode={mode} onClose={() => setGate(false)}
           onUpgrade={() => { setGate(false); navigate("/plan"); }} />

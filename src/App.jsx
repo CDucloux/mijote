@@ -203,7 +203,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     if (to) navigate(to, { replace: true });
   }, [navigate]);
   // Import de recette (URL / photos) → ouvre l'éditeur sur le brouillon (useRecipeImport).
-  const { importFromUrl, importFromImages, importFromText, importFromPdf } = useRecipeImport({ ingredientDB, utensilDB, openEditor: openDraftEditor });
+  const { importFromUrl, importFromImages, importFromText, importFromPdf, importGift } = useRecipeImport({ ingredientDB, utensilDB, openEditor: openDraftEditor });
   // Restauration du brouillon : on arrive sur /recipes/new sans brouillon en
   // mémoire (rafraîchissement, retour arrière) → on rejoue le cache s'il existe,
   // sinon la route n'a plus d'objet → retour propre à la bibliothèque.
@@ -271,15 +271,22 @@ function AppInner({ user, isDark, toggleTheme }) {
     importFromImages: (...a) => shellApiRef.current.importFromImages?.(...a),
     importFromText: (...a) => shellApiRef.current.importFromText?.(...a),
     importFromPdf: (...a) => shellApiRef.current.importFromPdf?.(...a),
+    importGift: (...a) => shellApiRef.current.importGift?.(...a),
     logActivity: (...a) => shellApiRef.current.logActivity?.(...a),
   }), []);
   // Accès à l'offre Cardamome+ : abonnement Stripe actif (extension Firebase) OU
   // admin (accès complet du propriétaire de l'app).
   const subscription = useSubscription(user?.uid);
   const isPlus = isAdmin || subscription.active;
+  // Recette découverte offerte (non-abonné) : disponible tant qu'elle n'a pas été
+  // consommée ; le flag vit dans les préférences (synchro Firestore multi-appareils).
+  const giftImportUsed = preferences?.giftImportUsed === true;
+  const markGiftImportUsed = useCallback(() => {
+    setPreferences(p => ({ ...p, giftImportUsed: true }));
+  }, [setPreferences]);
   const shellValue = useMemo(
-    () => ({ user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, ...stableApi }),
-    [user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, stableApi]
+    () => ({ user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, giftImportUsed, markGiftImportUsed, ...stableApi }),
+    [user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, giftImportUsed, markGiftImportUsed, stableApi]
   );
 
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
@@ -629,7 +636,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // bord, et ces fonctions ne sont appelées que sur action utilisateur (jamais au
   // render ni dans un effet de montage), donc jamais lue avant d'être remplie.
   // eslint-disable-next-line react-hooks/refs
-  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages, importFromText, importFromPdf, logActivity };
+  shellApiRef.current = { signOut: handleSignOut, toggleTheme, getSharedData, loadDirectory, importFromUrl, importFromImages, importFromText, importFromPdf, importGift, logActivity };
 
   return (
     <AppShellProvider value={shellValue}>

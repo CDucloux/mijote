@@ -11,6 +11,9 @@ export const DEFAULT_PREFERENCES = {
   // Journal de cuisine : jour `YYYY-MM-DD` → liste d'ids de recettes RÉELLEMENT
   // cuisinées (mode pas à pas mené jusqu'au bout). Alimente la heatmap du profil.
   cookLog: {},
+  // Recette découverte offerte (non-abonné, 1er import) déjà consommée : garde-fou
+  // « une seule fois », synchronisé multi-appareils via meta/preferences.
+  giftImportUsed: false,
 };
 
 export const DIETS = [
@@ -36,6 +39,7 @@ export function normalizePreferences(p) {
     excludedCategories: Array.isArray(src.excludedCategories) ? src.excludedCategories.filter(x => typeof x === "string") : [],
     dislikes: Array.isArray(src.dislikes) ? src.dislikes.filter(x => typeof x === "string") : [],
     cookLog: normalizeCookLog(src.cookLog),
+    giftImportUsed: src.giftImportUsed === true,
   };
 }
 
