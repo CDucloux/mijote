@@ -3352,9 +3352,13 @@ select {
     transition: background-color .18s ease, color .18s ease;
   }
 
-  .icon-btn-soft:hover {
-    background: var(--surface3) !important;
-    color: var(--text) !important;
+  /* Le rond de fond n'apparaît qu'au survol souris (desktop) : sur tactile, le
+     retour visuel passe par l'onde `.ripple`, pas par un hover qui resterait figé. */
+  @media (hover: hover) {
+    .icon-btn-soft:hover {
+      background: var(--surface3) !important;
+      color: var(--text) !important;
+    }
   }
 
   /* Hero back button: chevron nudges left + slight grow on hover */
