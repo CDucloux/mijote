@@ -257,7 +257,7 @@ export function ImportPage({ mode = "lien" }) {
 
   const header = (
     <div className="imp-hdr">
-      <button className="imp-back" aria-label="Retour" onClick={() => navigate(-1)}>
+      <button className="imp-back import-back" aria-label="Retour" onClick={() => navigate(-1)}>
         <Icon name="back" size={17} color="currentColor" />
       </button>
       <h1>Importer</h1>
