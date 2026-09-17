@@ -91,15 +91,32 @@ export function ImportPage({ mode = "lien" }) {
     return () => { alive = false; };
   }, [mode]);
 
+  // Non-abonné qui n'a pas encore reçu son cadeau : la recette découverte offerte
+  // s'ouvre DIRECTEMENT à l'arrivée sur l'écran, sans clic. Ouverture temporisée
+  // (calée sur l'animation d'entrée) : si le statut d'abonnement se résout entre
+  // temps (un abonné démarre à `isPlus` faux le temps du snapshot Stripe), le timer
+  // est annulé et la feuille ne flashe pas. `giftDismissed` empêche la réouverture
+  // après un « Plus tard ».
+  const giftPending = !isPlus && !giftImportUsed;
+  const giftDismissed = useRef(false);
+  useEffect(() => {
+    if (!giftPending || giftDismissed.current) return;
+    const t = setTimeout(() => setGiftOffer(true), 420);
+    return () => clearTimeout(t);
+  }, [giftPending]);
+
   // Focus différé (la page/onglet entre en glissant : un focus immédiat ouvrirait le
   // clavier pendant la transition). Seulement sur écran large ou après l'animation.
+  // Pas de focus tant que la feuille cadeau est susceptible de s'ouvrir (clavier
+  // mobile qui surgirait derrière la feuille).
   useEffect(() => {
+    if (giftPending) return;
     const t = setTimeout(() => {
       if (mode === "lien") urlRef.current?.focus();
       else if (mode === "texte") textRef.current?.focus();
     }, 380);
     return () => clearTimeout(t);
-  }, [mode]);
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectMode = (m) => { if (m !== mode) navigate(`/recipes/${ROUTE_BY_MODE[m]}`, { replace: true }); };
 
@@ -289,7 +306,7 @@ export function ImportPage({ mode = "lien" }) {
     <>
       {loading && <LoadingOverlay estimateMs={estimateMs} />}
       {giftOffer && (
-        <ImportGiftOffer onAccept={runGift} onClose={() => setGiftOffer(false)} />
+        <ImportGiftOffer onAccept={runGift} onClose={() => { giftDismissed.current = true; setGiftOffer(false); }} />
       )}
       {gate && (
         <ImportPlusGate mode={mode} onClose={() => setGate(false)}
