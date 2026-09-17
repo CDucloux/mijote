@@ -191,35 +191,37 @@ const ARTS = {
       <circle className="ink-accent" cx="60" cy="63.5" r="1.5" fill="var(--accent)" />
     </>
   ),
-  // Cloche de service SOULEVÉE au-dessus d'un plat qui fume : le geste du « c'est
-  // prêt, à table ». La cloche flotte, laissant un jour entre elle et l'assiette ;
-  // par ce jour s'échappe la vapeur, seul accent chaud, qui monte et se dissipe.
-  // Pas une célébration criarde (ni confettis ni emojis) : la fierté tranquille
-  // d'un plat servi. Écran de fin du mode cuisine (recette terminée).
+  // Cloche de service SOULEVÉE révélant un plat garni qui fume : le geste du
+  // « c'est prêt, à table ». La cloche flotte au-dessus de l'assiette ; dessous,
+  // une portion dressée d'où monte la vapeur, seul accent chaud (elle vient bien
+  // de la nourriture, jamais d'une cloche vide). Pas une célébration criarde
+  // (ni confettis ni emojis) : la fierté tranquille d'un plat servi. Écran de fin
+  // du mode cuisine (recette terminée).
   service: (
     <>
       <g className="ink-body" fill="currentColor">
         {/* ombre au sol sous l'assiette */}
-        <ellipse cx="60" cy="99" rx="30" ry="3.4" opacity="0.1" />
-        {/* creux de l'assiette (lavis de volume) */}
-        <ellipse cx="60" cy="86" rx="20" ry="2.8" opacity="0.08" />
+        <ellipse cx="60" cy="104" rx="36" ry="3.8" opacity="0.1" />
         {/* assiette : anneau plein vu de trois quarts (rebord effilé) */}
-        <path fillRule="evenodd" d="M60 79 C78 79 91 82 91 86 C91 90 78 93 60 93 C42 93 29 90 29 86 C29 82 42 79 60 79 Z M60 83 C49 83 41 84.4 41 86 C41 87.6 49 89 60 89 C71 89 79 87.6 79 86 C79 84.4 71 83 60 83 Z" />
-        {/* jour de lumière sous la cloche soulevée (le plat respire) */}
-        <path opacity="0.1" d="M40 66 C40 51 49 43 60 43 C71 43 80 51 80 66 Z" />
+        <path fillRule="evenodd" d="M60 85 C83 85 99 88 99 92 C99 96 83 99 60 99 C37 99 21 96 21 92 C21 88 37 85 60 85 Z M60 89 C46 89 36 90.5 36 92 C36 93.5 46 95 60 95 C74 95 84 93.5 84 92 C84 90.5 74 89 60 89 Z" />
+        {/* portion dressée sur l'assiette (lavis de volume + mont irrégulier) */}
+        <ellipse cx="60" cy="88" rx="19" ry="2.6" opacity="0.08" />
+        <path d="M41 89 C42 82 46 78 51 79 C53 74 60 74 62 79 C67 77 72 80 72 84 C77 83 80 86 80 89 C66 91 52 91 41 89 Z" />
+        {/* jour de lumière sous la cloche soulevée (elle respire) */}
+        <path opacity="0.1" d="M39 58 C39 39 48 27 60 27 C72 27 81 39 81 58 Z" />
         {/* dôme de la cloche : paroi effilée (fine au sommet, épaisse au rebord),
             un peu inégale, comme tirée au pinceau */}
-        <path d="M38 66 C38 48 48 40 60 40 C72 40 82 48 82 66 C80 51 71 45 60 45 C49 45 40 51 38 66 Z" />
+        <path d="M36 58 C36 37 46 26 60 26 C74 26 84 37 84 58 C81 40 72 33 60 33 C48 33 39 40 36 58 Z" />
         {/* rebord de la cloche : lentille effilée */}
-        <path d="M38 66 C49 69 71 69 82 66 C71 68 49 68 38 66 Z" />
+        <path d="M36 58 C48 61 72 61 84 58 C72 60 48 60 36 58 Z" />
         {/* prise au sommet : petit dôme + tige courte */}
-        <path d="M56 40 C56 35 64 35 64 40 C62 37 58 37 56 40 Z" />
-        <path d="M58 36 C58 32 62 32 62 36 C61 34 59 34 58 36 Z" />
+        <path d="M55 26 C55 20 65 20 65 26 C63 23 57 23 55 26 Z" />
+        <path d="M57 22 C57 18 63 18 63 22 C62 20 58 20 57 22 Z" />
       </g>
-      {/* accent unique : la vapeur qui s'échappe par le jour, montant le long des
-          flancs de la cloche puis se dissipant (jamais de va-et-vient). */}
-      <path className="ink-steam" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M50 74 C45 69 53 65 48 60 C45 56 50 53 47 49" />
-      <path className="ink-steam2" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" d="M70 74 C75 69 67 65 72 60 C75 56 70 53 73 49" />
+      {/* accent unique : la vapeur qui monte de la portion, s'élevant dans le jour
+          entre le plat et la cloche puis se dissipant (jamais de va-et-vient). */}
+      <path className="ink-steam" fill="none" stroke="var(--accent)" strokeWidth="1.9" strokeLinecap="round" d="M52 78 C47 72 55 68 50 62 C47 58 52 54 49 49" />
+      <path className="ink-steam2" fill="none" stroke="var(--accent)" strokeWidth="1.9" strokeLinecap="round" d="M68 78 C73 72 65 68 70 62 C73 58 68 54 71 49" />
     </>
   ),
   // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
