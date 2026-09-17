@@ -63,7 +63,7 @@
 /* Survols desktop : onglets d'import (le texte se réchauffe comme le segment
    « Découvrir / À suivre »), et lignes de sources recommandées (fond + puce de lien). */
 @media (hover: hover) {
-  .imp-seg button:not(.on):hover { color: var(--text); }
+  .imp-seg button:not(.on):hover { color: var(--text2); }
   .imp-creator:hover { background: rgba(var(--accent-rgb), 0.06); }
   .imp-creator:hover .imp-extl { background: rgba(var(--accent-rgb), 0.14); color: var(--accent); }
 }
