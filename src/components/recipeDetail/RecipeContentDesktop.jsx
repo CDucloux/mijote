@@ -15,7 +15,7 @@ import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "..
  * via `view` (contexte de rendu partagé avec la version mobile).
  */
 export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
-  const { mult, recipesById, getIngImage, getUtImage, getIngReco, getUtPrecaution, resolveComp, navigate } = view;
+  const { mult, recipesById, getIngImage, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, navigate } = view;
   const [precSheet, setPrecSheet] = useState(null);
   return (
     <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: "12px 16px 16px", gap: 16 }}>
@@ -124,12 +124,16 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                           </span>
                           );
                         })}
-                        {cUts.map(u => (
+                        {cUts.map(u => {
+                          const detail = getUtDetail(u, cstep);
+                          return (
                           <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
                             <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
                             {u.name}
+                            {detail && <span style={{ color: "var(--text3)", fontWeight: 400 }}>{detail}</span>}
                           </span>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -174,12 +178,16 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                         </span>
                         );
                       })}
-                      {linkedUts.map(u => (
+                      {linkedUts.map(u => {
+                        const detail = getUtDetail(u, step);
+                        return (
                         <span key={u.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
                           <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
                           {u.name}
+                          {detail && <span style={{ color: "var(--text3)", fontWeight: 400 }}>{detail}</span>}
                         </span>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                   {step.image && <Img src={step.image} alt={`Étape ${num}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 12, marginTop: 12 }} />}
