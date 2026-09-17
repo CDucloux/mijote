@@ -21,7 +21,7 @@ export function PublishSheet({ recipe, componentDeps, onClose, onPublish }) {
           </div>
         </div>
         <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: recipe.source ? 16 : 12, lineHeight: 1.5 }}>
-          Elle rejoindra la communauté Cardamome : chacun pourra la découvrir et l'ajouter à ses recettes. Vous en restez l'auteur·e et pouvez la retirer à tout moment.
+          Elle rejoindra la communauté Cardamome : chacun pourra la découvrir et l'ajouter à ses recettes. Tu en restes l'auteur·e et peux la retirer à tout moment.
         </p>
         {recipe.source && (
           <div style={{ borderRadius: 16, background: "rgba(224,146,10,0.08)", border: "1px solid rgba(224,146,10,0.22)", padding: 16, marginBottom: 18 }}>
@@ -32,7 +32,7 @@ export function PublishSheet({ recipe, componentDeps, onClose, onPublish }) {
               <span style={{ fontSize: 13.5, fontWeight: 650, color: "var(--text)" }}>Attention au droit d'auteur</span>
             </div>
             <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5 }}>
-              Cette recette provient d'une source externe. Ne republiez que ce dont vous avez le droit : reformulez les étapes avec vos propres mots et n'utilisez pas de textes ou de photos protégés dont vous n'êtes pas l'auteur·e.
+              Cette recette provient d'une source externe. Ne republie que ce dont tu as le droit : reformule les étapes avec tes propres mots et n'utilise pas de textes ou de photos protégés dont tu n'es pas l'auteur·e.
             </div>
           </div>
         )}
