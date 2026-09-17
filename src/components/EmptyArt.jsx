@@ -191,37 +191,34 @@ const ARTS = {
       <circle className="ink-accent" cx="60" cy="63.5" r="1.5" fill="var(--accent)" />
     </>
   ),
-  // Cloche de service SOULEVÉE révélant un plat garni qui fume : le geste du
-  // « c'est prêt, à table ». La cloche flotte au-dessus de l'assiette ; dessous,
-  // une portion dressée d'où monte la vapeur, seul accent chaud (elle vient bien
-  // de la nourriture, jamais d'une cloche vide). Pas une célébration criarde
-  // (ni confettis ni emojis) : la fierté tranquille d'un plat servi. Écran de fin
-  // du mode cuisine (recette terminée).
+  // Cloche de service POSÉE sur l'assiette : le plat est prêt, dressé et couvert,
+  // « c'est servi ». Un dôme franc reposant sur son assiette (rien ne flotte, rien
+  // ne fume, pas de portion à deviner). Seul accent chaud : le bouton de préhension
+  // au sommet, la petite prise qu'on saisit pour découvrir. Pas une célébration
+  // criarde (ni confettis ni emojis) : la fierté tranquille d'un plat servi. Écran
+  // de fin du mode cuisine (recette terminée).
   service: (
     <>
       <g className="ink-body" fill="currentColor">
         {/* ombre au sol sous l'assiette */}
-        <ellipse cx="60" cy="104" rx="36" ry="3.8" opacity="0.1" />
-        {/* assiette : anneau plein vu de trois quarts (rebord effilé) */}
-        <path fillRule="evenodd" d="M60 85 C83 85 99 88 99 92 C99 96 83 99 60 99 C37 99 21 96 21 92 C21 88 37 85 60 85 Z M60 89 C46 89 36 90.5 36 92 C36 93.5 46 95 60 95 C74 95 84 93.5 84 92 C84 90.5 74 89 60 89 Z" />
-        {/* portion dressée sur l'assiette (lavis de volume + mont irrégulier) */}
-        <ellipse cx="60" cy="88" rx="19" ry="2.6" opacity="0.08" />
-        <path d="M41 89 C42 82 46 78 51 79 C53 74 60 74 62 79 C67 77 72 80 72 84 C77 83 80 86 80 89 C66 91 52 91 41 89 Z" />
-        {/* jour de lumière sous la cloche soulevée (elle respire) */}
-        <path opacity="0.1" d="M39 58 C39 39 48 27 60 27 C72 27 81 39 81 58 Z" />
+        <ellipse cx="60" cy="101" rx="37" ry="3.8" opacity="0.1" />
+        {/* assiette : disque vu de trois quarts, plus large que la base de la cloche */}
+        <path d="M60 83 C85 83 101 86 101 89.5 C101 93 85 96 60 96 C35 96 19 93 19 89.5 C19 86 35 83 60 83 Z" />
+        {/* lavis du creux de l'assiette (volume) */}
+        <ellipse cx="60" cy="88" rx="30" ry="3" opacity="0.08" />
+        {/* intérieur de la cloche (lavis de volume) */}
+        <path opacity="0.1" d="M39 83 C39 55 49 38 60 38 C71 38 81 55 81 83 Z" />
         {/* dôme de la cloche : paroi effilée (fine au sommet, épaisse au rebord),
-            un peu inégale, comme tirée au pinceau */}
-        <path d="M36 58 C36 37 46 26 60 26 C74 26 84 37 84 58 C81 40 72 33 60 33 C48 33 39 40 36 58 Z" />
-        {/* rebord de la cloche : lentille effilée */}
-        <path d="M36 58 C48 61 72 61 84 58 C72 60 48 60 36 58 Z" />
-        {/* prise au sommet : petit dôme + tige courte */}
-        <path d="M55 26 C55 20 65 20 65 26 C63 23 57 23 55 26 Z" />
-        <path d="M57 22 C57 18 63 18 63 22 C62 20 58 20 57 22 Z" />
+            un peu inégale, comme tirée au pinceau, reposant sur l'assiette */}
+        <path d="M35 83 C35 52 46 34 60 34 C74 34 85 52 85 83 C82 55 72 45 60 45 C48 45 38 55 35 83 Z" />
+        {/* rebord de la cloche posé sur l'assiette : lentille effilée */}
+        <path d="M35 83 C48 86 72 86 85 83 C72 85 48 85 35 83 Z" />
+        {/* tige courte reliant le dôme à sa prise */}
+        <path d="M57 35 C57 31 63 31 63 35 C62 33 58 33 57 35 Z" />
       </g>
-      {/* accent unique : la vapeur qui monte de la portion, s'élevant dans le jour
-          entre le plat et la cloche puis se dissipant (jamais de va-et-vient). */}
-      <path className="ink-steam" fill="none" stroke="var(--accent)" strokeWidth="1.9" strokeLinecap="round" d="M52 78 C47 72 55 68 50 62 C47 58 52 54 49 49" />
-      <path className="ink-steam2" fill="none" stroke="var(--accent)" strokeWidth="1.9" strokeLinecap="round" d="M68 78 C73 72 65 68 70 62 C73 58 68 54 71 49" />
+      {/* accent unique : le bouton de préhension au sommet, la touche chaude qu'on
+          saisit pour soulever la cloche (il « pose » à la fin, avec un léger rebond). */}
+      <path className="ink-accent" fill="var(--accent)" d="M53 33 C53 26 67 26 67 33 C63 30 57 30 53 33 Z" />
     </>
   ),
   // Petite liste toute cochée (coches en accent) : « rien à racheter », tout est
