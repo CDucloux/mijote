@@ -3679,6 +3679,10 @@ select {
   position: fixed;
   inset: 0;
   min-height: 0;
+  /* Cf. #boot-splash (index.html) : on centre dans la zone sûre pour que la gousse
+     ne saute pas quand l'edge-to-edge natif s'applique après la première peinture. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
 }
 
 .loading-pod {

@@ -100,6 +100,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Centrage dans la zone SÛRE, pas le viewport brut : au tout premier rendu le
+           WebView Android est encore posé sous la barre de statut (edge-to-edge pas
+           encore appliqué), les insets valent 0 et la gousse se centre dans la zone
+           visible ; une fois l'edge-to-edge appliqué (WebView plein écran), les insets
+           compensent exactement les barres, le centre visible reste identique. Sans ce
+           padding, le centre remontait de quelques pixels à la bascule = flicker. */
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        box-sizing: border-box;
         background: #0f110d;
         opacity: 1;
         transition: opacity 0.45s ease;
