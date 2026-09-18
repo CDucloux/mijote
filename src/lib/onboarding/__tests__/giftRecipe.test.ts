@@ -28,6 +28,16 @@ describe("GIFT_RECIPE", () => {
     }
   });
 
+  it("ne référence dans les étapes que des ids d'ingrédients/ustensiles existants", () => {
+    const ingIds = new Set((GIFT_RECIPE.ingredients ?? []).map(i => i.id));
+    const utIds = new Set((GIFT_RECIPE.utensils ?? []).map(u => u.id));
+    for (const s of GIFT_RECIPE.steps ?? []) {
+      for (const id of s.ingredients ?? []) expect(ingIds.has(id)).toBe(true);
+      for (const id of s.utensils ?? []) expect(utIds.has(id)).toBe(true);
+      for (const id of Object.keys(s.utensilParams ?? {})) expect(utIds.has(id)).toBe(true);
+    }
+  });
+
   it("traverse prepareRecipeImport sans erreur (bases vides)", () => {
     const res = prepareRecipeImport(JSON.stringify(GIFT_RECIPE), { ingredientDB: [], utensilDB: [] });
     expect("prepared" in res).toBe(true);

@@ -144,6 +144,8 @@ export interface Step {
    * donc aucune migration des recettes existantes.
    */
   utensilParams?: Record<string, Record<string, unknown>>;
+  /** Photo illustrant l'étape (URL). Absente = pas de visuel pour cette étape. */
+  image?: string;
   /** Libellé de la section/groupe (« Pour la pâte »). Vide/absent = section principale. */
   group?: string;
 }
