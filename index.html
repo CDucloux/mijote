@@ -91,6 +91,35 @@
          Réservé au contexte « app » (PWA installée / Capacitor, classe app-shell
          posée par le script d'en-tête) : dans un onglet de navigateur (desktop / web),
          aucun splash n'est peint, la page de chargement post-login prend le relais. -->
+    <!-- ┌─ FLICKER DE LA GOUSSE AU DÉMARRAGE (natif Android) : diagnostic + remède ─┐
+         Symptôme observé UNIQUEMENT sur l'app native Capacitor, à l'ouverture : la
+         gousse du splash n'est pas stable verticalement (elle « saute »).
+
+         CAUSE : le WebView Android n'est pas edge-to-edge dès la 1ʳᵉ peinture. Il
+         traverse DEUX bascules après le premier rendu, chacune déplaçant le centre du
+         viewport, donc la gousse centrée dedans :
+           1) WebView posé SOUS la barre de statut  ->  puis passe PLEIN ÉCRAN.
+              Le centre remonte de quelques px (barre de statut != barre de navigation).
+           2) Une fois plein écran, env(safe-area-inset-*) vaut encore 0 pendant ~1
+              frame (propagation native différée)  ->  puis reçoit ses vraies valeurs.
+              Pendant cette frame la gousse se centre trop haut, puis redescend.
+         Aucune de ces bascules n'est pilotable depuis le web (timing natif).
+
+         REMÈDE (deux pièces, ne pas en retirer une sans l'autre) :
+           A. Centrer dans la ZONE SÛRE (padding env(safe-area-inset-*) + box-sizing)
+              et non le viewport brut : rend la position identique AVANT et APRÈS
+              l'edge-to-edge (insets 0 = WebView déjà inséré ; insets réels = plein
+              écran moins les barres  ->  même zone visible). Tue la bascule (1).
+           B. Tenir la gousse INVISIBLE les toutes premières ms puis la révéler en
+              fondu (animation bootMarkReveal). Couvre la frame transitoire (2) où les
+              insets ne sont pas encore propagés ; le fond plat reste visible (identique
+              au splash natif), rien n'est perçu. Tue la bascule (2).
+
+         NE PAS retenter : aligner les unités dvh/svh/vh, ou tenir le splash jusqu'à
+         l'auth. Ces pistes ne touchent PAS la cause (re-layout natif du WebView) et
+         font perdre du temps. Le même duo A+B protège l'écran de chargement React
+         (.loading-root--boot dans global.css), même contexte natif.
+         └──────────────────────────────────────────────────────────────────────────┘ -->
     <style>
       #boot-splash { display: none; }
       html.app-shell #boot-splash {
@@ -100,12 +129,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        /* Centrage dans la zone SÛRE, pas le viewport brut : au tout premier rendu le
-           WebView Android est encore posé sous la barre de statut (edge-to-edge pas
-           encore appliqué), les insets valent 0 et la gousse se centre dans la zone
-           visible ; une fois l'edge-to-edge appliqué (WebView plein écran), les insets
-           compensent exactement les barres, le centre visible reste identique. Sans ce
-           padding, le centre remontait de quelques pixels à la bascule = flicker. */
+        /* Remède A du flicker de démarrage (cf. bloc de diagnostic ci-dessus) :
+           centrage dans la zone sûre pour une position stable à la bascule edge-to-edge. */
         padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         box-sizing: border-box;
         background: #0f110d;
@@ -121,11 +146,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        /* Gousse tenue invisible pendant les toutes premieres ms puis revelee : ca
-           couvre la frame transitoire ou le WebView est deja plein ecran mais ou
-           env(safe-area-inset-*) vaut encore 0 (pas encore mis a jour), pendant
-           laquelle la gousse se centrerait trop haut. Le fond plat reste visible,
-           rien n'est percu ; a la reapparition le layout est stabilise. */
+        /* Remède B du flicker de démarrage (cf. bloc de diagnostic ci-dessus) :
+           gousse invisible pendant les toutes premières ms puis révélée en fondu, le
+           temps que les insets se propagent et que le layout se stabilise. */
         animation: bootMarkReveal 0.34s ease-out both;
       }
       @keyframes bootMarkReveal {
