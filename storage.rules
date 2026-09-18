@@ -1,33 +1,28 @@
 rules_version = '2';
 
-// ─── Règles Firebase Storage : Mijoté ────────────────────────────────────────
-// Arborescence :
-//   users/{uid}/**   images privées de chaque utilisateur (photos de recettes…)
-//   master/**        images de la base partagée (lecture tous, écriture admin)
-//
+// Règles Firebase Storage Cardamome.
+// Convention : un bloc par préfixe, `allow` d'abord, commentaire bref au format
+// « qui lit / qui écrit » + le POURQUOI seulement s'il n'est pas évident.
 // Déploiement : `npx firebase deploy --only storage`
 
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-    function isSignedIn() {
-      return request.auth != null;
-    }
+    function isSignedIn() { return request.auth != null; }
     function isAdmin() {
       return isSignedIn()
              && request.auth.token.email_verified == true
              && request.auth.token.email == 'corentin.ducloux.edifice@gmail.com';
     }
-    // Upload valide : une image de moins de 5 Mo. `request.resource` est null lors
-    // d'une suppression → on laisse passer (la restriction de propriété suffit).
+    // Upload valide : image < 5 Mo. `request.resource` est null à la suppression
+    // (on laisse passer, la restriction de propriété suffit).
     function isValidImageUpload() {
       return request.resource == null
              || (request.resource.size < 5 * 1024 * 1024
                  && request.resource.contentType.matches('image/.*'));
     }
 
-    // ── Images perso : chacun dans son dossier ───────────────────────────────
+    // Images perso : le propriétaire seul.
     match /users/{userId}/{allPaths=**} {
       allow read: if isSignedIn() && request.auth.uid == userId;
       allow write: if isSignedIn()
@@ -35,7 +30,7 @@ service firebase.storage {
                    && isValidImageUpload();
     }
 
-    // ── Images Master : lecture pour tous les connectés, écriture admin only ──
+    // Images Master : lecture par tout connecté, écriture admin.
     match /master/{allPaths=**} {
       allow read: if isSignedIn();
       allow write: if isAdmin() && isValidImageUpload();
