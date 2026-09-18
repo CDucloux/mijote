@@ -61,7 +61,7 @@ import { ImportPage } from "./pages/ImportPage.jsx";
 import { PlanPage } from "./pages/PlanPage.jsx";
 import { NotificationsPage } from "./pages/NotificationsPage.jsx";
 import { GuidePage } from "./pages/GuidePage.jsx";
-import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
+import { TAB_BY_ID, tabForPath } from "./constants/tabs.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent,
 // et non à chaque render d'App (toast, statut de sync…). Requiert des props stables
@@ -78,7 +78,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : location.pathname.startsWith("/guide") ? "guide" : location.pathname.startsWith("/notifications") ? "notifications" : location.pathname.startsWith("/recipes") ? "recipes" : location.pathname.startsWith("/meal-plan") ? "meal-plan" : "home");
+  const tab = tabForPath(location.pathname);
   // Fiche ingrédient (/admin/ingredients/{id}) : page PUBLIQUE (lisible par tous, en
   // lecture seule pour les non-admins), on la laisse passer même hors console admin.
   const adminFiche = /^\/admin\/ingredients\/.+/.test(location.pathname);
@@ -534,27 +534,34 @@ function AppInner({ user, isDark, toggleTheme }) {
   }, [atTabView, tab]);
 
 
+  // Onglet réellement affiché sous la fiche. Pendant la sortie animée, l'URL est
+  // encore /recipes/:id (donc `tab` = "recipes"), mais on doit dévoiler l'onglet
+  // D'ORIGINE (planning, accueil…) mémorisé à l'ouverture, sinon la page recettes
+  // « flashe » avant que la navigation de fin d'animation rejoigne l'origine.
+  const originTab = location.state?.originPath ? tabForPath(location.state.originPath) : tab;
+  const visibleTab = dismissing ? originTab : tab;
+
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
       {/* Moniteur de perf : durée de rendu de chaque onglet. En dev → console ;
           en prod, brancher ici un envoi vers l'analytics si besoin. */}
-      <Profiler id={tab} onRender={(id, phase, actualDuration) => {
+      <Profiler id={visibleTab} onRender={(id, phase, actualDuration) => {
         if (import.meta.env.DEV) console.log(`⏱️ [${id}] ${phase} : ${actualDuration.toFixed(1)} ms`);
       }}>
       {/* Wrapper clé=tab : rejoue l'animation d'entrée à chaque changement d'onglet
           (Accueil, Recettes, Planning, Profil, Config, Légal…), qui apparaissaient
           jusqu'ici sans transition. */}
-      <div key={tab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} unreadCount={unreadCount} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
-      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
-      {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
-      {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} recipes={recipes} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
-      {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} components={recipes.filter(r => r.isComponent)} />}
-      {tab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources} />}
-      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
-      {tab === "legal" && <LegalPage />}
-      {tab === "guide" && <GuidePage />}
-      {tab === "notifications" && <NotificationsPage activities={activities} loading={activitiesLoading} />}
+      <div key={visibleTab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+      {visibleTab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} unreadCount={unreadCount} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
+      {visibleTab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
+      {visibleTab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
+      {visibleTab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} recipes={recipes} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
+      {visibleTab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} components={recipes.filter(r => r.isComponent)} />}
+      {visibleTab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources} />}
+      {visibleTab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
+      {visibleTab === "legal" && <LegalPage />}
+      {visibleTab === "guide" && <GuidePage />}
+      {visibleTab === "notifications" && <NotificationsPage activities={activities} loading={activitiesLoading} />}
       </div>
       </Profiler>
     </div>
