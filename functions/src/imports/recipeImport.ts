@@ -32,6 +32,7 @@ import {
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
 import { assertHostAllowed, BlockedHostError } from "./urlGuard.js";
+import { readFreshImport, writeImportCache } from "./importCache.js";
 
 /** Clé API Anthropic (secret), l'extraction IA est refusée si elle est absente. */
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
@@ -451,6 +452,13 @@ function applianceInfosFrom(request: CallableRequest): ApplianceInfo[] {
 export const importRecipeFromUrl = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const requestId = (request.data as { requestId?: unknown })?.requestId;
+    // Idempotence : si le même import a déjà abouti (réponse perdue côté client,
+    // app en arrière-plan…), on renvoie le résultat mémorisé sans re-débiter ni
+    // rappeler le LLM. On ne débite (assertImportAllowed) qu'en cas de cache absent.
+    const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
+    if (cached) return cached;
     await assertImportAllowed(request, ADMIN_EMAIL.value(), "url");
 
     const url = String((request.data as { url?: unknown })?.url || "").trim();
@@ -472,7 +480,9 @@ export const importRecipeFromUrl = onCall(
       for (const s of inter.steps) s.image = (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
-      return { recipe, method: "llm" };
+      const result = { recipe, method: "llm" };
+      await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
+      return result;
     } catch (e) {
       if (e instanceof HttpsError) throw e; // messages déjà lisibles
       logger.error("importRecipeFromUrl, erreur inattendue:", e);
@@ -493,6 +503,10 @@ export const importRecipeFromUrl = onCall(
 export const importRecipeFromImages = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const requestId = (request.data as { requestId?: unknown })?.requestId;
+    const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
+    if (cached) return cached;
     await assertImportAllowed(request, ADMIN_EMAIL.value(), "photo");
 
     const rawImages = (request.data as { images?: unknown })?.images;
@@ -516,7 +530,9 @@ export const importRecipeFromImages = onCall(
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");
-      return { recipe, method: "image", coverIndex };
+      const result = { recipe, method: "image", coverIndex };
+      await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
+      return result;
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       logger.error("importRecipeFromImages, erreur inattendue:", e);
@@ -539,6 +555,10 @@ const MIN_TEXT_LEN = 40;
 export const importRecipeFromText = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const requestId = (request.data as { requestId?: unknown })?.requestId;
+    const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
+    if (cached) return cached;
     await assertImportAllowed(request, ADMIN_EMAIL.value(), "text");
 
     const text = String((request.data as { text?: unknown })?.text || "").trim();
@@ -553,7 +573,9 @@ export const importRecipeFromText = onCall(
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un texte collé
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée dans ce texte.");
-      return { recipe, method: "text" };
+      const result = { recipe, method: "text" };
+      await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
+      return result;
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       logger.error("importRecipeFromText, erreur inattendue:", e);
@@ -575,6 +597,10 @@ export const importRecipeFromText = onCall(
 export const importRecipeFromPdf = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const requestId = (request.data as { requestId?: unknown })?.requestId;
+    const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
+    if (cached) return cached;
     await assertImportAllowed(request, ADMIN_EMAIL.value(), "pdf");
 
     const text = String((request.data as { text?: unknown })?.text || "").trim();
@@ -589,7 +615,9 @@ export const importRecipeFromPdf = onCall(
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un PDF texte
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée dans ce PDF.");
-      return { recipe, method: "pdf" };
+      const result = { recipe, method: "pdf" };
+      await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
+      return result;
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       logger.error("importRecipeFromPdf, erreur inattendue:", e);

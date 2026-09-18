@@ -14,7 +14,7 @@
 /** Message présenté quand l'import a été interrompu par un passage en arrière-plan. */
 export const IMPORT_INTERRUPTED: { code: string; message: string } = {
   code: "cancelled",
-  message: "L'import a été interrompu parce que Cardamome est passé en arrière-plan. Garde l'écran ouvert le temps de l'extraction, puis réessaie.",
+  message: "L'import a été interrompu parce que Cardamome est passé en arrière-plan. Réessaie en gardant l'écran ouvert : si l'extraction avait déjà abouti, elle te sera rendue sans re-consommer de crédit.",
 };
 
 /**

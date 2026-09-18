@@ -8,6 +8,7 @@
 import { httpsCallable, type HttpsCallableResult } from "firebase/functions";
 import { functions } from "@/lib/firebase/firebase.js";
 import { prepareImageForUpload, blobToBase64 } from "@/lib/firebase/imageResize.js";
+import { importRequestId } from "@/lib/recipes/importIdempotency.js";
 import type { ApplianceImportInfo } from "@/lib/utensils/appliances.js";
 
 /** Erreur d'import : conserve le `code` canonique Firebase (origine visible). */
@@ -60,7 +61,7 @@ export function mapImportError(e: unknown): ImportError {
 export async function importRecipeFromUrl(url: string, knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromUrl", { timeout: 70000 });
   try {
-    const res = await call({ url, knownUtensils, appliances });
+    const res = await call({ url, knownUtensils, appliances, requestId: importRequestId("url", url) });
     return res.data;
   } catch (e) {
     throw mapImportError(e);
@@ -81,7 +82,7 @@ export async function importRecipeFromUrl(url: string, knownUtensils: string[] =
 export async function importRecipeFromText(text: string, knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromText", { timeout: 70000 });
   try {
-    const res = await call({ text, knownUtensils, appliances });
+    const res = await call({ text, knownUtensils, appliances, requestId: importRequestId("text", text) });
     return res.data;
   } catch (e) {
     throw mapImportError(e);
@@ -102,7 +103,7 @@ export async function importRecipeFromText(text: string, knownUtensils: string[]
 export async function importRecipeFromPdf(text: string, knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromPdf", { timeout: 70000 });
   try {
-    const res = await call({ text, knownUtensils, appliances });
+    const res = await call({ text, knownUtensils, appliances, requestId: importRequestId("pdf", text) });
     return res.data;
   } catch (e) {
     throw mapImportError(e);
@@ -125,7 +126,7 @@ export interface ImagePart { mediaType: string; data: string }
 export async function importRecipeFromImages(images: ImagePart[], knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
   const call = httpsCallable(functions, "importRecipeFromImages", { timeout: 115000 });
   try {
-    const res: HttpsCallableResult = await call({ images, knownUtensils, appliances });
+    const res: HttpsCallableResult = await call({ images, knownUtensils, appliances, requestId: importRequestId("photo", images.map(i => i.data).join("|")) });
     return res.data;
   } catch (e) {
     throw mapImportError(e);
