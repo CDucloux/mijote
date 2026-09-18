@@ -13,6 +13,13 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Fond de fenetre = couleur de fond du theme (jour/nuit, cf. splash_background),
+             peint AVANT le premier rendu du WebView, y compris sous la barre systeme en
+             edge-to-edge. Evite le flash gris de la zone systeme au premier affichage
+             (fenetre par defaut du theme DayNight) avant que le WebView ne peigne son fond. -->
+        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
 
@@ -26,5 +33,9 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_none</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@color/splash_background</item>
+        <!-- Barres systeme transparentes des le lancement (edge-to-edge) : le fond du
+             splash peint sous elles, plus de bande grise en haut avant le WebView. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 </resources>
