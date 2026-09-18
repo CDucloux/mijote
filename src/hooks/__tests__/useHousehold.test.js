@@ -11,7 +11,7 @@ vi.mock("../../context/AppShellContext.jsx", () => ({
 // onSnapshot livre synchronement un snapshot selon le type de requête (membre/invite).
 vi.mock("firebase/firestore", () => ({
   onSnapshot: (q, onNext) => {
-    if (q?.type === "member") onNext({ docs: [{ data: () => ({ id: "h1", name: "Mon foyer" }) }] });
+    if (q?.type === "member") onNext({ docs: [{ id: "h1", data: () => ({ name: "Mon foyer" }) }] });
     else onNext({ docs: [] });
     return () => {};
   },
@@ -26,6 +26,7 @@ vi.mock("@/lib/firebase/firestore.js", () => ({
 }));
 
 import { useHousehold } from "../useHousehold.js";
+import { dissolveHousehold } from "@/lib/firebase/firestore.js";
 
 describe("useHousehold", () => {
   it("expose le foyer et sort de l'état loading après le 1er snapshot", () => {
@@ -46,5 +47,13 @@ describe("useHousehold", () => {
     const { result } = renderHook(() => useHousehold());
     expect(typeof result.current.actions.create).toBe("function");
     expect(typeof result.current.actions.leave).toBe("function");
+  });
+
+  // Non-régression : `.data()` ne porte pas l'id → la dissolution partait avec un
+  // hid `undefined` et plantait dans Firebase (« can't access property indexOf »).
+  it("dissout le foyer avec l'id du document (issu de doc.id, pas de data())", async () => {
+    const { result } = renderHook(() => useHousehold());
+    await result.current.actions.dissolve();
+    expect(dissolveHousehold).toHaveBeenCalledWith("h1", "u1");
   });
 });

@@ -45,7 +45,10 @@ export function useHousehold() {
     // Changement de compte : on repart d'un état vierge (pas de fuite entre uids).
     if (hhCache.uid !== user.uid) { hhCache = { uid: user.uid, household: null, invites: [] }; setLoading(true); }
     const unsubMember = onSnapshot(householdMemberQuery(user.uid), snap => {
-      const h = snap.docs[0]?.data() || null;
+      // `.data()` ne porte JAMAIS l'id du document : on le rattache ici, sinon les
+      // actions serveur (invitation, dissolution…) reçoivent `hid = undefined`.
+      const d = snap.docs[0];
+      const h = d ? { id: d.id, ...d.data() } : null;
       hhCache = { ...hhCache, uid: user.uid, household: h };
       setHousehold(h);
       setLoading(false);
