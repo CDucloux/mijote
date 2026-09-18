@@ -121,6 +121,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Gousse tenue invisible pendant les toutes premieres ms puis revelee : ca
+           couvre la frame transitoire ou le WebView est deja plein ecran mais ou
+           env(safe-area-inset-*) vaut encore 0 (pas encore mis a jour), pendant
+           laquelle la gousse se centrerait trop haut. Le fond plat reste visible,
+           rien n'est percu ; a la reapparition le layout est stabilise. */
+        animation: bootMarkReveal 0.34s ease-out both;
+      }
+      @keyframes bootMarkReveal {
+        0%, 32% { opacity: 0; }
+        100%    { opacity: 1; }
       }
       .boot-splash__logo {
         position: relative;
@@ -154,6 +164,7 @@
         50%      { transform: scale(1.035); }
       }
       @media (prefers-reduced-motion: reduce) {
+        .boot-splash__mark { animation: none; opacity: 1; }
         .boot-splash__logo,
         .boot-splash__pulse { animation: none; }
         .boot-splash__pulse { opacity: 0; }
