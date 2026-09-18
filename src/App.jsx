@@ -61,7 +61,7 @@ import { ImportPage } from "./pages/ImportPage.jsx";
 import { PlanPage } from "./pages/PlanPage.jsx";
 import { NotificationsPage } from "./pages/NotificationsPage.jsx";
 import { GuidePage } from "./pages/GuidePage.jsx";
-import { TAB_BY_PATH, TAB_BY_ID } from "./constants/tabs.js";
+import { TAB_BY_ID, tabForPath } from "./constants/tabs.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent,
 // et non à chaque render d'App (toast, statut de sync…). Requiert des props stables
@@ -78,7 +78,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   usePageZoom();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = TAB_BY_PATH[location.pathname] || (location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/profile") ? "profile" : location.pathname.startsWith("/legal") ? "legal" : location.pathname.startsWith("/guide") ? "guide" : location.pathname.startsWith("/notifications") ? "notifications" : location.pathname.startsWith("/recipes") ? "recipes" : location.pathname.startsWith("/meal-plan") ? "meal-plan" : "home");
+  const tab = tabForPath(location.pathname);
   // Fiche ingrédient (/admin/ingredients/{id}) : page PUBLIQUE (lisible par tous, en
   // lecture seule pour les non-admins), on la laisse passer même hors console admin.
   const adminFiche = /^\/admin\/ingredients\/.+/.test(location.pathname);
@@ -534,31 +534,47 @@ function AppInner({ user, isDark, toggleTheme }) {
   }, [atTabView, tab]);
 
 
+  // Onglet réellement affiché sous la fiche : l'onglet d'ORIGINE (planning, accueil…)
+  // mémorisé à l'ouverture, tant qu'une fiche privée est ouverte (ouverture,
+  // consultation ET sortie animée), et non l'onglet "recipes" dérivé de l'URL
+  // /recipes/:id. La couche d'onglet reste ainsi montée et IDENTIQUE de l'ouverture
+  // au retour : elle ne se démonte jamais en passant par une fiche, donc son
+  // animation d'entrée (page-enter) n'est pas rejouée au retour (fin du flicker), et
+  // sa position de défilement est conservée.
+  const originTab = location.state?.originPath ? tabForPath(location.state.originPath) : tab;
+  const visibleTab = (selectedRecipe && currentRecipe) ? originTab : tab;
+
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
       {/* Moniteur de perf : durée de rendu de chaque onglet. En dev → console ;
           en prod, brancher ici un envoi vers l'analytics si besoin. */}
-      <Profiler id={tab} onRender={(id, phase, actualDuration) => {
+      <Profiler id={visibleTab} onRender={(id, phase, actualDuration) => {
         if (import.meta.env.DEV) console.log(`⏱️ [${id}] ${phase} : ${actualDuration.toFixed(1)} ms`);
       }}>
       {/* Wrapper clé=tab : rejoue l'animation d'entrée à chaque changement d'onglet
           (Accueil, Recettes, Planning, Profil, Config, Légal…), qui apparaissaient
           jusqu'ici sans transition. */}
-      <div key={tab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      {tab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} unreadCount={unreadCount} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
-      {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
-      {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
-      {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} recipes={recipes} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
-      {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} components={recipes.filter(r => r.isComponent)} />}
-      {tab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources} />}
-      {tab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
-      {tab === "legal" && <LegalPage />}
-      {tab === "guide" && <GuidePage />}
-      {tab === "notifications" && <NotificationsPage activities={activities} loading={activitiesLoading} />}
+      <div key={visibleTab} className="page-enter" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+      {visibleTab === "home" && <HomePage recipes={recipes} mealPlan={mealPlan} shoppingLists={shoppingLists} lowStock={lowStock} stock={stock} ingredientDB={ingredientDB} activities={activities} unreadCount={unreadCount} preferences={preferences} loading={!workspaceReady || sharedHydrating} mode={location.pathname.startsWith("/discover") ? "discover" : "home"} onNavigateSubview={(v) => navigate(v === "discover" ? "/discover" : "/home")} onSelectRecipe={setSelectedRecipe} setTab={setTab} onOpenPublic={openPublic} onClonePublic={quickCloneFromPublic} onNewRecipe={startNewRecipe} onOpenIngredient={(ing) => navigate(`/admin/ingredients/${encodeURIComponent(ing.id)}`)} onExploreSeason={(ing) => goDiscover(ing?.name || "")} discoverSeed={discoverSeed} onDiscoverSeedConsumed={() => setDiscoverSeed("")} />}
+      {visibleTab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
+      {visibleTab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
+      {visibleTab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} recipes={recipes} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
+      {visibleTab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} components={recipes.filter(r => r.isComponent)} />}
+      {visibleTab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources} />}
+      {visibleTab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
+      {visibleTab === "legal" && <LegalPage />}
+      {visibleTab === "guide" && <GuidePage />}
+      {visibleTab === "notifications" && <NotificationsPage activities={activities} loading={activitiesLoading} />}
       </div>
       </Profiler>
     </div>
   );
+
+  // Corps de la fiche recette, monté à la fois pendant l'affichage et pendant la
+  // sortie animée (voir la branche `dismissing` plus bas), d'où sa factorisation.
+  const detailBody = selectedRecipe && currentRecipe ? (
+    <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => dismissDetail(() => setSelectedRecipe(null))} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
+  ) : null;
 
   const mainScreen = isEditing ? (
     <div key={recipeBeingEdited?.id || "new"} className={isDesktop ? "desktop-content editor-layout" : ""} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
@@ -611,10 +627,23 @@ function AppInner({ user, isDark, toggleTheme }) {
       <RecipeNotFound onBack={() => navigate("/discover")} />
     )
   ) : selectedRecipe && currentRecipe ? (
-    <div key={selectedRecipe} className={`${dismissing ? "page-dismiss-right" : "editor-enter"}${isDesktop ? " desktop-content" : ""}`}
-      onAnimationEnd={dismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); } : undefined}
-      style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => dismissDetail(() => setSelectedRecipe(null))} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
+    // Fiche privée montée en OVERLAY au-dessus de l'onglet d'origine, gardé monté
+    // dessous pendant TOUTE la vie de la fiche (ouverture → consultation → sortie).
+    // L'onglet ne se démonte donc jamais en passant par une fiche : plus de rejeu de
+    // l'animation d'entrée au retour (flicker), et son scroll est conservé. La fiche
+    // apparaît (editor-enter) puis, au recul, glisse vers la droite (page-dismiss-
+    // right) en dévoilant l'onglet, statique, déjà en place. `paddingTop` = réserve
+    // d'inset système rendue à l'onglet pendant que #root porte edge-hero (padding
+    // annulé pour le hero à fond perdu) ; la fiche en inset:0 couvre tout le padding
+    // box, son hero reste donc à fond perdu. Edge-hero ⇔ !isDesktop ici.
+    <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", boxSizing: "border-box", paddingTop: isDesktop ? 0 : "var(--safe-hero-top)" }}>
+      {tabContent}
+      <div key={selectedRecipe}
+        className={dismissing ? "page-dismiss-right" : `editor-enter${isDesktop ? " desktop-content" : ""}`}
+        onAnimationEnd={dismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); } : undefined}
+        style={{ position: "absolute", inset: 0, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, background: "var(--bg)", zIndex: 2 }}>
+        {detailBody}
+      </div>
     </div>
   ) : justDeleted ? (
     // Recette supprimée : la redirection vers /recipes est en cours, on n'affiche
@@ -622,7 +651,14 @@ function AppInner({ user, isDark, toggleTheme }) {
     null
   ) : selectedRecipe && !currentRecipe && workspaceReady ? (
     <RecipeNotFound onBack={() => navigate("/recipes")} />
-  ) : tabContent;
+  ) : (
+    // Même conteneur `relative` que la branche fiche ci-dessus : React réconcilie les
+    // deux (même type, même position) et NE démonte PAS `tabContent` au retour d'une
+    // fiche, ce qui évite le rejeu de page-enter et préserve le scroll de l'onglet.
+    <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column" }}>
+      {tabContent}
+    </div>
+  );
 
   // Fiche recette affichée en mobile (privée ou publique chargée) : le shell rend son
   // hero à fond perdu jusqu'en haut de la barre système. On coupe alors la réserve

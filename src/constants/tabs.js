@@ -12,6 +12,27 @@ export const TABS = [
 export const TAB_BY_PATH = Object.fromEntries(TABS.map(t => [t.path, t.id]));
 export const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t.path]));
 
+/**
+ * Déduit l'onglet actif d'un chemin d'URL. Les onglets ont un chemin exact
+ * (`TAB_BY_PATH`) ; les autres écrans (fiche recette, admin, profil…) retombent
+ * sur leur onglet parent par préfixe. Chemin vide / inconnu → `"home"`.
+ *
+ * @param {string | null | undefined} pathname - Chemin (`location.pathname`).
+ * @returns {string} L'identifiant d'onglet (`home`, `recipes`, `meal-plan`, …).
+ */
+export function tabForPath(pathname) {
+  if (!pathname) return "home";
+  if (TAB_BY_PATH[pathname]) return TAB_BY_PATH[pathname];
+  if (pathname.startsWith("/admin")) return "admin";
+  if (pathname.startsWith("/profile")) return "profile";
+  if (pathname.startsWith("/legal")) return "legal";
+  if (pathname.startsWith("/guide")) return "guide";
+  if (pathname.startsWith("/notifications")) return "notifications";
+  if (pathname.startsWith("/recipes")) return "recipes";
+  if (pathname.startsWith("/meal-plan")) return "meal-plan";
+  return "home";
+}
+
 // Console admin : sous-sections mappées sur l'URL.
 export const CONFIG_SECTION_BY_PATH = {
   "dashboard": "dashboard",

@@ -1,23 +1,31 @@
 package studio.cardamome.cooksession;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
+import android.support.v4.media.session.MediaSessionCompat;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import studio.cardamome.MainActivity;
 import studio.cardamome.R;
 
 /**
- * Construit et poste la notification « ongoing » du cook mode. Une seule barre
- * à la fois (identifiant fixe). Le décompte du minuteur pilote est délégué au
- * chronomètre système : posé une fois, il s'anime sans réveiller le JS.
+ * Construit et poste la notification « lecteur » du cook mode, façon appli
+ * musicale : grande pochette (photo de recette), barre de progression du
+ * minuteur, et contrôles Précédent / Pause / Suivant. S'appuie sur une
+ * {@link CookMedia session média} pour obtenir la tuile média d'Android et sa
+ * barre de progression. Une seule barre à la fois (identifiant fixe). La
+ * pochette se charge en fond ({@link CookArt}) et déclenche un rafraîchissement
+ * dès qu'elle est prête.
  */
 final class CookNotification {
 
@@ -29,6 +37,12 @@ final class CookNotification {
     static final String ACTION_PREV = "prev";
     static final String ACTION_TOGGLE = "toggleTimer";
     static final String ACTION_STOP = "stop";
+
+    /** Teinte de repli de la tuile média quand aucune pochette n'est disponible. */
+    private static final int ACCENT = 0xFF6F8F4E;
+
+    private static Context appContext = null;
+    private static CookSnapshot lastSnap = null;
 
     private CookNotification() {}
 
@@ -47,43 +61,35 @@ final class CookNotification {
 
     /** Poste (ou remplace) la barre avec l'état fourni. */
     static void show(Context ctx, CookSnapshot snap) {
-        ensureChannel(ctx);
+        appContext = ctx.getApplicationContext();
+        lastSnap = snap;
+        ensureChannel(appContext);
 
-        NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL_ID)
+        MediaSessionCompat.Token token = CookMedia.ensure(appContext);
+        Bitmap art = CookArt.cached(snap.imageUrl);
+        CookMedia.apply(snap, art);
+
+        NotificationCompat.Builder b = new NotificationCompat.Builder(appContext, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cook_notification)
                 .setContentTitle(snap.recipeTitle)
-                .setContentText(subtitle(snap))
+                .setContentText(CookMedia.subtitle(snap))
+                .setLargeIcon(art)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setSilent(true)
-                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+                .setColorized(true)
+                .setColor(ACCENT)
+                .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setContentIntent(openAppIntent(ctx));
+                .setContentIntent(openAppIntent(appContext));
 
-        if (snap.stepText != null && !snap.stepText.isEmpty()) {
-            b.setStyle(new NotificationCompat.BigTextStyle().bigText(snap.stepText));
-        }
+        int[] compact = addActions(appContext, b, snap);
 
-        // Décompte live du minuteur pilote, animé par l'OS (WebView gelée incluse).
-        if (snap.hasTimer && snap.timerRunning && snap.timerEndAt > System.currentTimeMillis()) {
-            b.setWhen(snap.timerEndAt).setUsesChronometer(true).setChronometerCountDown(true);
-        } else {
-            b.setShowWhen(false);
-        }
+        b.setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                .setMediaSession(token)
+                .setShowActionsInCompactView(compact));
 
-        if (snap.canPrev) {
-            b.addAction(0, "Précédent", actionIntent(ctx, ACTION_PREV, 1));
-        }
-        if (snap.hasTimer) {
-            b.addAction(0, snap.timerRunning ? "Pause" : "Reprendre",
-                    actionIntent(ctx, ACTION_TOGGLE, 2));
-        }
-        if (snap.canNext) {
-            b.addAction(0, "Suivant", actionIntent(ctx, ACTION_NEXT, 3));
-        }
-        b.addAction(0, "Terminer", actionIntent(ctx, ACTION_STOP, 4));
-
-        NotificationManagerCompat nm = NotificationManagerCompat.from(ctx);
+        NotificationManagerCompat nm = NotificationManagerCompat.from(appContext);
         if (nm.areNotificationsEnabled()) {
             try {
                 nm.notify(NOTIF_ID, b.build());
@@ -91,19 +97,53 @@ final class CookNotification {
                 // Permission POST_NOTIFICATIONS refusée : la barre est un confort.
             }
         }
+
+        // Pochette pas encore décodée : on la charge en fond puis on re-poste la
+        // barre enrichie (le snapshot courant peut avoir changé entre-temps).
+        if (art == null && snap.imageUrl != null && !snap.imageUrl.isEmpty()) {
+            CookArt.load(snap.imageUrl, bmp -> {
+                if (appContext != null && lastSnap != null) show(appContext, lastSnap);
+            });
+        }
     }
 
-    /** Retire la barre. */
+    /** Retire la barre et libère la session média. */
     static void hide(Context ctx) {
         NotificationManagerCompat.from(ctx).cancel(NOTIF_ID);
+        CookMedia.release();
+        CookArt.clear();
+        lastSnap = null;
     }
 
-    /** Deuxième ligne : position d'étape, complétée du minuteur si présent. */
-    private static String subtitle(CookSnapshot snap) {
-        if (snap.hasTimer && snap.timerLabel != null && !snap.timerLabel.isEmpty()) {
-            return snap.stepLabel + " · " + snap.timerLabel;
+    /**
+     * Ajoute les boutons de transport et renvoie les index à montrer en vue
+     * compacte (max 3). Ordre : Précédent, Pause/Reprendre (si minuteur), Suivant,
+     * Terminer. La compacte privilégie Précédent, Pause/Reprendre et Suivant.
+     */
+    private static int[] addActions(Context ctx, NotificationCompat.Builder b, CookSnapshot snap) {
+        List<Integer> compact = new ArrayList<>();
+        int idx = 0;
+
+        if (snap.canPrev) {
+            b.addAction(R.drawable.ic_media_prev, "Précédent", actionIntent(ctx, ACTION_PREV, 1));
+            compact.add(idx++);
         }
-        return snap.stepLabel;
+        if (snap.hasTimer) {
+            int icon = snap.timerRunning ? R.drawable.ic_media_pause : R.drawable.ic_media_play;
+            b.addAction(icon, snap.timerRunning ? "Pause" : "Reprendre", actionIntent(ctx, ACTION_TOGGLE, 2));
+            compact.add(idx++);
+        }
+        if (snap.canNext) {
+            b.addAction(R.drawable.ic_media_next, "Suivant", actionIntent(ctx, ACTION_NEXT, 3));
+            compact.add(idx++);
+        }
+        int stopIdx = idx;
+        b.addAction(R.drawable.ic_media_stop, "Terminer", actionIntent(ctx, ACTION_STOP, 4));
+        if (compact.size() < 3) compact.add(stopIdx);
+
+        int[] out = new int[Math.min(3, compact.size())];
+        for (int i = 0; i < out.length; i++) out[i] = compact.get(i);
+        return out;
     }
 
     private static PendingIntent openAppIntent(Context ctx) {

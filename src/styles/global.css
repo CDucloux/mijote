@@ -3664,6 +3664,59 @@ select {
   letter-spacing: 0.01em;
 }
 
+/* Chargement sur coquille app : reprend À L'IDENTIQUE la gousse qui pulse du splash
+   d'ouverture (#boot-splash, index.html) pour un indicateur UNIQUE et continu du
+   boot jusqu'à l'app (pas de second loader marmite). Réutilise volontairement les
+   keyframes globales `bootPulse` / `bootBreathe` déclarées dans index.html, pour
+   que les deux gousses restent parfaitement synchronisées visuellement. */
+.loading-pod {
+  position: relative;
+  width: 116px;
+  height: 116px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-pod__logo {
+  position: relative;
+  z-index: 1;
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  animation: bootBreathe 2.6s ease-in-out infinite;
+}
+
+.loading-pod__pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #75a63f;
+  opacity: 0;
+  animation: bootPulse 2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.loading-root.light .loading-pod__pulse {
+  border-color: #6e9a3f;
+}
+
+.loading-pod__pulse.delay {
+  animation-delay: 1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-pod__logo {
+    animation: none;
+  }
+
+  .loading-pod__pulse {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 /* ── ÉCRAN DE CONNEXION ────────────────────────────────────────────────────────
    Deux panneaux (pitch marketing + zone d'auth) sur desktop, colonne compacte sur
    mobile. Réutilise les tokens partagés (surfaces, accent, typo, rayons, --red) :
