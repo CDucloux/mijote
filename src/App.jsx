@@ -534,12 +534,15 @@ function AppInner({ user, isDark, toggleTheme }) {
   }, [atTabView, tab]);
 
 
-  // Onglet réellement affiché sous la fiche. Pendant la sortie animée, l'URL est
-  // encore /recipes/:id (donc `tab` = "recipes"), mais on doit dévoiler l'onglet
-  // D'ORIGINE (planning, accueil…) mémorisé à l'ouverture, sinon la page recettes
-  // « flashe » avant que la navigation de fin d'animation rejoigne l'origine.
+  // Onglet réellement affiché sous la fiche : l'onglet d'ORIGINE (planning, accueil…)
+  // mémorisé à l'ouverture, tant qu'une fiche privée est ouverte (ouverture,
+  // consultation ET sortie animée), et non l'onglet "recipes" dérivé de l'URL
+  // /recipes/:id. La couche d'onglet reste ainsi montée et IDENTIQUE de l'ouverture
+  // au retour : elle ne se démonte jamais en passant par une fiche, donc son
+  // animation d'entrée (page-enter) n'est pas rejouée au retour (fin du flicker), et
+  // sa position de défilement est conservée.
   const originTab = location.state?.originPath ? tabForPath(location.state.originPath) : tab;
-  const visibleTab = dismissing ? originTab : tab;
+  const visibleTab = (selectedRecipe && currentRecipe) ? originTab : tab;
 
   const tabContent = (
     <div style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column", opacity: scrollHold ? 0 : 1 }} className={isDesktop ? "desktop-content" : ""}>
@@ -624,38 +627,38 @@ function AppInner({ user, isDark, toggleTheme }) {
       <RecipeNotFound onBack={() => navigate("/discover")} />
     )
   ) : selectedRecipe && currentRecipe ? (
-    dismissing ? (
-      // Sortie animée : on monte la vue d'onglet SOUS la fiche qui glisse vers la
-      // droite, pour qu'elle se dévoile au lieu de laisser un écran blanc (la route
-      // ne change qu'en fin d'animation, la liste n'était sinon pas encore montée).
-      // `paddingTop` = réserve d'inset système : pendant le dismiss, #root porte
-      // encore `root--edge-hero` (padding annulé pour le hero à fond perdu), donc la
-      // liste dessous remonterait sous la barre système puis redescendrait en fin
-      // d'animation. On lui rend l'inset ici ; la fiche en `inset:0` couvre tout le
-      // padding box, son hero reste donc à fond perdu, et l'offset de la liste est
-      // identique à sa position post-animation (aucun saut). Edge-hero ⇔ !isDesktop
-      // dans cette branche (édition / import / plan déjà écartés plus haut).
-      <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", boxSizing: "border-box", paddingTop: isDesktop ? 0 : "var(--safe-hero-top)" }}>
-        {tabContent}
-        <div key={selectedRecipe} className="page-dismiss-right"
-          onAnimationEnd={(e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); }}
-          style={{ position: "absolute", inset: 0, overflow: isDesktop ? "hidden" : "auto", background: "var(--bg)", zIndex: 2 }}>
-          {detailBody}
-        </div>
-      </div>
-    ) : (
-      <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`}
-        style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
+    // Fiche privée montée en OVERLAY au-dessus de l'onglet d'origine, gardé monté
+    // dessous pendant TOUTE la vie de la fiche (ouverture → consultation → sortie).
+    // L'onglet ne se démonte donc jamais en passant par une fiche : plus de rejeu de
+    // l'animation d'entrée au retour (flicker), et son scroll est conservé. La fiche
+    // apparaît (editor-enter) puis, au recul, glisse vers la droite (page-dismiss-
+    // right) en dévoilant l'onglet, statique, déjà en place. `paddingTop` = réserve
+    // d'inset système rendue à l'onglet pendant que #root porte edge-hero (padding
+    // annulé pour le hero à fond perdu) ; la fiche en inset:0 couvre tout le padding
+    // box, son hero reste donc à fond perdu. Edge-hero ⇔ !isDesktop ici.
+    <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", boxSizing: "border-box", paddingTop: isDesktop ? 0 : "var(--safe-hero-top)" }}>
+      {tabContent}
+      <div key={selectedRecipe}
+        className={dismissing ? "page-dismiss-right" : `editor-enter${isDesktop ? " desktop-content" : ""}`}
+        onAnimationEnd={dismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); } : undefined}
+        style={{ position: "absolute", inset: 0, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, background: "var(--bg)", zIndex: 2 }}>
         {detailBody}
       </div>
-    )
+    </div>
   ) : justDeleted ? (
     // Recette supprimée : la redirection vers /recipes est en cours, on n'affiche
     // rien pendant cette micro-fenêtre plutôt que l'écran « introuvable ».
     null
   ) : selectedRecipe && !currentRecipe && workspaceReady ? (
     <RecipeNotFound onBack={() => navigate("/recipes")} />
-  ) : tabContent;
+  ) : (
+    // Même conteneur `relative` que la branche fiche ci-dessus : React réconcilie les
+    // deux (même type, même position) et NE démonte PAS `tabContent` au retour d'une
+    // fiche, ce qui évite le rejeu de page-enter et préserve le scroll de l'onglet.
+    <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column" }}>
+      {tabContent}
+    </div>
+  );
 
   // Fiche recette affichée en mobile (privée ou publique chargée) : le shell rend son
   // hero à fond perdu jusqu'en haut de la barre système. On coupe alors la réserve
