@@ -57,7 +57,24 @@ ReactDOM.createRoot(document.getElementById('app')).render(
     </React.StrictMode>
 )
 
-// Splash d'ouverture (logo + onde, cf. index.html) : retiré une fois l'app montée,
-// après un court temps de visibilité pour que l'animation soit perçue. Le fond du
-// splash rejoint celui de la page de chargement, la transition est donc continue.
-requestAnimationFrame(() => setTimeout(() => window.__hideBootSplash?.(), 550))
+// Splash d'ouverture (logo + onde, cf. index.html) : on le garde affiché jusqu'à ce
+// que l'app soit prête à peindre son PREMIER écran réel (auth résolue), pas juste
+// montée. Sinon on masquait le splash sur un simple minuteur et on passait le relais
+// à un SECOND indicateur (la gousse de l'écran de chargement React), peint plus tard,
+// à un instant où les insets edge-to-edge ne sont pas encore stabilisés : les deux
+// gousses ne tombaient pas au même centre vertical, d'où le saut (flicker) au relais.
+// Une seule gousse (celle du splash), continue et immobile, jusqu'au vrai contenu.
+// `__releaseBootSplash` est appelé par l'app quand l'auth est connue (cf. App.jsx) ;
+// un temps minimum garantit que l'animation reste perçue même si l'auth est instantanée.
+const SPLASH_MIN_MS = 550
+const splashStart = performance.now()
+let splashReleased = false
+window.__releaseBootSplash = function () {
+    if (splashReleased) return
+    splashReleased = true
+    const wait = Math.max(0, SPLASH_MIN_MS - (performance.now() - splashStart))
+    setTimeout(() => window.__hideBootSplash?.(), wait)
+}
+// Vitrine publique : pas de phase d'auth ni de relais de gousse, on relâche dès le
+// montage (le splash n'existe de toute façon que sur la coquille app).
+if (!appZone) requestAnimationFrame(() => window.__releaseBootSplash())
