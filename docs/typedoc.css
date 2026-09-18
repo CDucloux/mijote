@@ -1,0 +1,137 @@
+/* Habillage Cardamome de la doc TypeDoc : reprend les tokens de l'app (vert
+   gousse, surfaces sombres/crème, Source Serif 4 en titres, Hanken Grotesk en
+   corps) pour sortir du rendu générique. On surcharge la palette à la source
+   (--light/dark-color-*) que TypeDoc dérive ensuite en --color-*. */
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Thème sombre (vert gousse vif sur fond olive profond) */
+  --dark-color-background: #0f110d;
+  --dark-color-background-secondary: #191d15;
+  --dark-color-background-active: #222720;
+  --dark-color-text: #eef1e7;
+  --dark-color-text-aside: #a7ac9c;
+  --dark-color-link: #a7c97c;
+  --dark-color-accent: #2c322a;
+  --dark-color-active-menu-item: #222720;
+  --dark-color-focus-outline: #75a63f;
+
+  /* Thème clair (vert densifié sur crème) */
+  --light-color-background: #f3f4ec;
+  --light-color-background-secondary: #ffffff;
+  --light-color-background-active: #e9ebdf;
+  --light-color-text: #23281d;
+  --light-color-text-aside: #565b4c;
+  --light-color-link: #587c31;
+  --light-color-accent: #dde0d0;
+  --light-color-active-menu-item: #e9ebdf;
+  --light-color-focus-outline: #6e9a3f;
+
+  --border-radius: 14px;
+}
+
+body {
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.005em;
+}
+
+/* Titres en serif à caractère : la signature Cardamome */
+h1, h2, h3, h4,
+.tsd-page-title h1,
+.tsd-typography h1, .tsd-typography h2, .tsd-typography h3 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* En-tête : barre pleine sur surface, sans le gris plat par défaut */
+.tsd-page-toolbar {
+  background: var(--color-background-secondary);
+  border-bottom: 1px solid var(--color-accent);
+  backdrop-filter: saturate(1.1);
+}
+.tsd-page-toolbar .title {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-weight: 600;
+}
+
+/* Liens de navigation : soulignés au survol seulement, teinte accent */
+a { text-underline-offset: 0.18em; }
+
+/* Panneaux, encarts et signatures : coins doux et surface distincte */
+.tsd-panel,
+.tsd-signature,
+.tsd-sources,
+.tsd-navigation a,
+.tsd-index-panel .tsd-index-content {
+  border-radius: var(--border-radius);
+}
+.tsd-panel {
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-accent);
+  padding: 1.1rem 1.25rem;
+}
+
+/* Élément de nav actif : pastille arrondie teintée accent */
+.tsd-navigation a {
+  border-radius: 999px;
+  padding: 0.28em 0.6em;
+  transition: background 0.15s ease;
+}
+.tsd-navigation a:hover {
+  background: var(--color-background-active);
+}
+.tsd-navigation a.current {
+  background: color-mix(in srgb, var(--color-link) 16%, transparent);
+  color: var(--color-link);
+  font-weight: 600;
+}
+
+/* Blocs de code et signatures : monospace posée sur surface active */
+.tsd-signature,
+pre,
+code {
+  border-radius: var(--border-radius);
+}
+pre {
+  border: 1px solid var(--color-accent);
+}
+code.tsd-tag,
+.tsd-signature {
+  background: var(--color-background-active);
+}
+
+/* Étiquettes (badges) type/kind : forme pill plutôt que carré */
+.tsd-tag,
+.tsd-anchor-icon,
+.tsd-kind-icon ~ span {
+  border-radius: 999px;
+}
+.tsd-tag {
+  padding: 0.1em 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Champ de recherche arrondi, aligné aux surfaces */
+#tsd-search .field input,
+.tsd-widget {
+  border-radius: 999px;
+}
+
+/* Tableaux (les vues de modules) : lignes aérées, en-tête discret */
+table {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+th {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-weight: 600;
+}
+
+/* Filet d'accent sous le titre de page : le détail fait-main */
+.tsd-page-title {
+  border-bottom: 2px solid color-mix(in srgb, var(--color-link) 45%, transparent);
+  padding-bottom: 0.6rem;
+}
