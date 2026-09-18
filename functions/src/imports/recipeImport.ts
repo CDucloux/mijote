@@ -31,6 +31,8 @@ import {
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
+import { assertHostAllowed, BlockedHostError } from "./urlGuard.js";
+import { readFreshImport, writeImportCache } from "./importCache.js";
 
 /** Clé API Anthropic (secret), l'extraction IA est refusée si elle est absente. */
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
@@ -41,6 +43,8 @@ const ADMIN_EMAIL = defineString("ADMIN_EMAIL");
 const MAX_HTML_BYTES = 3_000_000;
 /** Délai maximal de récupération d'une page avant abandon. */
 const FETCH_TIMEOUT_MS = 15_000;
+/** Nombre maximal de redirections suivies (chacune re-vérifiée anti-SSRF). */
+const MAX_REDIRECTS = 4;
 /** Modèle d'extraction pour l'URL (texte déjà propre). */
 const MODEL = "claude-haiku-4-5";
 /**
@@ -118,15 +122,28 @@ async function fetchHtml(url: string): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
-      redirect: "follow",
-      signal: controller.signal,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml",
-        "Accept-Language": "fr,en;q=0.8",
-      },
-    });
+    // Redirections suivies À LA MAIN : chaque saut est re-résolu et re-vérifié
+    // (une page publique pourrait sinon rediriger vers une IP interne). Anti-SSRF.
+    let current = url;
+    let res: Response;
+    for (let hop = 0; ; hop++) {
+      let target: URL;
+      try { target = new URL(current); } catch { throw new HttpsError("invalid-argument", "URL invalide."); }
+      await assertHostAllowed(target.hostname);
+      res = await fetch(current, {
+        redirect: "manual",
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml",
+          "Accept-Language": "fr,en;q=0.8",
+        },
+      });
+      const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+      if (!location) break;
+      if (hop >= MAX_REDIRECTS) throw new HttpsError("invalid-argument", "Trop de redirections.");
+      current = new URL(location, current).toString();
+    }
     if (!res.ok) throw new HttpsError("unavailable", `La page a répondu ${res.status}.`);
     const ct = res.headers.get("content-type") || "";
     if (!ct.includes("html") && !ct.includes("xml")) throw new HttpsError("invalid-argument", "L'URL ne pointe pas vers une page web.");
@@ -143,6 +160,7 @@ async function fetchHtml(url: string): Promise<string> {
     return Buffer.concat(chunks).toString("utf-8");
   } catch (e) {
     if (e instanceof HttpsError) throw e;
+    if (e instanceof BlockedHostError) throw new HttpsError("invalid-argument", "Cette adresse n'est pas autorisée (réseau interne).");
     if (e instanceof Error && e.name === "AbortError") throw new HttpsError("deadline-exceeded", "La page a mis trop de temps à répondre.");
     throw new HttpsError("unavailable", "Impossible de récupérer la page (réseau ou URL invalide).");
   } finally {
@@ -434,7 +452,14 @@ function applianceInfosFrom(request: CallableRequest): ApplianceInfo[] {
 export const importRecipeFromUrl = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "url");
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const requestId = (request.data as { requestId?: unknown })?.requestId;
+    // Idempotence : si le même import a déjà abouti (réponse perdue côté client,
+    // app en arrière-plan…), on renvoie le résultat mémorisé sans re-débiter ni
+    // rappeler le LLM. On ne débite (assertImportAllowed) qu'en cas de cache absent.
+    const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
+    if (cached) return cached;
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "url", requestId);
 
     const url = String((request.data as { url?: unknown })?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
@@ -455,7 +480,9 @@ export const importRecipeFromUrl = onCall(
       for (const s of inter.steps) s.image = (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
-      return { recipe, method: "llm" };
+      const result = { recipe, method: "llm" };
+      await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
+      return result;
     } catch (e) {
       if (e instanceof HttpsError) throw e; // messages déjà lisibles
       logger.error("importRecipeFromUrl, erreur inattendue:", e);
@@ -476,7 +503,11 @@ export const importRecipeFromUrl = onCall(
 export const importRecipeFromImages = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "photo");
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const requestId = (request.data as { requestId?: unknown })?.requestId;
+    const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
+    if (cached) return cached;
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "photo", requestId);
 
     const rawImages = (request.data as { images?: unknown })?.images;
     const raw = Array.isArray(rawImages) ? rawImages : [];
@@ -499,7 +530,9 @@ export const importRecipeFromImages = onCall(
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");
-      return { recipe, method: "image", coverIndex };
+      const result = { recipe, method: "image", coverIndex };
+      await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
+      return result;
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       logger.error("importRecipeFromImages, erreur inattendue:", e);
@@ -522,7 +555,11 @@ const MIN_TEXT_LEN = 40;
 export const importRecipeFromText = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "text");
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const requestId = (request.data as { requestId?: unknown })?.requestId;
+    const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
+    if (cached) return cached;
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "text", requestId);
 
     const text = String((request.data as { text?: unknown })?.text || "").trim();
     if (text.length < MIN_TEXT_LEN) throw new HttpsError("invalid-argument", "Colle un texte de recette un peu plus complet (ingrédients et étapes).");
@@ -536,7 +573,9 @@ export const importRecipeFromText = onCall(
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un texte collé
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée dans ce texte.");
-      return { recipe, method: "text" };
+      const result = { recipe, method: "text" };
+      await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
+      return result;
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       logger.error("importRecipeFromText, erreur inattendue:", e);
@@ -558,7 +597,11 @@ export const importRecipeFromText = onCall(
 export const importRecipeFromPdf = onCall(
   { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "pdf");
+    if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
+    const requestId = (request.data as { requestId?: unknown })?.requestId;
+    const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
+    if (cached) return cached;
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "pdf", requestId);
 
     const text = String((request.data as { text?: unknown })?.text || "").trim();
     if (text.length < MIN_TEXT_LEN) throw new HttpsError("invalid-argument", "Ce PDF ne contient pas de texte exploitable (document scanné ?). Essaie plutôt l'import Photo.");
@@ -572,7 +615,9 @@ export const importRecipeFromPdf = onCall(
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un PDF texte
       const recipe = assignIdsAndLink(inter);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée dans ce PDF.");
-      return { recipe, method: "pdf" };
+      const result = { recipe, method: "pdf" };
+      await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
+      return result;
     } catch (e) {
       if (e instanceof HttpsError) throw e;
       logger.error("importRecipeFromPdf, erreur inattendue:", e);

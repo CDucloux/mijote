@@ -12,6 +12,7 @@ import { fileToImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import { extractPdfText } from "@/lib/recipes/pdfImport.js";
 import { hasUsablePdfText } from "@/lib/recipes/pdfText.js";
 import { visibleSources, prettyHost } from "@/lib/sources/recommendedSources.js";
+import { importFailureFor } from "@/lib/recipes/importInterruption.js";
 import { DEFAULT_SOURCES } from "@/constants/recommendedSources.js";
 import "../styles/import.css";
 
@@ -59,6 +60,7 @@ export function ImportPage({ mode = "lien" }) {
   const textRef = useRef(null);
   const fileRef = useRef(null);
   const pdfRef = useRef(null);
+  const wentHiddenRef = useRef(false);  // page masquée pendant un import (arrière-plan)
   const photosRef = useRef(photos);
   useEffect(() => { photosRef.current = photos; }, [photos]);
 
@@ -69,6 +71,16 @@ export function ImportPage({ mode = "lien" }) {
 
   // Libère les aperçus photo au démontage uniquement (cf. ImportFromPicture d'origine).
   useEffect(() => () => { photosRef.current.forEach(p => URL.revokeObjectURL(p.preview)); }, []);
+
+  // Interruption d'import : sur mobile (WebView suspendue) ou onglet quitté, l'OS
+  // peut couper l'appel réseau d'un import un peu long. On mémorise ce passage en
+  // arrière-plan pour, en cas d'échec, afficher un message d'interruption clair
+  // plutôt qu'une erreur serveur alarmante (cf. importFailureFor).
+  useEffect(() => {
+    const onVis = () => { if (document.hidden) wentHiddenRef.current = true; };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
 
   // Partage natif (share_target) : un lien partagé arrive en query sur la route lien.
   // On en extrait la 1ʳᵉ URL, on pré-remplit, puis on nettoie la query.
@@ -163,7 +175,7 @@ export function ImportPage({ mode = "lien" }) {
     if (!navigator.onLine) { setError("Pas de connexion internet. L'import intelligent a besoin d'être en ligne."); return; }
     if (blocked) { setError(credits.monthLeft < CREDIT_COST[kind] ? "Tu as utilisé tous tes crédits d'import ce mois-ci. Ça repart le mois prochain." : "Beaucoup d'imports aujourd'hui. Reprends demain, tes crédits du mois sont intacts."); return; }
     if (!ready) return;
-    setError(""); setLoading(true);
+    setError(""); setLoading(true); wentHiddenRef.current = false;
     try {
       if (mode === "lien") { await importFromUrl(url.trim()); notify?.("Recette extraite, à relire"); }
       else if (mode === "photo") { await importFromImages(photos.map(p => p.part)); notify?.("Recette extraite, à relire"); }
@@ -181,7 +193,7 @@ export function ImportPage({ mode = "lien" }) {
       else { await importFromText(text.trim()); notify?.("Recette extraite, à relire"); }
     } catch (e) {
       setLoading(false);
-      setImportError({ message: e?.message || "Import impossible.", code: e?.code });
+      setImportError(importFailureFor(e, wentHiddenRef.current));
     }
   };
 

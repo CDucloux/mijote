@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.50.0 – Cardamome · Import robuste et sûr
+
+### Import intelligent
+- **Recette découverte offerte** : la recette cadeau des non-abonnés est désormais la « Tarte fine à la courgette », plus complète (découpes, photos d'étapes, réglages de four) pour mieux montrer la mise en forme.
+- **Reprise gratuite d'un import interrompu** : si l'app passe en arrière-plan (onglet quitté, application mobile suspendue) pendant un import, l'extraction n'est plus refacturée à la reprise. Le résultat est mémorisé et rendu sans re-consommer de crédit ni relancer l'IA ; le débit lui-même devient idempotent (au plus un crédit par import). Un message clair remplace l'erreur technique quand l'import est coupé par un passage en arrière-plan.
+
+### Sécurité
+- **Import URL durci (anti-SSRF)** : la récupération d'une page vérifie désormais que l'adresse (et chaque redirection) ne pointe pas vers un réseau interne, fermant une porte d'accès à des ressources non exposées.
+
+### Corrigé
+- **Retour depuis Découvrir** : le bouton retour d'une recette de la communauté revient au feed « Découvrir » au lieu de l'accueil, sans le temps d'attente qui allait avec.
+
 ## v4.49.0 – Cardamome · Recette découverte offerte
 
 ### Import intelligent

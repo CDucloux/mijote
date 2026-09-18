@@ -151,5 +151,22 @@ service cloud.firestore {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow write: if false;
     }
+
+    // ── Cache d'idempotence des imports IA ────────────────────────────────────
+    // Écriture ET lecture RÉSERVÉES au serveur (Admin SDK). Le client ne lit jamais
+    // ce cache directement : la Cloud Function d'import renvoie le résultat mémorisé
+    // pour ne pas re-débiter ni rappeler le LLM quand un import est rejoué (réponse
+    // perdue, app passée en arrière-plan). Doc id : `{uid}__{requestId}`.
+    match /importCache/{docId} {
+      allow read, write: if false;
+    }
+
+    // ── Marques de facturation idempotente des imports IA ─────────────────────
+    // Écriture/lecture serveur uniquement (transaction Admin SDK). Empêche de
+    // re-débiter un crédit quand un import interrompu est rejoué. Doc id :
+    // `{uid}__{requestId}`. Même fenêtre de validité que le cache de résultat.
+    match /importCharge/{docId} {
+      allow read, write: if false;
+    }
   }
 }

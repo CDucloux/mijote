@@ -595,11 +595,11 @@ function AppInner({ user, isDark, toggleTheme }) {
           authorPhoto={publicDocs.pub.authorPhoto}
           authorUid={publicDocs.pub.authorUid}
           onClone={() => cloneFromPublic(publicDocs.pub)}
-          onBack={() => navigate("/home")}
+          onBack={() => navigate("/discover")}
           onExportPDF={exportPDF}
           isAdmin={isAdmin}
           onReport={(reason, note) => reportPublicRecipe({ pubId: publicDocs.pub.pubId, recipeName: publicDocs.pub.recipe?.name, authorUid: publicDocs.pub.authorUid, reason, note, reporterUid: user?.uid, reporterEmail: user?.email || null }).then(() => notify("Merci, ton signalement a été transmis.")).catch(() => notify("Signalement impossible pour le moment.", "error"))}
-          onAdminDelete={() => deletePublicRecipe(publicDocs.pub.pubId).then(() => { notify("Recette retirée de la communauté."); navigate("/home"); }).catch(() => notify("Suppression impossible.", "error"))}
+          onAdminDelete={() => deletePublicRecipe(publicDocs.pub.pubId).then(() => { notify("Recette retirée de la communauté."); navigate("/discover"); }).catch(() => notify("Suppression impossible.", "error"))}
           ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={[]} notify={notify}
         />
       </div>
@@ -608,7 +608,7 @@ function AppInner({ user, isDark, toggleTheme }) {
         <div style={{ width: 26, height: 26, border: "3px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
       </div>
     ) : (
-      <RecipeNotFound onBack={() => navigate("/home")} />
+      <RecipeNotFound onBack={() => navigate("/discover")} />
     )
   ) : selectedRecipe && currentRecipe ? (
     <div key={selectedRecipe} className={`${dismissing ? "page-dismiss-right" : "editor-enter"}${isDesktop ? " desktop-content" : ""}`}
