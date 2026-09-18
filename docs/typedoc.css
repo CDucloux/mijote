@@ -59,18 +59,14 @@ h1, h2, h3, h4,
 /* Liens de navigation : soulignés au survol seulement, teinte accent */
 a { text-underline-offset: 0.18em; }
 
-/* Panneaux, encarts et signatures : coins doux et surface distincte */
+/* Panneaux, encarts et signatures : coins doux, sans fond de carte (on reste
+   flush avec la page pour éviter un two-tone décoratif et l'empilement visuel) */
 .tsd-panel,
 .tsd-signature,
 .tsd-sources,
 .tsd-navigation a,
 .tsd-index-panel .tsd-index-content {
   border-radius: var(--border-radius);
-}
-.tsd-panel {
-  background: var(--color-background-secondary);
-  border: 1px solid var(--color-accent);
-  padding: 1.1rem 1.25rem;
 }
 
 /* Élément de nav actif : pastille arrondie teintée accent */
@@ -134,4 +130,21 @@ th {
 .tsd-page-title {
   border-bottom: 2px solid color-mix(in srgb, var(--color-link) 45%, transparent);
   padding-bottom: 0.6rem;
+}
+
+/* Footer Cardamome : discret, centré, filet d'accent en tête */
+footer {
+  border-top: 1px solid var(--color-accent);
+  margin-top: 2rem;
+  padding: 1.4rem 1rem;
+  text-align: center;
+}
+footer p {
+  margin: 0;
+  color: var(--color-text-aside);
+  font-size: 0.85rem;
+}
+footer code {
+  background: var(--color-background-active);
+  padding: 0.05em 0.4em;
 }

@@ -9,7 +9,8 @@
   "readme": "docs/lib-overview.md",
   "customCss": "docs/typedoc.css",
   "includeVersion": true,
-  "hideGenerator": false,
+  "hideGenerator": true,
+  "customFooterHtml": "<span>Cardamome · Bibliothèque métier (<code>src/lib</code>) · <a href=\"https://cardamome.studio\">cardamome.studio</a> · <a href=\"https://github.com/CDucloux/mijote\">Dépôt</a></span>",
   "excludePrivate": true,
   "excludeInternal": true,
   "validation": {
