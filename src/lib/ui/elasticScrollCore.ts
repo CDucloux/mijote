@@ -9,7 +9,7 @@ import { canArmBottomStretch } from "@/lib/ui/elasticStretch.js";
  * seule vélocité. Partagé par `useElasticScroll` (React) et `installGlobalElasticScroll`
  * (délégation globale) pour n'avoir qu'UNE implémentation de la machine à gestes.
  *
- * @module elasticScrollCore
+ * @module ui/elasticScrollCore
  */
 
 /** Constante de rubber-band iOS/WebKit (suivi volontairement discret). */

@@ -4,7 +4,7 @@
  * elle tombe à ~250-400 Ko. On normalise tout en `image/jpeg` → règle au passage le
  * HEIC iPhone (rejeté côté serveur).
  *
- * @module imageResize
+ * @module firebase/imageResize
  */
 
 /** vision haute résolution (Sonnet lit jusqu'à 2576px) : plus lisible pour l'OCR

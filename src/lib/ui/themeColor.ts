@@ -6,7 +6,7 @@
  * installée, le haut de l'écran (chrome système, hors du contenu web) reste clair
  * pendant que le reste de la page est grisé par le backdrop, ce qui casse l'effet.
  *
- * @module themeColor
+ * @module ui/themeColor
  */
 
 /** Parse une couleur hex (`#rgb` ou `#rrggbb`, avec ou sans `#`) en canaux [0,255]. */

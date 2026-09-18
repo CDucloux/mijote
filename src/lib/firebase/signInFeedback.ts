@@ -3,7 +3,7 @@
  * message et ton. Séparé du composant pour être testable et garder une seule voix de
  * copie. Aucune dépendance à Firebase ni au DOM.
  *
- * @module signInFeedback
+ * @module firebase/signInFeedback
  */
 import type { SignInOutcome } from "@/lib/firebase/authErrors.js";
 

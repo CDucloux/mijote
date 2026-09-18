@@ -3,7 +3,7 @@
  * beurre…) dans le texte d'une étape pour les surligner et afficher leur
  * définition. Logique pure : le composant fournit le texte et le glossaire.
  *
- * @module techniques
+ * @module recipes/techniques
  */
 
 /** Préfixe d'id des techniques GÉNÉRIQUES (parents de la hiérarchie v2) : elles

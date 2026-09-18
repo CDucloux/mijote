@@ -3,7 +3,7 @@
  * Point d'entrée unique : garde d'environnement, persistance explicite et cache
  * hors-ligne configurés une seule fois au chargement du module.
  *
- * @module firebase
+ * @module firebase/firebase
  */
 import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";

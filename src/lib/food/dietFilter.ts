@@ -9,7 +9,7 @@
  * Le filtre allergènes est donc HEURISTIQUE (catégorie + mots-clés sur le nom) ;
  * à durcir le jour où les ingrédients porteront un champ `allergens` explicite.
  *
- * @module dietFilter
+ * @module food/dietFilter
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";

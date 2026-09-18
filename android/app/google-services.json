@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "947290846041",
+    "project_id": "mijote-b8a6d",
+    "storage_bucket": "mijote-b8a6d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:947290846041:android:7a3d6352cba59329d8d248",
+        "android_client_info": {
+          "package_name": "studio.cardamome"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "947290846041-sqn5oeouv70943c7vqaee2gui7tn2ljo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "studio.cardamome",
+            "certificate_hash": "a25f97185019e36d601922d9188763262eeb5300"
+          }
+        },
+        {
+          "client_id": "947290846041-a9fdk9bf2tv55tojcv9lf9kju5b734o6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZQWIhs8iYMlbNj0V-Cwe58S6qem9-jMg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "947290846041-a9fdk9bf2tv55tojcv9lf9kju5b734o6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

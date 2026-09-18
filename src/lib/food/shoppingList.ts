@@ -4,7 +4,7 @@
  * nettoyage d'un collage multi-lignes. Aucun I/O ni React ; les mutations d'état
  * (animations, écritures Firestore) vivent dans le hook `useShopping`.
  *
- * @module shoppingList
+ * @module food/shoppingList
  */
 import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher.js";
 import { sortedCategoryEntries, STOCK_CATEGORIES } from "@/constants/categories.js";

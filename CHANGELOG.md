@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.51.0 – Cardamome · Cuisine sous l'œil, même en arrière-plan
+
+### Cuisine
+- **Barre de suivi dans les notifications (Android)** : quand une recette est lancée en pas à pas, une barre façon lecteur média apparaît dans les notifications du téléphone. On garde un œil sur l'étape en cours et sur le minuteur le plus proche (décompte animé par le système, même écran verrouillé), et on avance, recule ou met le minuteur en pause directement depuis là. Idéal pour faire autre chose en parallèle sans perdre le fil de la cuisson.
+
+### Sous le capot
+- **Règles Firestore et Storage clarifiées** : commentaires resserrés selon une convention stricte, branding remis à jour et plafond du foyer corrigé. Aucune règle d'accès n'est modifiée.
+- **Documentation technique (TypeDoc)** : navigation hiérarchisée par dossier, habillage aux couleurs de Cardamome et génération sans avertissement.
+
 ## v4.50.0 – Cardamome · Import robuste et sûr
 
 ### Import intelligent

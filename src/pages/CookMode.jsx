@@ -26,6 +26,8 @@ import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { EmptyArt } from "../components/EmptyArt.jsx";
 import { useLS } from "../hooks/useLS.js";
+import { useCookSession } from "../hooks/useCookSession.js";
+import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.ts";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 
 // Formate un temps écoulé en `m:ss` (ou `h:mm:ss` au-delà d'une heure).
@@ -272,6 +274,25 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     return fmtQtyUnit(amount, ing.unit);
   };
   const progress = ((stepIdx + 1) / totalSteps) * 100;
+
+  // Barre de notification native (Android) : reflète le pas à pas quand l'app
+  // passe en arrière-plan. Active pour la recette principale en cours seulement ;
+  // ses boutons réveillent l'app et rejouent l'action ici. No-op côté web.
+  const cookSnapshot = buildCookSnapshot({
+    recipeTitle: recipe.name || "",
+    pageKind: cur.kind,
+    stepIdx, totalSteps, realIdx,
+    stepText: step?.text || "",
+    timers,
+  });
+  useCookSession({
+    active: !isNested && !done && !closing,
+    snapshot: cookSnapshot,
+    onNext: goNext,
+    onPrev: goPrev,
+    onToggleTimer: () => { const id = pickPilotTimerId(timers); if (id) toggleTimer(id); },
+    onStop: requestClose,
+  });
 
   // Battement d'horloge tant qu'un minuteur tourne : on avance `now` (le restant
   // s'en dérive) et on bascule à « terminé » les échéances dépassées. Un recalage

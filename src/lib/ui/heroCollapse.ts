@@ -11,7 +11,7 @@
  * forme (`toFixed`, `translateY(...)`, seuils de `pointer-events`) et l'écriture dans le
  * DOM restent côté hook d'animation, pour un rendu strictement identique frame à frame.
  *
- * @module heroCollapse
+ * @module ui/heroCollapse
  */
 
 /** Borne `v` dans `[a, b]`. */

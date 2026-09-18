@@ -5,7 +5,7 @@ import type { Recipe } from "@/lib/types.js";
  *
  * Le montage produit est assumé : au lieu d'appeler le LLM (coûteux) pour un
  * non-abonné, on lui sert cette recette pré-écrite via le pipeline d'import
- * habituel ({@link useRecipeImport}). Il vit l'effet « import magique » (overlay
+ * habituel (`useRecipeImport`). Il vit l'effet « import magique » (overlay
  * de chargement puis brouillon complet dans l'éditeur) pour 0 crédit et 0 appel
  * serveur. La recette est présentée comme un cadeau (« recette découverte »),
  * jamais comme le résultat de sa propre saisie : l'honnêteté fait l'effet wahou,

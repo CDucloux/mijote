@@ -8,7 +8,7 @@
  * par recette (favori, vegan, de saison, rapide, base, cuisine) et délègue ici la
  * décision d'affichage, pour que le filtrage reste testable et cohérent.
  *
- * @module discoverFeed
+ * @module recipes/discoverFeed
  */
 
 import { normalizeStr } from "@/lib/food/parseIngredient.js";

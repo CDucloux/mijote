@@ -5,7 +5,7 @@
  * exprimée dans l'unité du rendement → fraction `f = consommé / rendement`.
  * v1 : composition mono-niveau (un composant ne contient que des ingrédients bruts).
  *
- * @module recipeComponents
+ * @module recipes/recipeComponents
  */
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";
 import type { IngredientLine, RecipeYield } from "@/lib/types.js";

@@ -7,11 +7,23 @@
   "out": "docs/api",
   "tsconfig": "tsconfig.json",
   "readme": "docs/lib-overview.md",
+  "customCss": "docs/typedoc.css",
   "includeVersion": true,
-  "hideGenerator": false,
+  "hideGenerator": true,
+  "customFooterHtml": "<span>Cardamome · Bibliothèque métier (<code>src/lib</code>) · <a href=\"https://cardamome.studio\">cardamome.studio</a> · <a href=\"https://github.com/CDucloux/mijote\">Dépôt</a></span>",
   "excludePrivate": true,
   "excludeInternal": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": true,
+    "notDocumented": false
+  },
   "categorizeByGroup": true,
+  "navigation": {
+    "includeCategories": false,
+    "includeGroups": false,
+    "includeFolders": true
+  },
   "navigationLinks": {
     "Dépôt": "https://github.com/CDucloux/mijote"
   },

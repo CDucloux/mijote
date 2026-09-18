@@ -10,7 +10,7 @@
  * par lot) sans réécriture : elle ne fait qu'agréger des lignes d'ingrédients.
  * Aucun I/O, aucun React.
  *
- * @module decoupe
+ * @module recipes/decoupe
  */
 
 import type { Calibre, Cut, FormeDecoupe, IngredientLine, Step } from "@/lib/types.js";
@@ -256,7 +256,7 @@ const CUT_MARKERS: readonly string[] = [
  * naviguer et de vérifier la classification. Une étape « relie » le poste si elle le cite
  * dans ses liens `ingredients` OU nomme le légume dans son `text` (beaucoup d'étapes ne
  * remplissent pas les liens mais écrivent « couper l'aubergine »). Cherche la PREMIÈRE
- * étape qui relie le poste ET mentionne un geste de découpe ({@link CUT_MARKERS}) ; à
+ * étape qui relie le poste ET mentionne un geste de découpe (`CUT_MARKERS`) ; à
  * défaut, la première étape qui relie simplement le poste. Renvoie `-1` si aucune ne s'y
  * rattache.
  *

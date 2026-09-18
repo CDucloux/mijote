@@ -2,7 +2,7 @@
  * Détection des durées dans le texte d'une étape de recette et formatage des
  * comptes à rebours pour les minuteurs du mode cuisine.
  *
- * @module stepTimers
+ * @module planning/stepTimers
  */
 
 /** Une durée détectée dans une étape : sa valeur en minutes et son libellé affichable. */

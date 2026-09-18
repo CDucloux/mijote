@@ -10,7 +10,7 @@
  * Toutes les fonctions sont pures (aucune I/O, `now` injecté) : la planification
  * de la notification OS (son écran verrouillé) vit dans `notifications/`.
  *
- * @module cookTimers
+ * @module planning/cookTimers
  */
 
 /** Un minuteur du cook mode, rattaché à l'étape d'où il a été lancé. */

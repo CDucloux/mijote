@@ -4,7 +4,7 @@
  * canal alpha) sont conservées en PNG pour préserver la transparence ; tout le
  * reste est aplati en JPEG (plus léger).
  *
- * @module storage
+ * @module firebase/storage
  */
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { auth, storage } from "@/lib/firebase/firebase.js";

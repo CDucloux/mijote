@@ -7,7 +7,7 @@
  * La persistance (append/subscribe Firestore) vit dans `firestore.ts` ; ce module
  * ne fait que produire/valider les objets et calculer leur rendu textuel.
  *
- * @module activity
+ * @module notifications/activity
  */
 
 /** Types d'évènements suivis. Toute valeur hors de cette liste est ignorée. */

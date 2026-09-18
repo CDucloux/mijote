@@ -2,7 +2,7 @@
  * Normalisation de texte et analyse d'une saisie d'ingrédient (« 500 g farine »
  * → quantité / unité / nom).
  *
- * @module parseIngredient
+ * @module food/parseIngredient
  */
 
 /**

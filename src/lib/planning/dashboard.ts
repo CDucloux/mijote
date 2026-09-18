@@ -3,7 +3,7 @@
  * de l'état local déjà présent (planning, listes de courses, stock bas). Fonctions
  * pures pour rester testables et réutilisables côté découverte.
  *
- * @module dashboard
+ * @module planning/dashboard
  */
 import { slotOrder } from "@/constants/mealSlots.js";
 import { aggregateShopping, type ShoppingList } from "@/lib/food/shoppingAggregate.js";

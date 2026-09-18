@@ -4,7 +4,7 @@
  * par le clavier, la barre d'onglets se retrouve collée juste au-dessus du clavier,
  * ce qu'aucune app native ne fait. On la retire tant qu'un tel champ a le focus.
  *
- * @module softKeyboard
+ * @module ui/softKeyboard
  */
 
 // Types d'`<input>` qui n'ouvrent PAS de clavier texte (boutons, cases, curseurs,

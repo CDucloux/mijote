@@ -2,7 +2,7 @@
  * Quota de recettes du plan gratuit (Cardamome+ = illimité). Les préparations de base
  * (`isComponent`) ne comptent pas dans le quota : ce sont des briques, pas des recettes.
  *
- * @module plan
+ * @module recipes/plan
  */
 import type { Recipe } from "@/lib/types.js";
 

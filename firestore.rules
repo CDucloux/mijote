@@ -1,44 +1,30 @@
 rules_version = '2';
 
-// ─── Règles Firestore : Mijoté ───────────────────────────────────────────────
-// Modèle de données :
-//   users/{uid}/**         données privées de chaque utilisateur (recettes, méta…)
-//   master/{doc}           base partagée en lecture, écriture réservée à l'admin
-//   userDirectory/{uid}    fiche publique (email/avatar) pour foyer/invitations
-//   publicRecipes/{pubId}  recettes (et bases) publiées, lisibles par tous les
-//                          connectés ; écriture réservée à leur auteur
-//
+// Règles Firestore Cardamome.
+// Convention : un bloc par collection, `allow` d'abord, commentaire bref au
+// format « qui lit / qui écrit » + le POURQUOI seulement s'il n'est pas évident.
 // Déploiement : `npx firebase deploy --only firestore:rules`
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    // Email-based auth : on exige un email VÉRIFIÉ (protège le jour où une auth
-    // email/mot de passe non vérifiée serait ajoutée à côté de Google).
+    function isSignedIn() { return request.auth != null; }
+    // Email vérifié requis : relève la barre face à un compte scriptable.
     function hasVerifiedEmail() {
       return isSignedIn() && request.auth.token.email_verified == true;
     }
-    function email() {
-      return request.auth.token.email;
-    }
+    function email() { return request.auth.token.email; }
     function isAdmin() {
-      return hasVerifiedEmail()
-             && email() == 'corentin.ducloux.edifice@gmail.com';
+      return hasVerifiedEmail() && email() == 'corentin.ducloux.edifice@gmail.com';
     }
 
-    // ── Données privées de chaque utilisateur ────────────────────────────────
+    // Données privées : le propriétaire seul, lecture et écriture.
     match /users/{uid}/{document=**} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
-    // ── Abonnements Stripe (Mijoté+) ──────────────────────────────────────────
-    // Écriture RÉSERVÉE au serveur (webhook via Admin SDK, qui contourne les
-    // règles) ; le client lit seulement SES propres documents (statut d'abonnement,
-    // mapping client Stripe). Aucun secret Stripe n'y est stocké.
+    // Abonnements Stripe : le client lit les siens ; écriture serveur (webhook
+    // Admin SDK, qui contourne les règles). Aucun secret Stripe stocké ici.
     match /customers/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow write: if false;
@@ -48,123 +34,87 @@ service cloud.firestore {
       }
     }
 
-    // ── Mapping technique achat Play → uid (serveur uniquement) ───────────────
-    // Écrit par verifyPlayPurchase / mis à jour par le webhook RTDN (Admin SDK) pour
-    // retrouver l'uid d'une notification Play (qui ne le porte pas). Ne contient
-    // qu'un uid et un productId, aucun secret ; jamais exposé au client.
+    // Mapping achat Play -> uid : serveur uniquement. Retrouve l'uid d'une
+    // notification RTDN qui ne le porte pas ; aucun secret.
     match /playPurchases/{purchaseToken} {
       allow read, write: if false;
     }
 
-    // ── Base Master partagée (écriture : admin) ──────────────────────────────
-    // Lecture par DOC uniquement (`get`), jamais par requête (`list`) : la base
-    // d'ingrédients enrichie (Ciqual) n'est pas énumérable/aspirable en masse. Le
-    // client la charge de toute façon doc par doc (getDoc ingredients/utensils/…).
-    // Email vérifié requis (relève la barre vs un simple compte scriptable).
+    // Base Master : lecture par doc (`get`) pour tout compte vérifié, écriture
+    // admin. Pas de `list` : la base d'ingrédients n'est pas énumérable en masse.
     match /master/{doc} {
       allow get: if hasVerifiedEmail();
       allow write: if isAdmin();
     }
 
-    // ── Annuaire utilisateurs : chacun écrit SA fiche ; lecture par connectés ─
+    // Annuaire : chacun écrit SA fiche ; lecture par tout connecté (foyer/invits).
     match /userDirectory/{uid} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == uid;
     }
 
-    // ── Foyers (households) ───────────────────────────────────────────────────
-    // Appartenance par uid (membre) ; invitation par email. Plafond « 4 places »
-    // (membres actifs + invitations en attente) et propriétaire immuable appliqués
-    // côté serveur. Les sous-collections (recettes, méta du foyer, Phase 2) sont
-    // accessibles aux membres via un get() sur le doc parent.
+    // Foyers : membre (par uid) ou invité (par email). Création serveur only
+    // (fonctionnalité Cardamome+, abonnement non vérifiable en règles). Plafond
+    // de 2 places (membres + invitations) et owner immuable maintenus à l'update.
     match /households/{hid} {
       function isHMember(rsc) { return isSignedIn() && request.auth.uid in rsc.data.memberUids; }
       function isHInvited(rsc) { return hasVerifiedEmail() && email() in rsc.data.invitedEmails; }
       function peopleOk(d) { return d.memberUids.size() <= 2 && d.memberUids.size() + d.invitedEmails.size() <= 2; }
 
       allow read: if isHMember(resource) || isHInvited(resource);
-
-      // Création : RÉSERVÉE AU SERVEUR. Le foyer partagé est une fonctionnalité
-      // Cardamome+ ; la vérification de l'abonnement ne pouvant se faire en règles
-      // (pas de requête sur customers/{uid}/subscriptions), le doc est créé par la
-      // Cloud Function `createHousehold` (Admin SDK, gardée par assertPlusOrAdmin).
-      // Aucun client ne crée households/{hid} directement.
       allow create: if false;
-
-      // Mise à jour : un membre ou un invité (qui accepte) édite, MAIS owner immuable
-      // et plafond de 4 places maintenu.
       allow update: if (isHMember(resource) || isHInvited(resource))
-                    && request.resource.data.ownerUid == resource.data.ownerUid
-                    && peopleOk(request.resource.data);
-
-      // Dissolution : propriétaire uniquement.
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && peopleOk(request.resource.data);
       allow delete: if isSignedIn() && request.auth.uid == resource.data.ownerUid;
 
-      // Sous-collections du foyer (recettes / meta), accès réservé aux membres.
+      // Sous-collections (recettes, méta) : membres uniquement.
       match /{document=**} {
         allow read, write: if isSignedIn()
           && request.auth.uid in get(/databases/$(database)/documents/households/$(hid)).data.memberUids;
       }
     }
 
-    // ── Recettes publiques (communauté) ───────────────────────────────────────
-    // Écriture/suppression réservées à l'auteur : on exige que `authorUid` soit
-    // l'uid courant ET que l'identifiant du doc soit préfixé « {uid}__ » (défense en
-    // profondeur, cohérent avec publicId() côté client). Les composants publiés
-    // suivent les mêmes règles.
+    // Recettes publiques : `get` public (partage par lien, rendu Open Graph par
+    // des crawlers non authentifiés) ; `list` (Découverte) réservé aux comptes
+    // vérifiés et borné à 120 contre l'aspiration. Écriture par l'auteur (uid ==
+    // authorUid ET id préfixé `{uid}__`) ; suppression auteur ou admin (modération).
     match /publicRecipes/{pubId} {
       function ownsDoc() {
         return hasVerifiedEmail()
-               && request.auth.uid == request.resource.data.authorUid
-               && pubId.split('__')[0] == request.auth.uid;
+          && request.auth.uid == request.resource.data.authorUid
+          && pubId.split('__')[0] == request.auth.uid;
       }
-      // Lecture d'UN doc (`get`) : PUBLIQUE. Une recette publiée est destinée à être
-      // partagée par lien, y compris à des destinataires sans compte, et lue côté
-      // serveur (rendu Open Graph, cf. api/og) par les crawlers de liens (WhatsApp,
-      // iMessage...) qui ne sont pas authentifiés. Le `list` (feed Découverte) reste
-      // réservé aux comptes vérifiés et borné à 120 pour interdire l'aspiration de
-      // toute la collection en une requête ; une requête sans limite est refusée.
       allow get: if true;
       allow list: if hasVerifiedEmail() && request.query.limit <= 120;
       allow create, update: if ownsDoc();
-      // Suppression : l'auteur (dépublication) OU l'admin (modération). L'admin
-      // peut retirer n'importe quelle recette publique ; la copie privée de
-      // l'auteur, dans son espace, n'est pas affectée.
       allow delete: if isAdmin()
-                    || (hasVerifiedEmail() && request.auth.uid == resource.data.authorUid);
+        || (hasVerifiedEmail() && request.auth.uid == resource.data.authorUid);
     }
 
-    // ── Signalements de recettes publiques (modération) ───────────────────────
-    // Tout utilisateur (email vérifié) peut CRÉER un signalement pour lui-même ;
-    // seul l'admin peut les lire/traiter. Pas de modification/suppression client.
+    // Signalements : création par le rapporteur (email vérifié) ; lecture et
+    // traitement admin uniquement.
     match /reports/{id} {
       allow create: if hasVerifiedEmail()
-                    && request.resource.data.reporterUid == request.auth.uid;
+        && request.resource.data.reporterUid == request.auth.uid;
       allow read, update, delete: if isAdmin();
     }
 
-    // ── Compteurs d'usage IA (quotas Mijoté+) ─────────────────────────────────
-    // Écriture RÉSERVÉE au serveur (Cloud Function via Admin SDK, en transaction) :
-    // les quotas d'import IA ne doivent JAMAIS être remis à zéro par le client. Le
-    // client lit seulement SES propres compteurs (affichage éventuel du reliquat).
+    // Quotas d'usage IA : le client lit les siens ; écriture serveur only
+    // (transaction Admin SDK) pour interdire toute remise à zéro côté client.
     match /aiUsage/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow write: if false;
     }
 
-    // ── Cache d'idempotence des imports IA ────────────────────────────────────
-    // Écriture ET lecture RÉSERVÉES au serveur (Admin SDK). Le client ne lit jamais
-    // ce cache directement : la Cloud Function d'import renvoie le résultat mémorisé
-    // pour ne pas re-débiter ni rappeler le LLM quand un import est rejoué (réponse
-    // perdue, app passée en arrière-plan). Doc id : `{uid}__{requestId}`.
+    // Cache d'idempotence des imports IA : serveur only. Renvoie le résultat
+    // mémorisé sans re-débiter ni rappeler le LLM sur rejeu. Id : `{uid}__{requestId}`.
     match /importCache/{docId} {
       allow read, write: if false;
     }
 
-    // ── Marques de facturation idempotente des imports IA ─────────────────────
-    // Écriture/lecture serveur uniquement (transaction Admin SDK). Empêche de
-    // re-débiter un crédit quand un import interrompu est rejoué. Doc id :
-    // `{uid}__{requestId}`. Même fenêtre de validité que le cache de résultat.
+    // Marques de facturation idempotente des imports IA : serveur only. Empêche
+    // le re-débit d'un crédit sur rejeu. Id : `{uid}__{requestId}`.
     match /importCharge/{docId} {
       allow read, write: if false;
     }

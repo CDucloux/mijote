@@ -6,7 +6,7 @@
  * (on ne connaît pas l'uid de l'invité à l'avance). Le plafond compte les membres
  * ACTIFS + les invitations EN ATTENTE : on ne peut pas inviter au-delà des places.
  *
- * @module household
+ * @module household/household
  */
 
 /** Document de foyer. */

@@ -1,7 +1,7 @@
 /**
  * Schéma de recette : nettoyage à l'export JSON et validation stricte à l'import.
  *
- * @module recipeSchema
+ * @module recipes/recipeSchema
  */
 
 /**

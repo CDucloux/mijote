@@ -9,7 +9,7 @@
  * l'éditeur : on regroupe en PRÉSERVANT l'ordre du tableau (l'ordre des sections suit
  * la première apparition), sans jamais réordonner les lignes elles-mêmes.
  *
- * @module recipeGroups
+ * @module recipes/recipeGroups
  */
 
 /** Une section : `group` = libellé (`null` pour la section principale non nommée). */

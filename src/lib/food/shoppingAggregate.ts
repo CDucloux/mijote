@@ -4,7 +4,7 @@
  * conservée), une seule « sortie au supermarché » plutôt qu'une check-list par
  * recette.
  *
- * @module shoppingAggregate
+ * @module food/shoppingAggregate
  */
 import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";

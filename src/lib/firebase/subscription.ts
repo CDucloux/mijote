@@ -6,7 +6,7 @@
  *   • appelle `createStripePortal` pour ouvrir le portail de facturation.
  * Toute la logique de paiement vit côté fonctions (voir functions/stripe.js).
  *
- * @module subscription
+ * @module firebase/subscription
  */
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { httpsCallable, getFunctions } from "firebase/functions";
