@@ -6,7 +6,7 @@ import { TAB_ORDER } from "../../hooks/useHeroCollapse.js";
  */
 export function RecipeTabsMobile({ activeTab, setActiveTab }) {
   return (
-    <div style={{ position: "sticky", top: 52, zIndex: 29, background: "var(--bg)", padding: "8px 16px 10px", flexShrink: 0 }}>
+    <div style={{ position: "sticky", top: "calc(52px + var(--safe-hero-top))", zIndex: 29, background: "var(--bg)", padding: "8px 16px 10px", flexShrink: 0 }}>
       <div style={{ position: "relative", display: "flex", background: "var(--surface2)", borderRadius: 12, padding: 4 }}>
         {/* Pastille active qui glisse d'un segment à l'autre */}
         <div aria-hidden="true" style={{
