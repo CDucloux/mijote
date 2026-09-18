@@ -64,8 +64,8 @@ service cloud.firestore {
       allow read: if isHMember(resource) || isHInvited(resource);
       allow create: if false;
       allow update: if (isHMember(resource) || isHInvited(resource))
-                    && request.resource.data.ownerUid == resource.data.ownerUid
-                    && peopleOk(request.resource.data);
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && peopleOk(request.resource.data);
       allow delete: if isSignedIn() && request.auth.uid == resource.data.ownerUid;
 
       // Sous-collections (recettes, méta) : membres uniquement.
@@ -82,21 +82,21 @@ service cloud.firestore {
     match /publicRecipes/{pubId} {
       function ownsDoc() {
         return hasVerifiedEmail()
-               && request.auth.uid == request.resource.data.authorUid
-               && pubId.split('__')[0] == request.auth.uid;
+          && request.auth.uid == request.resource.data.authorUid
+          && pubId.split('__')[0] == request.auth.uid;
       }
       allow get: if true;
       allow list: if hasVerifiedEmail() && request.query.limit <= 120;
       allow create, update: if ownsDoc();
       allow delete: if isAdmin()
-                    || (hasVerifiedEmail() && request.auth.uid == resource.data.authorUid);
+        || (hasVerifiedEmail() && request.auth.uid == resource.data.authorUid);
     }
 
     // Signalements : création par le rapporteur (email vérifié) ; lecture et
     // traitement admin uniquement.
     match /reports/{id} {
       allow create: if hasVerifiedEmail()
-                    && request.resource.data.reporterUid == request.auth.uid;
+        && request.resource.data.reporterUid == request.auth.uid;
       allow read, update, delete: if isAdmin();
     }
 

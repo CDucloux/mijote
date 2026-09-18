@@ -11,23 +11,23 @@ service firebase.storage {
     function isSignedIn() { return request.auth != null; }
     function isAdmin() {
       return isSignedIn()
-             && request.auth.token.email_verified == true
-             && request.auth.token.email == 'corentin.ducloux.edifice@gmail.com';
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'corentin.ducloux.edifice@gmail.com';
     }
     // Upload valide : image < 5 Mo. `request.resource` est null à la suppression
     // (on laisse passer, la restriction de propriété suffit).
     function isValidImageUpload() {
       return request.resource == null
-             || (request.resource.size < 5 * 1024 * 1024
-                 && request.resource.contentType.matches('image/.*'));
+        || (request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*'));
     }
 
     // Images perso : le propriétaire seul.
     match /users/{userId}/{allPaths=**} {
       allow read: if isSignedIn() && request.auth.uid == userId;
       allow write: if isSignedIn()
-                   && request.auth.uid == userId
-                   && isValidImageUpload();
+        && request.auth.uid == userId
+        && isValidImageUpload();
     }
 
     // Images Master : lecture par tout connecté, écriture admin.
