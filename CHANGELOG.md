@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.52.0 – Cardamome · Cuisine soignée jusqu'au moindre détail
+
+### Cuisine
+- **Notification de cuisson façon lecteur média** : la barre de suivi du pas à pas (Android) adopte la présentation d'un lecteur type Spotify. Elle affiche la **photo de la recette** en pochette, une **barre de progression** qui se remplit au fil du minuteur en cours, le **texte de l'étape** et les commandes Précédent / Pause / Suivant, directement depuis les notifications ou l'écran verrouillé.
+
+### Corrigé (application mobile)
+- **Retour d'une recette sans à-coup** : revenir d'une fiche vers la liste (geste ou chevron) ne provoque plus d'écran blanc, de saut vertical, ni de clignotement de la page d'origine. La fiche glisse proprement et dévoile l'onglet exact d'où l'on vient (Recettes, Planning…), en conservant la position de défilement.
+- **Un seul écran de chargement** : au démarrage, la gousse qui pulse reste l'unique indicateur, sans enchaîner sur un second chargement. La barre système ne clignote plus en gris avant de prendre la bonne couleur.
+- **Barre d'onglets stable au clavier** : valider une recherche ne fait plus « sauter » la barre d'onglets en milieu d'écran le temps que le clavier se referme.
+- **Sélecteur Ingrédients / Ustensiles / Étapes** : il reste entièrement visible sous la barre compacte quand on fait défiler une fiche.
+- **Bascule clair / sombre plus fluide** depuis le menu du compte, sans temps de latence perceptible.
+
 ## v4.51.0 – Cardamome · Cuisine sous l'œil, même en arrière-plan
 
 ### Cuisine
