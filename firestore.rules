@@ -160,5 +160,13 @@ service cloud.firestore {
     match /importCache/{docId} {
       allow read, write: if false;
     }
+
+    // ── Marques de facturation idempotente des imports IA ─────────────────────
+    // Écriture/lecture serveur uniquement (transaction Admin SDK). Empêche de
+    // re-débiter un crédit quand un import interrompu est rejoué. Doc id :
+    // `{uid}__{requestId}`. Même fenêtre de validité que le cache de résultat.
+    match /importCharge/{docId} {
+      allow read, write: if false;
+    }
   }
 }

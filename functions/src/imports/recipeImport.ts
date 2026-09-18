@@ -459,7 +459,7 @@ export const importRecipeFromUrl = onCall(
     // rappeler le LLM. On ne débite (assertImportAllowed) qu'en cas de cache absent.
     const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
     if (cached) return cached;
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "url");
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "url", requestId);
 
     const url = String((request.data as { url?: unknown })?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
@@ -507,7 +507,7 @@ export const importRecipeFromImages = onCall(
     const requestId = (request.data as { requestId?: unknown })?.requestId;
     const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
     if (cached) return cached;
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "photo");
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "photo", requestId);
 
     const rawImages = (request.data as { images?: unknown })?.images;
     const raw = Array.isArray(rawImages) ? rawImages : [];
@@ -559,7 +559,7 @@ export const importRecipeFromText = onCall(
     const requestId = (request.data as { requestId?: unknown })?.requestId;
     const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
     if (cached) return cached;
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "text");
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "text", requestId);
 
     const text = String((request.data as { text?: unknown })?.text || "").trim();
     if (text.length < MIN_TEXT_LEN) throw new HttpsError("invalid-argument", "Colle un texte de recette un peu plus complet (ingrédients et étapes).");
@@ -601,7 +601,7 @@ export const importRecipeFromPdf = onCall(
     const requestId = (request.data as { requestId?: unknown })?.requestId;
     const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
     if (cached) return cached;
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "pdf");
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "pdf", requestId);
 
     const text = String((request.data as { text?: unknown })?.text || "").trim();
     if (text.length < MIN_TEXT_LEN) throw new HttpsError("invalid-argument", "Ce PDF ne contient pas de texte exploitable (document scanné ?). Essaie plutôt l'import Photo.");

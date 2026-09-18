@@ -9,6 +9,7 @@ import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { ACTIVE_STATUSES } from "../subscriptions/stripeHelpers.js";
 import { periodKeys, currentCredits, creditsError, creditCost, type ImportKind, type CreditUsage } from "./quota.js";
+import { sanitizeRequestId, isFresh, IMPORT_CACHE_TTL_MS } from "../imports/importCache.js";
 
 if (!getApps().length) initializeApp();
 const dbAdmin = getFirestore();
@@ -61,20 +62,36 @@ export async function assertPlusOrAdmin(request: CallableRequest, adminEmail: st
  * crédits sont débités de façon atomique AVANT l'appel IA (contrôle du coût :
  * une tentative compte, même si l'extraction échoue).
  *
+ * Idempotence : si `requestId` est fourni et qu'une facturation FRAÎCHE existe déjà
+ * pour cette même requête (reprise d'un import interrompu avant que le serveur ait
+ * pu répondre), le débit est SAUTÉ. Au plus un crédit par import unique dans la
+ * fenêtre de validité (même TTL que le cache de résultat).
+ *
  * @param request - La requête onCall.
  * @param adminEmail - E-mail de l'admin.
  * @param kind - Type d'import : `"url"` | `"photo"` | `"text"` | `"pdf"`.
+ * @param rawRequestId - Identifiant d'idempotence du client (facultatif).
  * @throws HttpsError `resource-exhausted` si les crédits sont épuisés.
  */
-export async function assertImportAllowed(request: CallableRequest, adminEmail: string, kind: ImportKind): Promise<void> {
+export async function assertImportAllowed(request: CallableRequest, adminEmail: string, kind: ImportKind, rawRequestId?: unknown): Promise<void> {
   const { admin } = await requireAccess(request, adminEmail);
   if (admin) return; // roi 👑 : pas de quota
 
   const uid = request.auth!.uid;
   const ref = dbAdmin.doc(`aiUsage/${uid}`);
+  const reqId = sanitizeRequestId(rawRequestId);
+  const chargeRef = reqId ? dbAdmin.doc(`importCharge/${uid}__${reqId}`) : null;
   const { day, month } = periodKeys();
   const cost = creditCost(kind);
+  const now = Date.now();
   await dbAdmin.runTransaction(async (tx) => {
+    // Débit idempotent : une facturation fraîche pour cette requête = reprise d'un
+    // import déjà payé, on ne re-débite pas. Une marque périmée est ignorée (un
+    // ré-import du même contenu bien plus tard reste facturé normalement).
+    if (chargeRef) {
+      const charged = await tx.get(chargeRef);
+      if (charged.exists && isFresh(charged.data()?.chargedAtMs, now)) return;
+    }
     const s = await tx.get(ref);
     const data = (s.exists ? (s.data() || {}) : {}) as CreditUsage;
     const counts = currentCredits(data, day, month);
@@ -85,5 +102,6 @@ export async function assertImportAllowed(request: CallableRequest, adminEmail: 
       creditsMonth: month, creditsMonthCount: counts.monthCount + cost,
       updated: FieldValue.serverTimestamp(),
     }, { merge: true });
+    if (chargeRef) tx.set(chargeRef, { chargedAtMs: now, expireAt: new Date(now + IMPORT_CACHE_TTL_MS) });
   });
 }
