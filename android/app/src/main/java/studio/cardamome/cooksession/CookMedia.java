@@ -89,10 +89,16 @@ final class CookMedia {
         session = null;
     }
 
-    /** Deuxième ligne : position d'étape, complétée du minuteur si présent. */
+    /**
+     * Deuxième ligne de la card : numéro d'étape + texte de l'instruction quand on
+     * est sur une étape (ex. « Étape 1 / 2 · Verser le café… »). Sur une page méta
+     * (mise en place, bases) sans texte, on retombe sur le seul libellé de position.
+     * Le minuteur n'est plus repris ici : son décompte vit dans la barre de
+     * progression, qui suffit.
+     */
     static String subtitle(CookSnapshot snap) {
-        if (snap.hasTimer && snap.timerLabel != null && !snap.timerLabel.isEmpty()) {
-            return snap.stepLabel + " · " + snap.timerLabel;
+        if (snap.stepText != null && !snap.stepText.isEmpty()) {
+            return snap.stepLabel + " · " + snap.stepText;
         }
         return snap.stepLabel;
     }
