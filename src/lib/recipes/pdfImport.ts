@@ -3,7 +3,7 @@
  * (`await import`) pour ne peser sur le bundle qu'au moment d'un import PDF. On lit
  * uniquement la COUCHE TEXTE du document (aucune vision, aucun rendu de page) : un
  * PDF scanné renvoie donc un texte quasi vide, détecté en amont par
- * {@link hasUsablePdfText}. Le texte propre part ensuite au même pipeline Haiku que
+ * `hasUsablePdfText`. Le texte propre part ensuite au même pipeline Haiku que
  * l'import « texte collé ».
  *
  * @module recipes/pdfImport

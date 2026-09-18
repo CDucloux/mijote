@@ -11,6 +11,11 @@
   "hideGenerator": false,
   "excludePrivate": true,
   "excludeInternal": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": true,
+    "notDocumented": false
+  },
   "categorizeByGroup": true,
   "navigation": {
     "includeCategories": false,
