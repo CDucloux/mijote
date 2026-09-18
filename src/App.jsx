@@ -560,6 +560,12 @@ function AppInner({ user, isDark, toggleTheme }) {
     </div>
   );
 
+  // Corps de la fiche recette, monté à la fois pendant l'affichage et pendant la
+  // sortie animée (voir la branche `dismissing` plus bas), d'où sa factorisation.
+  const detailBody = selectedRecipe && currentRecipe ? (
+    <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => dismissDetail(() => setSelectedRecipe(null))} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
+  ) : null;
+
   const mainScreen = isEditing ? (
     <div key={recipeBeingEdited?.id || "new"} className={isDesktop ? "desktop-content editor-layout" : ""} style={{ flex: 1, overflow: "hidden", width: "100%" }}>
       <RecipeEditor recipe={recipeBeingEdited}
@@ -611,11 +617,24 @@ function AppInner({ user, isDark, toggleTheme }) {
       <RecipeNotFound onBack={() => navigate("/discover")} />
     )
   ) : selectedRecipe && currentRecipe ? (
-    <div key={selectedRecipe} className={`${dismissing ? "page-dismiss-right" : "editor-enter"}${isDesktop ? " desktop-content" : ""}`}
-      onAnimationEnd={dismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); } : undefined}
-      style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
-      <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => dismissDetail(() => setSelectedRecipe(null))} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
-    </div>
+    dismissing ? (
+      // Sortie animée : on monte la vue d'onglet SOUS la fiche qui glisse vers la
+      // droite, pour qu'elle se dévoile au lieu de laisser un écran blanc (la route
+      // ne change qu'en fin d'animation, la liste n'était sinon pas encore montée).
+      <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column" }}>
+        {tabContent}
+        <div key={selectedRecipe} className="page-dismiss-right"
+          onAnimationEnd={(e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); }}
+          style={{ position: "absolute", inset: 0, overflow: isDesktop ? "hidden" : "auto", background: "var(--bg)", zIndex: 2 }}>
+          {detailBody}
+        </div>
+      </div>
+    ) : (
+      <div key={selectedRecipe} className={`editor-enter${isDesktop ? " desktop-content" : ""}`}
+        style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
+        {detailBody}
+      </div>
+    )
   ) : justDeleted ? (
     // Recette supprimée : la redirection vers /recipes est en cours, on n'affiche
     // rien pendant cette micro-fenêtre plutôt que l'écran « introuvable ».
