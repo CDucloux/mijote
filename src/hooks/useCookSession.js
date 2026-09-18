@@ -72,7 +72,7 @@ export function useCookSession({ active, snapshot, onNext, onPrev, onToggleTimer
 /** Clé de contenu du snapshot pour piloter les dépendances d'effet. */
 function serializeSnapshot(s) {
   return [
-    s.recipeTitle, s.stepLabel, s.stepText, s.canPrev, s.canNext,
-    s.timer ? `${s.timer.endAt}|${s.timer.running}|${s.timer.label}` : "",
+    s.recipeTitle, s.imageUrl, s.stepLabel, s.stepText, s.pageIndex, s.pageCount, s.canPrev, s.canNext,
+    s.timer ? `${s.timer.endAt}|${s.timer.running}|${s.timer.label}|${s.timer.totalMs}` : "",
   ].join("");
 }

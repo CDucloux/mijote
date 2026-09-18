@@ -21,6 +21,8 @@ export interface CookSnapshotTimer {
   label: string;
   /** Échéance absolue en ms epoch : alimente le chronomètre natif (décompte OS). */
   endAt: number;
+  /** Durée totale en ms : alimente la barre de progression (seekbar média). */
+  totalMs: number;
   /** En marche (décompte) vs en pause : conditionne le libellé du bouton. */
   running: boolean;
 }
@@ -29,10 +31,16 @@ export interface CookSnapshotTimer {
 export interface CookSessionSnapshot {
   /** Nom de la recette en cours. */
   recipeTitle: string;
+  /** URL (ou data URI) de la photo de la recette, pour la pochette média. Vide si aucune. */
+  imageUrl: string;
   /** Libellé de position, ex. `"Étape 3 / 8"`, `"Mise en place"`, `"Bases"`. */
   stepLabel: string;
   /** Texte de l'étape, tronqué pour la notification. */
   stepText: string;
+  /** Progression dans le pas à pas (page courante, 0-based) : barre par défaut hors minuteur. */
+  pageIndex: number;
+  /** Nombre total de pages du pas à pas. */
+  pageCount: number;
   /** Une étape précédente existe (bouton « Précédent »). */
   canPrev: boolean;
   /** Une étape suivante existe (bouton « Suivant »). */
@@ -48,6 +56,8 @@ export type CookPageKind = "overview" | "bases" | "step";
 export interface BuildSnapshotArgs {
   /** Nom de la recette. */
   recipeTitle: string;
+  /** URL (ou data URI) de la photo de la recette, pour la pochette média. */
+  imageUrl?: string;
   /** Nature de la page courante. */
   pageKind: CookPageKind;
   /** Index de la page courante (0-based). */
@@ -97,7 +107,7 @@ function stepLabelOf(args: BuildSnapshotArgs, realStepCount: number): string {
 export function pickPilotTimer(timers: CookTimer[]): CookSnapshotTimer | null {
   const best = findPilot(timers);
   if (best === null || best.endAt == null) return null;
-  return { label: best.label, endAt: best.endAt, running: true };
+  return { label: best.label, endAt: best.endAt, totalMs: best.totalSec * 1000, running: true };
 }
 
 /**
@@ -131,8 +141,11 @@ export function buildCookSnapshot(args: BuildSnapshotArgs): CookSessionSnapshot 
   const realStepCount = countRealSteps(args);
   return {
     recipeTitle: args.recipeTitle.trim() || "Recette",
+    imageUrl: (args.imageUrl ?? "").trim(),
     stepLabel: stepLabelOf(args, realStepCount),
     stepText: args.pageKind === "step" ? truncateStepText(args.stepText) : "",
+    pageIndex: args.stepIdx,
+    pageCount: args.totalSteps,
     canPrev: args.stepIdx > 0,
     canNext: args.stepIdx < args.totalSteps - 1,
     timer: pickPilotTimer(args.timers),

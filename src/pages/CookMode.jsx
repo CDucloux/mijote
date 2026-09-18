@@ -280,6 +280,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   // ses boutons réveillent l'app et rejouent l'action ici. No-op côté web.
   const cookSnapshot = buildCookSnapshot({
     recipeTitle: recipe.name || "",
+    imageUrl: recipe.image || "",
     pageKind: cur.kind,
     stepIdx, totalSteps, realIdx,
     stepText: step?.text || "",

@@ -19,7 +19,7 @@ describe("pickPilotTimer", () => {
       timer({ id: "b", endAt: 2000, label: "2 min" }),
       timer({ id: "c", endAt: 9000, label: "9 min" }),
     ];
-    expect(pickPilotTimer(timers)).toEqual({ label: "2 min", endAt: 2000, running: true });
+    expect(pickPilotTimer(timers)).toEqual({ label: "2 min", endAt: 2000, totalMs: 360000, running: true });
     expect(pickPilotTimerId(timers)).toBe("b");
   });
 
@@ -42,6 +42,7 @@ describe("pickPilotTimer", () => {
 describe("buildCookSnapshot", () => {
   const base = {
     recipeTitle: "Tarte aux pommes",
+    imageUrl: "https://img/tarte.jpg",
     pageKind: "step", stepIdx: 2, totalSteps: 5, realIdx: 1,
     stepText: "Étaler la pâte.", timers: [],
   };
@@ -52,6 +53,18 @@ describe("buildCookSnapshot", () => {
     expect(snap.stepLabel).toBe("Étape 2 / 4");
     expect(snap.canPrev).toBe(true);
     expect(snap.canNext).toBe(true);
+  });
+
+  it("reporte la photo et la progression de page pour la pochette média", () => {
+    const snap = buildCookSnapshot(base);
+    expect(snap.imageUrl).toBe("https://img/tarte.jpg");
+    expect(snap.pageIndex).toBe(2);
+    expect(snap.pageCount).toBe(5);
+  });
+
+  it("normalise une photo absente ou espacée en chaîne vide", () => {
+    expect(buildCookSnapshot({ ...base, imageUrl: undefined }).imageUrl).toBe("");
+    expect(buildCookSnapshot({ ...base, imageUrl: "  " }).imageUrl).toBe("");
   });
 
   it("désactive Précédent en première page et Suivant en dernière", () => {
@@ -81,6 +94,6 @@ describe("buildCookSnapshot", () => {
 
   it("expose le minuteur pilote dans le snapshot", () => {
     const snap = buildCookSnapshot({ ...base, timers: [timer({ endAt: 4200, label: "1 min" })] });
-    expect(snap.timer).toEqual({ label: "1 min", endAt: 4200, running: true });
+    expect(snap.timer).toEqual({ label: "1 min", endAt: 4200, totalMs: 360000, running: true });
   });
 });
