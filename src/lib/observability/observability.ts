@@ -17,7 +17,7 @@
  * });
  * ```
  *
- * @module observability
+ * @module observability/observability
  */
 
 /** Destination des signaux (implémentée par le fournisseur choisi). */

@@ -8,7 +8,7 @@
  * l'appelant DOIT annuler l'import en entier (jamais d'écrasement partiel de la
  * base master), comme le faisait déjà l'import Markdown.
  *
- * @module dataYaml
+ * @module household/dataYaml
  */
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { ING_MD_BOUNDS } from "@/lib/food/ingredientsMarkdown.js";

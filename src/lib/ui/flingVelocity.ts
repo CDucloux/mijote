@@ -8,7 +8,7 @@
  * seuil (le rebond « ne se déclenche pas toujours »). On retient à la place un PIC
  * amorti de la vitesse récente, qui reflète l'élan réel d'approche.
  *
- * @module flingVelocity
+ * @module ui/flingVelocity
  */
 
 /**

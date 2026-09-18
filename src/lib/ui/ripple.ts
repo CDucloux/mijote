@@ -7,7 +7,7 @@
  * La cible doit être `position: relative; overflow: hidden` et l'animation CSS
  * `.ripple-ink` / `@keyframes rippleInk` doit exister (cf. global.css).
  *
- * @module ripple
+ * @module ui/ripple
  */
 
 /** Sous-ensemble d'un évènement pointeur suffisant pour placer l'onde. */

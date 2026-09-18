@@ -10,7 +10,7 @@
  * Décision PURE (booléens injectés), testable sans DOM ; sa lecture depuis le vrai
  * conteneur reste dans `useElasticScroll`.
  *
- * @module elasticStretch
+ * @module ui/elasticStretch
  */
 
 /**

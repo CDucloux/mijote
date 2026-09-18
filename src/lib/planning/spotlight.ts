@@ -2,7 +2,7 @@
  * Ingrédient du moment (logique pure) : choisit un fruit/légume de saison à mettre
  * en vedette sur le tableau de bord de l'Accueil (rotation hebdomadaire).
  *
- * @module spotlight
+ * @module planning/spotlight
  */
 import { ingredientMonths } from "@/lib/food/seasonality.js";
 

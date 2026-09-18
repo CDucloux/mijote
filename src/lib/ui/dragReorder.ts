@@ -2,7 +2,7 @@
  * Réordonnancement par glisser vertical : calculs purs (aucun DOM, aucun React)
  * partagés par les lignes d'ingrédients et les cartes d'étapes de l'éditeur.
  *
- * @module dragReorder
+ * @module ui/dragReorder
  */
 
 /** Bande verticale occupée par une ligne réordonnable (coordonnées viewport). */

@@ -4,7 +4,7 @@
  * Point d'entrée unique de la connexion/déconnexion : l'UI n'appelle jamais le SDK
  * Firebase Auth directement.
  *
- * @module auth
+ * @module firebase/auth
  */
 import { signInWithRedirect, signOut, type User } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase/firebase.js";

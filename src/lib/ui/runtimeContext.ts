@@ -12,7 +12,7 @@
  * testable sans globals ; la lecture des signaux réels ({@link readRuntimeSignals})
  * est la seule glue impure.
  *
- * @module runtimeContext
+ * @module ui/runtimeContext
  */
 import { Capacitor } from "@capacitor/core";
 

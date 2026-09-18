@@ -8,7 +8,7 @@
  * (Firestore, synchro) continue de s'appuyer sur l'état d'auth du SDK JS, comme sur
  * le web. Sur le web, le comportement est strictement inchangé (popup).
  *
- * @module googleAuth
+ * @module firebase/googleAuth
  */
 import { GoogleAuthProvider, signInWithCredential, signInWithPopup, type UserCredential } from "firebase/auth";
 import { Capacitor } from "@capacitor/core";

@@ -2,7 +2,7 @@
  * Tri des recettes de la bibliothèque : options de tri (critère + sens lisible)
  * et fabrique de comparateurs.
  *
- * @module recipeSort
+ * @module recipes/recipeSort
  */
 import { computeDifficulty } from "@/lib/recipes/difficulty.js";
 

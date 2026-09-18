@@ -5,7 +5,7 @@
  * régimes compatibles, mots-clés). Les composants (bases) sont publiés à part comme
  * docs publics et reliés par `componentRefs`.
  *
- * @module publicRecipes
+ * @module household/publicRecipes
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";

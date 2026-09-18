@@ -9,7 +9,7 @@
  * du namespace actif : `users/{uid}` en solo, `households/{hid}` en foyer). Un uid
  * brut (string) reste accepté pour rétro-compat ponctuelle.
  *
- * @module firestore
+ * @module firebase/firestore
  */
 import {
   doc, getDoc, collection, getDocs, writeBatch, query, orderBy, limit, where,

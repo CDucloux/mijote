@@ -10,7 +10,7 @@
  * par lot) sans réécriture : elle ne fait qu'agréger des lignes d'ingrédients.
  * Aucun I/O, aucun React.
  *
- * @module decoupe
+ * @module recipes/decoupe
  */
 
 import type { Calibre, Cut, FormeDecoupe, IngredientLine, Step } from "@/lib/types.js";

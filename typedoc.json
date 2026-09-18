@@ -12,6 +12,11 @@
   "excludePrivate": true,
   "excludeInternal": true,
   "categorizeByGroup": true,
+  "navigation": {
+    "includeCategories": false,
+    "includeGroups": false,
+    "includeFolders": true
+  },
   "navigationLinks": {
     "Dépôt": "https://github.com/CDucloux/mijote"
   },

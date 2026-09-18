@@ -4,7 +4,7 @@
  * `nut: true` = champ rangé dans `nutrition` ; `isVegetable` n'est pas une colonne
  * (recalculé depuis la catégorie).
  *
- * @module ingredientsMarkdown
+ * @module food/ingredientsMarkdown
  */
 import { parseMonths } from "@/lib/food/seasonality.js";
 import { TIP_TYPES } from "@/constants/tipTypes.js";

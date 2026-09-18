@@ -7,7 +7,7 @@
  * `window.print()` de la WebView est un no-op et ne rejoint pas le service
  * d'impression OS). Texte sélectionnable, rendu fidèle.
  *
- * @module recipePdf
+ * @module recipes/recipePdf
  */
 import { groupBy, sectionRuns } from "@/lib/recipes/recipeGroups.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";

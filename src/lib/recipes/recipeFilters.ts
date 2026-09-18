@@ -2,7 +2,7 @@
  * Filtres de recettes (état partagé, pur). Forme de l'état de filtrage avancé
  * partagé par /recipes et « Découvrir », et prédicat unique appliqué des deux côtés.
  *
- * @module recipeFilters
+ * @module recipes/recipeFilters
  */
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";

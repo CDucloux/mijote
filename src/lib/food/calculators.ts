@@ -4,7 +4,7 @@
  *    surface, ou de volume si les deux hauteurs sont fournies).
  * 2. Conversions d'unités, masse ↔ volume via la densité de l'ingrédient.
  *
- * @module calculators
+ * @module food/calculators
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 

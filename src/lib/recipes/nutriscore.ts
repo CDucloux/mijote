@@ -3,7 +3,7 @@
  * nutriments de TOUTE la recette ramenés à 100 g de plat fini, on calcule un
  * unique Nutri-Score, puis on le mappe sur l'échelle 0–100 du ring.
  *
- * @module nutriscore
+ * @module recipes/nutriscore
  */
 
 import type { IngredientLine } from "@/lib/types.js";

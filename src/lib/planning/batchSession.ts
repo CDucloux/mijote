@@ -8,7 +8,7 @@
  *      avec la quantité totale à préparer d'avance (le vrai différenciateur : rien
  *      dans une app de contenu ne connaît le rendement ni le partage des bases).
  *
- * @module batchSession
+ * @module planning/batchSession
  */
 import type { IngredientLine, RecipeYield } from "@/lib/types.js";
 import { flattenForShopping, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";

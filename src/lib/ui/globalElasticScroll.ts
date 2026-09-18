@@ -12,7 +12,7 @@ import { attachElasticScroll, type ElasticScrollOptions } from "@/lib/ui/elastic
  * contenu défilable). Réglages optionnels par attributs : `data-elastic-max` (px) et la
  * présence de `data-elastic-arm-unscrollable` (armer même sans défilement).
  *
- * @module globalElasticScroll
+ * @module ui/globalElasticScroll
  */
 
 /** Sélecteur d'opt-in : tout conteneur défilant portant l'effet en délégation. */

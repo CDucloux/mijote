@@ -11,7 +11,7 @@
  * score = clamp(base + min(mods, 2), 1, 5)
  * ```
  *
- * @module difficulty
+ * @module recipes/difficulty
  */
 import { buildTechniqueIndex, annotateText, type TechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
 

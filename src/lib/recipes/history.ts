@@ -4,7 +4,7 @@
  * l'état de la recette → reproductibilité et rollback. Tout vit dans le doc
  * recette (`recipe.history[]`), donc aucun impact sur la sync (1 doc/recette).
  *
- * @module history
+ * @module recipes/history
  */
 
 interface IngredientLike { name?: string; amount?: number | string | null; unit?: string | null }

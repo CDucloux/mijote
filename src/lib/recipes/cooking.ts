@@ -4,7 +4,7 @@
  * (normalisés, sans accents). Une recette peut relever de plusieurs modes, on
  * parle alors de cuisson « mixte ».
  *
- * @module cooking
+ * @module recipes/cooking
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 

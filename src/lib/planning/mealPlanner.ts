@@ -9,7 +9,7 @@
  *   variété (recette/catégorie/cuisine), effort étalé, et bonus d'affinité batch
  *   (recettes partageant une préparation de base).
  *
- * @module mealPlanner
+ * @module planning/mealPlanner
  */
 import { recipeSeasonScore, currentMonth } from "@/lib/food/seasonality.js";
 import { collectIngredientSignals, isEligible, type DietPreferences } from "@/lib/food/dietFilter.js";

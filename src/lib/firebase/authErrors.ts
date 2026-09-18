@@ -3,7 +3,7 @@
  * (donc testables unitairement sans charger le SDK). Séparé de `googleAuth`/`auth`
  * pour cette raison.
  *
- * @module authErrors
+ * @module firebase/authErrors
  */
 
 /** Nature d'un échec de connexion NON annulé, pour choisir le bon message. */

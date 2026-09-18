@@ -3,7 +3,7 @@
  * Aucune dépendance à React : le composant fournit l'état courant et applique le
  * résultat.
  *
- * @module recipeActions
+ * @module recipes/recipeActions
  */
 import { computeNutriInfo, buildRecipeIndex, isComponentLine } from "@/lib/recipes/nutriscore.js";
 import { flattenForShopping, mergeRawLines, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";

@@ -12,7 +12,7 @@
  * la base d'ingrédients) – l'appelant leur passe explicitement le workspace solo,
  * même quand l'utilisateur est dans un foyer.
  *
- * @module workspace
+ * @module household/workspace
  */
 
 /** Espace de données personnel (`users/{uid}`). */

@@ -5,7 +5,7 @@
  * délègue ici le choix « au-dessus / en-dessous », le centrage horizontal clampé et
  * la position du caret. Isolé pour être testable sans navigateur.
  *
- * @module tooltipPosition
+ * @module ui/tooltipPosition
  */
 
 /** Rectangle mesuré (repère viewport, comme `getBoundingClientRect`). */

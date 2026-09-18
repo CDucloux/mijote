@@ -8,7 +8,7 @@
  * alarme en premier plan (bip + vibration) gérée côté composant. La décision de
  * plateforme s'appuie sur `Capacitor.isNativePlatform()`.
  *
- * @module localNotifications
+ * @module notifications/localNotifications
  */
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";

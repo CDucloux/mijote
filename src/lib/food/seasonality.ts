@@ -4,7 +4,7 @@
  * CALCULÉE depuis ses ingrédients ; un produit disponible toute l'année n'apporte
  * aucun signal et est ignoré.
  *
- * @module seasonality
+ * @module food/seasonality
  */
 
 /** Item de base minimal exploité ici (issu du résolveur de noms). */

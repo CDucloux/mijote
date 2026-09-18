@@ -10,7 +10,7 @@
  * La couleur (`barColorFor`) est pure et testable ; `applyStatusBarTheme` est la glue
  * DOM/plugin.
  *
- * @module statusBarTheme
+ * @module ui/statusBarTheme
  */
 
 /** Couleurs de fond du thème, calées sur celles posées au boot (`index.html`). */

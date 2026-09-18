@@ -13,7 +13,7 @@
  * VARIÉTÉ/TYPE (blanc, doux, nouveau…) ne sont jamais retirés : ils distinguent
  * des ingrédients différents, ces équivalences relèvent des alias.
  *
- * @module nameMatcher
+ * @module food/nameMatcher
  */
 
 /** Entrée de base (ingrédient/ustensile). Champs libres tolérés via l'index. */

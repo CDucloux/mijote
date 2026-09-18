@@ -5,7 +5,7 @@
  * legacy sans `groupId` est un plat autonome. Le shopping et le drag-and-drop
  * itèrent les items sans rien savoir de la composition.
  *
- * @module composedMeal
+ * @module planning/composedMeal
  */
 import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
 import type { MealItem, MealPlan } from "@/lib/types.js";

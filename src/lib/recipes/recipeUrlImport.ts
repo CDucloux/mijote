@@ -3,7 +3,7 @@
  * Functions `importRecipeFromUrl` / `importRecipeFromImages` et remonte un message
  * d'erreur lisible. La garde admin est faite CÔTÉ SERVEUR.
  *
- * @module recipeUrlImport
+ * @module recipes/recipeUrlImport
  */
 import { httpsCallable, type HttpsCallableResult } from "firebase/functions";
 import { functions } from "@/lib/firebase/firebase.js";

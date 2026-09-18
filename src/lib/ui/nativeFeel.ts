@@ -6,7 +6,7 @@
  * pure (booléens injectés) ; la pose de la classe `.native-feel` sur `<html>` est
  * une glue fine sans logique, cf. `markNativeFeel`.
  *
- * @module nativeFeel
+ * @module ui/nativeFeel
  */
 
 /** Classe posée sur `<html>` quand le feel natif est actif (cf. règles CSS). */

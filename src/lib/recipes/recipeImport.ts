@@ -4,7 +4,7 @@
  * DOM. Le composant se contente de dédoublonner contre l'existant et d'afficher
  * le résultat.
  *
- * @module recipeImport
+ * @module recipes/recipeImport
  */
 import { validateRecipeSchema } from "@/lib/recipes/recipeSchema.js";
 import { buildNameMatcher } from "@/lib/food/nameMatcher.js";

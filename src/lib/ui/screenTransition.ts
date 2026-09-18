@@ -9,7 +9,7 @@
  * l'orchestration (état, minuterie de sécurité, navigation) est une glue fine, cf.
  * `AppInner`.
  *
- * @module screenTransition
+ * @module ui/screenTransition
  */
 import { isCapacitorContext, type RuntimeContext } from "./runtimeContext.js";
 

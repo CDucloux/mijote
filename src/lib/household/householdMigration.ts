@@ -8,7 +8,7 @@
  *     listes partagés ne se fusionnent pas ligne à ligne ; la copie perso reste
  *     en sauvegarde dans l'espace solo).
  *
- * @module householdMigration
+ * @module household/householdMigration
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 

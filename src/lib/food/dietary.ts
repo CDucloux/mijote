@@ -8,7 +8,7 @@
  * pas de signal. On exige au moins un ingrédient identifié pour affirmer
  * « vegan », plutôt que d'afficher le badge à tort.
  *
- * @module dietary
+ * @module food/dietary
  */
 
 interface VeganItem { id: string; category?: string }

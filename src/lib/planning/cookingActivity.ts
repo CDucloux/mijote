@@ -3,7 +3,7 @@
  * d'activité du planning : chaque jour porte le nombre de repas planifiés (proxy
  * de « ce que tu as cuisiné »). Alimente la heatmap du profil. Aucune I/O.
  *
- * @module cookingActivity
+ * @module planning/cookingActivity
  */
 
 /** Planning : clé jour `YYYY-MM-DD` → items de repas. */

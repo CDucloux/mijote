@@ -6,7 +6,7 @@
  * l'exécution (naviguer, rejoindre l'accueil, quitter) est une glue fine côté
  * orchestration, cf. `useAndroidBackButton`.
  *
- * @module backButton
+ * @module ui/backButton
  */
 
 /** Action à exécuter en réponse au bouton retour Android. */
