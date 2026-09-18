@@ -621,7 +621,14 @@ function AppInner({ user, isDark, toggleTheme }) {
       // Sortie animée : on monte la vue d'onglet SOUS la fiche qui glisse vers la
       // droite, pour qu'elle se dévoile au lieu de laisser un écran blanc (la route
       // ne change qu'en fin d'animation, la liste n'était sinon pas encore montée).
-      <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column" }}>
+      // `paddingTop` = réserve d'inset système : pendant le dismiss, #root porte
+      // encore `root--edge-hero` (padding annulé pour le hero à fond perdu), donc la
+      // liste dessous remonterait sous la barre système puis redescendrait en fin
+      // d'animation. On lui rend l'inset ici ; la fiche en `inset:0` couvre tout le
+      // padding box, son hero reste donc à fond perdu, et l'offset de la liste est
+      // identique à sa position post-animation (aucun saut). Edge-hero ⇔ !isDesktop
+      // dans cette branche (édition / import / plan déjà écartés plus haut).
+      <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", boxSizing: "border-box", paddingTop: isDesktop ? 0 : "var(--safe-hero-top)" }}>
         {tabContent}
         <div key={selectedRecipe} className="page-dismiss-right"
           onAnimationEnd={(e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); }}
