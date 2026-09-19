@@ -80,4 +80,16 @@ describe("attachElasticScroll", () => {
     const removed = remove.mock.calls.map((c) => c[0]);
     expect(removed).toEqual(expect.arrayContaining(["touchstart", "touchmove", "touchend", "touchcancel", "scroll"]));
   });
+
+  it("en armAtEdgeOnly, n'attache PAS le touchmove non passif à l'installation (scroll compositeur préservé)", () => {
+    mockMedia({ reduce: false });
+    const el = document.createElement("div");
+    const inner = document.createElement("div");
+    const add = vi.spyOn(el, "addEventListener");
+    const off = attachElasticScroll(el, inner, { armAtEdgeOnly: true });
+    const events = add.mock.calls.map((c) => c[0]);
+    expect(events).toEqual(expect.arrayContaining(["touchstart", "touchend", "touchcancel", "scroll"]));
+    expect(events).not.toContain("touchmove");
+    expect(() => off()).not.toThrow();
+  });
 });

@@ -47,6 +47,13 @@ export interface ElasticScrollOptions {
   max?: number;
   /** Armer l'étirement sur un geste vers le haut même quand rien ne défile (page courte). */
   armWhenUnscrollable?: boolean;
+  /**
+   * N'attacher le `touchmove` non passif QUE pendant un geste amorcé en butée basse.
+   * Hors de ce cas, le conteneur défile en natif (thread compositeur), sans la taxe
+   * du listener non passif : le scroll courant reste fluide, seul l'overscroll de bord
+   * passe en JS. Le rebond d'inertie (fling) continue de jouer via l'écoute `scroll`.
+   */
+  armAtEdgeOnly?: boolean;
 }
 
 /**
@@ -64,7 +71,7 @@ export interface ElasticScrollOptions {
 export function attachElasticScroll(
   scrollEl: HTMLElement,
   contentEl: HTMLElement,
-  { max = 38, armWhenUnscrollable = false }: ElasticScrollOptions = {},
+  { max = 38, armWhenUnscrollable = false, armAtEdgeOnly = false }: ElasticScrollOptions = {},
 ): () => void {
   if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) return () => {};
   const el = scrollEl, inner = contentEl;
@@ -103,12 +110,21 @@ export function attachElasticScroll(
   };
   const onEnd = (): void => { if (!pull) lift(false); };
   inner.addEventListener("transitionend", onEnd);
+  // Attache/détache dynamiques du touchmove non passif. En `armAtEdgeOnly`, il n'existe
+  // que le temps d'un geste amorcé en butée : le scroll courant garde le fast path
+  // compositeur, seul l'overscroll de bord bascule en JS.
+  let moveAttached = false;
+  const addMove = (): void => { if (!moveAttached) { el.addEventListener("touchmove", onMove, { passive: false }); moveAttached = true; } };
+  const removeMove = (): void => { if (moveAttached) { el.removeEventListener("touchmove", onMove); moveAttached = false; } };
   // On ne promeut PAS la couche GPU dès le touchstart : sur une page à beaucoup
   // d'éléments, `will-change` sur tout le contenu à chaque amorce rasterise une couche
   // géante et provoque du jank. On ne « lift » qu'à l'armement réel (mode === "bottom").
   const onDown = (e: TouchEvent): void => {
     if ((e.target as HTMLElement | null)?.closest?.("[data-drag-handle]")) { dragging = false; return; }
     bounce?.cancel(); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0;
+    // Geste amorcé en butée basse (ou page courte armable) → on attache le listener de
+    // bord juste pour ce geste ; sinon on laisse filer le scroll natif.
+    if (armAtEdgeOnly && canArmBottomStretch(scrollable(), atBottom(), armWhenUnscrollable)) addMove();
   };
   const onMove = (e: TouchEvent): void => {
     if (!dragging) return;
@@ -127,6 +143,7 @@ export function attachElasticScroll(
     if (mode === "bottom") { pull = 0; apply(true); }
     else lift(false);
     axis = null; mode = null;
+    if (armAtEdgeOnly) removeMove(); // rendre le scroll au compositeur hors du bord
   };
 
   // Suivi de vélocité pour le rebond d'inertie : le fling après le doigt est géré
@@ -145,13 +162,13 @@ export function attachElasticScroll(
   };
 
   el.addEventListener("touchstart", onDown, { passive: true });
-  el.addEventListener("touchmove", onMove, { passive: false });
+  if (!armAtEdgeOnly) addMove(); // mode historique : listener présent en permanence
   el.addEventListener("touchend", onUp, { passive: true });
   el.addEventListener("touchcancel", onUp, { passive: true });
   el.addEventListener("scroll", onScroll, { passive: true });
   return () => {
     el.removeEventListener("touchstart", onDown);
-    el.removeEventListener("touchmove", onMove);
+    removeMove();
     el.removeEventListener("touchend", onUp);
     el.removeEventListener("touchcancel", onUp);
     el.removeEventListener("scroll", onScroll);

@@ -18,6 +18,9 @@ import { attachElasticScroll } from "@/lib/ui/elasticScrollCore.js";
  * @param options.armWhenUnscrollable - Arme l'étirement sur un geste vers le haut même
  *   quand le contenu tient à l'écran (rien à défiler). Utile sur une page courte (ex.
  *   connexion) pour garder le ressenti élastique ; faux par défaut.
+ * @param options.armAtEdgeOnly - N'attache le `touchmove` non passif que le temps d'un
+ *   geste amorcé en butée basse : le scroll courant reste sur le thread compositeur
+ *   (pas de jank), seul l'overscroll de bord passe en JS. Faux par défaut.
  * @returns `scrollRef` (conteneur `overflow-y`) et `contentRef` (enfant transformé,
  *   englobant tout le contenu défilable).
  *
@@ -27,15 +30,15 @@ import { attachElasticScroll } from "@/lib/ui/elasticScrollCore.js";
  * return <div ref={scrollRef} style={{ overflowY: "auto" }}><div ref={contentRef}>…</div></div>;
  * ```
  */
-export function useElasticScroll({ max = 38, disabled = false, armWhenUnscrollable = false }: { max?: number; disabled?: boolean; armWhenUnscrollable?: boolean } = {}) {
+export function useElasticScroll({ max = 38, disabled = false, armWhenUnscrollable = false, armAtEdgeOnly = false }: { max?: number; disabled?: boolean; armWhenUnscrollable?: boolean; armAtEdgeOnly?: boolean } = {}) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current, inner = contentRef.current;
     if (!el || !inner || disabled) return;
-    return attachElasticScroll(el, inner, { max, armWhenUnscrollable });
-  }, [max, disabled, armWhenUnscrollable]);
+    return attachElasticScroll(el, inner, { max, armWhenUnscrollable, armAtEdgeOnly });
+  }, [max, disabled, armWhenUnscrollable, armAtEdgeOnly]);
 
   return { scrollRef, contentRef };
 }
