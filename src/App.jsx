@@ -769,6 +769,14 @@ export default function App() {
   useStatusBarSync(isDark); // aligne la barre système sur le thème (boot, bascule, reprise)
   const { user, postLogin } = useAuthUser();
 
+  // Relâche le splash d'ouverture (cf. main.jsx / index.html) dès que l'auth est
+  // connue : le splash couvre TOUTE la phase de chargement à froid, puis cède la
+  // place au premier écran réel. La gousse de l'écran de chargement React n'est donc
+  // jamais dévoilée au démarrage, ce qui supprime le saut vertical du relais.
+  useEffect(() => {
+    if (user !== undefined) window.__releaseBootSplash?.();
+  }, [user]);
+
   return (
     <Routes>
       {/* Écran de connexion : route publique dédiée. Déjà connecté → retour à

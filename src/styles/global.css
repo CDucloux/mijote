@@ -3669,6 +3669,23 @@ select {
    boot jusqu'à l'app (pas de second loader marmite). Réutilise volontairement les
    keyframes globales `bootPulse` / `bootBreathe` déclarées dans index.html, pour
    que les deux gousses restent parfaitement synchronisées visuellement. */
+/* Chargement app-shell : on calque EXACTEMENT la géométrie du splash d'ouverture
+   (#boot-splash : fixed + inset:0, cf. index.html) au lieu d'un flux `min-height:
+   100dvh`. Sur WebView Android edge-to-edge, `100dvh` et le viewport `fixed` ne
+   résolvent pas à la même hauteur : le centre vertical des deux gousses différait
+   d'un poil, d'où le saut (flicker) quand le splash s'efface sur l'écran de
+   chargement. Même boîte = pods parfaitement alignés, plus de flicker. */
+.loading-root--boot {
+  position: fixed;
+  inset: 0;
+  min-height: 0;
+  /* Cf. bloc « FLICKER DE LA GOUSSE AU DÉMARRAGE » dans index.html (#boot-splash) :
+     même contexte natif, même remède A (centrage en zone sûre) pour que la gousse ne
+     saute pas à la bascule edge-to-edge du WebView. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+
 .loading-pod {
   position: relative;
   width: 116px;

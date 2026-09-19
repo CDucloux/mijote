@@ -38,14 +38,22 @@ export function useHousehold() {
   const [household, setHousehold] = useState<DocumentData | null>(cached ? hhCache.household : null);
   const [invites, setInvites] = useState<DocumentData[]>(cached ? hhCache.invites : []);
   const [loading, setLoading] = useState(!cached);
+  const [creating, setCreating] = useState(false);
   const hadHousehold = useRef(!!(cached && hhCache.household));
+  // Verrou anti double-création : un clic répété (ou deux onglets) ne doit pas
+  // semer plusieurs foyers fantômes. Le ref garde l'invariant même entre deux
+  // rendus, avant que `creating` (asynchrone) ne se propage.
+  const creatingRef = useRef(false);
 
   useEffect(() => {
     if (!user?.uid) { hhCache = { uid: null, household: null, invites: [] }; setHousehold(null); setInvites([]); setLoading(false); return; }
     // Changement de compte : on repart d'un état vierge (pas de fuite entre uids).
     if (hhCache.uid !== user.uid) { hhCache = { uid: user.uid, household: null, invites: [] }; setLoading(true); }
     const unsubMember = onSnapshot(householdMemberQuery(user.uid), snap => {
-      const h = snap.docs[0]?.data() || null;
+      // `.data()` ne porte JAMAIS l'id du document : on le rattache ici, sinon les
+      // actions serveur (invitation, dissolution…) reçoivent `hid = undefined`.
+      const d = snap.docs[0];
+      const h = d ? { id: d.id, ...d.data() } : null;
       hhCache = { ...hhCache, uid: user.uid, household: h };
       setHousehold(h);
       setLoading(false);
@@ -77,8 +85,22 @@ export function useHousehold() {
     catch (e) { const msg = (e as { message?: string })?.message; notify(msg ? `${errMsg} : ${msg}` : errMsg, "error"); return false; }
   }, [online, notify]);
 
+  // Création idempotente : refuse un second appel tant qu'un est en vol, et ne
+  // crée pas un foyer si on en a déjà un (les clics rapides ne sèment qu'un foyer).
+  const create = useCallback(async (name: string): Promise<boolean> => {
+    if (creatingRef.current || household) return false;
+    creatingRef.current = true;
+    setCreating(true);
+    try {
+      return await run(() => createHousehold(user!, name, getSharedData?.() as Parameters<typeof createHousehold>[2]), "Création du foyer échouée");
+    } finally {
+      creatingRef.current = false;
+      setCreating(false);
+    }
+  }, [household, run, user, getSharedData]);
+
   const actions = {
-    create: (name: string) => run(() => createHousehold(user!, name, getSharedData?.() as Parameters<typeof createHousehold>[2]), "Création du foyer échouée"),
+    create,
     invite: (email: string) => run(() => inviteToHousehold(household?.id, email), "Invitation échouée"),
     accept: (hid: string) => run(() => acceptInvite(hid, user!), "Adhésion échouée"),
     decline: (hid: string) => run(() => declineInvite(hid, user!.email!), "Refus échoué"),
@@ -87,5 +109,5 @@ export function useHousehold() {
     dissolve: () => run(() => dissolveHousehold(household?.id, user!.uid), "Dissolution échouée"),
   };
 
-  return { household, invites, loading, actions };
+  return { household, invites, loading, creating, actions };
 }

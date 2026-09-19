@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 
 const USER = { uid: "u1", email: "a@b.c" };
@@ -8,10 +8,13 @@ vi.mock("../../context/AppShellContext.jsx", () => ({
   useAppShell: () => ({ user: USER, notify: vi.fn(), getSharedData: vi.fn() }),
 }));
 
+// Foyer courant simulé côté snapshot membre (null = aucun foyer, pour tester la création).
+let memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
+
 // onSnapshot livre synchronement un snapshot selon le type de requête (membre/invite).
 vi.mock("firebase/firestore", () => ({
   onSnapshot: (q, onNext) => {
-    if (q?.type === "member") onNext({ docs: [{ data: () => ({ id: "h1", name: "Mon foyer" }) }] });
+    if (q?.type === "member") onNext({ docs: memberDoc ? [memberDoc] : [] });
     else onNext({ docs: [] });
     return () => {};
   },
@@ -26,8 +29,12 @@ vi.mock("@/lib/firebase/firestore.js", () => ({
 }));
 
 import { useHousehold } from "../useHousehold.js";
+import { dissolveHousehold, createHousehold } from "@/lib/firebase/firestore.js";
+import { act } from "@testing-library/react";
 
 describe("useHousehold", () => {
+  beforeEach(() => { memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) }; vi.clearAllMocks(); });
+
   it("expose le foyer et sort de l'état loading après le 1er snapshot", () => {
     const { result } = renderHook(() => useHousehold());
     expect(result.current.household).toEqual({ id: "h1", name: "Mon foyer" });
@@ -46,5 +53,35 @@ describe("useHousehold", () => {
     const { result } = renderHook(() => useHousehold());
     expect(typeof result.current.actions.create).toBe("function");
     expect(typeof result.current.actions.leave).toBe("function");
+  });
+
+  // Non-régression : `.data()` ne porte pas l'id → la dissolution partait avec un
+  // hid `undefined` et plantait dans Firebase (« can't access property indexOf »).
+  it("dissout le foyer avec l'id du document (issu de doc.id, pas de data())", async () => {
+    const { result } = renderHook(() => useHousehold());
+    await result.current.actions.dissolve();
+    expect(dissolveHousehold).toHaveBeenCalledWith("h1", "u1");
+  });
+
+  // Anti-foyer-fantôme : un clic répété ne doit semer qu'un seul foyer.
+  it("ne crée pas un second foyer quand on en a déjà un", async () => {
+    const { result } = renderHook(() => useHousehold());
+    const ok = await result.current.actions.create("Autre");
+    expect(ok).toBe(false);
+    expect(createHousehold).not.toHaveBeenCalled();
+  });
+
+  it("ignore les créations concurrentes (verrou en vol) : un seul appel serveur", async () => {
+    memberDoc = null; // aucun foyer : la création est autorisée
+    const { result } = renderHook(() => useHousehold());
+    await act(async () => {
+      const [a, b] = await Promise.all([
+        result.current.actions.create("Maison"),
+        result.current.actions.create("Maison"),
+      ]);
+      expect(a).toBe(true);
+      expect(b).toBe(false);
+    });
+    expect(createHousehold).toHaveBeenCalledTimes(1);
   });
 });

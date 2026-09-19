@@ -14,7 +14,7 @@ export function LoadingPage({ isDark }) {
   // splash d'ouverture, donc on garde l'écran de chargement complet.
   if (APP_SHELL) {
     return (
-      <div className={`loading-root${isDark ? "" : " light"}`}>
+      <div className={`loading-root loading-root--boot${isDark ? "" : " light"}`}>
         <div className="loading-pod" role="img" aria-label="Chargement">
           <span className="loading-pod__pulse" />
           <span className="loading-pod__pulse delay" />
