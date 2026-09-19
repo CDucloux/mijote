@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.52.1 – Cardamome · Foyer sans accroc
+
+### Corrigé (foyer)
+- **Dissolution du foyer réparée** : dissoudre un foyer dont on est propriétaire fonctionne de nouveau. Une erreur technique empêchait l'opération d'aboutir (le foyer restait en place au lieu d'être supprimé).
+- **Plus de foyers en double** : appuyer plusieurs fois sur « Créer le foyer » ne crée plus qu'un seul foyer. Le bouton se verrouille pendant la création et ne relance rien tant qu'un foyer existe déjà.
+
+### Corrigé (application mobile)
+- **Démarrage sans à-coup** : la gousse de l'écran d'ouverture ne saute plus et reste centrée dans la zone sûre ; l'écran de démarrage est tenu jusqu'à l'authentification, sans clignotement résiduel avant l'affichage de l'application.
+
 ## v4.52.0 – Cardamome · Cuisine soignée jusqu'au moindre détail
 
 ### Cuisine
