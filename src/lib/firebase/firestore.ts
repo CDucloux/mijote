@@ -33,6 +33,19 @@ import type { Recipe } from "@/lib/types.js";
 /** Workspace actif, ou uid brut (rétro-compat). */
 export type WorkspaceRef = Workspace | string;
 
+// ── Verrou d'écriture des slices partagés (garde-fou anti-client périmé) ──────
+// Engagé au bootstrap quand `evaluateAppGuard` déclasse le client (version trop
+// vieille ou hôte non canonique). Une fois posé, les écritures par diff des
+// recettes (seul chemin capable de SUPPRIMER des docs distants) deviennent des
+// no-op : un cache local obsolète ne peut plus saccager la base partagée.
+let sharedWritesLocked = false;
+
+/** Engage ou lève le verrou d'écriture des slices partagés. */
+export function setSharedWritesLocked(locked: boolean): void { sharedWritesLocked = locked; }
+
+/** Indique si les écritures partagées sont actuellement verrouillées. */
+export function areSharedWritesLocked(): boolean { return sharedWritesLocked; }
+
 /** Fiche d'annuaire d'un utilisateur (avatar, email, nom). */
 export interface DirectoryUser {
   uid: string;
@@ -344,6 +357,7 @@ export async function loadSharedData(ws: WorkspaceRef): Promise<Required<SharedD
  * @returns La nouvelle carte de synchro des recettes.
  */
 export async function writeSharedData(ws: WorkspaceRef, data: SharedData, recipeMap: Map<string, Recipe> = new Map()): Promise<Map<string, Recipe>> {
+  if (sharedWritesLocked) return recipeMap; // client déclassé : aucune écriture partagée
   const newMap = await syncRecipes(ws, (data.recipes || []) as Recipe[], recipeMap);
   const batch = writeBatch(db);
   batch.set(metaDoc(ws, "collections"), { items: data.collections || [] });
@@ -653,6 +667,9 @@ export async function migrateLegacyDoc(uid: string): Promise<DocumentData | null
  * @returns La nouvelle carte de synchro (id → recette).
  */
 export async function syncRecipes(ws: WorkspaceRef, recipes: Recipe[], lastSyncedMap: Map<string, Recipe>): Promise<Map<string, Recipe>> {
+  // Client déclassé : on n'écrit rien et on préserve la carte de synchro connue,
+  // pour ne jamais supprimer une recette distante depuis un état local périmé.
+  if (sharedWritesLocked) return lastSyncedMap;
   const batch = writeBatch(db);
   const col = recipesCol(ws);
   const currentIds = new Set<string>();

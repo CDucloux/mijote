@@ -47,6 +47,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Config d'admission (garde-fou anti-client périmé) : lecture par tout connecté
+    // (le bootstrap la lit pour décider version/hôte), écriture admin seule.
+    match /config/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
     // Annuaire : chacun écrit SA fiche ; lecture par tout connecté (foyer/invits).
     match /userDirectory/{uid} {
       allow read: if isSignedIn();
