@@ -23,19 +23,19 @@ describe("isIOSPlatform", () => {
 });
 
 describe("elasticStrategy", () => {
-  it("garde le custom en coquille iOS et sur iOS web/PWA", () => {
+  it("garde le custom dans les coquilles Capacitor (iOS comme Android)", () => {
     expect(elasticStrategy("capacitor-ios", true)).toBe("custom");
+    expect(elasticStrategy("capacitor-android", false)).toBe("custom");
+    expect(elasticStrategy("capacitor-android", true)).toBe("custom");
+  });
+
+  it("garde le custom sur iOS web/PWA (pas de rebond natif sur scrollers internes)", () => {
     expect(elasticStrategy("browser", true)).toBe("custom");
     expect(elasticStrategy("pwa", true)).toBe("custom");
   });
 
-  it("prend le natif en coquille Android et sur web/PWA non-iOS", () => {
-    expect(elasticStrategy("capacitor-android", false)).toBe("native");
+  it("prend le natif sur le web/PWA hors iOS (overscroll fourni par le navigateur)", () => {
     expect(elasticStrategy("browser", false)).toBe("native");
     expect(elasticStrategy("pwa", false)).toBe("native");
-  });
-
-  it("la coquille Capacitor prime sur le signal iOS (Android natif même si le flag traîne)", () => {
-    expect(elasticStrategy("capacitor-android", true)).toBe("native");
   });
 });
