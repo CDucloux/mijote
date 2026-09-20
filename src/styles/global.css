@@ -2231,6 +2231,12 @@ select {
   transition: transform .18s ease, box-shadow .18s ease;
 }
 
+/* Bouton « Passer » de l'onboarding : au survol (desktop / pointeur fin), fond « pill »
+   translucide. Rien au tactile pour ne pas laisser d'état collé après un tap. */
+@media (hover: hover) and (pointer: fine) {
+  .onb-skip:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
+}
+
 /* Entrée de page glissée (gauche vers la droite) : rejouée à chaque navigation
    dans le Guide / les Informations légales via un `key` qui remonte le contenu. */
 @keyframes page-slide-in {

@@ -273,7 +273,7 @@ export function OnboardingCarousel() {
 
       {/* Passer (sauf dernière slide) */}
       {!last && (
-        <button onClick={finish} style={{ position: "absolute", top: "calc(14px + env(safe-area-inset-top))", right: 18, zIndex: 3, background: "none", border: "none", color: "rgba(255,255,255,0.85)", fontSize: 13.5, fontWeight: 600, cursor: "pointer", padding: 6 }}>Passer</button>
+        <button onClick={finish} className="onb-skip" style={{ position: "absolute", top: "calc(14px + env(safe-area-inset-top))", right: 18, zIndex: 3, background: "none", border: "none", color: "rgba(255,255,255,0.85)", fontSize: 13.5, fontWeight: 600, cursor: "pointer", padding: "6px 14px", borderRadius: 999, transition: "background 0.18s ease, color 0.18s ease" }}>Passer</button>
       )}
 
       {/* Piste plein écran, FENÊTRÉE : seules la slide active et ses voisines
