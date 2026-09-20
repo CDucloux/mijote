@@ -27,6 +27,10 @@ export function HouseholdPanel({ onClose }) {
   // Après une dissolution/départ réussi, on ferme la sheet SANS repasser par l'état
   // « aucun foyer » (sinon le bloc « Créer un foyer » apparaît un instant : effet de pop).
   const [leaving, setLeaving] = useState(false);
+  // Instantané (nom + propriétaire) capturé à l'ouverture du dialogue : `household`
+  // passe à null dès la suppression optimiste, bien avant la fin de l'action ; sans
+  // cet instantané le dialogue lirait un nom nul et se démonterait (spinner qui saute).
+  const [confirmSnap, setConfirmSnap] = useState({ name: "", owner: false });
   // Le panneau foyer a besoin de l'annuaire (candidats à l'invitation + avatars).
   useEffect(() => { loadDirectory?.(); }, [loadDirectory]);
 
@@ -97,8 +101,9 @@ export function HouseholdPanel({ onClose }) {
         </div>
       ))}
 
-      {!household ? (
-        /* ── Pas de foyer : en créer un ── */
+      {working && !household ? null : !household ? (
+        /* ── Pas de foyer : en créer un ── (masqué pendant une dissolution en cours,
+             le temps que la sheet se ferme, pour éviter le pop du formulaire) ── */
         card(
           <>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Créer un foyer</div>
@@ -189,7 +194,7 @@ export function HouseholdPanel({ onClose }) {
           )}
 
           {/* Quitter / dissoudre : action destructive, franchement rouge (pilule teintée). */}
-          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => setConfirmLeave(true)}
+          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => { setConfirmSnap({ name: household.name, owner }); setConfirmLeave(true); }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.2)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.12)"; }}>
             <Icon name="logout" size={15} color="var(--red)" /> {owner ? "Dissoudre le foyer" : "Quitter le foyer"}
@@ -197,15 +202,15 @@ export function HouseholdPanel({ onClose }) {
         </>
       )}
 
-      {/* Feuille de confirmation quitter / dissoudre. On garde `household` dans la
-          condition : dès qu'il devient null (dissolution/départ effectif), la feuille
-          se démonte sans jamais lire household.name sur une valeur nulle. */}
-      {confirmLeave && household && (
+      {/* Feuille de confirmation quitter / dissoudre. Découplée de `household` (qui
+          passe à null dès la suppression optimiste) : on s'appuie sur l'instantané
+          capturé, pour que le dialogue tienne (spinner) jusqu'à la fermeture. */}
+      {confirmLeave && (
         <ConfirmDialog
-          title={owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
-          icon={owner ? "trash" : "logout"}
-          confirmLabel={owner ? "Dissoudre" : "Quitter"}
-          busyLabel={owner ? "Dissolution…" : "Départ…"}
+          title={confirmSnap.owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
+          icon={confirmSnap.owner ? "trash" : "logout"}
+          confirmLabel={confirmSnap.owner ? "Dissoudre" : "Quitter"}
+          busyLabel={confirmSnap.owner ? "Dissolution…" : "Départ…"}
           busy={working}
           onCancel={() => setConfirmLeave(false)}
           onConfirm={async () => {
@@ -213,15 +218,15 @@ export function HouseholdPanel({ onClose }) {
             // Délai plancher : le spinner reste visible un minimum même si le serveur
             // répond instantanément (confort visuel, comme la déconnexion).
             const [ok] = await Promise.all([
-              owner ? actions.dissolve() : actions.leave(),
+              confirmSnap.owner ? actions.dissolve() : actions.leave(),
               new Promise(r => setTimeout(r, 650)),
             ]);
             if (ok) { setLeaving(true); onClose?.(); }
             else { setWorking(false); setConfirmLeave(false); }
           }}>
-          {owner
-            ? <>« {household.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
-            : <>Tu n'auras plus accès aux données partagées de « {household.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
+          {confirmSnap.owner
+            ? <>« {confirmSnap.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
+            : <>Tu n'auras plus accès aux données partagées de « {confirmSnap.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
         </ConfirmDialog>
       )}
     </Col>
