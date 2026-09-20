@@ -1171,22 +1171,15 @@ select {
   width: 100%;
   max-width: 380px;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
-  /* Entrée SANS scale ni overshoot : mettre le contenu à l'échelle rasterisait le
-     texte (aspect « distordu ») et l'overshoot le faisait dépasser puis se recaler
-     (le « ça remonte après 100 ms »). Un simple fondu + léger glissement suffit. */
+  /* Entrée en FONDU PUR (aucun transform) : le scale rasterisait le texte (aspect
+     distordu) et tout translate le faisait « sauter » au recalage. Un fondu ne touche
+     pas à la position, donc le texte est net et immobile dès l'ouverture. */
   animation: alertPop 0.2s ease-out backwards;
 }
 
 @keyframes alertPop {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Menus contextuels (appui long recette / carnet) : tuiles d'actions rapides
