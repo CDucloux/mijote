@@ -176,8 +176,8 @@ const SLIDES = [
   },
   {
     illustration: LeafIllustration, color: "#5fb88a",
-    title: "Difficulté, saison, Nutri-Score",
-    text: <>Cardamome lit tes recettes et fait le calcul : <strong>difficulté</strong> déduite des techniques, <em>saisonnalité</em> des ingrédients et <em>Nutri-Score</em>, sans rien à saisir.</>,
+    title: "Cardamome comprend tes recettes",
+    text: <>Aucun champ à remplir : Cardamome <strong>lit chaque recette</strong> et en déduit seul la <em>difficulté</em> (d'après les techniques), la <em>saisonnalité</em> (d'après les ingrédients) et le <em>Nutri-Score</em>. Toi tu cuisines, lui il analyse.</>,
   },
   {
     illustration: PlanningIllustration, color: "#5b9cf6",
