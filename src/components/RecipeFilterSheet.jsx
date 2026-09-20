@@ -27,7 +27,14 @@ function Group({ title, summary, defaultOpen = false, first = false, children })
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </span>
       </button>
-      {open && <div style={{ marginTop: 13 }}>{children}</div>}
+      {/* Déploiement animé sans mesurer la hauteur : la piste de grille passe de
+          0fr à 1fr (transition douce quelle que soit la taille du contenu), le
+          wrapper `overflow: hidden` clippe pendant l'animation. */}
+      <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows 0.32s cubic-bezier(0.33, 1, 0.68, 1)" }}>
+        <div style={{ overflow: "hidden", minHeight: 0 }}>
+          <div style={{ paddingTop: 13 }}>{children}</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -35,7 +42,7 @@ function Group({ title, summary, defaultOpen = false, first = false, children })
 // Puce (toggle) générique.
 function Chip({ on, onClick, color, children }) {
   return (
-    <button onClick={onClick} style={{
+    <button onClick={onClick} className="ripple" style={{
       display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
       padding: "8px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer",
       background: on ? (color ? `${color}22` : "rgba(var(--accent-rgb),0.16)") : "var(--surface2)",
@@ -69,7 +76,7 @@ function IngredientPicker({ ingredientDB, selected, setFilters }) {
             const ing = byId.get(id);
             if (!ing) return null;
             return (
-              <button key={id} onClick={() => toggle(id)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(var(--accent-rgb),0.16)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.5)" }}>
+              <button key={id} onClick={() => toggle(id)} className="ripple" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(var(--accent-rgb),0.16)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.5)" }}>
                 <span style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "var(--surface)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={22} /></span>
                 {ing.name}
                 <Icon name="close" size={12} color="var(--accent)" />
@@ -82,7 +89,7 @@ function IngredientPicker({ ingredientDB, selected, setFilters }) {
       {matches.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 8 }}>
           {matches.map(ing => (
-            <button key={ing.id} onClick={() => { toggle(ing.id); setQ(""); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "7px 8px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+            <button key={ing.id} onClick={() => { toggle(ing.id); setQ(""); }} className="ripple" style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "7px 8px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
               <span style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={30} /></span>
               <span style={{ fontSize: 13.5, color: "var(--text)" }}>{ing.name}</span>
               <span style={{ marginLeft: "auto", display: "inline-flex" }}><Icon name="plus" size={15} color="var(--text3)" /></span>
@@ -209,7 +216,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
         <div style={{ display: "flex", gap: 8 }}>
           {["A", "B", "C", "D", "E"].map(l => {
             const on = filters.nutriMax === l;
-            return <button key={l} onClick={() => set({ nutriMax: on ? null : l })} style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 14, fontWeight: 800, cursor: "pointer", background: on ? NUTRI[l] : "var(--surface2)", color: on ? "#fff" : "var(--text3)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{l}</button>;
+            return <button key={l} onClick={() => set({ nutriMax: on ? null : l })} className="ripple" style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 14, fontWeight: 800, cursor: "pointer", background: on ? NUTRI[l] : "var(--surface2)", color: on ? "#fff" : "var(--text3)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{l}</button>;
           })}
         </div>
       </Group>
@@ -221,7 +228,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
             const on = filters.diffMax === n;
             const col = difficultyColor(n);
             return (
-              <button key={n} onClick={() => set({ diffMax: on ? null : n })} style={{
+              <button key={n} onClick={() => set({ diffMax: on ? null : n })} className="ripple" style={{
                 display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
                 padding: "8px 13px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer",
                 background: on ? `color-mix(in srgb, ${col} 16%, transparent)` : "var(--surface2)",
