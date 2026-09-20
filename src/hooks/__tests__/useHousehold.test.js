@@ -24,12 +24,12 @@ vi.mock("@/lib/firebase/firestore.js", () => ({
   householdMemberQuery: () => ({ type: "member" }),
   householdInviteQuery: () => ({ type: "invite" }),
   createHousehold: vi.fn(), inviteToHousehold: vi.fn(), acceptInvite: vi.fn(),
-  declineInvite: vi.fn(), leaveHousehold: vi.fn(), dissolveHousehold: vi.fn(),
+  declineInvite: vi.fn(), exitAllHouseholds: vi.fn(),
   clearHouseholdPointer: vi.fn(),
 }));
 
 import { useHousehold } from "../useHousehold.js";
-import { dissolveHousehold, createHousehold } from "@/lib/firebase/firestore.js";
+import { exitAllHouseholds, createHousehold } from "@/lib/firebase/firestore.js";
 import { act } from "@testing-library/react";
 
 describe("useHousehold", () => {
@@ -55,12 +55,18 @@ describe("useHousehold", () => {
     expect(typeof result.current.actions.leave).toBe("function");
   });
 
-  // Non-régression : `.data()` ne porte pas l'id → la dissolution partait avec un
-  // hid `undefined` et plantait dans Firebase (« can't access property indexOf »).
-  it("dissout le foyer avec l'id du document (issu de doc.id, pas de data())", async () => {
+  // Dissoudre sort l'utilisateur de TOUS ses foyers (robuste aux doublons fantômes),
+  // via exitAllHouseholds, plutôt que d'agir sur le seul foyer affiché.
+  it("dissout en sortant de tous les foyers de l'utilisateur", async () => {
     const { result } = renderHook(() => useHousehold());
     await result.current.actions.dissolve();
-    expect(dissolveHousehold).toHaveBeenCalledWith("h1", "u1");
+    expect(exitAllHouseholds).toHaveBeenCalledWith(USER);
+  });
+
+  it("quitter passe aussi par exitAllHouseholds", async () => {
+    const { result } = renderHook(() => useHousehold());
+    await result.current.actions.leave();
+    expect(exitAllHouseholds).toHaveBeenCalledWith(USER);
   });
 
   // Anti-foyer-fantôme : un clic répété ne doit semer qu'un seul foyer.

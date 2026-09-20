@@ -4,7 +4,7 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import {
   householdMemberQuery, householdInviteQuery,
   createHousehold, inviteToHousehold, acceptInvite, declineInvite,
-  leaveHousehold, dissolveHousehold, clearHouseholdPointer,
+  exitAllHouseholds, clearHouseholdPointer,
 } from "@/lib/firebase/firestore.js";
 
 // ─── HOOK FOYER ───────────────────────────────────────────────────────────────
@@ -105,8 +105,10 @@ export function useHousehold() {
     accept: (hid: string) => run(() => acceptInvite(hid, user!), "Adhésion échouée"),
     decline: (hid: string) => run(() => declineInvite(hid, user!.email!), "Refus échoué"),
     cancelInvite: (email: string) => run(() => declineInvite(household?.id, email), "Annulation échouée"),
-    leave: () => run(() => leaveHousehold(household?.id, user!), "Départ échoué"),
-    dissolve: () => run(() => dissolveHousehold(household?.id, user!.uid), "Dissolution échouée"),
+    // Départ et dissolution sortent l'utilisateur de TOUS ses foyers (dont d'éventuels
+    // doublons fantômes), pour ne plus jamais rester « coincé » dans un foyer résiduel.
+    leave: () => run(() => exitAllHouseholds(user!), "Départ échoué"),
+    dissolve: () => run(() => exitAllHouseholds(user!), "Dissolution échouée"),
   };
 
   return { household, invites, loading, creating, actions };

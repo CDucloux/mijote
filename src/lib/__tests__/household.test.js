@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   MAX_HOUSEHOLD, peopleCount, isOwner, isMemberUid, newHouseholdDoc,
   canInvite, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved,
+  planHouseholdExit,
 } from "@/lib/household/household.js";
 
 const owner = { uid: "u1", email: "Owner@Mail.com" };
@@ -66,5 +67,36 @@ describe("adhésion & départ", () => {
     h = withMemberRemoved(h, { uid: "u2", email: "bob@x.com" });
     expect(h.memberUids).toEqual(["u1"]);
     expect(h.memberEmails).toEqual(["owner@mail.com"]);
+  });
+});
+
+describe("planHouseholdExit", () => {
+  const user = { uid: "u1", email: "owner@mail.com" };
+
+  it("supprime les foyers possédés et quitte les autres", () => {
+    const docs = [
+      { id: "a", ownerUid: "u1", memberUids: ["u1"], memberEmails: ["owner@mail.com"] },
+      { id: "b", ownerUid: "u9", memberUids: ["u9", "u1"], memberEmails: ["x@y.z", "owner@mail.com"] },
+    ];
+    const plan = planHouseholdExit(docs, user);
+    expect(plan.deleteIds).toEqual(["a"]);
+    expect(plan.leave).toHaveLength(1);
+    expect(plan.leave[0].id).toBe("b");
+    expect(plan.leave[0].next.memberUids).toEqual(["u9"]);
+    expect(plan.leave[0].next.memberEmails).toEqual(["x@y.z"]);
+  });
+
+  it("gère plusieurs foyers possédés (doublons fantômes) en une passe", () => {
+    const docs = [
+      { id: "a", ownerUid: "u1", memberUids: ["u1"] },
+      { id: "b", ownerUid: "u1", memberUids: ["u1"] },
+      { id: "c", ownerUid: "u1", memberUids: ["u1"] },
+    ];
+    expect(planHouseholdExit(docs, user).deleteIds).toEqual(["a", "b", "c"]);
+    expect(planHouseholdExit(docs, user).leave).toEqual([]);
+  });
+
+  it("sur une liste vide, ne fait rien", () => {
+    expect(planHouseholdExit([], user)).toEqual({ deleteIds: [], leave: [] });
   });
 });
