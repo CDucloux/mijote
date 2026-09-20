@@ -3894,7 +3894,9 @@ select {
   min-height: 52px;
   padding: 14px 22px;
   border-radius: var(--radius, 16px);
-  border: 1px solid var(--border);
+  /* Sans bordure visible, mais on garde 1px transparent pour figer la hauteur
+     (retirer la bordure décalerait le bouton de 2px). Le hover se joue au fond seul. */
+  border: 1px solid transparent;
   /* Surface légèrement surélevée : contraste à la fois avec le fond mobile (uni) et
      le panneau desktop (surface), donc le bouton reste toujours lisible. */
   background: var(--surface2);
@@ -3903,9 +3905,9 @@ select {
   font-family: var(--ff-body);
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+  transition: background 0.18s ease, transform 0.12s ease;
 }
-.auth__google:hover:not(:disabled) { border-color: var(--accent); background: var(--surface3); }
+.auth__google:hover:not(:disabled) { background: var(--surface3); }
 .auth__google:disabled { cursor: default; opacity: 0.85; }
 
 .auth__spinner {
