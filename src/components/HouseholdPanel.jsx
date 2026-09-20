@@ -6,7 +6,6 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, isOwner, MAX_HOUSEHOLD } from "@/lib/household/household.js";
 import { Row, Col } from "./ui/primitives.jsx";
-import { FoyerGlyph } from "./FoyerGlyph.jsx";
 
 // Avatar rond : photo si disponible, sinon initiale colorée.
 function Avatar({ photo, label, size = 34, dim = false }) {
@@ -53,18 +52,13 @@ export function HouseholdPanel({ onClose }) {
 
   return (
     <Col gap={14}>
-      {/* Bandeau info : glyphe foyer + accroche courte, puis les 4 espaces partagés en
-          pastilles (scannable, moins « bloc de texte »), et une ligne de réassurance. */}
-      <Col gap={13} style={{ background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 16, padding: 16 }}>
-        <Row gap={11} style={{ alignItems: "center" }}>
-          <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "var(--accent)" }}>
-            <FoyerGlyph size={22} color="#fff" />
-          </span>
-          <Col gap={1}>
-            <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)" }}>Un foyer, tout en commun</span>
-            <span style={{ fontSize: 12.5, color: "var(--text2)" }}>Jusqu'à {MAX_HOUSEHOLD} personnes, un seul espace de cuisine.</span>
-          </Col>
-        </Row>
+      {/* Bandeau info : sans fond ni icône (l'icône vit au titre de la sheet). Accroche
+          + sous-titre, puis les 4 espaces partagés en pastilles, et une réassurance. */}
+      <Col gap={12} style={{ padding: "2px 2px 0" }}>
+        <Col gap={1}>
+          <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)" }}>Un foyer, tout en commun</span>
+          <span style={{ fontSize: 12.5, color: "var(--text2)" }}>Jusqu'à {MAX_HOUSEHOLD} personnes, un seul espace de cuisine.</span>
+        </Col>
         <Row gap={7} style={{ flexWrap: "wrap" }}>
           {[
             { icon: "book", label: "Recettes" },
@@ -101,7 +95,7 @@ export function HouseholdPanel({ onClose }) {
           <>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Créer un foyer</div>
             <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 14 }}>Tu en seras le propriétaire et pourras inviter {MAX_HOUSEHOLD - 1} personne{MAX_HOUSEHOLD - 1 > 1 ? "s" : ""}.</div>
-            <input className="field-input" placeholder="Nom du foyer (ex. Maison Dupont)" value={name} maxLength={40} onChange={e => setName(e.target.value)} style={{ marginBottom: 12 }} />
+            <input className="field-input" placeholder="Nom du foyer (ex. Maison Dupont)" value={name} maxLength={40} onChange={e => setName(e.target.value)} style={{ marginBottom: 12, border: "none", background: "var(--surface2)" }} />
             {/* Soft-lock : en gratuit, la page de création reste visible (l'utilisateur
                 se projette), mais la validation renvoie vers l'offre au lieu de créer. */}
             {isPlus ? (
