@@ -23,20 +23,21 @@ export interface LandingCta {
 export type AuthLike = { uid?: string } | null | undefined;
 
 /**
- * Décide du CTA principal de la landing selon l'état d'authentification.
+ * Décide du CTA principal de la landing. Le libellé est unique (« Découvrir
+ * Cardamome »), volontairement non conditionnel : la landing invite tout le monde de
+ * la même voix. Seule la DESTINATION s'adapte à l'authentification (invisible côté
+ * bouton) pour ne pas renvoyer un connecté vers la connexion.
  *
- * - Connecté : « Ouvrir Cardamome » vers l'accueil de l'app (`/home`).
- * - Déconnecté (ou auth non encore résolue) : « Essayer Cardamome » vers `/login`.
+ * - Connecté : vers l'accueil de l'app (`/home`).
+ * - Déconnecté (ou auth non encore résolue) : vers `/login`.
  *
  * L'état non résolu (`undefined`) est traité comme déconnecté : la landing peut se
- * peindre immédiatement sans attendre Firebase, le CTA basculera si l'utilisateur
- * se révèle connecté.
+ * peindre immédiatement sans attendre Firebase, la destination basculera si
+ * l'utilisateur se révèle connecté.
  *
  * @param user - Utilisateur courant (`undefined` tant que l'auth se résout, `null` si déconnecté).
- * @returns Le libellé et la destination du bouton principal.
+ * @returns Le libellé (fixe) et la destination du bouton principal.
  */
 export function landingPrimaryCta(user: AuthLike): LandingCta {
-  return user?.uid
-    ? { label: "Ouvrir Cardamome", to: "/home" }
-    : { label: "Essayer Cardamome", to: "/login" };
+  return { label: "Découvrir Cardamome", to: user?.uid ? "/home" : "/login" };
 }

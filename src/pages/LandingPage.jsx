@@ -383,9 +383,10 @@ function Socials() {
 }
 
 /**
- * Landing publique servie sur `/`. Reste consultable connecté ou non : seul le CTA
- * principal s'adapte (`Essayer` vs `Ouvrir`). Aucun accès Firestore ni logique
- * métier ici, c'est une page de présentation pure.
+ * Landing publique servie sur `/`. Reste consultable connecté ou non : le CTA
+ * principal garde un libellé unique (« Découvrir Cardamome »), seule sa destination
+ * s'adapte à l'auth. Aucun accès Firestore ni logique métier ici, c'est une page de
+ * présentation pure.
  *
  * @param {{ user: ({uid?: string}|null|undefined), isDark: boolean, toggleTheme: () => void }} props
  */
