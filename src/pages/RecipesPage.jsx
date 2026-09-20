@@ -137,6 +137,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   const [recipeMenu, setRecipeMenu] = useState(null); // recette visée par l'appui long / clic droit (modifier/supprimer)
   const [carnetPickFor, setCarnetPickFor] = useState(null); // recette dont on choisit les carnets (action « Carnet »)
   const [confirmDelete, setConfirmDelete] = useState(null); // { kind: "carnet" | "recipe", item }, confirmation avant suppression
+  const [deleting, setDeleting] = useState(false); // action de suppression en cours (spinner du dialogue)
   const [editingSmartId, setEditingSmartId] = useState(null); // carnet smart dont on ré-édite la vue de filtres
   const [dragCarnetId, setDragCarnetId] = useState(null); // carnet en cours de glisser-déposer (réordonnancement)
 
@@ -559,14 +560,22 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
         <ConfirmDialog
           title={`Supprimer ${confirmDelete.kind === "carnet" ? "ce carnet" : "cette recette"} ?`}
           icon={confirmDelete.kind === "carnet" ? "book" : "trash"}
+          busy={deleting}
+          busyLabel="Suppression…"
           onCancel={() => setConfirmDelete(null)}
-          onConfirm={() => {
+          onConfirm={async () => {
+            setDeleting(true);
+            // Délai plancher : le spinner reste visible un minimum même quand la
+            // suppression optimiste répond instantanément (confort visuel, comme
+            // la dissolution d'un foyer).
+            await new Promise(r => setTimeout(r, 650));
             if (confirmDelete.kind === "carnet") {
               setCollections(prev => prev.filter(c => c.id !== confirmDelete.item.id));
               if (filterCol === confirmDelete.item.id) setFilterCol(null);
             } else {
               onDeleteRecipe?.(confirmDelete.item.id);
             }
+            setDeleting(false);
             setConfirmDelete(null);
           }}>
           <strong style={{ color: "var(--text)" }}>« {confirmDelete.item.name} »</strong>
