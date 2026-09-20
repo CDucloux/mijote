@@ -1125,7 +1125,7 @@ select {
 @keyframes alertPopOut {
   to {
     opacity: 0;
-    transform: scale(0.92) translateY(8px);
+    transform: translateY(8px);
   }
 }
 
@@ -1171,18 +1171,21 @@ select {
   width: 100%;
   max-width: 380px;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
-  animation: alertPop 0.35s cubic-bezier(0.32, 1.2, 0.5, 1) backwards;
+  /* Entrée SANS scale ni overshoot : mettre le contenu à l'échelle rasterisait le
+     texte (aspect « distordu ») et l'overshoot le faisait dépasser puis se recaler
+     (le « ça remonte après 100 ms »). Un simple fondu + léger glissement suffit. */
+  animation: alertPop 0.2s ease-out backwards;
 }
 
 @keyframes alertPop {
   from {
     opacity: 0;
-    transform: scale(0.9) translateY(12px);
+    transform: translateY(8px);
   }
 
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(0);
   }
 }
 
