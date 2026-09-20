@@ -27,7 +27,14 @@ function Group({ title, summary, defaultOpen = false, first = false, children })
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </span>
       </button>
-      {open && <div style={{ marginTop: 13 }}>{children}</div>}
+      {/* Déploiement animé sans mesurer la hauteur : la piste de grille passe de
+          0fr à 1fr (transition douce quelle que soit la taille du contenu), le
+          wrapper `overflow: hidden` clippe pendant l'animation. */}
+      <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows 0.32s cubic-bezier(0.33, 1, 0.68, 1)" }}>
+        <div style={{ overflow: "hidden", minHeight: 0 }}>
+          <div style={{ paddingTop: 13 }}>{children}</div>
+        </div>
+      </div>
     </div>
   );
 }
