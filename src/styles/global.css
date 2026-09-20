@@ -3786,7 +3786,9 @@ select {
   cursor: pointer;
   transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
-.auth__theme:hover { color: var(--text); border-color: var(--accent); }
+/* Hover aligné sur celui de la landing (.lp-theme) : éclaircissement du fond, pas de
+   bordure d'accent. */
+.auth__theme:hover { color: var(--text); background: var(--surface3); }
 
 /* ── Panneau pitch (porte l'unique h1) ── */
 .auth__pitch {
