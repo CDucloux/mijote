@@ -31,6 +31,10 @@ export function HouseholdPanel({ onClose }) {
   // passe à null dès la suppression optimiste, bien avant la fin de l'action ; sans
   // cet instantané le dialogue lirait un nom nul et se démonterait (spinner qui saute).
   const [confirmSnap, setConfirmSnap] = useState({ name: "", owner: false });
+  // Foyer figé pendant la dissolution/le départ : `household` tombe à null dès la
+  // suppression optimiste, ce qui viderait la sheet DERRIÈRE la modal (effet cassé).
+  // On garde le dernier foyer connu pour l'afficher intact jusqu'à la fermeture.
+  const [frozenHh, setFrozenHh] = useState(null);
   // Le panneau foyer a besoin de l'annuaire (candidats à l'invitation + avatars).
   useEffect(() => { loadDirectory?.(); }, [loadDirectory]);
 
@@ -40,13 +44,13 @@ export function HouseholdPanel({ onClose }) {
     </Row>;
   }
 
-  // Fermeture en cours après dissolution/départ : on n'affiche plus rien (surtout pas
-  // le bloc « Créer un foyer ») le temps que la sheet glisse hors écran.
-  if (leaving) return <Col style={{ minHeight: 80 }} />;
+  // Pendant l'action (spinner) et la fermeture, on rend le foyer FIGÉ : ainsi la sheet
+  // derrière la modal reste intacte (membres visibles) au lieu de se vider.
+  const h = (working || leaving) ? (frozenHh || household) : household;
 
   const myEmail = (user?.email || "").toLowerCase();
-  const owner = household && isOwner(household, user?.uid);
-  const full = household && peopleCount(household) >= MAX_HOUSEHOLD;
+  const owner = h && isOwner(h, user?.uid);
+  const full = h && peopleCount(h) >= MAX_HOUSEHOLD;
   const dirByEmail = new Map(directory.map(d => [(d.email || "").toLowerCase(), d]));
   const photoFor = (email) => (email === myEmail ? user?.photoURL : dirByEmail.get(email)?.photoURL) || "";
   // Mon nom personnalisé dans l'app (préférences) prime sur le nom technique de
@@ -55,7 +59,7 @@ export function HouseholdPanel({ onClose }) {
   const nameFor = (email) => (email === myEmail ? myName : "") || dirByEmail.get(email)?.displayName || "";
 
   // Candidats à l'invitation : utilisateurs déjà connus, hors moi / membres / invités.
-  const taken = new Set([...(household?.memberEmails || []), ...(household?.invitedEmails || []), myEmail]);
+  const taken = new Set([...(h?.memberEmails || []), ...(h?.invitedEmails || []), myEmail]);
   const candidates = directory.filter(d => d.email && !taken.has((d.email || "").toLowerCase()));
 
   const card = (children, style) => (
@@ -101,9 +105,8 @@ export function HouseholdPanel({ onClose }) {
         </div>
       ))}
 
-      {working && !household ? null : !household ? (
-        /* ── Pas de foyer : en créer un ── (masqué pendant une dissolution en cours,
-             le temps que la sheet se ferme, pour éviter le pop du formulaire) ── */
+      {!h ? (
+        /* ── Pas de foyer : en créer un ── */
         card(
           <>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Créer un foyer</div>
@@ -134,11 +137,11 @@ export function HouseholdPanel({ onClose }) {
           {card(
             <>
               <Row justify="space-between" style={{ marginBottom: 14 }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>{household.name}</div>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>{peopleCount(household)}/{MAX_HOUSEHOLD}</span>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>{h.name}</div>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>{peopleCount(h)}/{MAX_HOUSEHOLD}</span>
               </Row>
               <Col gap={10}>
-                {(household.memberEmails || []).map(e => {
+                {(h.memberEmails || []).map(e => {
                   const mine = e === myEmail;
                   const nm = nameFor(e);
                   return (
@@ -148,11 +151,11 @@ export function HouseholdPanel({ onClose }) {
                         <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nm || e}{mine ? " (toi)" : ""}</div>
                         {nm && <div style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>}
                       </div>
-                      {household.ownerUid && ((mine && owner) || (!mine && nm && false)) && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
+                      {h.ownerUid && ((mine && owner) || (!mine && nm && false)) && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
                     </Row>
                   );
                 })}
-                {(household.invitedEmails || []).map(e => (
+                {(h.invitedEmails || []).map(e => (
                   <Row key={e} gap={11} style={{ opacity: 0.75 }}>
                     <Avatar photo={photoFor(e)} label={e} dim />
                     <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>
@@ -214,6 +217,7 @@ export function HouseholdPanel({ onClose }) {
           busy={working}
           onCancel={() => setConfirmLeave(false)}
           onConfirm={async () => {
+            setFrozenHh(household); // fige l'affichage avant la suppression optimiste
             setWorking(true);
             // Délai plancher : le spinner reste visible un minimum même si le serveur
             // répond instantanément (confort visuel, comme la déconnexion).
