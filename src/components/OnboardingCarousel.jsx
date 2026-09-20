@@ -73,14 +73,18 @@ function ToqueIllustration() {
 function AnalysisIllustration() {
   return (
     <svg {...IL}>
-      {/* loupe : Cardamome « lit » la recette et en tire des scores */}
-      <path d="M74 72 L90 88" stroke="#3f9e6d" strokeWidth="10" strokeLinecap="round" />
-      <circle cx="54" cy="52" r="28" fill="#eafaf1" stroke="#3f9e6d" strokeWidth="7" />
-      {/* mini barres croissantes = scores deduits automatiquement */}
-      <g>
-        <rect x="44" y="53" width="7" height="10" rx="2.5" fill="#6fce9b" />
-        <rect x="54" y="47" width="7" height="16" rx="2.5" fill="#4caf7d" />
-        <rect x="64" y="41" width="7" height="22" rx="2.5" fill="#3f9e6d" />
+      {/* Décalage : la boîte englobante (loupe + manche en biais) est ainsi centrée
+          dans le viewBox, sinon le disque de la loupe paraît en haut à gauche. */}
+      <g transform="translate(2 4)">
+        {/* loupe : Cardamome « lit » la recette et en tire des scores */}
+        <path d="M74 72 L90 88" stroke="#3f9e6d" strokeWidth="10" strokeLinecap="round" />
+        <circle cx="54" cy="52" r="28" fill="#eafaf1" stroke="#3f9e6d" strokeWidth="7" />
+        {/* mini barres croissantes = scores deduits automatiquement */}
+        <g>
+          <rect x="44" y="53" width="7" height="10" rx="2.5" fill="#6fce9b" />
+          <rect x="54" y="47" width="7" height="16" rx="2.5" fill="#4caf7d" />
+          <rect x="64" y="41" width="7" height="22" rx="2.5" fill="#3f9e6d" />
+        </g>
       </g>
     </svg>
   );
