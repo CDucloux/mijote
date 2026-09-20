@@ -70,12 +70,22 @@ function ToqueIllustration() {
     </svg>
   );
 }
-function LeafIllustration() {
+function AnalysisIllustration() {
   return (
     <svg {...IL}>
-      <path d="M58 26 C33 39 29 74 44 95 C71 93 94 61 84 32 C71 41 62 39 58 26 Z" fill="#4caf7d" />
-      <path d="M58 26 C33 39 29 74 44 95 C50 80 52 58 84 32 C71 41 62 39 58 26 Z" fill="#6fce9b" />
-      <path d="M49 90 C55 66 66 50 82 41" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.75" />
+      {/* Décalage : la boîte englobante (loupe + manche en biais) est ainsi centrée
+          dans le viewBox, sinon le disque de la loupe paraît en haut à gauche. */}
+      <g transform="translate(2 4)">
+        {/* loupe : Cardamome « lit » la recette et en tire des scores */}
+        <path d="M74 72 L90 88" stroke="#3f9e6d" strokeWidth="10" strokeLinecap="round" />
+        <circle cx="54" cy="52" r="28" fill="#eafaf1" stroke="#3f9e6d" strokeWidth="7" />
+        {/* mini barres croissantes = scores deduits automatiquement */}
+        <g>
+          <rect x="41" y="53" width="7" height="10" rx="2.5" fill="#6fce9b" />
+          <rect x="51" y="47" width="7" height="16" rx="2.5" fill="#4caf7d" />
+          <rect x="61" y="41" width="7" height="22" rx="2.5" fill="#3f9e6d" />
+        </g>
+      </g>
     </svg>
   );
 }
@@ -167,7 +177,7 @@ const SLIDES = [
   {
     illustration: PodIllustration, color: "#6e9a3f",
     title: "Bienvenue sur Cardamome",
-    text: <>Bien plus qu'un carnet de recettes : une vraie base d'<em>ingrédients</em>, d'<em>ustensiles</em> et de <em>techniques</em> pour <strong>comprendre ce que tu cuisines</strong>, et progresser à chaque plat.</>,
+    text: <>Ton <strong>compagnon de cuisine</strong>, pas un simple carnet : tes recettes y prennent vie, s'affinent à chaque essai et te suivent <em>des courses jusqu'aux fourneaux</em>.</>,
   },
   {
     illustration: ToqueIllustration, color: "#c8912f",
@@ -175,9 +185,9 @@ const SLIDES = [
     text: <>Lance le <strong>mode pas à pas</strong> et avance sereinement. Chaque <em>geste technique</em> s'explique au bon moment, pour réussir même ce que tu n'as jamais tenté.</>,
   },
   {
-    illustration: LeafIllustration, color: "#5fb88a",
-    title: "Difficulté, saison, Nutri-Score",
-    text: <>Cardamome lit tes recettes et fait le calcul : <strong>difficulté</strong> déduite des techniques, <em>saisonnalité</em> des ingrédients et <em>Nutri-Score</em>, sans rien à saisir.</>,
+    illustration: AnalysisIllustration, color: "#5fb88a",
+    title: "Chaque recette s'analyse toute seule",
+    text: <>À la lecture d'une recette, Cardamome en déduit la <strong>difficulté</strong> (d'après les techniques), la <em>saisonnalité</em> (d'après les ingrédients) et le <em>Nutri-Score</em>. L'info est là avant même que tu la cherches.</>,
   },
   {
     illustration: PlanningIllustration, color: "#5b9cf6",
@@ -273,7 +283,7 @@ export function OnboardingCarousel() {
 
       {/* Passer (sauf dernière slide) */}
       {!last && (
-        <button onClick={finish} style={{ position: "absolute", top: "calc(14px + env(safe-area-inset-top))", right: 18, zIndex: 3, background: "none", border: "none", color: "rgba(255,255,255,0.85)", fontSize: 13.5, fontWeight: 600, cursor: "pointer", padding: 6 }}>Passer</button>
+        <button onClick={finish} className="onb-skip" style={{ position: "absolute", top: "calc(14px + env(safe-area-inset-top))", right: 18, zIndex: 3, border: "none", color: "rgba(255,255,255,0.85)", fontSize: 13.5, fontWeight: 600, cursor: "pointer", padding: "6px 14px", borderRadius: 999, transition: "background 0.18s ease, color 0.18s ease" }}>Passer</button>
       )}
 
       {/* Piste plein écran, FENÊTRÉE : seules la slide active et ses voisines

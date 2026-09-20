@@ -7,6 +7,10 @@ import {
   installGlobalElasticScroll,
 } from "@/lib/ui/globalElasticScroll.js";
 
+// La délégation ne s'installe que là où l'overscroll natif manque : on force la
+// stratégie sur « custom » pour tester la mécanique d'attache.
+vi.mock("@/lib/ui/elasticStrategy.js", () => ({ readElasticStrategy: () => "custom" }));
+
 afterEach(() => { document.body.innerHTML = ""; vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 /** Stub matchMedia : coarse => (hover: none) vrai ; reduce toujours faux. */
@@ -62,11 +66,11 @@ describe("elasticOptionsFrom", () => {
     expect(elasticOptionsFrom(document.querySelector("[data-elastic-scroll]")).max).toBeUndefined();
   });
 
-  it("active armWhenUnscrollable par la seule présence de l'attribut", () => {
+  it("arme l'étirement même sur page non défilable (généralisé, avec ou sans attribut)", () => {
     document.body.innerHTML = `<div data-elastic-scroll data-elastic-arm-unscrollable></div>`;
     expect(elasticOptionsFrom(document.querySelector("[data-elastic-scroll]")).armWhenUnscrollable).toBe(true);
     document.body.innerHTML = `<div data-elastic-scroll></div>`;
-    expect(elasticOptionsFrom(document.querySelector("[data-elastic-scroll]")).armWhenUnscrollable).toBe(false);
+    expect(elasticOptionsFrom(document.querySelector("[data-elastic-scroll]")).armWhenUnscrollable).toBe(true);
   });
 });
 

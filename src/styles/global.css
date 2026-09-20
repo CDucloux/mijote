@@ -1125,7 +1125,7 @@ select {
 @keyframes alertPopOut {
   to {
     opacity: 0;
-    transform: scale(0.92) translateY(8px);
+    transform: translateY(8px);
   }
 }
 
@@ -1171,19 +1171,15 @@ select {
   width: 100%;
   max-width: 380px;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
-  animation: alertPop 0.35s cubic-bezier(0.32, 1.2, 0.5, 1) backwards;
+  /* Entrée en FONDU PUR (aucun transform) : le scale rasterisait le texte (aspect
+     distordu) et tout translate le faisait « sauter » au recalage. Un fondu ne touche
+     pas à la position, donc le texte est net et immobile dès l'ouverture. */
+  animation: alertPop 0.2s ease-out backwards;
 }
 
 @keyframes alertPop {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Menus contextuels (appui long recette / carnet) : tuiles d'actions rapides
@@ -2229,6 +2225,14 @@ select {
 
 .onb-cta {
   transition: transform .18s ease, box-shadow .18s ease;
+}
+
+/* Bouton « Passer » de l'onboarding : fond transparent au repos (défini ici et non en
+   inline, sinon le style inline battrait la règle :hover), fond « pill » translucide au
+   survol (desktop / pointeur fin). Rien au tactile pour ne pas laisser d'état collé. */
+.onb-skip { background: transparent; }
+@media (hover: hover) and (pointer: fine) {
+  .onb-skip:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
 }
 
 /* Entrée de page glissée (gauche vers la droite) : rejouée à chaque navigation
@@ -3786,7 +3790,9 @@ select {
   cursor: pointer;
   transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
-.auth__theme:hover { color: var(--text); border-color: var(--accent); }
+/* Hover aligné sur celui de la landing (.lp-theme) : éclaircissement du fond, pas de
+   bordure d'accent. */
+.auth__theme:hover { color: var(--text); background: var(--surface3); }
 
 /* ── Panneau pitch (porte l'unique h1) ── */
 .auth__pitch {
@@ -3894,7 +3900,9 @@ select {
   min-height: 52px;
   padding: 14px 22px;
   border-radius: var(--radius, 16px);
-  border: 1px solid var(--border);
+  /* Sans bordure visible, mais on garde 1px transparent pour figer la hauteur
+     (retirer la bordure décalerait le bouton de 2px). Le hover se joue au fond seul. */
+  border: 1px solid transparent;
   /* Surface légèrement surélevée : contraste à la fois avec le fond mobile (uni) et
      le panneau desktop (surface), donc le bouton reste toujours lisible. */
   background: var(--surface2);
@@ -3903,9 +3911,9 @@ select {
   font-family: var(--ff-body);
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+  transition: background 0.18s ease, transform 0.12s ease;
 }
-.auth__google:hover:not(:disabled) { border-color: var(--accent); background: var(--surface3); }
+.auth__google:hover:not(:disabled) { background: var(--surface3); }
 .auth__google:disabled { cursor: default; opacity: 0.85; }
 
 .auth__spinner {

@@ -166,3 +166,31 @@ export function withMemberRemoved(h: Household, { uid, email }: { uid: string; e
     memberEmails: (h.memberEmails || []).filter(x => x !== e),
   };
 }
+
+/** Plan de sortie de foyer(s) : ceux à supprimer (possédés) et ceux à quitter. */
+export interface HouseholdExitPlan {
+  /** Identifiants des foyers dont l'utilisateur est propriétaire → suppression. */
+  deleteIds: string[];
+  /** Foyers non possédés → départ (nouveau document sans ce membre). */
+  leave: { id: string; next: Household }[];
+}
+
+/**
+ * Plan de sortie sur TOUS les foyers d'un utilisateur en une passe. Robuste aux
+ * doublons de foyers (ex. plusieurs créés par erreur) : on quitte/supprime chacun,
+ * plutôt que d'agir sur un seul à la fois. On SUPPRIME ceux dont l'utilisateur est
+ * propriétaire (dissolution), on QUITTE les autres. Décision PURE (aucune I/O).
+ *
+ * @param docs - Les foyers dont l'utilisateur est membre (avec leur `id`).
+ * @param user - L'utilisateur qui sort.
+ * @returns Les identifiants à supprimer et les foyers à quitter (document réécrit).
+ */
+export function planHouseholdExit(docs: (Household & { id: string })[], user: HouseholdUser): HouseholdExitPlan {
+  const deleteIds: string[] = [];
+  const leave: { id: string; next: Household }[] = [];
+  for (const d of docs) {
+    if (d.ownerUid === user.uid) deleteIds.push(d.id);
+    else leave.push({ id: d.id, next: withMemberRemoved(d, { uid: user.uid, email: user.email }) });
+  }
+  return { deleteIds, leave };
+}

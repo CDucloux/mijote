@@ -73,7 +73,11 @@ export function attachElasticScroll(
   const scrollable = (): boolean => el.scrollHeight > el.clientHeight + 1;
   const atBottom = (): boolean => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
 
-  let dragging = false, y0 = 0, x0 = 0, axis: "x" | "y" | null = null, mode: "bottom" | "scroll" | null = null, pull = 0;
+  // `rawOver` = distance brute tirée AU-DELÀ de la butée basse (px, >= 0), accumulée au
+  // fil du geste ; `pull` = son rendu résisté (rubber-band, <= 0). On garde une distance
+  // brute plutôt qu'un simple `dy` pour pouvoir engager l'étirement même quand la butée
+  // est atteinte EN COURS de geste (le doigt a d'abord fait défiler, puis pousse au-delà).
+  let dragging = false, y0 = 0, x0 = 0, prevY = 0, axis: "x" | "y" | null = null, rawOver = 0, pull = 0;
   let bounce: Animation | null = null; // rebond d'inertie en cours (Web Animations API)
   // Promotion de couche GPU : activée pendant un geste/animation pour éviter le « lag »
   // de première frame, relâchée au repos pour ne pas gaspiller de mémoire.
@@ -103,30 +107,45 @@ export function attachElasticScroll(
   };
   const onEnd = (): void => { if (!pull) lift(false); };
   inner.addEventListener("transitionend", onEnd);
-  // On ne promeut PAS la couche GPU dès le touchstart : sur une page à beaucoup
-  // d'éléments, `will-change` sur tout le contenu à chaque amorce rasterise une couche
-  // géante et provoque du jank. On ne « lift » qu'à l'armement réel (mode === "bottom").
+  // Le `touchmove` non passif n'est attaché QUE le temps d'un geste (touchstart →
+  // touchend) : entre deux gestes et pendant l'inertie (fling), le conteneur défile sur
+  // le thread compositeur, sans la taxe du listener non passif. C'est ce qui rend le
+  // scroll nettement moins saccadé, tout en gardant l'overscroll piloté au doigt.
+  let moveAttached = false;
+  const addMove = (): void => { if (!moveAttached) { el.addEventListener("touchmove", onMove, { passive: false }); moveAttached = true; } };
+  const removeMove = (): void => { if (moveAttached) { el.removeEventListener("touchmove", onMove); moveAttached = false; } };
   const onDown = (e: TouchEvent): void => {
     if ((e.target as HTMLElement | null)?.closest?.("[data-drag-handle]")) { dragging = false; return; }
-    bounce?.cancel(); dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; axis = null; mode = null; pull = 0;
+    bounce?.cancel();
+    dragging = true; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; prevY = y0; axis = null; rawOver = 0; pull = 0;
+    addMove();
   };
   const onMove = (e: TouchEvent): void => {
     if (!dragging) return;
-    const dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
-    if (!axis) { if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
-    if (axis !== "y") return;
-    if (!mode) { mode = canArmBottomStretch(scrollable(), atBottom(), armWhenUnscrollable) && dy < -2 ? "bottom" : "scroll"; if (mode === "bottom") lift(true); }
-    if (mode !== "bottom") return;
-    pull = dy < 0 ? -rubber(-dy, el.clientHeight) : 0;
-    apply(false);
-    if (pull && e.cancelable) e.preventDefault();
+    const ty = e.touches[0].clientY, tx = e.touches[0].clientX;
+    if (!axis) { const dy = ty - y0, dx = tx - x0; if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
+    if (axis !== "y") { prevY = ty; return; }
+    // Incrément vertical du doigt depuis le dernier `move` : > 0 = le doigt monte (le
+    // contenu voudrait défiler vers le bas).
+    const step = prevY - ty;
+    prevY = ty;
+    // On accumule l'overscroll dès qu'on est en butée basse (armée) et que le doigt
+    // pousse encore vers le haut ; on continue tant que `rawOver > 0`, y compris quand la
+    // butée a été atteinte APRÈS un défilement. Un retour du doigt vers le bas la résorbe
+    // et rend la main au défilement natif.
+    if (rawOver > 0 || (step > 0 && canArmBottomStretch(scrollable(), atBottom(), armWhenUnscrollable))) {
+      rawOver = Math.max(0, rawOver + step);
+      pull = rawOver > 0 ? -rubber(rawOver, el.clientHeight) : 0;
+      if (pull) { lift(true); apply(false); if (e.cancelable) e.preventDefault(); }
+      else apply(false); // overscroll résorbé : on relâche, le défilement natif reprend
+    }
   };
   const onUp = (): void => {
     if (!dragging) return;
     dragging = false;
-    if (mode === "bottom") { pull = 0; apply(true); }
-    else lift(false);
-    axis = null; mode = null;
+    if (pull) { rawOver = 0; pull = 0; apply(true); } else lift(false);
+    axis = null; rawOver = 0;
+    removeMove();
   };
 
   // Suivi de vélocité pour le rebond d'inertie : le fling après le doigt est géré
@@ -145,13 +164,12 @@ export function attachElasticScroll(
   };
 
   el.addEventListener("touchstart", onDown, { passive: true });
-  el.addEventListener("touchmove", onMove, { passive: false });
   el.addEventListener("touchend", onUp, { passive: true });
   el.addEventListener("touchcancel", onUp, { passive: true });
   el.addEventListener("scroll", onScroll, { passive: true });
   return () => {
     el.removeEventListener("touchstart", onDown);
-    el.removeEventListener("touchmove", onMove);
+    removeMove();
     el.removeEventListener("touchend", onUp);
     el.removeEventListener("touchcancel", onUp);
     el.removeEventListener("scroll", onScroll);

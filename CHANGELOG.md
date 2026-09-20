@@ -1,5 +1,20 @@
 # Changelog – Cardamome
 
+## v4.53.0 – Cardamome · Défilement plus doux et foyer soigné
+
+### Confort (mobile)
+- **Défilement nettement plus fluide** : l'effet élastique de bas de page a été retravaillé pour ne plus « accrocher ». Le défilement reste fluide en continu (y compris pendant l'inertie), et l'étirement élastique s'engage désormais dès qu'on atteint le bas, même en plein geste. L'effet s'active aussi sur les pages courtes qui ne défilent pas.
+
+### Foyer
+- **Dissolution réparée et robuste** : dissoudre (ou quitter) un foyer fonctionne de façon fiable et te sort proprement de tous tes foyers, y compris d'éventuels doublons créés par erreur.
+- **Retours visuels soignés** : un indicateur de chargement accompagne la création, la dissolution et le départ ; la feuille se ferme sans à-coup, sans afficher d'état vide au passage.
+- **Panneau foyer plus clair** : en-tête avec le pictogramme du foyer, partie informative allégée (les espaces partagés en pastilles : recettes, planning, courses, stock) et champ de création épuré.
+
+### Accueil & connexion
+- **Écran d'accueil (onboarding) revu** : textes retravaillés (moins de redite, une voix plus nette), nouvelle illustration d'analyse, et bouton « Passer » avec un survol soigné sur ordinateur.
+- **Page de connexion** : bouton « Continuer avec Google » épuré (sans bordure, survol par éclaircissement) et interrupteur clair/sombre au survol harmonisé avec la page d'accueil.
+- **Vitrine publique** : vrais logos Play Store et App Store sur les badges « bientôt disponible », et bouton d'action unique « Découvrir Cardamome ».
+
 ## v4.52.1 – Cardamome · Foyer sans accroc
 
 ### Corrigé (foyer)

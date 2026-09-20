@@ -23,7 +23,7 @@ import { reportError } from "@/lib/observability/observability.js";
 import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
 import {
   withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved,
-  peopleCount, MAX_HOUSEHOLD, type Household, type HouseholdUser,
+  planHouseholdExit, peopleCount, MAX_HOUSEHOLD, type Household, type HouseholdUser,
 } from "@/lib/household/household.js";
 import { householdWorkspace, type Workspace } from "@/lib/household/workspace.js";
 import type { SharedData } from "@/lib/household/householdMigration.js";
@@ -459,6 +459,27 @@ export async function dissolveHousehold(hid: string, uid: string): Promise<void>
   const batch = writeBatch(db);
   batch.delete(householdDoc(hid));
   batch.delete(householdPointerDoc(uid));
+  await batch.commit();
+}
+
+/**
+ * Sort l'utilisateur de TOUS ses foyers en une passe : supprime ceux qu'il possède
+ * (dissolution) et quitte les autres, puis efface son pointeur. Robuste aux doublons
+ * (foyers fantômes créés par erreur avant le garde-fou de création) : sans quoi,
+ * n'agir que sur le premier foyer laissait les suivants remonter, donnant l'illusion
+ * qu'« il ne se passe rien ». Sert autant à la dissolution (propriétaire) qu'au départ.
+ *
+ * @param user - L'utilisateur qui sort.
+ * @returns La promesse de commit (rejette si une écriture est refusée).
+ */
+export async function exitAllHouseholds(user: HouseholdUser): Promise<void> {
+  const snap = await getDocs(householdMemberQuery(user.uid));
+  const docs = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Household) }));
+  const { deleteIds, leave } = planHouseholdExit(docs, user);
+  const batch = writeBatch(db);
+  for (const id of deleteIds) batch.delete(householdDoc(id));
+  for (const { id, next } of leave) batch.set(householdDoc(id), next);
+  batch.delete(householdPointerDoc(user.uid));
   await batch.commit();
 }
 

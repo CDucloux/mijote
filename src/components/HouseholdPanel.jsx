@@ -5,7 +5,7 @@ import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, isOwner, MAX_HOUSEHOLD } from "@/lib/household/household.js";
-import { Row, Col, IconChip } from "./ui/primitives.jsx";
+import { Row, Col } from "./ui/primitives.jsx";
 
 // Avatar rond : photo si disponible, sinon initiale colorée.
 function Avatar({ photo, label, size = 34, dim = false }) {
@@ -23,6 +23,18 @@ export function HouseholdPanel({ onClose }) {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [working, setWorking] = useState(false);
+  // Après une dissolution/départ réussi, on ferme la sheet SANS repasser par l'état
+  // « aucun foyer » (sinon le bloc « Créer un foyer » apparaît un instant : effet de pop).
+  const [leaving, setLeaving] = useState(false);
+  // Instantané (nom + propriétaire) capturé à l'ouverture du dialogue : `household`
+  // passe à null dès la suppression optimiste, bien avant la fin de l'action ; sans
+  // cet instantané le dialogue lirait un nom nul et se démonterait (spinner qui saute).
+  const [confirmSnap, setConfirmSnap] = useState({ name: "", owner: false });
+  // Foyer figé pendant la dissolution/le départ : `household` tombe à null dès la
+  // suppression optimiste, ce qui viderait la sheet DERRIÈRE la modal (effet cassé).
+  // On garde le dernier foyer connu pour l'afficher intact jusqu'à la fermeture.
+  const [frozenHh, setFrozenHh] = useState(null);
   // Le panneau foyer a besoin de l'annuaire (candidats à l'invitation + avatars).
   useEffect(() => { loadDirectory?.(); }, [loadDirectory]);
 
@@ -32,9 +44,13 @@ export function HouseholdPanel({ onClose }) {
     </Row>;
   }
 
+  // Pendant l'action (spinner) et la fermeture, on rend le foyer FIGÉ : ainsi la sheet
+  // derrière la modal reste intacte (membres visibles) au lieu de se vider.
+  const h = (working || leaving) ? (frozenHh || household) : household;
+
   const myEmail = (user?.email || "").toLowerCase();
-  const owner = household && isOwner(household, user?.uid);
-  const full = household && peopleCount(household) >= MAX_HOUSEHOLD;
+  const owner = h && isOwner(h, user?.uid);
+  const full = h && peopleCount(h) >= MAX_HOUSEHOLD;
   const dirByEmail = new Map(directory.map(d => [(d.email || "").toLowerCase(), d]));
   const photoFor = (email) => (email === myEmail ? user?.photoURL : dirByEmail.get(email)?.photoURL) || "";
   // Mon nom personnalisé dans l'app (préférences) prime sur le nom technique de
@@ -43,7 +59,7 @@ export function HouseholdPanel({ onClose }) {
   const nameFor = (email) => (email === myEmail ? myName : "") || dirByEmail.get(email)?.displayName || "";
 
   // Candidats à l'invitation : utilisateurs déjà connus, hors moi / membres / invités.
-  const taken = new Set([...(household?.memberEmails || []), ...(household?.invitedEmails || []), myEmail]);
+  const taken = new Set([...(h?.memberEmails || []), ...(h?.invitedEmails || []), myEmail]);
   const candidates = directory.filter(d => d.email && !taken.has((d.email || "").toLowerCase()));
 
   const card = (children, style) => (
@@ -52,17 +68,28 @@ export function HouseholdPanel({ onClose }) {
 
   return (
     <Col gap={14}>
-      {/* Bandeau info : tint accent plate (plus sobre que l'ancien dégradé), titre
-          court puis explication du partage. */}
-      <Col gap={9} style={{ background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 16, padding: 16 }}>
-        <Row gap={10}>
-          <IconChip size={32} radius={10} tint="rgba(var(--accent-rgb),0.15)">
-            <Icon name="info" size={17} color="var(--accent)" />
-          </IconChip>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Un foyer, tout en commun</span>
+      {/* Bandeau info : sans fond ni icône (l'icône vit au titre de la sheet). Accroche
+          + sous-titre, puis les 4 espaces partagés en pastilles, et une réassurance. */}
+      <Col gap={12} style={{ padding: "2px 2px 0" }}>
+        <Col gap={1}>
+          <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)" }}>Un foyer, tout en commun</span>
+          <span style={{ fontSize: 12.5, color: "var(--text2)" }}>Jusqu'à {MAX_HOUSEHOLD} personnes, un seul espace de cuisine.</span>
+        </Col>
+        <Row gap={7} style={{ flexWrap: "wrap" }}>
+          {[
+            { icon: "book", label: "Recettes" },
+            { icon: "calendar", label: "Planning" },
+            { icon: "shopping", label: "Courses" },
+            { icon: "box", label: "Stock" },
+          ].map(({ icon, label }) => (
+            <Row key={label} gap={5} style={{ alignItems: "center", background: "var(--surface)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 999, padding: "5px 11px" }}>
+              <Icon name={icon} size={13} color="var(--accent)" />
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{label}</span>
+            </Row>
+          ))}
         </Row>
-        <span style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.6 }}>
-          Jusqu'à <strong style={{ color: "var(--text)" }}>{MAX_HOUSEHOLD} personnes</strong> partagent recettes, stock, listes de courses et planning. En rejoignant un foyer, tes recettes y sont <strong style={{ color: "var(--text)" }}>ajoutées</strong> ; planning, stock et courses du foyer sont adoptés (ta version perso reste sauvegardée).
+        <span style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5 }}>
+          En rejoignant, tes recettes s'ajoutent au foyer. Ta version perso reste sauvegardée.
         </span>
       </Col>
 
@@ -78,18 +105,18 @@ export function HouseholdPanel({ onClose }) {
         </div>
       ))}
 
-      {!household ? (
+      {!h ? (
         /* ── Pas de foyer : en créer un ── */
         card(
           <>
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Créer un foyer</div>
             <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 14 }}>Tu en seras le propriétaire et pourras inviter {MAX_HOUSEHOLD - 1} personne{MAX_HOUSEHOLD - 1 > 1 ? "s" : ""}.</div>
-            <input className="field-input" placeholder="Nom du foyer (ex. Maison Dupont)" value={name} maxLength={40} onChange={e => setName(e.target.value)} style={{ marginBottom: 12 }} />
+            <input className="field-input" placeholder="Nom du foyer (ex. Maison Dupont)" value={name} maxLength={40} onChange={e => setName(e.target.value)} style={{ marginBottom: 12, border: "none", background: "var(--surface2)" }} />
             {/* Soft-lock : en gratuit, la page de création reste visible (l'utilisateur
                 se projette), mais la validation renvoie vers l'offre au lieu de créer. */}
             {isPlus ? (
               <button className="btn btn-primary" disabled={creating || !name.trim()} onClick={async () => { if (await actions.create(name)) setName(""); }} style={{ width: "100%" }}>
-                <Icon name={creating ? "spinner" : "plus"} size={16} /> {creating ? "Création…" : "Créer le foyer"}
+                <Icon name={creating ? "spinner" : "plus"} size={16} style={creating ? { animation: "spin 0.7s linear infinite" } : undefined} /> {creating ? "Création…" : "Créer le foyer"}
               </button>
             ) : (
               <>
@@ -110,11 +137,11 @@ export function HouseholdPanel({ onClose }) {
           {card(
             <>
               <Row justify="space-between" style={{ marginBottom: 14 }}>
-                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>{household.name}</div>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>{peopleCount(household)}/{MAX_HOUSEHOLD}</span>
+                <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>{h.name}</div>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>{peopleCount(h)}/{MAX_HOUSEHOLD}</span>
               </Row>
               <Col gap={10}>
-                {(household.memberEmails || []).map(e => {
+                {(h.memberEmails || []).map(e => {
                   const mine = e === myEmail;
                   const nm = nameFor(e);
                   return (
@@ -124,11 +151,11 @@ export function HouseholdPanel({ onClose }) {
                         <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nm || e}{mine ? " (toi)" : ""}</div>
                         {nm && <div style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>}
                       </div>
-                      {household.ownerUid && ((mine && owner) || (!mine && nm && false)) && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
+                      {h.ownerUid && ((mine && owner) || (!mine && nm && false)) && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>OWNER</span>}
                     </Row>
                   );
                 })}
-                {(household.invitedEmails || []).map(e => (
+                {(h.invitedEmails || []).map(e => (
                   <Row key={e} gap={11} style={{ opacity: 0.75 }}>
                     <Avatar photo={photoFor(e)} label={e} dim />
                     <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e}</div>
@@ -170,7 +197,7 @@ export function HouseholdPanel({ onClose }) {
           )}
 
           {/* Quitter / dissoudre : action destructive, franchement rouge (pilule teintée). */}
-          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => setConfirmLeave(true)}
+          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => { setConfirmSnap({ name: household.name, owner }); setConfirmLeave(true); }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.2)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.12)"; }}>
             <Icon name="logout" size={15} color="var(--red)" /> {owner ? "Dissoudre le foyer" : "Quitter le foyer"}
@@ -178,19 +205,32 @@ export function HouseholdPanel({ onClose }) {
         </>
       )}
 
-      {/* Feuille de confirmation quitter / dissoudre. On garde `household` dans la
-          condition : dès qu'il devient null (dissolution/départ effectif), la feuille
-          se démonte sans jamais lire household.name sur une valeur nulle. */}
-      {confirmLeave && household && (
+      {/* Feuille de confirmation quitter / dissoudre. Découplée de `household` (qui
+          passe à null dès la suppression optimiste) : on s'appuie sur l'instantané
+          capturé, pour que le dialogue tienne (spinner) jusqu'à la fermeture. */}
+      {confirmLeave && (
         <ConfirmDialog
-          title={owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
-          icon={owner ? "trash" : "logout"}
-          confirmLabel={owner ? "Dissoudre" : "Quitter"}
+          title={confirmSnap.owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
+          icon={confirmSnap.owner ? "trash" : "logout"}
+          confirmLabel={confirmSnap.owner ? "Dissoudre" : "Quitter"}
+          busyLabel={confirmSnap.owner ? "Dissolution…" : "Départ…"}
+          busy={working}
           onCancel={() => setConfirmLeave(false)}
-          onConfirm={async () => { const ok = await (owner ? actions.dissolve() : actions.leave()); setConfirmLeave(false); if (ok) onClose?.(); }}>
-          {owner
-            ? <>« {household.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
-            : <>Tu n'auras plus accès aux données partagées de « {household.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
+          onConfirm={async () => {
+            setFrozenHh(household); // fige l'affichage avant la suppression optimiste
+            setWorking(true);
+            // Délai plancher : le spinner reste visible un minimum même si le serveur
+            // répond instantanément (confort visuel, comme la déconnexion).
+            const [ok] = await Promise.all([
+              confirmSnap.owner ? actions.dissolve() : actions.leave(),
+              new Promise(r => setTimeout(r, 650)),
+            ]);
+            if (ok) { setLeaving(true); onClose?.(); }
+            else { setWorking(false); setConfirmLeave(false); }
+          }}>
+          {confirmSnap.owner
+            ? <>« {confirmSnap.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
+            : <>Tu n'auras plus accès aux données partagées de « {confirmSnap.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
         </ConfirmDialog>
       )}
     </Col>

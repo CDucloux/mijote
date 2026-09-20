@@ -361,7 +361,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           )}
         </SwipeableSheet>
       )}
-      <div ref={scrollRef} onScroll={rememberScroll} style={{ flex: 1, overflowY: "auto", padding: "4px 20px var(--page-pad-b)" }}>
+      <div ref={scrollRef} onScroll={rememberScroll} style={{ flex: 1, overflowY: "auto", overscrollBehaviorY: "contain", padding: "4px 20px var(--page-pad-b)" }}>
         <div ref={contentRef} style={{ minHeight: "100%" }}>
         {(booting || loading) ? (
           // Squelette pendant le boot de l'onglet OU tant que le workspace n'est pas

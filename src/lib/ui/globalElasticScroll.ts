@@ -1,4 +1,5 @@
 import { attachElasticScroll, type ElasticScrollOptions } from "@/lib/ui/elasticScrollCore.js";
+import { readElasticStrategy } from "@/lib/ui/elasticStrategy.js";
 
 /**
  * Délégation GLOBALE de l'overscroll « stretch » (cf. installGlobalRipple pour l'onde
@@ -41,7 +42,9 @@ export function elasticContentOf(container: Element): HTMLElement | null {
 export function elasticOptionsFrom(container: Element): ElasticScrollOptions {
   const raw = container.getAttribute("data-elastic-max");
   const max = raw != null && raw.trim() !== "" && Number.isFinite(Number(raw)) ? Number(raw) : undefined;
-  return { max, armWhenUnscrollable: container.hasAttribute("data-elastic-arm-unscrollable") };
+  // Armé même sur page courte par défaut (comme le reste de l'app) ; l'attribut reste
+  // accepté mais n'est plus nécessaire.
+  return { max, armWhenUnscrollable: true };
 }
 
 /** Collecte les conteneurs marqués dans un noeud (lui-même inclus). */
@@ -57,7 +60,8 @@ let installed = false;
  * Installe la délégation globale : attache l'effet à tout conteneur `data-elastic-scroll`
  * présent ou ajouté ensuite (navigation entre pages), et le détache au démontage.
  * Réservé aux pointeurs grossiers (mobile/tactile) : sur souris fine, on ne fait rien.
- * Idempotent (une seule installation à la fois).
+ * Rien non plus là où l'overscroll natif est fiable (web/PWA hors iOS) : on laisse le
+ * navigateur faire (cf. {@link readElasticStrategy}). Idempotent.
  *
  * @param root - Racine observée (défaut `document.body`).
  * @returns Fonction de désinstallation (détache tout, coupe l'observateur).
@@ -65,6 +69,7 @@ let installed = false;
 export function installGlobalElasticScroll(root?: HTMLElement): () => void {
   if (typeof document === "undefined" || typeof window === "undefined") return () => {};
   if (window.matchMedia && !window.matchMedia("(hover: none)").matches) return () => {};
+  if (readElasticStrategy() === "native") return () => {};
   if (installed) return () => {};
   installed = true;
 
