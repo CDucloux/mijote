@@ -221,7 +221,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   const { pubId: publicPubId, docs: publicDocs, open: openPublic } = usePublicRecipeView({ user, recipes, location, navigate });
 
   // ── Couche de synchronisation Firestore (auth, chargement, sauvegardes) ───────
-  const { workspaceReady, sharedHydrating } = useFirestoreSync({
+  const { workspaceReady, sharedHydrating, removeRecipe } = useFirestoreSync({
     user, setUser, isAdmin, setSyncStatus, householdPointer,
     recipes, setRecipes,
     collections, setCollections,
@@ -292,7 +292,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
   const { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF } = useRecipeCrud({
     recipes, setRecipes, setCollections, setEditingRecipe, shoppingLists, setShoppingLists,
-    ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity,
+    ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity, removeRecipe,
   });
 
   // Publier / dépublier / cloner des recettes publiques (communauté), voir usePublicRecipes.

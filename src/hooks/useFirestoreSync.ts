@@ -6,7 +6,7 @@ import { reportError, setObservabilityUser } from "@/lib/observability/observabi
 import {
   metaDoc, recipesCol, upsertOwnDirectoryEntry,
   loadMasterDB, subscribeMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
-  loadSharedData, writeSharedData, setHouseholdPointer, setSharedWritesLocked,
+  loadSharedData, writeSharedData, setHouseholdPointer, setSharedWritesLocked, deleteSharedRecipe,
   type WorkspaceRef, type MasterDB,
 } from "@/lib/firebase/firestore.js";
 import { loadAppConfig } from "@/lib/firebase/appConfig.js";
@@ -463,15 +463,15 @@ export function useFirestoreSync({
     catch { setSyncStatus("error"); }
   }, [user, setSyncStatus]);
 
-  // Recettes (slice partagé) – diff par id vers le workspace actif. On lit la
-  // DERNIÈRE valeur (sharedRef) pour ne jamais supprimer une recette arrivée d'un
-  // autre membre entre la planification et l'exécution de cet effet.
+  // Recettes (slice partagé) – upsert par id vers le workspace actif. On lit la
+  // DERNIÈRE valeur (sharedRef) pour envoyer l'état le plus à jour.
   useEffect(() => {
     if (!user || !canAutosaveShared()) return;
     const latest = sharedRef.current.recipes || [];
     // N'écrire QUE sur une vraie modif utilisateur : si la signature courante est celle
     // qu'on vient d'appliquer (chargement / snapshot distant), on ne touche à rien
-    // (évite l'écho et surtout les suppressions destructrices au reload).
+    // (évite l'écho et les upserts inutiles au reload). La synchro n'ajoute/modifie
+    // que ; elle ne supprime jamais par absence (cf. removeRecipe pour la suppression).
     const sig = JSON.stringify(latest);
     if (recipesSigRef.current === sig) return;
     recipesSigRef.current = sig;
@@ -481,6 +481,19 @@ export function useFirestoreSync({
       .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
       .catch(() => { setSyncStatus("error"); });
   }, [recipes, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Suppression EXPLICITE d'une recette : un deleteDoc ciblé vers le workspace actif.
+  // C'est le SEUL chemin qui retire une recette côté serveur. L'autosave ci-dessus
+  // ne supprime jamais par absence, donc un état local périmé ne peut rien effacer.
+  const removeRecipe = useCallback((id: string): void => {
+    if (!user || !canAutosaveShared()) return;
+    const ws = sharedWsNow(user.uid);
+    recipeSyncMap.current.delete(id); // la recette n'est plus « déjà synchronisée »
+    setSyncStatus("syncing");
+    deleteSharedRecipe(ws, id)
+      .then(() => setSyncStatus("synced"))
+      .catch(e => { setSyncStatus("error"); reportError(e, { where: "removeRecipe" }); });
+  }, [user, setSyncStatus]);
 
   // Écrit une méta partagée si elle a changé (signature) : on note la signature avant
   // d'écrire, si bien que le snapshot de notre propre écriture (même JSON) est ignoré.
@@ -605,5 +618,5 @@ export function useFirestoreSync({
 
   useEffect(() => () => { if (hydrationTimer.current) clearTimeout(hydrationTimer.current); }, []);
 
-  return { cloudLoaded, workspaceReady, sharedHydrating };
+  return { cloudLoaded, workspaceReady, sharedHydrating, removeRecipe };
 }

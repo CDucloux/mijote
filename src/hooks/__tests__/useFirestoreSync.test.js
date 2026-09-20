@@ -27,6 +27,7 @@ vi.mock("@/lib/firebase/firestore.js", () => ({
   writeSharedData: vi.fn(() => Promise.resolve(new Map())),
   setHouseholdPointer: vi.fn(() => Promise.resolve()),
   setSharedWritesLocked: vi.fn(),
+  deleteSharedRecipe: vi.fn(() => Promise.resolve()),
 }));
 vi.mock("@/lib/firebase/appConfig.js", () => ({ loadAppConfig: vi.fn(() => Promise.resolve(null)) }));
 vi.mock("@/lib/household/householdMigration.js", () => ({ mergeShared: (_local, remote) => ({ ...remote }) }));
@@ -88,6 +89,19 @@ describe("useFirestoreSync", () => {
     expect(props.setMasterDB).toHaveBeenCalledWith(MASTER);
     expect(localStorage.getItem("rf_masterDB_cache")).toBeTruthy();
     await waitFor(() => expect(fs.upsertOwnDirectoryEntry).toHaveBeenCalled());
+  });
+
+  it("suppression : removeRecipe fait un deleteDoc explicite (jamais par absence)", async () => {
+    fs.loadMasterDB.mockResolvedValue(MASTER);
+    fs.loadUserData.mockResolvedValue({ recipes: [{ id: "r1" }], userDB: { ingredients: [], utensils: [] } });
+    const props = makeProps();
+    const { result, rerender } = renderHook(p => useFirestoreSync(p), { initialProps: props });
+    await act(async () => { await authCb({ uid: "me", email: "a@b.c" }); });
+    rerender({ ...props, user: { uid: "me", email: "a@b.c" } });
+    await waitFor(() => expect(props.setSyncStatus).toHaveBeenCalledWith("synced"));
+
+    await act(async () => { result.current.removeRecipe("r1"); });
+    expect(fs.deleteSharedRecipe).toHaveBeenCalledWith(expect.anything(), "r1");
   });
 
   it("garde-fou : un client déclassé verrouille les écritures, passe en 'blocked' et n'écrit rien", async () => {

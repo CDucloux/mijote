@@ -29,7 +29,7 @@ import { householdWorkspace, type Workspace } from "@/lib/household/workspace.js
 import type { SharedData } from "@/lib/household/householdMigration.js";
 import type { PublicDoc } from "@/lib/household/publicRecipes.js";
 import type { Recipe } from "@/lib/types.js";
-import { planRecipeSync } from "@/lib/recipes/recipeSync.js";
+import { planRecipeUpserts } from "@/lib/recipes/recipeSync.js";
 
 /** Workspace actif, ou uid brut (rétro-compat). */
 export type WorkspaceRef = Workspace | string;
@@ -659,35 +659,42 @@ export async function migrateLegacyDoc(uid: string): Promise<DocumentData | null
 }
 
 /**
- * Sync des recettes par diff : n'écrit que les recettes nouvelles/modifiées et
- * supprime celles retirées.
+ * Synchro des recettes par UPSERT uniquement : écrit les nouvelles/modifiées, ne
+ * supprime JAMAIS par absence. Une recette absente de `recipes` mais présente
+ * côté serveur est laissée intacte (une suppression est une opération explicite,
+ * cf. `deleteSharedRecipe`). Un état local périmé ne peut donc plus effacer de
+ * données distantes.
  *
  * @param ws - Le workspace cible.
  * @param recipes - L'état courant des recettes.
- * @param lastSyncedMap - La carte de synchro précédente (id → recette).
- * @returns La nouvelle carte de synchro (id → recette).
+ * @param lastSyncedMap - La carte de synchro précédente (id -> recette).
+ * @returns La nouvelle carte de synchro (id -> recette).
  */
 export async function syncRecipes(ws: WorkspaceRef, recipes: Recipe[], lastSyncedMap: Map<string, Recipe>): Promise<Map<string, Recipe>> {
-  // Client déclassé : on n'écrit rien et on préserve la carte de synchro connue,
-  // pour ne jamais supprimer une recette distante depuis un état local périmé.
+  // Client déclassé : on n'écrit rien et on préserve la carte de synchro connue.
   if (sharedWritesLocked) return lastSyncedMap;
-  const plan = planRecipeSync(recipes, lastSyncedMap);
-  if (plan.blockedDeletions.length > 0) {
-    // Coupe-circuit : une suppression de masse (au-delà du seuil) est presque
-    // toujours le symptôme d'un état local périmé. On garde les recettes distantes
-    // (le snapshot temps réel les réhydratera) et on remonte l'anomalie.
-    reportError(
-      new Error(`syncRecipes: ${plan.blockedDeletions.length} suppressions bloquées (coupe-circuit)`),
-      { where: "syncRecipes:circuitBreaker", blocked: plan.blockedDeletions.length },
-    );
+  const upserts = planRecipeUpserts(recipes, lastSyncedMap);
+  if (upserts.length > 0) {
+    const batch = writeBatch(db);
+    const col = recipesCol(ws);
+    for (const r of upserts) batch.set(doc(col, r.id as string), r);
+    await batch.commit();
   }
-  const batch = writeBatch(db);
-  const col = recipesCol(ws);
-  let ops = 0;
-  for (const r of plan.upserts) { batch.set(doc(col, r.id as string), r); ops++; }
-  for (const id of plan.deletions) { batch.delete(doc(col, id)); ops++; }
-  if (ops > 0) await batch.commit();
   const newMap = new Map<string, Recipe>();
   for (const r of recipes) if (r.id) newMap.set(r.id, r);
   return newMap;
+}
+
+/**
+ * Suppression EXPLICITE d'une recette dans le workspace actif. C'est le seul
+ * chemin qui retire une recette côté serveur : une intention utilisateur ciblée
+ * sur un document précis, jamais une déduction par absence. No-op si le client
+ * est déclassé (verrou d'écriture).
+ *
+ * @param ws - Le workspace cible (solo ou foyer).
+ * @param id - L'identifiant de la recette à supprimer.
+ */
+export async function deleteSharedRecipe(ws: WorkspaceRef, id: string): Promise<void> {
+  if (sharedWritesLocked) return;
+  await deleteDoc(doc(recipesCol(ws), id));
 }
