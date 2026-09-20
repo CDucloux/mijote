@@ -167,7 +167,7 @@ const SLIDES = [
   {
     illustration: PodIllustration, color: "#6e9a3f",
     title: "Bienvenue sur Cardamome",
-    text: <>Bien plus qu'un carnet de recettes : une vraie base d'<em>ingrédients</em>, d'<em>ustensiles</em> et de <em>techniques</em> pour <strong>comprendre ce que tu cuisines</strong>, et progresser à chaque plat.</>,
+    text: <>Ton <strong>atelier de cuisine</strong>, pas un simple carnet : tes recettes y prennent vie, s'affinent à chaque essai et te suivent <em>des courses jusqu'aux fourneaux</em>.</>,
   },
   {
     illustration: ToqueIllustration, color: "#c8912f",
@@ -176,8 +176,8 @@ const SLIDES = [
   },
   {
     illustration: LeafIllustration, color: "#5fb88a",
-    title: "Cardamome comprend tes recettes",
-    text: <>Aucun champ à remplir : Cardamome <strong>lit chaque recette</strong> et en déduit seul la <em>difficulté</em> (d'après les techniques), la <em>saisonnalité</em> (d'après les ingrédients) et le <em>Nutri-Score</em>. Toi tu cuisines, lui il analyse.</>,
+    title: "Chaque recette s'analyse toute seule",
+    text: <>Aucun champ à remplir : à la lecture d'une recette, Cardamome en déduit la <strong>difficulté</strong> (d'après les techniques), la <em>saisonnalité</em> (d'après les ingrédients) et le <em>Nutri-Score</em>. L'info est là avant même que tu la cherches.</>,
   },
   {
     illustration: PlanningIllustration, color: "#5b9cf6",
