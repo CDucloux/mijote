@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.53.1 – Cardamome · Filtres plus vivants
+
+### Filtres (mobile)
+- **Onde tactile généralisée** : toutes les pills de la feuille « Tous les filtres » (type de recette, préparation de base, nature, temps, régime & saison, cuisine, mode de cuisson, Nutri-Score, difficulté, ingrédients) répondent désormais au toucher par l'onde native, comme le reste de l'application, au lieu d'un simple enfoncement.
+- **Déploiement animé des sections** : ouvrir ou refermer une catégorie de filtres se fait par une transition douce de hauteur, quelle que soit la taille du contenu, au lieu d'un affichage instantané.
+
 ## v4.53.0 – Cardamome · Défilement plus doux et foyer soigné
 
 ### Confort (mobile)
