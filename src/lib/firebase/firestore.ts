@@ -29,6 +29,7 @@ import { householdWorkspace, type Workspace } from "@/lib/household/workspace.js
 import type { SharedData } from "@/lib/household/householdMigration.js";
 import type { PublicDoc } from "@/lib/household/publicRecipes.js";
 import type { Recipe } from "@/lib/types.js";
+import { planRecipeSync } from "@/lib/recipes/recipeSync.js";
 
 /** Workspace actif, ou uid brut (rétro-compat). */
 export type WorkspaceRef = Workspace | string;
@@ -670,22 +671,21 @@ export async function syncRecipes(ws: WorkspaceRef, recipes: Recipe[], lastSynce
   // Client déclassé : on n'écrit rien et on préserve la carte de synchro connue,
   // pour ne jamais supprimer une recette distante depuis un état local périmé.
   if (sharedWritesLocked) return lastSyncedMap;
+  const plan = planRecipeSync(recipes, lastSyncedMap);
+  if (plan.blockedDeletions.length > 0) {
+    // Coupe-circuit : une suppression de masse (au-delà du seuil) est presque
+    // toujours le symptôme d'un état local périmé. On garde les recettes distantes
+    // (le snapshot temps réel les réhydratera) et on remonte l'anomalie.
+    reportError(
+      new Error(`syncRecipes: ${plan.blockedDeletions.length} suppressions bloquées (coupe-circuit)`),
+      { where: "syncRecipes:circuitBreaker", blocked: plan.blockedDeletions.length },
+    );
+  }
   const batch = writeBatch(db);
   const col = recipesCol(ws);
-  const currentIds = new Set<string>();
   let ops = 0;
-  for (const r of recipes) {
-    if (!r.id) continue;
-    currentIds.add(r.id);
-    const prev = lastSyncedMap.get(r.id);
-    if (!prev || JSON.stringify(prev) !== JSON.stringify(r)) {
-      batch.set(doc(col, r.id), r);
-      ops++;
-    }
-  }
-  for (const id of lastSyncedMap.keys()) {
-    if (!currentIds.has(id)) { batch.delete(doc(col, id)); ops++; }
-  }
+  for (const r of plan.upserts) { batch.set(doc(col, r.id as string), r); ops++; }
+  for (const id of plan.deletions) { batch.delete(doc(col, id)); ops++; }
   if (ops > 0) await batch.commit();
   const newMap = new Map<string, Recipe>();
   for (const r of recipes) if (r.id) newMap.set(r.id, r);
