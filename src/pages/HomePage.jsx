@@ -7,6 +7,7 @@ import { DiscoverSection } from "../components/DiscoverSection.jsx";
 import { SpotlightIngredient } from "../components/SpotlightIngredient.jsx";
 import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
 import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
+import { FoyerGlyph } from "../components/FoyerGlyph.jsx";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { NewRecipeSheet } from "../components/NewRecipeButton.jsx";
 import { ElasticScroll } from "../components/ElasticScroll.jsx";
@@ -132,17 +133,6 @@ function OnboardingCard({ onNewRecipe, onExplore }) {
 
 // Pictogramme « foyer » : un toit qui abrite deux personnes. Inline pour pouvoir
 // le teinter en blanc sur le badge dégradé (aucune icône « groupe » dispo sinon).
-function FoyerGlyph({ size = 26 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M3.2 10.4 12 3.5l8.8 6.9" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="9.2" cy="12.4" r="1.9" fill="#fff" />
-      <circle cx="14.8" cy="12.4" r="1.9" fill="#fff" />
-      <path d="M5.7 19.2c.4-2 1.8-3 3.5-3s3.1 1 3.5 3M11.3 19.2c.4-2 1.8-3 3.5-3 1.6 0 3 1 3.5 3" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 // Pile d'avatars des membres (chevauchement), repli sur l'initiale colorée.
 function MemberStack({ emails, photoFor, nameFor }) {
   return (
@@ -215,7 +205,7 @@ function FoyerSection() {
           {household
             ? <MemberStack emails={household.memberEmails || []} photoFor={photoFor} nameFor={nameFor} />
             : <span style={{ width: 50, height: 50, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--accent)" }}>
-                <FoyerGlyph size={27} />
+                <FoyerGlyph size={27} color="#fff" />
               </span>}
         </span>
         {/* Perforation verticale */}
@@ -246,7 +236,12 @@ function FoyerSection() {
       </button>
       {open && (
         <SwipeableSheet onClose={() => setOpen(false)} style={{ maxHeight: "88dvh" }}>
-          <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: "0 0 16px" }}>Foyer</h2>
+          <h2 style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: "0 0 16px" }}>
+            <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "var(--accent)" }}>
+              <FoyerGlyph size={20} color="#fff" />
+            </span>
+            Foyer
+          </h2>
           <HouseholdPanel onClose={() => setOpen(false)} />
         </SwipeableSheet>
       )}

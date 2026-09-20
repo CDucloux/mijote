@@ -5,7 +5,8 @@ import { ConfirmDialog } from "./ConfirmDialog.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount, isOwner, MAX_HOUSEHOLD } from "@/lib/household/household.js";
-import { Row, Col, IconChip } from "./ui/primitives.jsx";
+import { Row, Col } from "./ui/primitives.jsx";
+import { FoyerGlyph } from "./FoyerGlyph.jsx";
 
 // Avatar rond : photo si disponible, sinon initiale colorée.
 function Avatar({ photo, label, size = 34, dim = false }) {
@@ -52,17 +53,33 @@ export function HouseholdPanel({ onClose }) {
 
   return (
     <Col gap={14}>
-      {/* Bandeau info : tint accent plate (plus sobre que l'ancien dégradé), titre
-          court puis explication du partage. */}
-      <Col gap={9} style={{ background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 16, padding: 16 }}>
-        <Row gap={10}>
-          <IconChip size={32} radius={10} tint="rgba(var(--accent-rgb),0.15)">
-            <Icon name="info" size={17} color="var(--accent)" />
-          </IconChip>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Un foyer, tout en commun</span>
+      {/* Bandeau info : glyphe foyer + accroche courte, puis les 4 espaces partagés en
+          pastilles (scannable, moins « bloc de texte »), et une ligne de réassurance. */}
+      <Col gap={13} style={{ background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 16, padding: 16 }}>
+        <Row gap={11} style={{ alignItems: "center" }}>
+          <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "var(--accent)" }}>
+            <FoyerGlyph size={22} color="#fff" />
+          </span>
+          <Col gap={1}>
+            <span style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text)" }}>Un foyer, tout en commun</span>
+            <span style={{ fontSize: 12.5, color: "var(--text2)" }}>Jusqu'à {MAX_HOUSEHOLD} personnes, un seul espace de cuisine.</span>
+          </Col>
         </Row>
-        <span style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.6 }}>
-          Jusqu'à <strong style={{ color: "var(--text)" }}>{MAX_HOUSEHOLD} personnes</strong> partagent recettes, stock, listes de courses et planning. En rejoignant un foyer, tes recettes y sont <strong style={{ color: "var(--text)" }}>ajoutées</strong> ; planning, stock et courses du foyer sont adoptés (ta version perso reste sauvegardée).
+        <Row gap={7} style={{ flexWrap: "wrap" }}>
+          {[
+            { icon: "book", label: "Recettes" },
+            { icon: "calendar", label: "Planning" },
+            { icon: "shopping", label: "Courses" },
+            { icon: "box", label: "Stock" },
+          ].map(({ icon, label }) => (
+            <Row key={label} gap={5} style={{ alignItems: "center", background: "var(--surface)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 999, padding: "5px 11px" }}>
+              <Icon name={icon} size={13} color="var(--accent)" />
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{label}</span>
+            </Row>
+          ))}
+        </Row>
+        <span style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5 }}>
+          En rejoignant, tes recettes s'ajoutent au foyer. Ta version perso reste sauvegardée.
         </span>
       </Col>
 
