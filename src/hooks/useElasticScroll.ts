@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { attachElasticScroll } from "@/lib/ui/elasticScrollCore.js";
+import { readElasticStrategy } from "@/lib/ui/elasticStrategy.js";
 
 /**
  * Overscroll vertical « stretch » au BAS d'un conteneur scrollable : arrivé en bas,
@@ -12,15 +13,17 @@ import { attachElasticScroll } from "@/lib/ui/elasticScrollCore.js";
  * La mécanique (résistance rubber-band iOS, rebond d'inertie) vit dans
  * `attachElasticScroll` (cf. elasticScrollCore), partagée avec la délégation globale.
  *
+ * L'effet n'est monté que là où la plateforme n'offre pas d'overscroll natif fiable
+ * (coquilles Capacitor, iOS web) ; sur le web/PWA hors iOS, on laisse le navigateur
+ * faire (cf. {@link readElasticStrategy}). Le `touchmove` non passif n'est attaché
+ * qu'au fil d'un geste, l'inertie restant sur le thread compositeur.
+ *
  * @param options - Réglages.
  * @param options.max - Décalage maximal en pixels (défaut 38, volontairement subtil).
  * @param options.disabled - Désactive l'effet (ex. desktop).
  * @param options.armWhenUnscrollable - Arme l'étirement sur un geste vers le haut même
- *   quand le contenu tient à l'écran (rien à défiler). Utile sur une page courte (ex.
- *   connexion) pour garder le ressenti élastique ; faux par défaut.
- * @param options.armAtEdgeOnly - N'attache le `touchmove` non passif que le temps d'un
- *   geste amorcé en butée basse : le scroll courant reste sur le thread compositeur
- *   (pas de jank), seul l'overscroll de bord passe en JS. Faux par défaut.
+ *   quand le contenu tient à l'écran (rien à défiler). Vrai par défaut : toutes les
+ *   pages, même courtes, gardent le ressenti élastique.
  * @returns `scrollRef` (conteneur `overflow-y`) et `contentRef` (enfant transformé,
  *   englobant tout le contenu défilable).
  *
@@ -30,15 +33,16 @@ import { attachElasticScroll } from "@/lib/ui/elasticScrollCore.js";
  * return <div ref={scrollRef} style={{ overflowY: "auto" }}><div ref={contentRef}>…</div></div>;
  * ```
  */
-export function useElasticScroll({ max = 38, disabled = false, armWhenUnscrollable = false, armAtEdgeOnly = false }: { max?: number; disabled?: boolean; armWhenUnscrollable?: boolean; armAtEdgeOnly?: boolean } = {}) {
+export function useElasticScroll({ max = 38, disabled = false, armWhenUnscrollable = true }: { max?: number; disabled?: boolean; armWhenUnscrollable?: boolean } = {}) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    if (disabled || readElasticStrategy() === "native") return;
     const el = scrollRef.current, inner = contentRef.current;
-    if (!el || !inner || disabled) return;
-    return attachElasticScroll(el, inner, { max, armWhenUnscrollable, armAtEdgeOnly });
-  }, [max, disabled, armWhenUnscrollable, armAtEdgeOnly]);
+    if (!el || !inner) return;
+    return attachElasticScroll(el, inner, { max, armWhenUnscrollable });
+  }, [max, disabled, armWhenUnscrollable]);
 
   return { scrollRef, contentRef };
 }

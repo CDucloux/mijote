@@ -17,7 +17,6 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
-import { readElasticStrategy } from "@/lib/ui/elasticStrategy.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { OverscrollRow } from "../components/OverscrollRow.jsx";
 
@@ -285,11 +284,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   };
 
   const isDesktop = useIsDesktop();
-  // Prototype overscroll : natif (compositeur) partout où la plateforme l'offre sur les
-  // corps internes (Android/PWA-Android/web-Android) ; custom ALLÉGÉ sur iOS (armé au
-  // seul bord, sinon scroll natif). Cf. lib/ui/elasticStrategy.
-  const elasticNative = useMemo(() => readElasticStrategy() === "native", []);
-  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop || elasticNative, armAtEdgeOnly: true });
+  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
 
   // Restaure la position mémorisée au montage (retour depuis une fiche), avant la
   // peinture pour éviter tout saut visible. La pagination a déjà été restaurée dans

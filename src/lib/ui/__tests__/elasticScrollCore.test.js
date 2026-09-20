@@ -67,29 +67,57 @@ describe("attachElasticScroll", () => {
     expect(() => off()).not.toThrow();
   });
 
-  it("attache les listeners de geste et les retire au nettoyage", () => {
+  it("n'attache PAS le touchmove non passif à l'installation (inertie sur le compositeur)", () => {
     mockMedia({ reduce: false });
     const el = document.createElement("div");
     const inner = document.createElement("div");
     const add = vi.spyOn(el, "addEventListener");
-    const remove = vi.spyOn(el, "removeEventListener");
     const off = attachElasticScroll(el, inner, { max: 64 });
-    const events = add.mock.calls.map((c) => c[0]);
-    expect(events).toEqual(expect.arrayContaining(["touchstart", "touchmove", "touchend", "touchcancel", "scroll"]));
-    off();
-    const removed = remove.mock.calls.map((c) => c[0]);
-    expect(removed).toEqual(expect.arrayContaining(["touchstart", "touchmove", "touchend", "touchcancel", "scroll"]));
-  });
-
-  it("en armAtEdgeOnly, n'attache PAS le touchmove non passif à l'installation (scroll compositeur préservé)", () => {
-    mockMedia({ reduce: false });
-    const el = document.createElement("div");
-    const inner = document.createElement("div");
-    const add = vi.spyOn(el, "addEventListener");
-    const off = attachElasticScroll(el, inner, { armAtEdgeOnly: true });
     const events = add.mock.calls.map((c) => c[0]);
     expect(events).toEqual(expect.arrayContaining(["touchstart", "touchend", "touchcancel", "scroll"]));
     expect(events).not.toContain("touchmove");
     expect(() => off()).not.toThrow();
   });
+
+  it("attache le touchmove le temps d'un geste puis le retire au relâcher", () => {
+    mockMedia({ reduce: false });
+    const el = document.createElement("div");
+    const inner = document.createElement("div");
+    const add = vi.spyOn(el, "addEventListener");
+    const remove = vi.spyOn(el, "removeEventListener");
+    attachElasticScroll(el, inner);
+    dispatchTouch(el, "touchstart", 300);
+    expect(add.mock.calls.map((c) => c[0])).toContain("touchmove");
+    dispatchTouch(el, "touchend", 300);
+    expect(remove.mock.calls.map((c) => c[0])).toContain("touchmove");
+  });
+
+  it("engage l'étirement quand la butée basse est atteinte EN COURS de geste", () => {
+    mockMedia({ reduce: false });
+    const el = document.createElement("div");
+    const inner = document.createElement("div");
+    stubScroll(el, { clientHeight: 500, scrollHeight: 1000, scrollTop: 0 });
+    attachElasticScroll(el, inner);
+    dispatchTouch(el, "touchstart", 300);
+    dispatchTouch(el, "touchmove", 280); // le doigt monte mais on n'est pas en bas
+    expect(inner.style.transform === "" || inner.style.transform === "scaleY(1)").toBe(true);
+    el.scrollTop = 500; // on vient d'atteindre le bas (défilement natif)
+    dispatchTouch(el, "touchmove", 260); // le doigt continue de monter → overscroll
+    expect(inner.style.transform.startsWith("scaleY(")).toBe(true);
+    expect(Number(inner.style.transform.slice(7, -1))).toBeGreaterThan(1);
+  });
 });
+
+/** Dispatche un événement tactile mono-doigt avec la position verticale voulue. */
+function dispatchTouch(el, type, clientY) {
+  const e = new Event(type, { bubbles: true, cancelable: true });
+  e.touches = [{ clientX: 10, clientY }];
+  el.dispatchEvent(e);
+}
+
+/** Fige les dimensions de défilement (jsdom les rend à 0 sinon). */
+function stubScroll(el, { clientHeight, scrollHeight, scrollTop }) {
+  Object.defineProperty(el, "clientHeight", { value: clientHeight, configurable: true });
+  Object.defineProperty(el, "scrollHeight", { value: scrollHeight, configurable: true });
+  el.scrollTop = scrollTop;
+}
