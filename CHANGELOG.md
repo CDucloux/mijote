@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.55.0 – Cardamome · Stock qui va droit au but
+
+### Stock
+- **Filtre partageable et mémorisé** : la vue En stock / Bientôt vide / Catalogue vit désormais dans l'adresse de la page. Un lien ou un rafraîchissement retombe sur le bon filtre, au lieu de toujours repartir de « En stock ».
+- **Raccourci d'accueil plus précis** : le bandeau « X ingrédients à racheter bientôt » ouvre directement la vue « Bientôt vide » du stock, pile sur les ingrédients concernés.
+- **Survol soigné (ordinateur)** : les pills de filtre du stock réagissent au survol comme les onglets de courses.
+
+### Recettes
+- **Suppression avec retour visuel** : confirmer la suppression d'une recette ou d'un carnet affiche un indicateur de chargement, comme la dissolution d'un foyer, plutôt que de disparaître sèchement.
+
 ## v4.54.0 – Cardamome · Synchronisation qui protège tes recettes
 
 ### Fiabilité (synchronisation)

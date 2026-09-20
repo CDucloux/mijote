@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, memo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
 import { EmptyArt } from "../components/EmptyArt.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
@@ -169,8 +170,17 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   const [search, setSearch] = useState("");
   // Vue par défaut : « ce que j'ai en stock » (l'objet de la page), pas le catalogue
   // complet des ingrédients gérables. "stock" = ce que j'ai | "low" = à racheter |
-  // "all" = catalogue (tout ce que Cardamome sait gérer).
-  const [view, setView] = useState("stock");
+  // "all" = catalogue (tout ce que Cardamome sait gérer). Le filtre vit dans l'URL
+  // (?view=…) pour être partageable et survivre au refresh ; "stock" reste implicite
+  // (URL nue), un param inconnu retombe sur le défaut. `replace` : le filtre est une
+  // vue, pas une étape d'historique.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawView = searchParams.get("view");
+  const view = rawView === "low" || rawView === "all" ? rawView : "stock";
+  const setView = useCallback(
+    (v) => setSearchParams(v === "stock" ? {} : { view: v }, { replace: true }),
+    [setSearchParams]
+  );
 
   const { logActivity } = useAppShell();
   const stockSet = useMemo(() => new Set(stock), [stock]);
@@ -334,7 +344,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           ].map(p => {
             const active = view === p.key;
             return (
-              <button key={p.key} onClick={() => setView(p.key)} className="ripple"
+              <button key={p.key} onClick={() => setView(p.key)} className={`ripple${active ? "" : " hov-pill"}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
