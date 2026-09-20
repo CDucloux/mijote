@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.54.0 – Cardamome · Synchronisation qui protège tes recettes
+
+### Fiabilité (synchronisation)
+- **Fini les pertes de recettes par un appareil en retard** : la synchronisation n'efface plus une recette du cloud simplement parce qu'elle est absente d'un appareil au cache périmé (par exemple un vieil onglet, une app installée pas rouverte depuis longtemps, ou un ancien lien). Un appareil en retard ne peut désormais qu'ajouter ou mettre à jour, jamais supprimer en masse.
+- **Suppression explicite et ciblée** : supprimer une recette agit sur cette recette précise, et sur elle seule. C'est le seul chemin qui retire une recette, y compris en foyer et hors-ligne (la suppression part à la reconnexion).
+- **Garde-fou « version / origine »** : un client trop ancien ou servi depuis une adresse non officielle passe en lecture seule au lieu de risquer d'écraser tes données. Réglable à distance sans redéploiement.
+
 ## v4.53.1 – Cardamome · Filtres plus vivants
 
 ### Filtres (mobile)

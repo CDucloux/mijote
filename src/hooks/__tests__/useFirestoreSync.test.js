@@ -26,10 +26,14 @@ vi.mock("@/lib/firebase/firestore.js", () => ({
   loadSharedData: vi.fn(),
   writeSharedData: vi.fn(() => Promise.resolve(new Map())),
   setHouseholdPointer: vi.fn(() => Promise.resolve()),
+  setSharedWritesLocked: vi.fn(),
+  deleteSharedRecipe: vi.fn(() => Promise.resolve()),
 }));
+vi.mock("@/lib/firebase/appConfig.js", () => ({ loadAppConfig: vi.fn(() => Promise.resolve(null)) }));
 vi.mock("@/lib/household/householdMigration.js", () => ({ mergeShared: (_local, remote) => ({ ...remote }) }));
 
 import * as fs from "@/lib/firebase/firestore.js";
+import { loadAppConfig } from "@/lib/firebase/appConfig.js";
 import { useFirestoreSync } from "../useFirestoreSync.js";
 
 const SETTER_NAMES = ["setUser", "setSyncStatus", "setRecipes", "setCollections", "setMealPlan", "setShoppingLists", "setStock", "setLowStock", "setPreferences", "setMasterDB", "setUserDB"];
@@ -85,6 +89,35 @@ describe("useFirestoreSync", () => {
     expect(props.setMasterDB).toHaveBeenCalledWith(MASTER);
     expect(localStorage.getItem("rf_masterDB_cache")).toBeTruthy();
     await waitFor(() => expect(fs.upsertOwnDirectoryEntry).toHaveBeenCalled());
+  });
+
+  it("suppression : removeRecipe fait un deleteDoc explicite (jamais par absence)", async () => {
+    fs.loadMasterDB.mockResolvedValue(MASTER);
+    fs.loadUserData.mockResolvedValue({ recipes: [{ id: "r1" }], userDB: { ingredients: [], utensils: [] } });
+    const props = makeProps();
+    const { result, rerender } = renderHook(p => useFirestoreSync(p), { initialProps: props });
+    await act(async () => { await authCb({ uid: "me", email: "a@b.c" }); });
+    rerender({ ...props, user: { uid: "me", email: "a@b.c" } });
+    await waitFor(() => expect(props.setSyncStatus).toHaveBeenCalledWith("synced"));
+
+    await act(async () => { result.current.removeRecipe("r1"); });
+    expect(fs.deleteSharedRecipe).toHaveBeenCalledWith(expect.anything(), "r1");
+  });
+
+  it("garde-fou : un client déclassé verrouille les écritures, passe en 'blocked' et n'écrit rien", async () => {
+    loadAppConfig.mockResolvedValueOnce({ minimumVersion: "999.0.0" }); // au-dessus du bundle courant
+    fs.loadMasterDB.mockResolvedValue(MASTER);
+    fs.loadUserData.mockResolvedValue({ recipes: [{ id: "r1" }], userDB: { ingredients: [], utensils: [] } });
+    const props = makeProps();
+    const { rerender } = renderHook(p => useFirestoreSync(p), { initialProps: props });
+    await act(async () => { await authCb({ uid: "me", email: "a@b.c" }); });
+    rerender({ ...props, user: { uid: "me", email: "a@b.c" } });
+
+    await waitFor(() => expect(fs.setSharedWritesLocked).toHaveBeenCalledWith(true));
+    expect(props.setSyncStatus).toHaveBeenCalledWith("blocked");
+    expect(props.setSyncStatus).not.toHaveBeenCalledWith("synced");
+    expect(fs.syncRecipes).not.toHaveBeenCalled(); // push initial sauté
+    expect(props.setRecipes).toHaveBeenCalledWith([{ id: "r1" }]); // lecture seule : données visibles
   });
 
   it("membre d'un foyer (déjà migré) : le coordinateur charge et applique les données du foyer", async () => {

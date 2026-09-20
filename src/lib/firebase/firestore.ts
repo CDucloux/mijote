@@ -29,9 +29,23 @@ import { householdWorkspace, type Workspace } from "@/lib/household/workspace.js
 import type { SharedData } from "@/lib/household/householdMigration.js";
 import type { PublicDoc } from "@/lib/household/publicRecipes.js";
 import type { Recipe } from "@/lib/types.js";
+import { planRecipeUpserts } from "@/lib/recipes/recipeSync.js";
 
 /** Workspace actif, ou uid brut (rétro-compat). */
 export type WorkspaceRef = Workspace | string;
+
+// ── Verrou d'écriture des slices partagés (garde-fou anti-client périmé) ──────
+// Engagé au bootstrap quand `evaluateAppGuard` déclasse le client (version trop
+// vieille ou hôte non canonique). Une fois posé, les écritures par diff des
+// recettes (seul chemin capable de SUPPRIMER des docs distants) deviennent des
+// no-op : un cache local obsolète ne peut plus saccager la base partagée.
+let sharedWritesLocked = false;
+
+/** Engage ou lève le verrou d'écriture des slices partagés. */
+export function setSharedWritesLocked(locked: boolean): void { sharedWritesLocked = locked; }
+
+/** Indique si les écritures partagées sont actuellement verrouillées. */
+export function areSharedWritesLocked(): boolean { return sharedWritesLocked; }
 
 /** Fiche d'annuaire d'un utilisateur (avatar, email, nom). */
 export interface DirectoryUser {
@@ -344,6 +358,7 @@ export async function loadSharedData(ws: WorkspaceRef): Promise<Required<SharedD
  * @returns La nouvelle carte de synchro des recettes.
  */
 export async function writeSharedData(ws: WorkspaceRef, data: SharedData, recipeMap: Map<string, Recipe> = new Map()): Promise<Map<string, Recipe>> {
+  if (sharedWritesLocked) return recipeMap; // client déclassé : aucune écriture partagée
   const newMap = await syncRecipes(ws, (data.recipes || []) as Recipe[], recipeMap);
   const batch = writeBatch(db);
   batch.set(metaDoc(ws, "collections"), { items: data.collections || [] });
@@ -644,33 +659,42 @@ export async function migrateLegacyDoc(uid: string): Promise<DocumentData | null
 }
 
 /**
- * Sync des recettes par diff : n'écrit que les recettes nouvelles/modifiées et
- * supprime celles retirées.
+ * Synchro des recettes par UPSERT uniquement : écrit les nouvelles/modifiées, ne
+ * supprime JAMAIS par absence. Une recette absente de `recipes` mais présente
+ * côté serveur est laissée intacte (une suppression est une opération explicite,
+ * cf. `deleteSharedRecipe`). Un état local périmé ne peut donc plus effacer de
+ * données distantes.
  *
  * @param ws - Le workspace cible.
  * @param recipes - L'état courant des recettes.
- * @param lastSyncedMap - La carte de synchro précédente (id → recette).
- * @returns La nouvelle carte de synchro (id → recette).
+ * @param lastSyncedMap - La carte de synchro précédente (id -> recette).
+ * @returns La nouvelle carte de synchro (id -> recette).
  */
 export async function syncRecipes(ws: WorkspaceRef, recipes: Recipe[], lastSyncedMap: Map<string, Recipe>): Promise<Map<string, Recipe>> {
-  const batch = writeBatch(db);
-  const col = recipesCol(ws);
-  const currentIds = new Set<string>();
-  let ops = 0;
-  for (const r of recipes) {
-    if (!r.id) continue;
-    currentIds.add(r.id);
-    const prev = lastSyncedMap.get(r.id);
-    if (!prev || JSON.stringify(prev) !== JSON.stringify(r)) {
-      batch.set(doc(col, r.id), r);
-      ops++;
-    }
+  // Client déclassé : on n'écrit rien et on préserve la carte de synchro connue.
+  if (sharedWritesLocked) return lastSyncedMap;
+  const upserts = planRecipeUpserts(recipes, lastSyncedMap);
+  if (upserts.length > 0) {
+    const batch = writeBatch(db);
+    const col = recipesCol(ws);
+    for (const r of upserts) batch.set(doc(col, r.id as string), r);
+    await batch.commit();
   }
-  for (const id of lastSyncedMap.keys()) {
-    if (!currentIds.has(id)) { batch.delete(doc(col, id)); ops++; }
-  }
-  if (ops > 0) await batch.commit();
   const newMap = new Map<string, Recipe>();
   for (const r of recipes) if (r.id) newMap.set(r.id, r);
   return newMap;
+}
+
+/**
+ * Suppression EXPLICITE d'une recette dans le workspace actif. C'est le seul
+ * chemin qui retire une recette côté serveur : une intention utilisateur ciblée
+ * sur un document précis, jamais une déduction par absence. No-op si le client
+ * est déclassé (verrou d'écriture).
+ *
+ * @param ws - Le workspace cible (solo ou foyer).
+ * @param id - L'identifiant de la recette à supprimer.
+ */
+export async function deleteSharedRecipe(ws: WorkspaceRef, id: string): Promise<void> {
+  if (sharedWritesLocked) return;
+  await deleteDoc(doc(recipesCol(ws), id));
 }

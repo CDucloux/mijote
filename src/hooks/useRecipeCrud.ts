@@ -36,6 +36,8 @@ export interface RecipeCrudDeps {
   notify: (msg: string, type?: string) => void;
   navigate: (path: string) => void;
   logActivity: (input: ActivityInput) => void;
+  /** Suppression explicite côté serveur (deleteDoc ciblé), jamais par absence. */
+  removeRecipe: (id: string) => void;
 }
 
 /** Index de recettes tel qu'attendu par les helpers courses/PDF (composants). */
@@ -52,7 +54,7 @@ const componentIndex = (recipes: Recipe[]): Map<string, ComponentRecipe> =>
  */
 export function useRecipeCrud({
   recipes, setRecipes, setCollections, setEditingRecipe, shoppingLists, setShoppingLists,
-  ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity,
+  ingredientDB, utensilDB, techniques, stock, isPlus, notify, navigate, logActivity, removeRecipe,
 }: RecipeCrudDeps) {
   // Quota du plan gratuit : bloque la création au-delà de la limite. `redirect`
   // renvoie vers l'offre, désactivé depuis l'éditeur (qui masquerait /plan).
@@ -98,6 +100,7 @@ export function useRecipeCrud({
           return { ...recipe, ingredients: (recipe.ingredients || []).filter(ing => ing.recipeId !== id) };
         }).filter(recipe => recipe.id !== id));
         if (r?.image) deleteImageByUrl(r.image);
+        removeRecipe(id); // suppression explicite côté serveur (doc ciblé)
         navigate("/recipes");
         notify("Base supprimée");
         return;
@@ -105,6 +108,7 @@ export function useRecipeCrud({
     }
     if (r?.image) deleteImageByUrl(r.image);
     setRecipes(prev => prev.filter(x => x.id !== id));
+    removeRecipe(id); // suppression explicite côté serveur (doc ciblé)
     navigate("/recipes");
     notify("Recette supprimée");
     if (r) logActivity({ type: "recipe.delete", target: r.name });

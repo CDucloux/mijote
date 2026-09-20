@@ -6,9 +6,11 @@ import { reportError, setObservabilityUser } from "@/lib/observability/observabi
 import {
   metaDoc, recipesCol, upsertOwnDirectoryEntry,
   loadMasterDB, subscribeMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
-  loadSharedData, writeSharedData, setHouseholdPointer,
+  loadSharedData, writeSharedData, setHouseholdPointer, setSharedWritesLocked, deleteSharedRecipe,
   type WorkspaceRef, type MasterDB,
 } from "@/lib/firebase/firestore.js";
+import { loadAppConfig } from "@/lib/firebase/appConfig.js";
+import { evaluateAppGuard } from "@/lib/appGuard.js";
 import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
 import { normalizePreferences } from "@/constants/preferences.js";
 import { soloWorkspace, householdWorkspace, type Workspace } from "@/lib/household/workspace.js";
@@ -209,6 +211,9 @@ export function useFirestoreSync({
       setSyncStatus("syncing");
       try {
         const masterPromise = loadMasterDB();
+        // Garde-fou anti-client périmé : lu en parallèle du reste, appliqué AVANT
+        // toute écriture partagée (cf. verrou plus bas). Non bloquant pour le skeleton.
+        const appConfigPromise = loadAppConfig();
         const ws = soloWorkspace(u.uid); // espace perso (préférences/base + partagé solo)
         // Foyer connu du dernier passage → on charge DIRECTEMENT ses données partagées
         // (pas de flash solo→foyer au reload). Le coordinateur confirmera/corrigera.
@@ -314,12 +319,27 @@ export function useFirestoreSync({
         recipeSyncMap.current = mapOf(shared.recipes);
         recipesSigRef.current = JSON.stringify(shared.recipes || []);
 
+        // Garde-fou : si le client est déclassé (version trop vieille ou hôte non
+        // canonique), on VERROUILLE toute écriture partagée AVANT le moindre push.
+        // La lecture (snapshots) reste active : l'utilisateur voit ses données en
+        // lecture seule, sans jamais pouvoir écraser la base depuis un cache périmé.
+        const guard = evaluateAppGuard({
+          currentVersion: __APP_VERSION__,
+          host: window.location.hostname,
+          config: await appConfigPromise,
+        });
+        setSharedWritesLocked(!guard.ok);
+        if (!guard.ok) {
+          setSyncStatus("blocked");
+          reportError(new Error(`client déclassé: ${guard.reason}`), { where: "sync:guard", host: window.location.hostname });
+        }
+
         if (loadedFromHousehold) {
           // Le foyer est déjà chargé : on s'aligne pour que le coordinateur ne rebascule pas.
           seedSigs(shared);
           activeHidRef.current = bootHid;
           setLoadedHid(bootHid);
-        } else if (isEmpty && data.recipes && (data.recipes.length || data.userDB)) {
+        } else if (guard.ok && isEmpty && data.recipes && (data.recipes.length || data.userDB)) {
           await Promise.all([
             syncRecipes(ws, data.recipes, new Map()).then(m => { recipeSyncMap.current = m; }),
             setDoc(metaDoc(ws, "collections"), { items: data.collections || [] }),
@@ -330,7 +350,13 @@ export function useFirestoreSync({
           ]);
         }
 
-        setTimeout(() => { cloudLoaded.current = true; setBootstrapped(true); setSyncStatus("synced"); }, 0);
+        // Client déclassé : on lève le skeleton (données lisibles) mais on n'active
+        // JAMAIS `cloudLoaded` (les autosaves restent inertes) et on conserve l'état
+        // "blocked". Client sain : bascule normale en écriture.
+        setTimeout(() => {
+          setBootstrapped(true);
+          if (guard.ok) { cloudLoaded.current = true; setSyncStatus("synced"); }
+        }, 0);
       } catch (e) { setSyncStatus("error"); reportError(e, { where: "sync:bootstrap" }); }
     };
 
@@ -437,15 +463,15 @@ export function useFirestoreSync({
     catch { setSyncStatus("error"); }
   }, [user, setSyncStatus]);
 
-  // Recettes (slice partagé) – diff par id vers le workspace actif. On lit la
-  // DERNIÈRE valeur (sharedRef) pour ne jamais supprimer une recette arrivée d'un
-  // autre membre entre la planification et l'exécution de cet effet.
+  // Recettes (slice partagé) – upsert par id vers le workspace actif. On lit la
+  // DERNIÈRE valeur (sharedRef) pour envoyer l'état le plus à jour.
   useEffect(() => {
     if (!user || !canAutosaveShared()) return;
     const latest = sharedRef.current.recipes || [];
     // N'écrire QUE sur une vraie modif utilisateur : si la signature courante est celle
     // qu'on vient d'appliquer (chargement / snapshot distant), on ne touche à rien
-    // (évite l'écho et surtout les suppressions destructrices au reload).
+    // (évite l'écho et les upserts inutiles au reload). La synchro n'ajoute/modifie
+    // que ; elle ne supprime jamais par absence (cf. removeRecipe pour la suppression).
     const sig = JSON.stringify(latest);
     if (recipesSigRef.current === sig) return;
     recipesSigRef.current = sig;
@@ -455,6 +481,19 @@ export function useFirestoreSync({
       .then(map => { recipeSyncMap.current = map; setSyncStatus("synced"); })
       .catch(() => { setSyncStatus("error"); });
   }, [recipes, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Suppression EXPLICITE d'une recette : un deleteDoc ciblé vers le workspace actif.
+  // C'est le SEUL chemin qui retire une recette côté serveur. L'autosave ci-dessus
+  // ne supprime jamais par absence, donc un état local périmé ne peut rien effacer.
+  const removeRecipe = useCallback((id: string): void => {
+    if (!user || !canAutosaveShared()) return;
+    const ws = sharedWsNow(user.uid);
+    recipeSyncMap.current.delete(id); // la recette n'est plus « déjà synchronisée »
+    setSyncStatus("syncing");
+    deleteSharedRecipe(ws, id)
+      .then(() => setSyncStatus("synced"))
+      .catch(e => { setSyncStatus("error"); reportError(e, { where: "removeRecipe" }); });
+  }, [user, setSyncStatus]);
 
   // Écrit une méta partagée si elle a changé (signature) : on note la signature avant
   // d'écrire, si bien que le snapshot de notre propre écriture (même JSON) est ignoré.
@@ -579,5 +618,5 @@ export function useFirestoreSync({
 
   useEffect(() => () => { if (hydrationTimer.current) clearTimeout(hydrationTimer.current); }, []);
 
-  return { cloudLoaded, workspaceReady, sharedHydrating };
+  return { cloudLoaded, workspaceReady, sharedHydrating, removeRecipe };
 }
