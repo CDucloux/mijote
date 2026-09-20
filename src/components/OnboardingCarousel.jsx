@@ -70,12 +70,18 @@ function ToqueIllustration() {
     </svg>
   );
 }
-function LeafIllustration() {
+function AnalysisIllustration() {
   return (
     <svg {...IL}>
-      <path d="M58 26 C33 39 29 74 44 95 C71 93 94 61 84 32 C71 41 62 39 58 26 Z" fill="#4caf7d" />
-      <path d="M58 26 C33 39 29 74 44 95 C50 80 52 58 84 32 C71 41 62 39 58 26 Z" fill="#6fce9b" />
-      <path d="M49 90 C55 66 66 50 82 41" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.75" />
+      {/* loupe : Cardamome « lit » la recette et en tire des scores */}
+      <path d="M74 72 L90 88" stroke="#3f9e6d" strokeWidth="10" strokeLinecap="round" />
+      <circle cx="54" cy="52" r="28" fill="#eafaf1" stroke="#3f9e6d" strokeWidth="7" />
+      {/* mini barres croissantes = scores deduits automatiquement */}
+      <g>
+        <rect x="44" y="53" width="7" height="10" rx="2.5" fill="#6fce9b" />
+        <rect x="54" y="47" width="7" height="16" rx="2.5" fill="#4caf7d" />
+        <rect x="64" y="41" width="7" height="22" rx="2.5" fill="#3f9e6d" />
+      </g>
     </svg>
   );
 }
@@ -167,7 +173,7 @@ const SLIDES = [
   {
     illustration: PodIllustration, color: "#6e9a3f",
     title: "Bienvenue sur Cardamome",
-    text: <>Ton <strong>atelier de cuisine</strong>, pas un simple carnet : tes recettes y prennent vie, s'affinent à chaque essai et te suivent <em>des courses jusqu'aux fourneaux</em>.</>,
+    text: <>Ton <strong>compagnon de cuisine</strong>, pas un simple carnet : tes recettes y prennent vie, s'affinent à chaque essai et te suivent <em>des courses jusqu'aux fourneaux</em>.</>,
   },
   {
     illustration: ToqueIllustration, color: "#c8912f",
@@ -175,9 +181,9 @@ const SLIDES = [
     text: <>Lance le <strong>mode pas à pas</strong> et avance sereinement. Chaque <em>geste technique</em> s'explique au bon moment, pour réussir même ce que tu n'as jamais tenté.</>,
   },
   {
-    illustration: LeafIllustration, color: "#5fb88a",
+    illustration: AnalysisIllustration, color: "#5fb88a",
     title: "Chaque recette s'analyse toute seule",
-    text: <>Aucun champ à remplir : à la lecture d'une recette, Cardamome en déduit la <strong>difficulté</strong> (d'après les techniques), la <em>saisonnalité</em> (d'après les ingrédients) et le <em>Nutri-Score</em>. L'info est là avant même que tu la cherches.</>,
+    text: <>À la lecture d'une recette, Cardamome en déduit la <strong>difficulté</strong> (d'après les techniques), la <em>saisonnalité</em> (d'après les ingrédients) et le <em>Nutri-Score</em>. L'info est là avant même que tu la cherches.</>,
   },
   {
     illustration: PlanningIllustration, color: "#5b9cf6",
