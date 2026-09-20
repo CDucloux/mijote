@@ -2231,8 +2231,10 @@ select {
   transition: transform .18s ease, box-shadow .18s ease;
 }
 
-/* Bouton « Passer » de l'onboarding : au survol (desktop / pointeur fin), fond « pill »
-   translucide. Rien au tactile pour ne pas laisser d'état collé après un tap. */
+/* Bouton « Passer » de l'onboarding : fond transparent au repos (défini ici et non en
+   inline, sinon le style inline battrait la règle :hover), fond « pill » translucide au
+   survol (desktop / pointeur fin). Rien au tactile pour ne pas laisser d'état collé. */
+.onb-skip { background: transparent; }
 @media (hover: hover) and (pointer: fine) {
   .onb-skip:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
 }
