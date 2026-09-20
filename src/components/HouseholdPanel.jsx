@@ -24,6 +24,9 @@ export function HouseholdPanel({ onClose }) {
   const [name, setName] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [working, setWorking] = useState(false);
+  // Après une dissolution/départ réussi, on ferme la sheet SANS repasser par l'état
+  // « aucun foyer » (sinon le bloc « Créer un foyer » apparaît un instant : effet de pop).
+  const [leaving, setLeaving] = useState(false);
   // Le panneau foyer a besoin de l'annuaire (candidats à l'invitation + avatars).
   useEffect(() => { loadDirectory?.(); }, [loadDirectory]);
 
@@ -32,6 +35,10 @@ export function HouseholdPanel({ onClose }) {
       <div style={{ width: 22, height: 22, border: "2.5px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
     </Row>;
   }
+
+  // Fermeture en cours après dissolution/départ : on n'affiche plus rien (surtout pas
+  // le bloc « Créer un foyer ») le temps que la sheet glisse hors écran.
+  if (leaving) return <Col style={{ minHeight: 80 }} />;
 
   const myEmail = (user?.email || "").toLowerCase();
   const owner = household && isOwner(household, user?.uid);
@@ -203,10 +210,14 @@ export function HouseholdPanel({ onClose }) {
           onCancel={() => setConfirmLeave(false)}
           onConfirm={async () => {
             setWorking(true);
-            const ok = await (owner ? actions.dissolve() : actions.leave());
-            setWorking(false);
-            setConfirmLeave(false);
-            if (ok) onClose?.();
+            // Délai plancher : le spinner reste visible un minimum même si le serveur
+            // répond instantanément (confort visuel, comme la déconnexion).
+            const [ok] = await Promise.all([
+              owner ? actions.dissolve() : actions.leave(),
+              new Promise(r => setTimeout(r, 650)),
+            ]);
+            if (ok) { setLeaving(true); onClose?.(); }
+            else { setWorking(false); setConfirmLeave(false); }
           }}>
           {owner
             ? <>« {household.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
