@@ -23,6 +23,7 @@ export function HouseholdPanel({ onClose }) {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [working, setWorking] = useState(false);
   // Le panneau foyer a besoin de l'annuaire (candidats à l'invitation + avatars).
   useEffect(() => { loadDirectory?.(); }, [loadDirectory]);
 
@@ -197,8 +198,16 @@ export function HouseholdPanel({ onClose }) {
           title={owner ? "Dissoudre le foyer ?" : "Quitter le foyer ?"}
           icon={owner ? "trash" : "logout"}
           confirmLabel={owner ? "Dissoudre" : "Quitter"}
+          busyLabel={owner ? "Dissolution…" : "Départ…"}
+          busy={working}
           onCancel={() => setConfirmLeave(false)}
-          onConfirm={async () => { const ok = await (owner ? actions.dissolve() : actions.leave()); setConfirmLeave(false); if (ok) onClose?.(); }}>
+          onConfirm={async () => {
+            setWorking(true);
+            const ok = await (owner ? actions.dissolve() : actions.leave());
+            setWorking(false);
+            setConfirmLeave(false);
+            if (ok) onClose?.();
+          }}>
           {owner
             ? <>« {household.name} » sera supprimé pour <strong style={{ color: "var(--text)" }}>tous les membres</strong>. Les données partagées ne seront plus accessibles. Ta <strong style={{ color: "var(--text)" }}>bibliothèque personnelle reste intacte</strong>.</>
             : <>Tu n'auras plus accès aux données partagées de « {household.name} ». Ta <strong style={{ color: "var(--text)" }}>version personnelle reste sauvegardée</strong> et redevient active.</>}
