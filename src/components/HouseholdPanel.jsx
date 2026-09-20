@@ -113,7 +113,7 @@ export function HouseholdPanel({ onClose }) {
                 se projette), mais la validation renvoie vers l'offre au lieu de créer. */}
             {isPlus ? (
               <button className="btn btn-primary" disabled={creating || !name.trim()} onClick={async () => { if (await actions.create(name)) setName(""); }} style={{ width: "100%" }}>
-                <Icon name={creating ? "spinner" : "plus"} size={16} /> {creating ? "Création…" : "Créer le foyer"}
+                <Icon name={creating ? "spinner" : "plus"} size={16} style={creating ? { animation: "spin 0.7s linear infinite" } : undefined} /> {creating ? "Création…" : "Créer le foyer"}
               </button>
             ) : (
               <>
