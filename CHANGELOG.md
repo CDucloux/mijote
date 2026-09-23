@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.56.0 – Cardamome · Interface peaufinée
+
+### Onboarding
+- **Accroche de bienvenue réécrite** : un ton plus juste et deux phrases nettes, sans le mot « carnet » qui collait mal au propos.
+- **Slide « planning » retitrée** : « Ton menu de la semaine, composé pour toi », plus parlante et sans répétition avec la slide précédente.
+
+### Partage
+- **Pastilles épurées** : les boutons WhatsApp et SMS perdent leur halo coloré, gagnent un survol discret sur ordinateur, et l'icône SMS est plus lisible.
+
+### Filtres (ordinateur)
+- **Survol des pills** : toutes les pills de la feuille « Tous les filtres » réagissent désormais au survol, comme celles de l'éditeur de recettes.
+
 ## v4.55.0 – Cardamome · Stock qui va droit au but
 
 ### Stock
