@@ -4530,6 +4530,37 @@ select {
   .classement-pill[data-active]:hover { background: rgba(var(--accent-rgb), 0.2); border-color: var(--accent); color: var(--accent); }
 }
 
+/* Pills (toggles) du panneau de filtres : même feel que `.classement-pill` de
+   l'éditeur, avec un hover desktop. La teinte de l'état actif est portée par
+   `--chip-color` (accent par défaut) posée en inline pour les variantes colorées
+   (Vegan, De saison, difficulté), ce qui garde le hover cohérent quelle que soit
+   la couleur. `color-mix` évite d'avoir besoin d'un triplet -rgb par teinte. */
+.filter-chip {
+  --chip-color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 22px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.filter-chip[data-on] {
+  background: color-mix(in srgb, var(--chip-color) 14%, transparent);
+  color: var(--chip-color);
+  border-color: color-mix(in srgb, var(--chip-color) 53%, transparent);
+}
+@media (hover: hover) {
+  .filter-chip:not([data-on]):hover { background: var(--surface3); border-color: var(--text3); color: var(--text); }
+  .filter-chip[data-on]:hover { background: color-mix(in srgb, var(--chip-color) 22%, transparent); border-color: var(--chip-color); }
+}
+
 /* Lien discret « Effacer la recherche » (état vide des recettes) : au survol desktop,
    il prend un fond en pilule pour se signaler comme cliquable. */
 .empty-clear-link {

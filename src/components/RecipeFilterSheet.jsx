@@ -39,16 +39,13 @@ function Group({ title, summary, defaultOpen = false, first = false, children })
   );
 }
 
-// Puce (toggle) générique.
+// Puce (toggle) générique. Style piloté par `.filter-chip` (CSS), la teinte de
+// l'état actif passe par la variable `--chip-color` (accent par défaut) : ça
+// autorise un hover desktop propre pour toutes les couleurs (cf. `.classement-pill`).
 function Chip({ on, onClick, color, children }) {
   return (
-    <button onClick={onClick} className="ripple" style={{
-      display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
-      padding: "8px 14px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer",
-      background: on ? (color ? `${color}22` : "rgba(var(--accent-rgb),0.16)") : "var(--surface2)",
-      color: on ? (color || "var(--accent)") : "var(--text2)",
-      border: `1px solid ${on ? (color ? `${color}88` : "rgba(var(--accent-rgb),0.5)") : "var(--border)"}`,
-    }}>{children}</button>
+    <button onClick={onClick} className="filter-chip ripple" data-on={on ? "1" : undefined}
+      style={color ? { "--chip-color": color } : undefined}>{children}</button>
   );
 }
 const Row = ({ children }) => <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{children}</div>;
@@ -228,13 +225,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
             const on = filters.diffMax === n;
             const col = difficultyColor(n);
             return (
-              <button key={n} onClick={() => set({ diffMax: on ? null : n })} className="ripple" style={{
-                display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
-                padding: "8px 13px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer",
-                background: on ? `color-mix(in srgb, ${col} 16%, transparent)` : "var(--surface2)",
-                color: on ? col : "var(--text2)",
-                border: `1px solid ${on ? `color-mix(in srgb, ${col} 55%, transparent)` : "var(--border)"}`,
-              }}>
+              <button key={n} onClick={() => set({ diffMax: on ? null : n })} className="filter-chip ripple" data-on={on ? "1" : undefined} style={{ "--chip-color": col }}>
                 <span style={{ display: "inline-flex", gap: 2 }}>
                   {[1, 2, 3, 4, 5].map(i => (
                     <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: i <= n ? (on ? col : "var(--text3)") : (on ? `color-mix(in srgb, ${col} 30%, transparent)` : "var(--border)") }} />
