@@ -74,6 +74,16 @@ const SALISSANTS = new Set([
   "basilic", "menthe", "aneth", "estragon", "cerfeuil", "oseille",
 ]);
 
+/** Ingrédients jamais taillés au couteau sur une planche (matières grasses, poudres,
+ *  liquides, œufs…) : même quand le LLM leur colle une découpe par erreur (« émincer le
+ *  beurre »), la ligne n'a rien à faire dans la mise en place. Filet de sécurité côté
+ *  affichage, qui rattrape aussi les recettes déjà importées avec une découpe aberrante. */
+const NON_DECOUPABLE = new Set([
+  "beurre", "farine", "sucre", "oeuf", "œuf", "lait", "creme", "eau", "huile",
+  "sel", "poivre", "miel", "sirop", "levure", "bicarbonate", "fecule", "maizena",
+  "cacao", "vanille", "gelatine",
+]);
+
 /** Normalisation d'une formulation libre pour l'appariement (accents/casse ignorés, espaces compactés). */
 const normPhrase = (s: string): string => normalizeStr(s).replace(/\s+/g, " ");
 
@@ -205,6 +215,7 @@ export function buildPostesDecoupe(
     if (!cut) continue;
     const name = (line.name || "").trim();
     if (!name) continue;
+    if (normalizeStr(name).split(" ").some((w) => NON_DECOUPABLE.has(w))) continue;
     const unit = (line.unit || "").trim();
     const calibre = cut.calibre ?? null;
     const key = [normalizeStr(line.dbId || name), cut.forme, calibre || "", normalizeStr(unit)].join("|");
@@ -282,10 +293,17 @@ export function findDecoupeStepIndex(
   // Appariement tolérant au pluriel : chaque mot du nom peut porter un « s » final, y
   // compris au milieu d'un nom composé (« pomme de terre » ↔ « pommes de terre »). Le
   // simple `includes` échouait sur ce pluriel interne.
+  // Tolérant aussi au qualificatif : le nom-tête doit être présent, mais les mots qui le
+  // suivent (adjectif, précision) sont optionnels, car l'étape désigne souvent l'ingrédient
+  // par son seul nom (« râper le gingembre » pour une ligne « gingembre frais »).
   const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const nameRes = [...names]
     .filter((n) => n.length > 0)
-    .map((n) => new RegExp(`(^|[^a-z0-9])${n.split(" ").map((w) => escapeRe(w) + "s?").join("\\s+")}([^a-z0-9]|$)`));
+    .map((n) => {
+      const [head, ...tail] = n.split(" ").map((w) => escapeRe(w) + "s?");
+      const suffix = tail.length ? `(?:\\s+${tail.join("\\s+")})?` : "";
+      return new RegExp(`(^|[^a-z0-9])${head}${suffix}([^a-z0-9]|$)`);
+    });
   const matchesName = (haystack: string): boolean => nameRes.some((re) => re.test(haystack));
 
   const linksIngredient = (step: Step): boolean =>
