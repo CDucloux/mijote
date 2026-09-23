@@ -19,10 +19,10 @@ export function ShareSheet({ recipe, publicUrl, shareText, onCopyLink, onNativeS
   };
   const opt = (label, glyph, onClick, kind, brandBg) => (
     <button onClick={onClick} className="pressable" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 9, background: "none", border: "none", cursor: "pointer", padding: "4px 0", minWidth: 0 }}>
-      <span className="ripple" style={{
+      <span className="ripple share-circle" style={{
         width: 56, height: 56, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
         ...(kind === "brand"
-          ? { background: brandBg, border: "none", boxShadow: `0 6px 16px ${brandBg}55` }
+          ? { background: brandBg, border: "none", boxShadow: "none" }
           : CIRCLE[kind]),
       }}>{glyph}</span>
       <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text2)", whiteSpace: "nowrap" }}>{label}</span>
@@ -55,7 +55,7 @@ export function ShareSheet({ recipe, publicUrl, shareText, onCopyLink, onNativeS
           <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.04c-.24.68-1.42 1.31-1.95 1.36-.53.05-1.02.24-3.44-.72-2.9-1.14-4.75-4.1-4.9-4.29-.14-.19-1.17-1.56-1.17-2.97 0-1.41.74-2.11 1-2.4.26-.29.57-.36.76-.36.19 0 .38 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.14.12.31.02.5-.09.19-.14.31-.29.48-.14.17-.3.38-.43.51-.14.14-.29.29-.12.57.17.29.74 1.22 1.59 1.98 1.09.97 2.01 1.27 2.3 1.42.29.14.45.12.62-.07.17-.19.71-.83.9-1.12.19-.29.38-.24.65-.14.26.1 1.67.79 1.96.93.29.14.48.22.55.34.07.12.07.68-.17 1.36Z" /></svg>
         ), () => { window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + publicUrl)}`, "_blank", "noopener"); onClose(); }, "brand", "#25D366")}
         {opt("SMS", (
-          <svg width="25" height="25" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4 3.5V16H5.5A1.5 1.5 0 0 1 4 14.5v-9Z" fill="#fff" /></svg>
+          <svg width="25" height="25" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4 3.5V16H5.5A1.5 1.5 0 0 1 4 14.5v-9Z" fill="#fff" /><circle cx="8.5" cy="10" r="1.15" fill="#34C759" /><circle cx="12" cy="10" r="1.15" fill="#34C759" /><circle cx="15.5" cy="10" r="1.15" fill="#34C759" /></svg>
         ), () => { window.location.href = `sms:?&body=${encodeURIComponent(shareText + " " + publicUrl)}`; onClose(); }, "brand", "#34C759")}
         {typeof navigator !== "undefined" && navigator.share && opt("Plus…", (
           <Icon name="share" size={22} color="var(--text)" />

@@ -177,7 +177,7 @@ const SLIDES = [
   {
     illustration: PodIllustration, color: "#6e9a3f",
     title: "Bienvenue sur Cardamome",
-    text: <>Ton <strong>compagnon de cuisine</strong>, pas un simple carnet : tes recettes y prennent vie, s'affinent à chaque essai et te suivent <em>des courses jusqu'aux fourneaux</em>.</>,
+    text: <>Ton <strong>compagnon de cuisine</strong>, pas une énième appli où recopier des recettes. Elles prennent vie, s'affinent à chaque essai et te suivent <em>des courses jusqu'aux fourneaux</em>.</>,
   },
   {
     illustration: ToqueIllustration, color: "#c8912f",
@@ -191,7 +191,7 @@ const SLIDES = [
   },
   {
     illustration: PlanningIllustration, color: "#5b9cf6",
-    title: "Ta semaine se planifie toute seule",
+    title: "Ton menu de la semaine, composé pour toi",
     text: <>Cardamome compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Tout s'exporte ensuite vers ton agenda.</>,
   },
   {
