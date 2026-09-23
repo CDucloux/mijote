@@ -191,7 +191,7 @@ const SLIDES = [
   },
   {
     illustration: PlanningIllustration, color: "#5b9cf6",
-    title: "Ta semaine se planifie toute seule",
+    title: "Ton menu de la semaine, composé pour toi",
     text: <>Cardamome compose des <strong>repas équilibrés</strong> (entrée, plat, accompagnement, dessert), privilégie la <em>saison</em>, varie les plaisirs et <strong>réutilise les portions cuisinées</strong> pour t'éviter de tout refaire. Tout s'exporte ensuite vers ton agenda.</>,
   },
   {
