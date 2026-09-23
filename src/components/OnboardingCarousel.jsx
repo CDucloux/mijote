@@ -177,7 +177,7 @@ const SLIDES = [
   {
     illustration: PodIllustration, color: "#6e9a3f",
     title: "Bienvenue sur Cardamome",
-    text: <>Ton <strong>compagnon de cuisine</strong>, pas une énième appli où recopier des recettes. Chacune prend vie, s'affine à chaque essai et te suit <em>des courses jusqu'aux fourneaux</em>.</>,
+    text: <>Ton <strong>compagnon de cuisine</strong>, pas une énième appli où recopier des recettes. Elles prennent vie, s'affinent à chaque essai et te suivent <em>des courses jusqu'aux fourneaux</em>.</>,
   },
   {
     illustration: ToqueIllustration, color: "#c8912f",
