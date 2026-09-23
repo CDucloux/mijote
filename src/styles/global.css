@@ -4391,6 +4391,12 @@ select {
 @media (hover: none) {
   .ripple:active { opacity: 1 !important; }
 }
+/* Pastilles rondes de la feuille de partage : sur souris uniquement, un léger
+   soulèvement + éclaircissement fait office de hover (le tactile, lui, a l'onde). */
+.share-circle { transition: transform 0.16s ease, filter 0.16s ease; }
+@media (hover: hover) {
+  button:hover > .share-circle { transform: translateY(-2px); filter: brightness(1.07); }
+}
 /* Variante claire : sur une surface sombre (boutons ronds translucides sur photo),
    l'onde grise ne se voit pas → encre blanche. L'ink est inséré comme enfant direct. */
 .ripple-light > .ripple-ink { background: rgba(255, 255, 255, 0.4); }
