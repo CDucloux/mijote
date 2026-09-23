@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.56.1 – Cardamome · Découpe plus juste en mode cuisine
+
+### Mode cuisine
+- **Fini les découpes aberrantes** : le beurre, la farine, le sucre, les œufs, les liquides et les poudres ne s'affichent plus dans la mise en place, même quand l'import leur avait collé une découpe par erreur (« Émincer : 90 g beurre »). Le correctif nettoie aussi les recettes déjà importées.
+- **Étape retrouvée malgré un qualificatif** : la puce « Étape N » d'une découpe apparaît désormais même quand l'étape ne nomme l'ingrédient que par son nom-tête (« râper le gingembre » pour une ligne « gingembre frais »).
+
 ## v4.56.0 – Cardamome · Interface peaufinée
 
 ### Onboarding
