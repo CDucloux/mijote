@@ -4393,9 +4393,9 @@ select {
 }
 /* Pastilles rondes de la feuille de partage : sur souris uniquement, un léger
    soulèvement + éclaircissement fait office de hover (le tactile, lui, a l'onde). */
-.share-circle { transition: transform 0.16s ease, filter 0.16s ease; }
+.share-circle { transition: filter 0.16s ease; }
 @media (hover: hover) {
-  button:hover > .share-circle { transform: translateY(-2px); filter: brightness(1.07); }
+  button:hover > .share-circle { filter: brightness(1.08); }
 }
 /* Variante claire : sur une surface sombre (boutons ronds translucides sur photo),
    l'onde grise ne se voit pas → encre blanche. L'ink est inséré comme enfant direct. */
