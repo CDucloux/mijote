@@ -367,7 +367,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
           {TABS.map(({ id, label, icon }, i) => {
             const active = section === id;
             return (
-              <button key={id} onClick={() => goSection(id, i)} style={{
+              <button key={id} onClick={() => goSection(id, i)} className={`editor-tab${active ? " active" : ""}`} style={{
                 flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "7px 3px", borderRadius: 11, border: "none", cursor: "pointer",
                 background: active ? "rgba(var(--accent-rgb),0.12)" : "transparent", color: active ? "var(--accent)" : "var(--text3)",
                 transition: "color 0.15s ease, background-color 0.15s ease" }}>

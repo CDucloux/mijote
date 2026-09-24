@@ -2631,6 +2631,13 @@ select {
     color: var(--text);
   }
 
+  /* Onglets de l'éditeur de recette : au survol desktop, un onglet non sélectionné
+     s'allume (fond + texte plus clair), comme le bouton fermer à gauche. */
+  .editor-tab:not(.active):hover {
+    background: var(--surface2);
+    color: var(--text2);
+  }
+
   /* Ligne de suggestion « compléter le repas » : mise en avant au survol.
      `!important` : ces cartes portent des `border`/`box-shadow` en style inline
      (bordure d'état, ombre de base) qui, sinon, l'emportent sur ce survol. */
