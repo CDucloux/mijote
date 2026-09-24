@@ -12,7 +12,8 @@ const ESPACES = [
 ];
 
 /**
- * Rangée de pastilles listant les 4 espaces partagés d'un foyer.
+ * Rangée de pastilles listant les 4 espaces partagés d'un foyer, disposées en
+ * grille 2x2 (Recettes/Planning, puis Courses/Stock) pour un bloc équilibré.
  *
  * @param {{ style?: import("react").CSSProperties, stagger?: number }} props
  * @param props.style - Styles additionnels du conteneur (ex. marge).
@@ -20,12 +21,16 @@ const ESPACES = [
  */
 export function FoyerEspaces({ style, stagger }) {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 7, ...style }}>
-      {ESPACES.map(({ icon, label }, i) => (
-        <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--surface)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 999, padding: "5px 11px", animation: stagger != null ? `foyerRise 0.42s ${stagger + i * 0.07}s both ease` : undefined }}>
-          <Icon name={icon} size={13} color="var(--accent)" />
-          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{label}</span>
-        </span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 7, ...style }}>
+      {[ESPACES.slice(0, 2), ESPACES.slice(2)].map((row, r) => (
+        <div key={r} style={{ display: "flex", gap: 7 }}>
+          {row.map(({ icon, label }, i) => (
+            <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--surface)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 999, padding: "5px 11px", animation: stagger != null ? `foyerRise 0.42s ${stagger + (r * 2 + i) * 0.07}s both ease` : undefined }}>
+              <Icon name={icon} size={13} color="var(--accent)" />
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{label}</span>
+            </span>
+          ))}
+        </div>
       ))}
     </div>
   );

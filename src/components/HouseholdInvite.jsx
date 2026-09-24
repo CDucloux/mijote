@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
 import { FoyerGlyph } from "./FoyerGlyph.jsx";
 import { FoyerEspaces } from "./FoyerEspaces.jsx";
+import { forgetWelcome } from "./HouseholdWelcome.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 
 // ─── INVITATION AU FOYER (accueil) ────────────────────────────────────────────
@@ -28,6 +29,10 @@ export function HouseholdInvite() {
     await fn(inv.id);
     setWorking(false);
   };
+  // « Rejoindre » doit toujours déboucher sur le message d'arrivée : on réarme
+  // l'accueil avant d'accepter (sans quoi un re-join sur un foyer déjà « vu »
+  // resterait muet à cause du flag localStorage).
+  const join = () => { forgetWelcome(inv.id); act(actions.accept); };
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 1500, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.2s ease" }}>
@@ -57,7 +62,7 @@ export function HouseholdInvite() {
           <button className="btn btn-ghost btn-pill" disabled={working} style={{ flex: "0 0 auto", padding: "13px 18px" }} onClick={() => act(actions.decline)}>
             Refuser
           </button>
-          <button className="btn btn-primary btn-pill" disabled={working} style={{ flex: 1, padding: "13px 0", fontSize: 15 }} onClick={() => act(actions.accept)}>
+          <button className="btn btn-primary btn-pill" disabled={working} style={{ flex: 1, padding: "13px 0", fontSize: 15 }} onClick={join}>
             {working
               ? <span style={{ width: 17, height: 17, border: "2px solid rgba(255,255,255,0.5)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
               : <><Icon name="check" size={17} /> Rejoindre</>}

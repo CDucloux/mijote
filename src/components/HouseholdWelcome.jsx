@@ -13,6 +13,17 @@ import { useHousehold } from "../hooks/useHousehold.js";
 // halo accent ni confettis d'emojis (des tells d'IA).
 const seenKey = (hid) => `mijote_foyer_welcomed_${hid}`;
 
+/**
+ * Réarme l'accueil pour un foyer : la modale de bienvenue se ré-affichera au prochain
+ * passage. Appelé quand l'utilisateur accepte explicitement une invitation, pour que
+ * « Rejoindre » débouche toujours sur le message d'arrivée, même sur un re-join.
+ *
+ * @param hid - L'identifiant du foyer.
+ */
+export function forgetWelcome(hid) {
+  try { if (hid) localStorage.removeItem(seenKey(hid)); } catch { /* ignore */ }
+}
+
 export function HouseholdWelcome() {
   const { user } = useAppShell();
   const { household } = useHousehold();
