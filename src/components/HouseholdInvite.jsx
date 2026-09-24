@@ -7,21 +7,14 @@ import { useHousehold } from "../hooks/useHousehold.js";
 
 // ─── INVITATION AU FOYER (accueil) ────────────────────────────────────────────
 // Dès l'arrivée dans l'app, si une invitation à rejoindre un foyer attend, on la
-// présente en modale (rejoindre / refuser / plus tard) plutôt que de la laisser
-// enfouie dans le panneau Foyer. Reprend le langage visuel de la modale de
+// présente en modale bloquante : maintenant ou jamais, c'est rejoindre ou refuser,
+// sans échappatoire « plus tard ». Reprend le langage visuel de la modale de
 // bienvenue (tuile carrée + FoyerGlyph + pastilles des espaces), sans tell d'IA.
-//
-// « Plus tard » se mémorise en mémoire de session (pas de localStorage) : l'invitation
-// ne re-surgit pas à chaque navigation, mais réapparaît à la prochaine ouverture de
-// l'app, tant qu'elle n'a pas été acceptée ou refusée. Clé par id d'invitation :
-// une nouvelle invitation, elle, s'affiche même si une précédente a été repoussée.
-const snoozed = new Set();
 
 export function HouseholdInvite() {
   const { invites, actions } = useHousehold();
   const [working, setWorking] = useState(false);
-  const [, bump] = useState(0); // force le re-rendu après un « Plus tard » (état hors React)
-  const inv = invites.find(i => i.id && !snoozed.has(i.id)) || null;
+  const inv = invites.find(i => i.id) || null;
 
   if (!inv) return null;
 
@@ -35,11 +28,10 @@ export function HouseholdInvite() {
     await fn(inv.id);
     setWorking(false);
   };
-  const snooze = () => { snoozed.add(inv.id); setWorking(false); bump(x => x + 1); };
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 1500, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.2s ease" }}>
-      <div style={{ width: "100%", maxWidth: 372, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 24, padding: "26px 24px 20px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)", animation: "modalIn 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+      <div style={{ width: "100%", maxWidth: 372, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 24, padding: "26px 24px 24px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)", animation: "modalIn 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
           {/* Tuile carrée arrondie, reprise du header du panneau Foyer. Ombre neutre
               douce (pas de halo vert : un glow accent est un tell d'IA banni). */}
@@ -71,10 +63,6 @@ export function HouseholdInvite() {
               : <><Icon name="check" size={17} /> Rejoindre</>}
           </button>
         </div>
-
-        <button onClick={snooze} disabled={working} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: "var(--text3)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 4 }}>
-          Plus tard
-        </button>
       </div>
     </div>,
     document.body
