@@ -13,47 +13,36 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // -text | -pdf). Le mur d'offre n'apparaît qu'au moment d'essayer l'import (cf.
 // ImportPage) : on laisse d'abord découvrir l'écran, on ne bloque pas l'entrée.
 
-// Pastille « import intelligent » : pastille orange, anneau blanc fin (net dans
-// les deux thèmes) et un petit robot blanc (yeux évidés couleur pastille), centré.
-function SmartBadge() {
+// Petit robot « import intelligent » : glyphe au trait, teintable. Utilisé une seule
+// fois, en tête du groupe d'imports (plutôt que répété sur chaque ligne, ce qui
+// alourdissait la feuille et lui donnait un air « chargé »).
+function RobotGlyph({ size = 16, color = "currentColor" }) {
   return (
-    <span title="Import intelligent" style={{ position: "absolute", top: -6, right: -6, display: "grid", placeItems: "center", width: 21, height: 21, borderRadius: "50%", background: "var(--accent)", border: "1.5px solid rgba(255,255,255,0.92)", boxShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
-      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
-        {/* antenne */}
-        <rect x="11" y="2" width="2" height="3.4" rx="1" fill="#fff" />
-        <circle cx="12" cy="2.4" r="2" fill="#fff" />
-        {/* tête */}
-        <rect x="4" y="7" width="16" height="12" rx="4" fill="#fff" />
-        {/* yeux + bouche évidés */}
-        <circle cx="9" cy="12.6" r="1.9" fill="var(--accent)" />
-        <circle cx="15" cy="12.6" r="1.9" fill="var(--accent)" />
-        <rect x="9" y="16" width="6" height="1.6" rx="0.8" fill="var(--accent)" />
-      </svg>
-    </span>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="11" y="1.6" width="2" height="3.6" rx="1" fill={color} />
+      <circle cx="12" cy="2" r="1.8" fill={color} />
+      <rect x="4" y="6.5" width="16" height="12" rx="4.5" stroke={color} strokeWidth="1.8" />
+      <circle cx="9.2" cy="12.4" r="1.6" fill={color} />
+      <circle cx="14.8" cy="12.4" r="1.6" fill={color} />
+      <path d="M9.5 15.8h5" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
   );
 }
 
-// Ligne-option du sélecteur (empilées verticalement). `accent` = import intelligent.
-function Choice({ icon, title, subtitle, onClick, accent, smart, badge }) {
+// Ligne-option du sélecteur (empilées verticalement). `iconAccent` teinte l'icône
+// en accent (imports intelligents), sinon en neutre (saisie manuelle).
+function Choice({ icon, title, subtitle, onClick, iconAccent }) {
   return (
-    <button onClick={onClick} className={`pressable nr-choice${accent ? "" : " nr-neutral"}`} style={{
+    <button onClick={onClick} className="pressable nr-choice" style={{
       display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
-      padding: 14, borderRadius: 16,
-      background: accent ? "rgba(var(--accent-rgb),0.05)" : "var(--surface)",
-      border: `1px solid ${accent ? "rgba(var(--accent-rgb),0.32)" : "var(--border)"}`,
+      padding: 14, borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)",
       boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
     }}>
-      <span style={{ position: "relative", flexShrink: 0 }}>
-        <span style={{ width: 46, height: 46, borderRadius: 14, display: "grid", placeItems: "center", background: accent ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)" }}>
-          <Icon name={icon} size={22} color={accent ? "var(--accent)" : "var(--text2)"} />
-        </span>
-        {smart && <SmartBadge />}
+      <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, display: "grid", placeItems: "center", background: "var(--surface2)" }}>
+        <Icon name={icon} size={22} color={iconAccent ? "var(--accent)" : "var(--text2)"} />
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{title}</span>
-          {badge}
-        </span>
+        <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: "var(--text)", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{title}</span>
         <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.45, marginTop: 3 }}>{subtitle}</span>
       </span>
       <span className="nr-chev" style={{ flexShrink: 0, width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", background: "var(--surface2)", color: "var(--text3)" }}>
@@ -99,12 +88,21 @@ export function NewRecipeSheet({ onClose, onManual }) {
           <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Comment veux-tu la créer ?</p>
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <Choice icon="link" accent smart badge={plusBadge} title="Importer depuis un lien" subtitle="Colle une URL : l'import intelligent extrait et met en forme la recette." onClick={() => goImport("/recipes/import-from-url")} />
-        <Choice icon="photo" accent smart badge={plusBadge} title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImport("/recipes/import-from-picture")} />
-        <Choice icon="paste" accent smart badge={plusBadge} title="Coller un texte" subtitle="Un mail, une note, un message : colle le texte, il est mis en forme." onClick={() => goImport("/recipes/import-from-text")} />
-        <Choice icon="pdf" accent smart badge={plusBadge} title="Importer un PDF" subtitle="Une fiche ou un livre en PDF : le texte est lu et mis en forme." onClick={() => goImport("/recipes/import-from-pdf")} />
-        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* Groupe « import intelligent » : un seul eyebrow (robot + libellé + un unique
+            badge Cardamome+) coiffe les 4 options, au lieu de répéter badge et robot
+            sur chaque ligne. Les lignes redeviennent neutres : plus de fond teinté
+            ni de halo vert (un glow accent est un tell d'IA banni). */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 2px 2px" }}>
+          <RobotGlyph size={16} color="var(--accent)" />
+          <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text3)" }}>Import intelligent</span>
+          {plusBadge}
+        </div>
+        <Choice icon="link" iconAccent title="Importer depuis un lien" subtitle="Colle une URL : l'import intelligent extrait et met en forme la recette." onClick={() => goImport("/recipes/import-from-url")} />
+        <Choice icon="photo" iconAccent title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImport("/recipes/import-from-picture")} />
+        <Choice icon="paste" iconAccent title="Coller un texte" subtitle="Un mail, une note, un message : colle le texte, il est mis en forme." onClick={() => goImport("/recipes/import-from-text")} />
+        <Choice icon="pdf" iconAccent title="Importer un PDF" subtitle="Une fiche ou un livre en PDF : le texte est lu et mis en forme." onClick={() => goImport("/recipes/import-from-pdf")} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "6px 0 4px" }}>
           <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
           <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>
           <span style={{ flex: 1, height: 1, background: "var(--border)" }} />

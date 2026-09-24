@@ -2644,15 +2644,11 @@ select {
     color: #fff;
   }
 
-  /* Choix « Nouvelle recette » : survol accent (import IA) / neutre (manuel). */
+  /* Choix « Nouvelle recette » : survol neutre (fond crème/gris qui s'appuie,
+     bordure marquée), sans halo vert. Le chevron, lui, s'anime en accent. */
   .nr-choice:hover {
-    border-color: rgba(var(--accent-rgb), 0.5);
-    box-shadow: 0 8px 22px -12px rgba(var(--accent-rgb), 0.55);
-  }
-
-  .nr-choice.nr-neutral:hover {
     border-color: var(--text3);
-    box-shadow: 0 8px 22px -14px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 22px -14px rgba(0, 0, 0, 0.35);
   }
 
   .nr-choice:hover .nr-chev {
