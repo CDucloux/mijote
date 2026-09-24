@@ -39,22 +39,25 @@ export function HouseholdWelcome() {
       <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 372, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 24, padding: "26px 24px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)", animation: "modalIn 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
         {/* Tuile carrée arrondie, reprise du header du panneau Foyer. Ombre neutre
             très douce (pas de halo vert : un glow accent est un tell d'IA banni). */}
+        {/* La tuile « pop » à l'arrivée, puis les deux visages du glyphe s'y installent
+            (un foyer qui se peuple) : la signature faite-main de l'accueil. */}
         <div style={{ width: 52, height: 52, borderRadius: 16, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(0,0,0,0.28)", animation: "popIn 0.55s 0.05s both cubic-bezier(0.34,1.56,0.64,1)" }}>
-          <FoyerGlyph size={30} color="#fff" />
+          <FoyerGlyph size={30} color="#fff" animateFaces />
         </div>
 
         {/* Hiérarchie assumée : le titre domine (display, gros, serré), le corps
-            s'aligne à gauche en colonne lisible, sans tout-centré mécanique. */}
-        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 25, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.12, margin: "18px 0 8px" }}>
+            s'aligne à gauche en colonne lisible, sans tout-centré mécanique. Le
+            contenu se révèle en cascade juste après l'arrivée des visages. */}
+        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 25, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.12, margin: "18px 0 8px", animation: "foyerRise 0.42s 0.34s both ease" }}>
           Bienvenue dans le foyer
         </h2>
-        <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 16px" }}>
+        <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 16px", animation: "foyerRise 0.42s 0.42s both ease" }}>
           Tu as rejoint <strong style={{ color: "var(--text)" }}>« {household.name} »</strong>. Tes recettes ont été ajoutées, et à partir de maintenant tout se partage entre vous.
         </p>
 
-        <FoyerEspaces style={{ marginBottom: 18 }} />
+        <FoyerEspaces style={{ marginBottom: 18 }} stagger={0.5} />
 
-        <button className="btn btn-primary btn-pill" style={{ width: "100%", padding: "13px 0", fontSize: 15 }} onClick={close}>
+        <button className="btn btn-primary btn-pill" style={{ width: "100%", padding: "13px 0", fontSize: 15, animation: "foyerRise 0.42s 0.82s both ease" }} onClick={close}>
           <Icon name="check" size={17} /> C'est parti
         </button>
       </div>

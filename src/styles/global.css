@@ -1778,6 +1778,37 @@ select {
   }
 }
 
+/* Accueil au foyer : les deux visages du glyphe « arrivent » dans la maison (un
+   foyer qui se peuple), chaque cercle rebondissant autour de son propre centre. */
+@keyframes foyerFacePop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.25);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Révélation en cascade du contenu de la modale d'accueil (montée douce + fondu). */
+@keyframes foyerRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ══ ÉTAGÈRES DU STOCK ════════════════════════════════════════════════════════
    Un mur de briques (fond du conteneur scrollable) portant des planches en chêne
    avec équerres fer ; sur chaque planche, une rangée de bocaux. La SIGNATURE : le
