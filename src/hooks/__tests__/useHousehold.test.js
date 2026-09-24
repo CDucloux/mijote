@@ -10,12 +10,14 @@ vi.mock("../../context/AppShellContext.jsx", () => ({
 
 // Foyer courant simulé côté snapshot membre (null = aucun foyer, pour tester la création).
 let memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
+// Invitations simulées côté snapshot invite (vide par défaut).
+let inviteDocs = [];
 
 // onSnapshot livre synchronement un snapshot selon le type de requête (membre/invite).
 vi.mock("firebase/firestore", () => ({
   onSnapshot: (q, onNext) => {
     if (q?.type === "member") onNext({ docs: memberDoc ? [memberDoc] : [] });
-    else onNext({ docs: [] });
+    else onNext({ docs: inviteDocs });
     return () => {};
   },
 }));
@@ -29,11 +31,11 @@ vi.mock("@/lib/firebase/firestore.js", () => ({
 }));
 
 import { useHousehold } from "../useHousehold.js";
-import { exitAllHouseholds, createHousehold } from "@/lib/firebase/firestore.js";
+import { exitAllHouseholds, createHousehold, acceptInvite } from "@/lib/firebase/firestore.js";
 import { act } from "@testing-library/react";
 
 describe("useHousehold", () => {
-  beforeEach(() => { memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) }; vi.clearAllMocks(); });
+  beforeEach(() => { memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) }; inviteDocs = []; vi.clearAllMocks(); });
 
   it("expose le foyer et sort de l'état loading après le 1er snapshot", () => {
     const { result } = renderHook(() => useHousehold());
@@ -75,6 +77,17 @@ describe("useHousehold", () => {
     const ok = await result.current.actions.create("Autre");
     expect(ok).toBe(false);
     expect(createHousehold).not.toHaveBeenCalled();
+  });
+
+  // Non-régression : `.data()` ne porte pas l'id du document. Sans le rattacher,
+  // `actions.accept(inv.id)` partait avec `hid = undefined` et l'adhésion plantait
+  // au premier accès Firestore (« can't access property indexOf »).
+  it("rattache l'id du document aux invitations et l'utilise pour l'adhésion", async () => {
+    inviteDocs = [{ id: "h9", data: () => ({ name: "Maison de test" }) }];
+    const { result } = renderHook(() => useHousehold());
+    expect(result.current.invites).toEqual([{ id: "h9", name: "Maison de test" }]);
+    await result.current.actions.accept(result.current.invites[0].id);
+    expect(acceptInvite).toHaveBeenCalledWith("h9", USER);
   });
 
   it("ignore les créations concurrentes (verrou en vol) : un seul appel serveur", async () => {
