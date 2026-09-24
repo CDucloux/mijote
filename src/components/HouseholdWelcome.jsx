@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
 import { FoyerGlyph } from "./FoyerGlyph.jsx";
+import { FoyerEspaces } from "./FoyerEspaces.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 
@@ -11,14 +12,6 @@ import { useHousehold } from "../hooks/useHousehold.js";
 // carrée + pastilles des 4 espaces partagés) pour une continuité assumée, sans
 // halo accent ni confettis d'emojis (des tells d'IA).
 const seenKey = (hid) => `mijote_foyer_welcomed_${hid}`;
-
-// Les 4 espaces mis en commun, mêmes libellés/icônes que le panneau Foyer.
-const ESPACES = [
-  { icon: "book", label: "Recettes" },
-  { icon: "calendar", label: "Planning" },
-  { icon: "shopping", label: "Courses" },
-  { icon: "box", label: "Stock" },
-];
 
 export function HouseholdWelcome() {
   const { user } = useAppShell();
@@ -59,14 +52,7 @@ export function HouseholdWelcome() {
           Tu as rejoint <strong style={{ color: "var(--text)" }}>« {household.name} »</strong>. Tes recettes ont été ajoutées, et à partir de maintenant tout se partage entre vous.
         </p>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 18 }}>
-          {ESPACES.map(({ icon, label }) => (
-            <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--surface)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 999, padding: "5px 11px" }}>
-              <Icon name={icon} size={13} color="var(--accent)" />
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{label}</span>
-            </span>
-          ))}
-        </div>
+        <FoyerEspaces style={{ marginBottom: 18 }} />
 
         <button className="btn btn-primary btn-pill" style={{ width: "100%", padding: "13px 0", fontSize: 15 }} onClick={close}>
           <Icon name="check" size={17} /> C'est parti
