@@ -20,12 +20,12 @@ import { stripAiDashes } from "@/lib/format.js";
 // Surlignage « marqueur » discret : fond accent translucide, coins arrondis, pas
 // de soulignage. Lisible et clairement tactile (donc utilisable au tap sur mobile).
 const wordBtn = (active) => ({
-  display: "inline", padding: "1px 4px", margin: "0 -1px", font: "inherit",
+  display: "inline-block", position: "relative", overflow: "hidden", verticalAlign: "baseline",
+  padding: "1px 4px", margin: "0 -1px", font: "inherit",
   color: "var(--accent)", fontWeight: 600,
   background: active ? "rgba(var(--accent-rgb),0.28)" : "rgba(var(--accent-rgb),0.11)",
   border: "none", borderRadius: 6, cursor: "pointer",
   lineHeight: "inherit", textAlign: "left",
-  WebkitBoxDecorationBreak: "clone", boxDecorationBreak: "clone",
   transition: "background 0.15s ease",
 });
 
@@ -231,7 +231,7 @@ export function TechniqueText({ text, index: indexProp }) {
         const t = seg.tech;
         const active = pop?.key === key;
         return (
-          <button key={i} type="button"
+          <button key={i} type="button" className="ripple"
             title={`${t.name} : voir la définition`}
             onClick={e => { e.stopPropagation(); if (active && pinned) { setPop(null); setPinned(false); } else { setPop(placeFor(e.currentTarget, key, t)); setPinned(true); } }}
             onMouseEnter={e => { if (!pinned) setPop(placeFor(e.currentTarget, key, t)); }}
