@@ -1778,11 +1778,14 @@ select {
   }
 }
 
-/* Tuiles d'action de la journée libre (accueil) : fond au survol desktop, feedback
-   tactile mobile via l'onde `.ripple`. */
+/* Tuiles d'action de la journée libre (accueil) : au survol desktop, le fond
+   s'allume, la pastille d'icône s'intensifie et la flèche glisse vers la droite ;
+   feedback tactile mobile via l'onde `.ripple`. */
 .hh-calm-tile { transition: background-color 0.15s ease; }
 @media (hover: hover) {
   .hh-calm-tile:hover { background: var(--surface2); }
+  .hh-calm-tile:hover .hh-calm-ico { background: rgba(var(--accent-rgb), 0.2); }
+  .hh-calm-tile:hover .hh-calm-arrow { transform: translateX(3px); color: var(--accent); }
 }
 
 /* Accueil au foyer : les deux visages du glyphe « arrivent » dans la maison (un

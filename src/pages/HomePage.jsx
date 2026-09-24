@@ -168,15 +168,17 @@ function CalmDayCard({ onPlan, onNewRecipe, onStock, onShopping }) {
       <div style={{ display: "flex", flexDirection: "column", borderTop: "1px solid var(--border)" }}>
         {tiles.map(t => (
           <button key={t.label} onClick={t.on} className="pressable ripple hh-calm-tile"
-            style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "12px 6px", background: "none", border: "none", borderRadius: 12, cursor: "pointer" }}>
-            <span style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(var(--accent-rgb),0.12)" }}>
+            style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "12px 10px", background: "none", border: "none", borderRadius: 12, cursor: "pointer" }}>
+            <span className="hh-calm-ico" style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(var(--accent-rgb),0.12)", transition: "background-color 0.16s ease" }}>
               <Icon name={t.icon} size={16} color="var(--accent)" />
             </span>
             <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
               <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{t.label}</span>
               <span style={{ fontSize: 11.5, color: "var(--text3)" }}>{t.desc}</span>
             </span>
-            <Icon name="forward" size={15} color="var(--text3)" />
+            <span className="hh-calm-arrow" style={{ display: "inline-flex", flexShrink: 0, transition: "transform 0.16s ease, color 0.16s ease", color: "var(--text3)" }}>
+              <Icon name="forward" size={15} color="currentColor" />
+            </span>
           </button>
         ))}
       </div>
