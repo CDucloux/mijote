@@ -4851,6 +4851,18 @@ select {
   border-radius: 999px;
   transition: background-color .18s ease;
 }
+.notif-more:disabled { cursor: default; opacity: 0.85; }
+
+/* Spinner du dépliage « Voir N de plus » : petit anneau accent. */
+.notif-more-spin {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(var(--accent-rgb), 0.3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
 
 /* État vide au croquis « encre » (EmptyArt), aligné sur les autres écrans vides de
    l'app : illustration fait-main, titre serif, sous-titre discret. */

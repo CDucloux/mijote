@@ -7,12 +7,12 @@ import { describeActivity, actorLabel, relativeTime, dayBucketLabel } from "@/li
 
 // Nombre d'évènements montrés d'emblée ; le reste se déplie à la demande. Garde la
 // section courte au repos sans masquer l'historique déjà chargé.
-const COLLAPSED = 5;
+const COLLAPSED = 10;
 
 // Une ligne de la timeline : pastille teintée (perce la spine) + phrase (2 lignes max)
 // + ligne acteur si ce n'est pas « Toi » + heure dédiée. Navigable (route non nulle)
 // → <button> pressable avec chevron d'affordance ; sinon (suppression) un <div> statique.
-function ActivityRow({ event, currentEmail, onNavigate }) {
+function ActivityRow({ event, currentEmail, onNavigate, style }) {
   const { icon, color, title, route } = describeActivity(event);
   const who = actorLabel(event, currentEmail);
   const when = relativeTime(event.ts);
@@ -34,10 +34,10 @@ function ActivityRow({ event, currentEmail, onNavigate }) {
     </>
   );
   if (!route) {
-    return <div className="notif-row">{inner}</div>;
+    return <div className="notif-row" style={style}>{inner}</div>;
   }
   return (
-    <button type="button" className="notif-row notif-row--nav pressable" onClick={() => onNavigate(route)}>
+    <button type="button" className="notif-row notif-row--nav pressable" style={style} onClick={() => onNavigate(route)}>
       {inner}
     </button>
   );
@@ -80,6 +80,7 @@ export function NotificationsSection({ activities = [], loading = false, onNavig
   const { user } = useAppShell();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+  const [revealing, setRevealing] = useState(false);
   const [, setTick] = useState(0);
 
   // Rafraîchit « il y a N min » chaque minute tant que la section est montée.
@@ -93,6 +94,14 @@ export function NotificationsSection({ activities = [], loading = false, onNavig
   const rest = activities.length - COLLAPSED;
   // Renvoie vers l'onglet ciblé puis referme le panneau (accès via le bouton rond).
   const go = (route) => { onNavigated?.(); navigate(route); };
+
+  // Dépliage en douceur : un court spinner, puis on révèle le reste (chaque ligne
+  // supplémentaire apparaît en cascade, cf. l'index global plus bas).
+  const expand = () => {
+    if (revealing) return;
+    setRevealing(true);
+    setTimeout(() => { setExpanded(true); setRevealing(false); }, 420);
+  };
 
   // Regroupe par jour SANS re-trier : préserve l'ordre `ts desc` du flux.
   const groups = useMemo(() => {
@@ -120,22 +129,36 @@ export function NotificationsSection({ activities = [], loading = false, onNavig
     );
   }
 
+  // Index global (à travers les groupes) pour animer en cascade UNIQUEMENT les
+  // lignes fraîchement révélées (au-delà de COLLAPSED), pas celles déjà à l'écran.
+  let gidx = -1;
+
   return (
     <div className="notif-feed">
       {groups.map((group, gi) => (
         <section key={`${group.label}-${gi}`} className="notif-group">
           <div className="notif-daylabel"><span>{group.label}</span></div>
           <div className="notif-stack">
-            {group.events.map(event => (
-              <ActivityRow key={event.id} event={event} currentEmail={currentEmail} onNavigate={go} />
-            ))}
+            {group.events.map(event => {
+              gidx++;
+              const isNew = expanded && gidx >= COLLAPSED;
+              const style = isNew ? { animation: `foyerRise 0.34s ${(gidx - COLLAPSED) * 0.05}s both ease` } : undefined;
+              return (
+                <ActivityRow key={event.id} event={event} currentEmail={currentEmail} onNavigate={go} style={style} />
+              );
+            })}
           </div>
         </section>
       ))}
       {rest > 0 && (
-        <button onClick={() => setExpanded(v => !v)} className="pressable notif-more">
-          {expanded ? "Réduire" : `Voir ${rest} de plus`}
-          <Icon name={expanded ? "chevronUp" : "chevronDown"} size={14} color="var(--accent)" />
+        <button onClick={expanded ? () => setExpanded(false) : expand} className="pressable notif-more" disabled={revealing}>
+          {revealing ? (
+            <>Chargement <span className="notif-more-spin" /></>
+          ) : expanded ? (
+            <>Réduire <Icon name="chevronUp" size={14} color="var(--accent)" /></>
+          ) : (
+            <>Voir {rest} de plus <Icon name="chevronDown" size={14} color="var(--accent)" /></>
+          )}
         </button>
       )}
     </div>
