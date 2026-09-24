@@ -20,6 +20,7 @@ import { useLongPress } from "../hooks/useLongPress.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
+import { buildPostesDecoupe, FORME_LABEL } from "@/lib/recipes/decoupe.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { fmtQtyUnit, fmtTime, isoWeek } from "@/lib/format.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
@@ -264,6 +265,22 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     [batch, recipesById, resolver, ingredientDB, stock, categoryOrder, PREP_CATEGORIES]
   );
   const cookingGroups = useMemo(() => groupCookings(batch.dishes), [batch]);
+  // Découpe mutualisée : on exploite la découpe individuelle notée sur chaque recette
+  // (champ `cut` des lignes d'ingrédients) pour proposer, par ingrédient, le(s)
+  // geste(s) concret(s) à faire d'un coup (« Émincer », « Tailler en dés »). Bien plus
+  // actionnable qu'un conseil générique. Indexé par nom d'ingrédient normalisé.
+  const decoupeByName = useMemo(() => {
+    const lines = [];
+    for (const d of batch.dishes) for (const l of (d.recipe.ingredients || [])) lines.push(l);
+    const map = new Map();
+    for (const p of buildPostesDecoupe(lines)) {
+      const key = normalizeStr(p.name);
+      const label = FORME_LABEL[p.forme] + (p.calibre ? ` (${p.calibre})` : "");
+      if (!map.has(key)) map.set(key, new Set());
+      map.get(key).add(label);
+    }
+    return map;
+  }, [batch]);
   // La semaine visible contient-elle au moins un plat (≠ base) ? Conditionne l'accès
   // à la session batch depuis le header (ré-ouvrable à tout moment, pas seulement
   // juste après une génération).
@@ -290,10 +307,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const [checkedPrep, setCheckedPrep] = useState(() => new Set());
   const togglePrep = useCallback(key => setCheckedPrep(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; }), []);
   // En-tête de section de la feuille batch : pastille emoji + titre (+ sous-titre).
-  const secHead = (emoji, title, sub) => (
+  const secHead = (iconName, title, sub) => (
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-        <span style={{ width: 28, height: 28, borderRadius: 9, background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 15, flexShrink: 0 }}>{emoji}</span>
+        <span style={{ width: 28, height: 28, borderRadius: 9, background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0 }}><Icon name={iconName} size={15} color="var(--text2)" /></span>
         <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>{title}</span>
       </div>
       {sub && <p style={{ fontSize: 11.5, color: "var(--text3)", margin: "7px 0 0", lineHeight: 1.45, paddingLeft: 37 }}>{sub}</p>}
@@ -981,7 +998,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           {batch.dishes.length === 0
             ? (
               <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
-                <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--surface2)", display: "grid", placeItems: "center", margin: "0 auto 12px", fontSize: 26 }}>🍳</div>
+                <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--surface2)", display: "grid", placeItems: "center", margin: "0 auto 12px" }}><Icon name="dish" size={24} color="var(--text3)" /></div>
                 <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Planifie des repas cette semaine<br />pour préparer ta session batch.</p>
               </div>
             )
@@ -989,12 +1006,12 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {/* Récap de session : tuiles blanches */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 22 }}>
                 {[
-                  { n: prepCount, l: prepCount > 1 ? "ingrédients" : "ingrédient", icon: "🔪" },
-                  { n: cookCount, l: cookCount > 1 ? "cuissons" : "cuisson", icon: "🔥" },
-                  { n: mealOccasions, l: mealOccasions > 1 ? "repas" : "repas", icon: "🍽️" },
+                  { n: prepCount, l: prepCount > 1 ? "ingrédients" : "ingrédient", icon: "knife" },
+                  { n: cookCount, l: cookCount > 1 ? "cuissons" : "cuisson", icon: "fire" },
+                  { n: mealOccasions, l: mealOccasions > 1 ? "repas" : "repas", icon: "dish" },
                 ].map((c, i) => (
                   <div key={i} style={{ padding: "13px 8px", background: "var(--surface)", borderRadius: 15, border: "1px solid var(--border)", textAlign: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                    <div style={{ fontSize: 15, marginBottom: 3 }}>{c.icon}</div>
+                    <div style={{ display: "grid", placeItems: "center", marginBottom: 4 }}><Icon name={c.icon} size={16} color="var(--text3)" /></div>
                     <div style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, color: "var(--accent)", lineHeight: 1 }}>{c.n}</div>
                     <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 4 }}>{c.l}</div>
                   </div>
@@ -1004,7 +1021,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {/* ── 1. Mise en place mutualisée (par ingrédient) ── */}
               {miseEnPlace.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  {secHead("🔪", "Mise en place", "Prépare tous ces ingrédients d'un coup, toutes recettes confondues.")}
+                  {secHead("knife", "Mise en place", "Prépare tous ces ingrédients d'un coup, toutes recettes confondues.")}
                   {miseEnPlace.map(group => {
                     const cat = DEFAULT_CATEGORIES[group.category] || { label: "Autres", icon: "📦" };
                     return (
@@ -1017,6 +1034,11 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                           {group.items.map(it => {
                             const done = checkedPrep.has(it.key);
                             const qty = it.unit ? fmtQtyUnit(it.amount, it.unit) : `${it.amount}`;
+                            // Geste(s) de découpe tirés des recettes de la semaine ; repli sur le
+                            // conseil générique de l'ingrédient si aucune découpe n'est notée.
+                            const cuts = decoupeByName.get(normalizeStr(it.name));
+                            const geste = cuts && cuts.size ? [...cuts].join(" · ") : null;
+                            const nbRecettes = it.usedBy.length > 1 ? `pour ${it.usedBy.length} recettes` : "";
                             return (
                               <button key={it.key} onClick={() => togglePrep(it.key)} className="pressable" style={{
                                 display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", cursor: "pointer",
@@ -1032,11 +1054,16 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                                     <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)", textDecoration: done ? "line-through" : "none", opacity: done ? 0.6 : 1 }}>{it.name}</span>
                                     <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{qty}{it.pieces ? ` · ~${it.pieces}` : ""}</span>
                                   </span>
-                                  {(it.prepTip || it.usedBy.length > 1) && (
-                                    <span style={{ display: "block", fontSize: 10.5, color: "var(--text3)", marginTop: 2 }}>
-                                      {it.prepTip ? it.prepTip : ""}{it.prepTip && it.usedBy.length > 1 ? " · " : ""}{it.usedBy.length > 1 ? `pour ${it.usedBy.length} recettes` : ""}
+                                  {geste ? (
+                                    <span style={{ display: "block", fontSize: 11, marginTop: 3 }}>
+                                      <span style={{ fontWeight: 600, color: "var(--text2)" }}>{geste}</span>
+                                      {nbRecettes && <span style={{ color: "var(--text3)" }}> · {nbRecettes}</span>}
                                     </span>
-                                  )}
+                                  ) : (it.prepTip || nbRecettes) ? (
+                                    <span style={{ display: "block", fontSize: 10.5, color: "var(--text3)", marginTop: 2 }}>
+                                      {it.prepTip ? it.prepTip : ""}{it.prepTip && nbRecettes ? " · " : ""}{nbRecettes}
+                                    </span>
+                                  ) : null}
                                 </span>
                               </button>
                             );
@@ -1051,7 +1078,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {/* ── 2. Cuissons regroupées (mutualiser le four / les feux) ── */}
               {cookingGroups.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  {secHead("🔥", "Cuissons à mutualiser", "Ces plats partagent le même appareil, lance-les ensemble.")}
+                  {secHead("fire", "Cuissons à mutualiser", "Ces plats partagent le même appareil, lance-les ensemble.")}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {cookingGroups.map(g => (
                       <div key={g.method} style={{ padding: "12px 14px", background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
@@ -1070,7 +1097,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {/* ── 3. Préparations de base à faire d'avance ── */}
               {batch.bases.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  {secHead("🧩", "À préparer d'avance", "Les bases partagées entre plusieurs plats.")}
+                  {secHead("layers", "À préparer d'avance", "Les bases partagées entre plusieurs plats.")}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {batch.bases.map(b => (
                       <button key={b.recipe.id} onClick={() => { selectRecipe(b.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", background: b.shared ? "rgba(var(--ok-rgb),0.07)" : "var(--surface)", borderRadius: 14, border: `1px solid ${b.shared ? "rgba(var(--ok-rgb),0.35)" : "var(--border)"}`, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
@@ -1087,7 +1114,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               )}
 
               {/* ── 4. Plats à cuisiner ── */}
-              {secHead("🍽️", "À cuisiner", null)}
+              {secHead("dish", "À cuisiner", null)}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {batch.dishes.map(d => (
                   <button key={d.recipe.id} onClick={() => { selectRecipe(d.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
