@@ -1778,6 +1778,13 @@ select {
   }
 }
 
+/* Tuiles d'action de la journée libre (accueil) : fond au survol desktop, feedback
+   tactile mobile via l'onde `.ripple`. */
+.hh-calm-tile { transition: background-color 0.15s ease; }
+@media (hover: hover) {
+  .hh-calm-tile:hover { background: var(--surface2); }
+}
+
 /* Accueil au foyer : les deux visages du glyphe « arrivent » dans la maison (un
    foyer qui se peuple), chaque cercle rebondissant autour de son propre centre. */
 @keyframes foyerFacePop {
