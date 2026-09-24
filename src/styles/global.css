@@ -1778,15 +1778,44 @@ select {
   }
 }
 
-@keyframes floatUp {
+/* Tuiles d'action de la journée libre (accueil) : au survol desktop, le fond
+   s'allume, la pastille d'icône s'intensifie et la flèche glisse vers la droite ;
+   feedback tactile mobile via l'onde `.ripple`. */
+.hh-calm-tile { transition: background-color 0.15s ease; }
+@media (hover: hover) {
+  .hh-calm-tile:hover { background: var(--surface2); }
+  .hh-calm-tile:hover .hh-calm-ico { background: rgba(var(--accent-rgb), 0.2); }
+  .hh-calm-tile:hover .hh-calm-arrow { transform: translateX(3px); color: var(--accent); }
+}
+
+/* Accueil au foyer : les deux visages du glyphe « arrivent » dans la maison (un
+   foyer qui se peuple), chaque cercle rebondissant autour de son propre centre. */
+@keyframes foyerFacePop {
   0% {
-    transform: translateY(0);
-    opacity: 1;
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.25);
   }
 
   100% {
-    transform: translateY(-60px);
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Révélation en cascade du contenu de la modale d'accueil (montée douce + fondu). */
+@keyframes foyerRise {
+  from {
     opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -2602,6 +2631,13 @@ select {
     color: var(--text);
   }
 
+  /* Onglets de l'éditeur de recette : au survol desktop, un onglet non sélectionné
+     s'allume (fond + texte plus clair), comme le bouton fermer à gauche. */
+  .editor-tab:not(.active):hover {
+    background: var(--surface2);
+    color: var(--text2);
+  }
+
   /* Ligne de suggestion « compléter le repas » : mise en avant au survol.
      `!important` : ces cartes portent des `border`/`box-shadow` en style inline
      (bordure d'état, ombre de base) qui, sinon, l'emportent sur ce survol. */
@@ -2615,15 +2651,11 @@ select {
     color: #fff;
   }
 
-  /* Choix « Nouvelle recette » : survol accent (import IA) / neutre (manuel). */
+  /* Choix « Nouvelle recette » : survol neutre (fond crème/gris qui s'appuie,
+     bordure marquée), sans halo vert. Le chevron, lui, s'anime en accent. */
   .nr-choice:hover {
-    border-color: rgba(var(--accent-rgb), 0.5);
-    box-shadow: 0 8px 22px -12px rgba(var(--accent-rgb), 0.55);
-  }
-
-  .nr-choice.nr-neutral:hover {
     border-color: var(--text3);
-    box-shadow: 0 8px 22px -14px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 22px -14px rgba(0, 0, 0, 0.35);
   }
 
   .nr-choice:hover .nr-chev {
@@ -4805,6 +4837,7 @@ select {
 
 .notif-more {
   display: inline-flex;
+  align-self: flex-start;
   align-items: center;
   gap: 5px;
   margin: 8px 0 6px 6px;
@@ -4818,6 +4851,18 @@ select {
   color: var(--accent);
   border-radius: 999px;
   transition: background-color .18s ease;
+}
+.notif-more:disabled { cursor: default; opacity: 0.85; }
+
+/* Spinner du dépliage « Voir N de plus » : petit anneau accent. */
+.notif-more-spin {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(var(--accent-rgb), 0.3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
 }
 
 /* État vide au croquis « encre » (EmptyArt), aligné sur les autres écrans vides de

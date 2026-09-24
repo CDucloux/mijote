@@ -41,6 +41,7 @@ import { Icon } from "./components/Icon.jsx";
 import { RecipeNotFound } from "./components/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/OfflineModal.jsx";
 import { HouseholdWelcome } from "./components/HouseholdWelcome.jsx";
+import { HouseholdInvite } from "./components/HouseholdInvite.jsx";
 import { OnboardingCarousel } from "./components/OnboardingCarousel.jsx";
 import { TooltipLayer } from "./components/TooltipLayer.jsx";
 import { TabBar } from "./components/TabBar.jsx";
@@ -733,6 +734,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           </SwipeableSheet>
         )}
         <OfflineModal />
+        <HouseholdInvite />
         <HouseholdWelcome />
         <OnboardingCarousel />
         <TooltipLayer />

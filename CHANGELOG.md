@@ -1,5 +1,27 @@
 # Changelog – Cardamome
 
+## v4.57.0 – Cardamome · Foyer, batch et accueil peaufinés
+
+### Foyer
+- **Adhésion réparée** : rejoindre un foyer depuis une invitation ne plante plus (« can't access property indexOf ») ; l'invitation portait mal son identifiant.
+- **Invitation dès l'arrivée** : une invitation en attente s'affiche désormais en pleine page à l'ouverture de l'app, à choisir tout de suite (rejoindre ou refuser), au lieu de rester enfouie dans le panneau Foyer.
+- **Accueil au foyer soigné** : la fenêtre de bienvenue est repensée (sans confettis d'emojis ni halo), avec une petite animation d'arrivée et les quatre espaces partagés en pastilles équilibrées 2x2.
+
+### Accueil
+- **Journée libre plus vivante** : quand rien n'est prévu aujourd'hui, l'accueil invite à agir (planifier la semaine, ajouter une recette, gérer le stock, faire les courses) au lieu d'une simple ligne « Rien de prévu ». Survol soigné sur ordinateur.
+
+### Nouvelle recette
+- **Feuille épurée** : « Écrire la recette » passe en tête, les options d'import intelligent sont regroupées sous un seul intitulé, et les icônes retrouvent une couleur neutre (fini le halo vert).
+
+### Session batch
+- **Interface allégée** : les emojis qui envahissaient la page laissent place à un jeu d'icônes cohérent (les emojis de catégorie, eux, restent).
+- **Mise en place plus juste** : elle s'appuie sur la découpe notée sur chaque recette et propose le bon geste à faire d'un coup par ingrédient (« Émincer », « Tailler en dés »).
+
+### Détails soignés
+- **Onde tactile sur les techniques** : sur mobile, taper un mot-technique dans une étape déclenche le retour tactile, comme les autres boutons.
+- **Onglets de l'éditeur de recette** : survol sur ordinateur des onglets non sélectionnés.
+- **Notifications** : 10 activités affichées d'emblée (au lieu de 5), et le dépliage se fait en douceur (court chargement puis apparition en cascade).
+
 ## v4.56.1 – Cardamome · Découpe plus juste en mode cuisine
 
 ### Mode cuisine

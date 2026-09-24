@@ -131,9 +131,62 @@ function OnboardingCard({ onNewRecipe, onExplore }) {
   );
 }
 
-// Pictogramme « foyer » : un toit qui abrite deux personnes. Inline pour pouvoir
-// le teinter en blanc sur le badge dégradé (aucune icône « groupe » dispo sinon).
-// Pile d'avatars des membres (chevauchement), repli sur l'initiale colorée.
+// ─── JOURNÉE LIBRE ────────────────────────────────────────────────────────────
+// L'utilisateur a déjà des recettes mais rien de planifié aujourd'hui : plutôt
+// qu'une barre vide « Rien de prévu », on l'invite à prendre de l'avance. Un
+// en-tête rassurant (la journée est libre, ce n'est pas un manque), puis une
+// grille d'actions concrètes. Hiérarchie assumée : « Planifier la semaine » domine
+// (pastille pleine accent), les autres sont des tuiles neutres. Une seule carte,
+// pas de cartes imbriquées : les actions sont groupées par proximité.
+function CalmDayCard({ onPlan, onNewRecipe, onStock, onShopping }) {
+  const [newOpen, setNewOpen] = useState(false);
+  const tiles = [
+    { icon: "plus", label: "Ajouter une recette", desc: "Enrichis ta bibliothèque", on: () => setNewOpen(true) },
+    { icon: "box", label: "Gérer le stock", desc: "Fais le point sur tes réserves", on: onStock },
+    { icon: "shopping", label: "Faire les courses", desc: "Prépare ta prochaine liste", on: onShopping },
+  ];
+  return (
+    <div className="slide-up" style={{ animationDelay: "0.04s",
+      background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20,
+      padding: 20, boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+        <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(var(--ok-rgb),0.16)" }}>
+          <Icon name="check" size={18} color="var(--ok)" />
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.15 }}>Rien de prévu aujourd'hui</div>
+          <div style={{ fontSize: 12.5, color: "var(--text3)" }}>Ta journée est libre. Prends un peu d'avance.</div>
+        </div>
+      </div>
+
+      {/* Action qui domine : planifier la semaine, en pastille pleine. */}
+      <button onClick={onPlan} className="btn btn-primary btn-pill pressable ripple" style={{ width: "100%", padding: "12px 0", fontSize: 14.5, margin: "16px 0 12px" }}>
+        <Icon name="calendar" size={16} color="#fff" /> Planifier la semaine
+      </button>
+
+      {/* Tuiles secondaires, groupées par un simple filet, jamais des cartes imbriquées. */}
+      <div style={{ display: "flex", flexDirection: "column", borderTop: "1px solid var(--border)" }}>
+        {tiles.map(t => (
+          <button key={t.label} onClick={t.on} className="pressable ripple hh-calm-tile"
+            style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", padding: "12px 10px", background: "none", border: "none", borderRadius: 12, cursor: "pointer" }}>
+            <span className="hh-calm-ico" style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(var(--accent-rgb),0.12)", transition: "background-color 0.16s ease" }}>
+              <Icon name={t.icon} size={16} color="var(--accent)" />
+            </span>
+            <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{t.label}</span>
+              <span style={{ fontSize: 11.5, color: "var(--text3)" }}>{t.desc}</span>
+            </span>
+            <span className="hh-calm-arrow" style={{ display: "inline-flex", flexShrink: 0, transition: "transform 0.16s ease, color 0.16s ease", color: "var(--text3)" }}>
+              <Icon name="forward" size={15} color="currentColor" />
+            </span>
+          </button>
+        ))}
+      </div>
+      {newOpen && <NewRecipeSheet onClose={() => setNewOpen(false)} onManual={onNewRecipe} />}
+    </div>
+  );
+}
+
 function MemberStack({ emails, photoFor, nameFor }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center" }}>
@@ -429,16 +482,11 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
           ) : isEmpty ? (
             <OnboardingCard onNewRecipe={onNewRecipe} onExplore={() => onNavigateSubview?.("discover")} />
           ) : isCalm ? (
-            <button className="slide-up pressable ripple" onClick={() => setTab?.("meal-plan")}
-              style={{ animationDelay: "0.04s", display: "flex", alignItems: "center", gap: 11, width: "100%", textAlign: "left", padding: "11px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
-              <span style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--ok-rgb),0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name="check" size={15} color="var(--ok)" />
-              </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                <strong style={{ fontWeight: 600 }}>Rien de prévu aujourd'hui</strong>
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 12, fontWeight: 600, color: "var(--accent)", flexShrink: 0 }}>Planifier <Icon name="forward" size={13} color="var(--accent)" /></span>
-            </button>
+            <CalmDayCard
+              onPlan={() => setTab?.("meal-plan")}
+              onNewRecipe={onNewRecipe}
+              onStock={() => setTab?.("stock")}
+              onShopping={() => setTab?.("shopping")} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {/* Repas du jour (un repas composé = une carte, plat en tête) */}

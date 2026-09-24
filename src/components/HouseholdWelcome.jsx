@@ -1,13 +1,28 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon.jsx";
+import { FoyerGlyph } from "./FoyerGlyph.jsx";
+import { FoyerEspaces } from "./FoyerEspaces.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 
 // ─── BIENVENUE DANS LE FOYER ──────────────────────────────────────────────────
 // S'affiche une seule fois (mémorisé en localStorage) quand l'utilisateur REJOINT
-// un foyer qu'il n'a pas créé. Petit moment de célébration.
+// un foyer qu'il n'a pas créé. Reprend le langage visuel du panneau Foyer (tuile
+// carrée + pastilles des 4 espaces partagés) pour une continuité assumée, sans
+// halo accent ni confettis d'emojis (des tells d'IA).
 const seenKey = (hid) => `mijote_foyer_welcomed_${hid}`;
+
+/**
+ * Réarme l'accueil pour un foyer : la modale de bienvenue se ré-affichera au prochain
+ * passage. Appelé quand l'utilisateur accepte explicitement une invitation, pour que
+ * « Rejoindre » débouche toujours sur le message d'arrivée, même sur un re-join.
+ *
+ * @param hid - L'identifiant du foyer.
+ */
+export function forgetWelcome(hid) {
+  try { if (hid) localStorage.removeItem(seenKey(hid)); } catch { /* ignore */ }
+}
 
 export function HouseholdWelcome() {
   const { user } = useAppShell();
@@ -32,22 +47,29 @@ export function HouseholdWelcome() {
 
   return createPortal(
     <div onClick={close} style={{ position: "fixed", inset: 0, zIndex: 1500, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadeIn 0.2s ease" }}>
-      {/* Confettis d'emojis */}
-      {["🏡", "✨", "🎉", "🍲", "🥳", "🧑‍🍳"].map((e, i) => (
-        <span key={i} style={{ position: "absolute", fontSize: 26 + i * 4, animation: `floatUp ${1.3 + i * 0.3}s ease forwards`, animationDelay: `${i * 0.12}s`, left: `${12 + i * 14}%`, top: `${62 + Math.sin(i) * 14}%`, pointerEvents: "none" }}>{e}</span>
-      ))}
-      <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 360, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 22, padding: "30px 24px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)", textAlign: "center", animation: "modalIn 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", margin: "0 auto 16px", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(167,201,124,0.4)", animation: "popIn 0.6s 0.1s both cubic-bezier(0.34,1.56,0.64,1)" }}>
-          <span style={{ fontSize: 32, lineHeight: 1 }}>🏡</span>
+      <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 372, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 24, padding: "26px 24px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)", animation: "modalIn 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+        {/* Tuile carrée arrondie, reprise du header du panneau Foyer. Ombre neutre
+            très douce (pas de halo vert : un glow accent est un tell d'IA banni). */}
+        {/* La tuile « pop » à l'arrivée, puis les deux visages du glyphe s'y installent
+            (un foyer qui se peuple) : la signature faite-main de l'accueil. */}
+        <div style={{ width: 52, height: 52, borderRadius: 16, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(0,0,0,0.28)", animation: "popIn 0.55s 0.05s both cubic-bezier(0.34,1.56,0.64,1)" }}>
+          <FoyerGlyph size={30} color="#fff" animateFaces />
         </div>
-        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 8px", animation: "popIn 0.5s 0.2s both ease" }}>
-          Bienvenue dans le foyer !
+
+        {/* Hiérarchie assumée : le titre domine (display, gros, serré), le corps
+            s'aligne à gauche en colonne lisible, sans tout-centré mécanique. Le
+            contenu se révèle en cascade juste après l'arrivée des visages. */}
+        <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 25, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.12, margin: "18px 0 8px", animation: "foyerRise 0.42s 0.34s both ease" }}>
+          Bienvenue dans le foyer
         </h2>
-        <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 22px" }}>
-          Tu as rejoint <strong style={{ color: "var(--text)" }}>« {household.name} »</strong>. À partir de maintenant, vous partagez vos <strong style={{ color: "var(--text)" }}>recettes, votre stock, vos listes de courses et votre planning</strong>. Tes recettes ont été ajoutées au foyer 🙂
+        <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 0 16px", animation: "foyerRise 0.42s 0.42s both ease" }}>
+          Tu as rejoint <strong style={{ color: "var(--text)" }}>« {household.name} »</strong>. Tes recettes ont été ajoutées, et à partir de maintenant tout se partage entre vous.
         </p>
-        <button className="btn btn-primary" style={{ width: "100%", padding: "13px 0", fontSize: 15, borderRadius: 14 }} onClick={close}>
-          <Icon name="check" size={17} /> C'est parti !
+
+        <FoyerEspaces style={{ marginBottom: 18 }} stagger={0.5} />
+
+        <button className="btn btn-primary btn-pill" style={{ width: "100%", padding: "13px 0", fontSize: 15, animation: "foyerRise 0.42s 0.82s both ease" }} onClick={close}>
+          <Icon name="check" size={17} /> C'est parti
         </button>
       </div>
     </div>,

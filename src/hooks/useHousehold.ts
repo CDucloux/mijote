@@ -64,7 +64,9 @@ export function useHousehold() {
     let unsubInvite: Unsubscribe = () => {};
     if (user.email) {
       unsubInvite = onSnapshot(householdInviteQuery(user.email),
-        snap => { const arr = snap.docs.map(d => d.data()); hhCache = { ...hhCache, uid: user.uid, invites: arr }; setInvites(arr); }, () => {});
+        // `.data()` ne porte pas l'id : on le rattache, sinon `actions.accept(inv.id)`
+        // reçoit `hid = undefined` et l'adhésion échoue au premier accès Firestore.
+        snap => { const arr = snap.docs.map(d => ({ id: d.id, ...d.data() })); hhCache = { ...hhCache, uid: user.uid, invites: arr }; setInvites(arr); }, () => {});
     }
     return () => { unsubMember(); unsubInvite(); };
   }, [user]);
