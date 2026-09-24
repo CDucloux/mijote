@@ -29,9 +29,9 @@ function RobotGlyph({ size = 16, color = "currentColor" }) {
   );
 }
 
-// Ligne-option du sélecteur (empilées verticalement). `iconAccent` teinte l'icône
-// en accent (imports intelligents), sinon en neutre (saisie manuelle).
-function Choice({ icon, title, subtitle, onClick, iconAccent }) {
+// Ligne-option du sélecteur (empilées verticalement). Icône neutre, uniforme sur
+// toutes les options (saisie manuelle comme imports intelligents).
+function Choice({ icon, title, subtitle, onClick }) {
   return (
     <button onClick={onClick} className="pressable nr-choice" style={{
       display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
@@ -39,7 +39,7 @@ function Choice({ icon, title, subtitle, onClick, iconAccent }) {
       boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
     }}>
       <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, display: "grid", placeItems: "center", background: "var(--surface2)" }}>
-        <Icon name={icon} size={22} color={iconAccent ? "var(--accent)" : "var(--text2)"} />
+        <Icon name={icon} size={22} color="var(--text2)" />
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: "var(--text)", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{title}</span>
@@ -89,25 +89,26 @@ export function NewRecipeSheet({ onClose, onManual }) {
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {/* Groupe « import intelligent » : un seul eyebrow (robot + libellé + un unique
-            badge Cardamome+) coiffe les 4 options, au lieu de répéter badge et robot
-            sur chaque ligne. Les lignes redeviennent neutres : plus de fond teinté
-            ni de halo vert (un glow accent est un tell d'IA banni). */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 2px 2px" }}>
-          <RobotGlyph size={16} color="var(--accent)" />
-          <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text3)" }}>Import intelligent</span>
-          {plusBadge}
-        </div>
-        <Choice icon="link" iconAccent title="Importer depuis un lien" subtitle="Colle une URL : l'import intelligent extrait et met en forme la recette." onClick={() => goImport("/recipes/import-from-url")} />
-        <Choice icon="photo" iconAccent title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImport("/recipes/import-from-picture")} />
-        <Choice icon="paste" iconAccent title="Coller un texte" subtitle="Un mail, une note, un message : colle le texte, il est mis en forme." onClick={() => goImport("/recipes/import-from-text")} />
-        <Choice icon="pdf" iconAccent title="Importer un PDF" subtitle="Une fiche ou un livre en PDF : le texte est lu et mis en forme." onClick={() => goImport("/recipes/import-from-pdf")} />
+        {/* Saisie manuelle en tête : le geste par défaut, gratuit et immédiat. */}
+        <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
         <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "6px 0 4px" }}>
           <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
           <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>ou</span>
           <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
         </div>
-        <Choice icon="edit" title="Écrire la recette" subtitle="Saisis les ingrédients et les étapes toi-même." onClick={goManual} />
+        {/* Groupe « import intelligent » : un seul eyebrow (robot + libellé + un unique
+            badge Cardamome+) coiffe les 4 options, au lieu de répéter badge et robot
+            sur chaque ligne. Lignes neutres comme la saisie manuelle : plus de fond
+            teinté ni de halo vert (un glow accent est un tell d'IA banni). */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 2px 2px" }}>
+          <RobotGlyph size={16} color="var(--accent)" />
+          <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text3)" }}>Import intelligent</span>
+          {plusBadge}
+        </div>
+        <Choice icon="link" title="Importer depuis un lien" subtitle="Colle une URL : l'import intelligent extrait et met en forme la recette." onClick={() => goImport("/recipes/import-from-url")} />
+        <Choice icon="photo" title="Importer une photo" subtitle="Photographie une recette de livre, jusqu'à 2 pages." onClick={() => goImport("/recipes/import-from-picture")} />
+        <Choice icon="paste" title="Coller un texte" subtitle="Un mail, une note, un message : colle le texte, il est mis en forme." onClick={() => goImport("/recipes/import-from-text")} />
+        <Choice icon="pdf" title="Importer un PDF" subtitle="Une fiche ou un livre en PDF : le texte est lu et mis en forme." onClick={() => goImport("/recipes/import-from-pdf")} />
       </div>
     </SwipeableSheet>
   );
