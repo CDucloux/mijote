@@ -1778,18 +1778,6 @@ select {
   }
 }
 
-@keyframes floatUp {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateY(-60px);
-    opacity: 0;
-  }
-}
-
 /* ══ ÉTAGÈRES DU STOCK ════════════════════════════════════════════════════════
    Un mur de briques (fond du conteneur scrollable) portant des planches en chêne
    avec équerres fer ; sur chaque planche, une rangée de bocaux. La SIGNATURE : le
