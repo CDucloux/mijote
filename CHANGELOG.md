@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.58.0 – Cardamome · Apport en sel du jour
+
+### Planning
+- **Éviter le surplus de sel** : chaque journée du planning affiche désormais une pastille discrète situant son apport en sel (proxy du sodium) face au repère de 6 g/jour. Neutre tant qu'on reste raisonnable, ambre à l'approche du repère, rouge au dépassement. Le calcul se fait sur **une portion de chaque plat** (pas le plat entier), et la pastille reste muette tant que trop peu d'ingrédients ont des données nutritionnelles, pour ne jamais afficher d'alerte trompeuse.
+
 ## v4.57.0 – Cardamome · Foyer, batch et accueil peaufinés
 
 ### Foyer

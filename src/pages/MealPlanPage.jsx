@@ -19,6 +19,7 @@ import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNee
 import { useLongPress } from "../hooks/useLongPress.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
+import { computeDayIntake } from "@/lib/planning/dayIntake.js";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { buildPostesDecoupe, FORME_LABEL } from "@/lib/recipes/decoupe.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
@@ -55,6 +56,34 @@ function mpGetWeekDays(ref) {
 function mpPad(n) { return String(n).padStart(2, "0"); }
 function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T" + timeStr; }
 function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").join("\\,").split(";").join("\\;"); }
+
+// Apport en sel du jour : pastille discrète qui situe la journée face au repère
+// (6 g/j, proxy du sodium). Trois états MAPPÉS à un niveau réel : neutre tant qu'on
+// reste sous 75 %, ambre en approche, rouge au dépassement (le seul qui « crie »).
+// Muette si la couverture des fiches est trop faible : mieux vaut rien qu'une
+// alerte trompeuse.
+const MP_SALT_AMBER = "#c98a12"; // caution (assez sombre pour rester lisible clair/sombre)
+const mpFmtSalt = (g) => `${(g >= 10 ? Math.round(g) : Math.round(g * 10) / 10).toLocaleString("fr-FR")} g`;
+const DaySaltPill = React.memo(function DaySaltPill({ intake }) {
+  if (!intake.reliable) return null;
+  const { level, salt, saltTarget } = intake;
+  const tone = level === "over"
+    ? { fg: "var(--red)", bg: "rgba(var(--red-rgb),0.13)" }
+    : level === "warn"
+      ? { fg: MP_SALT_AMBER, bg: "rgba(201,138,18,0.14)" }
+      : { fg: "var(--text3)", bg: "var(--surface2)" };
+  const title = level === "over"
+    ? `Journée salée : ${mpFmtSalt(salt)} de sel, au-delà du repère de ${saltTarget} g/jour`
+    : level === "warn"
+      ? `${mpFmtSalt(salt)} de sel sur la journée, proche du repère de ${saltTarget} g/jour`
+      : `${mpFmtSalt(salt)} de sel sur la journée (repère ${saltTarget} g/jour)`;
+  return (
+    <span title={title} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px 2px 6px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, whiteSpace: "nowrap" }}>
+      <Icon name={level === "over" ? "warning" : "spoon"} size={11} color={tone.fg} />
+      {mpFmtSalt(salt)}
+    </span>
+  );
+});
 
 // SlotZone lifted out + memoised → never re-created on parent re-render
 const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOpenItemMenu, onAdd, startLongPress, cancelLongPress, moveLongPress, wasLongPress }) {
@@ -321,6 +350,14 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const getMeals = useCallback((date, slot) => (mealPlan[date] || []).filter(m => m.slot === slot), [mealPlan]);
 
+  // Apport en sel par jour de la semaine visible (pastille « éviter le surplus »).
+  // Vue dérivée pure, recalculée quand le planning ou la base bougent.
+  const dayIntakes = useMemo(() => {
+    const map = new Map();
+    for (const date of weekDays) map.set(date, computeDayIntake(mealPlan[date], recipesById, ingredientDB || []));
+    return map;
+  }, [weekDays, mealPlan, recipesById, ingredientDB]);
+
   const removeMeal = useCallback((date, idx) => setMealPlan(prev => { const arr = [...(prev[date] || [])]; arr.splice(idx, 1); return { ...prev, [date]: arr }; }), [setMealPlan]);
   // Déplacement d'un item (drag-and-drop ET replanification) : règle de
   // rattachement au repas cible factorisée dans `moveMealItem` (pur, testé).
@@ -554,6 +591,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                         {MP_DAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]} {d.getDate()}
                       </span>
                       {isToday && <span style={{ fontSize: 10, background: "rgba(var(--accent-rgb),0.2)", color: "var(--accent)", padding: "2px 7px", borderRadius: 10 }}>Aujourd'hui</span>}
+                      <DaySaltPill intake={dayIntakes.get(date)} />
                     </div>
                     <button onClick={() => openAdd(date, ["midi"])} className="mp-add-btn" title="Ajouter une recette au planning">
                       <span className="mp-add-label">Ajouter</span>
