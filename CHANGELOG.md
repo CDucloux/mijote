@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.58.3 – Cardamome · Apports du jour peaufinés
+
+### Planning
+- **Pastille « Apports »** : l'indicateur en tête de chaque journée devient un point d'entrée « Apports » (icône éclair), sa couleur restant pilotée par le sel pour continuer d'alerter en cas de surplus.
+- **Fiche réorganisée** : l'énergie est présentée à part (chiffre brut), puis un bloc « Face aux repères » regroupe protéines et sel avec leurs jauges. Ordre énergie, protéines, sel, icônes de ligne agrandies.
+
 ## v4.58.2 – Cardamome · Apports du jour détaillés
 
 ### Planning
