@@ -37,13 +37,16 @@ function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
   void weight;
   return (
     <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
-      {/* Corps + bec, penchés à 35° (bec en bas à gauche) */}
-      <path transform="rotate(35 128 128)" d="M86 92 Q86 58 128 58 Q170 58 170 92 L170 176 L150 176 L150 200 Q150 210 140 210 L116 210 Q106 210 106 200 L106 176 L86 176 Z" />
-      {/* Grains qui tombent du bec */}
-      <rect x="68" y="200" width="18" height="18" rx="6" />
-      <rect x="45" y="221" width="15" height="15" rx="5" />
-      <rect x="86" y="226" width="15" height="15" rx="5" />
-      <rect x="60" y="246" width="14" height="14" rx="5" />
+      {/* Corps en goutte (étroit en haut, évasé vers le bas) + bec, penchés à 35° */}
+      <path transform="rotate(35 128 128)" d="M128 54 Q150 54 160 96 Q172 150 176 172 L150 172 L150 200 Q150 210 140 210 L116 210 Q106 210 106 200 L106 172 L80 172 Q84 150 96 96 Q106 54 128 54 Z" />
+      {/* Grains qui tombent du bec (nombreux et fins) */}
+      <rect x="70" y="204" width="12" height="12" rx="4" />
+      <rect x="88" y="212" width="10" height="10" rx="4" />
+      <rect x="52" y="218" width="10" height="10" rx="4" />
+      <rect x="76" y="229" width="11" height="11" rx="4" />
+      <rect x="58" y="239" width="9" height="9" rx="3" />
+      <rect x="84" y="241" width="9" height="9" rx="3" />
+      <rect x="66" y="255" width="9" height="9" rx="3" />
     </svg>
   );
 }
