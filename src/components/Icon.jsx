@@ -38,7 +38,7 @@ function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
   return (
     <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
       {/* Corps + bec, penchés à 35° (bec en bas à gauche) */}
-      <path transform="rotate(35 128 128)" d="M100 92 Q100 62 128 62 Q156 62 156 92 L156 176 L146 176 L146 200 Q146 210 136 210 L120 210 Q110 210 110 200 L110 176 L100 176 Z" />
+      <path transform="rotate(35 128 128)" d="M86 92 Q86 58 128 58 Q170 58 170 92 L170 176 L150 176 L150 200 Q150 210 140 210 L116 210 Q106 210 106 200 L106 176 L86 176 Z" />
       {/* Grains qui tombent du bec */}
       <rect x="68" y="200" width="18" height="18" rx="6" />
       <rect x="45" y="221" width="15" height="15" rx="5" />
