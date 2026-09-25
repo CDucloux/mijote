@@ -57,10 +57,25 @@ function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
   );
 }
 
+// Pilon de poulet : Phosphor n'en fournit pas. Symbole universel des protéines,
+// silhouette pleine (viande + os + articulation) pour épouser le poids « fill ».
+function Drumstick({ size = 20, color = "currentColor", weight, ...rest }) {
+  void weight;
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
+      <ellipse cx="94" cy="94" rx="52" ry="43" transform="rotate(-40 94 94)" />
+      <g transform="rotate(45 120 120)"><rect x="118" y="108" width="78" height="24" rx="12" /></g>
+      <circle cx="165" cy="182" r="16" />
+      <circle cx="182" cy="165" r="16" />
+    </svg>
+  );
+}
+
 // name métier -> composant Phosphor.
 const ICONS = {
   spoon: Spoon,
   saltShaker: SaltShaker,
+  drumstick: Drumstick,
   home: House,
   search: MagnifyingGlass,
   calendar: CalendarBlank,
