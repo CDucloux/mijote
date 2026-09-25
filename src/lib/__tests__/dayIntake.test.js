@@ -6,8 +6,11 @@ import { computeDayIntake } from "@/lib/planning/dayIntake.js";
 const ingredientDB = [
   { id: "sel", name: "Sel", nutrition: { salt: 100, calories: 0 } },
   { id: "riz", name: "Riz", nutrition: { salt: 0, calories: 350 } },
+  { id: "prot", name: "Protéine", nutrition: { protein: 100, calories: 0 } },
   { id: "myst", name: "Mystère" },
 ];
+// Plat pour 1 portion apportant `g` grammes de protéines.
+const proteinDish = (id, g) => ({ id, name: id, servings: 1, ingredients: [{ name: "Protéine", dbId: "prot", amount: g, unit: "g" }] });
 
 // Plat pour 1 portion apportant `g` grammes de sel (dbId figé pour un match direct).
 const saltyDish = (id, g) => ({ id, name: id, servings: 1, ingredients: [{ name: "Sel", dbId: "sel", amount: g, unit: "g" }] });
@@ -70,6 +73,22 @@ describe("computeDayIntake", () => {
     const r = computeDayIntake([{ recipeId: "flou" }], byId(recipes), ingredientDB);
     expect(r.coverage).toBeLessThan(0.5);
     expect(r.reliable).toBe(false);
+  });
+
+  it("somme les protéines par portion et les juge `low` sous 50 % du repère", () => {
+    // Repère protéines = 50 g. 20 g < 25 g → faible.
+    const recipes = [proteinDish("p", 20)];
+    const r = computeDayIntake([{ recipeId: "p" }], byId(recipes), ingredientDB);
+    expect(r.protein).toBeCloseTo(20, 5);
+    expect(r.proteinTarget).toBe(50);
+    expect(r.proteinLevel).toBe("low");
+  });
+
+  it("juge les protéines `ok` au-delà de 50 % du repère", () => {
+    const recipes = [proteinDish("a", 20), proteinDish("b", 15)]; // 35 g > 25 g
+    const r = computeDayIntake([{ recipeId: "a" }, { recipeId: "b" }], byId(recipes), ingredientDB);
+    expect(r.protein).toBeCloseTo(35, 5);
+    expect(r.proteinLevel).toBe("ok");
   });
 
   it("agrège aussi les calories par portion (sous-produit)", () => {

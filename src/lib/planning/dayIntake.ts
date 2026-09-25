@@ -21,8 +21,10 @@ type IngredientDB = Parameters<typeof computeNutritionDetail>[1];
 /** Un repas planifié (seul le `recipeId` est requis ici). */
 interface DayItem { recipeId?: string }
 
-/** Niveau d'apport d'une journée face au repère (sel). */
+/** Niveau d'apport d'une journée face au repère (sel, un PLAFOND à ne pas dépasser). */
 export type IntakeLevel = "ok" | "warn" | "over";
+/** Niveau des protéines (un PLANCHER : on veut en avoir assez, pas éviter le surplus). */
+export type ProteinLevel = "low" | "ok";
 
 /** Apport journalier consolidé (par personne) d'une journée de planning. */
 export interface DayIntake {
@@ -34,8 +36,16 @@ export interface DayIntake {
   saltTarget: number;
   /** Part du repère de sel atteinte (1 = pile au repère, > 1 = dépassement). */
   saltRatio: number;
-  /** Niveau lisible : `ok` < 75 %, `warn` 75-100 %, `over` >= 100 %. */
+  /** Niveau du sel : `ok` < 75 %, `warn` 75-100 %, `over` >= 100 %. */
   level: IntakeLevel;
+  /** Protéines cumulées sur la journée, en grammes (par portion mangée). */
+  protein: number;
+  /** Repère journalier de protéines (g), pour l'affichage du dénominateur. */
+  proteinTarget: number;
+  /** Part du repère de protéines atteinte. */
+  proteinRatio: number;
+  /** Niveau protéines : `low` sous 50 % du repère (plancher), sinon `ok`. */
+  proteinLevel: ProteinLevel;
   /** Part de la masse du jour couverte par des données nutritionnelles (0-1). */
   coverage: number;
   /**
@@ -50,11 +60,13 @@ export interface DayIntake {
 
 /** Seuils de bascule du niveau, en part du repère journalier de sel. */
 const WARN_RATIO = 0.75;
+/** Sous ce taux du repère de protéines, la journée est jugée un peu juste. */
+const PROTEIN_LOW_RATIO = 0.5;
 /** Sous ce taux de couverture, l'estimation n'est pas assez fiable pour alerter. */
 const RELIABLE_COVERAGE = 0.5;
 
 /**
- * Agrège l'apport nutritionnel (sel, calories) d'une journée de planning.
+ * Agrège l'apport nutritionnel (sel, protéines, calories) d'une journée de planning.
  *
  * @param items - Les repas planifiés du jour (`mealPlan[date]`).
  * @param recipesById - Index des recettes (résout les items ET les composants).
@@ -67,13 +79,15 @@ export function computeDayIntake(
   ingredientDB: IngredientDB,
 ): DayIntake {
   const saltTarget = NUTRI_RI.salt;
-  let salt = 0, calories = 0, covMass = 0, totMass = 0, meals = 0;
+  const proteinTarget = NUTRI_RI.protein;
+  let salt = 0, protein = 0, calories = 0, covMass = 0, totMass = 0, meals = 0;
   for (const item of items || []) {
     const recipe = item?.recipeId ? recipesById.get(item.recipeId) : undefined;
     if (!recipe) continue;
     const servings = Math.max(1, Number(recipe.servings) || 1);
     const detail = computeNutritionDetail(recipe.ingredients, ingredientDB, servings, recipesById);
     salt += detail.perServing.salt || 0;
+    protein += detail.perServing.protein || 0;
     calories += detail.perServing.calories || 0;
     // Couverture consolidée : pondérée par la masse d'UNE portion, pour qu'un gros
     // plat mal renseigné pèse plus qu'une petite garniture bien renseignée.
@@ -84,7 +98,9 @@ export function computeDayIntake(
   }
   const coverage = totMass ? covMass / totMass : 0;
   const saltRatio = saltTarget > 0 ? salt / saltTarget : 0;
+  const proteinRatio = proteinTarget > 0 ? protein / proteinTarget : 0;
   const reliable = meals > 0 && coverage >= RELIABLE_COVERAGE;
   const level: IntakeLevel = saltRatio >= 1 ? "over" : saltRatio >= WARN_RATIO ? "warn" : "ok";
-  return { salt, calories, saltTarget, saltRatio, level, coverage, reliable, meals };
+  const proteinLevel: ProteinLevel = proteinRatio < PROTEIN_LOW_RATIO ? "low" : "ok";
+  return { salt, calories, saltTarget, saltRatio, level, protein, proteinTarget, proteinRatio, proteinLevel, coverage, reliable, meals };
 }
