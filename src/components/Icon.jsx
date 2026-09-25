@@ -29,9 +29,38 @@ function Spoon({ size = 20, color = "currentColor", weight, ...rest }) {
   );
 }
 
+// Salière : Phosphor n'en fournit pas. Salière PENCHÉE qui verse, dessinée EN
+// CONTOUR (corps creux cerné d'un trait, réserve de sel pleine à l'intérieur,
+// bouchon plein), grains qui tombent du bec. Le corps est incliné (rotation) ;
+// les grains restent posés en bas à gauche (chute), d'où le repère non tourné.
+function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
+  void weight;
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
+      <g transform="rotate(35 128 128)">
+        {/* Coque en contour : extérieur puis intérieur évidé (evenodd) */}
+        <path fillRule="evenodd" d="M72 72 Q88 52 128 52 Q168 52 184 72 Q196 84 196 108 L172 176 Q168 188 156 188 L100 188 Q88 188 84 176 L60 108 Q60 84 72 72 Z M88 88 Q100 72 128 72 Q156 72 168 88 Q176 98 176 114 L156 170 Q153 176 147 176 L109 176 Q103 176 100 170 L80 114 Q80 98 88 88 Z" />
+        {/* Réserve de sel (à l'intérieur) */}
+        <path d="M98 138 Q128 122 158 134 L150 168 Q148 174 142 174 L112 174 Q106 174 104 168 Z" />
+        {/* Bouchon : rectangle arrondi détaché du corps (petit espace au-dessus) */}
+        <path d="M108 196 L148 196 Q156 196 156 204 L156 210 Q156 218 148 218 L108 218 Q100 218 100 210 L100 204 Q100 196 108 196 Z" />
+      </g>
+      {/* Grains qui tombent du bec (nombreux, petits, dispersés) */}
+      <rect x="60" y="218" width="11" height="11" rx="4" />
+      <rect x="84" y="224" width="10" height="10" rx="4" />
+      <rect x="48" y="232" width="10" height="10" rx="4" />
+      <rect x="72" y="238" width="10" height="10" rx="4" />
+      <rect x="56" y="250" width="9" height="9" rx="3" />
+      <rect x="80" y="252" width="9" height="9" rx="3" />
+      <rect x="64" y="264" width="9" height="9" rx="3" />
+    </svg>
+  );
+}
+
 // name métier -> composant Phosphor.
 const ICONS = {
   spoon: Spoon,
+  saltShaker: SaltShaker,
   home: House,
   search: MagnifyingGlass,
   calendar: CalendarBlank,

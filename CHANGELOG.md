@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.58.1 – Cardamome · Icône salière
+
+### Planning
+- **Repère de sel plus parlant** : l'apport en sel du jour s'affiche désormais avec une icône de salière (une salière penchée qui verse) au lieu d'un pictogramme générique, plus immédiate à lire.
+
 ## v4.58.0 – Cardamome · Apport en sel du jour
 
 ### Planning
