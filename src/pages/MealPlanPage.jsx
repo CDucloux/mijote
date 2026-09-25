@@ -134,7 +134,7 @@ function DayIntakeSheet({ intake, dateLabel, onClose }) {
       <Col gap={16} style={{ margin: "18px 2px 6px" }}>
         <DayIntakeRow icon="saltShaker" label="Sel" value={mpFmtG(intake.salt)} sub={`/ ${intake.saltTarget} g · ${saltNote}`} pct={intake.saltRatio * 100} color={saltColor} />
         <DayIntakeRow icon="drumstick" label="Protéines" value={mpFmtG(intake.protein)} sub={`/ ${intake.proteinTarget} g · ${protNote}`} pct={intake.proteinRatio * 100} color={protColor} />
-        <DayIntakeRow icon="fire" label="Énergie" value={Math.round(intake.calories).toLocaleString("fr-FR")} sub="kcal" color="var(--text3)" />
+        <DayIntakeRow icon="bolt" label="Énergie" value={Math.round(intake.calories).toLocaleString("fr-FR")} sub="kcal" color="var(--text3)" />
       </Col>
       <div style={{ fontSize: 10.5, color: "var(--text3)", lineHeight: 1.5, marginTop: 14, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
         Estimation par personne, une portion de chaque plat, sur {Math.round(intake.coverage * 100)}% de la masse renseignée. Le sel est un plafond à ne pas dépasser (repère {intake.saltTarget} g/jour), les protéines un plancher à atteindre.
