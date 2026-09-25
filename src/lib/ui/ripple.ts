@@ -41,12 +41,13 @@ export function spawnRipple(e: RippleEvent): void {
 
 /**
  * Surfaces éligibles à l'onde tactile par délégation globale : l'opt-in explicite
- * `.ripple`, plus tous les boutons (`.btn`) et pilules/surfaces tappables
- * (`.pressable`). Généraliser l'onde à ce jeu couvre l'UI actionnable (boutons et
- * pills) d'un coup, sans câbler chaque site : le retour tactile natif remplace le
- * flash d'opacité `:active` hérité de `pressable` (neutralisé côté CSS en mobile).
+ * `.ripple`, plus tous les boutons (`.btn`), pilules/surfaces tappables
+ * (`.pressable`) et les boutons d'ajout de l'éditeur de recette (`.editor-add`).
+ * Généraliser l'onde à ce jeu couvre l'UI actionnable (boutons et pills) d'un coup,
+ * sans câbler chaque site : le retour tactile natif remplace le flash d'opacité
+ * `:active` hérité de `pressable` (neutralisé côté CSS en mobile).
  */
-export const RIPPLE_SELECTOR = ".ripple, .btn, .pressable";
+export const RIPPLE_SELECTOR = ".ripple, .btn, .pressable, .editor-add";
 
 /**
  * Remonte du point de contact vers la plus proche surface éligible à l'onde

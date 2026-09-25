@@ -2770,6 +2770,33 @@ select {
   transform: scale(0.99);
 }
 
+/* Bouton « Nouvelle section » : distinct des ajouts (fond teinté accent, coins
+   doux). Le survol n'existe qu'au vrai pointeur ; sur tactile, l'onde (.ripple)
+   fait le retour. AUCUN glow/box-shadow décoratif (cf. CLAUDE.md §3.1). */
+.editor-new-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
+  background: rgba(var(--accent-rgb), 0.07);
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .editor-new-section:hover {
+    background: rgba(var(--accent-rgb), 0.12);
+  }
+}
+
+.editor-new-section:active {
+  transform: scale(0.99);
+}
+
 .nr-choice {
   transition: border-color 0.15s ease, box-shadow 0.2s ease;
 }
@@ -4448,12 +4475,14 @@ select {
    (le léger scale d'appui, lui, reste). Desktop intact (hover/active classiques). */
 @media (hover: none) {
   .btn,
-  .pressable {
+  .pressable,
+  .editor-add {
     position: relative;
     overflow: hidden;
   }
   .btn:active,
-  .pressable:active { opacity: 1 !important; }
+  .pressable:active,
+  .editor-add:active { opacity: 1 !important; }
 }
 
 .tap-row .tap-chevron {
