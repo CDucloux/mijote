@@ -9,6 +9,7 @@ describe("RIPPLE_SELECTOR", () => {
     expect(RIPPLE_SELECTOR).toContain(".ripple");
     expect(RIPPLE_SELECTOR).toContain(".btn");
     expect(RIPPLE_SELECTOR).toContain(".pressable");
+    expect(RIPPLE_SELECTOR).toContain(".editor-add");
   });
 });
 
@@ -34,6 +35,11 @@ describe("rippleTargetFrom", () => {
   it("remonte à la surface éligible la plus proche", () => {
     document.body.innerHTML = `<div class="ripple"><button class="btn"><span id="d">go</span></button></div>`;
     expect(rippleTargetFrom(document.getElementById("d"))).toBe(document.querySelector("button.btn"));
+  });
+
+  it("retrouve un bouton d'ajout d'éditeur (.editor-add)", () => {
+    document.body.innerHTML = `<button class="editor-add"><span id="e">+</span> Ingrédient</button>`;
+    expect(rippleTargetFrom(document.getElementById("e"))).toBe(document.querySelector(".editor-add"));
   });
 
   it("retourne null hors de toute surface éligible", () => {

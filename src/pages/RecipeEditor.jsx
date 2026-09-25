@@ -85,7 +85,6 @@ function EditorSectionHeader({ name, onRename, onDelete }) {
 // déplie en une petite carte de nommage soignée.
 function NewSectionButton({ onAdd }) {
   const [open, setOpen] = useState(false);
-  const [hover, setHover] = useState(false);
   const [draft, setDraft] = useState("");
   const inputRef = useRef(null);
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
@@ -97,10 +96,7 @@ function NewSectionButton({ onAdd }) {
     </span>
   );
   if (!open) return (
-    <button type="button" onClick={() => setOpen(true)} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "11px 14px", borderRadius: 16, cursor: "pointer", textAlign: "left",
-        border: "1px solid rgba(var(--accent-rgb),0.4)", background: hover ? "rgba(var(--accent-rgb),0.12)" : "rgba(var(--accent-rgb),0.07)",
-        boxShadow: hover ? "0 6px 18px -10px rgba(var(--accent-rgb),0.6)" : "none", transition: "background 0.15s, box-shadow 0.2s" }}>
+    <button type="button" className="editor-new-section ripple" onClick={() => setOpen(true)}>
       {chip}
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nouvelle section</span>
