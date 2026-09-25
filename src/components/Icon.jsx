@@ -29,9 +29,25 @@ function Spoon({ size = 20, color = "currentColor", weight, ...rest }) {
   );
 }
 
+// Salière : Phosphor n'en fournit pas. Silhouette pleine (repère 256) avec dôme
+// perforé et grains, pour épouser le poids « regular » du reste du set. Les trous
+// sont ÉVIDÉS (fillRule evenodd) → le fond, même teinté, se voit au travers.
+function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
+  void weight;
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
+      <circle cx="118" cy="48" r="4" />
+      <circle cx="140" cy="42" r="3" />
+      <circle cx="128" cy="34" r="3" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M80 116 L176 116 L176 196 Q176 214 158 214 L98 214 Q80 214 80 196 Z M100 116 L108 74 Q110 62 122 62 L134 62 Q146 62 148 74 L156 116 Z M114 82 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 Z M124 78 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 Z M134 82 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 Z" />
+    </svg>
+  );
+}
+
 // name métier -> composant Phosphor.
 const ICONS = {
   spoon: Spoon,
+  saltShaker: SaltShaker,
   home: House,
   search: MagnifyingGlass,
   calendar: CalendarBlank,
