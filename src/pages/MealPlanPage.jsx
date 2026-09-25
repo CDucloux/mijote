@@ -79,7 +79,7 @@ const DaySaltPill = React.memo(function DaySaltPill({ intake }) {
       : `${mpFmtSalt(salt)} de sel sur la journée (repère ${saltTarget} g/jour)`;
   return (
     <span title={title} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px 2px 6px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, whiteSpace: "nowrap" }}>
-      <Icon name={level === "over" ? "warning" : "saltShaker"} size={11} color={tone.fg} />
+      <Icon name={level === "over" ? "warning" : "saltShaker"} size={level === "over" ? 11 : 13} color={tone.fg} />
       {mpFmtSalt(salt)}
     </span>
   );

@@ -29,24 +29,30 @@ function Spoon({ size = 20, color = "currentColor", weight, ...rest }) {
   );
 }
 
-// Salière : Phosphor n'en fournit pas. Silhouette pleine (repère 256) d'une salière
-// PENCHÉE qui verse, grains qui tombent du bec, pour épouser le poids « fill » et
-// rester lisible en petit. Le corps est incliné (rotation), les grains restent
-// posés en bas à gauche (chute), d'où deux repères non tournés.
+// Salière : Phosphor n'en fournit pas. Salière PENCHÉE qui verse, dessinée EN
+// CONTOUR (corps creux cerné d'un trait, réserve de sel pleine à l'intérieur,
+// bouchon plein), grains qui tombent du bec. Le corps est incliné (rotation) ;
+// les grains restent posés en bas à gauche (chute), d'où le repère non tourné.
 function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
   void weight;
   return (
     <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
-      {/* Corps en goutte (étroit en haut, évasé vers le bas) + bec, penchés à 35° */}
-      <path transform="rotate(35 128 128)" d="M128 54 Q150 54 160 96 Q172 150 176 172 L150 172 L150 200 Q150 210 140 210 L116 210 Q106 210 106 200 L106 172 L80 172 Q84 150 96 96 Q106 54 128 54 Z" />
-      {/* Grains qui tombent du bec (nombreux et fins) */}
-      <rect x="70" y="204" width="12" height="12" rx="4" />
-      <rect x="88" y="212" width="10" height="10" rx="4" />
-      <rect x="52" y="218" width="10" height="10" rx="4" />
-      <rect x="76" y="229" width="11" height="11" rx="4" />
-      <rect x="58" y="239" width="9" height="9" rx="3" />
-      <rect x="84" y="241" width="9" height="9" rx="3" />
-      <rect x="66" y="255" width="9" height="9" rx="3" />
+      <g transform="rotate(35 128 128)">
+        {/* Coque en contour : extérieur puis intérieur évidé (evenodd) */}
+        <path fillRule="evenodd" d="M72 72 Q88 52 128 52 Q168 52 184 72 Q196 84 196 108 L172 176 Q168 188 156 188 L100 188 Q88 188 84 176 L60 108 Q60 84 72 72 Z M88 88 Q100 72 128 72 Q156 72 168 88 Q176 98 176 114 L156 170 Q153 176 147 176 L109 176 Q103 176 100 170 L80 114 Q80 98 88 88 Z" />
+        {/* Réserve de sel (à l'intérieur) */}
+        <path d="M98 138 Q128 122 158 134 L150 168 Q148 174 142 174 L112 174 Q106 174 104 168 Z" />
+        {/* Bouchon plein */}
+        <path d="M100 184 L156 184 L156 210 Q156 214 152 214 L104 214 Q100 214 100 210 Z" />
+      </g>
+      {/* Grains qui tombent du bec */}
+      <rect x="66" y="204" width="12" height="12" rx="4" />
+      <rect x="86" y="210" width="10" height="10" rx="4" />
+      <rect x="52" y="216" width="10" height="10" rx="4" />
+      <rect x="76" y="226" width="11" height="11" rx="4" />
+      <rect x="58" y="236" width="9" height="9" rx="3" />
+      <rect x="82" y="238" width="9" height="9" rx="3" />
+      <rect x="68" y="252" width="9" height="9" rx="3" />
     </svg>
   );
 }
