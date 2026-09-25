@@ -46,13 +46,13 @@ function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
         <path d="M108 196 L148 196 Q156 196 156 204 L156 210 Q156 218 148 218 L108 218 Q100 218 100 210 L100 204 Q100 196 108 196 Z" />
       </g>
       {/* Grains qui tombent du bec (nombreux, petits, dispersés) */}
-      <rect x="66" y="208" width="11" height="11" rx="4" />
-      <rect x="86" y="214" width="10" height="10" rx="4" />
-      <rect x="52" y="222" width="10" height="10" rx="4" />
-      <rect x="74" y="230" width="10" height="10" rx="4" />
-      <rect x="58" y="242" width="9" height="9" rx="3" />
-      <rect x="80" y="246" width="9" height="9" rx="3" />
-      <rect x="64" y="258" width="9" height="9" rx="3" />
+      <rect x="60" y="218" width="11" height="11" rx="4" />
+      <rect x="84" y="224" width="10" height="10" rx="4" />
+      <rect x="48" y="232" width="10" height="10" rx="4" />
+      <rect x="72" y="238" width="10" height="10" rx="4" />
+      <rect x="56" y="250" width="9" height="9" rx="3" />
+      <rect x="80" y="252" width="9" height="9" rx="3" />
+      <rect x="64" y="264" width="9" height="9" rx="3" />
     </svg>
   );
 }
