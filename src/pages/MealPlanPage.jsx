@@ -131,8 +131,19 @@ function DayIntakeSheet({ intake, dateLabel, onClose }) {
           <div style={{ fontSize: 12, color: "var(--text3)", textTransform: "capitalize" }}>{dateLabel}</div>
         </div>
       </Row>
-      <Col gap={16} style={{ margin: "18px 2px 6px" }}>
-        <DayIntakeRow icon="bolt" label="Énergie" value={Math.round(intake.calories).toLocaleString("fr-FR")} sub="kcal" color="var(--text3)" />
+      {/* Énergie : chiffre brut (pas de repère) → présenté à part, en tuile. */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: "var(--surface2)", borderRadius: 14, margin: "18px 0 6px" }}>
+        <Row gap={9} as="span">
+          <Icon name="bolt" size={19} color="var(--text2)" />
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Énergie</span>
+        </Row>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+          {Math.round(intake.calories).toLocaleString("fr-FR")} <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text3)" }}>kcal</span>
+        </span>
+      </div>
+      {/* Face aux repères journaliers : protéines (plancher) puis sel (plafond). */}
+      <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "16px 2px 12px" }}>Face aux repères</div>
+      <Col gap={16} style={{ margin: "0 2px 6px" }}>
         <DayIntakeRow icon="drumstick" label="Protéines" value={mpFmtG(intake.protein)} sub={`/ ${intake.proteinTarget} g · ${protNote}`} pct={intake.proteinRatio * 100} color={protColor} />
         <DayIntakeRow icon="saltShaker" label="Sel" value={mpFmtG(intake.salt)} sub={`/ ${intake.saltTarget} g · ${saltNote}`} pct={intake.saltRatio * 100} color={saltColor} />
       </Col>
