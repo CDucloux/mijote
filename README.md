@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.58.1-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.58.2-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -89,8 +89,9 @@ toujours avec vous.
   (ouvrir, replanifier vers une autre semaine, retirer), **générateur de semaine**
   (styles facile / équilibré / aventureux, repas composés, affinité de saison,
   priorité aux ingrédients déjà en stock hors basiques de placard),
-  **session batch** (préparations à cuisiner d'avance), **apport en sel du jour**
-  (repère par journée pour éviter le surplus de sodium) et export `.ics`.
+  **session batch** (préparations à cuisiner d'avance), **apports du jour**
+  (repère par journée pour le sel, les protéines et l'énergie, détail au tap) et
+  export `.ics`.
 - 🛒 **Listes de courses** : ajout par collage, tri par rayon, gestes de swipe
   (→ j'achète, ← je supprime).
 - 📦 **Stock** : inventaire présenté en **mur d'étagères**, chaque ingrédient

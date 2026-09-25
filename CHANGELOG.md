@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.58.2 – Cardamome · Apports du jour détaillés
+
+### Planning
+- **Détail des apports au tap** : la pastille de sel de chaque journée devient cliquable et ouvre une fiche « Apports du jour » qui récapitule le sel, les protéines et l'énergie, chacun situé face à son repère.
+- **Suivi des protéines** : en plus du sel (un plafond à ne pas dépasser), la journée signale désormais si elle est un peu juste en protéines (un plancher à atteindre), sans surcharger l'en-tête du planning.
+- **Icônes dédiées** : salière pour le sel, pilon pour les protéines, éclair pour l'énergie.
+
 ## v4.58.1 – Cardamome · Icône salière
 
 ### Planning

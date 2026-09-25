@@ -20,6 +20,7 @@ import { useLongPress } from "../hooks/useLongPress.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { computeDayIntake } from "@/lib/planning/dayIntake.js";
+import { Row, Col } from "../components/ui/primitives.jsx";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { buildPostesDecoupe, FORME_LABEL } from "@/lib/recipes/decoupe.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
@@ -63,8 +64,12 @@ function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").jo
 // Muette si la couverture des fiches est trop faible : mieux vaut rien qu'une
 // alerte trompeuse.
 const MP_SALT_AMBER = "#c98a12"; // caution (assez sombre pour rester lisible clair/sombre)
-const mpFmtSalt = (g) => `${(g >= 10 ? Math.round(g) : Math.round(g * 10) / 10).toLocaleString("fr-FR")} g`;
-const DaySaltPill = React.memo(function DaySaltPill({ intake }) {
+const mpFmtG = (g) => `${(g >= 10 ? Math.round(g) : Math.round(g * 10) / 10).toLocaleString("fr-FR")} g`;
+// Pastille cliquable de l'apport en sel du jour (le seul repère montré en tête, pour
+// ne pas encombrer) : neutre sous 75 %, ambre en approche, rouge au dépassement.
+// Muette si la couverture des fiches est trop faible (alerte trompeuse évitée). Le
+// clic ouvre le détail du jour (protéines comprises).
+const DaySaltPill = React.memo(function DaySaltPill({ intake, onClick }) {
   if (!intake.reliable) return null;
   const { level, salt, saltTarget } = intake;
   const tone = level === "over"
@@ -73,17 +78,70 @@ const DaySaltPill = React.memo(function DaySaltPill({ intake }) {
       ? { fg: MP_SALT_AMBER, bg: "rgba(201,138,18,0.14)" }
       : { fg: "var(--text3)", bg: "var(--surface2)" };
   const title = level === "over"
-    ? `Journée salée : ${mpFmtSalt(salt)} de sel, au-delà du repère de ${saltTarget} g/jour`
+    ? `Journée salée : ${mpFmtG(salt)} de sel, au-delà du repère de ${saltTarget} g/jour · voir le détail`
     : level === "warn"
-      ? `${mpFmtSalt(salt)} de sel sur la journée, proche du repère de ${saltTarget} g/jour`
-      : `${mpFmtSalt(salt)} de sel sur la journée (repère ${saltTarget} g/jour)`;
+      ? `${mpFmtG(salt)} de sel sur la journée, proche du repère de ${saltTarget} g/jour · voir le détail`
+      : `${mpFmtG(salt)} de sel sur la journée (repère ${saltTarget} g/jour) · voir le détail`;
   return (
-    <span title={title} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px 2px 6px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, whiteSpace: "nowrap" }}>
+    <button type="button" onClick={onClick} title={title} className="pressable"
+      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 9px 2px 6px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, whiteSpace: "nowrap", border: "none", cursor: "pointer" }}>
       <Icon name={level === "over" ? "warning" : "saltShaker"} size={level === "over" ? 11 : 13} color={tone.fg} />
-      {mpFmtSalt(salt)}
-    </span>
+      {mpFmtG(salt)}
+    </button>
   );
 });
+
+// Feuille « Apports du jour » : détail sel (plafond) + protéines (plancher) +
+// énergie. Reste sobre : une ligne par nutriment, valeur du jour, barre vers le
+// repère. Le sel colore l'alerte au dépassement, les protéines signalent seulement
+// une journée un peu juste (jamais « en rouge », ce n'est pas un danger).
+function DayIntakeRow({ icon, label, value, sub, pct, color }) {
+  return (
+    <div>
+      <Row justify="space-between" align="baseline" style={{ marginBottom: 5 }}>
+        <Row gap={7} as="span">
+          <Icon name={icon} size={15} color={color} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{label}</span>
+        </Row>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+          {value} <span style={{ color: "var(--text3)", fontWeight: 500 }}>{sub}</span>
+        </span>
+      </Row>
+      {pct != null && (
+        <div style={{ height: 6, borderRadius: 999, background: "var(--surface2)", overflow: "hidden" }}>
+          <div style={{ width: `${Math.min(100, pct)}%`, height: "100%", borderRadius: 999, background: color, transition: "width 0.4s ease" }} />
+        </div>
+      )}
+    </div>
+  );
+}
+function DayIntakeSheet({ intake, dateLabel, onClose }) {
+  const saltColor = intake.level === "over" ? "var(--red)" : intake.level === "warn" ? MP_SALT_AMBER : "var(--text3)";
+  const protColor = intake.proteinLevel === "low" ? MP_SALT_AMBER : "var(--ok)";
+  const saltNote = intake.level === "over" ? "au-delà du repère" : intake.level === "warn" ? "proche du repère" : "sous le repère";
+  const protNote = intake.proteinLevel === "low" ? "un peu juste" : "suffisant";
+  return (
+    <SwipeableSheet onClose={onClose} style={{ maxWidth: 420 }}>
+      <Row gap={12} style={{ marginBottom: 4 }}>
+        <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: "var(--surface2)", display: "grid", placeItems: "center" }}>
+          <Icon name="saltShaker" size={20} color="var(--text2)" />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700 }}>Apports du jour</div>
+          <div style={{ fontSize: 12, color: "var(--text3)", textTransform: "capitalize" }}>{dateLabel}</div>
+        </div>
+      </Row>
+      <Col gap={16} style={{ margin: "18px 2px 6px" }}>
+        <DayIntakeRow icon="saltShaker" label="Sel" value={mpFmtG(intake.salt)} sub={`/ ${intake.saltTarget} g · ${saltNote}`} pct={intake.saltRatio * 100} color={saltColor} />
+        <DayIntakeRow icon="drumstick" label="Protéines" value={mpFmtG(intake.protein)} sub={`/ ${intake.proteinTarget} g · ${protNote}`} pct={intake.proteinRatio * 100} color={protColor} />
+        <DayIntakeRow icon="bolt" label="Énergie" value={Math.round(intake.calories).toLocaleString("fr-FR")} sub="kcal" color="var(--text3)" />
+      </Col>
+      <div style={{ fontSize: 10.5, color: "var(--text3)", lineHeight: 1.5, marginTop: 14, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
+        Estimation par personne, une portion de chaque plat, sur {Math.round(intake.coverage * 100)}% de la masse renseignée. Le sel est un plafond à ne pas dépasser (repère {intake.saltTarget} g/jour), les protéines un plancher à atteindre.
+      </div>
+    </SwipeableSheet>
+  );
+}
 
 // SlotZone lifted out + memoised → never re-created on parent re-render
 const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOpenItemMenu, onAdd, startLongPress, cancelLongPress, moveLongPress, wasLongPress }) {
@@ -350,13 +408,14 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const getMeals = useCallback((date, slot) => (mealPlan[date] || []).filter(m => m.slot === slot), [mealPlan]);
 
-  // Apport en sel par jour de la semaine visible (pastille « éviter le surplus »).
+  // Apport nutritionnel par jour de la semaine visible (sel + protéines + énergie).
   // Vue dérivée pure, recalculée quand le planning ou la base bougent.
   const dayIntakes = useMemo(() => {
     const map = new Map();
     for (const date of weekDays) map.set(date, computeDayIntake(mealPlan[date], recipesById, ingredientDB || []));
     return map;
   }, [weekDays, mealPlan, recipesById, ingredientDB]);
+  const [intakeDate, setIntakeDate] = useState(null); // jour dont on ouvre le détail des apports
 
   const removeMeal = useCallback((date, idx) => setMealPlan(prev => { const arr = [...(prev[date] || [])]; arr.splice(idx, 1); return { ...prev, [date]: arr }; }), [setMealPlan]);
   // Déplacement d'un item (drag-and-drop ET replanification) : règle de
@@ -591,7 +650,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                         {MP_DAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]} {d.getDate()}
                       </span>
                       {isToday && <span style={{ fontSize: 10, background: "rgba(var(--accent-rgb),0.2)", color: "var(--accent)", padding: "2px 7px", borderRadius: 10 }}>Aujourd'hui</span>}
-                      <DaySaltPill intake={dayIntakes.get(date)} />
+                      <DaySaltPill intake={dayIntakes.get(date)} onClick={() => setIntakeDate(date)} />
                     </div>
                     <button onClick={() => openAdd(date, ["midi"])} className="mp-add-btn" title="Ajouter une recette au planning">
                       <span className="mp-add-label">Ajouter</span>
@@ -610,6 +669,15 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         )}
         </div>
       </div>
+
+      {/* Détail des apports d'un jour (ouvert depuis la pastille de sel) */}
+      {intakeDate && dayIntakes.get(intakeDate) && (
+        <DayIntakeSheet
+          intake={dayIntakes.get(intakeDate)}
+          dateLabel={new Date(intakeDate + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          onClose={() => setIntakeDate(null)}
+        />
+      )}
 
       {/* Add recipe modal */}
       {addModal && (
