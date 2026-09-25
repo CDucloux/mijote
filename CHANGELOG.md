@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.58.4 – Cardamome · Éditeur, retour tactile soigné
+
+### Éditeur de recette
+- **Onde tactile sur les ajouts** : les boutons « Ingrédient », « Base » et « Ajouter une étape » déclenchent désormais l'onde native au toucher (comme le reste de l'app), au lieu du simple flash d'opacité.
+- **Fin du glow sur « Nouvelle section »** : le halo accent qui restait parfois « collé » après un appui sur mobile disparaît. Le survol est réservé aux vrais pointeurs, l'onde tactile prenant le relais sur mobile.
+
 ## v4.58.3 – Cardamome · Apports du jour peaufinés
 
 ### Planning
