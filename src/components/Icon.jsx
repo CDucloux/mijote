@@ -58,15 +58,17 @@ function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
 }
 
 // Pilon de poulet : Phosphor n'en fournit pas. Symbole universel des protéines,
-// silhouette pleine (viande + os + articulation) pour épouser le poids « fill ».
+// dessiné EN CONTOUR (comme la salière) : bulbe de viande en haut à droite avec
+// quelques points, os à double bosse en bas à gauche.
 function Drumstick({ size = 20, color = "currentColor", weight, ...rest }) {
   void weight;
   return (
-    <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
-      <ellipse cx="94" cy="94" rx="52" ry="43" transform="rotate(-40 94 94)" />
-      <g transform="rotate(45 120 120)"><rect x="118" y="108" width="78" height="24" rx="12" /></g>
-      <circle cx="165" cy="182" r="16" />
-      <circle cx="182" cy="165" r="16" />
+    <svg width={size} height={size} viewBox="0 0 256 256" fill="none" stroke={color} strokeWidth="16" strokeLinejoin="round" strokeLinecap="round" xmlns="http://www.w3.org/2000/svg" {...rest}>
+      <path d="M92 166 C58 150 58 96 94 74 C120 58 168 56 190 84 C212 112 202 156 164 170 C140 178 114 178 92 166 Z" />
+      <path d="M96 166 L74 190" />
+      <circle cx="60" cy="188" r="13" />
+      <circle cx="74" cy="202" r="13" />
+      <g fill={color} stroke="none"><circle cx="150" cy="86" r="6" /><circle cx="168" cy="80" r="6" /><circle cx="160" cy="102" r="6" /></g>
     </svg>
   );
 }
