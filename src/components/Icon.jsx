@@ -42,17 +42,15 @@ function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
         <path fillRule="evenodd" d="M72 72 Q88 52 128 52 Q168 52 184 72 Q196 84 196 108 L172 176 Q168 188 156 188 L100 188 Q88 188 84 176 L60 108 Q60 84 72 72 Z M88 88 Q100 72 128 72 Q156 72 168 88 Q176 98 176 114 L156 170 Q153 176 147 176 L109 176 Q103 176 100 170 L80 114 Q80 98 88 88 Z" />
         {/* Réserve de sel (à l'intérieur) */}
         <path d="M98 138 Q128 122 158 134 L150 168 Q148 174 142 174 L112 174 Q106 174 104 168 Z" />
-        {/* Bouchon plein */}
-        <path d="M100 184 L156 184 L156 210 Q156 214 152 214 L104 214 Q100 214 100 210 Z" />
+        {/* Bouchon : rectangle arrondi détaché du corps (petit espace au-dessus) */}
+        <path d="M108 196 L148 196 Q156 196 156 204 L156 210 Q156 218 148 218 L108 218 Q100 218 100 210 L100 204 Q100 196 108 196 Z" />
       </g>
-      {/* Grains qui tombent du bec */}
-      <rect x="66" y="204" width="12" height="12" rx="4" />
-      <rect x="86" y="210" width="10" height="10" rx="4" />
-      <rect x="52" y="216" width="10" height="10" rx="4" />
-      <rect x="76" y="226" width="11" height="11" rx="4" />
-      <rect x="58" y="236" width="9" height="9" rx="3" />
-      <rect x="82" y="238" width="9" height="9" rx="3" />
-      <rect x="68" y="252" width="9" height="9" rx="3" />
+      {/* Grains qui tombent du bec (peu nombreux, gros, dispersés) */}
+      <rect x="62" y="210" width="15" height="15" rx="5" />
+      <rect x="86" y="218" width="14" height="14" rx="5" />
+      <rect x="46" y="230" width="14" height="14" rx="5" />
+      <rect x="72" y="240" width="14" height="14" rx="5" />
+      <rect x="56" y="256" width="13" height="13" rx="5" />
     </svg>
   );
 }
