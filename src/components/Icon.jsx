@@ -29,17 +29,21 @@ function Spoon({ size = 20, color = "currentColor", weight, ...rest }) {
   );
 }
 
-// Salière : Phosphor n'en fournit pas. Silhouette pleine (repère 256) avec dôme
-// perforé et grains, pour épouser le poids « regular » du reste du set. Les trous
-// sont ÉVIDÉS (fillRule evenodd) → le fond, même teinté, se voit au travers.
+// Salière : Phosphor n'en fournit pas. Silhouette pleine (repère 256) d'une salière
+// PENCHÉE qui verse, grains qui tombent du bec, pour épouser le poids « fill » et
+// rester lisible en petit. Le corps est incliné (rotation), les grains restent
+// posés en bas à gauche (chute), d'où deux repères non tournés.
 function SaltShaker({ size = 20, color = "currentColor", weight, ...rest }) {
   void weight;
   return (
     <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
-      <circle cx="118" cy="48" r="4" />
-      <circle cx="140" cy="42" r="3" />
-      <circle cx="128" cy="34" r="3" />
-      <path fillRule="evenodd" clipRule="evenodd" d="M80 116 L176 116 L176 196 Q176 214 158 214 L98 214 Q80 214 80 196 Z M100 116 L108 74 Q110 62 122 62 L134 62 Q146 62 148 74 L156 116 Z M114 82 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 Z M124 78 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 Z M134 82 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 Z" />
+      {/* Corps + bec, penchés à 35° (bec en bas à gauche) */}
+      <path transform="rotate(35 128 128)" d="M100 92 Q100 62 128 62 Q156 62 156 92 L156 176 L146 176 L146 200 Q146 210 136 210 L120 210 Q110 210 110 200 L110 176 L100 176 Z" />
+      {/* Grains qui tombent du bec */}
+      <rect x="68" y="200" width="18" height="18" rx="6" />
+      <rect x="45" y="221" width="15" height="15" rx="5" />
+      <rect x="86" y="226" width="15" height="15" rx="5" />
+      <rect x="60" y="246" width="14" height="14" rx="5" />
     </svg>
   );
 }
