@@ -46,6 +46,14 @@ export interface DayIntake {
   proteinRatio: number;
   /** Niveau protéines : `low` sous 50 % du repère (plancher), sinon `ok`. */
   proteinLevel: ProteinLevel;
+  /** Fibres cumulées sur la journée, en grammes (par portion mangée). */
+  fiber: number;
+  /** Repère journalier de fibres (g), pour l'affichage du dénominateur. */
+  fiberTarget: number;
+  /** Part du repère de fibres atteinte. */
+  fiberRatio: number;
+  /** Niveau fibres : `low` sous 50 % du repère (plancher), sinon `ok`. */
+  fiberLevel: ProteinLevel;
   /** Part de la masse du jour couverte par des données nutritionnelles (0-1). */
   coverage: number;
   /**
@@ -60,7 +68,7 @@ export interface DayIntake {
 
 /** Seuils de bascule du niveau, en part du repère journalier de sel. */
 const WARN_RATIO = 0.75;
-/** Sous ce taux du repère de protéines, la journée est jugée un peu juste. */
+/** Sous ce taux d'un repère PLANCHER (protéines, fibres), la journée est jugée un peu juste. */
 const PROTEIN_LOW_RATIO = 0.5;
 /** Sous ce taux de couverture, l'estimation n'est pas assez fiable pour alerter. */
 const RELIABLE_COVERAGE = 0.5;
@@ -80,7 +88,8 @@ export function computeDayIntake(
 ): DayIntake {
   const saltTarget = NUTRI_RI.salt;
   const proteinTarget = NUTRI_RI.protein;
-  let salt = 0, protein = 0, calories = 0, covMass = 0, totMass = 0, meals = 0;
+  const fiberTarget = NUTRI_RI.fiber;
+  let salt = 0, protein = 0, fiber = 0, calories = 0, covMass = 0, totMass = 0, meals = 0;
   for (const item of items || []) {
     const recipe = item?.recipeId ? recipesById.get(item.recipeId) : undefined;
     if (!recipe) continue;
@@ -88,6 +97,7 @@ export function computeDayIntake(
     const detail = computeNutritionDetail(recipe.ingredients, ingredientDB, servings, recipesById);
     salt += detail.perServing.salt || 0;
     protein += detail.perServing.protein || 0;
+    fiber += detail.perServing.fiber || 0;
     calories += detail.perServing.calories || 0;
     // Couverture consolidée : pondérée par la masse d'UNE portion, pour qu'un gros
     // plat mal renseigné pèse plus qu'une petite garniture bien renseignée.
@@ -99,8 +109,10 @@ export function computeDayIntake(
   const coverage = totMass ? covMass / totMass : 0;
   const saltRatio = saltTarget > 0 ? salt / saltTarget : 0;
   const proteinRatio = proteinTarget > 0 ? protein / proteinTarget : 0;
+  const fiberRatio = fiberTarget > 0 ? fiber / fiberTarget : 0;
   const reliable = meals > 0 && coverage >= RELIABLE_COVERAGE;
   const level: IntakeLevel = saltRatio >= 1 ? "over" : saltRatio >= WARN_RATIO ? "warn" : "ok";
   const proteinLevel: ProteinLevel = proteinRatio < PROTEIN_LOW_RATIO ? "low" : "ok";
-  return { salt, calories, saltTarget, saltRatio, level, protein, proteinTarget, proteinRatio, proteinLevel, coverage, reliable, meals };
+  const fiberLevel: ProteinLevel = fiberRatio < PROTEIN_LOW_RATIO ? "low" : "ok";
+  return { salt, calories, saltTarget, saltRatio, level, protein, proteinTarget, proteinRatio, proteinLevel, fiber, fiberTarget, fiberRatio, fiberLevel, coverage, reliable, meals };
 }

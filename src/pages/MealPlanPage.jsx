@@ -118,8 +118,10 @@ function DayIntakeRow({ icon, label, value, sub, pct, color }) {
 function DayIntakeSheet({ intake, dateLabel, onClose }) {
   const saltColor = intake.level === "over" ? "var(--red)" : intake.level === "warn" ? MP_SALT_AMBER : "var(--text3)";
   const protColor = intake.proteinLevel === "low" ? MP_SALT_AMBER : "var(--ok)";
+  const fiberColor = intake.fiberLevel === "low" ? MP_SALT_AMBER : "var(--ok)";
   const saltNote = intake.level === "over" ? "au-delà du repère" : intake.level === "warn" ? "proche du repère" : "sous le repère";
   const protNote = intake.proteinLevel === "low" ? "un peu juste" : "suffisant";
+  const fiberNote = intake.fiberLevel === "low" ? "un peu juste" : "suffisant";
   return (
     <SwipeableSheet onClose={onClose} style={{ maxWidth: 420 }}>
       <Row gap={12} style={{ marginBottom: 4 }}>
@@ -145,10 +147,11 @@ function DayIntakeSheet({ intake, dateLabel, onClose }) {
       <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "16px 2px 12px" }}>Face aux repères</div>
       <Col gap={16} style={{ margin: "0 2px 6px" }}>
         <DayIntakeRow icon="drumstick" label="Protéines" value={mpFmtG(intake.protein)} sub={`/ ${intake.proteinTarget} g · ${protNote}`} pct={intake.proteinRatio * 100} color={protColor} />
+        <DayIntakeRow icon="leaf" label="Fibres" value={mpFmtG(intake.fiber)} sub={`/ ${intake.fiberTarget} g · ${fiberNote}`} pct={intake.fiberRatio * 100} color={fiberColor} />
         <DayIntakeRow icon="saltShaker" label="Sel" value={mpFmtG(intake.salt)} sub={`/ ${intake.saltTarget} g · ${saltNote}`} pct={intake.saltRatio * 100} color={saltColor} />
       </Col>
       <div style={{ fontSize: 10.5, color: "var(--text3)", lineHeight: 1.5, marginTop: 14, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
-        Estimation par personne, une portion de chaque plat, sur {Math.round(intake.coverage * 100)}% de la masse renseignée. Le sel est un plafond à ne pas dépasser (repère {intake.saltTarget} g/jour), les protéines un plancher à atteindre.
+        Estimation par personne, une portion de chaque plat, sur {Math.round(intake.coverage * 100)}% de la masse renseignée. Le sel est un plafond à ne pas dépasser (repère {intake.saltTarget} g/jour), les protéines et les fibres des planchers à atteindre.
       </div>
     </SwipeableSheet>
   );
