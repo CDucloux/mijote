@@ -3452,6 +3452,21 @@ select {
     }
   }
 
+  /* Pastille de statut d'appariement (ligne d'ingrédient). Tonalité posée en inline
+     via `--dot-fg` ; le survol souris densifie le tint dans cette même teinte, le
+     tactile s'appuie sur l'onde `.ripple`. `overflow:hidden` borne l'onde au rond. */
+  .match-dot {
+    position: relative;
+    overflow: hidden;
+    transition: background-color .18s ease, transform .18s ease;
+  }
+  @media (hover: hover) {
+    .match-dot:hover {
+      background: color-mix(in srgb, var(--dot-fg) 22%, transparent) !important;
+      transform: scale(1.07);
+    }
+  }
+
   /* Hero back button: chevron nudges left + slight grow on hover */
   .hero-back {
     transition: background-color .2s ease, transform .2s ease;
@@ -4732,7 +4747,7 @@ select {
 }
 @keyframes notifFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ⚠️ LEÇON STICKY (ne plus refaire l'erreur) — deux règles qui ont coûté plusieurs
+/* ⚠️ LEÇON STICKY (ne plus refaire l'erreur) : deux règles qui ont coûté plusieurs
    allers-retours sur le « bleed » des notifications (texte qui défilait à nu sous
    l'en-tête sur mobile) :
 

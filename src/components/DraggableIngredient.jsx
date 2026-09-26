@@ -80,11 +80,15 @@ export function DraggableIngredient({
   // ouvre le détail à la demande, plutôt qu'une rangée de pilules sous chaque ligne.
   const match = ingredientMatch(ing);
   const tone = MATCH_TONE[match.tone];
+  // Pastille de statut posée À L'INTÉRIEUR du champ gris, calée à droite. Ouvre le
+  // détail à la demande. Onde tactile mobile (`ripple`) + survol desktop (`match-dot`).
+  // top/marginTop (et non translateY) pour le centrage : `.tap:active` remplace le
+  // transform par un scale, ce qui ferait sauter un centrage porté par transform.
   const matchBtn = tone && (
-    <button type="button" className="tap" onClick={() => setShowMatch(true)}
+    <button type="button" className="match-dot ripple tap" onClick={() => setShowMatch(true)}
       title={match.summary} aria-label={`Analyse : ${match.summary}`}
-      style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", background: tone.soft, border: "none", display: "grid", placeItems: "center", cursor: "pointer", padding: 0 }}>
-      <Icon name={tone.icon} size={15} color={tone.fg} />
+      style={{ position: "absolute", top: "50%", right: 6, marginTop: -14, "--dot-fg": tone.fg, width: 28, height: 28, borderRadius: "50%", background: tone.soft, border: "none", display: "grid", placeItems: "center", cursor: "pointer", padding: 0 }}>
+      <Icon name={tone.icon} size={14} color={tone.fg} />
     </button>
   );
   return (
@@ -94,18 +98,21 @@ export function DraggableIngredient({
         {img
           ? <IngImage src={img} alt={ing.name} size={36} />
           : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: "var(--surface2)", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="leaf" size={15} color="var(--text3)" /></span>}
-        <input className="field-input field-soft" placeholder="ex: 500g pois chiches, 2 oeufs…"
-          ref={inputRef}
-          enterKeyHint="enter"
-          value={ing._raw !== undefined ? ing._raw : ""}
-          onChange={e => onRawChange(ing.id, e.target.value)}
-          onKeyDown={e => {
-            if (e.key === "Enter") { e.preventDefault(); onEnter(); }
-            // Retour arrière sur une ligne VIDE → supprime la ligne (miroir d'Entrée).
-            else if (e.key === "Backspace" && !(ing._raw || "") && onBackspaceEmpty) { e.preventDefault(); onBackspaceEmpty(ing.id); }
-          }}
-          style={{ marginBottom: 0, flex: 1, minWidth: 0 }} />
-        {matchBtn}
+        {/* Champ + pastille de statut logée à l'intérieur (padding-right réservé). */}
+        <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex" }}>
+          <input className="field-input field-soft" placeholder="ex: 500g pois chiches, 2 oeufs…"
+            ref={inputRef}
+            enterKeyHint="enter"
+            value={ing._raw !== undefined ? ing._raw : ""}
+            onChange={e => onRawChange(ing.id, e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter") { e.preventDefault(); onEnter(); }
+              // Retour arrière sur une ligne VIDE → supprime la ligne (miroir d'Entrée).
+              else if (e.key === "Backspace" && !(ing._raw || "") && onBackspaceEmpty) { e.preventDefault(); onBackspaceEmpty(ing.id); }
+            }}
+            style={{ marginBottom: 0, flex: 1, minWidth: 0, paddingRight: tone ? 42 : undefined }} />
+          {matchBtn}
+        </div>
         {trashBtn}
       </div>
       {showMatch && <IngredientMatchSheet ing={ing} image={img} onClose={() => setShowMatch(false)} />}
