@@ -4,11 +4,11 @@ import { IngImage } from "./Img.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { MoveArrows } from "./MoveArrows.jsx";
 import { IngredientMatchSheet } from "./IngredientMatchSheet.jsx";
+import { DecoupeSheet } from "./DecoupeSheet.jsx";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
-import { FORMES, FORME_LABEL } from "@/lib/recipes/decoupe.js";
+import { FORME_LABEL } from "@/lib/recipes/decoupe.js";
 import { ingredientMatch } from "@/lib/recipes/ingredientMatch.js";
-
-const CALIBRES = [["fin", "Fin"], ["moyen", "Moyen"], ["gros", "Gros"]];
+import { capitalize } from "../lib/format.js";
 
 // Registre visuel de la pastille de statut d'appariement (foreground + fond doux).
 // L'ambre n'a pas de token `--…-rgb` : rgba littéral, idiome déjà présent ailleurs.
@@ -27,6 +27,7 @@ export function DraggableIngredient({
 }) {
   const [trashHover, setTrashHover] = useState(false);
   const [showMatch, setShowMatch] = useState(false);
+  const [showCut, setShowCut] = useState(false);
   const inputRef = useRef(null);
   const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
   // La ligne saisie se soulève ; la ligne VISÉE s'entoure d'accent.
@@ -116,33 +117,26 @@ export function DraggableIngredient({
         {trashBtn}
       </div>
       {showMatch && <IngredientMatchSheet ing={ing} image={img} onClose={() => setShowMatch(false)} />}
-      {/* Édition de la découpe de mise en place : forme (vocabulaire fermé) + calibre.
-          Réservée aux ingrédients nommés ; « Aucune » retire la découpe. */}
+      {/* Découpe de mise en place : optionnelle, donc réduite à UN déclencheur discret
+          quand rien n'est posé (« + Découpe »), ou à une pill accent résumant le choix.
+          L'édition (forme + calibre) se fait dans une feuille dédiée, pas en <select>. */}
       {ing.name && onCutChange && (
-        <div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600 }}>Découpe</span>
-          <select className="field-input field-soft" value={ing.cut?.forme || ""}
-            onChange={e => {
-              const forme = e.target.value;
-              if (!forme) return onCutChange(ing.id, null);
-              onCutChange(ing.id, ing.cut?.calibre ? { forme, calibre: ing.cut.calibre } : { forme });
-            }}
-            style={{ marginBottom: 0, width: "auto", padding: "5px 10px", fontSize: 12, borderRadius: 999, background: "var(--surface2)" }}>
-            <option value="">Aucune</option>
-            {FORMES.map(f => <option key={f} value={f}>{FORME_LABEL[f]}</option>)}
-          </select>
-          {ing.cut?.forme && (
-            <select className="field-input field-soft" value={ing.cut?.calibre || ""}
-              onChange={e => {
-                const calibre = e.target.value;
-                onCutChange(ing.id, calibre ? { forme: ing.cut.forme, calibre } : { forme: ing.cut.forme });
-              }}
-              style={{ marginBottom: 0, width: "auto", padding: "5px 10px", fontSize: 12, borderRadius: 999, background: "var(--surface2)" }}>
-              <option value="">Calibre</option>
-              {CALIBRES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
-          )}
+        <div style={{ marginTop: 8 }}>
+          {ing.cut?.forme
+            ? <button type="button" className="tap ripple" onClick={() => setShowCut(true)}
+                style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px 6px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.35)" }}>
+                <Icon name="knife" size={13} color="var(--accent)" />
+                {FORME_LABEL[ing.cut.forme]}{ing.cut.calibre ? ` · ${capitalize(ing.cut.calibre)}` : ""}
+              </button>
+            : <button type="button" className="tap ripple" onClick={() => setShowCut(true)}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 9px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: "transparent", color: "var(--text3)", border: "1px dashed var(--border)" }}>
+                <Icon name="plus" size={13} color="var(--text3)" /> Découpe
+              </button>}
         </div>
+      )}
+      {showCut && (
+        <DecoupeSheet name={ing.name} cut={ing.cut}
+          onChange={cut => onCutChange(ing.id, cut)} onClose={() => setShowCut(false)} />
       )}
     </div>
   );
