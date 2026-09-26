@@ -23,6 +23,7 @@ import { computeDayIntake } from "@/lib/planning/dayIntake.js";
 import { Row, Col } from "../components/ui/primitives.jsx";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { buildPostesDecoupe, FORME_LABEL } from "@/lib/recipes/decoupe.js";
+import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { fmtQtyUnit, fmtTime, isoWeek } from "@/lib/format.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
@@ -276,6 +277,13 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
   const recipesById = useMemo(() => new Map(recipes.map(r => [r.id, r])), [recipes]);
+  // Nutri-Score recalculé À L'AFFICHAGE (comme la fiche recette) : `r.nutriLetter`
+  // est un instantané figé à l'enregistrement, souvent périmé ; on recompute depuis
+  // les ingrédients (appariement par nom inclus), repli sur la valeur stockée.
+  const liveNutri = useCallback(
+    (r) => computeNutriInfo(r.ingredients, ingredientDB || [], recipesById).letter ?? r.nutriLetter,
+    [ingredientDB, recipesById]
+  );
 
   // Composition manuelle : contexte pour suggérer des recettes par rôle.
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
@@ -798,6 +806,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {filteredRecipes.map(r => {
               const total = (r.prepTime || 0) + (r.cookTime || 0);
               const nIng = r.ingredients?.length || 0;
+              const nutri = liveNutri(r);
               const added = addedId === r.id;
               return (
                 <button key={r.id} onClick={() => confirmAdd(r)} disabled={!!addedId} className="complete-row ripple"
@@ -809,7 +818,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                       {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
                       {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
                       {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
-                      {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
+                      {nutri && <NutriScoreBadge letter={nutri} compact />}
                     </div>
                   </div>
                   {/* (+) → ✓ vert : le + sort en pivotant, le ✓ surgit (keyframes,
@@ -1310,6 +1319,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {list.map(r => {
                 const total = (r.prepTime || 0) + (r.cookTime || 0);
                 const nIng = r.ingredients?.length || 0;
+                const nutri = liveNutri(r);
                 return (
                   <button key={r.id} onClick={() => attachToMeal(r.id, completeRole)} className="complete-row ripple"
                     style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
@@ -1320,7 +1330,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                         {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
                         {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
                         {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
-                        {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
+                        {nutri && <NutriScoreBadge letter={nutri} compact />}
                       </div>
                     </div>
                     <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>
