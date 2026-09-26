@@ -83,8 +83,8 @@ const DayIntakePill = React.memo(function DayIntakePill({ intake, onClick }) {
       ? `Journée un peu salée (proche du repère de sel) · voir le détail des apports`
       : `Voir le détail des apports du jour`;
   return (
-    <button type="button" onClick={onClick} title={title} className="pressable"
-      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 10px 2px 7px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, whiteSpace: "nowrap", border: "none", cursor: "pointer" }}>
+    <button type="button" onClick={onClick} title={title} className="pressable day-intake-pill"
+      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 10px 2px 7px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, "--pill-fg": tone.fg, whiteSpace: "nowrap", border: "none", cursor: "pointer" }}>
       <Icon name="bolt" size={12} color={tone.fg} />
       Apports
     </button>

@@ -3469,6 +3469,18 @@ select {
     }
   }
 
+  /* Pastille « Apports » de la journée (planning). Fond piloté par la tonalité du
+     jour (inline via `--pill-fg`) ; le survol souris densifie ce fond dans la même
+     teinte. Le tactile s'appuie sur l'onde `.ripple` (via `.pressable`). */
+  .day-intake-pill {
+    transition: background-color 0.15s ease;
+  }
+  @media (hover: hover) {
+    .day-intake-pill:hover {
+      background: color-mix(in srgb, var(--pill-fg) 20%, transparent) !important;
+    }
+  }
+
   /* Hero back button: chevron nudges left + slight grow on hover */
   .hero-back {
     transition: background-color .2s ease, transform .2s ease;
