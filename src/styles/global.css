@@ -3458,12 +3458,11 @@ select {
   .match-dot {
     position: relative;
     overflow: hidden;
-    transition: background-color .18s ease, transform .18s ease;
+    transition: background-color .18s ease;
   }
   @media (hover: hover) {
     .match-dot:hover {
       background: color-mix(in srgb, var(--dot-fg) 22%, transparent) !important;
-      transform: scale(1.07);
     }
   }
 
