@@ -320,7 +320,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           {/* Filtres (la feuille de tri est désormais séparée, bouton « Tri ») */}
-          <button className="toolbar-pill" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
+          <button className="toolbar-pill ripple" data-active={nActiveFilters > 0 ? "1" : undefined} onClick={() => setFilterOpen(true)} title="Filtrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Filtres
             {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
@@ -328,12 +328,12 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           {/* Pilule + flèche accolées : clic sur la pilule = critère suivant,
               clic sur la flèche = inverser le sens. */}
           <div className="sort-control">
-            <button className="toolbar-pill sort-cycle" onClick={cycleSort} title="Changer le critère de tri">
+            <button className="toolbar-pill sort-cycle ripple" onClick={cycleSort} title="Changer le critère de tri">
               <Icon name="updown" size={15} color="currentColor" />
               <span style={{ color: "var(--text3)", fontWeight: 500 }}>Trié par :</span>
               <strong style={{ fontWeight: 600 }}>{sortOption(sortBy).label}</strong>
             </button>
-            <button className="toolbar-pill sort-dir" onClick={toggleSortDir}
+            <button className="toolbar-pill sort-dir ripple" onClick={toggleSortDir}
               aria-label={`Sens : ${dirLabel(sortBy, sortDir)}`} title={`Sens : ${dirLabel(sortBy, sortDir)} (inverser)`}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transition: "transform 0.2s ease", transform: sortDir === "asc" ? "rotate(180deg)" : "none" }}>
                 <path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
