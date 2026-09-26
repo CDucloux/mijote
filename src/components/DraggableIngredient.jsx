@@ -121,7 +121,8 @@ export function DraggableIngredient({
           quand rien n'est posé (« + Découpe »), ou à une pill accent résumant le choix.
           L'édition (forme + calibre) se fait dans une feuille dédiée, pas en <select>. */}
       {ing.name && onCutChange && (
-        <div style={{ marginTop: 8 }}>
+        <div style={{ marginTop: 8, marginLeft: isDraggable ? 72 : 82 }}>{/* Aligné au bord gauche
+            du champ gris : poignée (16/26) + image (36) + 2 gouttières (10). */}
           {ing.cut?.forme
             ? <button type="button" className="tap ripple" onClick={() => setShowCut(true)}
                 style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px 6px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.35)" }}>
