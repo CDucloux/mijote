@@ -23,7 +23,6 @@ import { computeDayIntake } from "@/lib/planning/dayIntake.js";
 import { Row, Col } from "../components/ui/primitives.jsx";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
 import { buildPostesDecoupe, FORME_LABEL } from "@/lib/recipes/decoupe.js";
-import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { fmtQtyUnit, fmtTime, isoWeek } from "@/lib/format.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
@@ -245,7 +244,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 // Réinitialisé après usage et au rechargement complet.
 let mealPlanReturnDate = null;
 
-export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
+export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, recipeDerived, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
   const { notify, user, isPlus, logActivity } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
   // vers l'offre Cardamome+ quand une fonctionnalité premium est verrouillée.
@@ -277,12 +276,14 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
   const recipesById = useMemo(() => new Map(recipes.map(r => [r.id, r])), [recipes]);
-  // Nutri-Score recalculé À L'AFFICHAGE (comme la fiche recette) : `r.nutriLetter`
-  // est un instantané figé à l'enregistrement, souvent périmé ; on recompute depuis
-  // les ingrédients (appariement par nom inclus), repli sur la valeur stockée.
+  // Nutri-Score en direct SANS recalcul par ligne : on lit la lettre déjà mémoïsée
+  // au niveau App (useRecipeDerived, un seul calcul par recette, stable tant que
+  // recipes/ingredientDB ne bougent pas). Recomputer ici à chaque rendu/frappe dans
+  // le picker rendait l'ouverture des feuilles lente. Repli sur l'instantané stocké.
+  const nutriById = recipeDerived?.seasonVeganById;
   const liveNutri = useCallback(
-    (r) => computeNutriInfo(r.ingredients, ingredientDB || [], recipesById).letter ?? r.nutriLetter,
-    [ingredientDB, recipesById]
+    (r) => nutriById?.get(r.id)?.nutriLetter ?? r.nutriLetter,
+    [nutriById]
   );
 
   // Composition manuelle : contexte pour suggérer des recettes par rôle.
