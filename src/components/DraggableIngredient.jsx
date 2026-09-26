@@ -3,10 +3,19 @@ import { Icon } from "./Icon.jsx";
 import { IngImage } from "./Img.jsx";
 import { BaseIcon } from "./BaseIcon.jsx";
 import { MoveArrows } from "./MoveArrows.jsx";
+import { IngredientMatchSheet } from "./IngredientMatchSheet.jsx";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
 import { FORMES, FORME_LABEL } from "@/lib/recipes/decoupe.js";
+import { ingredientMatch } from "@/lib/recipes/ingredientMatch.js";
 
 const CALIBRES = [["fin", "Fin"], ["moyen", "Moyen"], ["gros", "Gros"]];
+
+// Registre visuel de la pastille de statut d'appariement (foreground + fond doux).
+// L'ambre n'a pas de token `--…-rgb` : rgba littéral, idiome déjà présent ailleurs.
+const MATCH_TONE = {
+  ok: { fg: "var(--ok)", soft: "rgba(var(--ok-rgb),0.14)", icon: "check" },
+  warn: { fg: "var(--orange)", soft: "rgba(240,153,42,0.14)", icon: "warning" },
+};
 
 // Ligne d'ingrédient réorganisable LIBREMENT dans la liste complète (index global).
 // Glisser au doigt sur mobile (poignée), flèches ↑/↓ sur desktop. La section est
@@ -17,6 +26,7 @@ export function DraggableIngredient({
   onRawChange, onUpdateAmount, onRemove, onMove, onTargetChange, onEnter, onBackspaceEmpty, onCutChange,
 }) {
   const [trashHover, setTrashHover] = useState(false);
+  const [showMatch, setShowMatch] = useState(false);
   const inputRef = useRef(null);
   const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
   // La ligne saisie se soulève ; la ligne VISÉE s'entoure d'accent.
@@ -66,6 +76,17 @@ export function DraggableIngredient({
 
   // ── Ligne ingrédient brut ──
   const img = ing.dbId ? ingredientDB.find(d => d.id === ing.dbId)?.image : null;
+  // Statut d'appariement condensé en UNE pastille (à droite, avant la corbeille) qui
+  // ouvre le détail à la demande, plutôt qu'une rangée de pilules sous chaque ligne.
+  const match = ingredientMatch(ing);
+  const tone = MATCH_TONE[match.tone];
+  const matchBtn = tone && (
+    <button type="button" className="tap" onClick={() => setShowMatch(true)}
+      title={match.summary} aria-label={`Analyse : ${match.summary}`}
+      style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", background: tone.soft, border: "none", display: "grid", placeItems: "center", cursor: "pointer", padding: 0 }}>
+      <Icon name={tone.icon} size={15} color={tone.fg} />
+    </button>
+  );
   return (
     <div {...rowProps} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, transition: "border-color 0.15s, box-shadow 0.2s", ...dragStyle }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -84,20 +105,10 @@ export function DraggableIngredient({
             else if (e.key === "Backspace" && !(ing._raw || "") && onBackspaceEmpty) { e.preventDefault(); onBackspaceEmpty(ing.id); }
           }}
           style={{ marginBottom: 0, flex: 1, minWidth: 0 }} />
+        {matchBtn}
         {trashBtn}
       </div>
-      {(ing.name || ing.amount) && (
-        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
-          {Number(ing.amount) > 0
-            ? <span style={{ fontSize: 11, background: "rgba(240,192,96,0.15)", color: "var(--yellow)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Quantité : {ing.amount}</span>
-            : <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>⚠ Quantité manquante</span>}
-          {ing.unit && <span style={{ fontSize: 11, background: "rgba(91,156,246,0.15)", color: "var(--blue)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>Unité : {ing.unit}</span>}
-          {ing.name && <span style={{ fontSize: 11, background: "var(--surface2)", color: "var(--text2)", borderRadius: 8, padding: "2px 8px" }}>{ing.name}</span>}
-          {ing.dbId
-            ? <span style={{ fontSize: 11, background: "rgba(var(--ok-rgb),0.15)", color: "var(--ok)", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✓ Ingrédient reconnu</span>
-            : ing.name ? <span style={{ fontSize: 11, background: "rgba(224,82,82,0.12)", color: "#c04040", borderRadius: 8, padding: "2px 8px", fontWeight: 500 }}>✕ Non référencé</span> : null}
-        </div>
-      )}
+      {showMatch && <IngredientMatchSheet ing={ing} image={img} onClose={() => setShowMatch(false)} />}
       {/* Édition de la découpe de mise en place : forme (vocabulaire fermé) + calibre.
           Réservée aux ingrédients nommés ; « Aucune » retire la découpe. */}
       {ing.name && onCutChange && (
