@@ -83,8 +83,8 @@ const DayIntakePill = React.memo(function DayIntakePill({ intake, onClick }) {
       ? `Journée un peu salée (proche du repère de sel) · voir le détail des apports`
       : `Voir le détail des apports du jour`;
   return (
-    <button type="button" onClick={onClick} title={title} className="pressable"
-      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 10px 2px 7px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, whiteSpace: "nowrap", border: "none", cursor: "pointer" }}>
+    <button type="button" onClick={onClick} title={title} className="pressable day-intake-pill"
+      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 10px 2px 7px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, "--pill-fg": tone.fg, whiteSpace: "nowrap", border: "none", cursor: "pointer" }}>
       <Icon name="bolt" size={12} color={tone.fg} />
       Apports
     </button>
@@ -118,8 +118,10 @@ function DayIntakeRow({ icon, label, value, sub, pct, color }) {
 function DayIntakeSheet({ intake, dateLabel, onClose }) {
   const saltColor = intake.level === "over" ? "var(--red)" : intake.level === "warn" ? MP_SALT_AMBER : "var(--text3)";
   const protColor = intake.proteinLevel === "low" ? MP_SALT_AMBER : "var(--ok)";
+  const fiberColor = intake.fiberLevel === "low" ? MP_SALT_AMBER : "var(--ok)";
   const saltNote = intake.level === "over" ? "au-delà du repère" : intake.level === "warn" ? "proche du repère" : "sous le repère";
   const protNote = intake.proteinLevel === "low" ? "un peu juste" : "suffisant";
+  const fiberNote = intake.fiberLevel === "low" ? "un peu juste" : "suffisant";
   return (
     <SwipeableSheet onClose={onClose} style={{ maxWidth: 420 }}>
       <Row gap={12} style={{ marginBottom: 4 }}>
@@ -145,10 +147,11 @@ function DayIntakeSheet({ intake, dateLabel, onClose }) {
       <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "16px 2px 12px" }}>Face aux repères</div>
       <Col gap={16} style={{ margin: "0 2px 6px" }}>
         <DayIntakeRow icon="drumstick" label="Protéines" value={mpFmtG(intake.protein)} sub={`/ ${intake.proteinTarget} g · ${protNote}`} pct={intake.proteinRatio * 100} color={protColor} />
+        <DayIntakeRow icon="leaf" label="Fibres" value={mpFmtG(intake.fiber)} sub={`/ ${intake.fiberTarget} g · ${fiberNote}`} pct={intake.fiberRatio * 100} color={fiberColor} />
         <DayIntakeRow icon="saltShaker" label="Sel" value={mpFmtG(intake.salt)} sub={`/ ${intake.saltTarget} g · ${saltNote}`} pct={intake.saltRatio * 100} color={saltColor} />
       </Col>
       <div style={{ fontSize: 10.5, color: "var(--text3)", lineHeight: 1.5, marginTop: 14, padding: "10px 12px", background: "var(--surface2)", borderRadius: 10 }}>
-        Estimation par personne, une portion de chaque plat, sur {Math.round(intake.coverage * 100)}% de la masse renseignée. Le sel est un plafond à ne pas dépasser (repère {intake.saltTarget} g/jour), les protéines un plancher à atteindre.
+        Estimation par personne, une portion de chaque plat, sur {Math.round(intake.coverage * 100)}% de la masse renseignée. Le sel est un plafond à ne pas dépasser (repère {intake.saltTarget} g/jour), les protéines et les fibres des planchers à atteindre.
       </div>
     </SwipeableSheet>
   );
@@ -244,7 +247,7 @@ const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, d
 // Réinitialisé après usage et au rechargement complet.
 let mealPlanReturnDate = null;
 
-export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
+export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, recipeDerived, preferences = {}, stock = [], loading = false, generate, undo, undoKey = null }) {
   const { notify, user, isPlus, logActivity } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
   // vers l'offre Cardamome+ quand une fonctionnalité premium est verrouillée.
@@ -276,6 +279,15 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   const weekDays = useMemo(() => mpGetWeekDays(currentDate), [currentDate]);
   const recipesById = useMemo(() => new Map(recipes.map(r => [r.id, r])), [recipes]);
+  // Nutri-Score en direct SANS recalcul par ligne : on lit la lettre déjà mémoïsée
+  // au niveau App (useRecipeDerived, un seul calcul par recette, stable tant que
+  // recipes/ingredientDB ne bougent pas). Recomputer ici à chaque rendu/frappe dans
+  // le picker rendait l'ouverture des feuilles lente. Repli sur l'instantané stocké.
+  const nutriById = recipeDerived?.seasonVeganById;
+  const liveNutri = useCallback(
+    (r) => nutriById?.get(r.id)?.nutriLetter ?? r.nutriLetter,
+    [nutriById]
+  );
 
   // Composition manuelle : contexte pour suggérer des recettes par rôle.
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
@@ -798,6 +810,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {filteredRecipes.map(r => {
               const total = (r.prepTime || 0) + (r.cookTime || 0);
               const nIng = r.ingredients?.length || 0;
+              const nutri = liveNutri(r);
               const added = addedId === r.id;
               return (
                 <button key={r.id} onClick={() => confirmAdd(r)} disabled={!!addedId} className="complete-row ripple"
@@ -809,7 +822,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                       {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
                       {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
                       {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
-                      {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
+                      {nutri && <NutriScoreBadge letter={nutri} compact />}
                     </div>
                   </div>
                   {/* (+) → ✓ vert : le + sort en pivotant, le ✓ surgit (keyframes,
@@ -1310,6 +1323,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               {list.map(r => {
                 const total = (r.prepTime || 0) + (r.cookTime || 0);
                 const nIng = r.ingredients?.length || 0;
+                const nutri = liveNutri(r);
                 return (
                   <button key={r.id} onClick={() => attachToMeal(r.id, completeRole)} className="complete-row ripple"
                     style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
@@ -1320,7 +1334,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                         {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
                         {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
                         {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
-                        {r.nutriLetter && <NutriScoreBadge letter={r.nutriLetter} compact />}
+                        {nutri && <NutriScoreBadge letter={nutri} compact />}
                       </div>
                     </div>
                     <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>

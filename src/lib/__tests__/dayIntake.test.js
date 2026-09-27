@@ -7,10 +7,13 @@ const ingredientDB = [
   { id: "sel", name: "Sel", nutrition: { salt: 100, calories: 0 } },
   { id: "riz", name: "Riz", nutrition: { salt: 0, calories: 350 } },
   { id: "prot", name: "Protéine", nutrition: { protein: 100, calories: 0 } },
+  { id: "fibre", name: "Fibre", nutrition: { fiber: 100, calories: 0 } },
   { id: "myst", name: "Mystère" },
 ];
 // Plat pour 1 portion apportant `g` grammes de protéines.
 const proteinDish = (id, g) => ({ id, name: id, servings: 1, ingredients: [{ name: "Protéine", dbId: "prot", amount: g, unit: "g" }] });
+// Plat pour 1 portion apportant `g` grammes de fibres.
+const fiberDish = (id, g) => ({ id, name: id, servings: 1, ingredients: [{ name: "Fibre", dbId: "fibre", amount: g, unit: "g" }] });
 
 // Plat pour 1 portion apportant `g` grammes de sel (dbId figé pour un match direct).
 const saltyDish = (id, g) => ({ id, name: id, servings: 1, ingredients: [{ name: "Sel", dbId: "sel", amount: g, unit: "g" }] });
@@ -95,5 +98,22 @@ describe("computeDayIntake", () => {
     const recipes = [{ id: "riz", name: "Riz", servings: 1, ingredients: [{ name: "Riz", dbId: "riz", amount: 100, unit: "g" }] }];
     const r = computeDayIntake([{ recipeId: "riz" }], byId(recipes), ingredientDB);
     expect(r.calories).toBeCloseTo(350, 0);
+  });
+
+  it("somme les fibres par portion et les juge `low` sous 50 % du repère", () => {
+    // Repère fibres = 30 g. 10 g < 15 g → faible.
+    const recipes = [fiberDish("f", 10)];
+    const r = computeDayIntake([{ recipeId: "f" }], byId(recipes), ingredientDB);
+    expect(r.fiber).toBeCloseTo(10, 5);
+    expect(r.fiberTarget).toBe(30);
+    expect(r.fiberLevel).toBe("low");
+  });
+
+  it("juge les fibres `ok` au-delà de 50 % du repère", () => {
+    const recipes = [fiberDish("a", 10), fiberDish("b", 8)]; // 18 g > 15 g
+    const r = computeDayIntake([{ recipeId: "a" }, { recipeId: "b" }], byId(recipes), ingredientDB);
+    expect(r.fiber).toBeCloseTo(18, 5);
+    expect(r.fiberRatio).toBeCloseTo(0.6, 5);
+    expect(r.fiberLevel).toBe("ok");
   });
 });
