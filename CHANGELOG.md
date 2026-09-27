@@ -1,5 +1,19 @@
 # Changelog – Cardamome
 
+## v4.59.0 – Cardamome · Éditeur épuré, apports en fibres
+
+### Éditeur de recette
+- **Statut d'appariement condensé** : la rangée de pilules (Quantité, Unité, nom, reconnu) sous chaque ingrédient laisse place à une seule pastille logée dans le champ, à droite. Verte quand l'ingrédient est reconnu et quantifié, ambre s'il reste quelque chose à préciser ; elle ouvre une feuille détaillant l'analyse (quantité, unité, appariement à la base).
+- **Découpe repensée** : fini les listes déroulantes « brutes ». La découpe, optionnelle, se réduit à un déclencheur discret « + Découpe » ; une fois posée, une pastille résume le choix (« Émincer · Fin »). L'édition (forme + calibre) se fait dans une feuille dédiée avec retrait explicite.
+
+### Planning
+- **Fibres dans les apports du jour** : la feuille « Apports du jour » suit désormais les fibres (repère 30 g/jour, un plancher à atteindre), sous les protéines, avec la même jauge face au repère.
+- **Nutri-Score juste dans le choix de recette** : les listes « Ajouter une recette » affichent la lettre recalculée en direct (comme la fiche recette), au lieu de l'instantané figé à l'enregistrement, désormais lu depuis un cache mémoïsé pour rester fluide à l'ouverture.
+- **Survol de la pastille « Apports »** : retour visuel au survol souris, dans la teinte du jour.
+
+### Retour tactile
+- **Onde sur les filtres et le tri** : les pastilles « Filtres » et de tri de la page Recettes déclenchent l'onde native au toucher sur mobile.
+
 ## v4.58.4 – Cardamome · Éditeur, retour tactile soigné
 
 ### Éditeur de recette
