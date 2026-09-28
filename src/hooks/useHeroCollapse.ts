@@ -15,6 +15,13 @@ const BAR_START = MOVE_END - 22;      // 226
 
 type Ref = React.RefObject<HTMLElement | null>;
 
+// Position de défilement mémorisée entre deux visites d'une MÊME fiche : ouvrir la
+// fiche d'un ingrédient depuis la recette démonte RecipeDetail, l'état de scroll ne
+// peut donc pas vivre dans le composant. Conservé au niveau module (réinitialisé au
+// rechargement complet) et rejoué au retour, à condition de rouvrir la même recette,
+// exactement comme la mémoire de scroll de la liste de recettes.
+let detailScrollMemo: { id: string | undefined; top: number } = { id: undefined, top: 0 };
+
 export interface HeroCollapse {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   heroImgRef: Ref;
@@ -34,6 +41,8 @@ export interface HeroCollapse {
     onTouchMove: (e: React.TouchEvent) => void;
     onTouchEnd: (e: React.TouchEvent) => void;
   };
+  /** Oublie la position mémorisée : à appeler quand on quitte réellement la fiche (bouton retour). */
+  forgetScroll: () => void;
 }
 
 /**
@@ -228,6 +237,7 @@ export function useHeroCollapse(
     let lastY = el.scrollTop, lastT = performance.now(), vy = 0;
     const onScroll = () => {
       schedule();
+      detailScrollMemo = { id: recipeId, top: el.scrollTop };
       const now = performance.now(), y = el.scrollTop, dt = now - lastT;
       if (dt > 0) vy = (y - lastY) / dt;
       lastY = y; lastT = now;
@@ -242,6 +252,14 @@ export function useHeroCollapse(
     el.addEventListener("touchmove", onMove, { passive: false });
     el.addEventListener("touchend", onUp, { passive: true });
     el.addEventListener("touchcancel", onUp, { passive: true });
+
+    // Restaure la position mémorisée si l'on rouvre la MÊME fiche (retour depuis un
+    // ingrédient). Fait AVANT le premier applyHeroFrame pour que le hero se peigne
+    // d'emblée dans son état replié, sans saut visible. Si le contenu n'est pas assez
+    // haut (cale de bas posée par un effet ultérieur), scrollTop est simplement borné.
+    if (detailScrollMemo.id === recipeId && detailScrollMemo.top > 0) {
+      lastY = el.scrollTop = detailScrollMemo.top;
+    }
 
     applyHeroFrame();
 
@@ -285,8 +303,11 @@ export function useHeroCollapse(
     }
   }, [activeTab]);
 
+  const forgetScroll = () => { detailScrollMemo = { id: undefined, top: 0 }; };
+
   return {
     scrollRef, heroImgRef, shadeRef, titleRef, srcRef, attribRef, badgesRef,
     ctrlLRef, ctrlRRef, barRef, spacerRef, barInnerRef, paneRef, swipeHandlers,
+    forgetScroll,
   };
 }
