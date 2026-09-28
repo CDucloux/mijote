@@ -1,8 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/Icon.jsx";
-import { parseDurations, fmtCountdown } from "@/lib/planning/stepTimers.js";
-import { remainingSecs } from "@/lib/planning/cookTimers.js";
+import { parseDurations } from "@/lib/planning/stepTimers.js";
 import { StepTip } from "../components/StepTip.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
@@ -23,26 +22,14 @@ import { AutoResizeTextarea } from "../components/AutoResizeTextarea.jsx";
 import { RatingPicker } from "../components/RatingPicker.jsx";
 import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
 import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
-import { EmptyArt } from "../components/EmptyArt.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useCookSession } from "../hooks/useCookSession.js";
 import { useCookTimers } from "../hooks/useCookTimers.js";
+import { ToggleSwitch } from "../components/cookMode/ToggleSwitch.jsx";
+import { CookTimersStack } from "../components/cookMode/CookTimersStack.jsx";
+import { CookDoneScreen } from "../components/cookMode/CookDoneScreen.jsx";
 import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.ts";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-
-// Interrupteur animé (piste + pastille glissante) : remplace un bouton plain là où
-// l'état est un vrai on/off. La pastille glisse avec un léger ressort à l'activation.
-function ToggleSwitch({ checked, onChange, label, title }) {
-  return (
-    <button type="button" role="switch" aria-checked={checked} onClick={onChange} className="pressable" title={title}
-      style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 9, background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}>
-      <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: checked ? "var(--accent)" : "var(--text3)", transition: "color 0.2s" }}>{label}</span>
-      <span aria-hidden="true" style={{ position: "relative", width: 40, height: 23, borderRadius: 999, flexShrink: 0, background: checked ? "var(--accent)" : "var(--surface3)", transition: "background 0.25s ease", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.14)" }}>
-        <span style={{ position: "absolute", top: 2.5, left: 2.5, width: 18, height: 18, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.28)", transform: checked ? "translateX(17px)" : "translateX(0)", transition: "transform 0.28s cubic-bezier(0.34,1.5,0.64,1)" }} />
-      </span>
-    </button>
-  );
-}
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
 // `recipes` + `stockSet` permettent de gérer les composants (préparations de base) :
@@ -444,31 +431,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       )}
 
       {done && !subCook && (
-        <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: "calc(32px + max(env(safe-area-inset-top) - 8px, 0px)) 32px calc(32px + max(env(safe-area-inset-bottom) - 8px, 0px))", textAlign: "center" }}>
-          <div style={{ animation: "popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)", marginBottom: 20 }}>
-            <EmptyArt name="service" size={188} style={{ color: "var(--text)" }} />
-          </div>
-          <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em", marginBottom: 12, animation: "popIn 0.6s 0.2s both cubic-bezier(0.34,1.56,0.64,1)" }}>
-            {isNested ? "Base terminée !" : "Félicitations !"}
-          </h1>
-          <p style={{ fontSize: 16, color: "var(--text2)", lineHeight: 1.6, marginBottom: 32, maxWidth: 300, animation: "popIn 0.5s 0.35s both ease" }}>
-            {isNested
-              ? <><strong style={{ color: "var(--text)" }}>{recipe.name}</strong> est prêt·e. Reviens à la recette principale.</>
-              : <><strong style={{ color: "var(--text)" }}>{recipe.name}</strong> est prêt·e !</>}
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320, animation: "popIn 0.5s 0.5s both ease" }}>
-            {canIterate && (
-              <button className="btn btn-ghost" style={{ padding: "13px 24px", fontSize: 15, borderRadius: 999 }} onClick={() => { setIterRating(null); setIterNotes(""); setIterOpen(true); }}>
-                <Icon name="star" size={17} /> Noter une itération
-              </button>
-            )}
-            {/* Retour DIRECT depuis l'écran de fin (onClose sans `requestClose`) :
-                le fondu de sortie depuis cet écran paraissait étrange. */}
-            <button className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 16, borderRadius: 999 }} onClick={onClose}>
-              <Icon name="check" size={18} /> {isNested ? "Retour" : "Retour à la recette"}
-            </button>
-          </div>
-        </div>
+        <CookDoneScreen isNested={isNested} closing={closing} recipeName={recipe.name} canIterate={canIterate}
+          onIterate={() => { setIterRating(null); setIterNotes(""); setIterOpen(true); }} onClose={onClose} />
       )}
 
       {/* Ajout d'une itération au carnet depuis l'écran de fin */}
@@ -741,64 +705,9 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           </div>
         </div>
 
-        {/* Minuteurs actifs : pile repliable ancrée à droite, au-dessus de la nav.
-            Repliée, chaque minuteur reste visible en aperçu avec son étape source ;
-            un tap sur l'aperçu ramène à l'étape et déplie la carte complète. */}
-        {timers.length > 0 && (
-          <div className="cook-timers" style={{ bottom: "calc(80px + max(env(safe-area-inset-bottom) - 8px, 0px))" }}>
-            <button type="button" className="cook-timers-toggle" onClick={() => setTimersOpen(o => !o)}
-              title={timersOpen ? "Replier les minuteurs" : "Déplier les minuteurs"}>
-              <Icon name="clock" size={15} color="var(--accent)" />
-              <span>Minuteur{timers.length > 1 ? "s" : ""}</span>
-              <span className={`cook-timers-count${timers.some(t => t.done) ? " is-done" : ""}`}>{timers.length}</span>
-              <span className={`cook-timers-chevron${timersOpen ? " open" : ""}`}><Icon name="chevronDown" size={15} color="var(--text3)" /></span>
-            </button>
-
-            {timersOpen ? timers.map(t => {
-              const rem = remainingSecs(t, now);
-              const pct = t.totalSec ? Math.min(100, (1 - rem / t.totalSec) * 100) : 0;
-              return (
-                <div key={t.id} className="slide-up" style={{ alignSelf: "stretch", background: "var(--surface)", border: `1px solid ${t.done ? "var(--ok)" : "var(--border)"}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 8px 22px -10px rgba(0,0,0,0.4)", animation: t.done ? "timerPulse 1s ease-in-out infinite" : undefined }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Icon name="clock" size={15} color={t.done ? "var(--ok)" : "var(--accent)"} />
-                    <span style={{ flex: 1, fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 600, letterSpacing: "0.02em", color: t.done ? "var(--ok)" : "var(--text)" }}>
-                      {t.done ? "Terminé !" : fmtCountdown(rem)}
-                    </span>
-                    <button type="button" className="cook-timer-step" onClick={() => goTo(t.stepIdx)} title={`Aller à ${t.stepLabel}`}>
-                      <Icon name="layers" size={11} color="var(--accent)" /> {t.stepLabel}
-                    </button>
-                  </div>
-                  <div style={{ height: 3, borderRadius: 2, background: "var(--surface2)", margin: "8px 0", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: t.done ? "var(--ok)" : "var(--accent)", transition: "width 0.9s linear" }} />
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {t.done
-                      ? <button className="timer-btn timer-btn-accent" onClick={() => restartTimer(t.id)}>
-                          <Icon name="history" size={14} color="var(--accent)" /> Relancer
-                        </button>
-                      : <button className="timer-btn" onClick={() => toggleTimer(t.id)}>
-                          <Icon name={t.running ? "pause" : "play"} size={14} color="var(--text)" /> {t.running ? "Pause" : "Reprendre"}
-                        </button>}
-                    <button className="timer-btn timer-btn-stop" onClick={() => removeTimer(t.id)}>
-                      <Icon name="stop" size={13} color="var(--red)" /> Stop
-                    </button>
-                  </div>
-                </div>
-              );
-            }) : timers.map(t => {
-              const rem = remainingSecs(t, now);
-              return (
-                <button type="button" key={t.id} className="cook-timer-chip" onClick={() => { goTo(t.stepIdx); setTimersOpen(true); }}
-                  title={`${t.stepLabel}, ${t.done ? "terminé" : fmtCountdown(rem)}`}
-                  style={t.done ? { borderColor: "var(--ok)", animation: "timerPulse 1s ease-in-out infinite" } : undefined}>
-                  <Icon name="clock" size={14} color={t.done ? "var(--ok)" : "var(--accent)"} />
-                  <span className="t" style={{ color: t.done ? "var(--ok)" : "var(--text)" }}>{t.done ? "Terminé !" : fmtCountdown(rem)}</span>
-                  <span className="s">{t.stepLabel}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Minuteurs actifs : pile repliable ancrée à droite, au-dessus de la nav. */}
+        <CookTimersStack timers={timers} timersOpen={timersOpen} setTimersOpen={setTimersOpen} now={now}
+          onGoToStep={goTo} onToggle={toggleTimer} onRestart={restartTimer} onRemove={removeTimer} />
 
         {/* Bottom nav */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px calc(14px + max(env(safe-area-inset-bottom) - 8px, 0px))", background: "var(--surface)", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
