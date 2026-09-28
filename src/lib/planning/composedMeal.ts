@@ -223,6 +223,59 @@ export function copyMealToDays(
 }
 
 /**
+ * Ajoute une recette à un créneau d'une journée, en gérant la composition du repas.
+ *
+ * Règle : « Ajouter » COMPLÈTE le repas déjà présent dans le créneau (même groupId,
+ * un rôle en plus) plutôt que d'empiler des repas séparés. Exceptions : le matin ne
+ * compose pas (entrée simple) ; un 2ᵉ plat (le repas a déjà un plat) démarre un
+ * nouveau repas.
+ *
+ * @param entries - Les repas de la journée (non muté).
+ * @param recipe - La recette à ajouter (id + catégorie pour déduire le rôle).
+ * @param slot - Le créneau cible (`matin` / `midi` / `soir`).
+ * @param recipesById - Index des recettes (pour lire le rôle des items présents).
+ * @param makeGroupId - Générateur d'id de groupe (injectable pour les tests).
+ * @returns La nouvelle liste de repas de la journée.
+ */
+export function addRecipeToSlot(
+  entries: MealItem[],
+  recipe: { id: string; category?: string },
+  slot: string,
+  recipesById: Map<string, CategorizedRecipe>,
+  makeGroupId: () => string = newGroupId,
+): MealItem[] {
+  const arr = [...(entries || [])];
+  // Matin : pas de repas composé → entrée simple.
+  if (slot === "matin") {
+    arr.push({ recipeId: recipe.id, slot, portions: 1 });
+    return arr;
+  }
+  const role = roleForCategory(recipe.category);
+  const slotItems = arr.map((m, i) => ({ m, i })).filter(x => x.m.slot === slot);
+  const groupIds = [...new Set(slotItems.map(x => x.m.groupId).filter(Boolean))] as string[];
+  const groupHasPlat = (gid: string): boolean =>
+    slotItems.some(x => x.m.groupId === gid && itemRole(x.m, x.m.recipeId ? recipesById.get(x.m.recipeId) : undefined) === "plat");
+
+  let gid: string;
+  if (groupIds.length === 0) {
+    // Slot sans repas structuré : démarre un repas et promeut d'éventuels items nus.
+    gid = makeGroupId();
+    for (const x of slotItems) if (!arr[x.i].groupId) {
+      const cur = arr[x.i];
+      arr[x.i] = { ...cur, groupId: gid, role: cur.role || itemRole(cur, cur.recipeId ? recipesById.get(cur.recipeId) : undefined) };
+    }
+  } else if (role === "plat" && groupIds.every(groupHasPlat)) {
+    gid = makeGroupId(); // 2ᵉ plat = nouveau repas (sa propre barre)
+  } else if (role === "plat") {
+    gid = groupIds.find(g => !groupHasPlat(g)) || makeGroupId();
+  } else {
+    gid = groupIds[0]; // entrée/dessert/accompagnement → complète le 1er repas
+  }
+  arr.push({ recipeId: recipe.id, slot, portions: 1, role, groupId: gid });
+  return arr;
+}
+
+/**
  * Catégories jouant un rôle donné (pour les pickers manuels).
  *
  * @param role - Le rôle recherché.

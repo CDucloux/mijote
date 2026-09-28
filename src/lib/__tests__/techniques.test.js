@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildTechniqueIndex, annotateText, hasTechnique } from "@/lib/recipes/techniques.js";
+import { buildTechniqueIndex, annotateText } from "@/lib/recipes/techniques.js";
 
 const TECHS = [
   { id: "tech_suer", name: "Suer", aliases: ["suer", "faire suer"], definition: "Cuire doux." },
@@ -79,12 +79,5 @@ describe("annotateText", () => {
     const segs = annotateText("On va suer.", idx);
     const hit = segs.find(s => s.tech);
     expect(hit.tech.definition).toBe("Cuire doux.");
-  });
-});
-
-describe("hasTechnique", () => {
-  it("reports whether any technique is present", () => {
-    expect(hasTechnique("Faire suer.", idx)).toBe(true);
-    expect(hasTechnique("Touiller.", idx)).toBe(false);
   });
 });

@@ -137,14 +137,3 @@ export function annotateText(text: string | null | undefined, index: TechniqueIn
   if (cursor < text.length) segments.push({ text: text.slice(cursor), tech: null });
   return segments;
 }
-
-/**
- * Au moins une technique est-elle repérée dans le texte ?
- *
- * @param text - Le texte à examiner.
- * @param index - L'index de techniques.
- * @returns `true` si au moins un geste est détecté.
- */
-export function hasTechnique(text: string | null | undefined, index: TechniqueIndex | null | undefined): boolean {
-  return annotateText(text, index).some(s => s.tech);
-}

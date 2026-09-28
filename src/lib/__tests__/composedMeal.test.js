@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roleForCategory, itemRole, groupSlotMeals, mealsForSlot, newGroupId, platNeedsSide, moveMealItem, copyMealToDays } from "@/lib/planning/composedMeal.js";
+import { roleForCategory, itemRole, groupSlotMeals, mealsForSlot, newGroupId, platNeedsSide, moveMealItem, copyMealToDays, addRecipeToSlot } from "@/lib/planning/composedMeal.js";
 
 describe("roleForCategory", () => {
   it("mappe le type vers un rôle", () => {
@@ -178,5 +178,59 @@ describe("copyMealToDays", () => {
     const snapshot = JSON.parse(JSON.stringify(plan));
     copyMealToDays(plan, item, ["2026-09-01"], "soir", gid);
     expect(plan).toEqual(snapshot);
+  });
+});
+
+describe("addRecipeToSlot", () => {
+  const byId = new Map([
+    ["boeuf", { id: "boeuf", category: "plat" }],
+    ["riz", { id: "riz", category: "accompagnement" }],
+    ["tarte", { id: "tarte", category: "dessert" }],
+    ["soupe", { id: "soupe", category: "plat" }],
+  ]);
+  const gid = () => "G";
+
+  it("matin : entrée simple, sans groupId", () => {
+    const out = addRecipeToSlot([], { id: "tarte", category: "dessert" }, "matin", byId, gid);
+    expect(out).toEqual([{ recipeId: "tarte", slot: "matin", portions: 1 }]);
+  });
+
+  it("créneau vide : démarre un repas (groupId + rôle déduit)", () => {
+    const out = addRecipeToSlot([], { id: "boeuf", category: "plat" }, "midi", byId, gid);
+    expect(out).toEqual([{ recipeId: "boeuf", slot: "midi", portions: 1, role: "plat", groupId: "G" }]);
+  });
+
+  it("complète le repas existant : l'accompagnement rejoint le groupe du plat", () => {
+    const entries = [{ recipeId: "boeuf", slot: "midi", portions: 1, role: "plat", groupId: "g1" }];
+    const out = addRecipeToSlot(entries, { id: "riz", category: "accompagnement" }, "midi", byId, gid);
+    expect(out[1]).toEqual({ recipeId: "riz", slot: "midi", portions: 1, role: "accompagnement", groupId: "g1" });
+  });
+
+  it("promeut un item nu (sans groupId) en repas structuré quand on complète", () => {
+    const entries = [{ recipeId: "boeuf", slot: "midi", portions: 1 }];
+    const out = addRecipeToSlot(entries, { id: "riz", category: "accompagnement" }, "midi", byId, gid);
+    expect(out[0].groupId).toBe("G");
+    expect(out[0].role).toBe("plat");
+    expect(out[1].groupId).toBe("G");
+  });
+
+  it("2ᵉ plat : démarre un nouveau repas quand tous les groupes ont déjà un plat", () => {
+    const entries = [{ recipeId: "boeuf", slot: "midi", portions: 1, role: "plat", groupId: "g1" }];
+    const out = addRecipeToSlot(entries, { id: "soupe", category: "plat" }, "midi", byId, gid);
+    expect(out[1].groupId).toBe("G");
+    expect(out[1].groupId).not.toBe("g1");
+  });
+
+  it("plat : comble un groupe sans plat plutôt que d'en créer un", () => {
+    const entries = [{ recipeId: "riz", slot: "midi", portions: 1, role: "accompagnement", groupId: "g1" }];
+    const out = addRecipeToSlot(entries, { id: "boeuf", category: "plat" }, "midi", byId, gid);
+    expect(out[1].groupId).toBe("g1");
+  });
+
+  it("ne mute pas le tableau d'entrée", () => {
+    const entries = [{ recipeId: "boeuf", slot: "midi", portions: 1, role: "plat", groupId: "g1" }];
+    const copy = JSON.parse(JSON.stringify(entries));
+    addRecipeToSlot(entries, { id: "riz", category: "accompagnement" }, "midi", byId, gid);
+    expect(entries).toEqual(copy);
   });
 });

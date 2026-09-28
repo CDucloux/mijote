@@ -53,23 +53,3 @@ export function soloWorkspace(uid: string): SoloWorkspace {
 export function householdWorkspace(hid: string): HouseholdWorkspace {
   return { kind: "household", hid, id: hid, segments: ["households", hid] };
 }
-
-/**
- * Garde de type : le workspace est-il celui d'un foyer ?
- *
- * @param ws - Le workspace actif.
- * @returns `true` (et rétrécit le type) si c'est un {@link HouseholdWorkspace}.
- */
-export function isHousehold(ws: Workspace | null | undefined): ws is HouseholdWorkspace {
-  return ws?.kind === "household";
-}
-
-/**
- * Identifiant du namespace (uid ou hid) – utile comme clé de cache locale.
- *
- * @param ws - Le workspace actif.
- * @returns L'id du workspace, ou `null` s'il est absent.
- */
-export function workspaceId(ws: Workspace | null | undefined): string | null {
-  return ws?.id ?? null;
-}

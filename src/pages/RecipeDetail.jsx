@@ -48,7 +48,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   // `state.fromPath` = page d'origine (ex. "/home") → on y retourne tel quel.
   // `state.from` = id d'une recette parente (préparation de base ouverte depuis
   // une recette) → retour vers cette recette. Sinon, comportement par défaut.
-  const handleBack = location.state?.fromPath
+  const backTo = location.state?.fromPath
     ? () => navigate(location.state.fromPath)
     : location.state?.from
       ? () => navigate(`/recipes/${location.state.from}`)
@@ -209,6 +209,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
   // Animation du repli du hero + élastique + swipe d'onglet (refs pilotées dans le DOM).
   const hero = useHeroCollapse(isDesktop, activeTab, setActiveTab, recipe.id);
+  // Quitter réellement la fiche (bouton retour) oublie la position mémorisée : la
+  // restauration ne doit servir qu'au retour depuis la fiche d'un ingrédient, pas à
+  // une réouverture ultérieure de la recette depuis une liste.
+  const handleBack = backTo ? () => { hero.forgetScroll(); backTo(); } : backTo;
 
   const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
   const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");

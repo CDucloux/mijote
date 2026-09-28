@@ -1,25 +1,33 @@
 import { describe, it, expect } from "vitest";
 import {
-  MAX_HOUSEHOLD, peopleCount, isOwner, isMemberUid, newHouseholdDoc,
+  MAX_HOUSEHOLD, peopleCount, isOwner, isMemberUid,
   canInvite, withInvite, withInviteRemoved, withAcceptedMember, withMemberRemoved,
   planHouseholdExit,
 } from "@/lib/household/household.js";
 
 const owner = { uid: "u1", email: "Owner@Mail.com" };
 
-describe("newHouseholdDoc", () => {
-  it("crée un foyer avec le créateur comme owner & membre, email normalisé", () => {
-    const h = newHouseholdDoc({ id: "h1", owner, name: "  Maison  " });
-    expect(h.ownerUid).toBe("u1");
-    expect(h.memberUids).toEqual(["u1"]);
-    expect(h.memberEmails).toEqual(["owner@mail.com"]);
-    expect(h.invitedEmails).toEqual([]);
-    expect(h.name).toBe("Maison");
+// Fabrique de foyer pour les fixtures (email owner normalisé), locale aux tests.
+const newHouseholdDoc = ({ id, owner: o, name }) => {
+  const email = (o.email || "").trim().toLowerCase();
+  return {
+    id,
+    name: (name || "").trim() || "Mon foyer",
+    ownerUid: o.uid,
+    memberUids: [o.uid],
+    memberEmails: email ? [email] : [],
+    invitedEmails: [],
+    createdAt: Date.now(),
+  };
+};
+
+describe("gardes d'appartenance", () => {
+  const h = newHouseholdDoc({ id: "h1", owner });
+  it("isOwner / isMemberUid reconnaissent le fondateur, rejettent les autres", () => {
     expect(isOwner(h, "u1")).toBe(true);
+    expect(isOwner(h, "u2")).toBe(false);
     expect(isMemberUid(h, "u1")).toBe(true);
-  });
-  it("nom par défaut si vide", () => {
-    expect(newHouseholdDoc({ id: "h1", owner, name: "" }).name).toBe("Mon foyer");
+    expect(isMemberUid(h, "u2")).toBe(false);
   });
 });
 

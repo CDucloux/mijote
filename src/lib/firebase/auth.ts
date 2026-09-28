@@ -58,13 +58,3 @@ export async function signInWithGoogle(): Promise<SignInOutcome> {
     return { status: "error", reason: classifySignInError(e) };
   }
 }
-
-/**
- * Déconnexion. La bascule d'UI (retour à /login) est pilotée par l'écouteur d'auth
- * du routeur racine, ici on ne fait que révoquer la session Firebase.
- *
- * @returns Une promesse résolue une fois la session révoquée.
- */
-export function signOutApp(): Promise<void> {
-  return signOut(auth);
-}

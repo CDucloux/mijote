@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.59.1 – Cardamome · Retour fluide, cuisine allégée
+
+### Fiche recette
+- **Position de défilement conservée** : ouvrir la fiche d'un ingrédient depuis une recette puis revenir ramène désormais la fiche là où on l'avait laissée, au lieu de repartir du haut (même confort que la page Recettes).
+
+### Sous le capot
+- **Base allégée** : suppression de code mort et refactor des écrans Planning et Cuisine (logique métier isolée dans `src/lib` et testée, gros composants découpés, orchestration extraite en hooks). Aucun changement visible, une base plus saine pour la suite.
+
 ## v4.59.0 – Cardamome · Éditeur épuré, apports en fibres
 
 ### Éditeur de recette
