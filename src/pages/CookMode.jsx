@@ -2,8 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/Icon.jsx";
 import { parseDurations, fmtCountdown } from "@/lib/planning/stepTimers.js";
-import { startTimer, remainingSecs, hasElapsed, markDone, pauseTimer, resumeTimer, resetTimer as resetTimerState, hasActiveDuration } from "@/lib/planning/cookTimers.js";
-import { ensureTimerNotificationPermission, scheduleTimerNotification, cancelTimerNotification, deriveNotifId } from "@/lib/notifications/localNotifications.js";
+import { remainingSecs } from "@/lib/planning/cookTimers.js";
 import { StepTip } from "../components/StepTip.jsx";
 import { BaseIcon } from "../components/BaseIcon.jsx";
 import { Img, IngImage } from "../components/Img.jsx";
@@ -27,6 +26,7 @@ import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
 import { EmptyArt } from "../components/EmptyArt.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useCookSession } from "../hooks/useCookSession.js";
+import { useCookTimers } from "../hooks/useCookTimers.js";
 import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.ts";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 
@@ -101,52 +101,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   // (cf. `cookTimers`) : le restant se dérive de l'horloge, donc reste juste après
   // un passage en arrière-plan. En natif, une notification OS est planifiée à
   // l'échéance pour sonner même écran verrouillé (cf. `localNotifications`).
-  const [timers, setTimers] = useState([]);
-  const [timersOpen, setTimersOpen] = useState(true);
-  const [now, setNow] = useState(() => Date.now());
   const [navDir, setNavDir] = useState(1); // sens de navigation (animation d'étape)
-  const notifiedRef = useRef(new Set());
-  const permAskedRef = useRef(false);
-  const timerNotifBody = (t) => `${t.label}${t.stepLabel ? `, ${t.stepLabel.toLowerCase()}` : ""}`;
-  const armNotif = async (t) => {
-    if (t.endAt == null) return;
-    // Permission demandée à la volée au premier minuteur (Android 13+), avant de planifier.
-    if (!permAskedRef.current) { permAskedRef.current = true; await ensureTimerNotificationPermission(); }
-    scheduleTimerNotification({ notifId: deriveNotifId(t.id), title: "Minuteur terminé", body: timerNotifBody(t), at: new Date(t.endAt) });
-  };
-  const cancelNotif = (t) => cancelTimerNotification(deriveNotifId(t.id));
-  const addTimer = (d) => {
-    if (hasActiveDuration(timers, d.minutes)) return;
-    const stepLabel = realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases";
-    const clock = Date.now();
-    const t = startTimer({ minutes: d.minutes, label: d.label, stepIdx, stepLabel }, clock);
-    setTimers(prev => hasActiveDuration(prev, d.minutes) ? prev : [...prev, t]);
-    setNow(clock); // recale l'horloge d'affichage sur le même instant que l'échéance, sinon le restant part faux d'un `now` gelé (voir battement)
-    setTimersOpen(true);
-    armNotif(t);
-  };
-  const toggleTimer = (id) => {
-    const t = timers.find(x => x.id === id);
-    if (!t || t.done) return;
-    const clock = Date.now();
-    setTimers(prev => prev.map(x => x.id === id ? (x.running ? pauseTimer(x, clock) : resumeTimer(x, clock)) : x));
-    setNow(clock);
-    if (t.running) cancelNotif(t); else armNotif(resumeTimer(t, clock));
-  };
-  const restartTimer = (id) => {
-    const t = timers.find(x => x.id === id);
-    const clock = Date.now();
-    notifiedRef.current.delete(id);
-    setTimers(prev => prev.map(x => x.id === id ? resetTimerState(x, clock) : x));
-    setNow(clock);
-    if (t) armNotif(resetTimerState(t, clock));
-  };
-  const removeTimer = (id) => {
-    const t = timers.find(x => x.id === id);
-    if (t) cancelNotif(t);
-    notifiedRef.current.delete(id);
-    setTimers(prev => prev.filter(x => x.id !== id));
-  };
+  const { timers, timersOpen, setTimersOpen, now, addTimer, toggleTimer, restartTimer, removeTimer } = useCookTimers(notify);
   const canIterate = !isNested && !!onUpdateRecipe;
   const saveIteration = () => {
     onUpdateRecipe(addVersion(recipe, { label: nextVersionLabel(recipe.history), rating: iterRating, notes: iterNotes }));
@@ -272,58 +228,6 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     onToggleTimer: () => { const id = pickPilotTimerId(timers); if (id) toggleTimer(id); },
     onStop: requestClose,
   });
-
-  // Battement d'horloge tant qu'un minuteur tourne : on avance `now` (le restant
-  // s'en dérive) et on bascule à « terminé » les échéances dépassées. Un recalage
-  // immédiat au retour au premier plan rattrape ce qui a expiré en arrière-plan,
-  // où les timers JS sont gelés par l'OS.
-  useEffect(() => {
-    if (!timers.some(t => t.running && !t.done)) return;
-    const sync = () => {
-      const n = Date.now();
-      setNow(n);
-      setTimers(prev => {
-        let changed = false;
-        const next = prev.map(t => { if (hasElapsed(t, n)) { changed = true; return markDone(t); } return t; });
-        return changed ? next : prev;
-      });
-    };
-    const iv = setInterval(sync, 1000);
-    const onWake = () => { if (document.visibilityState === "visible") sync(); };
-    document.addEventListener("visibilitychange", onWake);
-    window.addEventListener("focus", onWake);
-    return () => { clearInterval(iv); document.removeEventListener("visibilitychange", onWake); window.removeEventListener("focus", onWake); };
-  }, [timers]);
-
-  // Alarme quand un minuteur se termine (une seule fois, compatible StrictMode).
-  useEffect(() => {
-    for (const t of timers) {
-      if (t.done && !notifiedRef.current.has(t.id)) {
-        notifiedRef.current.add(t.id);
-        try { navigator.vibrate?.([200, 100, 200]); } catch { /* ignore */ }
-        try {
-          const AC = window.AudioContext || window.webkitAudioContext;
-          if (AC) {
-            const ctx = new AC();
-            [0, 0.28, 0.56].forEach(off => {
-              const o = ctx.createOscillator(), g = ctx.createGain();
-              o.connect(g); g.connect(ctx.destination); o.type = "sine"; o.frequency.value = 880;
-              const s = ctx.currentTime + off;
-              g.gain.setValueAtTime(0.0001, s);
-              g.gain.exponentialRampToValueAtTime(0.3, s + 0.02);
-              g.gain.exponentialRampToValueAtTime(0.0001, s + 0.2);
-              o.start(s); o.stop(s + 0.22);
-            });
-            setTimeout(() => ctx.close?.(), 1200);
-          }
-        } catch { /* audio indisponible */ }
-        // L'alarme premier plan a joué : on annule la notif OS encore en attente
-        // pour éviter une bannière redondante quand le minuteur échoit app ouverte.
-        cancelNotif(t);
-        notify?.(`Minuteur terminé, ${t.label}`);
-      }
-    }
-  }, [timers, notify]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Navigation au clavier (desktop) : ← précédent, → suivant (ou terminer).
   useEffect(() => {
@@ -788,7 +692,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   {stepDurations.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
                       {stepDurations.map(d => (
-                        <button key={d.minutes} onClick={() => addTimer(d)} className="pressable cook-timer-btn"
+                        <button key={d.minutes} onClick={() => addTimer(d, stepIdx, realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases")} className="pressable cook-timer-btn"
                           style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--spice)" }}>
                           <Icon name="clock" size={14} color="var(--spice)" /> Minuteur {d.label}
                         </button>
