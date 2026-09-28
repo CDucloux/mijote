@@ -19,6 +19,7 @@ import { mealsForSlot, itemRole, roleLabel, newGroupId, roleForCategory, platNee
 import { useLongPress } from "../hooks/useLongPress.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
+import { buildMealPlanIcs } from "@/lib/planning/mealPlanIcs.js";
 import { computeDayIntake } from "@/lib/planning/dayIntake.js";
 import { Row, Col } from "../components/ui/primitives.jsx";
 import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
@@ -46,7 +47,6 @@ const MP_MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Ju
 const MP_SLOT_LABEL = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, `${s.emoji} ${s.label}`]));
 const MP_SLOT_COLOR = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.color]));
 const MP_SLOT_TEXT = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.text]));
-const MP_SLOT_TIMES = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.ics]));
 const MEAL_ROLE_IDS = ["entree", "plat", "accompagnement", "dessert"];
 
 function mpGetWeekDays(ref) {
@@ -54,9 +54,6 @@ function mpGetWeekDays(ref) {
   d.setDate(d.getDate() + diff);
   return Array.from({ length: 7 }, (_, i) => { const dd = new Date(d); dd.setDate(d.getDate() + i); return dd.toISOString().slice(0, 10); });
 }
-function mpPad(n) { return String(n).padStart(2, "0"); }
-function mpToICSDate(dateStr, timeStr) { return dateStr.split("-").join("") + "T" + timeStr; }
-function mpEscapeICS(s) { return (s || "").split("\n").join("\\n").split(",").join("\\,").split(";").join("\\;"); }
 
 // Apport en sel du jour : pastille discrète qui situe la journée face au repère
 // (6 g/j, proxy du sodium). Trois états MAPPÉS à un niveau réel : neutre tant qu'on
@@ -497,72 +494,16 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     [recipes, searchQ]
   );
 
-  const SLOT_TIMES = MP_SLOT_TIMES;
-
-  const pad = mpPad;
-  const toICSDate = mpToICSDate;
-  const escapeICS = mpEscapeICS;
-
+  // Export ICS : la construction du calendrier (pure, testée) vit dans lib/planning ;
+  // ici on ne fait que déclencher le téléchargement du fichier généré.
   const exportICS = () => {
-    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//RecipeApp//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
-    let count = 0;
-
-    // En mode foyer, on ajoute les membres comme participants : l'utilisateur courant
-    // est l'organisateur, les autres membres sont invités (ATTENDEE) sur chaque repas.
-    const myEmail = (user?.email || "").toLowerCase();
-    const memberEmails = household ? (household.memberEmails || []) : [];
-    const peopleLines = [];
-    if (memberEmails.length > 1 && myEmail) {
-      peopleLines.push(`ORGANIZER;CN=${escapeICS(user?.displayName || myEmail)}:mailto:${myEmail}`);
-      for (const email of memberEmails) {
-        if (!email || email.toLowerCase() === myEmail) continue;
-        peopleLines.push(`ATTENDEE;CN=${escapeICS(email)};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${email}`);
-      }
-    }
-
-    Object.entries(mealPlan).forEach(([date, meals]) => {
-      (meals || []).forEach(meal => {
-        const recipe = recipes.find(r => r.id === meal.recipeId);
-        if (!recipe) return;
-        const slot = meal.slot || "midi";
-        const times = SLOT_TIMES[slot] || SLOT_TIMES.midi;
-        const slotLabel = SLOT_BY_ID[slot]?.meal || "Repas";
-        const uid = `${date}-${slot}-${recipe.id}@recipeapp`;
-        const now = new Date();
-        const dtstamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}T${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}Z`;
-
-        const descParts = [
-          recipe.description,
-          meal.portions > 1 ? `${recipe.servings} portions sur ${meal.portions} jours` : "",
-          `Préparation : ${recipe.prepTime} min`,
-          `Cuisson : ${recipe.cookTime} min`,
-          `Score santé : ${recipe.healthScore || "–"}/100`,
-          recipe.ingredients?.map(i => `• ${i.name} ${i.amount} ${i.unit}`).join("\n") || "",
-          recipe.source ? `Source : ${recipe.source}` : "",
-        ].filter(Boolean).join("\n");
-
-        lines.push(
-          "BEGIN:VEVENT",
-          `UID:${uid}`,
-          `DTSTAMP:${dtstamp}`,
-          `DTSTART;TZID=Europe/Paris:${toICSDate(date, times.start)}`,
-          `DTEND;TZID=Europe/Paris:${toICSDate(date, times.end)}`,
-          `SUMMARY:${escapeICS(slotLabel + " – " + recipe.name)}`,
-          `DESCRIPTION:${escapeICS(descParts)}`,
-          `CATEGORIES:${escapeICS(slotLabel)}`,
-          ...peopleLines,
-          "END:VEVENT"
-        );
-        count++;
-      });
+    const ics = buildMealPlanIcs(mealPlan, recipes, {
+      organizerName: user?.displayName,
+      organizerEmail: user?.email,
+      memberEmails: household?.memberEmails,
     });
-
-    lines.push("END:VCALENDAR");
-
-    if (count === 0) { notify?.("Aucun repas dans le planning à exporter", "error"); return; }
-
-    const CRLF = "\r\n";
-    const blob = new Blob([lines.join(CRLF)], { type: "text/calendar;charset=utf-8" });
+    if (!ics) { notify?.("Aucun repas dans le planning à exporter", "error"); return; }
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "Cardamome - Planning repas.ics";
