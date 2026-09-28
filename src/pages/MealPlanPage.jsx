@@ -2,47 +2,35 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/Icon.jsx";
-import { EmptyArt } from "../components/EmptyArt.jsx";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { PlusBadge } from "../components/PlusBadge.jsx";
-import { Img } from "../components/Img.jsx";
 import { UserAvatar } from "../components/UserAvatar.jsx";
-import { NutriScoreBadge } from "../components/NutriScoreBadge.jsx";
-import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
-import { SearchField } from "../components/SearchField.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "@/lib/household/household.js";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useLS } from "../hooks/useLS.js";
-import { itemRole, roleLabel, newGroupId, roleForCategory, moveMealItem, copyMealToDays } from "@/lib/planning/composedMeal.js";
+import { itemRole, newGroupId, moveMealItem, copyMealToDays, addRecipeToSlot } from "@/lib/planning/composedMeal.js";
 import { useLongPress } from "../hooks/useLongPress.js";
-import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildMealPlanIcs } from "@/lib/planning/mealPlanIcs.js";
 import { computeDayIntake } from "@/lib/planning/dayIntake.js";
-import { fmtTime, isoWeek } from "@/lib/format.js";
+import { isoWeek } from "@/lib/format.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
-import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
-import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { DayIntakePill, DayIntakeSheet } from "../components/mealPlan/DayIntakeSheet.jsx";
 import { SlotZone } from "../components/mealPlan/SlotZone.jsx";
 import { BatchSessionView } from "../components/mealPlan/BatchSessionView.jsx";
 import { MealItemMenu } from "../components/mealPlan/MealItemMenu.jsx";
 import { RescheduleSheet, DuplicateSheet } from "../components/mealPlan/ReplanSheets.jsx";
 import { GenerateSheet } from "../components/mealPlan/GenerateSheet.jsx";
+import { AddRecipeSheet } from "../components/mealPlan/AddRecipeSheet.jsx";
+import { CompleteMealSheet } from "../components/mealPlan/CompleteMealSheet.jsx";
 import { useMealBatchSession } from "../hooks/useMealBatchSession.js";
 import { DAYS_SHORT_FR, MONTHS_FR, mondayFirstIndex } from "../constants/calendar.js";
 
-// Rôles proposés pour compléter un repas (le plat existe déjà).
-const COMPLETE_ROLES = [
-  { id: "entree", label: "Entrée" },
-  { id: "accompagnement", label: "Accompagnement" },
-  { id: "dessert", label: "Dessert" },
-];
 
 // ─── MEAL PLAN – module-level constants & pure helpers ────────────────────────
 
@@ -73,8 +61,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const [dragInfo, setDragInfo] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [addModal, setAddModal] = useState(null);
-  const [searchQ, setSearchQ] = useState("");
-  const [addedId, setAddedId] = useState(null); // recette en cours de confirmation (+→✓)
   // Menu contextuel d'un repas planifié (clic droit / appui long) et sa feuille
   // de replanification. `itemMenu` / `moveFor` = { date, idx, slot, recipeId }.
   const [itemMenu, setItemMenu] = useState(null);
@@ -106,13 +92,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const suggestCtx = useMemo(() => ({ resolver, byId: recipesById, month: currentMonth(), stockSet: new Set(stock || []), preferences }), [resolver, recipesById, stock, preferences]);
   const eligiblePool = useMemo(() => recipes.filter(r => !r.isComponent && isEligible(r, preferences, { resolver, byId: recipesById })), [recipes, preferences, resolver, recipesById]);
   const [composeFor, setComposeFor] = useState(null); // { date, slot, groupId, baseIdx, baseRecipeId }
-  const [completeRole, setCompleteRole] = useState("accompagnement");
-  const [completeSearch, setCompleteSearch] = useState("");
 
   const openComplete = useCallback((date, slot, group) => {
     const platEntry = group.items.find(x => itemRole(x.item, recipesById.get(x.item.recipeId)) === "plat") || group.items[0];
     setComposeFor({ date, slot, groupId: group.groupId || null, baseIdx: (mealPlan[date] || []).indexOf(platEntry.item), baseRecipeId: platEntry.item.recipeId });
-    setCompleteRole("accompagnement"); setCompleteSearch("");
   }, [mealPlan, recipesById]);
 
   const attachToMeal = useCallback((recipeId, role) => {
@@ -233,12 +216,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   // `lockSlot` : ouvert depuis le créneau lui-même (le slot est déjà choisi), on
   // masque alors le sélecteur matin/midi/soir. Depuis l'en-tête du jour, il reste.
-  const openAdd = useCallback((date, slots, lockSlot = false) => { setAddModal({ date, slots, lockSlot }); setSearchQ(""); }, []);
+  const openAdd = useCallback((date, slots, lockSlot = false) => { setAddModal({ date, slots, lockSlot }); }, []);
 
-  const filteredRecipes = useMemo(() =>
-    recipes.filter(r => !searchQ || r.name.toLowerCase().includes(searchQ.toLowerCase())),
-    [recipes, searchQ]
-  );
 
   // Export ICS : la construction du calendrier (pure, testée) vit dans lib/planning ;
   // ici on ne fait que déclencher le téléchargement du fichier généré.
@@ -391,157 +370,15 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
       {/* Add recipe modal */}
       {addModal && (
-        <SwipeableSheet onClose={() => { setAddModal(null); setSearchQ(""); setAddedId(null); }} style={{ maxHeight: "86dvh" }}>
-          {(close) => {
-          // Créneau UNIQUE (sélecteur simple) : moins ambigu qu'une multi-sélection.
-          const activeSlot = addModal.slots[0];
-          const activeIdx = Math.max(0, MEAL_SLOTS.findIndex(s => s.id === activeSlot));
-          // Ouvert depuis un créneau précis → le slot est figé, pas de sélecteur.
-          const lockSlot = !!addModal.lockSlot;
-          const activeMeta = SLOT_BY_ID[activeSlot];
-          const pickSlot = (id) => setAddModal(p => ({ ...p, slots: [id] }));
-          // Clic sur (+) : le rond passe en ✓ vert (animation), puis la feuille se
-          // ferme avec sa sortie animée et le repas est ajouté au planning.
-          const confirmAdd = (r) => {
-            if (addedId) return; // une confirmation à la fois
-            setAddedId(r.id);
-            setTimeout(() => {
-              close(() => {
-                setMealPlan(prev => {
-                  const arr = [...(prev[addModal.date] || [])];
-                  // Matin : pas de repas composé → entrée simple.
-                  if (activeSlot === "matin") {
-                    arr.push({ recipeId: r.id, slot: activeSlot, portions: 1 });
-                    return { ...prev, [addModal.date]: arr };
-                  }
-                  // Ajouter = COMPLÉTER le repas déjà présent dans le slot (même groupId)
-                  // → pas de barre/repas séparé, juste un rôle en plus. Exception : un
-                  // 2ᵉ PLAT (le repas a déjà un plat) démarre un nouveau repas.
-                  const role = roleForCategory(r.category);
-                  const slotItems = arr.map((m, i) => ({ m, i })).filter(x => x.m.slot === activeSlot);
-                  const groupIds = [...new Set(slotItems.map(x => x.m.groupId).filter(Boolean))];
-                  const groupHasPlat = (gid) => slotItems.some(x => x.m.groupId === gid && itemRole(x.m, recipesById.get(x.m.recipeId)) === "plat");
-
-                  let gid;
-                  if (groupIds.length === 0) {
-                    // Slot sans repas structuré : démarre un repas et promeut d'éventuels items nus.
-                    gid = newGroupId();
-                    for (const x of slotItems) if (!arr[x.i].groupId) {
-                      const cur = arr[x.i];
-                      arr[x.i] = { ...cur, groupId: gid, role: cur.role || itemRole(cur, recipesById.get(cur.recipeId)) };
-                    }
-                  } else if (role === "plat" && groupIds.every(groupHasPlat)) {
-                    gid = newGroupId(); // 2ᵉ plat = nouveau repas (sa propre barre)
-                  } else if (role === "plat") {
-                    gid = groupIds.find(g => !groupHasPlat(g)) || newGroupId();
-                  } else {
-                    gid = groupIds[0]; // entrée/dessert/accompagnement → complète le 1er repas
-                  }
-                  arr.push({ recipeId: r.id, slot: activeSlot, portions: 1, role, groupId: gid });
-                  return { ...prev, [addModal.date]: arr };
-                });
-                setAddModal(null); setSearchQ(""); setAddedId(null);
-              });
-            }, 500);
-          };
-          return (<>
-          {/* En-tête : puce calendrier + titre + date */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
-              <Icon name="calendar" size={21} color="var(--accent)" />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Ajouter une recette</h3>
-              <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {lockSlot && activeMeta ? `${activeMeta.meal} · ` : ""}{new Date(addModal.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-              </div>
-            </div>
-          </div>
-
-          {/* Créneau : contrôle segmenté avec pastille glissante (transition douce).
-              Masqué quand la feuille est ouverte depuis un créneau précis (slot figé). */}
-          {!lockSlot && (
-          <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
-            {/* Pastille active : glisse d'un créneau à l'autre (translateX) */}
-            <div aria-hidden="true" style={{
-              position: "absolute", top: 4, bottom: 4, left: 4, width: `calc((100% - 8px) / ${MEAL_SLOTS.length})`,
-              background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-              transform: `translateX(calc(${activeIdx} * 100%))`,
-              transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
-            }} />
-            {MEAL_SLOTS.map(s => {
-              const active = activeSlot === s.id;
-              return (
-                <button key={s.id} onClick={() => pickSlot(s.id)}
-                  style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
-                    background: "transparent", color: active ? s.text : "var(--text3)",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                    transition: "color 0.3s ease" }}>
-                  <Icon name={s.icon} size={15} weight="duotone" color={active ? s.text : "var(--text3)"} />{s.label}
-                </button>
-              );
-            })}
-          </div>
-          )}
-
-          {/* Recherche standard (loupe clavier mobile, effacement) */}
-          <SearchField value={searchQ} onChange={setSearchQ} placeholder="Rechercher une recette…" style={{ marginBottom: 16 }} />
-
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-            <Icon name={searchQ.trim() ? "search" : "book"} size={13} color="var(--accent)" />
-            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{searchQ.trim() ? "Résultats" : "Ta bibliothèque"}</span>
-            {filteredRecipes.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{filteredRecipes.length}</span>}
-          </div>
-
-          <ElasticScroll max={64} style={{ maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            {filteredRecipes.map(r => {
-              const total = (r.prepTime || 0) + (r.cookTime || 0);
-              const nIng = r.ingredients?.length || 0;
-              const nutri = liveNutri(r);
-              const added = addedId === r.id;
-              return (
-                <button key={r.id} onClick={() => confirmAdd(r)} disabled={!!addedId} className="complete-row ripple"
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--ok-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease, box-shadow 0.2s ease", opacity: addedId && !added ? 0.55 : 1 }}>
-                  <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
-                      {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
-                      {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
-                      {nutri && <NutriScoreBadge letter={nutri} compact />}
-                    </div>
-                  </div>
-                  {/* (+) → ✓ vert : le + sort en pivotant, le ✓ surgit (keyframes,
-                      pour un jeu fiable même juste avant la fermeture de la feuille). */}
-                  <span className="complete-add" style={{ position: "relative", width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", overflow: "hidden",
-                    background: added ? "var(--ok)" : "rgba(var(--accent-rgb),0.12)", color: added ? "#fff" : "var(--accent)",
-                    transition: "background-color 0.3s ease",
-                    animation: added ? "confirmBadgePop 0.34s cubic-bezier(0.34,1.56,0.64,1) forwards" : "none" }}>
-                    <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center",
-                      opacity: added ? 0 : 1,
-                      animation: added ? "confirmPlusOut 0.26s ease forwards" : "none" }}>
-                      <Icon name="plus" size={17} color="currentColor" />
-                    </span>
-                    <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center",
-                      opacity: added ? 1 : 0,
-                      animation: added ? "confirmCheckIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards" : "none" }}>
-                      <Icon name="check" size={17} color="currentColor" />
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-            {filteredRecipes.length === 0 && (
-              <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
-                <EmptyArt name="loupe" size={78} style={{ margin: "0 auto 8px" }} />
-                <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette {searchQ.trim() ? "ne correspond à ta recherche" : "dans ta bibliothèque"}.</p>
-              </div>
-            )}
-          </ElasticScroll>
-          </>);
-          }}
-        </SwipeableSheet>
+        <AddRecipeSheet
+          date={addModal.date}
+          initialSlot={addModal.slots[0]}
+          lockSlot={!!addModal.lockSlot}
+          recipes={recipes}
+          liveNutri={liveNutri}
+          onConfirm={(r, slot) => { setMealPlan(prev => ({ ...prev, [addModal.date]: addRecipeToSlot(prev[addModal.date] || [], r, slot, recipesById) })); setAddModal(null); }}
+          onClose={() => setAddModal(null)}
+        />
       )}
 
       {/* Menu contextuel d'un repas planifié (clic droit / appui long) */}
@@ -615,90 +452,16 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       )}
 
       {/* Compléter un repas : entrée / accompagnement / dessert, suggérés de saison */}
-      {composeFor && (() => {
-        const base = recipesById.get(composeFor.baseRecipeId);
-        const q = normalizeStr(completeSearch.trim());
-        const list = q
-          ? eligiblePool.filter(r => roleForCategory(r.category || "") === completeRole && normalizeStr(r.name).includes(q)).slice(0, 20)
-          : suggestSides(base, eligiblePool, suggestCtx, { role: completeRole, max: 12 });
-        return (
-          <SwipeableSheet onClose={() => setComposeFor(null)} style={{ maxHeight: "86dvh" }}>
-            {/* En-tête : vignette du plat de base + titre contextuel */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-              <div style={{ width: 46, height: 46, borderRadius: 13, overflow: "hidden", flexShrink: 0, background: "var(--surface2)", display: "grid", placeItems: "center" }}>
-                {base?.image ? <Img src={base.image} alt={base.name} style={{ width: "100%", height: "100%" }} /> : <Icon name="plus" size={20} color="var(--accent)" />}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Compléter le repas</h3>
-                {base && <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Autour de <strong style={{ color: "var(--text2)" }}>{base.name}</strong></div>}
-              </div>
-            </div>
-
-            {/* Contrôle segmenté (rôle) : pastille active blanche qui GLISSE d'un
-                onglet à l'autre (translateX), comme les autres sélecteurs de l'app. */}
-            <div style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 14, marginBottom: 14 }}>
-              <div aria-hidden="true" style={{
-                position: "absolute", top: 4, bottom: 4, left: 4, width: `calc((100% - 8px) / ${COMPLETE_ROLES.length})`,
-                background: "var(--surface)", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-                transform: `translateX(calc(${Math.max(0, COMPLETE_ROLES.findIndex(x => x.id === completeRole))} * 100%))`,
-                transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
-              }} />
-              {COMPLETE_ROLES.map(r => {
-                const active = completeRole === r.id;
-                return (
-                  <button key={r.id} onClick={() => setCompleteRole(r.id)}
-                    style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", border: "none",
-                      background: "transparent", color: active ? "var(--accent)" : "var(--text3)",
-                      transition: "color 0.3s ease" }}>
-                    {r.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Recherche standard (loupe clavier mobile, effacement) */}
-            <SearchField value={completeSearch} onChange={setCompleteSearch} placeholder={`Rechercher ${roleLabel(completeRole).toLowerCase()}…`} style={{ marginBottom: 16 }} />
-
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-              <Icon name={q ? "search" : "sun"} size={13} color="var(--accent)" />
-              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{q ? "Résultats" : "Suggestions de saison"}</span>
-              {list.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{list.length}</span>}
-            </div>
-
-            <ElasticScroll max={64} style={{ maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 9 }}>
-              {list.map(r => {
-                const total = (r.prepTime || 0) + (r.cookTime || 0);
-                const nIng = r.ingredients?.length || 0;
-                const nutri = liveNutri(r);
-                return (
-                  <button key={r.id} onClick={() => attachToMeal(r.id, completeRole)} className="complete-row ripple"
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                    <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
-                        {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
-                        {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
-                        {nutri && <NutriScoreBadge letter={nutri} compact />}
-                      </div>
-                    </div>
-                    <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>
-                      <Icon name="plus" size={17} color="currentColor" />
-                    </span>
-                  </button>
-                );
-              })}
-              {list.length === 0 && (
-                <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
-                  <EmptyArt name="loupe" size={78} style={{ margin: "0 auto 8px" }} />
-                  <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette « {roleLabel(completeRole).toLowerCase()} » {q ? "ne correspond à ta recherche" : "disponible pour l'instant"}.</p>
-                </div>
-              )}
-            </ElasticScroll>
-          </SwipeableSheet>
-        );
-      })()}
+      {composeFor && (
+        <CompleteMealSheet
+          base={recipesById.get(composeFor.baseRecipeId)}
+          eligiblePool={eligiblePool}
+          suggestCtx={suggestCtx}
+          liveNutri={liveNutri}
+          onAttach={attachToMeal}
+          onClose={() => setComposeFor(null)}
+        />
+      )}
     </div>
   );
 }
