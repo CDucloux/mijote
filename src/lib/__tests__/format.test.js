@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fmtTime, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes, allowsFractionGlyph, isoWeek } from "../format.js";
+import { fmtTime, fmtElapsed, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes, allowsFractionGlyph, isoWeek } from "../format.js";
 
 const EM_DASH = "\u2014";
 const EN_DASH = "\u2013";
@@ -133,6 +133,31 @@ describe("fmtTime", () => {
     expect(fmtTime(65)).toBe("1h05");
     expect(fmtTime(90)).toBe("1h30");
     expect(fmtTime(125)).toBe("2h05");
+  });
+});
+
+describe("fmtElapsed", () => {
+  it("formats seconds under a minute as m:ss", () => {
+    expect(fmtElapsed(0)).toBe("0:00");
+    expect(fmtElapsed(5)).toBe("0:05");
+    expect(fmtElapsed(59)).toBe("0:59");
+  });
+
+  it("formats minutes as m:ss with zero-padded seconds", () => {
+    expect(fmtElapsed(60)).toBe("1:00");
+    expect(fmtElapsed(125)).toBe("2:05");
+    expect(fmtElapsed(3599)).toBe("59:59");
+  });
+
+  it("switches to h:mm:ss past an hour", () => {
+    expect(fmtElapsed(3600)).toBe("1:00:00");
+    expect(fmtElapsed(3661)).toBe("1:01:01");
+    expect(fmtElapsed(7325)).toBe("2:02:05");
+  });
+
+  it("floors fractional seconds and clamps negatives to zero", () => {
+    expect(fmtElapsed(65.9)).toBe("1:05");
+    expect(fmtElapsed(-10)).toBe("0:00");
   });
 });
 

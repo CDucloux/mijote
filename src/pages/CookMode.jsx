@@ -13,11 +13,11 @@ import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { buildPostesDecoupe, posteLabel, findDecoupeStepIndex } from "@/lib/recipes/decoupe.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
-import { consumptionFraction } from "@/lib/recipes/recipeComponents.js";
 import { formatParamSummary } from "@/lib/utensils/appliances.js";
 import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
 import { PrecautionInfoBadge, UtensilPrecautionSheet } from "../components/QualityHints.jsx";
-import { capitalize, fmtQtyUnit } from "../lib/format.js";
+import { capitalize, fmtQtyUnit, fmtElapsed } from "../lib/format.js";
+import { groupIngredientsByCategory, buildPendingComponents } from "@/lib/cookSession/misEnPlace.ts";
 import { spoonConversions } from "@/lib/food/calculators.js";
 import { QuantityConvertSheet, ConvertBadge } from "../components/QuantityConvertSheet.jsx";
 import { AutoResizeTextarea } from "../components/AutoResizeTextarea.jsx";
@@ -28,14 +28,7 @@ import { EmptyArt } from "../components/EmptyArt.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useCookSession } from "../hooks/useCookSession.js";
 import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.ts";
-import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
-
-// Formate un temps écoulé en `m:ss` (ou `h:mm:ss` au-delà d'une heure).
-function fmtElapsed(s) {
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-  const pad = (n) => String(n).padStart(2, "0");
-  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
-}
+import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 
 // Interrupteur animé (piste + pastille glissante) : remplace un bouton plain là où
 // l'état est un vrai on/off. La pastille glisse avec un léger ressort à l'activation.
@@ -163,18 +156,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   };
 
   // Composants épuisés référencés par cette recette (étape 0)
-  const pendingComponents = useMemo(() => {
-    if (!recipesById) return [];
-    return (recipe.ingredients || [])
-      .filter(ing => ing.recipeId && !stockSet?.has(ing.recipeId))
-      .map(ing => {
-        const comp = recipesById.get(ing.recipeId);
-        if (!comp) return null;
-        const f = consumptionFraction(ing, comp);
-        return { line: ing, comp, nestedMult: (mult || 1) * f };
-      })
-      .filter(Boolean);
-  }, [recipe, recipesById, stockSet, mult]);
+  const pendingComponents = useMemo(
+    () => buildPendingComponents(recipe, recipesById, stockSet, mult),
+    [recipe, recipesById, stockSet, mult],
+  );
 
   // Pages virtuelles du mode pas à pas, dans l'ordre :
   //   • « aperçu » (mise en place) : TOUS les ingrédients + ustensiles, pour ne
@@ -187,17 +172,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
   // Ingrédients de la mise en place, regroupés par catégorie (rayon) dans l'ordre
   // configuré ; option d'affichage alternative à la liste plate.
-  const overviewIngGroups = useMemo(() => {
-    const buckets = {};
-    for (const ing of recipe.ingredients || []) {
-      const info = ingredientDB.find(d => d.id === ing.dbId) || (ing.name ? findIngredientMatch(ing.name, ingredientDB) : undefined);
-      const cat = info?.category || "other";
-      (buckets[cat] = buckets[cat] || []).push(ing);
-    }
-    return sortedCategoryEntries(categories)
-      .filter(([k]) => buckets[k]?.length)
-      .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: buckets[k] }));
-  }, [recipe.ingredients, ingredientDB, categories]);
+  const overviewIngGroups = useMemo(
+    () => groupIngredientsByCategory(recipe.ingredients, ingredientDB, categories),
+    [recipe.ingredients, ingredientDB, categories],
+  );
   // Postes de découpe de la mise en place : regroupés/ordonnés depuis les
   // ingrédients porteurs d'une découpe, aux quantités mises à l'échelle (mult).
   const postesDecoupe = useMemo(() => {

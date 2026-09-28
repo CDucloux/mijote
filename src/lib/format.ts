@@ -180,6 +180,20 @@ export function fmtTime(min: number | null | undefined): string {
 }
 
 /**
+ * Formate un temps ÉCOULÉ (en secondes) façon chronomètre : `m:ss`, ou `h:mm:ss`
+ * au-delà d'une heure. Distinct de {@link fmtTime} (durées de recette en minutes) et
+ * de `fmtCountdown` (compte à rebours) : ici les secondes comptent et défilent.
+ *
+ * @param s - Nombre de secondes écoulées (négatif traité comme 0).
+ */
+export function fmtElapsed(s: number): string {
+  const t = Math.max(0, Math.floor(s));
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
+/**
  * Date relative en français (« aujourd'hui », « il y a 2 jours », « il y a 1 an »).
  * Échelle jours → semaines → mois → années. Renvoie `""` si l'horodatage est
  * absent ou invalide.
