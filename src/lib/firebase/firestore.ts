@@ -44,9 +44,6 @@ let sharedWritesLocked = false;
 /** Engage ou lève le verrou d'écriture des slices partagés. */
 export function setSharedWritesLocked(locked: boolean): void { sharedWritesLocked = locked; }
 
-/** Indique si les écritures partagées sont actuellement verrouillées. */
-export function areSharedWritesLocked(): boolean { return sharedWritesLocked; }
-
 /** Fiche d'annuaire d'un utilisateur (avatar, email, nom). */
 export interface DirectoryUser {
   uid: string;

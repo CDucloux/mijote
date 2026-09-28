@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeNutriInfo, computeHealthScore, ingredientGrams, computeNutriBreakdown } from "@/lib/recipes/nutriscore.js";
+import { computeNutriInfo, ingredientGrams, computeNutriBreakdown } from "@/lib/recipes/nutriscore.js";
 
 const DB = [
   { id: "beurre", name: "Beurre", nutrition: { calories: 745, fat: 82, saturatedFat: 51, salt: 0.02, sugar: 0.6, protein: 0.7, fiber: 0 } },
@@ -51,8 +51,6 @@ describe("computeNutriInfo return shape", () => {
     // lignes présentes mais aucune avec dbId/nutrition → masse nulle
     const r = computeNutriInfo([{ name: "Inconnu", amount: 100, unit: "g" }], DB, new Map());
     expect(r).toEqual({ score: 50, letter: null });
-    // computeHealthScore en dérive un nombre, pas undefined
-    expect(computeHealthScore([{ name: "Inconnu", amount: 100, unit: "g" }], DB, new Map())).toBe(50);
   });
 
   it("empty ingredient list returns the neutral shape", () => {

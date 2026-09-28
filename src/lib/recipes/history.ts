@@ -92,29 +92,6 @@ export function addVersion(recipe: HistoryRecipe, { label, rating, notes }: { la
 }
 
 /**
- * Restaure une version : réécrit les champs live, après avoir figé l'état courant
- * en entrée auto (pour ne rien perdre).
- *
- * @param recipe - La recette courante.
- * @param entryId - L'id de l'entrée à restaurer.
- * @returns La recette restaurée (+ sauvegarde auto), ou inchangée si l'entrée est absente.
- */
-export function restoreVersion(recipe: HistoryRecipe, entryId: string): HistoryRecipe {
-  const history = recipe.history || [];
-  const target = history.find(h => h.id === entryId);
-  if (!target) return recipe;
-  const autoEntry: HistoryEntry = {
-    id: "h" + Date.now(),
-    label: nextVersionLabel(history),
-    createdAt: new Date().toISOString(),
-    rating: null,
-    notes: `Sauvegarde auto avant restauration de « ${target.label} »`,
-    snapshot: snapshotOf(recipe),
-  };
-  return { ...recipe, ...target.snapshot, history: [...history, autoEntry] };
-}
-
-/**
  * Supprime une entrée d'historique.
  *
  * @param recipe - La recette.

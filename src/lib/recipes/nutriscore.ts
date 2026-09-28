@@ -305,18 +305,6 @@ export function computeNutriBreakdown(ingredients: IngredientLine[] | null | und
   return nutriRaw(ingredients, ingredientDB, recipesById);
 }
 
-/**
- * Raccourci : uniquement le score santé 0–100.
- *
- * @param ingredients - Les lignes d'ingrédients.
- * @param ingredientDB - La base d'ingrédients.
- * @param recipesById - Index des recettes (composants).
- * @returns Le score santé 0–100.
- */
-export function computeHealthScore(ingredients: IngredientLine[] | null | undefined, ingredientDB: DbItem[], recipesById?: RecipeIndex): number {
-  return computeNutriInfo(ingredients, ingredientDB, recipesById).score;
-}
-
 const NUTRI_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat", "omega3", "fiber", "salt"] as const;
 
 /** Détail nutritionnel d'une recette. */

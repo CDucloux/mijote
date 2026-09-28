@@ -64,28 +64,6 @@ export function isMemberUid(h: Household | null | undefined, uid: string): boole
 }
 
 /**
- * Construit le document initial d'un foyer, dont `owner` est le 1er membre.
- *
- * @param args - Paramètres de création.
- * @param args.id - Identifiant du document (optionnel).
- * @param args.owner - Propriétaire fondateur (uid + email).
- * @param args.name - Nom du foyer (repli sur « Mon foyer » si vide).
- * @returns Le document de foyer prêt à écrire dans Firestore.
- */
-export function newHouseholdDoc({ id, owner, name }: { id?: string; owner: HouseholdUser; name?: string }): Required<Pick<Household, "name" | "ownerUid" | "memberUids" | "memberEmails" | "invitedEmails" | "createdAt">> & { id?: string } {
-  const email = norm(owner.email);
-  return {
-    id,
-    name: (name || "").trim() || "Mon foyer",
-    ownerUid: owner.uid,
-    memberUids: [owner.uid],
-    memberEmails: email ? [email] : [],
-    invitedEmails: [],
-    createdAt: Date.now(),
-  };
-}
-
-/**
  * Peut-on inviter `email` dans le foyer ?
  *
  * @param h - Le foyer.
