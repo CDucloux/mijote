@@ -17,7 +17,6 @@ import { MEAL_SLOTS, SLOT_BY_ID } from "../constants/mealSlots.js";
 import { useLS } from "../hooks/useLS.js";
 import { itemRole, roleLabel, newGroupId, roleForCategory, moveMealItem, copyMealToDays } from "@/lib/planning/composedMeal.js";
 import { useLongPress } from "../hooks/useLongPress.js";
-import { spawnRipple } from "@/lib/ui/ripple.js";
 import { suggestSides } from "@/lib/planning/mealPlanner.js";
 import { buildMealPlanIcs } from "@/lib/planning/mealPlanIcs.js";
 import { computeDayIntake } from "@/lib/planning/dayIntake.js";
@@ -32,7 +31,11 @@ import { ElasticScroll } from "../components/ElasticScroll.jsx";
 import { DayIntakePill, DayIntakeSheet } from "../components/mealPlan/DayIntakeSheet.jsx";
 import { SlotZone } from "../components/mealPlan/SlotZone.jsx";
 import { BatchSessionView } from "../components/mealPlan/BatchSessionView.jsx";
+import { MealItemMenu } from "../components/mealPlan/MealItemMenu.jsx";
+import { RescheduleSheet, DuplicateSheet } from "../components/mealPlan/ReplanSheets.jsx";
+import { GenerateSheet } from "../components/mealPlan/GenerateSheet.jsx";
 import { useMealBatchSession } from "../hooks/useMealBatchSession.js";
+import { DAYS_SHORT_FR, MONTHS_FR, mondayFirstIndex } from "../constants/calendar.js";
 
 // Rôles proposés pour compléter un repas (le plat existe déjà).
 const COMPLETE_ROLES = [
@@ -42,8 +45,6 @@ const COMPLETE_ROLES = [
 ];
 
 // ─── MEAL PLAN – module-level constants & pure helpers ────────────────────────
-const MP_DAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-const MP_MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
 function mpGetWeekDays(ref) {
   const d = new Date(ref), day = d.getDay(), diff = day === 0 ? -6 : 1 - day;
@@ -314,7 +315,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => navigate(-1)} className="pressable ripple hov-surface" style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={16} /></button>
           <span style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
-            {`${new Date(weekDays[0] + "T12:00").getDate()} – ${new Date(weekDays[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
+            {`${new Date(weekDays[0] + "T12:00").getDate()} – ${new Date(weekDays[6] + "T12:00").getDate()} ${MONTHS_FR[new Date(weekDays[6] + "T12:00").getMonth()]} ${new Date(weekDays[6] + "T12:00").getFullYear()}`}
           </span>
           <button onClick={() => navigate(1)} className="pressable ripple hov-surface" style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={16} /></button>
           <button onClick={goToday} className="pressable ripple" style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
@@ -356,7 +357,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: isToday ? "var(--accent)" : "var(--text)" }}>
-                        {MP_DAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]} {d.getDate()}
+                        {DAYS_SHORT_FR[mondayFirstIndex(d.getDay())]} {d.getDate()}
                       </span>
                       {isToday && <span style={{ fontSize: 10, background: "rgba(var(--accent-rgb),0.2)", color: "var(--accent)", padding: "2px 7px", borderRadius: 10 }}>Aujourd'hui</span>}
                       <DayIntakePill intake={dayIntakes.get(date)} onClick={() => setIntakeDate(date)} />
@@ -544,254 +545,60 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       )}
 
       {/* Menu contextuel d'un repas planifié (clic droit / appui long) */}
-      {itemMenu && (() => {
-        const it = itemMenu;
-        const r = recipesById.get(it.recipeId);
-        const close = () => setItemMenu(null);
-        const slotLabel = SLOT_BY_ID[it.slot]?.label || "Repas";
-        return (
-        <SwipeableSheet onClose={close}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 24 }}>
-              {r?.image ? <img src={r.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🍽️"}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r?.name || "Recette supprimée"}</div>
-              <div style={{ fontSize: 13, color: "var(--text3)" }}>{slotLabel} · {new Date(it.date + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {r && (
-              <button className="menu-row" onPointerDown={spawnRipple} onClick={() => { selectRecipe(r.id, it.date); close(); }}>
-                <Icon name="forward" size={19} color="var(--text2)" /> Ouvrir
-              </button>
-            )}
-            <button className="menu-row" onPointerDown={spawnRipple} onClick={() => openReschedule(it)}>
-              <Icon name="calendar" size={19} color="var(--text2)" /> Replanifier
-            </button>
-            {r && (
-              <button className="menu-row" onPointerDown={spawnRipple} onClick={() => openDuplicate(it)}>
-                <Icon name="copy" size={19} color="var(--text2)" /> Dupliquer sur d'autres jours
-              </button>
-            )}
-            <button className="menu-row menu-row-danger" style={{ borderTop: "1px solid var(--border)", marginTop: 6 }} onPointerDown={spawnRipple} onClick={() => { removeMeal(it.date, it.idx); close(); notify("Repas retiré du planning"); logActivity?.({ type: "mealplan.remove", target: r?.name || "" }); }}>
-              <Icon name="trash" size={19} color="var(--red)" /> Supprimer du calendrier
-            </button>
-          </div>
-        </SwipeableSheet>
-        );
-      })()}
+      {itemMenu && (
+        <MealItemMenu
+          item={itemMenu}
+          recipe={recipesById.get(itemMenu.recipeId)}
+          onOpen={() => { selectRecipe(itemMenu.recipeId, itemMenu.date); setItemMenu(null); }}
+          onReschedule={() => openReschedule(itemMenu)}
+          onDuplicate={() => openDuplicate(itemMenu)}
+          onRemove={() => { const nm = recipesById.get(itemMenu.recipeId)?.name || ""; removeMeal(itemMenu.date, itemMenu.idx); setItemMenu(null); notify("Repas retiré du planning"); logActivity?.({ type: "mealplan.remove", target: nm }); }}
+          onClose={() => setItemMenu(null)}
+        />
+      )}
 
       {/* Replanifier : choisir un autre jour (navigable de semaine en semaine) + créneau */}
-      {moveFor && (() => {
-        const r = recipesById.get(moveFor.recipeId);
-        const close = () => setMoveFor(null);
-        const days = mpGetWeekDays(moveWeekRef);
-        const shiftWeek = (dir) => setMoveWeekRef(prev => { const d = new Date(prev); d.setDate(d.getDate() + dir * 7); return d; });
-        return (
-        <SwipeableSheet onClose={close} style={{ maxHeight: "82dvh" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
-              <Icon name="calendar" size={21} color="var(--accent)" />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Replanifier</h3>
-              <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>« {r?.name || "cette recette"} »</div>
-            </div>
-          </div>
-
-          {/* Navigation de semaine */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            <button onClick={() => shiftWeek(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={15} /></button>
-            <span style={{ flex: 1, textAlign: "center", fontSize: 13.5, fontWeight: 600 }}>
-              {`${new Date(days[0] + "T12:00").getDate()} – ${new Date(days[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(days[6] + "T12:00").getMonth()]}`}
-            </span>
-            <button onClick={() => shiftWeek(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={15} /></button>
-          </div>
-
-          {/* Jours de la semaine : pastilles sélectionnables */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 16 }}>
-            {days.map(dstr => {
-              const d = new Date(dstr + "T12:00");
-              const active = moveTarget.date === dstr;
-              return (
-                <button key={dstr} onClick={() => setMoveTarget(t => ({ ...t, date: dstr }))} className="pressable"
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 0", borderRadius: 12, cursor: "pointer",
-                    background: active ? "var(--accent)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "#fff" : "var(--text2)" }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.9 }}>{MP_DAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]}</span>
-                  <span style={{ fontSize: 15, fontWeight: 700 }}>{d.getDate()}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Créneau cible */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-            {MEAL_SLOTS.map(s => {
-              const active = moveTarget.slot === s.id;
-              return (
-                <button key={s.id} onClick={() => setMoveTarget(t => ({ ...t, slot: s.id }))} className="pressable"
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 4px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "var(--accent)" : "var(--text3)" }}>
-                  <Icon name={s.icon} size={16} color="currentColor" />{s.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} disabled={!moveTarget.date || !moveTarget.slot} onClick={confirmReschedule}>
-            <Icon name="check" size={16} /> Déplacer ici
-          </button>
-        </SwipeableSheet>
-        );
-      })()}
+      {moveFor && (
+        <RescheduleSheet
+          recipe={recipesById.get(moveFor.recipeId)}
+          days={mpGetWeekDays(moveWeekRef)}
+          target={moveTarget}
+          onShift={(dir) => setMoveWeekRef(prev => { const d = new Date(prev); d.setDate(d.getDate() + dir * 7); return d; })}
+          onPickDay={(dstr) => setMoveTarget(t => ({ ...t, date: dstr }))}
+          onPickSlot={(id) => setMoveTarget(t => ({ ...t, slot: id }))}
+          onConfirm={confirmReschedule}
+          onClose={() => setMoveFor(null)}
+        />
+      )}
 
       {/* Dupliquer : poser la même recette sur plusieurs jours (multi-sélection) + créneau */}
-      {dupFor && (() => {
-        const r = recipesById.get(dupFor.recipeId);
-        const close = () => setDupFor(null);
-        const days = mpGetWeekDays(dupWeekRef);
-        const shiftWeek = (dir) => setDupWeekRef(prev => { const d = new Date(prev); d.setDate(d.getDate() + dir * 7); return d; });
-        return (
-        <SwipeableSheet onClose={close} style={{ maxHeight: "82dvh" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
-              <Icon name="copy" size={21} color="var(--accent)" />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Dupliquer</h3>
-              <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>« {r?.name || "cette recette"} » sur d'autres jours</div>
-            </div>
-          </div>
-
-          {/* Navigation de semaine */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            <button onClick={() => shiftWeek(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={15} /></button>
-            <span style={{ flex: 1, textAlign: "center", fontSize: 13.5, fontWeight: 600 }}>
-              {`${new Date(days[0] + "T12:00").getDate()} – ${new Date(days[6] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(days[6] + "T12:00").getMonth()]}`}
-            </span>
-            <button onClick={() => shiftWeek(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={15} /></button>
-          </div>
-
-          {/* Jours cibles : multi-sélection ; le jour d'origine est verrouillé (déjà planifié) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 16 }}>
-            {days.map(dstr => {
-              const d = new Date(dstr + "T12:00");
-              const isSource = dstr === dupFor.date;
-              const active = dupDates.has(dstr);
-              return (
-                <button key={dstr} disabled={isSource} onClick={() => toggleDupDate(dstr)} className="pressable"
-                  style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 0", borderRadius: 12, cursor: isSource ? "default" : "pointer", opacity: isSource ? 0.4 : 1,
-                    background: active ? "var(--accent)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "#fff" : "var(--text2)" }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.9 }}>{MP_DAYS_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1]}</span>
-                  <span style={{ fontSize: 15, fontWeight: 700 }}>{d.getDate()}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Créneau cible (commun aux jours choisis) */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-            {MEAL_SLOTS.map(s => {
-              const active = dupSlot === s.id;
-              return (
-                <button key={s.id} onClick={() => setDupSlot(s.id)} className="pressable"
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 4px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "var(--accent)" : "var(--text3)" }}>
-                  <Icon name={s.icon} size={16} color="currentColor" />{s.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} disabled={!dupDates.size || !dupSlot} onClick={confirmDuplicate}>
-            <Icon name="copy" size={16} /> {dupDates.size > 1 ? `Dupliquer sur ${dupDates.size} jours` : "Dupliquer ici"}
-          </button>
-        </SwipeableSheet>
-        );
-      })()}
+      {dupFor && (
+        <DuplicateSheet
+          recipe={recipesById.get(dupFor.recipeId)}
+          days={mpGetWeekDays(dupWeekRef)}
+          sourceDate={dupFor.date}
+          selected={dupDates}
+          slot={dupSlot}
+          onShift={(dir) => setDupWeekRef(prev => { const d = new Date(prev); d.setDate(d.getDate() + dir * 7); return d; })}
+          onToggleDay={toggleDupDate}
+          onPickSlot={setDupSlot}
+          onConfirm={confirmDuplicate}
+          onClose={() => setDupFor(null)}
+        />
+      )}
 
       {/* Sous-menu de génération : choix du style de repas */}
       {genOpen && (
-        <SwipeableSheet onClose={() => setGenOpen(false)} style={{ maxHeight: "82dvh" }}>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>
-          <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Quel style de repas veux-tu pour les créneaux vides&nbsp;?</p>
-
-          {/* Créneaux à remplir : par défaut midi + soir. Décocher « Midi » quand on
-              mange à la cantine en semaine (l'auto-génération le laisse alors libre). */}
-          <div style={{ marginBottom: 18 }}>
-            <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Créneaux à remplir</span>
-            <div style={{ display: "flex", gap: 10 }}>
-              {["midi", "soir"].map(slot => {
-                const active = genSlots.includes(slot);
-                return (
-                  <button key={slot} onClick={() => toggleGenSlot(slot)} className="pressable" style={{
-                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer",
-                    padding: "11px 0", borderRadius: 13, fontSize: 14, fontWeight: 600,
-                    color: active ? "var(--accent)" : "var(--text3)",
-                    background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
-                    border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
-                  }}>
-                    <span style={{ width: 18, height: 18, borderRadius: "50%", display: "grid", placeItems: "center", border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accent)" : "transparent" }}>
-                      {active && <Icon name="check" size={11} color="#fff" />}
-                    </span>
-                    {SLOT_BY_ID[slot]?.label || slot}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-            {[
-              { id: "facile", icon: "clock", title: "Facile et rapide", desc: "Peu d'ingrédients, préparation et cuisson courtes. Idéal quand on manque de temps." },
-              { id: "equilibre", icon: "leaf", title: "Équilibré", desc: "Un bon compromis entre saison, santé, variété et effort." },
-              { id: "aventureux", icon: "fire", title: "Aventureux", desc: "Des recettes plus élaborées et plus difficiles, pour se lancer des défis." },
-            ].map(o => {
-              const active = genStyle === o.id;
-              return (
-                <button key={o.id} onClick={() => setGenStyle(o.id)} className="pressable" style={{
-                  display: "flex", alignItems: "center", gap: 13, width: "100%", textAlign: "left", cursor: "pointer",
-                  padding: "13px 14px", borderRadius: 15,
-                  background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
-                  border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
-                }}>
-                  <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: active ? "rgba(var(--accent-rgb),0.2)" : "var(--surface3)" }}>
-                    <Icon name={o.icon} size={19} color={active ? "var(--accent)" : "var(--text2)"} />
-                  </span>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: "block", fontSize: 14.5, fontWeight: 600, color: "var(--text)" }}>{o.title}</span>
-                    <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>{o.desc}</span>
-                  </span>
-                  <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: "50%", display: "grid", placeItems: "center", border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accent)" : "transparent" }}>
-                    {active && <Icon name="check" size={12} color="#fff" />}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          {/* Batch cooking : tout préparer d'avance (ex. le dimanche) */}
-          <button onClick={() => setGenBatch(v => !v)} className="pressable" style={{
-            display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
-            padding: "12px 14px", borderRadius: 14, marginBottom: 16,
-            background: genBatch ? "rgba(var(--ok-rgb),0.12)" : "var(--surface2)",
-            border: `1.5px solid ${genBatch ? "var(--ok)" : "var(--border)"}`,
-          }}>
-            <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: genBatch ? "rgba(var(--ok-rgb),0.2)" : "var(--surface3)" }}>
-              <Icon name="fire" size={18} color={genBatch ? "var(--ok)" : "var(--text2)"} />
-            </span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Batch cooking</span>
-              <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>Regroupe tout ce qu'il y a à cuisiner pour la semaine en une seule session à préparer d'avance.</span>
-            </span>
-            <span style={{ flexShrink: 0, width: 42, height: 24, borderRadius: 999, padding: 2, background: genBatch ? "var(--ok)" : "var(--surface3)", display: "flex", justifyContent: genBatch ? "flex-end" : "flex-start", transition: "background 0.15s" }}>
-              <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff" }} />
-            </span>
-          </button>
-          <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} onClick={() => runGenerate(genStyle, genBatch)}>
-            <Icon name="calendar" size={16} /> Générer la semaine
-          </button>
-        </SwipeableSheet>
+        <GenerateSheet
+          genSlots={genSlots}
+          onToggleSlot={toggleGenSlot}
+          genStyle={genStyle}
+          onPickStyle={setGenStyle}
+          genBatch={genBatch}
+          onToggleBatch={() => setGenBatch(v => !v)}
+          onGenerate={() => runGenerate(genStyle, genBatch)}
+          onClose={() => setGenOpen(false)}
+        />
       )}
 
       {/* Session batch : PAGE dédiée (route /meal-plan/batch), portée en plein écran.
@@ -799,7 +606,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       {batchOpen && createPortal(
         <BatchSessionView
           key={weekDays[0]}
-          weekLabel={`Semaine du ${new Date(weekDays[0] + "T12:00").getDate()} ${MP_MONTHS_FR[new Date(weekDays[0] + "T12:00").getMonth()]}`}
+          weekLabel={`Semaine du ${new Date(weekDays[0] + "T12:00").getDate()} ${MONTHS_FR[new Date(weekDays[0] + "T12:00").getMonth()]}`}
           batch={batch} miseEnPlace={miseEnPlace} cookingGroups={cookingGroups} decoupeByName={decoupeByName}
           prepCount={prepCount} cookCount={cookCount} mealOccasions={mealOccasions}
           onClose={closeBatch} onSelectRecipe={selectRecipe}
