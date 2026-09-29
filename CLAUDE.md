@@ -14,6 +14,7 @@ La dette technique est l'ennemi. Chaque changement doit **réduire ou maintenir*
 
 ## 2. Typage : `src/lib/` et backend, TypeScript TOUJOURS, non négociable
 - Tout code dans `src/lib/` et `functions/` est en **TypeScript fortement typé**. Interdits : `any` implicite ou explicite (préférer `unknown` + narrowing), types manquants sur les signatures publiques, casts non justifiés.
+- **`src/hooks/` : tout hook est en `.ts` (ou `.tsx` s'il contient du JSX), jamais `.js`.** Un hook nouveau naît typé ; un hook `.js` croisé se migre vers `.ts` (props/retour via une interface dédiée, frontières avec `lib/` typées par `Parameters<typeof fn>[i]` / `ReturnType<>` quand les formes diffèrent, jamais de cast à l'aveugle). Les fichiers de test (`__tests__/*.test.js`) peuvent rester en `.js` (non type-checkés, `checkJs: false`).
 - Les payloads externes (réponse LLM, données Firestore, entrées réseau) sont typés `unknown` puis validés/narrowés, jamais castés à l'aveugle.
 - `tsc --noEmit` doit passer (0 erreur). `strict` est activé, il le reste.
 
