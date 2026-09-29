@@ -33,12 +33,12 @@ export interface RuntimeSignals {
  * Contexte d'exécution déduit de signaux injectés. Le natif prime (une app Capacitor
  * peut aussi rapporter standalone), puis le standalone (PWA), sinon navigateur.
  *
- * @param s - Les signaux d'exécution.
+ * @param signals - Les signaux d'exécution.
  * @returns Le contexte correspondant.
  */
-export function detectRuntimeContext(s: RuntimeSignals): RuntimeContext {
-  if (s.isNative) return s.platform === "ios" ? "capacitor-ios" : "capacitor-android";
-  if (s.standalone) return "pwa";
+export function detectRuntimeContext(signals: RuntimeSignals): RuntimeContext {
+  if (signals.isNative) return signals.platform === "ios" ? "capacitor-ios" : "capacitor-android";
+  if (signals.standalone) return "pwa";
   return "browser";
 }
 

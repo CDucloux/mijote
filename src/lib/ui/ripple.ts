@@ -21,15 +21,15 @@ interface RippleEvent {
  * Déclenche une onde tactile sur la cible de l'évènement, centrée sur le point de
  * contact (ou sur le centre de la cible si les coordonnées sont absentes).
  *
- * @param e - L'évènement pointeur (React ou natif) dont `currentTarget` reçoit l'onde.
+ * @param event - L'évènement pointeur (React ou natif) dont `currentTarget` reçoit l'onde.
  */
-export function spawnRipple(e: RippleEvent): void {
-  const el = e.currentTarget;
+export function spawnRipple(event: RippleEvent): void {
+  const el = event.currentTarget;
   if (!el) return;
   const rect = el.getBoundingClientRect();
   const size = Math.max(rect.width, rect.height) * 2;
-  const x = (e.clientX ?? rect.left + rect.width / 2) - rect.left;
-  const y = (e.clientY ?? rect.top + rect.height / 2) - rect.top;
+  const x = (event.clientX ?? rect.left + rect.width / 2) - rect.left;
+  const y = (event.clientY ?? rect.top + rect.height / 2) - rect.top;
   const ink = document.createElement("span");
   ink.className = "ripple-ink";
   ink.style.width = ink.style.height = `${size}px`;

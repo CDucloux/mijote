@@ -34,10 +34,10 @@ const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
  * Enregistre la destination des signaux. À appeler une fois au démarrage ;
  * un appel ultérieur remplace le sink courant.
  *
- * @param s - L'implémentation fournisseur (Sentry, GlitchTip…).
+ * @param nextSink - L'implémentation fournisseur (Sentry, GlitchTip…).
  */
-export function initObservability(s: ObservabilitySink): void {
-  sink = s;
+export function initObservability(nextSink: ObservabilitySink): void {
+  sink = nextSink;
 }
 
 /**

@@ -26,12 +26,12 @@ export interface PanDims {
  * Surface (cm²) d'un moule d'après sa forme et ses dimensions.
  *
  * @param shape - Forme du moule (`round` ou `rect`).
- * @param d - Dimensions (diamètre, ou longueur × largeur).
+ * @param dims - Dimensions (diamètre, ou longueur × largeur).
  * @returns La surface en cm² (0 si la forme est inconnue ou les dimensions absentes).
  */
-export function panArea(shape: PanShape, d: PanDims = {}): number {
-  if (shape === "round") { const r = (Number(d.diameter) || 0) / 2; return Math.PI * r * r; }
-  if (shape === "rect") { return (Number(d.length) || 0) * (Number(d.width) || 0); }
+export function panArea(shape: PanShape, dims: PanDims = {}): number {
+  if (shape === "round") { const r = (Number(dims.diameter) || 0) / 2; return Math.PI * r * r; }
+  if (shape === "rect") { return (Number(dims.length) || 0) * (Number(dims.width) || 0); }
   return 0;
 }
 

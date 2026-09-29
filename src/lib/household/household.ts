@@ -34,95 +34,95 @@ const uniq = <T,>(arr: T[]): T[] => Array.from(new Set(arr));
 /**
  * Nombre de « places occupées » : membres actifs + invitations en attente.
  *
- * @param h - Le foyer (ou `null`/`undefined` → 0).
+ * @param household - Le foyer (ou `null`/`undefined` → 0).
  * @returns Le total des places consommées, plafonné par {@link MAX_HOUSEHOLD}.
  */
-export function peopleCount(h: Household | null | undefined): number {
-  return (h?.memberUids?.length || 0) + (h?.invitedEmails?.length || 0);
+export function peopleCount(household: Household | null | undefined): number {
+  return (household?.memberUids?.length || 0) + (household?.invitedEmails?.length || 0);
 }
 
 /**
  * Indique si `uid` est le propriétaire du foyer.
  *
- * @param h - Le foyer.
+ * @param household - Le foyer.
  * @param uid - L'identifiant utilisateur à tester.
  * @returns `true` si `uid` est le `ownerUid` du foyer.
  */
-export function isOwner(h: Household | null | undefined, uid: string): boolean {
-  return !!h && h.ownerUid === uid;
+export function isOwner(household: Household | null | undefined, uid: string): boolean {
+  return !!household && household.ownerUid === uid;
 }
 
 /**
  * Indique si `uid` est un membre actif du foyer.
  *
- * @param h - Le foyer.
+ * @param household - Le foyer.
  * @param uid - L'identifiant utilisateur à tester.
  * @returns `true` si `uid` figure dans `memberUids`.
  */
-export function isMemberUid(h: Household | null | undefined, uid: string): boolean {
-  return !!h && (h.memberUids || []).includes(uid);
+export function isMemberUid(household: Household | null | undefined, uid: string): boolean {
+  return !!household && (household.memberUids || []).includes(uid);
 }
 
 /**
  * Peut-on inviter `email` dans le foyer ?
  *
- * @param h - Le foyer.
+ * @param household - Le foyer.
  * @param email - Email de l'invité (normalisé en interne).
  * @returns `false` si le foyer est plein, ou si l'email est déjà membre ou déjà invité.
  */
-export function canInvite(h: Household, email: string): boolean {
+export function canInvite(household: Household, email: string): boolean {
   const e = norm(email);
   if (!e) return false;
-  if (peopleCount(h) >= MAX_HOUSEHOLD) return false;
-  if ((h.memberEmails || []).includes(e)) return false;
-  if ((h.invitedEmails || []).includes(e)) return false;
+  if (peopleCount(household) >= MAX_HOUSEHOLD) return false;
+  if ((household.memberEmails || []).includes(e)) return false;
+  if ((household.invitedEmails || []).includes(e)) return false;
   return true;
 }
 
 /**
  * Ajoute une invitation (fonction pure).
  *
- * @param h - Le foyer.
+ * @param household - Le foyer.
  * @param email - Email à inviter.
  * @returns Un nouveau foyer avec l'email invité, ou le doc inchangé si non invitable.
  */
-export function withInvite(h: Household, email: string): Household {
+export function withInvite(household: Household, email: string): Household {
   const e = norm(email);
-  if (!canInvite(h, e)) return h;
-  return { ...h, invitedEmails: uniq([...(h.invitedEmails || []), e]) };
+  if (!canInvite(household, e)) return household;
+  return { ...household, invitedEmails: uniq([...(household.invitedEmails || []), e]) };
 }
 
 /**
  * Retire une invitation en attente (refus, ou retrait par un membre).
  *
- * @param h - Le foyer.
+ * @param household - Le foyer.
  * @param email - Email de l'invitation à retirer.
  * @returns Un nouveau foyer sans cette invitation.
  */
-export function withInviteRemoved(h: Household, email: string): Household {
+export function withInviteRemoved(household: Household, email: string): Household {
   const e = norm(email);
-  return { ...h, invitedEmails: (h.invitedEmails || []).filter(x => x !== e) };
+  return { ...household, invitedEmails: (household.invitedEmails || []).filter(x => x !== e) };
 }
 
 /**
  * Transforme une invitation en membre actif. Idempotent ; respecte le plafond
  * (un invité présent dans `invitedEmails` ne consomme pas de place supplémentaire).
  *
- * @param h - Le foyer.
+ * @param household - Le foyer.
  * @param member - Le nouveau membre.
  * @param member.uid - Son identifiant utilisateur.
  * @param member.email - Son email (retiré des invitations en attente).
  * @returns Un nouveau foyer avec le membre actif, ou le doc inchangé si déjà membre / plein.
  */
-export function withAcceptedMember(h: Household, { uid, email }: { uid: string; email?: string }): Household {
+export function withAcceptedMember(household: Household, { uid, email }: { uid: string; email?: string }): Household {
   const e = norm(email);
-  if (isMemberUid(h, uid)) return h;
-  if ((h.memberUids || []).length >= MAX_HOUSEHOLD) return h;
+  if (isMemberUid(household, uid)) return household;
+  if ((household.memberUids || []).length >= MAX_HOUSEHOLD) return household;
   return {
-    ...h,
-    memberUids: uniq([...(h.memberUids || []), uid]),
-    memberEmails: e ? uniq([...(h.memberEmails || []), e]) : (h.memberEmails || []),
-    invitedEmails: (h.invitedEmails || []).filter(x => x !== e),
+    ...household,
+    memberUids: uniq([...(household.memberUids || []), uid]),
+    memberEmails: e ? uniq([...(household.memberEmails || []), e]) : (household.memberEmails || []),
+    invitedEmails: (household.invitedEmails || []).filter(x => x !== e),
   };
 }
 
@@ -130,18 +130,18 @@ export function withAcceptedMember(h: Household, { uid, email }: { uid: string; 
  * Retire un membre (départ volontaire ou retrait). N'altère pas le propriétaire ici
  * (la dissolution se fait par suppression du document, pas par retrait du owner).
  *
- * @param h - Le foyer.
+ * @param household - Le foyer.
  * @param member - Le membre à retirer.
  * @param member.uid - Son identifiant utilisateur.
  * @param member.email - Son email (retiré de `memberEmails`).
  * @returns Un nouveau foyer sans ce membre.
  */
-export function withMemberRemoved(h: Household, { uid, email }: { uid: string; email?: string }): Household {
+export function withMemberRemoved(household: Household, { uid, email }: { uid: string; email?: string }): Household {
   const e = norm(email);
   return {
-    ...h,
-    memberUids: (h.memberUids || []).filter(x => x !== uid),
-    memberEmails: (h.memberEmails || []).filter(x => x !== e),
+    ...household,
+    memberUids: (household.memberUids || []).filter(x => x !== uid),
+    memberEmails: (household.memberEmails || []).filter(x => x !== e),
   };
 }
 
