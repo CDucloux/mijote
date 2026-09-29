@@ -34,6 +34,9 @@ export function currentMonth(): number { return new Date().getMonth() + 1; }
 /**
  * Champ `months` normalisé → tableau trié d'entiers 1–12, ou `null` si absent,
  * vide, ou couvrant les 12 mois (disponible toute l'année → aucun signal saison).
+ *
+ * @param ing - Item portant un champ `months` de forme quelconque (validé ici).
+ * @returns Les mois valides triés et dédupliqués, ou `null` si aucun signal exploitable.
  */
 export function ingredientMonths(ing: { months?: unknown } | null | undefined): number[] | null {
   const m = ing?.months;
@@ -43,7 +46,13 @@ export function ingredientMonths(ing: { months?: unknown } | null | undefined): 
   return clean;
 }
 
-/** L'ingrédient est-il de saison ce mois ? `null` = pas de donnée (ignoré). */
+/**
+ * L'ingrédient est-il de saison ce mois ?
+ *
+ * @param ing - Item portant un champ `months`.
+ * @param month - Mois testé (1–12) ; défaut = mois courant.
+ * @returns `true`/`false`, ou `null` quand l'ingrédient n'a pas de donnée de saison (ignoré).
+ */
 export function isIngredientInSeason(ing: { months?: unknown } | null | undefined, month: number = currentMonth()): boolean | null {
   const m = ingredientMonths(ing);
   if (!m) return null;
@@ -73,7 +82,16 @@ export function recipeSeasonScore(recipe: SeasonRecipe | null | undefined, resol
   return { score: Math.round((inSeason / total) * 100), total, inSeason };
 }
 
-/** La recette est-elle « de saison » ce mois ? (toggle du filtre). */
+/**
+ * La recette est-elle « de saison » ce mois ? Sert de prédicat au filtre : le score
+ * doit atteindre {@link SEASON_THRESHOLD}. Une recette sans produit saisonnier
+ * identifiable (score `null`) est considérée hors saison.
+ *
+ * @param recipe - La recette et ses ingrédients.
+ * @param resolver - Résolveur `(name) => item | null`.
+ * @param month - Mois testé (1–12) ; défaut = mois courant.
+ * @returns `true` si la recette franchit le seuil de saisonnalité.
+ */
 export function isRecipeInSeason(recipe: SeasonRecipe | null | undefined, resolver: SeasonResolver, month: number = currentMonth()): boolean {
   const s = recipeSeasonScore(recipe, resolver, month);
   return s != null && s.score >= SEASON_THRESHOLD;
@@ -81,7 +99,10 @@ export function isRecipeInSeason(recipe: SeasonRecipe | null | undefined, resolv
 
 /**
  * Désérialise une plage de mois Markdown (« 4-6 », « 1,7-12 ») → `[1,2,3,…]`.
- * Robuste aux espaces et au désordre.
+ * Robuste aux espaces et au désordre ; les valeurs hors 1–12 sont écartées.
+ *
+ * @param str - Expression de mois (tokens séparés par virgules, plages `a-b`).
+ * @returns Les mois valides, triés et dédupliqués (`[]` si l'entrée est vide/invalide).
  */
 export function parseMonths(str: string | null | undefined): number[] {
   if (!str || typeof str !== "string") return [];
@@ -101,7 +122,13 @@ export function parseMonths(str: string | null | undefined): number[] {
   return [...out].sort((a, b) => a - b);
 }
 
-/** Sérialise `[1,2,3,11,12]` → « 1-3,11-12 » (suites consécutives compressées). */
+/**
+ * Sérialise `[1,2,3,11,12]` → « 1-3,11-12 » (suites consécutives compressées).
+ * Opération inverse de {@link parseMonths}.
+ *
+ * @param arr - Entrée de forme quelconque ; seuls les entiers 1–12 sont retenus.
+ * @returns L'expression compacte des mois (`""` si rien d'exploitable).
+ */
 export function formatMonths(arr: unknown): string {
   if (!Array.isArray(arr)) return "";
   const m = [...new Set(arr.filter((x): x is number => Number.isInteger(x) && x >= 1 && x <= 12))].sort((a, b) => a - b);
