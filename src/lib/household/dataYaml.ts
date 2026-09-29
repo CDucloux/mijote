@@ -182,6 +182,14 @@ function cleanTechniqueDimensions(raw: Record<string, unknown>, where = "", erro
   return out;
 }
 
+/**
+ * Parse et valide un export YAML de la base de techniques (nom, définition,
+ * catégorie connue, difficulté 1-5, alias, hiérarchie…). Un id absent est dérivé du
+ * nom (`tech_…`) ; les doublons d'id sont signalés.
+ *
+ * @param text - Source YAML brute.
+ * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
+ */
 export function parseTechniquesYaml(text: string): ParseResult {
   const { list, error } = loadTechniquesList(text);
   if (error) return { items: [], errors: [error] };

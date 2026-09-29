@@ -163,13 +163,6 @@ const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: st
 };
 
 /**
- * Descripteur de rendu d'un évènement : icône métier, couleur (token), phrase
- * prête à afficher et onglet cible (`route`, `null` si non navigable). L'auteur et
- * l'horodatage relatif sont composés à part par l'UI.
- *
- * @param ev - Évènement à décrire.
- */
-/**
  * Lien profond d'un évènement : quand la cible a un id, on renvoie vers SA page
  * (fiche recette, liste de courses précise) plutôt que vers l'onglet générique.
  * Sans id (évènement ancien, cible multiple comme un import), on retombe sur
@@ -182,6 +175,14 @@ function routeFor(ev: ActivityEvent, base: string | null): string | null {
   return base;
 }
 
+/**
+ * Descripteur de rendu d'un évènement : icône métier, couleur (token), phrase
+ * prête à afficher et onglet cible (`route`, `null` si non navigable). L'auteur et
+ * l'horodatage relatif sont composés à part par l'UI.
+ *
+ * @param ev - Évènement à décrire.
+ * @returns La vue prête à afficher (icône, couleur, titre, lien profond éventuel).
+ */
 export function describeActivity(ev: ActivityEvent): ActivityView {
   const d = DESCRIPTORS[ev.type];
   return { icon: d.icon, color: d.color, route: routeFor(ev, d.route), title: d.title(ev) };
