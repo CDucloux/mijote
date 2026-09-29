@@ -41,7 +41,12 @@ export type WorkspaceRef = Workspace | string;
 // no-op : un cache local obsolète ne peut plus saccager la base partagée.
 let sharedWritesLocked = false;
 
-/** Engage ou lève le verrou d'écriture des slices partagés. */
+/**
+ * Engage ou lève le verrou d'écriture des slices partagés (garde-fou client périmé).
+ *
+ * @param locked - `true` verrouille (les diffs de recettes deviennent des no-op),
+ *   `false` restaure les écritures partagées.
+ */
 export function setSharedWritesLocked(locked: boolean): void { sharedWritesLocked = locked; }
 
 /** Fiche d'annuaire d'un utilisateur (avatar, email, nom). */
@@ -78,7 +83,9 @@ export interface MasterDB {
 
 const segmentsOf = (ws: WorkspaceRef): string[] => (typeof ws === "string" ? ["users", ws] : ws.segments);
 
+/** Réf. d'un document méta (`{namespace}/meta/{name}`) du workspace : `collections`, `mealPlan`, `stock`, etc. */
 export const metaDoc = (ws: WorkspaceRef, name: string): DocumentReference => doc(db, [...segmentsOf(ws), "meta", name].join("/"));
+/** Réf. de la collection des recettes du workspace (un document par recette). */
 export const recipesCol = (ws: WorkspaceRef): CollectionReference => collection(db, [...segmentsOf(ws), "recipes"].join("/"));
 
 // ── Journal d'activité (notifications du tableau de bord) ────────────────────
@@ -87,6 +94,7 @@ export const recipesCol = (ws: WorkspaceRef): CollectionReference => collection(
 // wildcard existantes (membre du foyer / propriétaire de l'espace), aucune règle à
 // ajouter. La lecture est plafonnée (limit) : le coût reste borné même si l'historique
 // grossit.
+/** Réf. de la sous-collection append-only du journal d'activité du workspace. */
 export const activityCol = (ws: WorkspaceRef): CollectionReference => collection(db, [...segmentsOf(ws), "activity"].join("/"));
 
 /** Charge utile d'un évènement, hors horodatage (posé côté serveur). */
@@ -137,7 +145,9 @@ export function subscribeActivity(
 }
 
 // Annuaire des utilisateurs connus (avatars des membres du foyer, invitations).
+/** Réf. de la collection d'annuaire des utilisateurs (top-level `userDirectory`). */
 export const userDirCol = (): CollectionReference => collection(db, "userDirectory");
+/** Réf. de la fiche d'annuaire d'un utilisateur donné (`userDirectory/{uid}`). */
 export const userDirDoc = (uid: string): DocumentReference => doc(db, "userDirectory", uid);
 
 /**
@@ -179,7 +189,9 @@ export async function fetchUserDirectory(emails?: string[]): Promise<DocumentDat
 
 // Recettes publiques (communauté) : collection top-level lisible par tous les
 // connectés, écrite uniquement par l'auteur (cf. firestore.rules).
+/** Réf. de la collection des recettes publiques (top-level `publicRecipes`). */
 export const publicRecipesCol = (): CollectionReference => collection(db, "publicRecipes");
+/** Réf. d'une recette publique donnée (`publicRecipes/{pubId}`). */
 export const publicRecipeDoc = (pubId: string): DocumentReference => doc(db, "publicRecipes", pubId);
 
 /**
@@ -307,12 +319,16 @@ export async function fetchPublicDocsByIds(pubIds: string[]): Promise<DocumentDa
 // ─── FOYERS (households) ──────────────────────────────────────────────────────
 // households/{hid} : doc d'appartenance (cf. lib/household.js). Le pointeur du
 // foyer actif de chaque utilisateur vit dans son espace privé : users/{uid}/meta/household.
+/** Réf. de la collection des foyers (top-level `households`). */
 export const householdsCol = (): CollectionReference => collection(db, "households");
+/** Réf. d'un foyer donné (`households/{hid}`). */
 export const householdDoc = (hid: string): DocumentReference => doc(db, "households", hid);
 const householdPointerDoc = (uid: string): DocumentReference => doc(db, "users", uid, "meta", "household");
 
 // Requêtes temps réel : mon foyer actif (par uid) et mes invitations (par email).
+/** Requête des foyers dont l'utilisateur est membre (filtre `memberUids array-contains uid`). */
 export const householdMemberQuery = (uid: string): Query => query(householdsCol(), where("memberUids", "array-contains", uid));
+/** Requête des foyers ayant invité cet email (filtre `invitedEmails array-contains`, casse normalisée). */
 export const householdInviteQuery = (email: string): Query => query(householdsCol(), where("invitedEmails", "array-contains", (email || "").toLowerCase()));
 
 /**
