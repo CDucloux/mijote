@@ -11,7 +11,7 @@
  * Un ustensile devient « appareil » quand sa ligne de base porte un `appliance`
  * dont la clé existe ici (`APPLIANCE_SCHEMAS`).
  *
- * @module ustensils/appliances
+ * @module utensils/appliances
  */
 
 /** Nature d'un réglage : nombre borné, choix fermé, ou interrupteur. */

@@ -4,7 +4,7 @@ import {
   precautionVisual,
   PRECAUTION_TONES,
   resolveUsagePrecaution,
-} from "@/lib/ustensils/usagePrecaution.js";
+} from "@/lib/utensils/usagePrecaution.js";
 
 describe("isPrecautionTone", () => {
   it("accepts known tones only", () => {

@@ -1,5 +1,5 @@
 import { Icon } from "./Icon.jsx";
-import { getApplianceSchema } from "@/lib/ustensils/appliances.js";
+import { getApplianceSchema } from "@/lib/utensils/appliances.js";
 
 // ─── RÉGLAGES D'APPAREIL (niveau étape) ───────────────────────────────────────
 // Éditeur compact des paramètres de fonctionnement d'un appareil (four, blender…)

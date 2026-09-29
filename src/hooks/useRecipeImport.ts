@@ -1,7 +1,7 @@
 import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
 import { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText, importRecipeFromPdf, type ImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import { uploadImage } from "@/lib/firebase/storage.js";
-import { applianceImportInfos, sanitizeStepUtensilParams } from "@/lib/ustensils/appliances.js";
+import { applianceImportInfos, sanitizeStepUtensilParams } from "@/lib/utensils/appliances.js";
 import { GIFT_RECIPE } from "@/lib/onboarding/giftRecipe.js";
 import type { Recipe } from "@/lib/types.js";
 
