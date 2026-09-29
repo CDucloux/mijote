@@ -46,39 +46,39 @@ const COOK_LABEL = new Map<string, string>(COOKING_METHODS.map((m: { id: string;
  * Résumé lisible d'une vue de filtres (pour l'affichage d'un carnet intelligent) :
  * une liste de courtes étiquettes.
  *
- * @param f - L'état de filtrage (partiel).
+ * @param filters - L'état de filtrage (partiel).
  * @param search - Le texte de recherche associé.
  * @returns Les étiquettes lisibles décrivant la vue.
  */
-export function summarizeFilters(f: Partial<RecipeFilters> = {}, search = ""): string[] {
+export function summarizeFilters(filters: Partial<RecipeFilters> = {}, search = ""): string[] {
   const out: string[] = [];
   const s = (search || "").trim();
   if (s) out.push(`« ${s} »`);
-  (f.categories || []).forEach(id => out.push(CAT_LABEL.get(id) || id));
-  if (f.type === "dish") out.push("Plats");
-  else if (f.type === "base") out.push("Préparations de base");
-  (f.cuisines || []).forEach(c => out.push(c));
-  (f.cooking || []).forEach(id => out.push(id === "mixte" ? "Cuisson mixte" : (COOK_LABEL.get(id) || id)));
-  if (f.timeMax) out.push(`≤ ${f.timeMax} min`);
-  if (f.vegan) out.push("Vegan");
-  if (f.season) out.push("De saison");
-  if (f.nutriMax) out.push(`Nutri ${f.nutriMax} ou mieux`);
-  if (f.diffMax) out.push(`Jusqu'à ${DIFFICULTY_LABEL[f.diffMax]}`);
-  if (f.ingredients?.length) out.push(`${f.ingredients.length} ingrédient${f.ingredients.length > 1 ? "s" : ""}`);
+  (filters.categories || []).forEach(id => out.push(CAT_LABEL.get(id) || id));
+  if (filters.type === "dish") out.push("Plats");
+  else if (filters.type === "base") out.push("Préparations de base");
+  (filters.cuisines || []).forEach(c => out.push(c));
+  (filters.cooking || []).forEach(id => out.push(id === "mixte" ? "Cuisson mixte" : (COOK_LABEL.get(id) || id)));
+  if (filters.timeMax) out.push(`≤ ${filters.timeMax} min`);
+  if (filters.vegan) out.push("Vegan");
+  if (filters.season) out.push("De saison");
+  if (filters.nutriMax) out.push(`Nutri ${filters.nutriMax} ou mieux`);
+  if (filters.diffMax) out.push(`Jusqu'à ${DIFFICULTY_LABEL[filters.diffMax]}`);
+  if (filters.ingredients?.length) out.push(`${filters.ingredients.length} ingrédient${filters.ingredients.length > 1 ? "s" : ""}`);
   return out;
 }
 
 /**
  * Nombre de critères actifs dans une vue de filtres.
  *
- * @param f - L'état de filtrage.
+ * @param filters - L'état de filtrage.
  * @returns Le nombre de critères non neutres.
  */
-export function activeFilterCount(f: RecipeFilters): number {
-  return (f.season ? 1 : 0) + (f.vegan ? 1 : 0) + (f.type !== "all" ? 1 : 0)
-    + (f.categories?.length ? 1 : 0)
-    + (f.timeMax ? 1 : 0) + (f.cuisines.length ? 1 : 0) + (f.cooking.length ? 1 : 0) + (f.nutriMax ? 1 : 0)
-    + (f.diffMax ? 1 : 0) + (f.ingredients.length ? 1 : 0);
+export function activeFilterCount(filters: RecipeFilters): number {
+  return (filters.season ? 1 : 0) + (filters.vegan ? 1 : 0) + (filters.type !== "all" ? 1 : 0)
+    + (filters.categories?.length ? 1 : 0)
+    + (filters.timeMax ? 1 : 0) + (filters.cuisines.length ? 1 : 0) + (filters.cooking.length ? 1 : 0) + (filters.nutriMax ? 1 : 0)
+    + (filters.diffMax ? 1 : 0) + (filters.ingredients.length ? 1 : 0);
 }
 
 /**
@@ -103,31 +103,31 @@ export function filtersEqual(a: Partial<RecipeFilters> = {}, b: Partial<RecipeFi
  * facultatives (résolveur d'ingrédients, techniques + index, liste de recettes pour
  * l'héritage des bases). Utilisé tel quel par /recipes et « Découvrir ».
  *
- * @param r - La recette à tester.
- * @param f - L'état de filtrage à appliquer.
+ * @param recipe - La recette à tester.
+ * @param filters - L'état de filtrage à appliquer.
  * @param ctx - Dépendances facultatives (résolveur, techniques + index, recettes).
  * @returns `true` si la recette passe tous les critères actifs.
  */
-export function matchesFilters(r: FilterableRecipe, f: RecipeFilters, ctx: FilterContext = {}): boolean {
+export function matchesFilters(recipe: FilterableRecipe, filters: RecipeFilters, ctx: FilterContext = {}): boolean {
   const { resolver, techniques, techIndex, recipes } = ctx;
-  if (f.type === "base" && !r.isComponent) return false;
-  if (f.type === "dish" && r.isComponent) return false;
-  if (f.categories?.length && !f.categories.includes(r.category || "")) return false;
-  if (f.cuisines?.length && !f.cuisines.includes(r.cuisine || "")) return false;
-  if (f.timeMax && ((r.prepTime || 0) + (r.cookTime || 0)) > f.timeMax) return false;
-  if (f.cooking?.length && !matchesCooking(r, f.cooking)) return false;
-  if (f.season && !(resolver && isRecipeInSeason(r, resolver))) return false;
-  if (f.vegan && !(resolver && isRecipeVegan(r, resolver, { recipes }))) return false;
-  if (f.nutriMax && !(r.nutriLetter && NUTRI_ORDER[r.nutriLetter] <= NUTRI_ORDER[f.nutriMax])) return false;
-  if (f.diffMax) {
-    const s = computeDifficulty(r, techniques || [], { index: techIndex, recipes }).score;
-    if (!(s != null && s <= f.diffMax)) return false;
+  if (filters.type === "base" && !recipe.isComponent) return false;
+  if (filters.type === "dish" && recipe.isComponent) return false;
+  if (filters.categories?.length && !filters.categories.includes(recipe.category || "")) return false;
+  if (filters.cuisines?.length && !filters.cuisines.includes(recipe.cuisine || "")) return false;
+  if (filters.timeMax && ((recipe.prepTime || 0) + (recipe.cookTime || 0)) > filters.timeMax) return false;
+  if (filters.cooking?.length && !matchesCooking(recipe, filters.cooking)) return false;
+  if (filters.season && !(resolver && isRecipeInSeason(recipe, resolver))) return false;
+  if (filters.vegan && !(resolver && isRecipeVegan(recipe, resolver, { recipes }))) return false;
+  if (filters.nutriMax && !(recipe.nutriLetter && NUTRI_ORDER[recipe.nutriLetter] <= NUTRI_ORDER[filters.nutriMax])) return false;
+  if (filters.diffMax) {
+    const s = computeDifficulty(recipe, techniques || [], { index: techIndex, recipes }).score;
+    if (!(s != null && s <= filters.diffMax)) return false;
   }
-  if (f.ingredients?.length) {
+  if (filters.ingredients?.length) {
     if (!resolver) return false;
     const ids = new Set<string>();
-    for (const ri of r.ingredients || []) { const m = resolver(ri.name); if (m) ids.add(m.id); }
-    if (!f.ingredients.every(id => ids.has(id))) return false;
+    for (const ri of recipe.ingredients || []) { const m = resolver(ri.name); if (m) ids.add(m.id); }
+    if (!filters.ingredients.every(id => ids.has(id))) return false;
   }
   return true;
 }

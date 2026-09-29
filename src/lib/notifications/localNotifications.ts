@@ -74,18 +74,18 @@ export async function ensureTimerNotificationPermission(): Promise<boolean> {
  * ou si `at` est déjà passé. Les échecs (permission refusée, plugin indisponible)
  * sont avalés : l'alarme premier plan reste le filet de sécurité.
  *
- * @param n - Description de la notification à planifier.
+ * @param notification - Description de la notification à planifier.
  */
-export async function scheduleTimerNotification(n: TimerNotification): Promise<void> {
-  if (!isNative() || n.at.getTime() <= Date.now()) return;
+export async function scheduleTimerNotification(notification: TimerNotification): Promise<void> {
+  if (!isNative() || notification.at.getTime() <= Date.now()) return;
   try {
     await LocalNotifications.schedule({
       notifications: [{
-        id: n.notifId,
-        title: n.title,
-        body: n.body,
+        id: notification.notifId,
+        title: notification.title,
+        body: notification.body,
         // `allowWhileIdle` : déclenche même en Doze (écran éteint depuis longtemps).
-        schedule: { at: n.at, allowWhileIdle: true },
+        schedule: { at: notification.at, allowWhileIdle: true },
       }],
     });
   } catch {

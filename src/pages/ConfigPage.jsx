@@ -19,8 +19,8 @@ import {
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
   TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES, buildTechniqueFromDraft,
 } from "@/lib/household/dataYaml.js";
-import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
-import { PRECAUTION_TONES } from "@/lib/utensils/usagePrecaution.js";
+import { APPLIANCE_LABELS } from "@/lib/ustensils/appliances.js";
+import { PRECAUTION_TONES } from "@/lib/ustensils/usagePrecaution.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { formatMonths } from "@/lib/food/seasonality.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";

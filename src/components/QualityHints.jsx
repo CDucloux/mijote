@@ -1,4 +1,4 @@
-import { precautionVisual } from "@/lib/utensils/usagePrecaution.js";
+import { precautionVisual } from "@/lib/ustensils/usagePrecaution.js";
 import { SwipeableSheet } from "./SwipeableSheet.jsx";
 import { Icon } from "./Icon.jsx";
 

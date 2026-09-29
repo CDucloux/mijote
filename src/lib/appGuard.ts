@@ -88,6 +88,9 @@ export interface AppGuardInput {
  * allowlist vide n'entravent JAMAIS le client. On ne bloque que sur un critère
  * explicitement configuré et sans ambiguïté (version strictement antérieure au
  * minimum, ou hôte hors d'une allowlist non vide).
+ *
+ * @param input - Identité du client courant (version + hôte) et config distante validée.
+ * @returns Le verdict : autorisé, ou bloqué avec la raison (version périmée / hôte non autorisé).
  */
 export function evaluateAppGuard({ currentVersion, host, config }: AppGuardInput): AppGuardVerdict {
   if (!config) return { ok: true };

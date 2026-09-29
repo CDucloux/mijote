@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, type DependencyList, type RefObject } from "react";
 
 /**
  * Gestes tactiles sur le contenu d'une étape du cook mode :
@@ -15,40 +15,47 @@ import { useRef, useEffect } from "react";
  * @param onPrev - Revient à l'étape précédente.
  * @param deps - Dépendances de rebind (index d'étape, total, etc.).
  */
-export function useStepGestures(active, onNext, onPrev, deps) {
-  const stepScrollRef = useRef(null);
-  const stepElasticRef = useRef(null);
+export function useStepGestures(
+  active: boolean,
+  onNext: () => void,
+  onPrev: () => void,
+  deps: DependencyList,
+): { stepScrollRef: RefObject<HTMLDivElement | null>; stepElasticRef: RefObject<HTMLDivElement | null> } {
+  const stepScrollRef = useRef<HTMLDivElement | null>(null);
+  const stepElasticRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = stepScrollRef.current;
     if (!el || !active) return;
     // Amplitude plus contenue (max 56 px) et ressort plus posé.
     const MAX_PULL = 56;
-    const damp = (d, max) => max * (1 - Math.exp(-d / max));
-    const atTop = () => el.scrollTop <= 0;
-    const atBottom = () => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
-    let dragging = false, x0 = 0, y0 = 0, axis = null, edge = null, pull = 0, raf = 0;
+    const damp = (d: number, max: number): number => max * (1 - Math.exp(-d / max));
+    const atTop = (): boolean => el.scrollTop <= 0;
+    const atBottom = (): boolean => el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
+    let dragging = false, x0 = 0, y0 = 0, pull = 0, raf = 0;
+    let axis: "x" | "y" | null = null;
+    let edge: "top" | "bottom" | "scroll" | null = null;
     // Écriture du transform batchée à la frame (évite les écritures multiples par
     // frame pendant le drag → moins de « lag »).
-    const flush = () => { raf = 0; const p = stepElasticRef.current; if (p) p.style.transform = pull ? `translateY(${pull.toFixed(2)}px)` : ""; };
-    const scheduleFlush = () => { if (!raf) raf = requestAnimationFrame(flush); };
-    const setPull = (v) => { pull = v; scheduleFlush(); };
-    const springBack = () => {
+    const flush = (): void => { raf = 0; const p = stepElasticRef.current; if (p) p.style.transform = pull ? `translateY(${pull.toFixed(2)}px)` : ""; };
+    const scheduleFlush = (): void => { if (!raf) raf = requestAnimationFrame(flush); };
+    const setPull = (v: number): void => { pull = v; scheduleFlush(); };
+    const springBack = (): void => {
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       pull = 0;
       const p = stepElasticRef.current; if (!p) return;
       p.style.transition = "transform 0.8s cubic-bezier(0.22,1,0.3,1)";
       p.style.transform = "translateY(0px)";
       // Retire la couche GPU une fois le ressort terminé (rendu texte net au repos).
-      const clear = () => { p.style.willChange = ""; p.removeEventListener("transitionend", clear); };
+      const clear = (): void => { p.style.willChange = ""; p.removeEventListener("transitionend", clear); };
       p.addEventListener("transitionend", clear);
     };
-    const onDown = (e) => {
+    const onDown = (e: TouchEvent): void => {
       dragging = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; edge = null; pull = 0;
       // `will-change` posé UNIQUEMENT le temps du drag : une couche GPU permanente
       // sur ce conteneur dégradait le rendu du texte (chiffres « qui bavent »).
       const p = stepElasticRef.current; if (p) { p.style.transition = "none"; p.style.willChange = "transform"; }
     };
-    const onMove = (e) => {
+    const onMove = (e: TouchEvent): void => {
       if (!dragging) return;
       const dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0;
       if (!axis) { if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
@@ -57,7 +64,7 @@ export function useStepGestures(active, onNext, onPrev, deps) {
       if (edge === "top") { setPull(damp(dy, MAX_PULL)); if (e.cancelable) e.preventDefault(); }
       else if (edge === "bottom") { setPull(-damp(-dy, MAX_PULL)); if (e.cancelable) e.preventDefault(); }
     };
-    const onUp = (e) => {
+    const onUp = (e: TouchEvent): void => {
       if (!dragging) return;
       dragging = false;
       if (axis === "x") {

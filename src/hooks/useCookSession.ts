@@ -1,6 +1,24 @@
 import { useEffect, useRef } from "react";
+import { type PluginListenerHandle } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
-import { startCookBar, updateCookBar, stopCookBar, onCookAction } from "@/lib/cookSession/plugin.ts";
+import { startCookBar, updateCookBar, stopCookBar, onCookAction } from "@/lib/cookSession/plugin.js";
+import type { CookSessionSnapshot } from "@/lib/cookSession/snapshot.js";
+
+/** Options du câblage de la barre native du cook mode. */
+export interface CookSessionOptions {
+  /** La barre doit-elle être affichée (session en cours, non terminée). */
+  active: boolean;
+  /** État courant à refléter. */
+  snapshot: CookSessionSnapshot;
+  /** Passe à l'étape suivante. */
+  onNext: () => void;
+  /** Revient à l'étape précédente. */
+  onPrev: () => void;
+  /** Met en pause / relance le minuteur pilote. */
+  onToggleTimer: () => void;
+  /** Ferme le cook mode. */
+  onStop: () => void;
+}
 
 /**
  * Câble la barre de notification native du cook mode (plugin `CookSession`) sur
@@ -13,15 +31,9 @@ import { startCookBar, updateCookBar, stopCookBar, onCookAction } from "@/lib/co
  * est déjà no-op. À monter une seule fois par session (recette principale ; les
  * bases imbriquées n'ouvrent pas de barre).
  *
- * @param {object} opts
- * @param {boolean} opts.active - La barre doit-elle être affichée (session en cours, non terminée).
- * @param {import("@/lib/cookSession/snapshot").CookSessionSnapshot} opts.snapshot - État courant à refléter.
- * @param {() => void} opts.onNext - Passe à l'étape suivante.
- * @param {() => void} opts.onPrev - Revient à l'étape précédente.
- * @param {() => void} opts.onToggleTimer - Met en pause / relance le minuteur pilote.
- * @param {() => void} opts.onStop - Ferme le cook mode.
+ * @param options - Voir {@link CookSessionOptions}.
  */
-export function useCookSession({ active, snapshot, onNext, onPrev, onToggleTimer, onStop }) {
+export function useCookSession({ active, snapshot, onNext, onPrev, onToggleTimer, onStop }: CookSessionOptions): void {
   // Motif « latest ref » : l'écouteur natif est posé une seule fois mais lit
   // toujours les callbacks les plus récents sans se re-câbler.
   const latest = useRef({ onNext, onPrev, onToggleTimer, onStop });
@@ -61,7 +73,7 @@ export function useCookSession({ active, snapshot, onNext, onPrev, onToggleTimer
   // minuteur peuvent avoir changé pendant l'absence).
   useEffect(() => {
     if (!active) return;
-    let handle;
+    let handle: PluginListenerHandle | undefined;
     let cancelled = false;
     CapacitorApp.addListener("resume", () => { updateCookBar(snapRef.current); })
       .then((h) => { if (cancelled) h.remove(); else handle = h; });
@@ -70,7 +82,7 @@ export function useCookSession({ active, snapshot, onNext, onPrev, onToggleTimer
 }
 
 /** Clé de contenu du snapshot pour piloter les dépendances d'effet. */
-function serializeSnapshot(s) {
+function serializeSnapshot(s: CookSessionSnapshot): string {
   return [
     s.recipeTitle, s.imageUrl, s.stepLabel, s.stepText, s.pageIndex, s.pageCount, s.canPrev, s.canNext,
     s.timer ? `${s.timer.endAt}|${s.timer.running}|${s.timer.label}|${s.timer.totalMs}` : "",

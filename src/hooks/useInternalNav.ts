@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { internalNavPath } from "../lib/ui/internalLink.js";
 
@@ -7,10 +7,10 @@ import { internalNavPath } from "../lib/ui/internalLink.js";
 // intercepte les clics d'ancres internes (/guide/..., /legal/...) et les route via
 // React Router au lieu d'un rechargement plein écran. Les liens externes, nouveaux
 // onglets et clics modifiés gardent leur comportement natif (cf. internalNavPath).
-export function useInternalNav() {
+export function useInternalNav(): (e: MouseEvent<HTMLElement>) => void {
   const navigate = useNavigate();
-  return useCallback((e) => {
-    const anchor = e.target.closest("a");
+  return useCallback((e: MouseEvent<HTMLElement>) => {
+    const anchor = (e.target as HTMLElement).closest("a");
     if (!anchor) return;
     const path = internalNavPath({
       href: anchor.getAttribute("href"),

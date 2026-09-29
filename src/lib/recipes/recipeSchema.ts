@@ -24,16 +24,16 @@ export function cleanRecipeForExport(recipe: Record<string, unknown>): Record<st
  * erreurs (vide = conforme). Évite d'injecter des données corrompues dans la base
  * (champs au mauvais type, structures inattendues, valeurs aberrantes).
  *
- * @param r - Donnée importée, de forme inconnue (validée ici avant tout usage).
+ * @param raw - Donnée importée, de forme inconnue (validée ici avant tout usage).
  * @param label - Étiquette de la recette dans les messages d'erreur.
  * @returns La liste des erreurs de schéma (vide = recette conforme).
  */
-export function validateRecipeSchema(r: unknown, label: string): string[] {
+export function validateRecipeSchema(raw: unknown, label: string): string[] {
   const errs: string[] = [];
-  if (typeof r !== "object" || r === null || Array.isArray(r)) return [`${label} : ce n'est pas un objet recette.`];
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return [`${label} : ce n'est pas un objet recette.`];
   // Donnée non fiable déjà confirmée « objet » : on accède aux champs via un cast
   // permissif, chaque valeur étant vérifiée avant d'être considérée valide.
-  const rec = r as Record<string, unknown>;
+  const rec = raw as Record<string, unknown>;
   if (typeof rec.name !== "string" || !rec.name.trim()) errs.push(`${label} : champ "name" manquant ou vide.`);
   else if (rec.name.length > 200) errs.push(`${label} : "name" trop long (max 200 caractères).`);
   (["prepTime", "cookTime", "servings"] as const).forEach(k => {

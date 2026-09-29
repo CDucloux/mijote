@@ -9,7 +9,7 @@ import { httpsCallable, type HttpsCallableResult } from "firebase/functions";
 import { functions } from "@/lib/firebase/firebase.js";
 import { prepareImageForUpload, blobToBase64 } from "@/lib/firebase/imageResize.js";
 import { importRequestId } from "@/lib/recipes/importIdempotency.js";
-import type { ApplianceImportInfo } from "@/lib/utensils/appliances.js";
+import type { ApplianceImportInfo } from "@/lib/ustensils/appliances.js";
 
 /** Erreur d'import : conserve le `code` canonique Firebase (origine visible). */
 export interface ImportError extends Error { code: string }
@@ -34,16 +34,16 @@ const ERROR_MESSAGES: Record<string, string> = {
  * canonique : le code (perdu par `new Error(e.message)`) est CONSERVÉ (origine
  * visible) ; un message serveur en français prime, sinon on retombe sur la table.
  *
- * @param e - L'erreur brute remontée par le SDK callable.
+ * @param error - L'erreur brute remontée par le SDK callable.
  * @returns Une `Error` avec un message lisible et un champ `code` canonique.
  */
-export function mapImportError(e: unknown): ImportError {
-  const err = e as { code?: string; message?: string } | null;
+export function mapImportError(error: unknown): ImportError {
+  const err = error as { code?: string; message?: string } | null;
   const code = String(err?.code || "").replace(/^functions\//, "") || "internal";
   const serverMsg = String(err?.message || "").trim();
   const lisible = serverMsg && serverMsg.toLowerCase() !== code && !/^functions\//.test(serverMsg);
   const message = lisible ? serverMsg : (ERROR_MESSAGES[code] || "L'import a échoué. Réessaie.");
-  const out = new Error(message, { cause: e }) as ImportError;
+  const out = new Error(message, { cause: error }) as ImportError;
   out.code = code;
   return out;
 }

@@ -7,7 +7,7 @@ import { MoveArrows } from "./MoveArrows.jsx";
 import { IngImage } from "./Img.jsx";
 import { UtImage } from "./StepPills.jsx";
 import { ApplianceParamsEditor } from "./ApplianceParams.jsx";
-import { isApplianceKey } from "@/lib/utensils/appliances.js";
+import { isApplianceKey } from "@/lib/ustensils/appliances.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../hooks/useDragReorder.js";
 

@@ -40,9 +40,9 @@ export interface DismissSignals {
  * une fiche est effectivement affichée et que l'utilisateur n'a pas réclamé la
  * réduction des animations. Faux partout ailleurs -> retour immédiat.
  *
- * @param s - Les signaux de décision.
+ * @param signals - Les signaux de décision.
  * @returns `true` s'il faut animer la sortie plutôt que naviguer d'emblée.
  */
-export function shouldAnimateDismiss(s: DismissSignals): boolean {
-  return s.onDetail && !s.isDesktop && !s.reducedMotion && isCapacitorContext(s.ctx);
+export function shouldAnimateDismiss(signals: DismissSignals): boolean {
+  return signals.onDetail && !signals.isDesktop && !signals.reducedMotion && isCapacitorContext(signals.ctx);
 }

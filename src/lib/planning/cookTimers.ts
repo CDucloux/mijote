@@ -75,11 +75,11 @@ export function startTimer(init: CookTimerInit, now: number): CookTimer {
  * négatif. Arrondi au plafond pour qu'on voie « 6:00 » et non « 5:59 » à l'instant
  * du lancement.
  *
- * @param t - Le minuteur.
+ * @param timer - Le minuteur.
  * @param now - Horodatage courant en ms.
  */
-export function remainingSecs(t: CookTimer, now: number): number {
-  const ms = t.running && t.endAt != null ? t.endAt - now : t.remainingMs;
+export function remainingSecs(timer: CookTimer, now: number): number {
+  const ms = timer.running && timer.endAt != null ? timer.endAt - now : timer.remainingMs;
   return Math.max(0, Math.ceil(ms / 1000));
 }
 
@@ -88,58 +88,58 @@ export function remainingSecs(t: CookTimer, now: number): number {
  * uniquement pour un minuteur en marche, non déjà marqué terminé, dont le restant
  * est nul (typiquement détecté au retour d'arrière-plan).
  *
- * @param t - Le minuteur.
+ * @param timer - Le minuteur.
  * @param now - Horodatage courant en ms.
  */
-export function hasElapsed(t: CookTimer, now: number): boolean {
-  return t.running && !t.done && t.endAt != null && t.endAt <= now;
+export function hasElapsed(timer: CookTimer, now: number): boolean {
+  return timer.running && !timer.done && timer.endAt != null && timer.endAt <= now;
 }
 
 /**
  * Marque un minuteur comme terminé (décompte figé à zéro, plus en marche).
  * Idempotent.
  *
- * @param t - Le minuteur.
+ * @param timer - Le minuteur.
  */
-export function markDone(t: CookTimer): CookTimer {
-  if (t.done) return t;
-  return { ...t, running: false, endAt: null, remainingMs: 0, done: true };
+export function markDone(timer: CookTimer): CookTimer {
+  if (timer.done) return timer;
+  return { ...timer, running: false, endAt: null, remainingMs: 0, done: true };
 }
 
 /**
  * Met en pause : fige le restant courant et coupe l'échéance. Sans effet sur un
  * minuteur déjà en pause ou terminé.
  *
- * @param t - Le minuteur.
+ * @param timer - Le minuteur.
  * @param now - Horodatage courant en ms.
  */
-export function pauseTimer(t: CookTimer, now: number): CookTimer {
-  if (!t.running || t.done) return t;
-  const remainingMs = Math.max(0, (t.endAt ?? now) - now);
-  return { ...t, running: false, endAt: null, remainingMs };
+export function pauseTimer(timer: CookTimer, now: number): CookTimer {
+  if (!timer.running || timer.done) return timer;
+  const remainingMs = Math.max(0, (timer.endAt ?? now) - now);
+  return { ...timer, running: false, endAt: null, remainingMs };
 }
 
 /**
  * Reprend un minuteur en pause : recale l'échéance sur `now + restant`. Sans effet
  * sur un minuteur déjà en marche ou terminé.
  *
- * @param t - Le minuteur.
+ * @param timer - Le minuteur.
  * @param now - Horodatage courant en ms.
  */
-export function resumeTimer(t: CookTimer, now: number): CookTimer {
-  if (t.running || t.done) return t;
-  return { ...t, running: true, endAt: now + t.remainingMs };
+export function resumeTimer(timer: CookTimer, now: number): CookTimer {
+  if (timer.running || timer.done) return timer;
+  return { ...timer, running: true, endAt: now + timer.remainingMs };
 }
 
 /**
  * Relance un minuteur terminé (ou en cours) depuis sa durée totale.
  *
- * @param t - Le minuteur.
+ * @param timer - Le minuteur.
  * @param now - Horodatage courant en ms.
  */
-export function resetTimer(t: CookTimer, now: number): CookTimer {
-  const durationMs = t.totalSec * 1000;
-  return { ...t, running: true, endAt: now + durationMs, remainingMs: durationMs, done: false };
+export function resetTimer(timer: CookTimer, now: number): CookTimer {
+  const durationMs = timer.totalSec * 1000;
+  return { ...timer, running: true, endAt: now + durationMs, remainingMs: durationMs, done: false };
 }
 
 /**

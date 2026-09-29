@@ -9,10 +9,12 @@ La dette technique est l'ennemi. Chaque changement doit **réduire ou maintenir*
 - **Fonctions pures et petites**, une seule responsabilité. Viser **< 400 lignes par fichier** ; au-delà, découper par responsabilité.
 - **Pas de duplication** : factoriser dès la 2ᵉ occurrence (helper, composant, hook).
 - **Nommage explicite**, français côté domaine métier quand c'est déjà la convention du fichier.
+- **Pas de paramètre à une lettre sur une fonction/export public de `src/lib/` ou `functions/`** : ils remontent tels quels dans le TypeDoc généré (un `@param s` affiché en doc publique trahit le manque de soin) et un `@param` DOIT reprendre le nom réel du paramètre. Un objet de domaine nommé d'après son initiale (`h: Household`, `t: CookTimer`, `ev: ActivityEvent`, `f: RecipeFilters`, `r: Recipe`) prend son nom complet (`household`, `timer`, `event`, `filters`, `recipe`). **Exception assumée** (relève du « épouser le style » ci-dessous, à ne PAS renommer) : les idiomes sur types primitifs (`s: string` d'un utilitaire de chaînes, `n: number` d'un formateur, `w`/`h` pour largeur/hauteur, `p` pour une progression, comparateurs `a`/`b`) et toutes les **locales jetables** (`d` dans un `.map`, `tx` pour une transaction, index de boucle).
 - Lire le code alentour et **en épouser le style** (idiomes, conventions, densité) avant d'écrire.
 
 ## 2. Typage : `src/lib/` et backend, TypeScript TOUJOURS, non négociable
 - Tout code dans `src/lib/` et `functions/` est en **TypeScript fortement typé**. Interdits : `any` implicite ou explicite (préférer `unknown` + narrowing), types manquants sur les signatures publiques, casts non justifiés.
+- **`src/hooks/` : tout hook est en `.ts` (ou `.tsx` s'il contient du JSX), jamais `.js`.** Un hook nouveau naît typé ; un hook `.js` croisé se migre vers `.ts` (props/retour via une interface dédiée, frontières avec `lib/` typées par `Parameters<typeof fn>[i]` / `ReturnType<>` quand les formes diffèrent, jamais de cast à l'aveugle). Les fichiers de test (`__tests__/*.test.js`) peuvent rester en `.js` (non type-checkés, `checkJs: false`).
 - Les payloads externes (réponse LLM, données Firestore, entrées réseau) sont typés `unknown` puis validés/narrowés, jamais castés à l'aveugle.
 - `tsc --noEmit` doit passer (0 erreur). `strict` est activé, il le reste.
 

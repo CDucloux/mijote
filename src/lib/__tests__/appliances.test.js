@@ -3,7 +3,7 @@ import {
   APPLIANCE_LABELS, APPLIANCE_SCHEMAS,
   isApplianceKey, getApplianceSchema, validateParamValues, formatParamSummary,
   applianceImportInfos, sanitizeStepUtensilParams,
-} from "@/lib/utensils/appliances.js";
+} from "@/lib/ustensils/appliances.js";
 
 describe("schémas d'appareils", () => {
   it("chaque appareil étiqueté a un schéma non vide et cohérent", () => {

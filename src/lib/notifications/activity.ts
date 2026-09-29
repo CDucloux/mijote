@@ -67,9 +67,9 @@ export interface ActivityView {
 
 const KNOWN = new Set<string>(ACTIVITY_TYPES);
 
-/** Vrai si `t` est un {@link ActivityType} connu. */
-export function isActivityType(t: unknown): t is ActivityType {
-  return typeof t === "string" && KNOWN.has(t);
+/** Vrai si `value` est un {@link ActivityType} connu. */
+export function isActivityType(value: unknown): value is ActivityType {
+  return typeof value === "string" && KNOWN.has(value);
 }
 
 const asStr = (v: unknown): string => (typeof v === "string" ? v : "");
@@ -123,14 +123,14 @@ const plural = (n: number, s = "s"): string => (n > 1 ? s : "");
  * Libellé de l'auteur d'un évènement : « Toi » quand c'est l'utilisateur courant,
  * sinon son nom, à défaut le préfixe de son email, à défaut « Le foyer ».
  *
- * @param ev - Évènement.
+ * @param event - Évènement.
  * @param currentEmail - Email de l'utilisateur courant (comparé en minuscule).
  */
-export function actorLabel(ev: ActivityEvent, currentEmail: string | null | undefined): string {
-  if (ev.actorEmail && ev.actorEmail === (currentEmail || "").toLowerCase()) return "Toi";
-  const name = ev.actorName.trim();
+export function actorLabel(event: ActivityEvent, currentEmail: string | null | undefined): string {
+  if (event.actorEmail && event.actorEmail === (currentEmail || "").toLowerCase()) return "Toi";
+  const name = event.actorName.trim();
   if (name) return name.split(" ")[0];
-  const prefix = ev.actorEmail.split("@")[0];
+  const prefix = event.actorEmail.split("@")[0];
   return prefix || "Le foyer";
 }
 
@@ -163,13 +163,6 @@ const DESCRIPTORS: Record<ActivityType, { icon: string; color: string; route: st
 };
 
 /**
- * Descripteur de rendu d'un évènement : icône métier, couleur (token), phrase
- * prête à afficher et onglet cible (`route`, `null` si non navigable). L'auteur et
- * l'horodatage relatif sont composés à part par l'UI.
- *
- * @param ev - Évènement à décrire.
- */
-/**
  * Lien profond d'un évènement : quand la cible a un id, on renvoie vers SA page
  * (fiche recette, liste de courses précise) plutôt que vers l'onglet générique.
  * Sans id (évènement ancien, cible multiple comme un import), on retombe sur
@@ -182,9 +175,17 @@ function routeFor(ev: ActivityEvent, base: string | null): string | null {
   return base;
 }
 
-export function describeActivity(ev: ActivityEvent): ActivityView {
-  const d = DESCRIPTORS[ev.type];
-  return { icon: d.icon, color: d.color, route: routeFor(ev, d.route), title: d.title(ev) };
+/**
+ * Descripteur de rendu d'un évènement : icône métier, couleur (token), phrase
+ * prête à afficher et onglet cible (`route`, `null` si non navigable). L'auteur et
+ * l'horodatage relatif sont composés à part par l'UI.
+ *
+ * @param event - Évènement à décrire.
+ * @returns La vue prête à afficher (icône, couleur, titre, lien profond éventuel).
+ */
+export function describeActivity(event: ActivityEvent): ActivityView {
+  const descriptor = DESCRIPTORS[event.type];
+  return { icon: descriptor.icon, color: descriptor.color, route: routeFor(event, descriptor.route), title: descriptor.title(event) };
 }
 
 /**

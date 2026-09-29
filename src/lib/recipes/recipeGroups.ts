@@ -54,6 +54,10 @@ export function groupBy<T extends { group?: string }>(items: readonly T[]): Sect
  * numérotation doit rester continue et suivre le fil de la recette (comme le mode
  * pas à pas). `start` = index global (0-based) du premier item du run → la n-ième
  * étape d'un run porte le numéro `start + n` (1-based).
+ *
+ * @param items - Lignes ordonnées (chaque item peut porter un `group?: string`).
+ * @returns Les runs contigus, chacun avec son `group` (`null` = hors-section) et le
+ *   `start` (index global 0-based de son premier item) pour la numérotation continue.
  */
 export function sectionRuns<T extends { group?: string }>(items: readonly T[]): { group: string | null; items: T[]; start: number }[] {
   const runs: { group: string | null; items: T[]; start: number }[] = [];
@@ -68,7 +72,12 @@ export function sectionRuns<T extends { group?: string }>(items: readonly T[]): 
   return runs;
 }
 
-/** `true` si au moins une ligne porte un groupe non vide (⇒ affichage sectionné). */
+/**
+ * Une liste comporte-t-elle au moins une section nommée ? (⇒ affichage sectionné).
+ *
+ * @param items - Lignes à inspecter (indéfini toléré).
+ * @returns `true` si au moins une ligne porte un `group` non vide.
+ */
 export function hasGroups(items: readonly { group?: string }[] | undefined): boolean {
   return !!items?.some(i => label(i.group) !== "");
 }
@@ -93,6 +102,9 @@ export function looseRunLabel(run: { group?: string | null }, isLast: boolean, h
 /**
  * Libellés de groupes d'une recette, dans l'ordre de première apparition (ingrédients
  * puis étapes). Utile pour proposer les groupes existants dans l'éditeur.
+ *
+ * @param recipe - Recette dont on lit `ingredients` et `steps`.
+ * @returns Les libellés de sections uniques, dédupliqués, dans l'ordre d'apparition.
  */
 export function groupOrder(recipe: { ingredients?: { group?: string }[]; steps?: { group?: string }[] }): string[] {
   const seen = new Set<string>();
@@ -104,7 +116,15 @@ export function groupOrder(recipe: { ingredients?: { group?: string }[]; steps?:
   return order;
 }
 
-/** Renomme un groupe (ou le supprime si `to` est vide) sur une liste d'items. */
+/**
+ * Renomme un groupe sur une liste d'items (ou l'efface, ramenant ses lignes à la
+ * section principale, si `to` est vide). Ne touche que les lignes du groupe `from`.
+ *
+ * @param items - Liste source (non mutée).
+ * @param from - Libellé du groupe à renommer.
+ * @param to - Nouveau libellé (vide = suppression du groupe).
+ * @returns Une nouvelle liste avec les `group` mis à jour.
+ */
 export function relabelGroup<T extends { group?: string }>(items: readonly T[], from: string, to: string): T[] {
   const f = label(from);
   const t = label(to);
@@ -117,6 +137,12 @@ export function relabelGroup<T extends { group?: string }>(items: readonly T[], 
  * `""` s'il devient premier). Base du réordonnancement positionnel de l'éditeur :
  * monter une ligne au-dessus de l'en-tête d'une section la fait sortir de la section,
  * la descendre dans un autre bloc l'y intègre.
+ *
+ * @param items - Liste complète source (non mutée).
+ * @param fromIdx - Index global de l'item déplacé (hors bornes ⇒ copie inchangée).
+ * @param toIdx - Index de destination (borné à `[0, longueur]`).
+ * @returns Une nouvelle liste, l'item déplacé ayant adopté le `group` de son
+ *   nouveau prédécesseur (`""` s'il devient premier).
  */
 export function moveWithAdopt<T extends { group?: string }>(items: readonly T[], fromIdx: number, toIdx: number): T[] {
   if (fromIdx < 0 || fromIdx >= items.length) return items.slice();
