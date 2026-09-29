@@ -8,7 +8,7 @@ import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { buildPostesDecoupe, findDecoupeStepIndex } from "@/lib/recipes/decoupe.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
-import { resolveUsagePrecaution } from "@/lib/ustensils/usagePrecaution.js";
+import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
 import { UtensilPrecautionSheet } from "../components/QualityHints.jsx";
 import { fmtQtyUnit, fmtElapsed } from "../lib/format.js";
 import { groupIngredientsByCategory, buildPendingComponents } from "@/lib/cookSession/misEnPlace.ts";

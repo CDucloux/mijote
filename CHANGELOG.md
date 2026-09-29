@@ -1,11 +1,16 @@
 # Changelog – Cardamome
 
+## v4.59.3 – Cardamome · Coquille rattrapée
+
+### Sous le capot
+- **Retour à `src/lib/utensils`** : le dossier renommé en `ustensils` à la version précédente reprend son nom d'origine, `utensil` étant bien l'orthographe anglaise correcte (le reste du code est déjà en anglais). Aucun changement visible.
+
 ## v4.59.2 – Cardamome · Base plus nette
 
 ### Sous le capot
 - **Documentation `src/lib` homogénéisée** : docstrings TypeDoc complétées (contrat, params, retour) sur les accesseurs Firestore, la saisonnalité, les groupes de recettes, l'observabilité et quelques exports ponctuels. Une docstring égarée (journal d'activité) remise à sa place.
 - **Nommage plus lisible** : les paramètres d'une lettre nommés d'après l'initiale de leur type de domaine (`h`, `t`, `ev`, `f`, `r`…) prennent leur nom complet sur les fonctions publiques ; la règle est désormais gravée dans les conventions du projet.
-- **Dossier renommé** : `src/lib/utensils` devient `src/lib/ustensils` (orthographe française).
+- **Dossier renommé** : `src/lib/utensils` devient `src/lib/ustensils`.
 - **Hooks tout en TypeScript** : les 7 hooks encore en JavaScript passent en `.ts` fortement typé (aucun `any`), et la convention est actée. Aucun changement visible.
 
 ## v4.59.1 – Cardamome · Retour fluide, cuisine allégée

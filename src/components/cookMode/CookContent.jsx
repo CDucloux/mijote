@@ -8,7 +8,7 @@ import { PrecautionInfoBadge } from "../QualityHints.jsx";
 import { ToggleSwitch } from "./ToggleSwitch.jsx";
 import { capitalize, fmtQtyUnit } from "@/lib/format.js";
 import { posteLabel } from "@/lib/recipes/decoupe.js";
-import { formatParamSummary } from "@/lib/ustensils/appliances.js";
+import { formatParamSummary } from "@/lib/utensils/appliances.js";
 
 /**
  * Corps du pas à pas : rend la page courante du cook mode selon son type,

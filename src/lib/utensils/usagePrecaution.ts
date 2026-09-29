@@ -5,7 +5,7 @@
  * TONALITÉ (conseil / cuisson / attention), qui pilote l'icône et la couleur pour
  * ne pas transformer chaque conseil en alerte.
  *
- * @module ustensils/usagePrecaution
+ * @module utensils/usagePrecaution
  */
 import type { PrecautionTone, UsagePrecaution, UtensilDbItem } from "@/lib/types";
 
