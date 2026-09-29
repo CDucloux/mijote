@@ -14,9 +14,9 @@ import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { ING_MD_BOUNDS } from "@/lib/food/ingredientsMarkdown.js";
 import { TIP_TYPES } from "@/constants/tipTypes.js";
 import { isFruitVeg } from "@/constants/categories.js";
-import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
+import { APPLIANCE_LABELS } from "@/lib/ustensils/appliances.js";
 import { INGREDIENT_FORMS, normalizePreferredForms } from "@/lib/food/qualityRecommendation.js";
-import { PRECAUTION_TONES, isPrecautionTone } from "@/lib/utensils/usagePrecaution.js";
+import { PRECAUTION_TONES, isPrecautionTone } from "@/lib/ustensils/usagePrecaution.js";
 
 /** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
 export interface ParseResult<T = Record<string, unknown>> {

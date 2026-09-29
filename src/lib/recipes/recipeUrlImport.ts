@@ -9,7 +9,7 @@ import { httpsCallable, type HttpsCallableResult } from "firebase/functions";
 import { functions } from "@/lib/firebase/firebase.js";
 import { prepareImageForUpload, blobToBase64 } from "@/lib/firebase/imageResize.js";
 import { importRequestId } from "@/lib/recipes/importIdempotency.js";
-import type { ApplianceImportInfo } from "@/lib/utensils/appliances.js";
+import type { ApplianceImportInfo } from "@/lib/ustensils/appliances.js";
 
 /** Erreur d'import : conserve le `code` canonique Firebase (origine visible). */
 export interface ImportError extends Error { code: string }
