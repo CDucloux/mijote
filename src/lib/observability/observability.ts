@@ -30,7 +30,12 @@ export interface ObservabilitySink {
 let sink: ObservabilitySink | null = null;
 const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
 
-/** Enregistre la destination (Sentry…). À appeler une fois au démarrage. */
+/**
+ * Enregistre la destination des signaux. À appeler une fois au démarrage ;
+ * un appel ultérieur remplace le sink courant.
+ *
+ * @param s - L'implémentation fournisseur (Sentry, GlitchTip…).
+ */
 export function initObservability(s: ObservabilitySink): void {
   sink = s;
 }
@@ -50,13 +55,21 @@ export function reportError(error: unknown, context?: Record<string, unknown>): 
 /**
  * Trace un événement/fil d'Ariane (breadcrumb) utile au diagnostic (ex.
  * « sync:bootstrap », « import:start »). N'est PAS de l'analytics produit.
+ * Ne throw jamais.
+ *
+ * @param name - Nom du fil d'Ariane.
+ * @param data - Métadonnées optionnelles attachées à l'événement.
  */
 export function logEvent(name: string, data?: Record<string, unknown>): void {
   if (isDev) console.debug("[obs:event]", name, data ?? "");
   try { sink?.captureEvent?.(name, data); } catch { /* ignore */ }
 }
 
-/** Associe (ou détache) l'utilisateur courant aux signaux, corrèle les erreurs. */
+/**
+ * Associe l'utilisateur courant aux signaux pour corréler les erreurs. Ne throw jamais.
+ *
+ * @param user - L'utilisateur (`id` + email optionnel), ou `null` pour le détacher.
+ */
 export function setObservabilityUser(user: { id: string; email?: string | null } | null): void {
   try { sink?.setUser?.(user); } catch { /* ignore */ }
 }

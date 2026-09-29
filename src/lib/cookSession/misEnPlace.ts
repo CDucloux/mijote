@@ -31,6 +31,11 @@ export interface PendingComponent {
  * configuré, pour l'affichage « par catégorie » de la mise en place. La catégorie
  * d'un ingrédient est résolue par `dbId` puis, à défaut, par correspondance de nom ;
  * les ingrédients non résolus tombent dans « other ». Les rayons vides sont omis.
+ *
+ * @param ingredients - Les lignes d'ingrédients à regrouper (indéfini toléré).
+ * @param ingredientDB - Base d'ingrédients pour résoudre la catégorie (par `dbId` ou nom).
+ * @param categories - Table des rayons (fournit ordre, libellé et icône).
+ * @returns Les rayons non vides, dans l'ordre configuré.
  */
 export function groupIngredientsByCategory(
   ingredients: readonly IngredientLine[] | null | undefined,
@@ -54,6 +59,12 @@ export function groupIngredientsByCategory(
  * du stock : ce sont celles à réaliser avant de commencer. Chaque entrée porte le
  * facteur d'échelle imbriqué (`nestedMult`), produit du multiplicateur courant et de
  * la fraction consommée du composant. Les composants introuvables sont ignorés.
+ *
+ * @param recipe - La recette dont on inspecte les ingrédients.
+ * @param recipesById - Index des recettes par id (indéfini ⇒ aucune préparation).
+ * @param stockSet - Ids des composants déjà en stock (donc à ne pas refaire).
+ * @param mult - Multiplicateur d'échelle courant (défaut effectif 1).
+ * @returns Les préparations de base à réaliser, avec leur facteur d'échelle imbriqué.
  */
 export function buildPendingComponents(
   recipe: Recipe,
