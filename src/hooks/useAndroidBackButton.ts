@@ -1,9 +1,19 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { decideBackAction } from "@/lib/ui/backButton.js";
 import { stripAppBase } from "@/lib/ui/appZone.js";
+
+/** Options du bouton retour matériel Android. */
+export interface AndroidBackButtonOptions {
+  /** Un éditeur est-il ouvert avec des modifications en cours. */
+  isEditing: boolean;
+  /** Ouvre la confirmation d'abandon (au lieu de naviguer). */
+  onLeaveEditor: () => void;
+  /** Enrobe le recul d'un cran (sortie animée d'une fiche) ; navigue direct sinon. */
+  onBackDismiss?: (doNavigate: () => void) => void;
+}
 
 /**
  * Câble le bouton retour matériel (et le geste de retour) d'Android sur la
@@ -20,14 +30,9 @@ import { stripAppBase } from "@/lib/ui/appZone.js";
  * Inerte hors plateforme native (web / PWA) : le geste y est déjà géré par le
  * navigateur. À monter une seule fois, sous le routeur.
  *
- * @param {object} opts
- * @param {boolean} opts.isEditing - Un éditeur est-il ouvert avec des modifications en cours.
- * @param {() => void} opts.onLeaveEditor - Ouvre la confirmation d'abandon (au lieu de naviguer).
- * @param {(doNavigate: () => void) => void} [opts.onBackDismiss] - Enrobe le recul
- *   d'un cran : quand une fiche recette est ouverte, joue sa sortie animée puis
- *   navigue ; sinon navigue immédiatement (cf. `AppInner`). Optionnel.
+ * @param options - Voir {@link AndroidBackButtonOptions}.
  */
-export function useAndroidBackButton({ isEditing, onLeaveEditor, onBackDismiss }) {
+export function useAndroidBackButton({ isEditing, onLeaveEditor, onBackDismiss }: AndroidBackButtonOptions): void {
   const navigate = useNavigate();
   // Motif « latest ref » : l'écouteur natif est posé une seule fois, mais lit
   // toujours l'état d'édition et les callbacks les plus récents sans se re-câbler.
@@ -36,7 +41,7 @@ export function useAndroidBackButton({ isEditing, onLeaveEditor, onBackDismiss }
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    let handle;
+    let handle: PluginListenerHandle | undefined;
     let cancelled = false;
     CapacitorApp.addListener("backButton", ({ canGoBack }) => {
       const { isEditing, onLeaveEditor, onBackDismiss } = latest.current;

@@ -1,13 +1,31 @@
-import { useState, useRef, useEffect } from "react";
-import { startTimer, hasElapsed, markDone, pauseTimer, resumeTimer, resetTimer as resetTimerState, hasActiveDuration } from "@/lib/planning/cookTimers.js";
+import { useState, useRef, useEffect, type Dispatch, type SetStateAction } from "react";
+import { startTimer, hasElapsed, markDone, pauseTimer, resumeTimer, resetTimer as resetTimerState, hasActiveDuration, type CookTimer } from "@/lib/planning/cookTimers.js";
 import { ensureTimerNotificationPermission, scheduleTimerNotification, cancelTimerNotification, deriveNotifId } from "@/lib/notifications/localNotifications.js";
+
+/** Durée candidate d'un minuteur (préréglage d'étape). */
+export interface TimerDuration {
+  minutes: number;
+  label: string;
+}
+
+/** État et actions exposés par {@link useCookTimers}. */
+export interface UseCookTimersResult {
+  timers: CookTimer[];
+  timersOpen: boolean;
+  setTimersOpen: Dispatch<SetStateAction<boolean>>;
+  now: number;
+  addTimer: (duration: TimerDuration, stepIdx: number, stepLabel: string) => void;
+  toggleTimer: (id: string) => void;
+  restartTimer: (id: string) => void;
+  removeTimer: (id: string) => void;
+}
 
 // Sonnerie de fin de minuteur : vibration + trois bips synthétisés (Web Audio).
 // Isolée ici car impérative (effets de bord matériels), no-op si l'API manque.
-function playAlarm() {
+function playAlarm(): void {
   try { navigator.vibrate?.([200, 100, 200]); } catch { /* ignore */ }
   try {
-    const AC = window.AudioContext || window.webkitAudioContext;
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return;
     const ctx = new AC();
     [0, 0.28, 0.56].forEach(off => {
@@ -33,25 +51,25 @@ function playAlarm() {
  * @returns L'état (`timers`, `now`, `timersOpen`) et les actions (`addTimer`,
  *   `toggleTimer`, `restartTimer`, `removeTimer`, `setTimersOpen`).
  */
-export function useCookTimers(notify) {
-  const [timers, setTimers] = useState([]);
+export function useCookTimers(notify?: (message: string) => void): UseCookTimersResult {
+  const [timers, setTimers] = useState<CookTimer[]>([]);
   const [timersOpen, setTimersOpen] = useState(true);
   const [now, setNow] = useState(() => Date.now());
-  const notifiedRef = useRef(new Set());
+  const notifiedRef = useRef(new Set<string>());
   const permAskedRef = useRef(false);
 
-  const timerNotifBody = (t) => `${t.label}${t.stepLabel ? `, ${t.stepLabel.toLowerCase()}` : ""}`;
-  const armNotif = async (t) => {
+  const timerNotifBody = (t: CookTimer): string => `${t.label}${t.stepLabel ? `, ${t.stepLabel.toLowerCase()}` : ""}`;
+  const armNotif = async (t: CookTimer): Promise<void> => {
     if (t.endAt == null) return;
     // Permission demandée à la volée au premier minuteur (Android 13+), avant de planifier.
     if (!permAskedRef.current) { permAskedRef.current = true; await ensureTimerNotificationPermission(); }
     scheduleTimerNotification({ notifId: deriveNotifId(t.id), title: "Minuteur terminé", body: timerNotifBody(t), at: new Date(t.endAt) });
   };
-  const cancelNotif = (t) => cancelTimerNotification(deriveNotifId(t.id));
+  const cancelNotif = (t: CookTimer): Promise<void> => cancelTimerNotification(deriveNotifId(t.id));
 
-  // Ajoute un minuteur pour la durée `d`, rattaché à l'étape (`stepIdx`/`stepLabel`)
+  // Ajoute un minuteur pour la durée `duration`, rattaché à l'étape (`stepIdx`/`stepLabel`)
   // depuis laquelle il est lancé. Sans effet si un minuteur identique tourne déjà.
-  const addTimer = (d, stepIdx, stepLabel) => {
+  const addTimer = (d: TimerDuration, stepIdx: number, stepLabel: string): void => {
     if (hasActiveDuration(timers, d.minutes)) return;
     const clock = Date.now();
     const t = startTimer({ minutes: d.minutes, label: d.label, stepIdx, stepLabel }, clock);
@@ -60,7 +78,7 @@ export function useCookTimers(notify) {
     setTimersOpen(true);
     armNotif(t);
   };
-  const toggleTimer = (id) => {
+  const toggleTimer = (id: string): void => {
     const t = timers.find(x => x.id === id);
     if (!t || t.done) return;
     const clock = Date.now();
@@ -68,7 +86,7 @@ export function useCookTimers(notify) {
     setNow(clock);
     if (t.running) cancelNotif(t); else armNotif(resumeTimer(t, clock));
   };
-  const restartTimer = (id) => {
+  const restartTimer = (id: string): void => {
     const t = timers.find(x => x.id === id);
     const clock = Date.now();
     notifiedRef.current.delete(id);
@@ -76,7 +94,7 @@ export function useCookTimers(notify) {
     setNow(clock);
     if (t) armNotif(resetTimerState(t, clock));
   };
-  const removeTimer = (id) => {
+  const removeTimer = (id: string): void => {
     const t = timers.find(x => x.id === id);
     if (t) cancelNotif(t);
     notifiedRef.current.delete(id);
