@@ -22,7 +22,7 @@ vi.mock("firebase/firestore", () => ({
   },
 }));
 
-vi.mock("@/lib/firebase/firestore.js", () => ({
+vi.mock("@/lib/firebase/households.js", () => ({
   householdMemberQuery: () => ({ type: "member" }),
   householdInviteQuery: () => ({ type: "invite" }),
   createHousehold: vi.fn(), inviteToHousehold: vi.fn(), acceptInvite: vi.fn(),
@@ -31,7 +31,7 @@ vi.mock("@/lib/firebase/firestore.js", () => ({
 }));
 
 import { useHousehold } from "../useHousehold.js";
-import { exitAllHouseholds, createHousehold, acceptInvite } from "@/lib/firebase/firestore.js";
+import { exitAllHouseholds, createHousehold, acceptInvite } from "@/lib/firebase/households.js";
 import { act } from "@testing-library/react";
 
 describe("useHousehold", () => {

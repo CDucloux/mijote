@@ -14,26 +14,47 @@ vi.mock("firebase/firestore", () => ({
   onSnapshot: vi.fn(() => () => {}),
 }));
 vi.mock("@/lib/firebase/firebase.js", () => ({ auth: {}, db: {} }));
-vi.mock("@/lib/firebase/firestore.js", () => ({
+// La couche d'accès Firestore est éclatée par domaine : on mocke chaque module et on
+// réagrège en un seul alias `fs` pour garder le corps des tests inchangé.
+vi.mock("@/lib/firebase/paths.js", () => ({
   metaDoc: vi.fn(() => ({})),
   recipesCol: vi.fn(() => ({})),
+}));
+vi.mock("@/lib/firebase/userDirectory.js", () => ({
   upsertOwnDirectoryEntry: vi.fn(() => Promise.resolve()),
+}));
+vi.mock("@/lib/firebase/masterDb.js", () => ({
   loadMasterDB: vi.fn(),
   subscribeMasterDB: vi.fn(() => () => {}),
+}));
+vi.mock("@/lib/firebase/workspaceData.js", () => ({
   loadUserData: vi.fn(),
   migrateLegacyDoc: vi.fn(() => Promise.resolve(null)),
   syncRecipes: vi.fn(() => Promise.resolve(new Map())),
   loadSharedData: vi.fn(),
   writeSharedData: vi.fn(() => Promise.resolve(new Map())),
-  setHouseholdPointer: vi.fn(() => Promise.resolve()),
-  setSharedWritesLocked: vi.fn(),
   deleteSharedRecipe: vi.fn(() => Promise.resolve()),
+}));
+vi.mock("@/lib/firebase/households.js", () => ({
+  setHouseholdPointer: vi.fn(() => Promise.resolve()),
+}));
+vi.mock("@/lib/firebase/writeLock.js", () => ({
+  setSharedWritesLocked: vi.fn(),
 }));
 vi.mock("@/lib/firebase/appConfig.js", () => ({ loadAppConfig: vi.fn(() => Promise.resolve(null)) }));
 vi.mock("@/lib/household/householdMigration.js", () => ({ mergeShared: (_local, remote) => ({ ...remote }) }));
 
-import * as fs from "@/lib/firebase/firestore.js";
+import * as paths from "@/lib/firebase/paths.js";
+import * as userDirectory from "@/lib/firebase/userDirectory.js";
+import * as masterDb from "@/lib/firebase/masterDb.js";
+import * as workspaceData from "@/lib/firebase/workspaceData.js";
+import * as households from "@/lib/firebase/households.js";
+import * as writeLock from "@/lib/firebase/writeLock.js";
 import { loadAppConfig } from "@/lib/firebase/appConfig.js";
+
+// Alias agrégé : les mocks ci-dessus exposent des références de fonctions stables,
+// donc `fs.X` reste la même instance mockée que celle vue par le hook.
+const fs = { ...paths, ...userDirectory, ...masterDb, ...workspaceData, ...households, ...writeLock };
 import { useFirestoreSync } from "../useFirestoreSync.js";
 
 const SETTER_NAMES = ["setUser", "setSyncStatus", "setRecipes", "setCollections", "setMealPlan", "setShoppingLists", "setStock", "setLowStock", "setPreferences", "setMasterDB", "setUserDB"];

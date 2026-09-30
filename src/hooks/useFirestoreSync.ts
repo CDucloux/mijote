@@ -3,12 +3,15 @@ import { getRedirectResult, onAuthStateChanged, type User } from "firebase/auth"
 import { doc, setDoc, onSnapshot, type DocumentData, type Unsubscribe } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/firebase.js";
 import { reportError, setObservabilityUser } from "@/lib/observability/observability.js";
+import { metaDoc, recipesCol, type WorkspaceRef } from "@/lib/firebase/paths.js";
+import { upsertOwnDirectoryEntry } from "@/lib/firebase/userDirectory.js";
+import { loadMasterDB, subscribeMasterDB, type MasterDB } from "@/lib/firebase/masterDb.js";
 import {
-  metaDoc, recipesCol, upsertOwnDirectoryEntry,
-  loadMasterDB, subscribeMasterDB, loadUserData, migrateLegacyDoc, syncRecipes,
-  loadSharedData, writeSharedData, setHouseholdPointer, setSharedWritesLocked, deleteSharedRecipe,
-  type WorkspaceRef, type MasterDB,
-} from "@/lib/firebase/firestore.js";
+  loadUserData, migrateLegacyDoc, syncRecipes,
+  loadSharedData, writeSharedData, deleteSharedRecipe,
+} from "@/lib/firebase/workspaceData.js";
+import { setHouseholdPointer } from "@/lib/firebase/households.js";
+import { setSharedWritesLocked } from "@/lib/firebase/writeLock.js";
 import { loadAppConfig } from "@/lib/firebase/appConfig.js";
 import { evaluateAppGuard } from "@/lib/appGuard.js";
 import { DEFAULT_CATEGORIES } from "@/constants/categories.js";

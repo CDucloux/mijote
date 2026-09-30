@@ -26,7 +26,7 @@ import { formatMonths } from "@/lib/food/seasonality.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
 import { AdminDashboard } from "../components/admin/AdminDashboard.jsx";
 import { SourcesAdmin } from "../components/admin/SourcesAdmin.jsx";
-import { loadReports, resolveReport, resolveReportsForRecipe, deletePublicRecipe } from "@/lib/firebase/firestore.js";
+import { loadReports, resolveReport, resolveReportsForRecipe, deletePublicRecipe } from "@/lib/firebase/community.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────

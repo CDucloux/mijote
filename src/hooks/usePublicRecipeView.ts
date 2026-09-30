@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { fetchPublicDocsByIds } from "@/lib/firebase/firestore.js";
+import { fetchPublicDocsByIds } from "@/lib/firebase/community.js";
 import { publicId } from "@/lib/household/publicRecipes.js";
 import type { DocumentData } from "firebase/firestore";
 

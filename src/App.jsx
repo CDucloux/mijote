@@ -2,7 +2,9 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, mem
 import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
 
 import { signInWithGoogle } from "@/lib/firebase/auth.js";
-import { subscribeHouseholdPointer, fetchUserDirectory, deletePublicRecipe, reportPublicRecipe } from "@/lib/firebase/firestore.js";
+import { subscribeHouseholdPointer } from "@/lib/firebase/households.js";
+import { fetchUserDirectory } from "@/lib/firebase/userDirectory.js";
+import { deletePublicRecipe, reportPublicRecipe } from "@/lib/firebase/community.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
