@@ -1,4 +1,5 @@
 import { useId } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 // ─── CROQUIS D'ÉTATS VIDES « À L'ENCRE » ──────────────────────────────────────
 // Des illustrations au trait, volontairement irrégulières, pour donner aux écrans
@@ -17,7 +18,7 @@ import { useId } from "react";
 
 // Croquis disponibles, indexés par nom. Chacun est un fragment de tracés dans un
 // viewBox 0 0 120 120 ; la déformation est ajoutée par le filtre en amont.
-const ARTS = {
+const ARTS: Record<string, ReactNode> = {
   // Cocotte couverte au trait de pinceau (épaisseur variable : les tracés sont des
   // FORMES PLEINES effilées, pas des `stroke` uniformes), avec lavis d'ombre et
   // d'intérieur pour le volume. Un seul accent : la vapeur, détachée au-dessus du
@@ -242,19 +243,24 @@ const ARTS = {
   ),
 };
 
+interface EmptyArtProps {
+  /** Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `etagere`, `cloche`, `service`, `liste`, `bibliotheque`). */
+  name?: string;
+  /** Côté du carré de rendu en pixels (viewBox interne fixe). */
+  size?: number;
+  /** Styles complémentaires posés sur le `<svg>` (ex. marge basse). */
+  style?: CSSProperties;
+}
+
 /**
  * Illustration d'état vide au trait, avec le rendu « encre » commun.
- *
- * @param name Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `etagere`, `cloche`, `service`, `liste`, `bibliotheque`).
- * @param size Côté du carré de rendu en pixels (viewBox interne fixe).
- * @param style Styles complémentaires posés sur le `<svg>` (ex. marge basse).
  */
-export function EmptyArt({ name, size = 128, style }) {
+export function EmptyArt({ name, size = 128, style }: EmptyArtProps) {
   // `useId` par instance : chaque croquis a SON filtre, pas de collision d'id
   // même quand plusieurs états vides coexistent. Les deux-points sont retirés
   // car `url(#…)` les tolère mal.
   const fid = "ink" + useId().replace(/:/g, "");
-  const art = ARTS[name] || ARTS.casserole;
+  const art = (name ? ARTS[name] : undefined) || ARTS.casserole;
   return (
     <svg width={size} height={size} viewBox="0 0 120 120" fill="none" aria-hidden="true"
       style={{ color: "var(--text2)", flexShrink: 0, ...style }}>

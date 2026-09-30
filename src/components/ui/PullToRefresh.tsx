@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh.js";
 import { Icon } from "./Icon.jsx";
 
@@ -6,14 +7,21 @@ const REST_Y = 64;
 /** Rotation totale (deg) balayée par la flèche entre repos et seuil atteint. */
 const MAX_SPIN = 270;
 
-export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 }) {
-  const { containerRef, pull, refreshing } = usePullToRefresh(onRefresh, { enabled, threshold });
+interface PullToRefreshProps {
+  enabled: boolean;
+  onRefresh: () => unknown;
+  children?: ReactNode;
+  threshold?: number;
+}
+
+export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 }: PullToRefreshProps) {
+  const { containerRef, pull, refreshing } = usePullToRefresh<HTMLDivElement>(onRefresh, { enabled, threshold });
   const active = pull > 0 || refreshing;
   const progress = Math.min(1, pull / threshold);
   // Le contenu ne bouge plus : seul le cercle descend, en suivant le doigt puis
   // en se calant à REST_Y pendant le refresh.
   const y = refreshing ? REST_Y : pull;
-  const gliding = refreshing || pull === 0; // release ou refresh → transition douce, sinon on colle au doigt
+  const gliding = refreshing || pull === 0; // release ou refresh -> transition douce, sinon on colle au doigt
 
   return (
     <div ref={containerRef} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", overscrollBehavior: "contain" }}>

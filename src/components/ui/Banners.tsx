@@ -1,7 +1,13 @@
+import type { CSSProperties } from "react";
 import { Icon } from "./Icon.jsx";
 
-// ─── READ-ONLY BANNER ─────────────────────────────────────────────────────────
-export function ReadOnlyBanner({ style }) {
+interface BannerProps {
+  /** Styles additionnels (ex. marge basse par section) sans dupliquer le markup. */
+  style?: CSSProperties;
+}
+
+// Bandeau « mode lecture » : la base partagée est en lecture seule pour l'utilisateur.
+export function ReadOnlyBanner({ style }: BannerProps) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(155,135,245,0.20), rgba(155,135,245,0.06))", border: "1px solid rgba(155,135,245,0.38)", boxShadow: "0 2px 12px rgba(155,135,245,0.12)", ...style }}>
       <div style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(155,135,245,0.85)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(155,135,245,0.45)" }}>
@@ -18,10 +24,8 @@ export function ReadOnlyBanner({ style }) {
   );
 }
 
-// ─── ADMIN BANNER (shared Master DB notice) ───────────────────────────────────
-// Single source of truth for the "MODE ADMIN" banner. `style` lets callers add
-// spacing without duplicating the whole markup (e.g. marginBottom per section).
-export function AdminBanner({ style }) {
+// Bandeau « mode admin » : source unique pour la notice de la base partagée (Master DB).
+export function AdminBanner({ style }: BannerProps) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", borderRadius: 14, background: "linear-gradient(135deg, rgba(var(--admin-rgb),0.20), rgba(var(--admin-rgb),0.06))", border: "1px solid rgba(var(--admin-rgb),0.38)", boxShadow: "0 2px 12px rgba(var(--admin-rgb),0.12)", ...style }}>
       <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--admin)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(var(--admin-rgb),0.45)" }}>

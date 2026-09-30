@@ -1,25 +1,35 @@
 import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Icon } from "./Icon.jsx";
+import { Icon, type IconName } from "./Icon.jsx";
 import { useModalExit } from "../../hooks/useModalExit.js";
 import { Row, IconChip } from "./primitives.jsx";
 
-// ─── DIALOGUE DE CONFIRMATION (alerte centrée) ────────────────────────────────
-// Pour les actions destructives / irréversibles. Volontairement PAS une feuille
-// swipeable : une suppression demande une décision (dialogue modal centré,
-// focus sur « Annuler », Échap/clic sur le fond pour annuler) plutôt qu'un tiroir
-// qu'on balaie machinalement. Pastille colorée + icône, titre + message centrés,
-// Annuler / action. Gère un état `busy` (boutons désactivés, fermeture bloquée).
-//
-// tone : "danger" (rouge, défaut) pour supprimer ; "accent" (orange) pour une
-// confirmation forte non destructive.
+interface ConfirmDialogProps {
+  title: ReactNode;
+  children?: ReactNode;
+  icon?: IconName;
+  confirmLabel?: ReactNode;
+  busyLabel?: ReactNode;
+  /** "danger" (rouge, défaut) pour supprimer ; "accent" (orange) pour une confirmation forte non destructive. */
+  tone?: "danger" | "accent";
+  busy?: boolean;
+  onCancel?: () => void;
+  onConfirm?: () => void;
+  zIndex?: number;
+}
+
+// Dialogue de confirmation (alerte centrée) pour les actions destructives /
+// irréversibles. Volontairement PAS une feuille swipeable : une suppression
+// demande une décision (dialogue modal centré, focus sur « Annuler », Échap/clic
+// sur le fond pour annuler). Gère un état `busy` (boutons désactivés, fermeture bloquée).
 export function ConfirmDialog({
   title, children, icon = "trash",
   confirmLabel = "Supprimer", busyLabel = "Suppression…",
   tone = "danger", busy = false, onCancel, onConfirm, zIndex,
-}) {
-  const cancelRef = useRef(null);
-  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(onCancel, { disabled: busy });
+}: ConfirmDialogProps) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit<HTMLDivElement>(onCancel, { disabled: busy });
   useEffect(() => { cancelRef.current?.focus(); }, []);
 
   const accent = tone === "danger" ? "var(--red)" : "var(--accent)";
@@ -27,7 +37,7 @@ export function ConfirmDialog({
 
   return createPortal(
     <div className={`alert-backdrop${closing ? " is-closing" : ""}`} onClick={busy ? undefined : () => beginClose()} style={zIndex != null ? { zIndex } : undefined}>
-      <div ref={surfaceRef} className={`alert-dialog${closing ? " is-closing" : ""}`} role="alertdialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()} onAnimationEnd={onAnimationEnd}>
+      <div ref={surfaceRef} className={`alert-dialog${closing ? " is-closing" : ""}`} role="alertdialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined} onClick={e => e.stopPropagation()} onAnimationEnd={onAnimationEnd}>
         <IconChip size={52} radius="50%" tint={accentSoft} style={{ margin: "0 auto 14px" }}>
           <Icon name={icon} size={24} color={accent} />
         </IconChip>

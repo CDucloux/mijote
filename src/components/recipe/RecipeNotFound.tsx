@@ -1,11 +1,15 @@
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { Icon } from "../ui/Icon.jsx";
 
+interface RecipeNotFoundProps {
+  onBack: () => void;
+}
+
 // État « recette introuvable » : lien mort (recette supprimée, id inconnu). On
 // reste dans le langage graphique des autres écrans vides (croquis à l'encre,
 // titre serif, bouton pill) et on ne montre AUCUN détail technique (pas de code
 // 404) : côté utilisateur, c'est juste une recette qui n'existe pas.
-export function RecipeNotFound({ onBack }) {
+export function RecipeNotFound({ onBack }: RecipeNotFoundProps) {
   return (
     <div className="editor-enter" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, padding: "40px 32px", textAlign: "center" }}>
       <EmptyArt name="loupe" size={132} />

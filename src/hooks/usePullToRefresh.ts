@@ -16,11 +16,11 @@ interface PullGesture { startY: number; startX: number; active: boolean; pull: n
  * @param options.max - Distance maximale du rubber-band (défaut 170).
  * @returns `{ containerRef, pull, refreshing }` (ref à câbler + état d'affichage).
  */
-export function usePullToRefresh(
+export function usePullToRefresh<T extends HTMLElement = HTMLElement>(
   onRefresh: () => unknown,
   { enabled = true, threshold = 110, max = 170 }: { enabled?: boolean; threshold?: number; max?: number } = {},
 ) {
-  const containerRef = useRef<HTMLElement | null>(null);
+  const containerRef = useRef<T | null>(null);
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const g = useRef<PullGesture>({ startY: 0, startX: 0, active: false, pull: 0, dirLocked: false });

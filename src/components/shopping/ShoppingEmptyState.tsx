@@ -1,11 +1,16 @@
 import { Icon } from "../ui/Icon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 
+interface ShoppingEmptyStateProps {
+  onCreate: () => void;
+  onBrowseRecipes: () => void;
+}
+
 /**
  * État vide de la page Courses (aucune liste) : illustration, explication, et
  * deux points d'entrée (créer une liste libre, ou partir d'une recette).
  */
-export function ShoppingEmptyState({ onCreate, onBrowseRecipes }) {
+export function ShoppingEmptyState({ onCreate, onBrowseRecipes }: ShoppingEmptyStateProps) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "24px", maxWidth: 380, margin: "0 auto" }}>
       <EmptyArt name="panier" size={128} style={{ marginBottom: 8 }} />

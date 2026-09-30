@@ -1,25 +1,28 @@
-import { Icon } from "../ui/Icon.jsx";
+import type { CSSProperties } from "react";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 
-// ─── PASTILLES DES ESPACES PARTAGÉS ───────────────────────────────────────────
 // Les 4 espaces mis en commun dans un foyer (recettes, planning, courses, stock),
 // rendus en pastilles cohérentes. Source unique réutilisée par le panneau Foyer,
 // la modale d'invitation et la modale de bienvenue (mêmes libellés / icônes).
-const ESPACES = [
+const ESPACES: { icon: IconName; label: string }[] = [
   { icon: "book", label: "Recettes" },
   { icon: "calendar", label: "Planning" },
   { icon: "shopping", label: "Courses" },
   { icon: "box", label: "Stock" },
 ];
 
+interface HouseholdSpacesProps {
+  /** Styles additionnels du conteneur (ex. marge). */
+  style?: CSSProperties;
+  /** Si défini (en s), révèle chaque pastille en cascade à partir de ce délai. */
+  stagger?: number;
+}
+
 /**
  * Rangée de pastilles listant les 4 espaces partagés d'un foyer, disposées en
  * grille 2x2 (Recettes/Planning, puis Courses/Stock) pour un bloc équilibré.
- *
- * @param {{ style?: import("react").CSSProperties, stagger?: number }} props
- * @param props.style - Styles additionnels du conteneur (ex. marge).
- * @param props.stagger - Si défini (en s), révèle chaque pastille en cascade à partir de ce délai.
  */
-export function HouseholdSpaces({ style, stagger }) {
+export function HouseholdSpaces({ style, stagger }: HouseholdSpacesProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 7, ...style }}>
       {[ESPACES.slice(0, 2), ESPACES.slice(2)].map((row, r) => (
