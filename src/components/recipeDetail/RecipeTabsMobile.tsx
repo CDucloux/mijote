@@ -1,10 +1,15 @@
-import { TAB_ORDER } from "../../hooks/useHeroCollapse.js";
+import { TAB_ORDER, type DetailTab } from "../../hooks/useHeroCollapse.js";
+
+interface RecipeTabsMobileProps {
+  activeTab: DetailTab;
+  setActiveTab: (tab: DetailTab) => void;
+}
 
 /**
  * Sélecteur d'onglets sticky (mobile) : contrôle segmenté avec pastille glissante entre
  * Ingrédients / Ustensiles / Étapes. Présentationnel ; l'onglet actif est piloté au-dessus.
  */
-export function RecipeTabsMobile({ activeTab, setActiveTab }) {
+export function RecipeTabsMobile({ activeTab, setActiveTab }: RecipeTabsMobileProps) {
   return (
     <div style={{ position: "sticky", top: "calc(52px + var(--safe-hero-top))", zIndex: 29, background: "var(--bg)", padding: "8px 16px 10px", flexShrink: 0 }}>
       <div style={{ position: "relative", display: "flex", background: "var(--surface2)", borderRadius: 12, padding: 4 }}>

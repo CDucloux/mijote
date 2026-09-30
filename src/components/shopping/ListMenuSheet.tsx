@@ -2,16 +2,35 @@ import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 
+/** Liste de courses telle que ce menu la manipule (forme minimale utilisée ici). */
+interface ShoppingList {
+  id?: string;
+  name?: string;
+  type?: string;
+  items: unknown[];
+  [k: string]: unknown;
+}
+
+interface ListMenuSheetProps {
+  list: ShoppingList;
+  onClose: () => void;
+  onSettings: (list: ShoppingList) => void;
+  /**
+   * Fourni uniquement pour une liste « recette » dont la recette source existe
+   * encore : ajoute l'entrée « Planifier la recette ».
+   */
+  onPlan?: (list: ShoppingList) => void;
+  onDelete: (list: ShoppingList) => void;
+}
+
 /**
  * Feuille du menu d'une liste (⋯ de la pastille active ou appui long) : rappel
  * du contexte (type + nombre d'articles), puis accès aux paramètres, à la
  * planification (listes issues d'une recette) et à la suppression. Les actions
  * remontent au parent.
  *
- * @param onPlan - Fourni uniquement pour une liste « recette » dont la recette
- *   source existe encore : ajoute l'entrée « Planifier la recette ».
  */
-export function ListMenuSheet({ list, onClose, onSettings, onPlan, onDelete }) {
+export function ListMenuSheet({ list, onClose, onSettings, onPlan, onDelete }: ListMenuSheetProps) {
   return (
     <SwipeableSheet onClose={onClose}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>

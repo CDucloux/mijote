@@ -1,11 +1,24 @@
+import type { Collection, Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+
+/** Carnet tel que rendu ici : la couleur pilote la mise en avant du carnet actif. */
+interface ColoredCollection extends Collection {
+  color: string;
+}
+
+interface CollectionsSheetProps {
+  recipe: Recipe;
+  collections?: ColoredCollection[];
+  onToggle: (recipeId: string | undefined, collectionId: string) => void;
+  onClose: () => void;
+}
 
 /**
  * Feuille de rangement d'une recette dans un ou plusieurs carnets (collections). Chaque
  * carnet actif est mis en avant par sa couleur ; le basculement passe par `onToggle`.
  */
-export function CollectionsSheet({ recipe, collections, onToggle, onClose }) {
+export function CollectionsSheet({ recipe, collections, onToggle, onClose }: CollectionsSheetProps) {
   return (
     <SwipeableSheet onClose={onClose}>
       <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Carnets</h3>

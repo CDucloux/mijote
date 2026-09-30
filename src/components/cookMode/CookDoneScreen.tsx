@@ -1,13 +1,22 @@
 import { Icon } from "../ui/Icon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 
+interface CookDoneScreenProps {
+  isNested?: boolean;
+  closing?: boolean;
+  recipeName?: string;
+  canIterate?: boolean;
+  onIterate: () => void;
+  onClose: () => void;
+}
+
 /**
  * Écran de félicitations affiché à la fin d'une recette (ou d'une base imbriquée).
  * Propose de noter une itération (recette principale non imbriquée uniquement) puis
  * de revenir. Le retour est DIRECT (`onClose` sans fondu de sortie : le fondu depuis
  * cet écran paraissait étrange).
  */
-export function CookDoneScreen({ isNested, closing, recipeName, canIterate, onIterate, onClose }) {
+export function CookDoneScreen({ isNested, closing, recipeName, canIterate, onIterate, onClose }: CookDoneScreenProps) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 601 : 501, background: "var(--bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "cookModeIn 0.4s ease", opacity: closing ? 0 : 1, transition: "opacity 0.28s ease", padding: "calc(32px + max(env(safe-area-inset-top) - 8px, 0px)) 32px calc(32px + max(env(safe-area-inset-bottom) - 8px, 0px))", textAlign: "center" }}>
       <div style={{ animation: "popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)", marginBottom: 20 }}>

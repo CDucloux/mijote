@@ -1,12 +1,19 @@
+import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+
+interface CloneConfirmSheetProps {
+  componentDeps: Recipe[];
+  onClose: () => void;
+  onClone?: () => void;
+}
 
 /**
  * Feuille de confirmation d'ajout d'une recette publique à sa propre bibliothèque
  * (clone personnel). Signale, le cas échéant, les préparations de base ajoutées avec.
  * Le clone effectif passe par `onClone`.
  */
-export function CloneConfirmSheet({ componentDeps, onClose, onClone }) {
+export function CloneConfirmSheet({ componentDeps, onClose, onClone }: CloneConfirmSheetProps) {
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (<>

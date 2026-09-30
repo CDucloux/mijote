@@ -1,3 +1,5 @@
+import type { Collection, Recipe } from "@/lib/types.js";
+import type { DifficultyResult, DifficultyExplain } from "@/lib/recipes/difficulty.js";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { VeganBadge, SeasonBadge } from "../badges/Badges.jsx";
@@ -5,13 +7,33 @@ import { DifficultyBadge } from "../badges/DifficultyBadge.jsx";
 import { cuisineEmoji } from "../../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../../constants/recipeCategories.js";
 
+/** Carnet tel que rendu ici : la couleur pilote la teinte du badge. */
+interface ColoredCollection extends Collection {
+  color: string;
+}
+
+interface RecipeHeroBadgesProps {
+  recipe: Recipe;
+  recipeVegan?: boolean;
+  recipeInSeason?: boolean;
+  difficulty: DifficultyResult;
+  difficultyExplain?: DifficultyExplain | null;
+  difficultyTitle?: string;
+  collections?: ColoredCollection[];
+  publicMode?: boolean;
+  onOpenBaseInfo: () => void;
+  onOpenDifficulty: () => void;
+  onOpenCollections: () => void;
+  variant: "desktop" | "mobile";
+}
+
 /**
  * Rangée de badges du hero (base, vegan, saison, difficulté, catégorie, cuisine,
  * carnets, ajout au carnet). Partagée entre le hero desktop et mobile ; le conteneur
  * (avec sa ref d'animation côté mobile) reste fourni par chaque hero. `variant` porte
  * les seuls écarts cosmétiques hérités de l'existant (opacité de bordure des tags).
  */
-export function RecipeHeroBadges({ recipe, recipeVegan, recipeInSeason, difficulty, difficultyExplain, difficultyTitle, collections, publicMode, onOpenBaseInfo, onOpenDifficulty, onOpenCollections, variant }) {
+export function RecipeHeroBadges({ recipe, recipeVegan, recipeInSeason, difficulty, difficultyExplain, difficultyTitle, collections, publicMode, onOpenBaseInfo, onOpenDifficulty, onOpenCollections, variant }: RecipeHeroBadgesProps) {
   const tagBorder = variant === "desktop" ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.2)";
   return (
     <>

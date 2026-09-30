@@ -1,11 +1,21 @@
+import type { RefObject } from "react";
 import { Icon } from "../ui/Icon.jsx";
+
+interface RecipeCompactBarProps {
+  barRef: RefObject<HTMLDivElement | null>;
+  barInnerRef: RefObject<HTMLDivElement | null>;
+  recipeName?: string;
+  publicMode?: boolean;
+  onBack: () => void;
+  onOpenShopping: () => void;
+}
 
 /**
  * Barre compacte sticky qui remplace le hero une fois replié (mobile). Fond, flou et
  * opacité du contenu sont écrits directement dans le DOM par `useHeroCollapse` via
  * `barRef` / `barInnerRef` ; ce composant ne porte que la structure et les actions.
  */
-export function RecipeCompactBar({ barRef, barInnerRef, recipeName, publicMode, onBack, onOpenShopping }) {
+export function RecipeCompactBar({ barRef, barInnerRef, recipeName, publicMode, onBack, onOpenShopping }: RecipeCompactBarProps) {
   return (
     <div ref={barRef} style={{
       position: "sticky", top: 0, zIndex: 30, flexShrink: 0,

@@ -1,12 +1,25 @@
+import type { Step } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
+
+/** Une page du cook mode : mise en place, préparations de base, ou étape numérotée. */
+export type CookPage =
+  | { kind: "overview" }
+  | { kind: "bases" }
+  | { kind: "step"; step: Step; realIdx: number };
+
+interface CookSidebarProps {
+  pages: CookPage[];
+  stepIdx: number;
+  onGoTo: (idx: number) => void;
+}
 
 /**
  * Sommaire latéral du cook mode (desktop uniquement, masqué en mobile via CSS) :
  * une entrée par page (mise en place, bases, étapes) avec pastille d'état
  * (à venir / active / franchie). Cliquer une entrée y navigue (`onGoTo`).
  */
-export function CookSidebar({ pages, stepIdx, onGoTo }) {
+export function CookSidebar({ pages, stepIdx, onGoTo }: CookSidebarProps) {
   return (
     <div className="cook-mode-sidebar" style={{ display: "none", width: 260, minWidth: 260, overflowY: "auto", borderRight: "1px solid var(--border)", padding: "12px 0" }}>
       {pages.map((pg, idx) => {

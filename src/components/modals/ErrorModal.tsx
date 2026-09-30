@@ -1,14 +1,24 @@
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../ui/Icon.jsx";
 import { useModalExit } from "../../hooks/useModalExit.js";
+
+interface ErrorModalProps {
+  title?: string;
+  message?: ReactNode;
+  code?: string;
+  onClose: () => void;
+  onRetry?: () => void;
+  retryLabel?: string;
+}
 
 // ─── POPUP D'ERREUR ───────────────────────────────────────────────────────────
 // Remplace le « texte rouge » discret par une vraie fenêtre centrée : titre,
 // message clair, et l'origine technique (`code`) affichée en petit pour le
 // diagnostic. Boutons Fermer / Réessayer optionnel. Même coquille .alert-* que
 // les confirmations (entrée + sortie animées).
-export function ErrorModal({ title = "Une erreur est survenue", message, code, onClose, onRetry, retryLabel = "Réessayer" }) {
-  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(onClose);
+export function ErrorModal({ title = "Une erreur est survenue", message, code, onClose, onRetry, retryLabel = "Réessayer" }: ErrorModalProps) {
+  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit<HTMLDivElement>(onClose);
   return createPortal(
     <div onClick={() => beginClose()} className={`alert-backdrop${closing ? " is-closing" : ""}`} style={{ zIndex: 800 }}>
       <div ref={surfaceRef} onClick={e => e.stopPropagation()} className={`alert-dialog${closing ? " is-closing" : ""}`} role="alertdialog" aria-label={title} onAnimationEnd={onAnimationEnd}>

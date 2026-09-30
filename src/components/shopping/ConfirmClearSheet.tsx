@@ -6,7 +6,13 @@ import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
  * et, parmi eux, les `stockCount` produits de placard rejoignent le stock (les
  * produits frais sont exclus). `onConfirm` porte le déversement et les toasts.
  */
-export function ConfirmClearSheet({ stockCount, onClose, onConfirm }) {
+interface ConfirmClearSheetProps {
+  stockCount: number;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+export function ConfirmClearSheet({ stockCount, onClose, onConfirm }: ConfirmClearSheetProps) {
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (<>
