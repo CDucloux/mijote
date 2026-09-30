@@ -2,8 +2,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
-vi.mock("@/lib/firebase/firestore.js", () => ({ fetchPublicDocsByIds: vi.fn() }));
-import { fetchPublicDocsByIds } from "@/lib/firebase/firestore.js";
+vi.mock("@/lib/firebase/community.js", () => ({ fetchPublicDocsByIds: vi.fn() }));
+import { fetchPublicDocsByIds } from "@/lib/firebase/community.js";
 import { usePublicRecipeView } from "../usePublicRecipeView.js";
 
 const loc = (pathname) => ({ pathname });

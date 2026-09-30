@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Icon } from "../components/Icon.jsx";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
-import { UserAvatar } from "../components/UserAvatar.jsx";
-import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner.jsx";
+import { UserAvatar } from "../components/user/UserAvatar.jsx";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Icon } from "../Icon.jsx";
-import { IngImage } from "../Img.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { IngImage } from "../ui/Img.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { splitBulletLines } from "@/lib/food/shoppingList.js";

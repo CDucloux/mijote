@@ -1,6 +1,6 @@
-import { Icon } from "../Icon.jsx";
-import { EmptyArt } from "../EmptyArt.jsx";
-import { ShoppingItemRow } from "../ShoppingItemRow.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { EmptyArt } from "../ui/EmptyArt.jsx";
+import { ShoppingItemRow } from "./ShoppingItemRow.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { resolveQualityRecommendation } from "@/lib/food/qualityRecommendation.js";
 import { buildShoppingSections } from "@/lib/food/shoppingList.js";

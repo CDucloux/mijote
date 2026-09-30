@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Icon } from "../Icon.jsx";
+import { Icon } from "../ui/Icon.jsx";
 import { uploadImage, deleteImageByUrl } from "@/lib/firebase/storage.js";
 import {
   SOURCE_TINTS, tintOf, monogramOf, prettyHost, normalizeSource, sanitizeSources,

@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { MEAL_SLOTS } from "../../constants/mealSlots.js";
 import { DAYS_SHORT_FR, MONTHS_FR, mondayFirstIndex } from "../../constants/calendar.js";
 

@@ -1,6 +1,6 @@
-import { Icon } from "../Icon.jsx";
-import { IngImage } from "../Img.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { IngImage } from "../ui/Img.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { fmtQtyUnit } from "../../lib/format.js";
 
 /**

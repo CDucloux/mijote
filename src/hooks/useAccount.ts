@@ -1,6 +1,6 @@
 import { signOut, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase/firebase.js";
-import { deleteAllUserData } from "@/lib/firebase/firestore.js";
+import { deleteAllUserData } from "@/lib/firebase/workspaceData.js";
 import { signInWithGoogle } from "@/lib/firebase/auth.js";
 import { signInFeedback } from "@/lib/firebase/signInFeedback.js";
 import { googleSignIn } from "@/lib/firebase/googleAuth.js";

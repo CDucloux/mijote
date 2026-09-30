@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Icon } from "../components/Icon.jsx";
-import { ElasticScroll } from "../components/ElasticScroll.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { ElasticScroll } from "../components/ui/ElasticScroll.jsx";
 import { useInternalNav } from "../hooks/useInternalNav.js";
 import { LEGAL_DOCS, LEGAL_BY_ID, LEGAL_UPDATED } from "../constants/legalDocs.js";
 

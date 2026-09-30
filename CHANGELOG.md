@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.59.4 – Cardamome · Fondations rangées
+
+### Sous le capot
+- **Composants réorganisés et typés** : les composants d'UI sont rangés en sous-dossiers par domaine (recette, cuisine, courses, foyer, planning…) et la migration vers TypeScript se poursuit (une trentaine de composants passés en `.tsx`, props typées via des interfaces dédiées réutilisant les types du domaine). Aucun changement visible.
+- **Couche d'accès Firestore éclatée** : le module fourre-tout `firestore.ts` est découpé en modules ciblés par domaine (foyer, communauté, base Master, annuaire, journal d'activité, données du workspace, verrou d'écriture). Chaque domaine devient isolé et testable ; aucun changement de comportement.
+
 ## v4.59.3 – Cardamome · Coquille rattrapée
 
 ### Sous le capot

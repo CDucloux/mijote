@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Icon } from "../Icon.jsx";
-import { Img, IngImage } from "../Img.jsx";
-import { UtImage } from "../StepPills.jsx";
-import { BaseIcon } from "../BaseIcon.jsx";
-import { StepTip } from "../StepTip.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { Img, IngImage } from "../ui/Img.jsx";
+import { UtImage } from "../recipe/StepPills.jsx";
+import { BaseIcon } from "../ui/BaseIcon.jsx";
+import { StepTip } from "../recipe/StepTip.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
-import { IngredientRecoHint, PrecautionInfoBadge, UtensilPrecautionSheet } from "../QualityHints.jsx";
+import { IngredientRecoHint, PrecautionInfoBadge, UtensilPrecautionSheet } from "../recipe/QualityHints.jsx";
 import { groupBy, sectionRuns, hasGroups, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
 import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../../lib/format.js";
 

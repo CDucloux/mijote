@@ -8,15 +8,16 @@ vi.mock("firebase/firestore", () => ({
   doc: vi.fn(() => ({})),
   collection: vi.fn(() => ({})),
   onSnapshot: (_ref, onNext, onError) => { successCb = onNext; errorCb = onError; return () => {}; },
-  // Symboles importés par firestore.ts mais inutilisés ici :
+  // Symboles importés par households.ts (et sa dépendance workspaceData.ts) mais inutilisés ici :
   getDoc: vi.fn(), getDocs: vi.fn(), writeBatch: vi.fn(), query: vi.fn(), orderBy: vi.fn(),
   limit: vi.fn(), where: vi.fn(), runTransaction: vi.fn(), deleteDoc: vi.fn(), setDoc: vi.fn(),
   addDoc: vi.fn(), serverTimestamp: vi.fn(),
 }));
-vi.mock("@/lib/firebase/firebase.js", () => ({ db: {} }));
+vi.mock("firebase/functions", () => ({ httpsCallable: vi.fn(), getFunctions: vi.fn() }));
+vi.mock("@/lib/firebase/firebase.js", () => ({ db: {}, firebaseApp: {} }));
 vi.mock("@/lib/observability/observability.js", () => ({ reportError: vi.fn() }));
 
-import { subscribeHouseholdPointer } from "../firestore.js";
+import { subscribeHouseholdPointer } from "../households.js";
 
 beforeEach(() => { successCb = null; errorCb = null; });
 

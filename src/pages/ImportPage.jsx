@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Icon } from "../components/Icon.jsx";
-import { ErrorModal } from "../components/ErrorModal.jsx";
-import { LoadingOverlay } from "../components/ImportUI.jsx";
-import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate, ImportGiftOffer } from "../components/ImportModules.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { ErrorModal } from "../components/modals/ErrorModal.jsx";
+import { LoadingOverlay } from "../components/import/ImportUI.jsx";
+import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate, ImportGiftOffer } from "../components/import/ImportModules.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
 import { CREDIT_COST } from "@/lib/aiQuota.js";

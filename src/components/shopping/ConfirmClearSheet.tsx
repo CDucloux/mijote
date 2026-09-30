@@ -1,0 +1,43 @@
+import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+
+/**
+ * Confirmation avant de valider l'achat : les articles cochés quittent la liste
+ * et, parmi eux, les `stockCount` produits de placard rejoignent le stock (les
+ * produits frais sont exclus). `onConfirm` porte le déversement et les toasts.
+ */
+interface ConfirmClearSheetProps {
+  stockCount: number;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+export function ConfirmClearSheet({ stockCount, onClose, onConfirm }: ConfirmClearSheetProps) {
+  return (
+    <SwipeableSheet onClose={onClose}>
+      {(close) => (<>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+          <span style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: "rgba(var(--ok-rgb),0.12)", display: "grid", placeItems: "center" }}>
+            <Icon name="shopping" size={20} color="var(--ok)" />
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Valider l'achat ?</h3>
+            <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "2px 0 0" }}>Solde les articles déjà cochés.</p>
+          </div>
+        </div>
+        <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: 20, lineHeight: 1.55 }}>
+          Les articles achetés vont être retirés de la liste.
+          {stockCount > 0
+            ? <> Parmi eux, <strong>{stockCount}</strong> produit{stockCount > 1 ? "s" : ""} de placard rejoindront ton stock (les produits frais sont exclus).</>
+            : <> Aucun produit de placard à ajouter au stock (uniquement des produits frais).</>}
+        </p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
+          <button className="btn btn-primary btn-pill" style={{ flex: 1, background: "var(--ok)", borderColor: "var(--ok)" }} onClick={() => close(onConfirm)}>
+            <Icon name="check" size={15} color="#fff" /> Valider
+          </button>
+        </div>
+      </>)}
+    </SwipeableSheet>
+  );
+}

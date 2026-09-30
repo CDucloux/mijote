@@ -1,10 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Icon } from "../components/Icon.jsx";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
-import { PlusBadge } from "../components/PlusBadge.jsx";
-import { UserAvatar } from "../components/UserAvatar.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner.jsx";
+import { PlusBadge } from "../components/badges/PlusBadge.jsx";
+import { UserAvatar } from "../components/user/UserAvatar.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { peopleCount } from "@/lib/household/household.js";

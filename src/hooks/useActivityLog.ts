@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import type { User } from "firebase/auth";
-import { appendActivity, subscribeActivity } from "@/lib/firebase/firestore.js";
+import { appendActivity, subscribeActivity } from "@/lib/firebase/activityLog.js";
 import { soloWorkspace, householdWorkspace, type Workspace } from "@/lib/household/workspace.js";
 import { parseActivity, type ActivityEvent, type ActivityInput } from "@/lib/notifications/activity.js";
 

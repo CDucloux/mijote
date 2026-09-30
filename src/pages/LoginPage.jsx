@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Icon } from "../components/Icon.jsx";
-import { EmptyArt } from "../components/EmptyArt.jsx";
-import { ThemeToggle } from "../components/ThemeToggle.jsx";
-import { LogoPod } from "../components/LogoPod.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { EmptyArt } from "../components/ui/EmptyArt.jsx";
+import { ThemeToggle } from "../components/ui/ThemeToggle.jsx";
+import { LogoPod } from "../components/ui/LogoPod.jsx";
 import { getRuntimeContext, showsDiscoverLink } from "../lib/ui/runtimeContext.js";
 import { signInFeedback, SIGN_IN_LOADING_MESSAGE } from "../lib/firebase/signInFeedback.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";

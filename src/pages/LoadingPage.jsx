@@ -1,4 +1,4 @@
-import { EmptyArt } from "../components/EmptyArt.jsx";
+import { EmptyArt } from "../components/ui/EmptyArt.jsx";
 
 // Coquille « app » (mobile installé / Capacitor) : le splash d'ouverture (gousse
 // qui pulse, cf. #boot-splash dans index.html) n'est peint que là. On lit le même

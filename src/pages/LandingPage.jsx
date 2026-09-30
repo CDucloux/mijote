@@ -1,8 +1,8 @@
 import { useEffect, useRef, useId } from "react";
 import { useNavigate } from "react-router-dom";
-import { Icon } from "../components/Icon.jsx";
-import { ThemeToggle } from "../components/ThemeToggle.jsx";
-import { LogoPod } from "../components/LogoPod.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { ThemeToggle } from "../components/ui/ThemeToggle.jsx";
+import { LogoPod } from "../components/ui/LogoPod.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";

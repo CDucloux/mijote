@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "@/lib/firebase/firestore.js";
+import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "@/lib/firebase/community.js";
 import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle, type PubUser, type PubRecipe, type PubDbItem, type PublicDoc } from "@/lib/household/publicRecipes.js";
 import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";

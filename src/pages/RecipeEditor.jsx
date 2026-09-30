@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect, Fragment } from "react";
-import { Icon } from "../components/Icon.jsx";
-import { ImageUpload } from "../components/ImageUpload.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { ImageUpload } from "../components/ui/ImageUpload.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../constants/recipeCategories.js";
-import { UtensilPicker } from "../components/UtensilPicker.jsx";
-import { DraggableStep } from "../components/DraggableStep.jsx";
-import { DraggableIngredient } from "../components/DraggableIngredient.jsx";
+import { UtensilPicker } from "../components/recipe/UtensilPicker.jsx";
+import { DraggableStep } from "../components/recipe/DraggableStep.jsx";
+import { DraggableIngredient } from "../components/recipe/DraggableIngredient.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
 import { groupOrder, relabelGroup, moveWithAdopt, sectionRuns } from "@/lib/recipes/recipeGroups.js";
-import { BaseIcon } from "../components/BaseIcon.jsx";
+import { BaseIcon } from "../components/ui/BaseIcon.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 

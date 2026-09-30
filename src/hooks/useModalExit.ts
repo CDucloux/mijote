@@ -17,9 +17,9 @@ import { useState, useRef, useEffect, useCallback, type AnimationEvent as ReactA
  * @param options.disabled - Désactive complètement le déclenchement de sortie.
  * @returns `{ closing, surfaceRef, beginClose, onAnimationEnd }`.
  */
-export function useModalExit(onClose?: () => void, { escape = true, disabled = false }: { escape?: boolean; disabled?: boolean } = {}) {
+export function useModalExit<T extends HTMLElement = HTMLElement>(onClose?: () => void, { escape = true, disabled = false }: { escape?: boolean; disabled?: boolean } = {}) {
   const [closing, setClosing] = useState(false);
-  const surfaceRef = useRef<HTMLElement | null>(null);
+  const surfaceRef = useRef<T | null>(null);
   const pending = useRef<(() => void) | null>(null);
 
   const beginClose = useCallback((cb?: unknown): void => {

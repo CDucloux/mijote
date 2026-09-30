@@ -1,6 +1,6 @@
 import React from "react";
-import { Icon } from "../Icon.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Row, Col } from "../ui/primitives.jsx";
 
 // Apport en sel du jour : pastille discrète qui situe la journée face au repère

@@ -1,0 +1,57 @@
+import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { Icon, type IconName } from "./Icon.jsx";
+import { useModalExit } from "../../hooks/useModalExit.js";
+import { Row, IconChip } from "./primitives.jsx";
+
+interface ConfirmDialogProps {
+  title: ReactNode;
+  children?: ReactNode;
+  icon?: IconName;
+  confirmLabel?: ReactNode;
+  busyLabel?: ReactNode;
+  /** "danger" (rouge, défaut) pour supprimer ; "accent" (orange) pour une confirmation forte non destructive. */
+  tone?: "danger" | "accent";
+  busy?: boolean;
+  onCancel?: () => void;
+  onConfirm?: () => void;
+  zIndex?: number;
+}
+
+// Dialogue de confirmation (alerte centrée) pour les actions destructives /
+// irréversibles. Volontairement PAS une feuille swipeable : une suppression
+// demande une décision (dialogue modal centré, focus sur « Annuler », Échap/clic
+// sur le fond pour annuler). Gère un état `busy` (boutons désactivés, fermeture bloquée).
+export function ConfirmDialog({
+  title, children, icon = "trash",
+  confirmLabel = "Supprimer", busyLabel = "Suppression…",
+  tone = "danger", busy = false, onCancel, onConfirm, zIndex,
+}: ConfirmDialogProps) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit<HTMLDivElement>(onCancel, { disabled: busy });
+  useEffect(() => { cancelRef.current?.focus(); }, []);
+
+  const accent = tone === "danger" ? "var(--red)" : "var(--accent)";
+  const accentSoft = tone === "danger" ? "rgba(224,82,82,0.12)" : "rgba(var(--accent-rgb),0.12)";
+
+  return createPortal(
+    <div className={`alert-backdrop${closing ? " is-closing" : ""}`} onClick={busy ? undefined : () => beginClose()} style={zIndex != null ? { zIndex } : undefined}>
+      <div ref={surfaceRef} className={`alert-dialog${closing ? " is-closing" : ""}`} role="alertdialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined} onClick={e => e.stopPropagation()} onAnimationEnd={onAnimationEnd}>
+        <IconChip size={52} radius="50%" tint={accentSoft} style={{ margin: "0 auto 14px" }}>
+          <Icon name={icon} size={24} color={accent} />
+        </IconChip>
+        <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, textAlign: "center" }}>{title}</h3>
+        <div style={{ color: "var(--text2)", fontSize: 14, marginBottom: 22, lineHeight: 1.55, textAlign: "center" }}>{children}</div>
+        <Row gap={10}>
+          <button ref={cancelRef} className="btn btn-ghost" style={{ flex: 1 }} disabled={busy} onClick={() => beginClose()}><Icon name="undo" size={15} /> Annuler</button>
+          <button className={`btn ${tone === "danger" ? "btn-danger" : "btn-primary"}`} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }} disabled={busy} onClick={onConfirm}>
+            {busy && <span style={{ width: 15, height: 15, border: "2px solid rgba(255,255,255,0.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />}
+            {busy ? busyLabel : confirmLabel}
+          </button>
+        </Row>
+      </div>
+    </div>,
+    document.body
+  );
+}
