@@ -1,7 +1,7 @@
-import { Icon } from "../Icon.jsx";
-import { Img } from "../Img.jsx";
-import { RecipePlaceholder } from "../RecipePlaceholder.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { Img } from "../ui/Img.jsx";
+import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
 /**
  * Feuille de partage d'une recette publique : aperçu type carte + options (copier le

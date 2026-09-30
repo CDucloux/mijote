@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
 /**
  * Feuille de rangement d'une recette dans un ou plusieurs carnets (collections). Chaque

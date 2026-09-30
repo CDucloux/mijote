@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { Icon } from "../components/Icon.jsx";
-import { NotificationsSection } from "../components/NotificationsSection.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { NotificationsSection } from "../components/user/NotificationsSection.jsx";
 
 // ─── NOTIFICATIONS ──────────────────────────────────────────────────────────────
 // Page dédiée /notifications : le journal d'activité du foyer, accessible depuis le

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Icon } from "../components/Icon.jsx";
-import { PlusBadge } from "../components/PlusBadge.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { PlusBadge } from "../components/badges/PlusBadge.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { startCheckout, openBillingPortal, PLAY_SUBS_URL } from "@/lib/firebase/subscription.js";
 import "../styles/plus.css";

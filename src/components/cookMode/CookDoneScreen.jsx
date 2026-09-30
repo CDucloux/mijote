@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { EmptyArt } from "../EmptyArt.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { EmptyArt } from "../ui/EmptyArt.jsx";
 
 /**
  * Écran de félicitations affiché à la fin d'une recette (ou d'une base imbriquée).

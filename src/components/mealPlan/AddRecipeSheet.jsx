@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
-import { Icon } from "../Icon.jsx";
-import { Img } from "../Img.jsx";
-import { SearchField } from "../SearchField.jsx";
-import { NutriScoreBadge } from "../NutriScoreBadge.jsx";
-import { EmptyArt } from "../EmptyArt.jsx";
-import { ElasticScroll } from "../ElasticScroll.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { Img } from "../ui/Img.jsx";
+import { SearchField } from "../ui/SearchField.jsx";
+import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
+import { EmptyArt } from "../ui/EmptyArt.jsx";
+import { ElasticScroll } from "../ui/ElasticScroll.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { fmtTime } from "@/lib/format.js";
 

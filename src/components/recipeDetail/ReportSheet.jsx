@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
 // Motifs de signalement d'une recette publique (modération).
 const REPORT_REASONS = [

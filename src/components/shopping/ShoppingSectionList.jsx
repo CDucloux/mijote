@@ -1,4 +1,4 @@
-import { Icon } from "../Icon.jsx";
+import { Icon } from "../ui/Icon.jsx";
 
 /**
  * En-tête d'un groupe de courses (catégorie ou « Acheté ») : icône, libellé,

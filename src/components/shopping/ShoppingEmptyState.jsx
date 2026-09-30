@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { EmptyArt } from "../EmptyArt.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { EmptyArt } from "../ui/EmptyArt.jsx";
 
 /**
  * État vide de la page Courses (aucune liste) : illustration, explication, et

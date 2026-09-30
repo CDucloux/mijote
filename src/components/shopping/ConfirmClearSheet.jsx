@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
 /**
  * Confirmation avant de valider l'achat : les articles cochés quittent la liste

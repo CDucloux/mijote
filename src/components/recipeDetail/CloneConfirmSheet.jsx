@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
 /**
  * Feuille de confirmation d'ajout d'une recette publique à sa propre bibliothèque

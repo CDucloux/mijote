@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { SwipeableSheet } from "../SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
 

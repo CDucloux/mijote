@@ -1,8 +1,8 @@
 import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, memo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Icon } from "../components/Icon.jsx";
-import { EmptyArt } from "../components/EmptyArt.jsx";
-import { UserAvatar } from "../components/UserAvatar.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { EmptyArt } from "../components/ui/EmptyArt.jsx";
+import { UserAvatar } from "../components/user/UserAvatar.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { paginateStockShelves, compareIngredientName } from "@/lib/food/stockShelves.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../constants/categories.js";

@@ -1,7 +1,7 @@
-import { Icon } from "../Icon.jsx";
-import { BaseIcon } from "../BaseIcon.jsx";
-import { VeganBadge, SeasonBadge } from "../Badges.jsx";
-import { DifficultyBadge } from "../DifficultyBadge.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { BaseIcon } from "../ui/BaseIcon.jsx";
+import { VeganBadge, SeasonBadge } from "../badges/Badges.jsx";
+import { DifficultyBadge } from "../badges/DifficultyBadge.jsx";
 import { cuisineEmoji } from "../../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../../constants/recipeCategories.js";
 

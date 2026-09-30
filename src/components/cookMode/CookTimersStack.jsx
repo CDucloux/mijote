@@ -1,4 +1,4 @@
-import { Icon } from "../Icon.jsx";
+import { Icon } from "../ui/Icon.jsx";
 import { remainingSecs } from "@/lib/planning/cookTimers.js";
 import { fmtCountdown } from "@/lib/planning/stepTimers.js";
 

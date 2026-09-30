@@ -1,4 +1,4 @@
-import { Icon } from "../Icon.jsx";
+import { Icon } from "../ui/Icon.jsx";
 
 /**
  * En-tête de section (« Pour la pâte », « Montage »…), toujours en accent pour une

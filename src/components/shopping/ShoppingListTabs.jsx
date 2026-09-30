@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { OverscrollRow } from "../OverscrollRow.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { OverscrollRow } from "../ui/OverscrollRow.jsx";
 
 /**
  * Rangée d'onglets de sélection de liste (overscroll « stretch » horizontal) :

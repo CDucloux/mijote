@@ -1,10 +1,10 @@
-import { Icon } from "../Icon.jsx";
-import { BaseIcon } from "../BaseIcon.jsx";
-import { Img, IngImage } from "../Img.jsx";
-import { StepTip } from "../StepTip.jsx";
-import { TechniqueText } from "../TechniqueText.jsx";
-import { ConvertBadge } from "../QuantityConvertSheet.jsx";
-import { PrecautionInfoBadge } from "../QualityHints.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { BaseIcon } from "../ui/BaseIcon.jsx";
+import { Img, IngImage } from "../ui/Img.jsx";
+import { StepTip } from "../recipe/StepTip.jsx";
+import { TechniqueText } from "../recipe/TechniqueText.jsx";
+import { ConvertBadge } from "../ingredient/QuantityConvertSheet.jsx";
+import { PrecautionInfoBadge } from "../recipe/QualityHints.jsx";
 import { ToggleSwitch } from "./ToggleSwitch.jsx";
 import { capitalize, fmtQtyUnit } from "@/lib/format.js";
 import { posteLabel } from "@/lib/recipes/decoupe.js";

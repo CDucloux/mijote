@@ -1,16 +1,16 @@
 import { useMemo, useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
-import { Icon } from "../components/Icon.jsx";
-import { PlusBadge } from "../components/PlusBadge.jsx";
-import { Img } from "../components/Img.jsx";
-import { UserAvatar } from "../components/UserAvatar.jsx";
-import { DiscoverSection } from "../components/DiscoverSection.jsx";
-import { SpotlightIngredient } from "../components/SpotlightIngredient.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { PlusBadge } from "../components/badges/PlusBadge.jsx";
+import { Img } from "../components/ui/Img.jsx";
+import { UserAvatar } from "../components/user/UserAvatar.jsx";
+import { DiscoverSection } from "../components/recipe/DiscoverSection.jsx";
+import { SpotlightIngredient } from "../components/ingredient/SpotlightIngredient.jsx";
 import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
-import { HouseholdPanel } from "../components/HouseholdPanel.jsx";
-import { FoyerGlyph } from "../components/FoyerGlyph.jsx";
-import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
-import { NewRecipeSheet } from "../components/NewRecipeButton.jsx";
-import { ElasticScroll } from "../components/ElasticScroll.jsx";
+import { HouseholdPanel } from "../components/household/HouseholdPanel.jsx";
+import { HouseholdGlyph } from "../components/household/HouseholdGlyph.jsx";
+import { SwipeableSheet } from "../components/ui/SwipeableSheet.jsx";
+import { NewRecipeSheet } from "../components/recipe/NewRecipeButton.jsx";
+import { ElasticScroll } from "../components/ui/ElasticScroll.jsx";
 import { useNavigate } from "react-router-dom";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
@@ -258,7 +258,7 @@ function FoyerSection() {
           {household
             ? <MemberStack emails={household.memberEmails || []} photoFor={photoFor} nameFor={nameFor} />
             : <span style={{ width: 50, height: 50, borderRadius: 15, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--accent)" }}>
-                <FoyerGlyph size={27} color="#fff" />
+                <HouseholdGlyph size={27} color="#fff" />
               </span>}
         </span>
         {/* Perforation verticale */}
@@ -291,7 +291,7 @@ function FoyerSection() {
         <SwipeableSheet onClose={() => setOpen(false)} style={{ maxHeight: "88dvh" }}>
           <h2 style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, margin: "0 0 16px" }}>
             <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "var(--accent)" }}>
-              <FoyerGlyph size={20} color="#fff" />
+              <HouseholdGlyph size={20} color="#fff" />
             </span>
             Foyer
           </h2>

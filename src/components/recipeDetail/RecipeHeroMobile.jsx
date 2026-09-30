@@ -1,7 +1,7 @@
-import { Icon } from "../Icon.jsx";
-import { Img } from "../Img.jsx";
-import { RecipePlaceholder } from "../RecipePlaceholder.jsx";
-import { HeroMenu } from "../HeroMenu.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { Img } from "../ui/Img.jsx";
+import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
+import { HeroMenu } from "./HeroMenu.jsx";
 import { RecipeHeroBadges } from "./RecipeHeroBadges.jsx";
 import { HERO_H } from "../../hooks/useHeroCollapse.js";
 

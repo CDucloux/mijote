@@ -1,13 +1,13 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useCallback, memo } from "react";
-import { Icon } from "../components/Icon.jsx";
-import { EmptyArt } from "../components/EmptyArt.jsx";
-import { UserAvatar } from "../components/UserAvatar.jsx";
-import { NewRecipeButton } from "../components/NewRecipeButton.jsx";
-import { RecipeCard } from "../components/RecipeCard.jsx";
-import { SwipeableSheet } from "../components/SwipeableSheet.jsx";
-import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
+import { Icon } from "../components/ui/Icon.jsx";
+import { EmptyArt } from "../components/ui/EmptyArt.jsx";
+import { UserAvatar } from "../components/user/UserAvatar.jsx";
+import { NewRecipeButton } from "../components/recipe/NewRecipeButton.jsx";
+import { RecipeCard } from "../components/recipe/RecipeCard.jsx";
+import { SwipeableSheet } from "../components/ui/SwipeableSheet.jsx";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
 import { CUISINES } from "../constants/cuisines.js";
-import { RecipeFilterSheet } from "../components/RecipeFilterSheet.jsx";
+import { RecipeFilterSheet } from "../components/recipe/RecipeFilterSheet.jsx";
 import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "@/lib/recipes/recipeSort.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "@/lib/recipes/recipeFilters.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
@@ -18,7 +18,7 @@ import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
-import { OverscrollRow } from "../components/OverscrollRow.jsx";
+import { OverscrollRow } from "../components/ui/OverscrollRow.jsx";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 // Toutes les cartes s'animent à l'entrée ; le décalage est plafonné pour que les

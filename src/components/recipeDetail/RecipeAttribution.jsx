@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { OfficialAvatar } from "../OfficialAvatar.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { OfficialAvatar } from "../user/OfficialAvatar.jsx";
 import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 
 /**

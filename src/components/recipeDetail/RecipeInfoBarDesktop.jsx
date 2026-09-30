@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { NutriScoreBadge } from "../NutriScoreBadge.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
 import { fmtTime } from "../../lib/format.js";
 
 /**

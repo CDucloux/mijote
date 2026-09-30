@@ -1,5 +1,5 @@
-import { EmptyArt } from "../EmptyArt.jsx";
-import { ShoppingItemRow } from "../ShoppingItemRow.jsx";
+import { EmptyArt } from "../ui/EmptyArt.jsx";
+import { ShoppingItemRow } from "./ShoppingItemRow.jsx";
 import { buildShoppingSections } from "@/lib/food/shoppingList.js";
 import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.jsx";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";

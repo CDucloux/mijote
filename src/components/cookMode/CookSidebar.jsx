@@ -1,5 +1,5 @@
-import { Icon } from "../Icon.jsx";
-import { BaseIcon } from "../BaseIcon.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { BaseIcon } from "../ui/BaseIcon.jsx";
 
 /**
  * Sommaire latéral du cook mode (desktop uniquement, masqué en mobile via CSS) :

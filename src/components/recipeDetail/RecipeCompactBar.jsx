@@ -1,4 +1,4 @@
-import { Icon } from "../Icon.jsx";
+import { Icon } from "../ui/Icon.jsx";
 
 /**
  * Barre compacte sticky qui remplace le hero une fois replié (mobile). Fond, flou et

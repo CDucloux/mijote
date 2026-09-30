@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { Icon } from "../Icon.jsx";
-import { Img } from "../Img.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { Img } from "../ui/Img.jsx";
 import { fmtQtyUnit } from "@/lib/format.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { DEFAULT_CATEGORIES } from "../../constants/categories.js";
