@@ -1,8 +1,17 @@
+import type { ReactNode } from "react";
+
+interface ToggleSwitchProps {
+  checked: boolean;
+  onChange: () => void;
+  label?: ReactNode;
+  title?: string;
+}
+
 /**
  * Interrupteur animé (piste + pastille glissante) : remplace un bouton plain là où
  * l'état est un vrai on/off. La pastille glisse avec un léger ressort à l'activation.
  */
-export function ToggleSwitch({ checked, onChange, label, title }) {
+export function ToggleSwitch({ checked, onChange, label, title }: ToggleSwitchProps) {
   return (
     <button type="button" role="switch" aria-checked={checked} onClick={onChange} className="pressable" title={title}
       style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 9, background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0 }}>

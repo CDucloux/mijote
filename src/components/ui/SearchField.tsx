@@ -1,18 +1,19 @@
+import type { CSSProperties } from "react";
 import { Icon } from "./Icon.jsx";
 
-// ─── CHAMP DE RECHERCHE STANDARD ─────────────────────────────────────────────
-// Aligné sur la barre de recherche de l'appli (Accueil, Recettes…) : loupe à
-// gauche, `enterKeyHint="search"` (→ touche « loupe » sur le clavier mobile),
-// Entrée referme le clavier (blur), bouton d'effacement quand il y a du texte.
+// Champ de recherche standard, aligné sur la barre de recherche de l'appli
+// (Accueil, Recettes…) : loupe à gauche, `enterKeyHint="search"` (touche « loupe »
+// sur le clavier mobile), Entrée referme le clavier (blur), bouton d'effacement.
 
-/**
- * @param value - Texte courant.
- * @param onChange - Rappelé avec la nouvelle valeur.
- * @param placeholder - Texte indicatif.
- * @param autoFocus - Focus au montage (défaut false).
- * @param style - Styles additionnels du wrapper.
- */
-export function SearchField({ value, onChange, placeholder = "Rechercher…", autoFocus = false, style }) {
+interface SearchFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  autoFocus?: boolean;
+  style?: CSSProperties;
+}
+
+export function SearchField({ value, onChange, placeholder = "Rechercher…", autoFocus = false, style }: SearchFieldProps) {
   return (
     <div style={{ position: "relative", ...style }}>
       <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}>

@@ -1,19 +1,25 @@
 import { Icon } from "../ui/Icon.jsx";
 
+interface IngredientStatusBadgeProps {
+  /** `"validated"` ou autre (« en cours de rédaction »). */
+  status?: string;
+  /** Diamètre de la pastille (px). */
+  size?: number;
+  /** Couleur du liseré (raccord au fond derrière l'image). */
+  ring?: string;
+  /** Si fourni, la pastille devient un BOUTON cliquable (ex. changer le statut). */
+  onClick?: () => void;
+}
+
 /**
  * Pastille de statut d'un ingrédient, posée en BAS-DROITE de son image ronde.
  * Le conteneur de l'image doit être `position: relative`.
- * - validé → cercle vert + coche blanche
- * - en cours → cercle ambre + crayon
- *
- * @param status - `"validated"` ou autre (« en cours de rédaction »).
- * @param size - Diamètre de la pastille (px).
- * @param ring - Couleur du liseré (raccord au fond derrière l'image).
- * @param onClick - Si fourni, la pastille devient un BOUTON cliquable (ex. changer le statut).
+ * - validé : cercle vert + coche blanche
+ * - en cours : cercle ambre + crayon
  */
-export function IngredientStatusBadge({ status, size = 18, ring = "var(--surface)", onClick }) {
+export function IngredientStatusBadge({ status, size = 18, ring = "var(--surface)", onClick }: IngredientStatusBadgeProps) {
   const validated = status === "validated";
-  const Tag = onClick ? "button" : "span";
+  const Tag: "button" | "span" = onClick ? "button" : "span";
   return (
     <Tag onClick={onClick} title={validated ? "Validé" : "En cours de rédaction"}
       style={{

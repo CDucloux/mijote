@@ -1,10 +1,16 @@
+import type { CSSProperties, ReactNode } from "react";
 import { Icon } from "../ui/Icon.jsx";
 
-// ─── ASTUCE D'UNE ÉTAPE ───────────────────────────────────────────────────────
+interface StepTipProps {
+  tip?: ReactNode;
+  /** "sm" (fiche mobile/desktop) ou "lg" (mode cuisson, plein écran). */
+  size?: "sm" | "lg";
+  style?: CSSProperties;
+}
+
 // Encart « conseil » réutilisé dans la fiche recette (desktop + mobile) et le
 // mode cuisson. Pastille d'icône ampoule + label ASTUCE + texte, teinte bleue.
-// `size` : "sm" (fiche mobile/desktop) ou "lg" (mode cuisson, plein écran).
-export function StepTip({ tip, size = "sm", style }) {
+export function StepTip({ tip, size = "sm", style }: StepTipProps) {
   if (!tip) return null;
   const lg = size === "lg";
   const chip = lg ? 30 : 26;

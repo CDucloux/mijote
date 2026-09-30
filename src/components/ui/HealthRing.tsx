@@ -1,5 +1,10 @@
-// ─── HEALTH RING ──────────────────────────────────────────────────────────────
-export const HealthRing = ({ score, size = 56 }) => {
+interface HealthRingProps {
+  score: number;
+  size?: number;
+}
+
+// Anneau de score nutritionnel (0-100) : couleur seuillée vert/jaune/rouge.
+export const HealthRing = ({ score, size = 56 }: HealthRingProps) => {
   const r = (size - 8) / 2, circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
   const color = score >= 70 ? "var(--green)" : score >= 50 ? "var(--yellow)" : "var(--red)";

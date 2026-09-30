@@ -17,9 +17,9 @@ import { useEffect, useRef } from "react";
  * @returns `scrollRef` (conteneur `overflow-x`) et `contentRef` (enfant transformé,
  *   idéalement `min-width: 100%`).
  */
-export function useHorizontalOverscroll({ max = 72, disabled = false, stretch = false }: { max?: number; disabled?: boolean; stretch?: boolean } = {}) {
-  const scrollRef = useRef<HTMLElement | null>(null);
-  const contentRef = useRef<HTMLElement | null>(null);
+export function useHorizontalOverscroll<T extends HTMLElement = HTMLElement>({ max = 72, disabled = false, stretch = false }: { max?: number; disabled?: boolean; stretch?: boolean } = {}) {
+  const scrollRef = useRef<T | null>(null);
+  const contentRef = useRef<T | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current, inner = contentRef.current;

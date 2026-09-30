@@ -1,11 +1,18 @@
+import type { CSSProperties, ReactNode } from "react";
 import { Icon } from "../ui/Icon.jsx";
+
+interface GroupHeaderProps {
+  label: ReactNode;
+  showIcon?: boolean;
+  style?: CSSProperties;
+}
 
 /**
  * En-tête de section (« Pour la pâte », « Montage »…), toujours en accent pour une
  * palette cohérente. Une vraie sous-préparation nommée porte l'icône « layers » ; les
  * blocs hors section n'en ont pas, la distinction se fait par l'icône et le libellé.
  */
-export function GroupHeader({ label, showIcon = false, style }) {
+export function GroupHeader({ label, showIcon = false, style }: GroupHeaderProps) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>
       {showIcon && <Icon name="layers" size={15} color="var(--accent)" />}

@@ -1,18 +1,23 @@
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Icon } from "./Icon.jsx";
 import { imgAlreadyLoaded } from "../../lib/ui/imageLoad.js";
 
-// ─── IMAGE (with fallback) ────────────────────────────────────────────────────
-// `fallback` (facultatif) : rendu de repli (ex. `RecipePlaceholder`). Quand il est
-// fourni, il reste AFFICHÉ tant que l'image n'a pas fini de charger : plus de carré
-// blanc sur les cards de recette pendant le chargement, l'image apparaît en fondu
-// une fois prête (et le repli persiste si elle échoue). Sans `fallback`, on garde le
-// comportement historique (l'`<img>` reçoit tel quel le `style` : objectFit, padding,
-// rayon…), pour ne pas perturber ustensiles / ingrédients / images d'étape.
-export const Img = ({ src, alt, style, fallback }) => {
+interface ImgProps {
+  src?: string;
+  alt?: string;
+  style?: CSSProperties;
+  /** Rendu de repli (ex. `RecipePlaceholder`) affiché tant que l'image charge. */
+  fallback?: ReactNode;
+}
+
+// Image avec repli. `fallback` (facultatif) reste affiché tant que l'image n'a pas
+// fini de charger (fondu à l'arrivée, persistance si échec). Sans `fallback`, on
+// garde le comportement historique (l'<img> reçoit tel quel le `style`).
+export const Img = ({ src, alt, style, fallback }: ImgProps) => {
   const [err, setErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   useEffect(() => { setErr(false); setLoaded(false); }, [src]);
   // Image servie depuis le cache : son évènement `load` a pu partir avant que le
   // handler onLoad ne soit attaché. On révèle donc l'image dès le montage si elle
@@ -41,11 +46,17 @@ export const Img = ({ src, alt, style, fallback }) => {
   );
 };
 
-// ─── INGREDIENT IMAGE (round, slightly larger, transparent-friendly) ──────────
-// Used everywhere an ingredient image appears, for a consistent circular look.
-// `cover` fills the whole circle (real photos, e.g. base recipes) instead of the
-// default contain-on-white used for transparent ingredient PNGs.
-export const IngImage = ({ src, alt, size = 48, cover = false }) => {
+interface IngImageProps {
+  src?: string;
+  alt?: string;
+  size?: number;
+  /** Remplit tout le cercle (vraies photos, ex. bases) au lieu du contain sur blanc. */
+  cover?: boolean;
+}
+
+// Image d'ingrédient (ronde, un peu plus grande, adaptée au transparent), pour un
+// rendu circulaire cohérent partout. `cover` remplit le cercle (vraies photos).
+export const IngImage = ({ src, alt, size = 48, cover = false }: IngImageProps) => {
   const [err, setErr] = useState(false);
   useEffect(() => { setErr(false); }, [src]);
   return (

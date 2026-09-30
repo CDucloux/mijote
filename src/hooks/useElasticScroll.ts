@@ -33,9 +33,9 @@ import { readElasticStrategy } from "@/lib/ui/elasticStrategy.js";
  * return <div ref={scrollRef} style={{ overflowY: "auto" }}><div ref={contentRef}>…</div></div>;
  * ```
  */
-export function useElasticScroll({ max = 38, disabled = false, armWhenUnscrollable = true }: { max?: number; disabled?: boolean; armWhenUnscrollable?: boolean } = {}) {
-  const scrollRef = useRef<HTMLElement | null>(null);
-  const contentRef = useRef<HTMLElement | null>(null);
+export function useElasticScroll<T extends HTMLElement = HTMLElement>({ max = 38, disabled = false, armWhenUnscrollable = true }: { max?: number; disabled?: boolean; armWhenUnscrollable?: boolean } = {}) {
+  const scrollRef = useRef<T | null>(null);
+  const contentRef = useRef<T | null>(null);
 
   useEffect(() => {
     if (disabled || readElasticStrategy() === "native") return;
