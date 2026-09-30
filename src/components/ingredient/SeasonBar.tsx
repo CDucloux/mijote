@@ -18,12 +18,22 @@ const MONTHS_INI = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
  * @param onToggle - Si fourni, la frise devient ÉDITABLE : chaque mois est un bouton
  *   qui appelle `onToggle(mois)` ; la piste reflète la sélection en direct.
  */
-export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node = "var(--accent-deep, #b8461c)", trackHeight = 12, glow, onToggle }) {
+interface SeasonBarProps {
+  months?: number[];
+  from?: string;
+  to?: string;
+  node?: string;
+  trackHeight?: number;
+  glow?: string;
+  onToggle?: (month: number) => void;
+}
+
+export function SeasonBar({ months, from = "var(--accent)", to = "#f2a25f", node = "var(--accent-deep, #b8461c)", trackHeight = 12, glow, onToggle }: SeasonBarProps) {
   const on = new Set(months || []);
   const now = currentMonth();
-  const pct = (n) => `${(n / 12) * 100}%`;
+  const pct = (n: number) => `${(n / 12) * 100}%`;
   // Regroupe les mois de saison en segments contigus (1–12, sans repli d'année).
-  const runs = [];
+  const runs: [number, number][] = [];
   [...on].sort((a, b) => a - b).forEach(m => {
     const last = runs[runs.length - 1];
     if (last && m === last[1] + 1) last[1] = m;

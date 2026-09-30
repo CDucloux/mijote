@@ -1,21 +1,41 @@
+import type { Sectionable, CategoriesConfig } from "@/lib/food/shoppingList.js";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ShoppingItemRow } from "./ShoppingItemRow.jsx";
 import { buildShoppingSections } from "@/lib/food/shoppingList.js";
 import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.jsx";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";
 
+/** Article agrégé (dédupliqué toutes listes) tel que cette vue le rend. */
+interface AggregatedItem extends Sectionable {
+  key: string;
+  category: string;
+  qtyDisplay?: string;
+  image?: string;
+  sources: string[];
+  partial?: boolean;
+}
+
+interface ShoppingAggregateViewProps {
+  aggregated: AggregatedItem[];
+  categories: CategoriesConfig;
+  pending: Set<string>;
+  unchecking: Set<string>;
+  onBuy: (agg: AggregatedItem) => void;
+  onClear: () => void;
+}
+
 /**
  * Vue agrégée « Toutes les courses » : les articles de toutes les listes,
  * dédupliqués et regroupés par catégorie, avec l'animation d'achat propagée à
  * chaque liste d'origine. Cocher/valider est piloté au-dessus par `useShopping`.
  */
-export function ShoppingAggregateView({ aggregated, categories, pending, unchecking, onBuy, onClear }) {
+export function ShoppingAggregateView({ aggregated, categories, pending, unchecking, onBuy, onClear }: ShoppingAggregateViewProps) {
   // Élastique instancié DANS la vue : ses listeners se (r)attachent à chaque
   // montage de ce conteneur (retour sur « Toutes les courses »), là où un hook
   // appelé au niveau de la page ne se relançait jamais après un démontage.
-  const { scrollRef, contentRef } = useElasticScroll();
+  const { scrollRef, contentRef } = useElasticScroll<HTMLDivElement>();
   const { sections, done } = buildShoppingSections(aggregated, categories, a => a.category);
-  const renderAgg = agg => (
+  const renderAgg = (agg: AggregatedItem) => (
     <ShoppingItemRow key={agg.key} disableDelete striking={pending.has(agg.key)} unstriking={unchecking.has(agg.key)}
       item={{ id: agg.key, name: agg.name, amount: agg.qtyDisplay, unit: "", checked: agg.checked }}
       imageSrc={agg.image} onBuy={() => onBuy(agg)} onDelete={() => {}}

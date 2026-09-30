@@ -1,12 +1,24 @@
+import type { ReactNode } from "react";
+import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
-import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
+import { NutriScoreBadge, type NutriLetter } from "../badges/NutriScoreBadge.jsx";
 import { fmtTime } from "../../lib/format.js";
+
+interface RecipeStatsMobileProps {
+  recipe: Recipe;
+  nutriLetter?: NutriLetter | null;
+  publicMode?: boolean;
+  keepCta?: ReactNode;
+  onOpenNutrition: () => void;
+  onOpenShopping: () => void;
+  onOpenMealPlan: () => void;
+}
 
 /**
  * Bloc mobile juste sous le hero : stats (préparation, cuisson, Nutri-Score) et actions
  * principales (Courses / Planifier), ou le CTA « Garder » en mode public. Présentationnel.
  */
-export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, onOpenNutrition, onOpenShopping, onOpenMealPlan }) {
+export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, onOpenNutrition, onOpenShopping, onOpenMealPlan }: RecipeStatsMobileProps) {
   return (
     <div style={{
       // Chevauchement du bas du hero AU MOINS égal au rayon des coins (20px) : sinon le

@@ -15,8 +15,8 @@ const OFFLINE_DELAY = 3000;
 export function OfflineModal() {
   const online = useOnline();
   const [show, setShow] = useState(false);
-  const timer = useRef(null);
-  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(() => setShow(false));
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit<HTMLDivElement>(() => setShow(false));
 
   useEffect(() => {
     if (!online) {

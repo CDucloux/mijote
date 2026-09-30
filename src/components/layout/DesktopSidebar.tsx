@@ -1,9 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { Icon } from "../ui/Icon.jsx";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 import { TABS } from "../../constants/tabs.js";
 
+interface DesktopSidebarProps {
+  tab: string;
+  setTab: (tab: string) => void;
+}
+
 // ─── DESKTOP SIDEBAR ──────────────────────────────────────────────────────────
-export function DesktopSidebar({ tab, setTab }) {
+export function DesktopSidebar({ tab, setTab }: DesktopSidebarProps) {
   const navigate = useNavigate();
   const guideActive = tab === "guide";
   return (
@@ -24,7 +29,7 @@ export function DesktopSidebar({ tab, setTab }) {
           const active = tab === t.id;
           return (
             <button key={t.id} className={`desktop-nav-item${active ? " active" : ""}`} onClick={() => setTab(t.id)}>
-              <Icon name={t.icon} size={20} weight="duotone" color={active ? "var(--accent)" : "var(--text2)"} />
+              <Icon name={t.icon as IconName} size={20} weight="duotone" color={active ? "var(--accent)" : "var(--text2)"} />
               {t.label}
             </button>
           );

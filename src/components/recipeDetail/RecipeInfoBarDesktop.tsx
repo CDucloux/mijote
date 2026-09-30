@@ -1,12 +1,22 @@
+import type { Dispatch, SetStateAction } from "react";
+import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
-import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
+import { NutriScoreBadge, type NutriLetter } from "../badges/NutriScoreBadge.jsx";
 import { fmtTime } from "../../lib/format.js";
+
+interface RecipeInfoBarDesktopProps {
+  recipe: Recipe;
+  nutriLetter?: NutriLetter | null;
+  servings: number;
+  setServings: Dispatch<SetStateAction<number>>;
+  onOpenNutrition: () => void;
+}
 
 /**
  * Barre d'infos desktop (carte arrondie façon mobile) : préparation, cuisson,
  * Nutri-Score cliquable et sélecteur de portions. Présentationnel.
  */
-export function RecipeInfoBarDesktop({ recipe, nutriLetter, servings, setServings, onOpenNutrition }) {
+export function RecipeInfoBarDesktop({ recipe, nutriLetter, servings, setServings, onOpenNutrition }: RecipeInfoBarDesktopProps) {
   return (
     <div style={{ padding: "12px 16px 0", flexShrink: 0 }}>
       <div style={{ display: "flex", alignItems: "stretch", background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", padding: "10px 0", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>

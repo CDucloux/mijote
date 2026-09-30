@@ -1,7 +1,18 @@
 import { useState, useRef } from "react";
 
+interface TagInputProps {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+  allTags: string[];
+  label?: string;
+  placeholder?: string;
+  inputId?: string;
+  commitOnBlur?: boolean;
+  dedupeInsensitive?: boolean;
+}
+
 // ─── TAG INPUT ────────────────────────────────────────────────────────────────
-export function TagInput({ tags, onChange, allTags, label = "Tags", placeholder = "Végétarien, Rapide…", inputId = "tag-input-field", commitOnBlur = false, dedupeInsensitive = false }) {
+export function TagInput({ tags, onChange, allTags, label = "Tags", placeholder = "Végétarien, Rapide…", inputId = "tag-input-field", commitOnBlur = false, dedupeInsensitive = false }: TagInputProps) {
   const [input, setInput] = useState("");
   const [focused, setFocused] = useState(false);
   const inputRef = useRef("");
@@ -10,7 +21,7 @@ export function TagInput({ tags, onChange, allTags, label = "Tags", placeholder 
     t.toLowerCase().includes(input.toLowerCase()) && !tags.includes(t) && input.length > 0
   );
 
-  const addTag = tag => {
+  const addTag = (tag: string) => {
     const t = tag.trim();
     if (!t) { setInput(""); return; }
     const isDup = dedupeInsensitive
@@ -19,13 +30,13 @@ export function TagInput({ tags, onChange, allTags, label = "Tags", placeholder 
     if (!isDup) onChange([...tags, t]);
     setInput("");
   };
-  const removeTag = t => onChange(tags.filter(x => x !== t));
+  const removeTag = (t: string) => onChange(tags.filter(x => x !== t));
 
   return (
     <div>
       {label ? <div className="field-label">{label}</div> : null}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "8px 10px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", minHeight: 42, cursor: "text" }}
-        onClick={() => document.getElementById(inputId).focus()}>
+        onClick={() => document.getElementById(inputId)?.focus()}>
         {tags.map(t => (
           <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)" }}>
             {t}
