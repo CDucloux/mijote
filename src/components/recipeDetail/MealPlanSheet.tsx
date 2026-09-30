@@ -1,4 +1,4 @@
-import { Icon } from "../ui/Icon.jsx";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { MEAL_SLOTS } from "../../constants/mealSlots.js";
 
@@ -7,7 +7,16 @@ import { MEAL_SLOTS } from "../../constants/mealSlots.js";
  * segmenté à pastille glissante). Présentationnel ; l'insertion réelle est faite par le
  * parent via `onConfirm`.
  */
-export function MealPlanSheet({ mealDate, setMealDate, mealSlot, setMealSlot, onClose, onConfirm }) {
+interface MealPlanSheetProps {
+  mealDate: string;
+  setMealDate: (date: string) => void;
+  mealSlot: string;
+  setMealSlot: (slot: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+export function MealPlanSheet({ mealDate, setMealDate, mealSlot, setMealSlot, onClose, onConfirm }: MealPlanSheetProps) {
   return (
     <SwipeableSheet onClose={onClose}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
@@ -43,7 +52,7 @@ export function MealPlanSheet({ mealDate, setMealDate, mealSlot, setMealSlot, on
                   background: "transparent", color: active ? s.text : "var(--text3)",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                   transition: "color 0.3s ease" }}>
-                <Icon name={s.icon} size={16} color="currentColor" />{s.label}
+                <Icon name={s.icon as IconName} size={16} color="currentColor" />{s.label}
               </button>
             );
           })}

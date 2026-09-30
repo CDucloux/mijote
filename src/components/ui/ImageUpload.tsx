@@ -1,15 +1,22 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type ChangeEvent, type CSSProperties } from "react";
 import { Icon } from "./Icon.jsx";
 import { Img } from "./Img.jsx";
 import { uploadImage, compressImage } from "@/lib/firebase/storage.js";
 
+interface ImageUploadProps {
+  value?: string;
+  onChange: (url: string) => void;
+  style?: CSSProperties;
+  pathPrefix?: string;
+}
+
 // ─── IMAGE UPLOAD ─────────────────────────────────────────────────────────────
-export function ImageUpload({ value, onChange, style, pathPrefix = "misc" }) {
+export function ImageUpload({ value, onChange, style, pathPrefix = "misc" }: ImageUploadProps) {
   const inputId = useRef("img_" + Math.random().toString(36).slice(2)).current;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const handleFile = async e => {
-    const file = e.target.files[0]; if (!file) return;
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
     setError("");
     setUploading(true);
     try {
@@ -20,7 +27,7 @@ export function ImageUpload({ value, onChange, style, pathPrefix = "misc" }) {
       try {
         const { blob } = await compressImage(file);
         const reader = new FileReader();
-        reader.onload = ev => onChange(ev.target.result);
+        reader.onload = ev => onChange(String(ev.target?.result ?? ""));
         reader.readAsDataURL(blob);
       } catch {
         setError("Échec de l'upload");

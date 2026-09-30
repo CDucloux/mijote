@@ -15,7 +15,16 @@ const REPORT_REASONS = [
  * Le motif choisi et la note libre sont portés par le parent ; l'envoi effectif passe
  * par `onReport(reason, note)` une fois la feuille refermée.
  */
-export function ReportSheet({ reportReason, setReportReason, reportNote, setReportNote, onClose, onReport }) {
+interface ReportSheetProps {
+  reportReason: string | null;
+  setReportReason: (reason: string) => void;
+  reportNote: string;
+  setReportNote: (note: string) => void;
+  onClose: () => void;
+  onReport?: (reason: string | null, note: string) => void;
+}
+
+export function ReportSheet({ reportReason, setReportReason, reportNote, setReportNote, onClose, onReport }: ReportSheetProps) {
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (<>

@@ -4,8 +4,8 @@ import { CHANGELOG } from "../../constants/changelog.js";
 import { renderInline } from "../ui/markdownInline.jsx";
 
 export function ChangelogSection() {
-  const [open, setOpen] = React.useState({});
-  const toggle = v => setOpen(p => ({ ...p, [v]: !p[v] }));
+  const [open, setOpen] = React.useState<Record<string, boolean>>({});
+  const toggle = (v: string) => setOpen(p => ({ ...p, [v]: !p[v] }));
   // On n'affiche que les 5 dernières versions : au-delà, la sheet « À propos »
   // devient trop lourde (l'historique complet reste dans CHANGELOG.md).
   const entries = CHANGELOG.slice(0, 5);

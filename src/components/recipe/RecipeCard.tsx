@@ -1,19 +1,33 @@
-import { useState } from "react";
+import { useState, type CSSProperties, type MouseEvent, type SyntheticEvent } from "react";
+import type { Recipe } from "@/lib/types.js";
 import { Img } from "../ui/Img.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { BaseInfoModal } from "../modals/BaseInfoModal.jsx";
 import { Icon } from "../ui/Icon.jsx";
-import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
+import { NutriScoreBadge, type NutriLetter } from "../badges/NutriScoreBadge.jsx";
 import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { VeganBadge, SeasonBadge } from "../badges/Badges.jsx";
 import { fmtTime } from "../../lib/format.js";
+
+interface RecipeCardProps {
+  recipe: Recipe;
+  onClick?: (e: SyntheticEvent) => void;
+  style?: CSSProperties;
+  inSeason?: boolean;
+  vegan?: boolean;
+  animate?: boolean;
+  /** Lettre Nutri-Score recalculée en direct par l'appelant ; repli sur `recipe.nutriLetter`. */
+  nutriLetter?: NutriLetter | null;
+  favorite?: boolean;
+  onToggleFavorite?: (e: MouseEvent) => void;
+}
 
 // `nutriLetter` (optionnel) : lettre recalculée EN DIRECT par l'appelant, pour rester
 // alignée sur la fiche détail. Repli sur la valeur figée de la recette si absente.
 // `onToggleFavorite` (optionnel) : affiche le bouton cœur en haut-gauche de la
 // vignette (favori propre à l'utilisateur, distinct des préférences). `favorite`
 // pilote son état rempli/vide.
-export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = false, animate = true, nutriLetter, favorite = false, onToggleFavorite }) {
+export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = false, animate = true, nutriLetter, favorite = false, onToggleFavorite }: RecipeCardProps) {
   const total = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const [showBaseInfo, setShowBaseInfo] = useState(false);
   return (
@@ -56,7 +70,7 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
             <span style={{ width: 1, height: 10, background: "var(--border)", display: "inline-block", borderRadius: 1 }} />
             <span>{recipe.ingredients?.length || 0} ingr.</span>
           </span>
-          <NutriScoreBadge letter={nutriLetter ?? recipe.nutriLetter} compact />
+          <NutriScoreBadge letter={(nutriLetter ?? recipe.nutriLetter) as NutriLetter | null | undefined} compact />
         </div>
       </div>
     </div>
