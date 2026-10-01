@@ -11,7 +11,11 @@ const FAMILIES = [
   { label: "Liaisons", desc: "Roux, beurre manié, liaison à la crème ou aux jaunes – des texturants qu'on intègre dans d'autres préparations." },
 ];
 
-export function BaseInfoModal({ onClose }) {
+interface BaseInfoModalProps {
+  onClose: () => void;
+}
+
+export function BaseInfoModal({ onClose }: BaseInfoModalProps) {
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "90dvh" }}>
       {/* Header – bandeau dégradé */}
