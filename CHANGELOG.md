@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.8 – Cardamome · Carnets nets
+
+### Détails
+- **Survol des carnets stabilisé** : au passage de la souris sur une carte de carnet, le titre ne tremble plus et ne se décale plus en fin d'animation. La jolie bascule (soulèvement + légère rotation) est conservée ; seul le rendu du texte a été fiabilisé.
+
 ## v4.59.7 – Cardamome · Infobulles stables
 
 ### Détails
