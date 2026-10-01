@@ -344,12 +344,12 @@ function StoreButtons() {
     <div className="lp-store" role="group" aria-label="Applications mobiles à venir">
       <span className="lp-store__btn" aria-disabled="true">
         <GooglePlayMark size={22} />
-        <span className="lp-store__txt"><small>Bientôt sur</small><b>Android</b></span>
+        <span className="lp-store__txt"><small>Bientôt sur</small><b>Google Play</b></span>
         <span className="lp-store__soon">à venir</span>
       </span>
       <span className="lp-store__btn" aria-disabled="true">
         <AppStoreMark size={22} />
-        <span className="lp-store__txt"><small>Bientôt sur</small><b>iOS</b></span>
+        <span className="lp-store__txt"><small>Bientôt sur</small><b>App Store</b></span>
         <span className="lp-store__soon">à venir</span>
       </span>
     </div>
