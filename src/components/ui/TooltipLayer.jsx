@@ -21,11 +21,16 @@ import { computeTooltipPosition } from "@/lib/ui/tooltipPosition.js";
 const SHOW_DELAY = 320; // ms avant apparition : évite le clignotement au survol de passage
 
 export function TooltipLayer() {
-  const [tip, setTip] = useState(null);   // { text, rect } de la cible, ou null
+  const [tip, setTip] = useState(null);   // { id, text, rect } de la cible, ou null
+  const [pos, setPos] = useState(null);   // { id, left, top, caretLeft, placement } positionné
   const [shown, setShown] = useState(false);
   const bubbleRef = useRef(null);
   const activeRef = useRef(null);          // { el, title } dont le title natif est neutralisé
   const timerRef = useRef(0);
+  const idRef = useRef(0);                 // identifiant croissant : lie une position à sa cible
+  // Nouvelle cible : `shown` repart à 0 et toute ancienne position devient caduque,
+  // pour que la bulle ne soit jamais peinte à son emplacement précédent (anti-gigotement).
+  const showTip = (text, rect) => { idRef.current += 1; setShown(false); setPos(null); setTip({ id: idRef.current, text, rect }); };
 
   useEffect(() => {
     // Appareil tactile sans survol : pas d'infobulles du tout (voir en-tête).
@@ -40,6 +45,7 @@ export function TooltipLayer() {
       clearTimeout(timerRef.current);
       restore();
       setShown(false);
+      setPos(null);
       setTip(null);
     };
     // Neutralise le title natif d'un élément et retient sa valeur pour la restaurer.
@@ -60,7 +66,7 @@ export function TooltipLayer() {
       const text = capture(el);
       if (!text) return;
       const rect = el.getBoundingClientRect();
-      timerRef.current = setTimeout(() => setTip({ text, rect }), SHOW_DELAY);
+      timerRef.current = setTimeout(() => showTip(text, rect), SHOW_DELAY);
     };
     const onOut = (e) => {
       const el = activeRef.current?.el;
@@ -74,7 +80,7 @@ export function TooltipLayer() {
       if (!el) return;
       const text = capture(el);
       if (!text) return;
-      setTip({ text, rect: el.getBoundingClientRect() });
+      showTip(text, el.getBoundingClientRect());
     };
     const onKey = (e) => { if (e.key === "Escape") hide(); };
 
@@ -98,23 +104,35 @@ export function TooltipLayer() {
     };
   }, []);
 
-  // Positionne la bulle une fois mesurée, puis déclenche la transition d'entrée.
+  // Mesure la bulle (rendue hors écran) et calcule sa position AVANT la peinture,
+  // en la rangeant dans l'état : React peint donc directement au bon endroit, sans
+  // jamais afficher d'image intermédiaire mal placée (cf. anti-gigotement).
   useLayoutEffect(() => {
     if (!tip || !bubbleRef.current) return;
     const b = bubbleRef.current;
-    const pos = computeTooltipPosition(tip.rect, { width: b.offsetWidth, height: b.offsetHeight },
+    const placed = computeTooltipPosition(tip.rect, { width: b.offsetWidth, height: b.offsetHeight },
       { width: window.innerWidth, height: window.innerHeight });
-    b.style.left = `${pos.left}px`;
-    b.style.top = `${pos.top}px`;
-    b.style.setProperty("--caret-x", `${pos.caretLeft}px`);
-    b.setAttribute("data-placement", pos.placement);
-    const raf = requestAnimationFrame(() => setShown(true));
-    return () => cancelAnimationFrame(raf);
+    setPos({ id: tip.id, ...placed });
   }, [tip]);
 
+  // La position prête pour CETTE cible déclenche la transition d'entrée (frame suivante).
+  useLayoutEffect(() => {
+    if (!tip || !pos || pos.id !== tip.id) return;
+    const raf = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(raf);
+  }, [tip, pos]);
+
   if (!tip) return null;
+  // Tant que la position de la cible courante n'est pas calculée, la bulle est
+  // rendue hors écran et invisible (elle doit rester dans le DOM pour être mesurée).
+  const ready = pos && pos.id === tip.id;
   return createPortal(
-    <div ref={bubbleRef} className="app-tooltip" role="tooltip" data-show={shown ? "1" : undefined}>
+    <div ref={bubbleRef} className="app-tooltip" role="tooltip"
+      data-show={ready && shown ? "1" : undefined}
+      data-placement={ready ? pos.placement : undefined}
+      style={ready
+        ? { left: pos.left, top: pos.top, "--caret-x": `${pos.caretLeft}px` }
+        : { left: -9999, top: -9999, visibility: "hidden" }}>
       {tip.text}
     </div>,
     document.body,
