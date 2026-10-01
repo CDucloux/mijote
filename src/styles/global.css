@@ -3455,6 +3455,19 @@ select {
     }
   }
 
+  /* Variante « danger » du bouton d'icône : au survol souris, un rond rouge
+     translucide apparaît et l'icône vire au rouge (même langage que la poubelle
+     de l'éditeur de recette). Tactile : pas de hover figé, l'onde suffit. */
+  .icon-btn-danger {
+    transition: background-color .18s ease, color .18s ease;
+  }
+  @media (hover: hover) {
+    .icon-btn-danger:hover {
+      background: rgba(224, 82, 82, 0.14) !important;
+      color: var(--red) !important;
+    }
+  }
+
   /* Pastille de statut d'appariement (ligne d'ingrédient). Tonalité posée en inline
      via `--dot-fg` ; le survol souris densifie le tint dans cette même teinte, le
      tactile s'appuie sur l'onde `.ripple`. `overflow:hidden` borne l'onde au rond. */
