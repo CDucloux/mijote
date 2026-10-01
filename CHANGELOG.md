@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.10 – Cardamome · Fondations typées
+
+### Sous le capot
+- **Migration TypeScript poursuivie** : 13 composants d'interface passés de `.jsx` à `.tsx` avec des props typées (ligne de courses, fenêtre À propos, éditeur d'ingrédients et ses feuilles découpe/appariement, modales difficulté/nutrition/base, bandeau d'annonce, paramètres d'appareil, conversion de quantités, etc.). Aucun changement visible : uniquement un typage plus sûr et une correction de types trompeurs hérités d'anciens JSDoc.
+
 ## v4.59.9 – Cardamome · Console admin peaufinée
 
 ### Console admin

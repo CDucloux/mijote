@@ -2,29 +2,34 @@ import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { capitalize } from "../../lib/format.js";
 import { FORMES, FORME_LABEL } from "@/lib/recipes/decoupe.js";
+import type { Cut, FormeDecoupe, Calibre } from "@/lib/types";
 
 // ─── FEUILLE DE DÉCOUPE ───────────────────────────────────────────────────────
 // Choix de la découpe de mise en place (forme + calibre), en remplacement des deux
 // listes déroulantes « stock » de la ligne d'ingrédient. Édition en direct : chaque
 // choix remonte via `onChange`, la feuille reste ouverte pour affiner le calibre.
 
-const CALIBRES = [["fin", "Fin"], ["moyen", "Moyen"], ["gros", "Gros"]];
+const CALIBRES: [Calibre, string][] = [["fin", "Fin"], ["moyen", "Moyen"], ["gros", "Gros"]];
+
+interface CutSheetProps {
+  /** Nom de l'ingrédient (sous-titre). */
+  name?: string;
+  /** Découpe courante. */
+  cut?: Cut | null;
+  onChange: (cut: Cut | null) => void;
+  onClose: () => void;
+}
 
 /**
  * Feuille de sélection de la découpe d'un ingrédient. Contrôlée : l'état vit chez le
  * parent (`cut`), chaque geste appelle `onChange` avec la nouvelle découpe ou `null`.
- *
- * @param {string} name Nom de l'ingrédient (sous-titre).
- * @param {import("@/lib/types").Cut | null | undefined} cut Découpe courante.
- * @param {(cut: import("@/lib/types").Cut | null) => void} onChange
- * @param {() => void} onClose
  */
-export function CutSheet({ name, cut, onChange, onClose }) {
+export function CutSheet({ name, cut, onChange, onClose }: CutSheetProps) {
   const forme = cut?.forme || null;
   const calibre = cut?.calibre || null;
 
-  const pickForme = (f) => onChange(calibre ? { forme: f, calibre } : { forme: f });
-  const pickCalibre = (c) => forme && onChange(c === calibre ? { forme } : { forme, calibre: c });
+  const pickForme = (f: FormeDecoupe) => onChange(calibre ? { forme: f, calibre } : { forme: f });
+  const pickCalibre = (c: Calibre) => forme && onChange(c === calibre ? { forme } : { forme, calibre: c });
 
   return (
     <SwipeableSheet onClose={onClose}>

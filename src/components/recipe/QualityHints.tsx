@@ -1,6 +1,8 @@
+import type { CSSProperties } from "react";
 import { precautionVisual } from "@/lib/utensils/usagePrecaution.js";
+import type { PrecautionTone, UsagePrecaution } from "@/lib/types";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { Icon } from "../ui/Icon.jsx";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 
 // ─── INDICES QUALITÉ (recommandation d'ingrédient / précaution d'ustensile) ───
 // Présentationnels et discrets : la logique (résolution, libellé, tonalité) vit
@@ -11,7 +13,12 @@ import { Icon } from "../ui/Icon.jsx";
  * Recommandation de forme d'un ingrédient, en ligne discrète (« 💡 Frais ou surgelé
  * recommandé »). Pensée pour se glisser sous une ligne d'ingrédient (recette, courses).
  */
-export function IngredientRecoHint({ label, style }) {
+interface IngredientRecoHintProps {
+  label?: string | null;
+  style?: CSSProperties;
+}
+
+export function IngredientRecoHint({ label, style }: IngredientRecoHintProps) {
   if (!label) return null;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, color: "var(--text3)", ...style }}>
@@ -26,7 +33,12 @@ export function IngredientRecoHint({ label, style }) {
  * est disponible. Purement visuelle (le clic est géré par la card parente) : pointer
  * events désactivés pour ne pas voler le tap.
  */
-export function PrecautionInfoBadge({ tone, style }) {
+interface PrecautionInfoBadgeProps {
+  tone?: PrecautionTone;
+  style?: CSSProperties;
+}
+
+export function PrecautionInfoBadge({ tone, style }: PrecautionInfoBadgeProps) {
   const { accent } = precautionVisual(tone);
   return (
     <span aria-hidden="true" style={{
@@ -43,13 +55,21 @@ export function PrecautionInfoBadge({ tone, style }) {
  * recette) ou sur l'ustensile d'une étape (mode pas à pas). En-tête au ton de la
  * précaution, puis titre, description et « bon réflexe ».
  */
-export function UtensilPrecautionSheet({ utensilName, precaution, onClose, zIndex }) {
+interface UtensilPrecautionSheetProps {
+  utensilName?: string;
+  precaution?: UsagePrecaution | null;
+  onClose: () => void;
+  zIndex?: number;
+}
+
+export function UtensilPrecautionSheet({ utensilName, precaution, onClose, zIndex }: UtensilPrecautionSheetProps) {
   if (!precaution) return null;
   const { icon, label, accent } = precautionVisual(precaution.tone);
   return (
     <SwipeableSheet onClose={onClose} zIndex={zIndex}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-        <span style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 14, background: accent + "1f", display: "grid", placeItems: "center" }} aria-hidden="true"><Icon name={icon} size={22} color={accent} /></span>
+        {/* `icon` provient de precautionVisual : toujours un nom d'icône du set maison. */}
+        <span style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 14, background: accent + "1f", display: "grid", placeItems: "center" }} aria-hidden="true"><Icon name={icon as IconName} size={22} color={accent} /></span>
         <div style={{ minWidth: 0 }}>
           {utensilName && <div style={{ fontSize: 12.5, color: "var(--text3)", marginBottom: 1 }}>{utensilName}</div>}
           <div style={{ fontSize: 11, fontWeight: 600, color: accent, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>

@@ -1,5 +1,6 @@
+import type { ReactNode } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
+import { DIFFICULTY_LABEL, difficultyColor, type DifficultyExplain } from "@/lib/recipes/difficulty.js";
 import { Row, Col, IconChip } from "../ui/primitives.jsx";
 
 // ─── EXPLICATION DE LA DIFFICULTÉ ─────────────────────────────────────────────
@@ -7,14 +8,14 @@ import { Row, Col, IconChip } from "../ui/primitives.jsx";
 // modificateurs). `data` provient de explainDifficulty().
 
 // Teintes douces dérivées de la couleur de difficulté (vert / ambre / rouge).
-function tints(color) {
+function tints(color: string) {
   if (color === "var(--green)") return { soft: "rgba(var(--green-rgb),0.13)", line: "rgba(var(--green-rgb),0.32)" };
   if (color === "var(--red)") return { soft: "rgba(224,82,82,0.13)", line: "rgba(224,82,82,0.32)" };
   return { soft: "rgba(232,146,10,0.13)", line: "rgba(232,146,10,0.32)" };
 }
 
 // Jauge segmentée pleine largeur (5 segments).
-function Gauge({ level, color, height = 7 }) {
+function Gauge({ level, color, height = 7 }: { level: number; color: string; height?: number }) {
   return (
     <div style={{ display: "flex", gap: 5 }}>
       {[1, 2, 3, 4, 5].map(i => (
@@ -25,12 +26,17 @@ function Gauge({ level, color, height = 7 }) {
 }
 
 // Libellé de section (petite étiquette accent).
-function SectionLabel({ children }) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 2px 11px" }}>{children}</div>;
 }
 
-export function DifficultyModal({ data, onClose }) {
-  if (!data) return null;
+interface DifficultyModalProps {
+  data?: DifficultyExplain | null;
+  onClose: () => void;
+}
+
+export function DifficultyModal({ data, onClose }: DifficultyModalProps) {
+  if (!data || data.score == null) return null;
   const color = difficultyColor(data.score);
   const label = DIFFICULTY_LABEL[data.score];
   const t = tints(color);
@@ -69,9 +75,10 @@ export function DifficultyModal({ data, onClose }) {
           <div style={{ padding: "14px 15px", borderRadius: 16, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 24 }}>
             <Row justify="space-between" gap={10} style={{ marginBottom: 11 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{data.drivers.join(", ")}</div>
-              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 600, color: difficultyColor(data.base), fontVariantNumeric: "tabular-nums" }}>niveau {data.base}</span>
+              {/* Hors cas `overridden` (traité plus haut), `base` est toujours un niveau calculé. */}
+              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 600, color: difficultyColor(data.base!), fontVariantNumeric: "tabular-nums" }}>niveau {data.base}</span>
             </Row>
-            <Gauge level={data.base} color={difficultyColor(data.base)} height={6} />
+            <Gauge level={data.base!} color={difficultyColor(data.base!)} height={6} />
           </div>
 
           {/* ── Modificateurs ── */}
@@ -106,7 +113,7 @@ export function DifficultyModal({ data, onClose }) {
                 {data.techniques.map(tech => (
                   <span key={tech.id} title={tech.inherited ? "Hérité d'une préparation de base" : undefined} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 11px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
                     <span style={{ display: "inline-flex", gap: 2 }}>
-                      {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: i <= tech.difficulty ? difficultyColor(tech.difficulty) : "var(--surface3)" }} />)}
+                      {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: i <= (tech.difficulty ?? 0) ? difficultyColor(tech.difficulty ?? 0) : "var(--surface3)" }} />)}
                     </span>
                     {tech.name}
                     {tech.inherited && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>· base</span>}

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
@@ -9,11 +10,11 @@ import { fmtQty, pluralizeUnit, capitalize } from "../../lib/format.js";
 // c. à soupe ». Les équivalents sont calculés en amont (lib `spoonConversions`).
 
 // Contenance de référence d'une cuillère (pour la ligne secondaire de chaque rangée).
-const SPOON_ML = { "cuillère à soupe": 15, "cuillère à café": 5 };
+const SPOON_ML: Record<string, number> = { "cuillère à soupe": 15, "cuillère à café": 5 };
 
 // Badge d'action posé en bas-DROITE d'une vignette d'ingrédient : ouvre la
 // conversion en cuillères. À placer dans un conteneur `position: relative`.
-export function ConvertBadge({ onClick, size = 19 }) {
+export function ConvertBadge({ onClick, size = 19 }: { onClick: () => void; size?: number }) {
   return (
     <button type="button" onClick={e => { e.stopPropagation(); onClick(); }} className="tap"
       title="Convertir en cuillères" aria-label="Convertir en cuillères"
@@ -26,22 +27,40 @@ export function ConvertBadge({ onClick, size = 19 }) {
   );
 }
 
+/** Équivalent cuillère pré-calculé pour un ingrédient. */
+interface SpoonEquivalent { unit: string; value: number }
+
+/** Ingrédient et ses équivalents cuillères pré-calculés. */
+interface ConvertIng {
+  id?: string;
+  name?: string;
+  image?: string;
+  amount: number;
+  unit?: string;
+  spoons: SpoonEquivalent[];
+}
+
+interface QuantityConvertSheetProps {
+  ing: ConvertIng;
+  onClose: () => void;
+  /** Unité cuillère actuellement choisie (mode sélection). */
+  selectedUnit?: string | null;
+  /** Choix d'une unité ; sa présence active le mode sélection. */
+  onSelectUnit?: (unit: string) => void;
+  /** Retour à l'unité d'origine (mode sélection). */
+  onReset?: () => void;
+  /** Surcharge du z-index du backdrop (au-dessus d'un overlay plein écran). */
+  zIndex?: number;
+}
+
 /**
  * Feuille de conversion en cuillères. Deux registres selon les callbacks fournis :
  * - Informatif (par défaut) : affiche les équivalents, rien de cliquable.
  * - Sélection (`onSelectUnit` fourni) : chaque rangée devient un choix ; l'unité
  *   retenue est mémorisée par l'appelant et sert d'affichage ailleurs (mise en
  *   place du cook mode). `onReset` rétablit l'unité d'origine.
- *
- * @param {{ id?: string, name?: string, image?: string, amount: number, unit?: string, spoons: {unit: string, value: number}[] }} ing
- *        Ingrédient et ses équivalents cuillères pré-calculés.
- * @param {() => void} onClose
- * @param {string | null} [selectedUnit] Unité cuillère actuellement choisie (mode sélection).
- * @param {(unit: string) => void} [onSelectUnit] Choix d'une unité ; active le mode sélection.
- * @param {() => void} [onReset] Retour à l'unité d'origine (mode sélection).
- * @param {number} [zIndex] Surcharge du z-index du backdrop (au-dessus d'un overlay plein écran).
  */
-export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSelectUnit, onReset, zIndex }) {
+export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSelectUnit, onReset, zIndex }: QuantityConvertSheetProps) {
   const selectable = typeof onSelectUnit === "function";
   return (
     <SwipeableSheet onClose={onClose} zIndex={zIndex}>
@@ -76,7 +95,7 @@ export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSele
       <div style={{ background: "var(--surface2)", borderRadius: 20, overflow: "hidden" }}>
         {ing.spoons.map((s, i) => {
           const active = selectable && selectedUnit === s.unit;
-          const rowStyle = { display: "flex", alignItems: "center", gap: 14, width: "100%", padding: "16px 18px", borderTop: i ? "1px solid var(--border)" : "none", textAlign: "left" };
+          const rowStyle: CSSProperties = { display: "flex", alignItems: "center", gap: 14, width: "100%", padding: "16px 18px", borderTop: i ? "1px solid var(--border)" : "none", textAlign: "left" };
           const inner = (
             <>
               <span style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.13)", display: "grid", placeItems: "center" }}>
@@ -98,7 +117,7 @@ export function QuantityConvertSheet({ ing, onClose, selectedUnit = null, onSele
             </>
           );
           return selectable
-            ? <button key={s.unit} type="button" className={`pressable convert-row${active ? " is-active" : ""}`} onClick={() => close(() => onSelectUnit(s.unit))} style={{ ...rowStyle, border: "none", borderTop: rowStyle.borderTop, cursor: "pointer" }}>{inner}</button>
+            ? <button key={s.unit} type="button" className={`pressable convert-row${active ? " is-active" : ""}`} onClick={() => close(() => onSelectUnit?.(s.unit))} style={{ ...rowStyle, border: "none", borderTop: rowStyle.borderTop, cursor: "pointer" }}>{inner}</button>
             : <div key={s.unit} style={{ ...rowStyle, background: "transparent" }}>{inner}</div>;
         })}
       </div>

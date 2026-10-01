@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Icon } from "../ui/Icon.jsx";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { PlusBadge } from "../badges/PlusBadge.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
@@ -16,7 +16,7 @@ import { useAppShell } from "../../context/AppShellContext.jsx";
 // Petit robot « import intelligent » : glyphe au trait, teintable. Utilisé une seule
 // fois, en tête du groupe d'imports (plutôt que répété sur chaque ligne, ce qui
 // alourdissait la feuille et lui donnait un air « chargé »).
-function RobotGlyph({ size = 16, color = "currentColor" }) {
+function RobotGlyph({ size = 16, color = "currentColor" }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect x="11" y="1.6" width="2" height="3.6" rx="1" fill={color} />
@@ -31,7 +31,14 @@ function RobotGlyph({ size = 16, color = "currentColor" }) {
 
 // Ligne-option du sélecteur (empilées verticalement). Icône neutre, uniforme sur
 // toutes les options (saisie manuelle comme imports intelligents).
-function Choice({ icon, title, subtitle, onClick }) {
+interface ChoiceProps {
+  icon: IconName;
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+}
+
+function Choice({ icon, title, subtitle, onClick }: ChoiceProps) {
   return (
     <button onClick={onClick} className="pressable nr-choice" style={{
       display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", cursor: "pointer",
@@ -61,7 +68,12 @@ function Choice({ icon, title, subtitle, onClick }) {
  * @param onClose - Ferme la feuille.
  * @param onManual - Bascule vers la saisie manuelle.
  */
-export function NewRecipeSheet({ onClose, onManual }) {
+interface NewRecipeSheetProps {
+  onClose: () => void;
+  onManual: () => void;
+}
+
+export function NewRecipeSheet({ onClose, onManual }: NewRecipeSheetProps) {
   const { isPlus } = useAppShell();
   const navigate = useNavigate();
 
@@ -69,7 +81,7 @@ export function NewRecipeSheet({ onClose, onManual }) {
   // Import intelligent : on ouvre TOUJOURS la page dédiée, y compris en plan
   // gratuit. Le blocage (mur d'offre) se joue au moment d'essayer l'import, pas à
   // l'entrée : l'utilisateur découvre d'abord l'écran.
-  const goImport = (path) => { onClose(); navigate(path); };
+  const goImport = (path: string) => { onClose(); navigate(path); };
   const plusBadge = !isPlus ? <PlusBadge /> : undefined;
 
   return (
@@ -114,7 +126,7 @@ export function NewRecipeSheet({ onClose, onManual }) {
   );
 }
 
-export function NewRecipeButton({ onManual }) {
+export function NewRecipeButton({ onManual }: { onManual: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <>
