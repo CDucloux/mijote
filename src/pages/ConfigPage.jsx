@@ -23,6 +23,7 @@ import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { PRECAUTION_TONES } from "@/lib/utensils/usagePrecaution.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { formatMonths } from "@/lib/food/seasonality.js";
+import { techniqueVisual } from "@/lib/recipes/techniqueDisplay.js";
 import { CONFIG_SECTION_BY_PATH, CONFIG_PATH_BY_SECTION } from "../constants/tabs.js";
 import { AdminDashboard } from "../components/admin/AdminDashboard.jsx";
 import { SourcesAdmin } from "../components/admin/SourcesAdmin.jsx";
@@ -119,8 +120,12 @@ function DifficultyPips({ level }) {
   );
 }
 
-// Intitulé de section dans l'éditeur de geste : discret, en capitales espacées.
-const editLabel = { fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text3)", margin: "18px 0 8px" };
+// Intitulé de section dans l'éditeur de geste : capitales espacées. Coloré par
+// catégorie (résultat attendu) ou en rouge (erreurs) pour épouser la fiche
+// détaillée affichée en recette, repli neutre sinon.
+const EDIT_LABEL_RED = "var(--red, #d1544f)";
+const sectionLabel = (color) => ({ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: color || "var(--text3)", margin: "18px 0 8px" });
+const editLabel = sectionLabel();
 
 // Éditeur d'une liste de phrases (indicateurs observables, erreurs fréquentes) :
 // une ligne par entrée, ajout/retrait, sans champ vide imposé.
@@ -813,8 +818,33 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       {/* Éditeur de geste technique (admin) */}
       {editTech && (
         <SwipeableSheet onClose={() => setEditTech(null)}>
-          {(close) => { const techOptions = [...techniques].filter(t => t.id !== editTech.id).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr")); return (<>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editTech.id ? "Modifier" : "Nouveau"} geste</h3>
+          {(close) => {
+          const techOptions = [...techniques].filter(t => t.id !== editTech.id).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
+          const techVis = techniqueVisual(editTech.category);
+          const catLabel = TECHNIQUE_CATEGORIES[editTech.category] || "Préparation";
+          const diff = Number(editTech.difficulty) || 0;
+          return (<>
+          {/* En-tête calqué sur la fiche détaillée (TechniqueDetailSheet) : pastille
+              d'icône colorée par catégorie, titre, puce de catégorie et pastilles de
+              difficulté, pour que la saisie reflète l'affichage en recette. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${techVis.color} 16%, transparent)` }}>
+              <Icon name={techVis.icon} size={27} color={techVis.color} />
+            </span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h3 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>
+                {editTech.name?.trim() || (editTech.id ? "Modifier le geste" : "Nouveau geste")}
+              </h3>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: techVis.color, background: `color-mix(in srgb, ${techVis.color} 14%, transparent)`, padding: "3px 9px", borderRadius: 999 }}>{catLabel}</span>
+                {diff > 0 && (
+                  <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 3, alignItems: "center" }}>
+                    {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= diff ? techVis.color : "var(--surface3)" }} />)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Émulsionner" value={editTech.name} onChange={e => setEditTech(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
           <div className="field-label">Catégorie</div>
@@ -846,7 +876,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           </select>
           <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>Le geste générique dont celui-ci est une variante (ex : « Ciseler » fait partie de « Hachage »).</div>
 
-          <div style={editLabel}>Résultat attendu</div>
+          <div style={sectionLabel(techVis.color)}>Résultat attendu</div>
           <textarea className="field-input" rows={2} placeholder="L'état observable après une bonne exécution."
             value={editTech.expected_result?.summary || ""}
             onChange={e => setEditTech(p => ({ ...p, expected_result: { ...(p.expected_result || {}), summary: e.target.value } }))}
@@ -856,7 +886,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             onChange={v => setEditTech(p => ({ ...p, expected_result: { ...(p.expected_result || {}), observable_indicators: v } }))}
             placeholder="ex: Des dés homogènes" addLabel="Ajouter un indicateur" />
 
-          <div style={editLabel}>Erreurs fréquentes</div>
+          <div style={sectionLabel(EDIT_LABEL_RED)}>Erreurs fréquentes</div>
           <PhraseListEditor items={editTech.common_errors || []}
             onChange={v => setEditTech(p => ({ ...p, common_errors: v }))}
             placeholder="ex: Écraser l'aliment" addLabel="Ajouter une erreur" />

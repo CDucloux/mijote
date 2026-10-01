@@ -4,6 +4,7 @@ import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 import { buildTechniqueIndex, annotateText } from "@/lib/recipes/techniques.js";
+import { techniqueVisual } from "@/lib/recipes/techniqueDisplay.js";
 import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
 import { stripAiDashes } from "@/lib/format.js";
 
@@ -32,15 +33,9 @@ const wordBtn = (active) => ({
 const POP_MARGIN = 10;   // marge minimale avec les bords de l'écran
 const POP_MAX_W = 306;   // largeur maximale de la bulle
 
-// Identité visuelle par catégorie de technique : icône du set maison + couleur.
-const TECH_CAT = {
-  decoupe: { icon: "knife", color: "#e0894a" },
-  cuisson: { icon: "fire", color: "#e0524f" },
-  liaison: { icon: "spoon", color: "#c8951f" },
-  preparation: { icon: "utensils", color: "#5b9cf6" },
-  dressage: { icon: "dish", color: "#9b87f5" },
-};
-const techCat = (c) => TECH_CAT[c] || { icon: "utensils", color: "var(--accent)" };
+// Identité visuelle par catégorie de technique (icône + couleur) : factorisée
+// dans src/lib pour rester cohérente avec l'éditeur de geste.
+const techCat = (c) => techniqueVisual(c);
 
 const popList = { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 };
 
