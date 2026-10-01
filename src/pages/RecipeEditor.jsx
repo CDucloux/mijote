@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Fragment } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, Fragment } from "react";
 import { Icon } from "../components/ui/Icon.jsx";
 import { ImageUpload } from "../components/ui/ImageUpload.jsx";
 import { CUISINES } from "../constants/cuisines.js";
@@ -207,56 +207,101 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
 
   // Ingredients
   const lastAddedIdRef = useRef(null);
-  // Insère un ingrédient à la position `index` (dans la liste globale) avec la section
-  // `group`. Le réordonnancement libre se fait ensuite via `moveIngGlobal`.
-  const addIngAt = (index, group) => {
+  // Les handlers passés aux lignes/étapes MÉMOÏSÉES doivent garder une identité
+  // stable : on les fige avec `useCallback` + `setForm` fonctionnel (aucune closure
+  // sur `form`), condition pour que `React.memo` évite de re-rendre les lignes non
+  // éditées à chaque frappe (cause du lag sur les grosses recettes).
+  const clearSaveError = useCallback(() => setSaveError(e => (e ? "" : e)), []);
+  // Insère un ingrédient à la position `index` (dans la liste globale) avec la section `group`.
+  const addIngAt = useCallback((index, group) => {
     const id = "i" + Date.now();
     lastAddedIdRef.current = id;
-    const arr = form.ingredients.slice();
-    arr.splice(index, 0, { id, dbId: "", name: "", amount: "", unit: "", _raw: "", group });
-    up("ingredients", arr);
-  };
+    setForm(p => {
+      const arr = p.ingredients.slice();
+      arr.splice(index, 0, { id, dbId: "", name: "", amount: "", unit: "", _raw: "", group });
+      return { ...p, ingredients: arr };
+    });
+  }, []);
+  // Entrée sur une ligne : insère la suivante APRÈS elle, dans sa section. On repart de
+  // l'id (pas d'un index capturé) pour que le callback reste stable entre les rendus.
+  const handleIngEnter = useCallback((id) => {
+    const newId = "i" + Date.now();
+    lastAddedIdRef.current = newId;
+    setForm(p => {
+      const idx = p.ingredients.findIndex(i => i.id === id);
+      const at = idx < 0 ? p.ingredients.length : idx + 1;
+      const group = idx < 0 ? "" : (p.ingredients[idx].group || "");
+      const arr = p.ingredients.slice();
+      arr.splice(at, 0, { id: newId, dbId: "", name: "", amount: "", unit: "", _raw: "", group });
+      return { ...p, ingredients: arr };
+    });
+  }, []);
   // Déplacement LIBRE (index globaux) : l'item adopte la section du bloc d'arrivée.
-  const moveIngGlobal = (from, to) => up("ingredients", moveWithAdopt(form.ingredients, from, to));
-  const updIng = (id, f, v) => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i)); };
-  const remIng = id => { if (saveError) setSaveError(""); up("ingredients", form.ingredients.filter(i => i.id !== id)); };
+  const moveIngGlobal = useCallback((from, to) => setForm(p => ({ ...p, ingredients: moveWithAdopt(p.ingredients, from, to) })), []);
+  const updIng = useCallback((id, f, v) => { clearSaveError(); setForm(p => ({ ...p, ingredients: p.ingredients.map(i => i.id === id ? { ...i, [f]: v } : i) })); }, [clearSaveError]);
+  const remIng = useCallback((id) => { clearSaveError(); setForm(p => ({ ...p, ingredients: p.ingredients.filter(i => i.id !== id) })); }, [clearSaveError]);
   // Retour arrière sur une ligne vide : supprime la ligne et refocalise la précédente.
-  const removeIngBackspace = (id) => {
-    const idx = form.ingredients.findIndex(i => i.id === id);
-    const prev = form.ingredients[idx - 1];
-    lastAddedIdRef.current = prev ? prev.id : null;
-    remIng(id);
-  };
+  const removeIngBackspace = useCallback((id) => {
+    clearSaveError();
+    setForm(p => {
+      const idx = p.ingredients.findIndex(i => i.id === id);
+      const prev = p.ingredients[idx - 1];
+      lastAddedIdRef.current = prev ? prev.id : null;
+      return { ...p, ingredients: p.ingredients.filter(i => i.id !== id) };
+    });
+  }, [clearSaveError]);
   // Parse + rapprochement base d'ingrédients à chaque frappe dans le champ « raw ».
-  const handleRawChange = (id, raw) => {
-    if (saveError) setSaveError("");
+  const handleRawChange = useCallback((id, raw) => {
+    clearSaveError();
     const parsed = parseIngredientInput(raw);
     const match = parsed.name ? findIngredientMatch(parsed.name, ingredientDB) : null;
-    up("ingredients", form.ingredients.map(x => x.id === id ? {
+    setForm(p => ({ ...p, ingredients: p.ingredients.map(x => x.id === id ? {
       ...x, _raw: raw, name: parsed.name, amount: parsed.amount, unit: parsed.unit,
       dbId: match ? match.id : "",
-    } : x));
-  };
+    } : x) }));
+  }, [clearSaveError, ingredientDB]);
+  // Handlers de champ figés (identité stable) pour les lignes mémoïsées.
+  const handleIngAmount = useCallback((id, v) => updIng(id, "amount", v), [updIng]);
+  const handleIngCut = useCallback((id, cut) => updIng(id, "cut", cut), [updIng]);
 
   // Composants disponibles (préparations de base), hors la recette courante et hors
   // celles déjà référencées. Indisponible si on édite soi-même un composant (mono-niveau v1).
   const usedRecipeIds = new Set(form.ingredients.filter(i => i.recipeId).map(i => i.recipeId));
   const availableComponents = (recipes || []).filter(r => r.isComponent && r.id !== form.id && !usedRecipeIds.has(r.id));
-  const addComponentAt = (index, comp, group = "") => {
-    const arr = form.ingredients.slice();
-    arr.splice(index, 0, { id: "i" + Date.now(), recipeId: comp.id, name: comp.name, amount: "", unit: comp.yield?.unit || "g", group });
-    up("ingredients", arr);
-  };
+  const addComponentAt = useCallback((index, comp, group = "") => {
+    setForm(p => {
+      const arr = p.ingredients.slice();
+      arr.splice(index, 0, { id: "i" + Date.now(), recipeId: comp.id, name: comp.name, amount: "", unit: comp.yield?.unit || "g", group });
+      return { ...p, ingredients: arr };
+    });
+  }, []);
 
-  // Étapes, mêmes primitives : insertion positionnelle + déplacement libre.
-  const addStepAt = (index, group) => {
-    const arr = form.steps.slice();
-    arr.splice(index, 0, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [], group });
-    up("steps", arr);
-  };
-  const updStep = (id, f, v) => up("steps", form.steps.map(s => s.id === id ? { ...s, [f]: v } : s));
-  const remStep = id => up("steps", form.steps.filter(s => s.id !== id));
-  const moveStepGlobal = (from, to) => up("steps", moveWithAdopt(form.steps, from, to));
+  // Étapes, mêmes primitives (handlers figés) : insertion positionnelle + déplacement libre.
+  const addStepAt = useCallback((index, group) => {
+    setForm(p => {
+      const arr = p.steps.slice();
+      arr.splice(index, 0, { id: "s" + Date.now(), title: "", text: "", ingredients: [], utensils: [], group });
+      return { ...p, steps: arr };
+    });
+  }, []);
+  const updStep = useCallback((id, f, v) => setForm(p => ({ ...p, steps: p.steps.map(s => s.id === id ? { ...s, [f]: v } : s) })), []);
+  const remStep = useCallback((id) => setForm(p => ({ ...p, steps: p.steps.filter(s => s.id !== id) })), []);
+  const moveStepGlobal = useCallback((from, to) => setForm(p => ({ ...p, steps: moveWithAdopt(p.steps, from, to) })), []);
+
+  // Image de chaque ligne résolue UNE fois ici (regated par signature légère), au lieu
+  // d'un scan complet de la base PAR étape ET PAR ligne (findIngredientMatch réindexe
+  // toute la base à chaque appel). Les cartes d'étape consomment `ing.image` tel quel.
+  const stepIngSig = form.ingredients.map(i => `${i.id}~${i.recipeId || ""}~${i.dbId || ""}~${i.name || ""}~${i.amount}~${i.unit || ""}`).join("|");
+  const stepIngredients = useMemo(
+    () => form.ingredients.map(ing => ({
+      ...ing,
+      image: ing.recipeId
+        ? ((recipes || []).find(r => r.id === ing.recipeId)?.image || "")
+        : ((ingredientDB || []).find(d => d.id === ing.dbId)?.image || (ing.name ? findIngredientMatch(ing.name, ingredientDB || [])?.image || "" : "")),
+    })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [stepIngSig, ingredientDB, recipes],
+  );
 
   // ── Sections partagées (ingrédients + étapes) ───────────────────────────────
   // `sectionNames` porte l'ORDRE des sections et permet les sections VIDES (créées
@@ -520,9 +565,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                         autoFocus={ing.id === lastAddedIdRef.current}
                         isDropTarget={ingDropIdx === gi} onTargetChange={setIngDropIdx}
                         onRawChange={handleRawChange}
-                        onUpdateAmount={(id, v) => updIng(id, "amount", v)}
-                        onCutChange={(id, cut) => updIng(id, "cut", cut)}
-                        onRemove={remIng} onMove={moveIngGlobal} onEnter={() => addIngAt(gi + 1, g || "")} onBackspaceEmpty={removeIngBackspace} />
+                        onUpdateAmount={handleIngAmount}
+                        onCutChange={handleIngCut}
+                        onRemove={remIng} onMove={moveIngGlobal} onEnter={handleIngEnter} onBackspaceEmpty={removeIngBackspace} />
                     );
                   })}
                   {g != null && <SectionAddBar onAddIngredient={() => addIngAt(endIdx, g)} components={compsAt(g, endIdx)} canBase={!form.isComponent && !rawInSection} />}
@@ -564,7 +609,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     const gi = run.start + j;
                     return (
                       <DraggableStep key={step.id} step={step} index={gi} total={form.steps.length}
-                        ingredients={form.ingredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
+                        ingredients={stepIngredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
                         draggable={!isDesktop}
                         isDropTarget={stepDropIdx === gi} onTargetChange={setStepDropIdx}
                         onUpdate={updStep} onRemove={remStep} onMove={moveStepGlobal} />

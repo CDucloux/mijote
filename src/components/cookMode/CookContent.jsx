@@ -81,8 +81,15 @@ export function CookContent(props) {
           }
           {!isComp && !gathered && convOf(ing, amount) && <ConvertBadge onClick={() => openConvert(ing, amount)} size={18} />}
         </span>
-        <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400, textDecoration: gathered ? "line-through" : "none", opacity: gathered ? 0.55 : 1, transition: "opacity 0.15s" }}>{capitalize(displayName)}</span>
-        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", opacity: gathered ? 0.55 : 1, transition: "opacity 0.15s" }}>
+        {/* Barré PROGRESSIF (comme la page Courses) : un trait qui se trace de 0 à 100%
+            sur le nom, plutôt qu'un line-through instantané non animable. */}
+        <span style={{ flex: 1, minWidth: 0, display: "flex" }}>
+          <span style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
+            <span style={{ display: "block", fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", opacity: gathered ? 0.55 : 1, transition: "opacity 0.28s ease" }}>{capitalize(displayName)}</span>
+            <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: isComp ? "var(--accent)" : "var(--text3)", width: gathered ? "100%" : "0%", transition: "width 0.28s ease" }} />
+          </span>
+        </span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", opacity: gathered ? 0.55 : 1, transition: "opacity 0.28s ease" }}>
           {displayQty(ing, amount)}
         </span>
       </div>
@@ -113,8 +120,12 @@ export function CookContent(props) {
         <span style={{ flexShrink: 0, display: "inline-flex", opacity: done ? 0.5 : 1, transition: "opacity 0.15s" }}>
           <IngImage src={imgSrc} alt={poste.name} size={42} />
         </span>
-        <span style={{ flex: 1, fontSize: 14, color: "var(--text)", textDecoration: done ? "line-through" : "none", opacity: done ? 0.55 : 1, transition: "opacity 0.15s" }}>
-          {posteLabel(poste)}
+        {/* Barré progressif identique aux ingrédients (cohérence avec la page Courses). */}
+        <span style={{ flex: 1, minWidth: 0, display: "flex" }}>
+          <span style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
+            <span style={{ display: "block", fontSize: 14, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", opacity: done ? 0.55 : 1, transition: "opacity 0.28s ease" }}>{posteLabel(poste)}</span>
+            <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--text3)", width: done ? "100%" : "0%", transition: "width 0.28s ease" }} />
+          </span>
         </span>
         {srcStepIdx >= 0 && (
           <button type="button" title="Voir l'étape d'origine de cette découpe"

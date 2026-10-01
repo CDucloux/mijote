@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type CSSProperties } from "react";
+import { memo, useState, useEffect, useRef, type CSSProperties } from "react";
 import { Icon, type IconName } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
@@ -36,7 +36,7 @@ interface DraggableIngredientProps {
   onRemove: (id: string | undefined) => void;
   onMove: (from: number, to: number) => void;
   onTargetChange?: (index: number | null) => void;
-  onEnter: () => void;
+  onEnter: (id: string | undefined) => void;
   onBackspaceEmpty?: (id: string | undefined) => void;
   onCutChange?: (id: string | undefined, cut: Cut | null) => void;
 }
@@ -44,7 +44,7 @@ interface DraggableIngredientProps {
 // Ligne d'ingrédient réorganisable LIBREMENT dans la liste complète (index global).
 // Glisser au doigt sur mobile (poignée), flèches ↑/↓ sur desktop. La section est
 // déterminée par la POSITION (pas de pastille) : voir `moveWithAdopt`.
-export function DraggableIngredient({
+function DraggableIngredientBase({
   ing, index, total, draggable: isDraggable = true,
   ingredientDB, recipes, autoFocus, isDropTarget = false,
   onRawChange, onUpdateAmount, onRemove, onMove, onTargetChange, onEnter, onBackspaceEmpty, onCutChange,
@@ -131,7 +131,7 @@ export function DraggableIngredient({
             value={ing._raw !== undefined ? ing._raw : ""}
             onChange={e => onRawChange(ing.id, e.target.value)}
             onKeyDown={e => {
-              if (e.key === "Enter") { e.preventDefault(); onEnter(); }
+              if (e.key === "Enter") { e.preventDefault(); onEnter(ing.id); }
               // Retour arrière sur une ligne VIDE → supprime la ligne (miroir d'Entrée).
               else if (e.key === "Backspace" && !(ing._raw || "") && onBackspaceEmpty) { e.preventDefault(); onBackspaceEmpty(ing.id); }
             }}
@@ -166,3 +166,10 @@ export function DraggableIngredient({
     </div>
   );
 }
+
+// Mémoïsé : dans l'éditeur, UNE frappe met à jour l'objet `ing` de la seule ligne
+// éditée (les autres gardent leur référence). Sans cette barrière, chaque frappe
+// re-rendait TOUTES les lignes (chacune rescanne la base via `ingredientMatch`),
+// d'où le lag sur les grosses recettes. Les callbacks parents sont stabilisés
+// (`useCallback` + `setForm` fonctionnel) pour que la comparaison superficielle tienne.
+export const DraggableIngredient = memo(DraggableIngredientBase);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { fmtQtyUnit } from "../../lib/format.js";
 import { AutoResizeTextarea } from "../ui/AutoResizeTextarea.jsx";
@@ -31,7 +31,7 @@ function BlockLabel({ icon, color, children }) {
   );
 }
 
-export function DraggableStep({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, isDropTarget = false, onUpdate, onRemove, onMove, onTargetChange }) {
+function DraggableStepBase({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, isDropTarget = false, onUpdate, onRemove, onMove, onTargetChange }) {
   const [trashHover, setTrashHover] = useState(false);
   const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
   // La carte saisie se soulève ; la carte VISÉE s'entoure d'accent.
@@ -40,9 +40,14 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
   const [showPhoto, setShowPhoto] = useState(!!step.image);
   const [showTip, setShowTip] = useState(!!step.tip);
 
-  const ingImg = (ing) => ing.recipeId
-    ? ((recipes || []).find(r => r.id === ing.recipeId)?.image || "")
-    : ((ingredientDB || []).find(d => d.id === ing.dbId)?.image || (ing.name ? findIngredientMatch(ing.name, ingredientDB || [])?.image || "" : ""));
+  // `ing.image` est pré-résolu par le parent (une passe pour toute la recette) afin
+  // d'éviter un scan complet de la base PAR ingrédient ET PAR étape à chaque frappe
+  // (findIngredientMatch réindexe toute la base). Repli conservé pour robustesse.
+  const ingImg = (ing) => ing.image !== undefined
+    ? ing.image
+    : (ing.recipeId
+      ? ((recipes || []).find(r => r.id === ing.recipeId)?.image || "")
+      : ((ingredientDB || []).find(d => d.id === ing.dbId)?.image || (ing.name ? findIngredientMatch(ing.name, ingredientDB || [])?.image || "" : "")));
   const utDbRow = (u) => (utensilDB || []).find(d => d.id === u.dbId);
   const utImg = (u) => utDbRow(u)?.image || "";
 
@@ -181,3 +186,8 @@ export function DraggableStep({ step, index, total, ingredients, utensils, recip
     </div>
   );
 }
+
+// Mémoïsé : éditer UNE étape (ou taper un ingrédient) ne doit pas re-rendre toutes
+// les autres cartes d'étape, chacune parcourant tous les ingrédients/ustensiles.
+// Le parent passe des props stables (callbacks `useCallback`, listes mémoïsées).
+export const DraggableStep = memo(DraggableStepBase);
