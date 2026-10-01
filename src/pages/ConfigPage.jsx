@@ -454,7 +454,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         </div>
         <OverscrollRow stretch style={{ gap: 6 }}>
           {[["dashboard", "Vue d'ensemble", "grid"], ["ingredients", "Ingrédients", "leaf"], ["ustensiles", "Ustensiles", "utensils"], ["techniques", "Techniques", "list2"], ["sources", "Sources", "star"], ["modération", "Modération", "warning"]].map(([s, label, ic]) => (
-            <button key={s} onClick={() => gotoSection(s)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: section === s ? "var(--accent)" : "var(--surface)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
+            <button key={s} onClick={() => gotoSection(s)} className={section === s ? undefined : "hov-pill"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: section === s ? "var(--accent)" : "var(--surface)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
               <Icon name={ic} size={13} color="currentColor" /> {label}
               {s === "modération" && reports.length > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 600, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: section === s ? "rgba(255,255,255,0.28)" : "var(--red)", color: "#fff" }}>{reports.length}</span>
@@ -660,23 +660,28 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
               {byCat.map(([catKey, list]) => {
                 const isOpen = openTechCats[catKey];
+                const catVis = techniqueVisual(catKey);
                 return (
                 <div key={catKey} style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px" }}>
-                    <button onClick={() => toggleTechCat(catKey)} style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
+                    <button onClick={() => toggleTechCat(catKey)} style={{ flex: 1, display: "flex", alignItems: "center", gap: 11, textAlign: "left" }}>
+                      {/* Pastille d'icône colorée par catégorie, à gauche du nom du groupe. */}
+                      <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${catVis.color} 16%, transparent)` }}>
+                        <Icon name={catVis.icon} size={16} color={catVis.color} />
+                      </span>
                       <div style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                         {TECHNIQUE_CATEGORIES[catKey]} <span style={{ color: "var(--text3)", opacity: 0.7 }}>· {list.length}</span>
                       </div>
-                      <span style={{
+                      <span className="icon-btn-soft" style={{
                         display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
                         background: "var(--surface2)", border: "1px solid var(--border)",
-                        transition: "transform 0.25s ease", transform: isOpen ? "rotate(-90deg)" : "rotate(90deg)",
+                        transition: "transform 0.25s ease, background-color 0.18s ease, color 0.18s ease", transform: isOpen ? "rotate(-90deg)" : "rotate(90deg)",
                       }}>
                         <Icon name="forward" size={12} color="var(--text3)" />
                       </span>
                     </button>
                     {isAdmin && (
-                      <button className="btn btn-primary btn-sm" style={{ flexShrink: 0, padding: "4px 10px", fontSize: 11 }}
+                      <button className="btn btn-primary" style={{ flexShrink: 0, padding: "6px 14px", fontSize: 11, borderRadius: 999 }}
                         onClick={() => setEditTech({ id: "", name: "", category: catKey, definition: "", aliases: [], difficulty: undefined, source: "" })}>
                         <Icon name="plus" size={12} /> Ajouter
                       </button>
@@ -701,8 +706,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                           </div>
                           {isAdmin && (
                             <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                              <button onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier" style={{ color: "var(--text3)", padding: 4 }}><Icon name="edit" size={14} /></button>
-                              <button onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer" style={{ color: "var(--text3)", padding: 4 }}><Icon name="trash" size={14} /></button>
+                              <button className="icon-btn-soft" onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier"
+                                style={{ width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", color: "var(--text3)", cursor: "pointer" }}><Icon name="edit" size={14} /></button>
+                              <button className="icon-btn-danger" onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer"
+                                style={{ width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", color: "var(--text3)", cursor: "pointer" }}><Icon name="trash" size={14} /></button>
                             </div>
                           )}
                         </div>

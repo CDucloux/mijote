@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.59.6 – Cardamome · Finitions soignées
+
+### Console admin
+- **Liste des techniques plus lisible** : chaque groupe de catégorie affiche sa pastille d'icône colorée à gauche de son nom, le bouton « Ajouter » devient une pill, et sur desktop les actions de ligne ont un effet de survol (fond doux sur le chevron et le crayon, fond rouge sur la poubelle, comme dans l'éditeur de recette).
+- **Survol des onglets** : les onglets de navigation (Vue d'ensemble, Ingrédients…) s'éclairent au survol sur desktop, comme les onglets de la page Courses.
+
+### Détails
+- **Infobulles sans sautillement** : le texte explicatif affiché au survol d'un bouton ne « gigote » plus avant de se placer ; il apparaît directement au bon endroit.
+- **Page de présentation** : les boutons d'application à venir nomment les stores (Google Play, App Store) plutôt que les plateformes.
+
 ## v4.59.5 – Cardamome · Geste bien dressé
 
 ### Base Master (admin)
