@@ -1570,19 +1570,16 @@ select {
   box-shadow: 0 14px 40px -12px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 14px 14px 12px;
   text-align: left;
-  animation: techPop 0.17s cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Entrée en OPACITÉ SEULE : animer un transform (translate/scale) re-rastérise
+     le texte à chaque frame à des sous-pixels différents, d'où le tremblement.
+     Un fondu ne bouge aucun pixel. La position (left/top) est posée en JS,
+     arrondie à l'entier, pour un rendu net. */
+  animation: techPop 0.14s ease;
 }
 
 @keyframes techPop {
-  from {
-    opacity: 0;
-    transform: translateY(4px) scale(0.97);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1613,29 +1610,23 @@ select {
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.45), 0 2px 7px rgba(0, 0, 0, 0.12);
   pointer-events: none;
   opacity: 0;
-  transform: translateY(3px) scale(0.98);
-  transition: opacity 0.14s ease, transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.app-tooltip[data-placement="bottom"] {
-  transform: translateY(-3px) scale(0.98);
+  /* Entrée en OPACITÉ SEULE, volontairement sans `transform`. Animer un transform
+     (translate/scale) force le navigateur à re-rastériser le texte à chaque frame,
+     à des sous-pixels légèrement différents : le texte « gigote » dans la bulle.
+     Un simple fondu ne bouge aucun pixel, donc aucun tremblement. La position
+     (left/top) est posée en JS, arrondie à l'entier, pour un rendu net. */
+  transition: opacity 0.13s ease;
 }
 .app-tooltip[data-show="1"] {
   opacity: 1;
-  transform: translateY(0) scale(1);
 }
 
-/* Caret : petit carré tourné, couleur de la bulle, aligné au centre de la cible
-   (--caret-x calculé en JS). Le décalage d'une moitié le fait chevaucher le bord. */
 /* Pas de caret : une bulle flottante nette, sans flèche de rattachement (choix
-   d'UI moderne). Le décalage vertical de la transition suffit à lier visuellement. */
+   d'UI moderne). */
 
 @media (prefers-reduced-motion: reduce) {
   .app-tooltip {
-    transition: opacity 0.1s ease;
-    transform: none;
-  }
-  .app-tooltip[data-placement="bottom"] {
-    transform: none;
+    transition: none;
   }
 }
 

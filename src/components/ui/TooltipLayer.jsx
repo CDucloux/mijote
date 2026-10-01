@@ -129,9 +129,8 @@ export function TooltipLayer() {
   return createPortal(
     <div ref={bubbleRef} className="app-tooltip" role="tooltip"
       data-show={ready && shown ? "1" : undefined}
-      data-placement={ready ? pos.placement : undefined}
       style={ready
-        ? { left: pos.left, top: pos.top, "--caret-x": `${pos.caretLeft}px` }
+        ? { left: Math.round(pos.left), top: Math.round(pos.top) }
         : { left: -9999, top: -9999, visibility: "hidden" }}>
       {tip.text}
     </div>,

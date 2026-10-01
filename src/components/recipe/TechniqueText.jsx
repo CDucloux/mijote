@@ -197,7 +197,8 @@ export function TechniqueText({ text, index: indexProp }) {
     const left = Math.max(POP_MARGIN, Math.min(r.left, vw - width - POP_MARGIN));
     const above = (vh - r.bottom) < 180 && r.top > 180;
     const top = above ? r.top - 6 : r.bottom + 6;
-    return { key, tech, left, top, width, above };
+    // Coordonnées arrondies à l'entier : du sous-pixel rendrait le texte flou/tremblant.
+    return { key, tech, left: Math.round(left), top: Math.round(top), width, above };
   }, []);
 
   // Ferme au clic ailleurs OU au scroll (les coordonnées `fixed` deviennent

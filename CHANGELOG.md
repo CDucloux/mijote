@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.7 – Cardamome · Infobulles stables
+
+### Détails
+- **Plus de tremblement des infobulles** : le texte des bulles d'aide (au survol d'un bouton) et des fiches de geste technique en cuisine n'« gigote » plus à l'apparition. La cause (une animation d'entrée qui re-rendait le texte à des positions sous-pixel) est corrigée : position arrondie au pixel et apparition en fondu seul.
+
 ## v4.59.6 – Cardamome · Finitions soignées
 
 ### Console admin
