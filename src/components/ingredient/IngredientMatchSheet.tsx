@@ -1,8 +1,10 @@
+import type { ReactNode } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { capitalize, fmtQty, pluralizeUnit } from "../../lib/format.js";
-import { ingredientMatch } from "../../lib/recipes/ingredientMatch.js";
+import { ingredientMatch, type MatchTone } from "../../lib/recipes/ingredientMatch.js";
+import type { IngredientLine } from "@/lib/types";
 
 // ─── FEUILLE D'APPARIEMENT D'UN INGRÉDIENT ────────────────────────────────────
 // Ouverte via la pastille de statut posée à droite d'une ligne d'ingrédient (éditeur
@@ -12,14 +14,21 @@ import { ingredientMatch } from "../../lib/recipes/ingredientMatch.js";
 
 // Registre visuel d'une tonalité : couleur de premier plan + fond doux. Le tint ambre
 // n'a pas de token `--…-rgb`, on le pose en rgba littéral (idiome déjà présent ailleurs).
-const TONE = {
+const TONE: Record<MatchTone, { fg: string; soft: string }> = {
   ok: { fg: "var(--ok)", soft: "rgba(var(--ok-rgb),0.14)" },
   warn: { fg: "var(--orange)", soft: "rgba(240,153,42,0.14)" },
   neutral: { fg: "var(--text3)", soft: "var(--surface2)" },
 };
 
+interface InfoRowProps {
+  label: string;
+  value: ReactNode;
+  tone?: MatchTone;
+  first?: boolean;
+}
+
 /** Une rangée « libellé → valeur » de la liste, registre réglages iOS/Linear. */
-function InfoRow({ label, value, tone = "neutral", first = false }) {
+function InfoRow({ label, value, tone = "neutral", first = false }: InfoRowProps) {
   const c = TONE[tone];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", borderTop: first ? "none" : "1px solid var(--border)" }}>
@@ -35,11 +44,16 @@ function InfoRow({ label, value, tone = "neutral", first = false }) {
  * unité et reconnaissance dans la base. Purement informative (rien à éditer ici, la
  * saisie reste sur la ligne). Le statut est dérivé par {@link ingredientMatch}.
  *
- * @param {import("@/lib/types").IngredientLine} ing Ligne d'ingrédient saisie.
- * @param {string | null} [image] Vignette de l'ingrédient apparié, si connue.
- * @param {() => void} onClose
  */
-export function IngredientMatchSheet({ ing, image, onClose }) {
+interface IngredientMatchSheetProps {
+  /** Ligne d'ingrédient saisie. */
+  ing: IngredientLine;
+  /** Vignette de l'ingrédient apparié, si connue. */
+  image?: string | null;
+  onClose: () => void;
+}
+
+export function IngredientMatchSheet({ ing, image, onClose }: IngredientMatchSheetProps) {
   const m = ingredientMatch(ing);
   const tone = TONE[m.tone];
   const name = (ing?.name || "").trim();
@@ -49,7 +63,7 @@ export function IngredientMatchSheet({ ing, image, onClose }) {
       {/* En-tête : vignette + nom analysé en display + pilule de statut globale. */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
         {image
-          ? <IngImage src={image} alt={name} size={52} />
+          ? <IngImage src={image ?? undefined} alt={name} size={52} />
           : <span style={{ width: 52, height: 52, borderRadius: "50%", flexShrink: 0, background: tone.soft, display: "grid", placeItems: "center" }}>
               <Icon name={m.recognized ? "leaf" : m.named ? "leaf" : "search"} size={22} color={tone.fg} />
             </span>}

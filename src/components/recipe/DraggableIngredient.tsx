@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Icon } from "../ui/Icon.jsx";
+import { useState, useEffect, useRef, type CSSProperties } from "react";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { MoveArrows } from "../ui/MoveArrows.jsx";
@@ -7,15 +7,39 @@ import { IngredientMatchSheet } from "../ingredient/IngredientMatchSheet.jsx";
 import { CutSheet } from "../ingredient/CutSheet.jsx";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../../hooks/useDragReorder.js";
 import { FORME_LABEL } from "@/lib/recipes/decoupe.js";
-import { ingredientMatch } from "@/lib/recipes/ingredientMatch.js";
+import { ingredientMatch, type MatchTone } from "@/lib/recipes/ingredientMatch.js";
 import { capitalize } from "../../lib/format.js";
+import type { IngredientLine, IngredientDbItem, Recipe, Cut } from "@/lib/types";
 
 // Registre visuel de la pastille de statut d'appariement (foreground + fond doux).
 // L'ambre n'a pas de token `--…-rgb` : rgba littéral, idiome déjà présent ailleurs.
-const MATCH_TONE = {
+interface MatchToneVisual { fg: string; soft: string; icon: IconName }
+const MATCH_TONE: Partial<Record<MatchTone, MatchToneVisual>> = {
   ok: { fg: "var(--ok)", soft: "rgba(var(--ok-rgb),0.14)", icon: "check" },
   warn: { fg: "var(--orange)", soft: "rgba(240,153,42,0.14)", icon: "warning" },
 };
+
+/** Ligne d'ingrédient en cours d'édition : `_raw` porte la saisie brute non parsée. */
+type EditableIngredientLine = IngredientLine & { _raw?: string };
+
+interface DraggableIngredientProps {
+  ing: EditableIngredientLine;
+  index: number;
+  total: number;
+  draggable?: boolean;
+  ingredientDB: IngredientDbItem[];
+  recipes?: Recipe[];
+  autoFocus?: boolean;
+  isDropTarget?: boolean;
+  onRawChange: (id: string | undefined, value: string) => void;
+  onUpdateAmount: (id: string | undefined, value: number | "") => void;
+  onRemove: (id: string | undefined) => void;
+  onMove: (from: number, to: number) => void;
+  onTargetChange?: (index: number | null) => void;
+  onEnter: () => void;
+  onBackspaceEmpty?: (id: string | undefined) => void;
+  onCutChange?: (id: string | undefined, cut: Cut | null) => void;
+}
 
 // Ligne d'ingrédient réorganisable LIBREMENT dans la liste complète (index global).
 // Glisser au doigt sur mobile (poignée), flèches ↑/↓ sur desktop. La section est
@@ -24,11 +48,11 @@ export function DraggableIngredient({
   ing, index, total, draggable: isDraggable = true,
   ingredientDB, recipes, autoFocus, isDropTarget = false,
   onRawChange, onUpdateAmount, onRemove, onMove, onTargetChange, onEnter, onBackspaceEmpty, onCutChange,
-}) {
+}: DraggableIngredientProps) {
   const [trashHover, setTrashHover] = useState(false);
   const [showMatch, setShowMatch] = useState(false);
   const [showCut, setShowCut] = useState(false);
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
   // La ligne saisie se soulève ; la ligne VISÉE s'entoure d'accent.
   const dragStyle = dragging ? LIFTED_ROW_STYLE : null;
@@ -76,7 +100,7 @@ export function DraggableIngredient({
   }
 
   // ── Ligne ingrédient brut ──
-  const img = ing.dbId ? ingredientDB.find(d => d.id === ing.dbId)?.image : null;
+  const img = ing.dbId ? (ingredientDB.find(d => d.id === ing.dbId)?.image ?? undefined) : undefined;
   // Statut d'appariement condensé en UNE pastille (à droite, avant la corbeille) qui
   // ouvre le détail à la demande, plutôt qu'une rangée de pilules sous chaque ligne.
   const match = ingredientMatch(ing);
@@ -88,7 +112,7 @@ export function DraggableIngredient({
   const matchBtn = tone && (
     <button type="button" className="match-dot ripple tap" onClick={() => setShowMatch(true)}
       title={match.summary} aria-label={`Analyse : ${match.summary}`}
-      style={{ position: "absolute", top: "50%", right: 6, marginTop: -14, "--dot-fg": tone.fg, width: 28, height: 28, borderRadius: "50%", background: tone.soft, border: "none", display: "grid", placeItems: "center", cursor: "pointer", padding: 0 }}>
+      style={{ position: "absolute", top: "50%", right: 6, marginTop: -14, "--dot-fg": tone.fg, width: 28, height: 28, borderRadius: "50%", background: tone.soft, border: "none", display: "grid", placeItems: "center", cursor: "pointer", padding: 0 } as CSSProperties}>
       <Icon name={tone.icon} size={14} color={tone.fg} />
     </button>
   );
@@ -137,7 +161,7 @@ export function DraggableIngredient({
       )}
       {showCut && (
         <CutSheet name={ing.name} cut={ing.cut}
-          onChange={cut => onCutChange(ing.id, cut)} onClose={() => setShowCut(false)} />
+          onChange={(cut: Cut | null) => onCutChange?.(ing.id, cut)} onClose={() => setShowCut(false)} />
       )}
     </div>
   );

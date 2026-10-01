@@ -1,5 +1,6 @@
+import type { ReactNode, MouseEvent } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { Icon } from "../ui/Icon.jsx";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 import { ChangelogSection } from "../onboarding/ChangelogSection.jsx";
 import { codenameFor } from "../../constants/changelog.js";
 import { CONTACT_EMAIL, CONTACT_MAILTO } from "../../constants/contact.js";
@@ -20,7 +21,7 @@ const STACK = [
   { name: "React Router", version: "7", role: "Navigation" },
 ];
 
-function Section({ icon, title, children }) {
+function Section({ icon, title, children }: { icon: IconName; title: string; children: ReactNode }) {
   return (
     <Col gap={8}>
       <Row gap={8}>
@@ -32,7 +33,7 @@ function Section({ icon, title, children }) {
   );
 }
 
-export function AboutModal({ onClose }) {
+export function AboutModal({ onClose }: { onClose: () => void }) {
   return (
     <SwipeableSheet onClose={onClose} style={{ maxWidth: 460 }}>
       <Col gap={22} style={{ padding: "4px 20px 24px" }}>
@@ -91,8 +92,8 @@ export function AboutModal({ onClose }) {
         <Section icon="mail" title="Nous contacter">
           <Row as="a" justify="space-between" gap={10} href={CONTACT_MAILTO}
             style={{ padding: "11px 14px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", textDecoration: "none", transition: "border-color 0.15s, background 0.15s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.13)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.18)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.07)"; }}>
+            onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.13)"; }}
+            onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.18)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.07)"; }}>
             <Col style={{ minWidth: 0 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Une question, un bug, une idée ?</span>
               <span style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{CONTACT_EMAIL}</span>

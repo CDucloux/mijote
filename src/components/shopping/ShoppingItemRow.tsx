@@ -3,22 +3,34 @@ import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { useIsDesktop } from "../../hooks/useIsDesktop.js";
 import { capitalize, pluralizeUnit } from "../../lib/format.js";
+import type { ShoppingItem } from "@/lib/food/shoppingAggregate.js";
 
 const SWIPE_MAX = 130, SWIPE_TRIGGER = 64;
 
-export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, imageSrc, subtitle, disableDelete = false }) {
+interface ShoppingItemRowProps {
+  item: ShoppingItem;
+  striking?: boolean;
+  unstriking?: boolean;
+  onBuy: (item: ShoppingItem) => void;
+  onDelete: (item: ShoppingItem) => void;
+  imageSrc?: string | null;
+  subtitle?: string;
+  disableDelete?: boolean;
+}
+
+export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, imageSrc, subtitle, disableDelete = false }: ShoppingItemRowProps) {
   const isDesktop = useIsDesktop();
   const [dx, setDx] = React.useState(0);
   const [animating, setAnimating] = React.useState(false);
   const [exiting, setExiting] = React.useState(false);
   const [trashHover, setTrashHover] = React.useState(false);
-  const startX = React.useRef(0), startY = React.useRef(0), axis = React.useRef(null);
+  const startX = React.useRef(0), startY = React.useRef(0), axis = React.useRef<"h" | "v" | null>(null);
   // `unstriking` : article coché qu'on décoche, on retrace le barré à l'envers
   // (et on rallume la ligne) AVANT que la donnée bascule et le remonte dans « À acheter ».
   const struck = (item.checked || striking) && !unstriking;
 
-  const onTouchStart = e => { startX.current = e.touches[0].clientX; startY.current = e.touches[0].clientY; axis.current = null; setAnimating(false); };
-  const onTouchMove = e => {
+  const onTouchStart = (e: React.TouchEvent) => { startX.current = e.touches[0].clientX; startY.current = e.touches[0].clientY; axis.current = null; setAnimating(false); };
+  const onTouchMove = (e: React.TouchEvent) => {
     const dX = e.touches[0].clientX - startX.current, dY = e.touches[0].clientY - startY.current;
     if (!axis.current) { if (Math.abs(dX) > 8 || Math.abs(dY) > 8) axis.current = Math.abs(dX) > Math.abs(dY) ? "h" : "v"; }
     if (axis.current === "h") {
@@ -95,7 +107,7 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
           <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: struck ? "var(--ok)" : "transparent", border: `2px solid ${struck ? "var(--ok)" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" }}>
             {struck && <Icon name="check" size={11} color="#fff" />}
           </div>
-          <IngImage src={imageSrc} alt={item.name} size={40} />
+          <IngImage src={imageSrc ?? undefined} alt={item.name} size={40} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 500, color: struck ? "var(--text3)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s" }}>{capitalize(item.name)}</span>
