@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { Img, IngImage } from "../components/ui/Img.jsx";
@@ -190,6 +190,14 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   // Fiche ingrédient : /admin/ingredients/{id}
   const ingDetailMatch = location.pathname.match(/^\/admin\/ingredients\/(.+)$/);
   const ingDetailId = ingDetailMatch ? decodeURIComponent(ingDetailMatch[1]) : null;
+  // Mémorise la position de défilement de la liste pour la restaurer au retour de
+  // la fiche d'un ingrédient (le conteneur scrollable est démonté pendant la fiche,
+  // mais ConfigPage reste monté : un ref suffit, cf. même confort sur la page Recettes).
+  const sectionScrollRef = useRef(null);
+  const savedScrollTop = useRef(0);
+  useLayoutEffect(() => {
+    if (!ingDetailId && sectionScrollRef.current) sectionScrollRef.current.scrollTop = savedScrollTop.current;
+  }, [ingDetailId]);
   const setSection = (s) => navigate(`/admin/${CONFIG_PATH_BY_SECTION[s] || "ingredients"}`, { replace: true });
   useEffect(() => {
     if (!configSectionParam) navigate("/admin/dashboard", { replace: true });
@@ -491,7 +499,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         })()}
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--page-pad-b)" }}>
+      <div ref={sectionScrollRef} onScroll={e => { savedScrollTop.current = e.currentTarget.scrollTop; }} style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--page-pad-b)" }}>
         {section === "dashboard" && (
           <AdminDashboard ingredientDB={ingredientDB} utensilDB={utensilDB} techniques={techniques} onGoto={gotoSection} />
         )}
@@ -550,16 +558,16 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{cat.label}</div>
                         <div style={{ fontSize: 11, color: "var(--text3)" }}>{catIngs.length} ingrédient{catIngs.length !== 1 ? "s" : ""} · <code style={{ fontSize: 10, background: "var(--surface2)", borderRadius: 4, padding: "1px 4px" }}>{catKey}</code></div>
                       </div>
-                      <span style={{
+                      <span className="icon-btn-soft" style={{
                         display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%",
                         background: "var(--surface2)", border: "1px solid var(--border)",
-                        transition: "transform 0.25s ease", transform: isOpen ? "rotate(-90deg)" : "rotate(90deg)"
+                        transition: "transform 0.25s ease, background-color 0.18s ease, color 0.18s ease", transform: isOpen ? "rotate(-90deg)" : "rotate(90deg)"
                       }}>
                         <Icon name="forward" size={12} color="var(--text3)" />
                       </span>
                     </button>
                     {isAdmin && (
-                      <button className="btn btn-primary btn-sm" style={{ flexShrink: 0, padding: "4px 10px", fontSize: 11 }}
+                      <button className="btn btn-primary" style={{ flexShrink: 0, padding: "6px 14px", fontSize: 11, borderRadius: 999 }}
                         onClick={() => createIngredient(catKey)}>
                         <Icon name="plus" size={12} /> Ajouter
                       </button>
