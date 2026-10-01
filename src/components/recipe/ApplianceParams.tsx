@@ -15,20 +15,25 @@ const chipOn = { background: "rgba(var(--accent-rgb),0.14)", color: "var(--accen
 const chipOff = { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" };
 const fieldLabel = { fontSize: 11.5, fontWeight: 600, color: "var(--text3)", marginBottom: 6, letterSpacing: "0.01em" };
 
+interface ApplianceParamsEditorProps {
+  /** Clé d'appareil (schéma). */
+  appliance?: string;
+  /** Valeurs courantes (indexées par clé de réglage). */
+  values?: Record<string, unknown> | null;
+  /** Reçoit le nouvel objet de valeurs (nettoyé des vides). */
+  onChange: (next: Record<string, unknown>) => void;
+}
+
 /**
  * Éditeur des réglages d'un appareil pour une étape donnée.
- *
- * @param {string} appliance - Clé d'appareil (schéma).
- * @param {Record<string, unknown>} values - Valeurs courantes (indexées par clé de réglage).
- * @param {(next: Record<string, unknown>) => void} onChange - Reçoit le nouvel objet de valeurs (nettoyé des vides).
  */
-export function ApplianceParamsEditor({ appliance, values, onChange }) {
+export function ApplianceParamsEditor({ appliance, values, onChange }: ApplianceParamsEditorProps) {
   const schema = getApplianceSchema(appliance);
   if (schema.length === 0) return null;
 
   // Écrit une valeur en écartant les « vides » (chaîne vide, null, false) pour
   // garder l'objet Firestore propre et éviter les NaN.
-  const set = (key, val) => {
+  const set = (key: string, val: unknown) => {
     const next = { ...(values || {}) };
     if (val === "" || val == null || val === false) delete next[key];
     else next[key] = val;
@@ -56,7 +61,7 @@ export function ApplianceParamsEditor({ appliance, values, onChange }) {
             <div key={field.key}>
               <div style={fieldLabel}>{field.label}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {field.options.map(opt => {
+                {(field.options ?? []).map(opt => {
                   const on = cur === opt.value;
                   return (
                     <button key={opt.value} type="button" onClick={() => set(field.key, on ? "" : opt.value)} className="pressable"
@@ -71,7 +76,7 @@ export function ApplianceParamsEditor({ appliance, values, onChange }) {
         }
 
         // number : saisie compacte avec suffixe d'unité.
-        const raw = cur === undefined || cur === null ? "" : cur;
+        const raw: string | number = cur === undefined || cur === null ? "" : (cur as string | number);
         return (
           <div key={field.key}>
             <div style={fieldLabel}>{field.label}</div>

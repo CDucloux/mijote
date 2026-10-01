@@ -1,17 +1,18 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
+import { NutriScoreBadge, type NutriLetter } from "../badges/NutriScoreBadge.jsx";
 import { Donut } from "../ui/Donut.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { PlusBadge } from "../badges/PlusBadge.jsx";
-import { computeNutritionDetail, computeNutriInfo, computeNutriBreakdown, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import { computeNutritionDetail, computeNutriInfo, computeNutriBreakdown, buildRecipeIndex, type NutriComponent, type NutriBreakdown } from "@/lib/recipes/nutriscore.js";
+import type { Recipe } from "@/lib/types";
 import { NUTRI_RI, MACRO_COLORS } from "../../constants/nutritionDisplay.js";
 import { Row, Col } from "../ui/primitives.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 
 // ─── NUTRITION ANALYSIS MODAL ─────────────────────────────────────────────────
-const NUTRI_LETTER_DESC = {
+const NUTRI_LETTER_DESC: Record<string, string> = {
   A: "Excellente qualité nutritionnelle",
   B: "Bonne qualité nutritionnelle",
   C: "Qualité nutritionnelle moyenne",
@@ -21,10 +22,10 @@ const NUTRI_LETTER_DESC = {
 
 const N_COLOR = "#e0724e";  // pénalités (rouge-orangé)
 const P_COLOR = "#4caf7d";  // apports positifs (vert)
-const fmtVal = (v) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
+const fmtVal = (v: number) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
 
 // Une ligne de composante du calcul : libellé + valeur/100 g, points, jauge.
-function CalcRow({ c, color }) {
+function CalcRow({ c, color }: { c: NutriComponent; color: string }) {
   const dim = c.counted === false;
   return (
     <div style={{ opacity: dim ? 0.5 : 1 }}>
@@ -44,16 +45,16 @@ function CalcRow({ c, color }) {
 }
 
 // Vue « Détail du calcul » (traçabilité Nutri-Score), abonnés Cardamome+.
-function NutriCalcView({ breakdown }) {
+function NutriCalcView({ breakdown }: { breakdown: NutriBreakdown }) {
   const { negatives, N, positives, P, ns, letter } = breakdown;
-  const stat = (val, label, color) => (
+  const stat = (val: number, label: string, color: string) => (
     <Col align="center" gap={1} style={{ minWidth: 0 }}>
       <span style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 700, color, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{val}</span>
       <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{label}</span>
     </Col>
   );
-  const op = (s) => <span style={{ fontSize: 16, fontWeight: 400, color: "var(--text3)" }}>{s}</span>;
-  const sectionLabel = (txt, total, color) => (
+  const op = (s: string) => <span style={{ fontSize: 16, fontWeight: 400, color: "var(--text3)" }}>{s}</span>;
+  const sectionLabel = (txt: string, total: number, color: string) => (
     <Row justify="space-between" style={{ margin: "18px 2px 11px" }}>
       <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{txt}</span>
       <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", background: color, borderRadius: 999, padding: "2px 9px", fontVariantNumeric: "tabular-nums" }}>{total} pt{total > 1 ? "s" : ""}</span>
@@ -90,7 +91,7 @@ function NutriCalcView({ breakdown }) {
 }
 
 // Aperçu verrouillé (non-abonnés) : pitch + CTA vers Cardamome+.
-function CalcLocked({ onUpgrade }) {
+function CalcLocked({ onUpgrade }: { onUpgrade: () => void }) {
   return (
     <div style={{ marginTop: 4, padding: "26px 20px", background: "linear-gradient(160deg, rgba(var(--accent-rgb),0.08), rgba(240,192,96,0.05))", border: "1px solid rgba(var(--accent-rgb),0.22)", borderRadius: 18, textAlign: "center" }}>
       <span style={{ width: 46, height: 46, borderRadius: 14, background: "var(--accent)", display: "inline-grid", placeItems: "center", boxShadow: "0 6px 16px -6px rgba(var(--accent-rgb),0.6)", marginBottom: 12 }}>
@@ -107,11 +108,20 @@ function CalcLocked({ onUpgrade }) {
   );
 }
 
-export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, onClose }) {
-  const [basis, setBasis] = useState("portion"); // "portion" | "100g" | "calc"
+interface NutritionModalProps {
+  recipe: Recipe;
+  recipes?: Recipe[];
+  ingredientDB: Parameters<typeof computeNutritionDetail>[1];
+  servings: number;
+  onClose: () => void;
+}
+
+export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, onClose }: NutritionModalProps) {
+  const [basis, setBasis] = useState<string>("portion"); // "portion" | "100g" | "calc"
   const navigate = useNavigate();
   const { isPlus } = useAppShell();
-  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
+  // `yield.amount` peut être une chaîne côté Recipe ; buildRecipeIndex ne lit que l'id/les ingrédients.
+  const recipesById = useMemo(() => buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]), [recipes]);
   const detail = useMemo(() => computeNutritionDetail(recipe.ingredients, ingredientDB, servings, recipesById), [recipe.ingredients, ingredientDB, servings, recipesById]);
   const breakdown = useMemo(() => computeNutriBreakdown(recipe.ingredients, ingredientDB, recipesById), [recipe.ingredients, ingredientDB, recipesById]);
   // Lettre recalculée EN DIRECT (comme le badge d'en-tête), pas la valeur figée à
@@ -123,7 +133,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   // (ex. « 3 kcal / portion », « 15 g de sel pour 100 g » quand seul le sel est
   // renseigné). On refuse alors d'afficher des chiffres, et la lettre, trompeurs.
   const reliable = detail.coverage >= 0.5;
-  const letter = reliable ? (liveLetter ?? recipe.nutriLetter) : null;
+  const letter = reliable ? (liveLetter ?? (recipe.nutriLetter as NutriLetter | null)) : null;
   const data = basis === "portion" ? detail.perServing : detail.per100;
   const kcal = Math.round(data.calories);
   const kj = Math.round(data.calories * 4.184);
@@ -137,12 +147,12 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   ];
   const macroTot = macroSegs.reduce((s, x) => s + x.value, 0) || 1;
 
-  const fmt = (v, unit = "g") => {
+  const fmt = (v: number | null | undefined, unit = "g") => {
     if (v == null) return "–";
     const r = v >= 10 ? Math.round(v) : Math.round(v * 10) / 10;
     return `${r} ${unit}`;
   };
-  const riPct = (key, v) => NUTRI_RI[key] ? Math.round(v / NUTRI_RI[key] * 100) : null;
+  const riPct = (key: string, v: number) => { const ri = (NUTRI_RI as Record<string, number>)[key]; return ri ? Math.round(v / ri * 100) : null; };
 
   // Barres détaillées (les "dont" indentés sous leur macro parent)
   const rows = [
