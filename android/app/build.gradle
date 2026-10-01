@@ -1,4 +1,18 @@
+import groovy.json.JsonSlurper
+
 apply plugin: 'com.android.application'
+
+// Version pilotee par package.json (racine du repo) : un seul `npm version x.y.z`
+// (deja fait a la MEP) alimente versionName ET versionCode cote Android, plus rien
+// a bumper a la main avant un upload Play. versionCode = M*1000000 + m*1000 + p :
+// strictement croissant tant que minor < 1000 et patch < 1000 (marge largement
+// suffisante, plafond Android = 2 100 000 000).
+def pkgVersion = (new JsonSlurper().parse(rootProject.file("../package.json"))).version as String
+def vParts = pkgVersion.tokenize('.')
+def vMajor = ((vParts.size() > 0 ? vParts[0] : '0').replaceAll(/\D.*$/, '') ?: '0') as int
+def vMinor = ((vParts.size() > 1 ? vParts[1] : '0').replaceAll(/\D.*$/, '') ?: '0') as int
+def vPatch = ((vParts.size() > 2 ? vParts[2] : '0').replaceAll(/\D.*$/, '') ?: '0') as int
+def computedVersionCode = vMajor * 1000000 + vMinor * 1000 + vPatch
 
 android {
     namespace = "studio.cardamome"
@@ -7,8 +21,8 @@ android {
         applicationId "studio.cardamome"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode computedVersionCode
+        versionName pkgVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
