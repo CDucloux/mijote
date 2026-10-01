@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.59.9 – Cardamome · Console admin peaufinée
+
+### Console admin
+- **Repli animé des catégories** : dans les sections Ingrédients et Techniques, replier une catégorie s'anime désormais comme son dépliage (plus de disparition sèche).
+- **Section Ingrédients harmonisée** : bouton « Ajouter » en pill et survol du chevron, alignés sur la section Techniques.
+- **Position de défilement conservée** : ouvrir la fiche d'un ingrédient puis revenir ramène la liste là où on l'avait laissée, au lieu de repartir du haut.
+
 ## v4.59.8 – Cardamome · Carnets nets
 
 ### Détails
