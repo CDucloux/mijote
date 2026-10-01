@@ -1570,19 +1570,16 @@ select {
   box-shadow: 0 14px 40px -12px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 14px 14px 12px;
   text-align: left;
-  animation: techPop 0.17s cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Entrée en OPACITÉ SEULE : animer un transform (translate/scale) re-rastérise
+     le texte à chaque frame à des sous-pixels différents, d'où le tremblement.
+     Un fondu ne bouge aucun pixel. La position (left/top) est posée en JS,
+     arrondie à l'entier, pour un rendu net. */
+  animation: techPop 0.14s ease;
 }
 
 @keyframes techPop {
-  from {
-    opacity: 0;
-    transform: translateY(4px) scale(0.97);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
