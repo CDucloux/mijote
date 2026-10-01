@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.59.5 – Cardamome · Geste bien dressé
+
+### Base Master (admin)
+- **Édition d'un geste alignée sur sa fiche** : la feuille de modification d'un geste technique reprend l'allure de la fiche affichée en cuisine (pastille d'icône colorée par catégorie, titre, puce de catégorie et niveau de difficulté en aperçu live), et les intitulés « Résultat attendu » et « Erreurs fréquentes » adoptent le même code couleur. La saisie reflète enfin le rendu, comme pour les ingrédients.
+
+### Sous le capot
+- **Identité visuelle des gestes factorisée** : l'icône et la couleur de chaque catégorie de geste vivent désormais dans un module unique et testé (`src/lib/recipes/techniqueDisplay`), partagé entre l'affichage en recette et l'éditeur. Fin de la duplication.
+
 ## v4.59.4 – Cardamome · Fondations rangées
 
 ### Sous le capot
