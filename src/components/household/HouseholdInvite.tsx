@@ -23,7 +23,7 @@ export function HouseholdInvite() {
 
   // Succès → l'invitation disparaît (la modale rend `null`) ; échec → on relâche le
   // verrou pour redonner la main. Dans les deux cas, réinitialiser `working` est sûr.
-  const act = async (fn) => {
+  const act = async (fn: (hid: string) => Promise<unknown>) => {
     if (working) return;
     setWorking(true);
     await fn(inv.id);

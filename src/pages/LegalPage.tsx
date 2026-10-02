@@ -1,8 +1,19 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import type { NavigateFunction } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
+import type { IconName } from "../components/ui/Icon.jsx";
 import { ElasticScroll } from "../components/ui/ElasticScroll.jsx";
 import { useInternalNav } from "../hooks/useInternalNav.js";
 import { LEGAL_DOCS, LEGAL_BY_ID, LEGAL_UPDATED } from "../constants/legalDocs.js";
+
+/** Document légal tel que produit par `legalDocs` (titre, icône, résumé, HTML rendu). */
+interface LegalDoc {
+  id: string;
+  title: string;
+  short: string;
+  icon: string;
+  html: string;
+}
 
 // ─── INFORMATIONS LÉGALES ───────────────────────────────────────────────────────
 // Page dédiée /legal, accessible même déconnecté (les documents légaux doivent
@@ -14,7 +25,9 @@ export function LegalPage() {
   const location = useLocation();
   const onProseClick = useInternalNav();
   const seg = location.pathname.replace(/^\/legal\/?/, "").replace(/\/$/, "");
-  const doc = seg ? LEGAL_BY_ID[seg] : null;
+  // `legalDocs` est en JS : `html` y est typé `string | Promise<string>` par
+  // l'inférence, mais `marked.parse` est appelé en mode synchrone (string réelle).
+  const doc = seg ? (LEGAL_BY_ID[seg] as LegalDoc) : null;
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -38,7 +51,7 @@ export function LegalPage() {
   );
 }
 
-function Index({ navigate }) {
+function Index({ navigate }: { navigate: NavigateFunction }) {
   return (
     <>
       <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: "0 0 20px" }}>
@@ -49,7 +62,7 @@ function Index({ navigate }) {
           <button key={d.id} onClick={() => navigate(`/legal/${d.id}`)} className="legal-row ripple"
             style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
             <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.18)" }}>
-              <Icon name={d.icon} size={18} color="var(--accent)" />
+              <Icon name={d.icon as IconName} size={18} color="var(--accent)" />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14.5, fontWeight: 600 }}>{d.title}</span>
@@ -66,7 +79,7 @@ function Index({ navigate }) {
   );
 }
 
-function Document({ doc }) {
+function Document({ doc }: { doc: LegalDoc }) {
   return (
     <article className="legal-md">
       <div dangerouslySetInnerHTML={{ __html: doc.html }} />

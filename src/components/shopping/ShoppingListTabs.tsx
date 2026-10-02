@@ -1,5 +1,19 @@
 import { Icon } from "../ui/Icon.jsx";
 import { OverscrollRow } from "../ui/OverscrollRow.jsx";
+import type { ShoppingList, AggregatedItem } from "@/lib/food/shoppingAggregate.js";
+import type { useLongPress } from "../../hooks/useLongPress.js";
+
+interface ShoppingListTabsProps {
+  shoppingLists: ShoppingList[];
+  hasAgg: boolean;
+  allMode: boolean;
+  effectiveId: string | null;
+  aggregated: AggregatedItem[];
+  longPress: ReturnType<typeof useLongPress>;
+  onSelectAll: () => void;
+  onSelect: (id: string) => void;
+  onOpenMenu: (list: ShoppingList) => void;
+}
 
 /**
  * Rangée d'onglets de sélection de liste (overscroll « stretch » horizontal) :
@@ -7,7 +21,7 @@ import { OverscrollRow } from "../ui/OverscrollRow.jsx";
  * liste, avec compteur coché/total, appui long / clic droit pour le menu, et
  * bouton ⋯ sur la pastille active. Présentationnel ; la sélection remonte au parent.
  */
-export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, aggregated, longPress, onSelectAll, onSelect, onOpenMenu }) {
+export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, aggregated, longPress, onSelectAll, onSelect, onOpenMenu }: ShoppingListTabsProps) {
   const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = longPress;
   return (
     <OverscrollRow stretch max={64} outerStyle={{ paddingBottom: 8 }} style={{ gap: 6, alignItems: "center" }}>
@@ -34,7 +48,8 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
       })()}
       {shoppingLists.map((l, idx) => {
         const isActive = !allMode && effectiveId === l.id;
-        const lChecked = l.items.filter(i => i.checked).length;
+        const items = l.items ?? [];
+        const lChecked = items.filter(i => i.checked).length;
         return (
           <div key={l.id} role="button" tabIndex={0} className={`slide-up ripple${isActive ? "" : " hov-pill"}`}
             onClick={() => { if (wasLongPress()) return; onSelect(l.id); }}
@@ -49,9 +64,9 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
             }}>
             <Icon name={l.type === "recipe" ? "book" : "shopping"} size={12} color={isActive ? "#fff" : "var(--text3)"} />
             {l.name}
-            {l.items.length > 0 && (
+            {items.length > 0 && (
               <span style={{ fontSize: 10, background: isActive ? "rgba(255,255,255,0.25)" : "var(--surface3)", borderRadius: 10, padding: "1px 6px" }}>
-                {lChecked}/{l.items.length}
+                {lChecked}/{items.length}
               </span>
             )}
             {/* Options : uniquement sur la liste active. La hauteur fixe de la

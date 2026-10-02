@@ -11,7 +11,7 @@ import { useHousehold } from "../../hooks/useHousehold.js";
 // un foyer qu'il n'a pas créé. Reprend le langage visuel du panneau Foyer (tuile
 // carrée + pastilles des 4 espaces partagés) pour une continuité assumée, sans
 // halo accent ni confettis d'emojis (des tells d'IA).
-const seenKey = (hid) => `mijote_foyer_welcomed_${hid}`;
+const seenKey = (hid: string) => `mijote_foyer_welcomed_${hid}`;
 
 /**
  * Réarme l'accueil pour un foyer : la modale de bienvenue se ré-affichera au prochain
@@ -20,15 +20,16 @@ const seenKey = (hid) => `mijote_foyer_welcomed_${hid}`;
  *
  * @param hid - L'identifiant du foyer.
  */
-export function forgetWelcome(hid) {
+export function forgetWelcome(hid: string) {
   try { if (hid) localStorage.removeItem(seenKey(hid)); } catch { /* ignore */ }
 }
 
 export function HouseholdWelcome() {
-  const { user } = useAppShell();
+  // Le contexte (JS) se narrow en `never` après son garde : on type le seul champ lu.
+  const { user } = useAppShell() as { user?: { uid?: string } | null };
   const { household } = useHousehold();
   const [show, setShow] = useState(false);
-  const [hid, setHid] = useState(null);
+  const [hid, setHid] = useState<string | null>(null);
 
   useEffect(() => {
     if (!household || !user) return;
