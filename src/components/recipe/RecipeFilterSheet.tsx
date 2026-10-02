@@ -1,22 +1,27 @@
 import { useState, useMemo } from "react";
+import type { CSSProperties, Dispatch, ReactNode, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { cuisineEmoji } from "../../constants/cuisines.js";
 import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../../constants/recipeCategories.js";
 import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
-import { DEFAULT_FILTERS, activeFilterCount } from "@/lib/recipes/recipeFilters.js";
+import { DEFAULT_FILTERS, activeFilterCount, type RecipeFilters } from "@/lib/recipes/recipeFilters.js";
 import { COOKING_METHODS } from "@/lib/recipes/cooking.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import type { DbEntry } from "@/lib/food/nameMatcher.js";
 
-const COOKING_EMOJI = { four: "🔥", airfryer: "🌀", plaques: "🍳", vapeur: "♨️", grill: "🍢", "micro-ondes": "📡" };
+type SetFilters = Dispatch<SetStateAction<RecipeFilters>>;
+interface UsedCuisine { label: string; emoji?: string }
+
+const COOKING_EMOJI: Record<string, string> = { four: "🔥", airfryer: "🌀", plaques: "🍳", vapeur: "♨️", grill: "🍢", "micro-ondes": "📡" };
 
 // ─── FILTRES AVANCÉS (feuille, sections repliables façon « Mob ») ──────────────
-const NUTRI = { A: "#178a3a", B: "#7db52a", C: "#f2c230", D: "#ef8b26", E: "#e5462f" };
-const TIME_LABEL = { 20: "≤ 20 min", 30: "≤ 30 min", 60: "≤ 1 h" };
+const NUTRI: Record<string, string> = { A: "#178a3a", B: "#7db52a", C: "#f2c230", D: "#ef8b26", E: "#e5462f" };
+const TIME_LABEL: Record<number, string> = { 20: "≤ 20 min", 30: "≤ 30 min", 60: "≤ 1 h" };
 
 // Section repliable : titre + résumé (quand fermée) + chevron.
-function Group({ title, summary, defaultOpen = false, first = false, children }) {
+function Group({ title, summary, defaultOpen = false, first = false, children }: { title: string; summary?: string | null; defaultOpen?: boolean; first?: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ borderTop: first ? "none" : "1px solid var(--border)", padding: first ? "3px 0 15px" : "15px 0" }}>
@@ -42,19 +47,19 @@ function Group({ title, summary, defaultOpen = false, first = false, children })
 // Puce (toggle) générique. Style piloté par `.filter-chip` (CSS), la teinte de
 // l'état actif passe par la variable `--chip-color` (accent par défaut) : ça
 // autorise un hover desktop propre pour toutes les couleurs (cf. `.classement-pill`).
-function Chip({ on, onClick, color, children }) {
+function Chip({ on, onClick, color, children }: { on?: boolean; onClick: () => void; color?: string; children: ReactNode }) {
   return (
     <button onClick={onClick} className="filter-chip ripple" data-on={on ? "1" : undefined}
-      style={color ? { "--chip-color": color } : undefined}>{children}</button>
+      style={color ? { "--chip-color": color } as CSSProperties : undefined}>{children}</button>
   );
 }
-const Row = ({ children }) => <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{children}</div>;
+const Row = ({ children }: { children: ReactNode }) => <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{children}</div>;
 
 // Sélection d'ingrédients (multi) avec vignettes.
-function IngredientPicker({ ingredientDB, selected, setFilters }) {
+function IngredientPicker({ ingredientDB, selected, setFilters }: { ingredientDB: DbEntry[]; selected: string[]; setFilters: SetFilters }) {
   const [q, setQ] = useState("");
   const byId = useMemo(() => new Map(ingredientDB.map(i => [i.id, i])), [ingredientDB]);
-  const toggle = (id) => setFilters(f => ({
+  const toggle = (id: string) => setFilters(f => ({
     ...f, ingredients: f.ingredients.includes(id) ? f.ingredients.filter(x => x !== id) : [...f.ingredients, id],
   }));
   const matches = useMemo(() => {
@@ -98,15 +103,27 @@ function IngredientPicker({ ingredientDB, selected, setFilters }) {
   );
 }
 
-export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false, updatingCarnetName = null }) {
-  const set = (patch) => setFilters(f => ({ ...f, ...patch }));
-  const toggleCuisine = (label) => setFilters(f => ({
+interface RecipeFilterSheetProps {
+  filters: RecipeFilters;
+  setFilters: SetFilters;
+  usedCuisines?: UsedCuisine[];
+  ingredientDB?: DbEntry[];
+  resultCount?: number;
+  onClose: () => void;
+  onSaveAsCarnet?: () => void;
+  alreadySaved?: boolean;
+  updatingCarnetName?: string | null;
+}
+
+export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false, updatingCarnetName = null }: RecipeFilterSheetProps) {
+  const set = (patch: Partial<RecipeFilters>) => setFilters(f => ({ ...f, ...patch }));
+  const toggleCuisine = (label: string) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
   }));
-  const toggleCooking = (id) => setFilters(f => ({
+  const toggleCooking = (id: string) => setFilters(f => ({
     ...f, cooking: f.cooking.includes(id) ? f.cooking.filter(c => c !== id) : [...f.cooking, id],
   }));
-  const toggleCategory = (id) => setFilters(f => ({
+  const toggleCategory = (id: string) => setFilters(f => ({
     ...f, categories: (f.categories || []).includes(id) ? f.categories.filter(c => c !== id) : [...(f.categories || []), id],
   }));
   const reset = () => setFilters({ ...DEFAULT_FILTERS });
@@ -153,7 +170,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
       {/* Nature (plat vs préparation de base) */}
       <Group title="Nature" summary={typeSummary}>
         <Row>
-          {[["all", "Toutes", false], ["dish", "Plats", false], ["base", "Préparations de base", true]].map(([val, label, isBase]) => (
+          {([["all", "Toutes", false], ["dish", "Plats", false], ["base", "Préparations de base", true]] as [string, string, boolean][]).map(([val, label, isBase]) => (
             <Chip key={val} on={filters.type === val} onClick={() => set({ type: val })}>
               {isBase && <BaseIcon size={12} color={filters.type === val ? "var(--accent)" : "var(--text3)"} />}{label}
             </Chip>
@@ -225,7 +242,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
             const on = filters.diffMax === n;
             const col = difficultyColor(n);
             return (
-              <button key={n} onClick={() => set({ diffMax: on ? null : n })} className="filter-chip ripple" data-on={on ? "1" : undefined} style={{ "--chip-color": col }}>
+              <button key={n} onClick={() => set({ diffMax: on ? null : n })} className="filter-chip ripple" data-on={on ? "1" : undefined} style={{ "--chip-color": col } as CSSProperties}>
                 <span style={{ display: "inline-flex", gap: 2 }}>
                   {[1, 2, 3, 4, 5].map(i => (
                     <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: i <= n ? (on ? col : "var(--text3)") : (on ? `color-mix(in srgb, ${col} 30%, transparent)` : "var(--border)") }} />
