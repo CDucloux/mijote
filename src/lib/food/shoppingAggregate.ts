@@ -18,6 +18,8 @@ export interface ShoppingItem {
   unit?: string | null;
   image?: string | null;
   checked?: boolean;
+  /** Clé de l'ingrédient de la base, présente sur les articles clonés d'une recette. */
+  dbId?: string | null;
 }
 
 /** Une liste de courses (recette clonée ou liste libre). */

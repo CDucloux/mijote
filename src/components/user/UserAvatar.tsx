@@ -14,7 +14,7 @@ import { useIsDesktop } from "../../hooks/useIsDesktop.js";
 import { getRuntimeContext, isAppContext } from "../../lib/ui/runtimeContext.js";
 
 /** Une entrée du menu compte (dropdown web / drawer mobile). */
-interface AvatarAction {
+export interface AvatarAction {
   icon: IconName;
   label: string;
   onClick?: () => void;
@@ -24,7 +24,7 @@ interface AvatarAction {
 }
 
 /** Un groupe d'entrées ; `special` distingue le bloc admin (rendu en carte). */
-interface AvatarGroup {
+export interface AvatarGroup {
   special?: boolean;
   items: AvatarAction[];
 }

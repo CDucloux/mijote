@@ -1,9 +1,24 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import type { TouchEvent, TransitionEvent } from "react";
 import { createPortal } from "react-dom";
+import type { User } from "firebase/auth";
 import { Icon } from "../ui/Icon.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
+import type { AvatarAction, AvatarGroup } from "./UserAvatar.jsx";
 
 const ENTER_TRANSITION = "transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1)";
+
+/** Props du panneau compte plein écran (voir docstring ci-dessous). */
+interface AccountSheetProps {
+  user: User;
+  isPlus: boolean;
+  syncLabel: string | null;
+  syncColor: string;
+  offline: boolean;
+  groups: AvatarGroup[];
+  signOutAction: AvatarAction;
+  onClose: () => void;
+}
 
 /**
  * Panneau « compte » plein écran des apps mobiles (Capacitor / PWA installée) :
@@ -26,13 +41,13 @@ const ENTER_TRANSITION = "transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1)";
  * @param props.signOutAction - Action de déconnexion (carte détachée en bas).
  * @param props.onClose - Fermeture réelle, appelée en fin d'animation de sortie.
  */
-export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, groups, signOutAction, onClose }) {
-  const asideRef = useRef(null);
-  const drag = useRef({ x: 0, y: 0, axis: null });
-  const pending = useRef(null);
+export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, groups, signOutAction, onClose }: AccountSheetProps) {
+  const asideRef = useRef<HTMLElement>(null);
+  const drag = useRef<{ x: number; y: number; axis: "x" | "y" | null }>({ x: 0, y: 0, axis: null });
+  const pending = useRef<(() => void) | null>(null);
   const [entered, setEntered] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [dragX, setDragX] = useState(null); // px pendant un swipe, sinon null
+  const [dragX, setDragX] = useState<number | null>(null); // px pendant un swipe, sinon null
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -40,7 +55,7 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const close = useCallback((fn) => {
+  const close = useCallback((fn?: () => void) => {
     setClosing((c) => {
       if (!c) pending.current = typeof fn === "function" ? fn : null;
       return true;
@@ -50,12 +65,12 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
   }, []);
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") close(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [close]);
 
-  const onTransitionEnd = (e) => {
+  const onTransitionEnd = (e: TransitionEvent<HTMLElement>) => {
     if (e.target !== asideRef.current || e.propertyName !== "transform" || !closing) return;
     const fn = pending.current;
     pending.current = null;
@@ -63,13 +78,13 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
     fn?.();
   };
 
-  const runRow = (action) => action.keepsOpen ? action.onClick?.() : close(action.onClick);
+  const runRow = (action: AvatarAction) => action.keepsOpen ? action.onClick?.() : close(action.onClick);
 
-  const onTouchStart = (e) => {
+  const onTouchStart = (e: TouchEvent<HTMLElement>) => {
     if (e.touches.length !== 1 || closing) return;
     drag.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, axis: null };
   };
-  const onTouchMove = (e) => {
+  const onTouchMove = (e: TouchEvent<HTMLElement>) => {
     if (closing || drag.current.axis === "y") return;
     const dx = e.touches[0].clientX - drag.current.x;
     const dy = e.touches[0].clientY - drag.current.y;
@@ -94,7 +109,7 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
     : dragX != null ? `translateX(${dragX}px)`
       : entered ? "translateX(0)" : "translateX(100%)";
 
-  const row = (action, i) => {
+  const row = (action: AvatarAction, i: number | string) => {
     const danger = action.variant === "danger";
     const iconColor = danger ? "var(--red)" : action.variant === "admin" ? "var(--admin)" : "var(--text2)";
     const body = (

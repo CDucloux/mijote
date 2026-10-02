@@ -1,11 +1,27 @@
 import { Icon } from "../ui/Icon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ShoppingItemRow } from "./ShoppingItemRow.jsx";
-import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher.js";
 import { resolveQualityRecommendation } from "@/lib/food/qualityRecommendation.js";
-import { buildShoppingSections } from "@/lib/food/shoppingList.js";
+import { buildShoppingSections, type CategoriesConfig } from "@/lib/food/shoppingList.js";
+import type { ShoppingItem, ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.jsx";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";
+
+/** Props de la vue liste active, relayées par `useShopping` via `ShoppingPage`. */
+interface ShoppingListViewProps {
+  activeList: ShoppingList;
+  categories: CategoriesConfig;
+  ingredientDB: DbEntry[];
+  catOf: (name: string) => string;
+  pending: Set<string>;
+  unchecking: Set<string>;
+  onBuy: (item: ShoppingItem) => void;
+  onDeleteItem: (listId: string, itemId: string) => void;
+  onClear: () => void;
+  onDeleteList: (listId: string) => void;
+  onOpenAdd: () => void;
+}
 
 /**
  * Vue d'une liste de courses active : FAB d'ajout (listes libres), états vides
@@ -16,12 +32,13 @@ import { useElasticScroll } from "../../hooks/useElasticScroll.js";
 export function ShoppingListView({
   activeList, categories, ingredientDB, catOf, pending, unchecking,
   onBuy, onDeleteItem, onClear, onDeleteList, onOpenAdd,
-}) {
+}: ShoppingListViewProps) {
   // Élastique instancié DANS la vue : comme ce conteneur remonte à chaque
   // changement de liste (clé = activeList.id), les listeners se réarment pour
   // CHAQUE liste (le hook au niveau page restait collé à la première).
-  const { scrollRef, contentRef } = useElasticScroll();
-  const renderItem = item => {
+  const { scrollRef, contentRef } = useElasticScroll<HTMLDivElement>();
+  const items = activeList.items ?? [];
+  const renderItem = (item: ShoppingItem) => {
     const dbItem = ingredientDB.find(d => d.id === item.dbId) || (item.name ? findIngredientMatch(item.name, ingredientDB) : null);
     const reco = resolveQualityRecommendation(dbItem);
     return (
@@ -30,7 +47,7 @@ export function ShoppingListView({
         onBuy={onBuy} onDelete={it => onDeleteItem(activeList.id, it.id)} />
     );
   };
-  const { sections, done } = buildShoppingSections(activeList.items, categories, it => catOf(it.name));
+  const { sections, done } = buildShoppingSections(items, categories, it => catOf(it.name));
   return (
     <div key={activeList.id} className="slide-up" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
       {/* FAB – absolute inside the list container */}
@@ -45,7 +62,7 @@ export function ShoppingListView({
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: `12px 20px ${activeList.type === "free" ? "calc(var(--page-pad-b) + 52px)" : "var(--page-pad-b)"}` }}>
         <div ref={contentRef} style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
 
-          {activeList.items.length === 0 && activeList.type !== "free" && (
+          {items.length === 0 && activeList.type !== "free" && (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
               <EmptyArt name="assiette" size={128} style={{ marginBottom: 8 }} />
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>Tout est acheté&nbsp;!</h3>
@@ -58,7 +75,7 @@ export function ShoppingListView({
             </div>
           )}
 
-          {activeList.items.length === 0 && activeList.type === "free" && (
+          {items.length === 0 && activeList.type === "free" && (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, textAlign: "center" }}>
               <EmptyArt name="panier" size={104} />
               <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em" }}>Liste vide</h3>
