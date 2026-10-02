@@ -1,18 +1,39 @@
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
 
-const GEN_STYLES = [
+/** Un style de génération proposé (facile / équilibré / aventureux). */
+interface GenStyle {
+  id: string;
+  icon: IconName;
+  title: string;
+  desc: string;
+}
+
+const GEN_STYLES: GenStyle[] = [
   { id: "facile", icon: "clock", title: "Facile et rapide", desc: "Peu d'ingrédients, préparation et cuisson courtes. Idéal quand on manque de temps." },
   { id: "equilibre", icon: "leaf", title: "Équilibré", desc: "Un bon compromis entre saison, santé, variété et effort." },
   { id: "aventureux", icon: "fire", title: "Aventureux", desc: "Des recettes plus élaborées et plus difficiles, pour se lancer des défis." },
 ];
 
+/** Props du sous-menu de génération automatique de la semaine. */
+interface GenerateSheetProps {
+  genSlots: string[];
+  onToggleSlot: (slot: string) => void;
+  genStyle: string;
+  onPickStyle: (id: string) => void;
+  genBatch: boolean;
+  onToggleBatch: () => void;
+  onGenerate: () => void;
+  onClose: () => void;
+}
+
 /**
  * Sous-menu de génération automatique de la semaine : créneaux à remplir, style de
  * repas et bascule batch cooking. La génération elle-même est déléguée au parent.
  */
-export function GenerateSheet({ genSlots, onToggleSlot, genStyle, onPickStyle, genBatch, onToggleBatch, onGenerate, onClose }) {
+export function GenerateSheet({ genSlots, onToggleSlot, genStyle, onPickStyle, genBatch, onToggleBatch, onGenerate, onClose }: GenerateSheetProps) {
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "82dvh" }}>
       <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>

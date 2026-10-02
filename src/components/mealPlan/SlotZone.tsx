@@ -1,23 +1,65 @@
 import React from "react";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../../constants/mealSlots.js";
-import { mealsForSlot, itemRole, roleLabel, platNeedsSide } from "@/lib/planning/composedMeal.js";
+import { mealsForSlot, itemRole, roleLabel, platNeedsSide, type SlotGroup, type RoleId } from "@/lib/planning/composedMeal.js";
+import type { MealPlan, Recipe } from "@/lib/types.js";
+import type { useLongPress } from "../../hooks/useLongPress.js";
 
-const MP_SLOT_LABEL = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, `${s.emoji} ${s.label}`]));
-const MP_SLOT_COLOR = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.color]));
-const MP_SLOT_TEXT = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.text]));
-const MEAL_ROLE_IDS = ["entree", "plat", "accompagnement", "dessert"];
+type LongPressHandlers = ReturnType<typeof useLongPress>;
+
+/** Repas tiré par glisser-deposer : créneau source et index dans la journée. */
+interface DragInfo {
+  date: string;
+  idx: number;
+  slot: string;
+}
+
+/** Cible d'un menu contextuel d'item (appui long / clic droit). */
+interface ItemMenuTarget {
+  date: string;
+  idx: number;
+  slot: string;
+  recipeId?: string;
+}
+
+interface SlotZoneProps {
+  date: string;
+  slot: string;
+  meals: MealPlan[string];
+  dropTarget: string | null;
+  dragInfo: DragInfo | null;
+  mealPlan: MealPlan;
+  recipesById: Map<string, Recipe>;
+  onSelectRecipe: (recipeId: string, date: string) => void;
+  onRemoveMeal: (date: string, idx: number) => void;
+  onMoveMeal: (fromDate: string, fromIdx: number, toDate: string, toSlot: string) => void;
+  onSetDropTarget: (key: string | null) => void;
+  onSetDragInfo: (info: DragInfo | null) => void;
+  onComplete?: (date: string, slot: string, group: SlotGroup) => void;
+  onOpenItemMenu: (target: ItemMenuTarget) => void;
+  onAdd: (date: string, slots: string[], autoOpen: boolean) => void;
+  startLongPress: LongPressHandlers["startLongPress"];
+  cancelLongPress: LongPressHandlers["cancelLongPress"];
+  moveLongPress: LongPressHandlers["moveLongPress"];
+  wasLongPress: LongPressHandlers["wasLongPress"];
+}
+
+const MP_SLOT_LABEL: Record<string, string> = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, `${s.emoji} ${s.label}`]));
+const MP_SLOT_COLOR: Record<string, string> = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.color]));
+const MP_SLOT_TEXT: Record<string, string> = Object.fromEntries(MEAL_SLOTS.map(s => [s.id, s.text]));
+const MEAL_ROLE_IDS: RoleId[] = ["entree", "plat", "accompagnement", "dessert"];
 
 // Créneau d'une journée du planning : liste les repas (composés ou simples) posés
 // sur ce slot, gère le drag-and-drop, le menu contextuel (appui long) et le bouton
 // « Compléter » quand le repas n'est pas encore complet.
 // Sorti du composant page et mémoïsé → jamais recréé au re-render du parent.
-export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOpenItemMenu, onAdd, startLongPress, cancelLongPress, moveLongPress, wasLongPress }) {
+export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOpenItemMenu, onAdd, startLongPress, cancelLongPress, moveLongPress, wasLongPress }: SlotZoneProps) {
   const dropKey = date + ":" + slot;
   const isOver = dropTarget === dropKey;
   const slotGroups = mealsForSlot(meals, recipesById);
-  const hasContent = slotGroups.some(g => g.items.some(({ item }) => recipesById.has(item.recipeId)));
+  const hasContent = slotGroups.some(g => g.items.some(({ item }) => recipesById.has(item.recipeId || "")));
   const meta = SLOT_BY_ID[slot];
   const mealLower = meta.meal.toLowerCase();
   return (
@@ -36,22 +78,22 @@ export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTa
         // la bibliothèque → entrée orpheline). Un groupe entièrement orphelin ne
         // rend rien : sinon la bordure + le bouton « Compléter » restaient affichés
         // sur un créneau visuellement vide.
-        const items = g.items.filter(({ item }) => recipesById.has(item.recipeId));
+        const items = g.items.filter(({ item }) => recipesById.has(item.recipeId || ""));
         if (items.length === 0) return null;
         // Un item généré porte toujours un groupId → c'est un repas (composé),
         // même s'il n'a qu'un plat pour l'instant (plus de « plat orphelin »).
         const composed = !!g.groupId;
-        const roles = new Set(items.map(({ item }) => itemRole(item, recipesById.get(item.recipeId))));
+        const roles = new Set(items.map(({ item }) => itemRole(item, recipesById.get(item.recipeId || ""))));
         // Un plat qui se suffit (soupe, pasta…) n'attend pas d'accompagnement :
         // le repas est « complet » sans lui.
-        const platItem = items.find(({ item }) => itemRole(item, recipesById.get(item.recipeId)) === "plat");
-        const needsSide = !platItem || platNeedsSide(recipesById.get(platItem.item.recipeId));
+        const platItem = items.find(({ item }) => itemRole(item, recipesById.get(item.recipeId || "")) === "plat");
+        const needsSide = !platItem || platNeedsSide(recipesById.get(platItem.item.recipeId || ""));
         const required = needsSide ? MEAL_ROLE_IDS : MEAL_ROLE_IDS.filter(r => r !== "accompagnement");
         const full = required.every(r => roles.has(r));
         return (
           <div key={g.groupId || `g${gi}`} style={composed ? { ...(multiMeal ? { borderLeft: `2px solid ${MP_SLOT_TEXT[slot]}`, paddingLeft: 7 } : {}), display: "flex", flexDirection: "column", gap: 5 } : undefined}>
             {items.map(({ item }) => {
-              const r = recipesById.get(item.recipeId);
+              const r = recipesById.get(item.recipeId || "");
               if (!r) return null;
               const globalIdx = (mealPlan[date] || []).indexOf(item);
               const role = itemRole(item, r);
@@ -65,10 +107,10 @@ export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTa
                   onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   style={{ display: "flex", alignItems: "center", gap: 8, cursor: "grab" }}>
                   <div style={{ width: composed ? 38 : 46, height: composed ? 38 : 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-                  <button onClick={() => { if (wasLongPress()) return; onSelectRecipe(r.id, date); }} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                  <button onClick={() => { if (wasLongPress()) return; onSelectRecipe(r.id ?? "", date); }} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
                     <div style={{ fontSize: 9.5, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{label}</div>
-                    {item.portions > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{item.portions}</div>}
+                    {(item.portions ?? 0) > 1 && <div style={{ fontSize: 9, color: "var(--text3)" }}>1/{item.portions}</div>}
                   </button>
                   <button className="mp-remove-btn" onClick={() => onRemoveMeal(date, globalIdx)} title="Retirer du planning"><Icon name="close" size={13} /></button>
                 </div>
@@ -87,7 +129,7 @@ export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTa
         <button type="button" className="mp-empty-slot ripple" data-slot={slot}
           onClick={() => onAdd(date, [slot], true)}
           aria-label={`Ajouter le ${mealLower}`}>
-          <Icon name={meta.icon} size={20} weight="duotone" />
+          <Icon name={meta.icon as IconName} size={20} weight="duotone" />
           <span className="mp-empty-txt"><b>{meta.label}</b><em>Ajouter le {mealLower}</em></span>
         </button>
       )}

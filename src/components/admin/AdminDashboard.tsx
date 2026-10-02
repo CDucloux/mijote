@@ -1,13 +1,26 @@
 import { Icon } from "../ui/Icon.jsx";
+import type { ReactNode } from "react";
+import type { IconName } from "../ui/Icon.jsx";
+import type { IngredientDbItem, UtensilDbItem } from "@/lib/types.js";
+import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
 
 // ─── DASHBOARD DE LA CONSOLE ADMIN ───────────────────────────────────────────
 // Vue d'ensemble des bases master : volumétrie, avancement de la validation des
 // ingrédients, et pistes « à compléter » (sans photo / sans nutrition). Chaque
 // carte est actionnable et amène à la section filtrée correspondante.
 
-const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18 };
+const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18 } as const;
 
-function StatTile({ icon, tint, color, value, label, onClick }) {
+interface StatTileProps {
+  icon: IconName;
+  tint: string;
+  color: string;
+  value: number;
+  label: string;
+  onClick?: () => void;
+}
+
+function StatTile({ icon, tint, color, value, label, onClick }: StatTileProps) {
   return (
     <button onClick={onClick} className="pressable" style={{ ...CARD, padding: 16, textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", gap: 11, width: "100%" }}>
       <span style={{ width: 38, height: 38, borderRadius: 12, background: tint, display: "grid", placeItems: "center" }}><Icon name={icon} size={19} color={color} /></span>
@@ -19,7 +32,15 @@ function StatTile({ icon, tint, color, value, label, onClick }) {
   );
 }
 
-function TodoCard({ icon, count, total, label, onClick }) {
+interface TodoCardProps {
+  icon: IconName;
+  count: number;
+  total: number;
+  label: string;
+  onClick?: () => void;
+}
+
+function TodoCard({ icon, count, total, label, onClick }: TodoCardProps) {
   const done = count === 0;
   return (
     <button onClick={onClick} className="pressable" style={{ ...CARD, padding: "13px 15px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, width: "100%",
@@ -38,11 +59,19 @@ function TodoCard({ icon, count, total, label, onClick }) {
   );
 }
 
-function Label({ children }) {
+function Label({ children }: { children: ReactNode }) {
   return <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 2px 11px" }}>{children}</div>;
 }
 
-export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques = [], onGoto }) {
+/** Props du tableau de bord admin : bases master et callback de navigation. */
+interface AdminDashboardProps {
+  ingredientDB?: IngredientDbItem[];
+  utensilDB?: UtensilDbItem[];
+  techniques?: TechniqueEntry[];
+  onGoto?: (section: string, filter?: string) => void;
+}
+
+export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques = [], onGoto }: AdminDashboardProps) {
   const ing = ingredientDB.length, ust = utensilDB.length, tech = techniques.length;
   const ingNoImg = ingredientDB.filter(i => !i.image).length;
   const ustNoImg = utensilDB.filter(u => !u.image).length;
