@@ -1,6 +1,19 @@
+import type { Dispatch, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { remainingSecs } from "@/lib/planning/cookTimers.js";
+import type { CookTimer } from "@/lib/planning/cookTimers.js";
 import { fmtCountdown } from "@/lib/planning/stepTimers.js";
+
+interface CookTimersStackProps {
+  timers: CookTimer[];
+  timersOpen: boolean;
+  setTimersOpen: Dispatch<SetStateAction<boolean>>;
+  now: number;
+  onGoToStep: (stepIdx: number) => void;
+  onToggle: (id: string) => void;
+  onRestart: (id: string) => void;
+  onRemove: (id: string) => void;
+}
 
 /**
  * Pile de minuteurs actifs, ancrée en bas à droite au-dessus de la nav. Dépliée :
@@ -8,7 +21,7 @@ import { fmtCountdown } from "@/lib/planning/stepTimers.js";
  * Repliée : un aperçu compact par minuteur. Toutes les actions sont déléguées ;
  * `onGoToStep(stepIdx)` ramène à l'étape source (et déplie depuis l'aperçu).
  */
-export function CookTimersStack({ timers, timersOpen, setTimersOpen, now, onGoToStep, onToggle, onRestart, onRemove }) {
+export function CookTimersStack({ timers, timersOpen, setTimersOpen, now, onGoToStep, onToggle, onRestart, onRemove }: CookTimersStackProps) {
   if (timers.length === 0) return null;
   return (
     <div className="cook-timers" style={{ bottom: "calc(80px + max(env(safe-area-inset-bottom) - 8px, 0px))" }}>

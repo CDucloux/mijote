@@ -1,12 +1,29 @@
+import type { Dispatch, RefCallback, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+
+/** Brouillon de liste piloté par le parent (création ou édition en cours). */
+export interface ConfigListDraft {
+  id?: string;
+  name: string;
+  isNew?: boolean;
+  hideClear?: boolean;
+}
+
+interface ListConfigSheetProps {
+  configList: ConfigListDraft;
+  setConfigList: Dispatch<SetStateAction<ConfigListDraft>>;
+  focusNoScroll: RefCallback<HTMLInputElement>;
+  onClose: () => void;
+  onSave: () => void;
+}
 
 /**
  * Feuille de configuration d'une liste (création ou édition) : nom (avec
  * suggestions à la création), et bascule « Cacher Valider l'achat ». Le
  * brouillon est piloté au-dessus via `setConfigList` ; `onSave` crée ou met à jour.
  */
-export function ListConfigSheet({ configList, setConfigList, focusNoScroll, onClose, onSave }) {
+export function ListConfigSheet({ configList, setConfigList, focusNoScroll, onClose, onSave }: ListConfigSheetProps) {
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (<>
@@ -24,7 +41,7 @@ export function ListConfigSheet({ configList, setConfigList, focusNoScroll, onCl
         <div className="field-label" style={{ marginBottom: 8 }}>Nom de la liste</div>
         <input className="field-input" value={configList.name} maxLength={60} ref={focusNoScroll} placeholder="ex : Courses de la semaine"
           onChange={e => setConfigList(p => ({ ...p, name: e.target.value }))}
-          onKeyDown={e => e.key === "Enter" && e.target.blur()} style={{ background: "var(--surface)", borderRadius: 13, height: 46 }} />
+          onKeyDown={e => e.key === "Enter" && e.currentTarget.blur()} style={{ background: "var(--surface)", borderRadius: 13, height: 46 }} />
 
         {/* Suggestions de nom (nouvelle liste uniquement) */}
         {configList.isNew && (

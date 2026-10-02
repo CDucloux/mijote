@@ -1,7 +1,20 @@
+import type { CSSProperties, ReactNode } from "react";
+import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+
+type CircleKind = "accent" | "brand" | "neutral";
+
+interface ShareSheetProps {
+  recipe: Recipe;
+  publicUrl: string;
+  shareText: string;
+  onCopyLink: () => void;
+  onNativeShare: () => void;
+  onClose: () => void;
+}
 
 /**
  * Feuille de partage d'une recette publique : aperçu type carte + options (copier le
@@ -9,15 +22,15 @@ import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
  * (`onCopyLink` / `onNativeShare`) ; les liens WhatsApp/SMS ouvrent une cible externe
  * puis referment la feuille via `onClose`.
  */
-export function ShareSheet({ recipe, publicUrl, shareText, onCopyLink, onNativeShare, onClose }) {
+export function ShareSheet({ recipe, publicUrl, shareText, onCopyLink, onNativeShare, onClose }: ShareSheetProps) {
   // `kind` module le disque : `accent` (teinte produit, réservé à l'action toujours
   // dispo = copier le lien, pour un seul point de hiérarchie coloré) ; `brand` (couleur
   // de marque relevée d'une ombre portée) ; `neutral` (surface + liseré, discret).
-  const CIRCLE = {
+  const CIRCLE: Record<"accent" | "neutral", CSSProperties> = {
     accent: { background: "rgba(var(--accent-rgb),0.14)", border: "1px solid rgba(var(--accent-rgb),0.28)", boxShadow: "none" },
     neutral: { background: "var(--surface3)", border: "1px solid var(--border)", boxShadow: "none" },
   };
-  const opt = (label, glyph, onClick, kind, brandBg) => (
+  const opt = (label: string, glyph: ReactNode, onClick: () => void, kind: CircleKind, brandBg?: string) => (
     <button onClick={onClick} className="pressable" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 9, background: "none", border: "none", cursor: "pointer", padding: "4px 0", minWidth: 0 }}>
       <span className="ripple share-circle" style={{
         width: 56, height: 56, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
@@ -57,7 +70,7 @@ export function ShareSheet({ recipe, publicUrl, shareText, onCopyLink, onNativeS
         {opt("SMS", (
           <svg width="25" height="25" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4 3.5V16H5.5A1.5 1.5 0 0 1 4 14.5v-9Z" fill="#fff" /><circle cx="8.5" cy="10" r="1.15" fill="#34C759" /><circle cx="12" cy="10" r="1.15" fill="#34C759" /><circle cx="15.5" cy="10" r="1.15" fill="#34C759" /></svg>
         ), () => { window.location.href = `sms:?&body=${encodeURIComponent(shareText + " " + publicUrl)}`; onClose(); }, "brand", "#34C759")}
-        {typeof navigator !== "undefined" && navigator.share && opt("Plus…", (
+        {typeof navigator !== "undefined" && typeof navigator.share === "function" && opt("Plus…", (
           <Icon name="share" size={22} color="var(--text)" />
         ), onNativeShare, "neutral")}
       </div>

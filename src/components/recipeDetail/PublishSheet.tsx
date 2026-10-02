@@ -1,12 +1,20 @@
+import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+
+interface PublishSheetProps {
+  recipe: Recipe;
+  componentDeps: Recipe[];
+  onClose: () => void;
+  onPublish?: (recipe: Recipe) => void;
+}
 
 /**
  * Feuille de confirmation de publication d'une recette vers la communauté Cardamome.
  * Rappelle le droit d'auteur si la recette a une source externe et liste les
  * préparations de base publiées avec elle. La publication réelle passe par `onPublish`.
  */
-export function PublishSheet({ recipe, componentDeps, onClose, onPublish }) {
+export function PublishSheet({ recipe, componentDeps, onClose, onPublish }: PublishSheetProps) {
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (<>
