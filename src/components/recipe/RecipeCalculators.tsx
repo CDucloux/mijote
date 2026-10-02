@@ -1,18 +1,19 @@
 import { useState, useMemo } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { panFactor, roundNice, densityFor, convertQuantity, CONVERT_UNITS } from "@/lib/food/calculators.js";
+import { panFactor, roundNice, densityFor, convertQuantity, CONVERT_UNITS, type PanDims } from "@/lib/food/calculators.js";
+import type { Recipe, IngredientLine } from "@/lib/types.js";
 
 // ─── CALCULATRICES DE RECETTE ───────────────────────────────────────────────────
 // Deux outils : adapter les quantités à un autre moule, et convertir une unité
 // (masse ↔ volume via la densité de l'ingrédient). Ouvert depuis la fiche recette.
 
-const UNIT_LABEL = {
+const UNIT_LABEL: Record<string, string> = {
   g: "g", kg: "kg", ml: "ml", cl: "cl", l: "L",
   "cuillère à soupe": "c. à soupe", "cuillère à café": "c. à café", cup: "cup", tasse: "tasse",
 };
 
-function NumField({ label, value, onChange, suffix }) {
+function NumField({ label, value, onChange, suffix }: { label: string; value: string | number | undefined; onChange: (v: string) => void; suffix?: string }) {
   return (
     <label style={{ flex: 1, minWidth: 0 }}>
       <span style={{ display: "block", fontSize: 11, color: "var(--text3)", marginBottom: 4, fontWeight: 600 }}>{label}</span>
@@ -26,8 +27,8 @@ function NumField({ label, value, onChange, suffix }) {
 }
 
 // Un moule : forme (rond/rect) + dimensions + hauteur optionnelle.
-function PanForm({ title, pan, set }) {
-  const upd = (k, v) => set({ ...pan, [k]: v });
+function PanForm({ title, pan, set }: { title: string; pan: PanDims; set: (next: PanDims) => void }) {
+  const upd = (k: keyof PanDims, v: string) => set({ ...pan, [k]: v });
   return (
     <div style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", padding: 14 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
@@ -54,9 +55,9 @@ function PanForm({ title, pan, set }) {
   );
 }
 
-function MouleTab({ onApply, onReset, applied }) {
-  const [orig, setOrig] = useState({ shape: "round", diameter: "", length: "", width: "", height: "" });
-  const [target, setTarget] = useState({ shape: "round", diameter: "", length: "", width: "", height: "" });
+function MouleTab({ onApply, onReset, applied }: { onApply: (factor: number) => void; onReset: () => void; applied?: boolean }) {
+  const [orig, setOrig] = useState<PanDims>({ shape: "round", diameter: "", length: "", width: "", height: "" });
+  const [target, setTarget] = useState<PanDims>({ shape: "round", diameter: "", length: "", width: "", height: "" });
   const factor = panFactor(orig, target);
   const useVolume = Number(orig.height) > 0 && Number(target.height) > 0;
 
@@ -90,24 +91,24 @@ function MouleTab({ onApply, onReset, applied }) {
   );
 }
 
-function ConvertTab({ ingredients }) {
+function ConvertTab({ ingredients }: { ingredients?: IngredientLine[] }) {
   const [value, setValue] = useState("100");
   const [from, setFrom] = useState("g");
   const [to, setTo] = useState("ml");
   const [ingName, setIngName] = useState("");
 
   const knownIngs = useMemo(() => {
-    const seen = new Set();
-    return (ingredients || []).filter(i => i?.name && !seen.has(i.name) && seen.add(i.name));
+    const seen = new Set<string>();
+    return (ingredients || []).filter(i => !!(i?.name && !seen.has(i.name) && seen.add(i.name)));
   }, [ingredients]);
 
   const density = ingName ? densityFor(ingName) : null;
-  const result = convertQuantity(value, from, to, density);
+  const result = convertQuantity(value, from, to, density ?? undefined);
   const needsDensity = result == null && Number(value) > 0 &&
     // croisement masse/volume détecté ⇒ densité manquante
     ((["g", "kg"].includes(from) && !["g", "kg"].includes(to)) || (!["g", "kg"].includes(from) && ["g", "kg"].includes(to)));
 
-  const UnitSelect = ({ val, set }) => (
+  const UnitSelect = ({ val, set }: { val: string; set: (v: string) => void }) => (
     <select className="field-input" value={val} onChange={e => set(e.target.value)} style={{ appearance: "auto" }}>
       {CONVERT_UNITS.map(u => <option key={u} value={u}>{UNIT_LABEL[u]}</option>)}
     </select>
@@ -162,7 +163,15 @@ function ConvertTab({ ingredients }) {
   );
 }
 
-export function RecipeCalculators({ recipe, panApplied, onApply, onReset, onClose }) {
+interface RecipeCalculatorsProps {
+  recipe: Recipe;
+  panApplied?: boolean;
+  onApply: (factor: number) => void;
+  onReset: () => void;
+  onClose: () => void;
+}
+
+export function RecipeCalculators({ recipe, panApplied, onApply, onReset, onClose }: RecipeCalculatorsProps) {
   const [tab, setTab] = useState("moule");
   return (
     <SwipeableSheet onClose={onClose}>
@@ -177,7 +186,7 @@ export function RecipeCalculators({ recipe, panApplied, onApply, onReset, onClos
         ))}
       </div>
       {tab === "moule"
-        ? <MouleTab recipeServings={recipe.servings} applied={panApplied}
+        ? <MouleTab applied={panApplied}
             onApply={f => { onApply(f); onClose(); }} onReset={() => { onReset(); onClose(); }} />
         : <ConvertTab ingredients={recipe.ingredients} />}
     </SwipeableSheet>

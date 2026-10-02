@@ -1,13 +1,27 @@
 import { useState, useMemo } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { SearchField } from "../ui/SearchField.jsx";
 import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
+import type { NutriLetter } from "../badges/NutriScoreBadge.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ElasticScroll } from "../ui/ElasticScroll.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { fmtTime } from "@/lib/format.js";
+import type { Recipe } from "@/lib/types.js";
+
+/** Props de la feuille « Ajouter une recette » à un créneau du planning. */
+interface AddRecipeSheetProps {
+  date: string;
+  initialSlot: string;
+  lockSlot?: boolean;
+  recipes: Recipe[];
+  liveNutri: (recipe: Recipe) => NutriLetter | null | undefined;
+  onConfirm: (recipe: Recipe, slot: string) => void;
+  onClose: () => void;
+}
 
 /**
  * Feuille « Ajouter une recette » à un créneau donné : sélecteur de créneau (masqué
@@ -15,22 +29,22 @@ import { fmtTime } from "@/lib/format.js";
  * confirmation animée (+ → ✓). L'ajout réel (composition du repas) est délégué au
  * parent via onConfirm(recipe, slot). L'état de recherche et d'animation est LOCAL.
  */
-export function AddRecipeSheet({ date, initialSlot, lockSlot, recipes, liveNutri, onConfirm, onClose }) {
+export function AddRecipeSheet({ date, initialSlot, lockSlot, recipes, liveNutri, onConfirm, onClose }: AddRecipeSheetProps) {
   const [slot, setSlot] = useState(initialSlot);
   const [q, setQ] = useState("");
-  const [addedId, setAddedId] = useState(null);
+  const [addedId, setAddedId] = useState<string | null>(null);
   const activeIdx = Math.max(0, MEAL_SLOTS.findIndex(s => s.id === slot));
   const activeMeta = SLOT_BY_ID[slot];
   const filtered = useMemo(
-    () => recipes.filter(r => !q || r.name.toLowerCase().includes(q.toLowerCase())),
+    () => recipes.filter(r => !q || (r.name || "").toLowerCase().includes(q.toLowerCase())),
     [recipes, q],
   );
 
   // Clic sur (+) : le rond passe en ✓ vert (animation), puis la feuille se ferme avec
   // sa sortie animée et le repas est ajouté au planning.
-  const confirm = (r, close) => {
+  const confirm = (r: Recipe, close: (cb?: () => void) => void) => {
     if (addedId) return; // une confirmation à la fois
-    setAddedId(r.id);
+    setAddedId(r.id ?? null);
     setTimeout(() => close(() => onConfirm(r, slot)), 500);
   };
 
@@ -69,7 +83,7 @@ export function AddRecipeSheet({ date, initialSlot, lockSlot, recipes, liveNutri
                   background: "transparent", color: active ? s.text : "var(--text3)",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                   transition: "color 0.3s ease" }}>
-                <Icon name={s.icon} size={15} weight="duotone" color={active ? s.text : "var(--text3)"} />{s.label}
+                <Icon name={s.icon as IconName} size={15} weight="duotone" color={active ? s.text : "var(--text3)"} />{s.label}
               </button>
             );
           })}
