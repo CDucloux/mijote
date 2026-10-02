@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.11 – Cardamome · Typage poursuivi
+
+### Sous le capot
+- **Migration TypeScript poursuivie** : une trentaine de composants d'interface passés de `.jsx` à `.tsx` avec des props typées, répartis sur tout le produit : courses (ajout d'article, sélection d'ingrédients, onglets et configuration de liste), planning (ajout de recette, compléter un repas, replanifier, dupliquer, apports du jour, génération), fiche recette (étape déplaçable, calculatrices, filtres avancés, sélecteur d'ustensiles, en-têtes et menus de partage/publication), compte et foyer (fenêtre compte, avatar, invitations, heatmap de cuisine, notifications), import et console admin. Aucun changement visible : uniquement un typage plus sûr des frontières entre composants et logique métier, et quelques corrections de types optionnels auparavant implicites.
+
 ## v4.59.10 – Cardamome · Fondations typées
 
 ### Sous le capot

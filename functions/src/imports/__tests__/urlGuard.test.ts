@@ -4,7 +4,7 @@ import { isBlockedIp } from "../urlGuard.js";
 // Le classifieur d'IP est le cœur de la garde anti-SSRF : il doit bloquer TOUTE
 // adresse non publiquement routable (et refuser par défaut les formes inconnues),
 // tout en laissant passer les IP publiques normales.
-describe("isBlockedIp — IPv4", () => {
+describe("isBlockedIp - IPv4", () => {
   it("bloque loopback, privées, link-local, CGNAT et réservées", () => {
     for (const ip of [
       "127.0.0.1", "127.1.2.3",
@@ -27,7 +27,7 @@ describe("isBlockedIp — IPv4", () => {
   });
 });
 
-describe("isBlockedIp — IPv6", () => {
+describe("isBlockedIp - IPv6", () => {
   it("bloque loopback, ULA, link-local et formes mappées IPv4 internes", () => {
     for (const ip of [
       "::1", "::",
@@ -46,7 +46,7 @@ describe("isBlockedIp — IPv6", () => {
   });
 });
 
-describe("isBlockedIp — entrées invalides", () => {
+describe("isBlockedIp - entrées invalides", () => {
   it("refuse par défaut ce qui n'est pas une IP reconnue", () => {
     for (const v of ["", "localhost", "not-an-ip", "999.1.1.1", "12.34"]) {
       expect(isBlockedIp(v), v).toBe(true);

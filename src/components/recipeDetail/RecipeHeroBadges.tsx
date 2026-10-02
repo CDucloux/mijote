@@ -28,6 +28,12 @@ interface RecipeHeroBadgesProps {
 }
 
 /**
+ * Props de badges fournies par le parent aux heros (desktop/mobile), qui les
+ * relaient à {@link RecipeHeroBadges} en complétant `recipe` et `variant`.
+ */
+export type HeroBadgesProps = Omit<RecipeHeroBadgesProps, "recipe" | "variant">;
+
+/**
  * Rangée de badges du hero (base, vegan, saison, difficulté, catégorie, cuisine,
  * carnets, ajout au carnet). Partagée entre le hero desktop et mobile ; le conteneur
  * (avec sa ref d'animation côté mobile) reste fourni par chaque hero. `variant` porte
