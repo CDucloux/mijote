@@ -1,4 +1,6 @@
 import { useRef } from "react";
+import type { PointerEvent } from "react";
+import type { IngredientDbItem } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { ingredientMonths } from "@/lib/food/seasonality.js";
@@ -11,7 +13,7 @@ import { useCanHover } from "../../hooks/useCanHover.js";
 // légume de saison, sa frise de saison (donnée réelle `months`), une accroche, et
 // un rebond vers « Découvrir » pré-filtré sur ce produit. Volontairement léger et
 // sans I/O : les recettes de la communauté qui l'emploient vivent côté /discover.
-const CAT_LABEL = { fruit: "Fruit", vegetable: "Légume" };
+const CAT_LABEL: Record<string, string> = { fruit: "Fruit", vegetable: "Légume" };
 
 // Une seule teinte chaude pour toute la carte : l'ambre du badge « De saison »,
 // en aplat (pas de dégradé), pour un rendu unifié. Source unique, DRY.
@@ -20,7 +22,7 @@ const AMBER_RGB = "232, 146, 10";
 
 // Frise de saison (accent) : réutilise la barre partagée <SeasonBar/> et ajoute
 // l'en-tête « Sa saison · N mois ».
-function SeasonFrieze({ months }) {
+function SeasonFrieze({ months }: { months: number[] }) {
   const count = new Set(months || []).size;
   return (
     <div style={{ marginTop: 14 }}>
@@ -40,20 +42,24 @@ function SeasonFrieze({ months }) {
  * @param onOpenIngredient - Ouvre la fiche de l'ingrédient (tap sur l'en-tête).
  * @param onExplore - Rebond vers « Découvrir » pré-filtré sur cet ingrédient (CTA).
  */
-export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore }) {
+export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore }: {
+  ingredient: IngredientDbItem | null;
+  onOpenIngredient?: (ingredient: IngredientDbItem) => void;
+  onExplore?: (ingredient: IngredientDbItem) => void;
+}) {
   const canHover = useCanHover();
   // Onde tactile posée dans une COUCHE dédiée (sœur de la photo), pas via la classe
   // `.ripple` : celle-ci imposerait `overflow: hidden` au bouton, qui rognerait le
   // cercle de l'ingrédient et son ombre douce. Ici seule l'encre est bornée.
-  const rippleClipRef = useRef(null);
-  const onHeaderPress = (e) => {
+  const rippleClipRef = useRef<HTMLSpanElement>(null);
+  const onHeaderPress = (e: PointerEvent<HTMLButtonElement>) => {
     if (canHover) return; // souris : on garde hover/active, pas d'onde
     const layer = rippleClipRef.current;
     if (layer) spawnRipple({ currentTarget: layer, clientX: e.clientX, clientY: e.clientY });
   };
   if (!ingredient) return null;
   const months = ingredientMonths(ingredient);
-  const catLabel = CAT_LABEL[ingredient.category] || "Ingrédient";
+  const catLabel = (ingredient.category && CAT_LABEL[ingredient.category]) || "Ingrédient";
 
   return (
     <section style={{ marginBottom: 22 }}>
@@ -93,7 +99,7 @@ export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore })
           <span style={{ position: "relative", zIndex: 1, display: "flex", flexShrink: 0 }}><Icon name="forward" size={16} color="var(--text3)" /></span>
         </button>
 
-        {ingredient.description && (
+        {typeof ingredient.description === "string" && ingredient.description && (
           <p style={{ margin: "13px 2px 2px", fontSize: 13.5, lineHeight: 1.5, color: "var(--text2)" }}>{ingredient.description}</p>
         )}
 
