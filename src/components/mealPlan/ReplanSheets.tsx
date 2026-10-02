@@ -1,10 +1,12 @@
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { MEAL_SLOTS } from "../../constants/mealSlots.js";
 import { DAYS_SHORT_FR, MONTHS_FR, mondayFirstIndex } from "../../constants/calendar.js";
+import type { Recipe } from "@/lib/types.js";
 
 // En-tête de la fiche : puce d'icône + titre + sous-titre (nom de recette).
-function SheetHeader({ icon, title, subtitle }) {
+function SheetHeader({ icon, title, subtitle }: { icon: IconName; title: string; subtitle: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
       <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
@@ -19,7 +21,7 @@ function SheetHeader({ icon, title, subtitle }) {
 }
 
 // Navigation de semaine (flèches + plage de dates courante).
-function WeekNav({ days, onShift }) {
+function WeekNav({ days, onShift }: { days: string[]; onShift: (direction: number) => void }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
       <button onClick={() => onShift(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={15} /></button>
@@ -32,7 +34,7 @@ function WeekNav({ days, onShift }) {
 }
 
 // Rangée de sélection du créneau (matin / midi / soir).
-function SlotPickerRow({ value, onPick }) {
+function SlotPickerRow({ value, onPick }: { value: string | null; onPick: (slotId: string) => void }) {
   return (
     <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
       {MEAL_SLOTS.map(s => {
@@ -41,7 +43,7 @@ function SlotPickerRow({ value, onPick }) {
           <button key={s.id} onClick={() => onPick(s.id)} className="pressable"
             style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 4px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
               background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)", border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`, color: active ? "var(--accent)" : "var(--text3)" }}>
-            <Icon name={s.icon} size={16} color="currentColor" />{s.label}
+            <Icon name={s.icon as IconName} size={16} color="currentColor" />{s.label}
           </button>
         );
       })}
@@ -50,7 +52,7 @@ function SlotPickerRow({ value, onPick }) {
 }
 
 // Une pastille jour de la grille hebdomadaire.
-function DayCell({ dstr, active, disabled, onClick }) {
+function DayCell({ dstr, active, disabled, onClick }: { dstr: string; active: boolean; disabled?: boolean; onClick: () => void }) {
   const d = new Date(dstr + "T12:00");
   return (
     <button disabled={disabled} onClick={onClick} className="pressable"
@@ -66,7 +68,18 @@ function DayCell({ dstr, active, disabled, onClick }) {
  * Replanifier un repas : choisir un autre jour (navigable de semaine en semaine)
  * et un créneau, puis confirmer le déplacement.
  */
-export function RescheduleSheet({ recipe, days, target, onShift, onPickDay, onPickSlot, onConfirm, onClose }) {
+interface RescheduleSheetProps {
+  recipe: Recipe | null | undefined;
+  days: string[];
+  target: { date: string | null; slot: string | null };
+  onShift: (direction: number) => void;
+  onPickDay: (dstr: string) => void;
+  onPickSlot: (slotId: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+}
+
+export function RescheduleSheet({ recipe, days, target, onShift, onPickDay, onPickSlot, onConfirm, onClose }: RescheduleSheetProps) {
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "82dvh" }}>
       <SheetHeader icon="calendar" title="Replanifier" subtitle={`« ${recipe?.name || "cette recette"} »`} />
@@ -88,7 +101,20 @@ export function RescheduleSheet({ recipe, days, target, onShift, onPickDay, onPi
  * Dupliquer un repas : multi-sélection de jours cibles (le jour d'origine est
  * verrouillé) + un créneau commun, puis confirmer la duplication.
  */
-export function DuplicateSheet({ recipe, days, sourceDate, selected, slot, onShift, onToggleDay, onPickSlot, onConfirm, onClose }) {
+interface DuplicateSheetProps {
+  recipe: Recipe | null | undefined;
+  days: string[];
+  sourceDate: string;
+  selected: Set<string>;
+  slot: string | null;
+  onShift: (direction: number) => void;
+  onToggleDay: (dstr: string) => void;
+  onPickSlot: (slotId: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+}
+
+export function DuplicateSheet({ recipe, days, sourceDate, selected, slot, onShift, onToggleDay, onPickSlot, onConfirm, onClose }: DuplicateSheetProps) {
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "82dvh" }}>
       <SheetHeader icon="copy" title="Dupliquer" subtitle={`« ${recipe?.name || "cette recette"} » sur d'autres jours`} />

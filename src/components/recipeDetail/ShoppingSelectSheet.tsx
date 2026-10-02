@@ -1,14 +1,38 @@
+import type { Dispatch, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { fmtQtyUnit } from "../../lib/format.js";
+
+/** Ingrédient aplati pour la feuille de courses (clé locale `_fid` ajoutée par le parent). */
+export interface FlatIng {
+  _fid: string;
+  name: string;
+  amount?: number | null;
+  unit?: string | null;
+  dbId?: string | null;
+  recipeId?: string | null;
+}
+
+/** Props de la feuille de sélection des ingrédients à ajouter aux courses. */
+interface ShoppingSelectSheetProps {
+  flatIngs: FlatIng[];
+  selectedIngs: string[];
+  setSelectedIngs: Dispatch<SetStateAction<string[]>>;
+  isInStock: (ing: FlatIng) => boolean;
+  isLowStock: (ing: FlatIng) => boolean;
+  getIngImage: (dbId: string | null | undefined, name: string) => string;
+  mult: number;
+  onClose: () => void;
+  onConfirm: (ings: FlatIng[]) => void;
+}
 
 /**
  * Feuille de sélection des ingrédients à ajouter aux courses. Les ingrédients en stock
  * sont décochés par défaut (choix fait par le parent via `selectedIngs`). Purement
  * présentationnel : l'état de sélection et l'ajout effectif restent orchestrés au-dessus.
  */
-export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, isInStock, isLowStock, getIngImage, mult, onClose, onConfirm }) {
+export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, isInStock, isLowStock, getIngImage, mult, onClose, onConfirm }: ShoppingSelectSheetProps) {
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "85dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexShrink: 0 }}>
@@ -53,7 +77,7 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{ing.name}</span>
-                  <span style={{ fontSize: 12, color: "var(--text2)" }}>{fmtQtyUnit(ing.amount * mult, ing.unit)}</span>
+                  <span style={{ fontSize: 12, color: "var(--text2)" }}>{fmtQtyUnit((ing.amount ?? 0) * mult, ing.unit)}</span>
                   {inStock && (
                     <span style={{
                       display: "inline-flex", alignItems: "center", gap: 5,

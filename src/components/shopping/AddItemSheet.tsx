@@ -3,9 +3,19 @@ import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { parseIngredientInput } from "@/lib/food/parseIngredient.js";
-import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher.js";
 import { splitBulletLines } from "@/lib/food/shoppingList.js";
 import { MAX_ITEM_CHARS, MAX_LIST_ITEMS, MAX_LIST_CHARS } from "../../hooks/useShopping.js";
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
+
+/** Props de la feuille d'ajout à une liste de courses libre. */
+interface AddItemSheetProps {
+  activeList: ShoppingList;
+  ingredientDB: DbEntry[];
+  onClose: () => void;
+  onAddItem: (raw: string) => void;
+  onAddMany: (text: string) => void;
+}
 
 /**
  * Feuille d'ajout à une liste libre : bascule « Article » / « Coller une liste »
@@ -13,7 +23,7 @@ import { MAX_ITEM_CHARS, MAX_LIST_ITEMS, MAX_LIST_CHARS } from "../../hooks/useS
  * comptage borné du collage. L'insertion réelle remonte via `onAddItem` /
  * `onAddMany` ; l'état de saisie est local et disparaît à la fermeture.
  */
-export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onAddMany }) {
+export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onAddMany }: AddItemSheetProps) {
   const [newItemName, setNewItemName] = useState("");
   const [pasteText, setPasteText] = useState("");
   const [listMode, setListMode] = useState(false);
@@ -74,7 +84,8 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
             value={newItemName} onChange={e => setNewItemName(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") onAddItem(newItemName); }}
             onPaste={e => {
-              const t = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+              const legacyClipboard = (window as unknown as { clipboardData?: DataTransfer }).clipboardData;
+              const t = (e.clipboardData || legacyClipboard)?.getData("text") || "";
               if (/\r?\n/.test(t)) { e.preventDefault(); setPasteText(p => (p ? p + "\n" : "") + t); setListMode(true); }
             }}
             style={{ marginBottom: 10 }} />

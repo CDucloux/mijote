@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { computeTooltipPosition } from "@/lib/ui/tooltipPosition.js";
+import { computeTooltipPosition, type TipPosition } from "@/lib/ui/tooltipPosition.js";
+
+interface TipState { id: number; text: string; rect: DOMRect }
+type PlacedTip = TipPosition & { id: number };
 
 // ─── CALQUE DE TOOLTIP GLOBAL ─────────────────────────────────────────────────
 // Remplace le tooltip natif brut du navigateur par une bulle stylée (voir
@@ -21,16 +24,16 @@ import { computeTooltipPosition } from "@/lib/ui/tooltipPosition.js";
 const SHOW_DELAY = 320; // ms avant apparition : évite le clignotement au survol de passage
 
 export function TooltipLayer() {
-  const [tip, setTip] = useState(null);   // { id, text, rect } de la cible, ou null
-  const [pos, setPos] = useState(null);   // { id, left, top, caretLeft, placement } positionné
+  const [tip, setTip] = useState<TipState | null>(null);   // { id, text, rect } de la cible, ou null
+  const [pos, setPos] = useState<PlacedTip | null>(null);  // { id, left, top, caretLeft, placement } positionné
   const [shown, setShown] = useState(false);
-  const bubbleRef = useRef(null);
-  const activeRef = useRef(null);          // { el, title } dont le title natif est neutralisé
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<{ el: Element; title: string } | null>(null); // { el, title } dont le title natif est neutralisé
   const timerRef = useRef(0);
   const idRef = useRef(0);                 // identifiant croissant : lie une position à sa cible
   // Nouvelle cible : `shown` repart à 0 et toute ancienne position devient caduque,
   // pour que la bulle ne soit jamais peinte à son emplacement précédent (anti-gigotement).
-  const showTip = (text, rect) => { idRef.current += 1; setShown(false); setPos(null); setTip({ id: idRef.current, text, rect }); };
+  const showTip = (text: string, rect: DOMRect) => { idRef.current += 1; setShown(false); setPos(null); setTip({ id: idRef.current, text, rect }); };
 
   useEffect(() => {
     // Appareil tactile sans survol : pas d'infobulles du tout (voir en-tête).
@@ -49,7 +52,7 @@ export function TooltipLayer() {
       setTip(null);
     };
     // Neutralise le title natif d'un élément et retient sa valeur pour la restaurer.
-    const capture = (el) => {
+    const capture = (el: Element) => {
       const title = el.getAttribute("title");
       if (!title || !title.trim()) return null;
       restore();
@@ -58,31 +61,33 @@ export function TooltipLayer() {
       return title.trim();
     };
 
-    const onOver = (e) => {
+    const onOver = (e: PointerEvent) => {
       if (e.pointerType && e.pointerType !== "mouse") return;
-      const el = e.target?.closest?.("[title]");
+      const el = (e.target as Element | null)?.closest?.("[title]");
       if (!el || activeRef.current?.el === el) return;
       clearTimeout(timerRef.current);
       const text = capture(el);
       if (!text) return;
       const rect = el.getBoundingClientRect();
-      timerRef.current = setTimeout(() => showTip(text, rect), SHOW_DELAY);
+      timerRef.current = window.setTimeout(() => showTip(text, rect), SHOW_DELAY);
     };
-    const onOut = (e) => {
+    const onOut = (e: PointerEvent) => {
       const el = activeRef.current?.el;
       if (!el) return;
-      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
-      if (e.target !== el && !el.contains(e.target)) return;
+      const related = e.relatedTarget as Node | null;
+      if (related && el.contains(related)) return;
+      const target = e.target as Node | null;
+      if (target !== el && !(target && el.contains(target))) return;
       hide();
     };
-    const onFocus = (e) => {
-      const el = e.target?.closest?.("[title]");
+    const onFocus = (e: FocusEvent) => {
+      const el = (e.target as Element | null)?.closest?.("[title]");
       if (!el) return;
       const text = capture(el);
       if (!text) return;
       showTip(text, el.getBoundingClientRect());
     };
-    const onKey = (e) => { if (e.key === "Escape") hide(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") hide(); };
 
     document.addEventListener("pointerover", onOver, true);
     document.addEventListener("pointerout", onOut, true);
