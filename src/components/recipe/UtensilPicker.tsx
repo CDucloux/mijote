@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon.jsx";
 import { UTENSIL_CATEGORIES } from "@/lib/household/dataYaml.js";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../../hooks/useIsDesktop.js";
+import type { Utensil, UtensilDbItem } from "@/lib/types.js";
 
 // Tri « simple » (défilement au clic), cohérent avec Recettes/Découvrir.
 const SORT_MODES = [
@@ -13,7 +14,7 @@ const SORT_MODES = [
 
 // Grille de cartes d'ustensiles (image détourée + nom + coche si sélectionné).
 // Extraite pour être réutilisée en mode plat ET en mode groupé par catégorie.
-function UtensilGrid({ list, selectedIds, onGridClick }) {
+function UtensilGrid({ list, selectedIds, onGridClick }: { list: UtensilDbItem[]; selectedIds: Set<string | undefined>; onGridClick: (d: UtensilDbItem) => void }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
       {list.map(d => {
@@ -45,18 +46,24 @@ function UtensilGrid({ list, selectedIds, onGridClick }) {
   );
 }
 
-export function UtensilPicker({ utensilDB, selected, onChange }) {
+interface UtensilPickerProps {
+  utensilDB: UtensilDbItem[];
+  selected: Utensil[];
+  onChange: (next: Utensil[]) => void;
+}
+
+export function UtensilPicker({ utensilDB, selected, onChange }: UtensilPickerProps) {
   const isDesktop = useIsDesktop();
-  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
+  const { scrollRef, contentRef } = useElasticScroll<HTMLDivElement>({ disabled: isDesktop });
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("default");
-  const [replacing, setReplacing] = useState(null); // id de l'ustensile en cours de remplacement
+  const [replacing, setReplacing] = useState<string | null>(null); // id de l'ustensile en cours de remplacement
   const selectedIds = new Set(selected.map(u => u.dbId));
   const replacingName = replacing ? selected.find(u => u.id === replacing)?.name : "";
   const sortLabel = SORT_MODES.find(m => m.key === sortKey)?.label || SORT_MODES[0].label;
   const cycleSort = () => setSortKey(k => SORT_MODES[(SORT_MODES.findIndex(m => m.key === k) + 1) % SORT_MODES.length].key);
 
-  const toggle = (d) => {
+  const toggle = (d: { id?: string; name?: string }) => {
     if (selectedIds.has(d.id)) {
       onChange(selected.filter(u => u.dbId !== d.id));
     } else {
@@ -65,19 +72,19 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
   };
 
   // Remplace l'ustensile en cours par `d` (dédup par dbId si le remplaçant existe déjà).
-  const replaceWith = (d) => {
+  const replaceWith = (d: { id?: string; name?: string }) => {
     const next = selected.map(u => u.id === replacing ? { ...u, dbId: d.id, name: d.name } : u);
     onChange(next.filter((u, i) => next.findIndex(x => x.dbId === u.dbId) === i));
     setReplacing(null);
     setSearch("");
   };
-  const onGridClick = (d) => (replacing ? replaceWith(d) : toggle(d));
+  const onGridClick = (d: UtensilDbItem) => (replacing ? replaceWith(d) : toggle(d));
 
   const filtered = utensilDB.filter(d =>
-    !search || d.name.toLowerCase().includes(search.toLowerCase())
+    !search || (d.name || "").toLowerCase().includes(search.toLowerCase())
   );
   const sorted = (() => {
-    if (sortKey === "az") return [...filtered].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    if (sortKey === "az") return [...filtered].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
     if (sortKey === "selected") return [...filtered].sort((a, b) => (selectedIds.has(b.id) ? 1 : 0) - (selectedIds.has(a.id) ? 1 : 0));
     return filtered;
   })();
@@ -92,7 +99,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }) {
             const active = replacing === u.id;
             return (
               <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: active ? "var(--accent)" : "rgba(var(--accent-rgb),0.12)", border: `1px solid ${active ? "var(--accent)" : "rgba(var(--accent-rgb),0.35)"}`, cursor: "pointer" }}
-                onClick={() => setReplacing(active ? null : u.id)} title="Remplacer cet ustensile">
+                onClick={() => setReplacing(active ? null : u.id ?? null)} title="Remplacer cet ustensile">
                 <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {db?.image
                     ? <img src={db.image} alt={u.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} referrerPolicy="no-referrer" loading="lazy" />
