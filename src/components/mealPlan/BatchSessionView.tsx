@@ -48,7 +48,7 @@ interface BatchSessionViewProps {
 
 export function BatchSessionView({ weekLabel, batch, miseEnPlace, cookingGroups, decoupeByName, prepCount, cookCount, mealOccasions, onClose, onSelectRecipe }: BatchSessionViewProps) {
   const [checkedPrep, setCheckedPrep] = useState<Set<string>>(() => new Set());
-  const togglePrep = useCallback((key: string) => setCheckedPrep(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; }), []);
+  const togglePrep = useCallback((key: string) => setCheckedPrep(prev => { const s = new Set(prev); if (s.has(key)) s.delete(key); else s.add(key); return s; }), []);
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 450, background: "var(--bg)", display: "flex", flexDirection: "column", animation: "cookModeIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
