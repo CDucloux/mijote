@@ -218,12 +218,12 @@ export function scoreRecipe(recipe: PlannerRecipe, ctx: PlannerContext = {}): nu
  * @param options.max - Nombre maximum de suggestions (défaut 8).
  * @returns Les meilleures recettes du rôle, triées par note décroissante.
  */
-export function suggestSides(
+export function suggestSides<T extends PlannerRecipe>(
   main: PlannerRecipe | null | undefined,
-  pool: PlannerRecipe[],
+  pool: T[],
   ctx: PlannerContext,
   { role = "accompagnement", max = 8 }: { role?: RoleId; max?: number } = {},
-): PlannerRecipe[] {
+): T[] {
   return pool
     .filter(r => r.id !== main?.id && roleForCategory(r.category || "") === role)
     .map(r => ({ r, s: scoreRecipe(r, ctx) }))

@@ -1,7 +1,10 @@
 import React from "react";
+import type { ReactNode, CSSProperties } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Row, Col } from "../ui/primitives.jsx";
+import type { DayIntake } from "@/lib/planning/dayIntake.js";
 
 // Apport en sel du jour : pastille discrète qui situe la journée face au repère
 // (6 g/j, proxy du sodium). Trois états MAPPÉS à un niveau réel : neutre tant qu'on
@@ -9,13 +12,13 @@ import { Row, Col } from "../ui/primitives.jsx";
 // Muette si la couverture des fiches est trop faible : mieux vaut rien qu'une
 // alerte trompeuse.
 const MP_SALT_AMBER = "#c98a12"; // caution (assez sombre pour rester lisible clair/sombre)
-const mpFmtG = (g) => `${(g >= 10 ? Math.round(g) : Math.round(g * 10) / 10).toLocaleString("fr-FR")} g`;
+const mpFmtG = (grams: number) => `${(grams >= 10 ? Math.round(grams) : Math.round(grams * 10) / 10).toLocaleString("fr-FR")} g`;
 
 // Pastille cliquable « Apports » de la journée : point d'entrée vers le détail
 // (énergie, protéines, sel). Sa couleur reste pilotée par le sel (le repère
 // anti-surplus) : neutre sous 75 %, ambre en approche, rouge au dépassement.
 // Muette si la couverture des fiches est trop faible (alerte trompeuse évitée).
-export const DayIntakePill = React.memo(function DayIntakePill({ intake, onClick }) {
+export const DayIntakePill = React.memo(function DayIntakePill({ intake, onClick }: { intake: DayIntake; onClick: () => void }) {
   if (!intake.reliable) return null;
   const { level } = intake;
   const tone = level === "over"
@@ -30,7 +33,7 @@ export const DayIntakePill = React.memo(function DayIntakePill({ intake, onClick
       : `Voir le détail des apports du jour`;
   return (
     <button type="button" onClick={onClick} title={title} className="pressable day-intake-pill"
-      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 10px 2px 7px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, "--pill-fg": tone.fg, whiteSpace: "nowrap", border: "none", cursor: "pointer" }}>
+      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 10px 2px 7px", borderRadius: 999, fontSize: 10.5, fontWeight: 600, background: tone.bg, color: tone.fg, "--pill-fg": tone.fg, whiteSpace: "nowrap", border: "none", cursor: "pointer" } as CSSProperties}>
       <Icon name="bolt" size={12} color={tone.fg} />
       Apports
     </button>
@@ -41,7 +44,16 @@ export const DayIntakePill = React.memo(function DayIntakePill({ intake, onClick
 // énergie. Reste sobre : une ligne par nutriment, valeur du jour, barre vers le
 // repère. Le sel colore l'alerte au dépassement, les protéines signalent seulement
 // une journée un peu juste (jamais « en rouge », ce n'est pas un danger).
-function DayIntakeRow({ icon, label, value, sub, pct, color }) {
+interface DayIntakeRowProps {
+  icon: IconName;
+  label: string;
+  value: ReactNode;
+  sub: ReactNode;
+  pct?: number | null;
+  color: string;
+}
+
+function DayIntakeRow({ icon, label, value, sub, pct, color }: DayIntakeRowProps) {
   return (
     <div>
       <Row justify="space-between" align="baseline" style={{ marginBottom: 5 }}>
@@ -62,7 +74,7 @@ function DayIntakeRow({ icon, label, value, sub, pct, color }) {
   );
 }
 
-export function DayIntakeSheet({ intake, dateLabel, onClose }) {
+export function DayIntakeSheet({ intake, dateLabel, onClose }: { intake: DayIntake; dateLabel: string; onClose: () => void }) {
   const saltColor = intake.level === "over" ? "var(--red)" : intake.level === "warn" ? MP_SALT_AMBER : "var(--text3)";
   const protColor = intake.proteinLevel === "low" ? MP_SALT_AMBER : "var(--ok)";
   const fiberColor = intake.fiberLevel === "low" ? MP_SALT_AMBER : "var(--ok)";

@@ -6,17 +6,29 @@ import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ElasticScroll } from "../ui/ElasticScroll.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { roleForCategory, roleLabel } from "@/lib/planning/composedMeal.js";
+import { roleForCategory, roleLabel, type RoleId } from "@/lib/planning/composedMeal.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
-import { suggestSides } from "@/lib/planning/mealPlanner.js";
+import { suggestSides, type PlannerContext } from "@/lib/planning/mealPlanner.js";
 import { fmtTime } from "@/lib/format.js";
+import type { Recipe } from "@/lib/types.js";
+import type { NutriLetter } from "../badges/NutriScoreBadge.jsx";
 
 // Rôles proposés pour compléter un repas (le plat existe déjà).
-const COMPLETE_ROLES = [
+const COMPLETE_ROLES: { id: RoleId; label: string }[] = [
   { id: "entree", label: "Entrée" },
   { id: "accompagnement", label: "Accompagnement" },
   { id: "dessert", label: "Dessert" },
 ];
+
+/** Props de la feuille « Compléter le repas ». */
+interface CompleteMealSheetProps {
+  base: Recipe | null;
+  eligiblePool: Recipe[];
+  suggestCtx: PlannerContext;
+  liveNutri: (recipe: Recipe) => NutriLetter | null | undefined;
+  onAttach: (recipeId: string, role: RoleId) => void;
+  onClose: () => void;
+}
 
 /**
  * Feuille « Compléter le repas » : autour d'un plat de base, suggère des recettes de
@@ -24,8 +36,8 @@ const COMPLETE_ROLES = [
  * accompagnement / dessert). Rôle et recherche sont un état LOCAL. L'ajout est délégué
  * au parent via onAttach(recipeId, role).
  */
-export function CompleteMealSheet({ base, eligiblePool, suggestCtx, liveNutri, onAttach, onClose }) {
-  const [completeRole, setCompleteRole] = useState("accompagnement");
+export function CompleteMealSheet({ base, eligiblePool, suggestCtx, liveNutri, onAttach, onClose }: CompleteMealSheetProps) {
+  const [completeRole, setCompleteRole] = useState<RoleId>("accompagnement");
   const [completeSearch, setCompleteSearch] = useState("");
   const q = normalizeStr(completeSearch.trim());
   const list = useMemo(
@@ -85,7 +97,7 @@ export function CompleteMealSheet({ base, eligiblePool, suggestCtx, liveNutri, o
           const nIng = r.ingredients?.length || 0;
           const nutri = liveNutri(r);
           return (
-            <button key={r.id} onClick={() => onAttach(r.id, completeRole)} className="complete-row ripple"
+            <button key={r.id} onClick={() => onAttach(r.id ?? "", completeRole)} className="complete-row ripple"
               style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
               <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>

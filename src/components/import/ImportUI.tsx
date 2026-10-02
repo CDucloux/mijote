@@ -35,7 +35,7 @@ const RING_R = 45; // rayon de l'anneau (le tracé raisonne en % via pathLength)
 const CAP = 0.99;        // plafond affiché tant que l'extraction n'est pas revenue
 const CURVE_K = 2.4;     // pente : ~90 % atteint à la durée estimée, puis creep vers 99 %
 
-export function LoadingOverlay({ estimateMs = 24000 }) {
+export function LoadingOverlay({ estimateMs = 24000 }: { estimateMs?: number }) {
   const dur = Math.max(2000, estimateMs);
   // L'anneau ET le compteur suivent la MÊME courbe asymptotique via ce timer. La
   // requête d'extraction attend le réseau (thread libre), donc le timer 200 ms tourne
