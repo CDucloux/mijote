@@ -25,8 +25,7 @@ export function forgetWelcome(hid: string) {
 }
 
 export function HouseholdWelcome() {
-  // Le contexte (JS) se narrow en `never` après son garde : on type le seul champ lu.
-  const { user } = useAppShell() as { user?: { uid?: string } | null };
+  const { user } = useAppShell();
   const { household } = useHousehold();
   const [show, setShow] = useState(false);
   const [hid, setHid] = useState<string | null>(null);

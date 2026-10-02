@@ -101,9 +101,7 @@ function NotificationsSkeleton() {
  *   squelette plutôt que l'état vide (qui flasherait avant l'arrivée du journal).
  */
 export function NotificationsSection({ activities = [], loading = false, onNavigated }: NotificationsSectionProps) {
-  // Le contexte (JS) renvoie `never` après son garde interne : on ne lit que le
-  // champ utile ici, typé au point d'accès plutôt que de caster tout le contexte.
-  const { user } = useAppShell() as { user?: { email?: string } | null };
+  const { user } = useAppShell();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [revealing, setRevealing] = useState(false);

@@ -1,12 +1,27 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 import { buildTechniqueIndex, annotateText } from "@/lib/recipes/techniques.js";
+import type { TechniqueEntry, TechniqueIndex } from "@/lib/recipes/techniques.js";
 import { techniqueVisual } from "@/lib/recipes/techniqueDisplay.js";
 import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
 import { stripAiDashes } from "@/lib/format.js";
+
+/** Position calculée de la bulle de technique (coordonnées `fixed`, bornées au viewport). */
+interface PopState {
+  key: string;
+  tech: TechniqueEntry;
+  left: number;
+  top: number;
+  width: number;
+  above: boolean;
+}
+
+type TechById = Map<string, TechniqueEntry>;
 
 // ─── TEXTE AVEC TECHNIQUES SURLIGNÉES ─────────────────────────────────────────
 // Rend un texte d'étape en repérant les gestes du glossaire (suer, déglacer…) et
@@ -20,7 +35,7 @@ import { stripAiDashes } from "@/lib/format.js";
 
 // Surlignage « marqueur » discret : fond accent translucide, coins arrondis, pas
 // de soulignage. Lisible et clairement tactile (donc utilisable au tap sur mobile).
-const wordBtn = (active) => ({
+const wordBtn = (active: boolean): CSSProperties => ({
   display: "inline-block", position: "relative", overflow: "hidden", verticalAlign: "baseline",
   padding: "1px 4px", margin: "0 -1px", font: "inherit",
   color: "var(--accent)", fontWeight: 600,
@@ -35,20 +50,20 @@ const POP_MAX_W = 306;   // largeur maximale de la bulle
 
 // Identité visuelle par catégorie de technique (icône + couleur) : factorisée
 // dans src/lib pour rester cohérente avec l'éditeur de geste.
-const techCat = (c) => techniqueVisual(c);
+const techCat = (category: string | null | undefined) => techniqueVisual(category);
 
-const popList = { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 };
+const popList = { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 } as const;
 
 // ─── FICHE TECHNIQUE DÉTAILLÉE ────────────────────────────────────────────────
 // Ouverte depuis la bulle compacte via « Plus de détails ». Reprend tout ce que la
 // bulle ne montre plus (résultat attendu + indicateurs, erreurs fréquentes, ne pas
 // confondre avec), dans une feuille lisible et aérée (tiroir mobile / carte desktop).
 const RED = "var(--red, #d1544f)";
-const sheetLabel = (color) => ({ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: color || "var(--text3)", marginBottom: 9 });
-const sheetItem = { fontSize: 13.5, lineHeight: 1.55, color: "var(--text2)", display: "flex", gap: 9 };
-const sheetDot = (color) => ({ width: 5, height: 5, borderRadius: "50%", background: color, marginTop: 8, flexShrink: 0 });
+const sheetLabel = (color?: string): CSSProperties => ({ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: color || "var(--text3)", marginBottom: 9 });
+const sheetItem: CSSProperties = { fontSize: 13.5, lineHeight: 1.55, color: "var(--text2)", display: "flex", gap: 9 };
+const sheetDot = (color: string): CSSProperties => ({ width: 5, height: 5, borderRadius: "50%", background: color, marginTop: 8, flexShrink: 0 });
 
-function SheetSection({ label, color, children }) {
+function SheetSection({ label, color, children }: { label: string; color?: string; children: ReactNode }) {
   return (
     <section style={{ marginTop: 22 }}>
       <div style={sheetLabel(color)}>{label}</div>
@@ -59,8 +74,8 @@ function SheetSection({ label, color, children }) {
 
 // Chaîne d'ancêtres (du plus haut au parent direct) pour le fil d'ariane, en
 // remontant `hierarchy.parent`. Garde-fou anti-cycle.
-function techAncestors(tech, techById) {
-  const out = [];
+function techAncestors(tech: TechniqueEntry, techById: TechById): TechniqueEntry[] {
+  const out: TechniqueEntry[] = [];
   let pid = tech.hierarchy?.parent, guard = 0;
   while (pid && guard < 8) {
     const p = techById.get(pid);
@@ -72,11 +87,11 @@ function techAncestors(tech, techById) {
   return out;
 }
 
-const crumbPill = { fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "3px 9px", borderRadius: 999, whiteSpace: "nowrap" };
+const crumbPill = { fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "3px 9px", borderRadius: 999, whiteSpace: "nowrap" } as const;
 
-function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
+function TechniqueDetailSheet({ tech, techById, onOpen, onClose }: { tech: TechniqueEntry; techById: TechById; onOpen: (tech: TechniqueEntry) => void; onClose: () => void }) {
   const c = techCat(tech.category);
-  const catLabel = TECHNIQUE_CATEGORIES[tech.category] || tech.category;
+  const catLabel = TECHNIQUE_CATEGORIES[tech.category ?? ""] || tech.category;
   const diff = Number(tech.difficulty) || 0;
   const er = tech.expected_result || null;
   const inds = Array.isArray(er?.observable_indicators) ? er.observable_indicators : [];
@@ -84,14 +99,14 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
   const conf = Array.isArray(tech.not_to_be_confused_with) ? tech.not_to_be_confused_with : [];
   const ancestors = techAncestors(tech, techById);
   // Navigation entre fiches (confusions) : on remonte le scroll de la feuille en tête.
-  const topRef = useRef(null);
+  const topRef = useRef<HTMLDivElement>(null);
   useEffect(() => { topRef.current?.closest(".modal-sheet")?.scrollTo({ top: 0 }); }, [tech.id]);
   return (
     <SwipeableSheet onClose={onClose} zIndex={760} style={{ maxHeight: "88dvh" }}>
       {(close) => (
         <div ref={topRef}>
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon} size={27} color={c.color} /></span>
+            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon as IconName} size={27} color={c.color} /></span>
             <div style={{ minWidth: 0, flex: 1 }}>
               <h2 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{tech.name}</h2>
               {diff > 0 && (
@@ -175,22 +190,22 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }) {
   );
 }
 
-export function TechniqueText({ text, index: indexProp }) {
+export function TechniqueText({ text, index: indexProp }: { text: string; index?: TechniqueIndex }) {
   const { techniques } = useAppShell();
-  const techById = useMemo(() => new Map((techniques || []).map(t => [t.id, t])), [techniques]);
+  const techById = useMemo<TechById>(() => new Map((techniques || []).map(t => [t.id, t])), [techniques]);
   const builtIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const index = indexProp || builtIndex;
   // On retire les tirets cadratins (marqueur des textes IA) avant tout.
   const clean = useMemo(() => stripAiDashes(text), [text]);
   const segments = useMemo(() => annotateText(clean, index), [clean, index]);
-  // Bulle affichée : { key, tech, left, top, width, above } ou null.
-  const [pop, setPop] = useState(null);
+  // Bulle affichée : position calculée ou null.
+  const [pop, setPop] = useState<PopState | null>(null);
   const [pinned, setPinned] = useState(false); // épinglée au tap (mobile)
-  const [detail, setDetail] = useState(null);  // technique dont la fiche détaillée est ouverte
+  const [detail, setDetail] = useState<TechniqueEntry | null>(null);  // technique dont la fiche détaillée est ouverte
 
   // Calcule la position `fixed` de la bulle à partir du rect du mot, bornée au
   // viewport (horizontalement) et retournée au-dessus si peu de place en bas.
-  const placeFor = useCallback((el, key, tech) => {
+  const placeFor = useCallback((el: HTMLElement, key: string, tech: TechniqueEntry): PopState => {
     const r = el.getBoundingClientRect();
     const vw = window.innerWidth, vh = window.innerHeight;
     const width = Math.min(POP_MAX_W, vw - POP_MARGIN * 2);
@@ -243,7 +258,7 @@ export function TechniqueText({ text, index: indexProp }) {
           {(() => {
             const t = pop.tech;
             const c = techCat(t.category);
-            const catLabel = TECHNIQUE_CATEGORIES[t.category] || t.category;
+            const catLabel = TECHNIQUE_CATEGORIES[t.category ?? ""] || t.category;
             const diff = Number(t.difficulty) || 0;
             const er = t.expected_result || null;
             const inds = Array.isArray(er?.observable_indicators) ? er.observable_indicators : [];
@@ -258,7 +273,7 @@ export function TechniqueText({ text, index: indexProp }) {
                 {/* barre d'accent colorée en tête, selon la catégorie */}
                 <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "14px 14px 0 0", background: c.color }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
-                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon} size={20} color={c.color} /></span>
+                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon as IconName} size={20} color={c.color} /></span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>{pop.tech.name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4 }}>
@@ -282,7 +297,7 @@ export function TechniqueText({ text, index: indexProp }) {
                 {hasMore && (
                   <button type="button" className="pressable tech-more"
                     onClick={e => { e.stopPropagation(); setDetail(t); setPop(null); setPinned(false); }}
-                    style={{ "--tech-accent": c.color, display: "inline-flex", alignItems: "center", gap: 5, marginTop: 11, padding: "6px 13px 6px 14px", borderRadius: 999, border: "none", cursor: "pointer", color: c.color, fontSize: 11.5, fontWeight: 600 }}>
+                    style={{ "--tech-accent": c.color, display: "inline-flex", alignItems: "center", gap: 5, marginTop: 11, padding: "6px 13px 6px 14px", borderRadius: 999, border: "none", cursor: "pointer", color: c.color, fontSize: 11.5, fontWeight: 600 } as CSSProperties}>
                     Plus de détails <Icon name="forward" size={13} color={c.color} />
                   </button>
                 )}

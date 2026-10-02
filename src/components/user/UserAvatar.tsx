@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import type { MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { useOnline } from "../../hooks/useOnline.js";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 import { AboutModal } from "../modals/AboutModal.jsx";
@@ -10,6 +12,22 @@ import { ConfirmDialog } from "../ui/ConfirmDialog.jsx";
 import { useModalExit } from "../../hooks/useModalExit.js";
 import { useIsDesktop } from "../../hooks/useIsDesktop.js";
 import { getRuntimeContext, isAppContext } from "../../lib/ui/runtimeContext.js";
+
+/** Une entrée du menu compte (dropdown web / drawer mobile). */
+interface AvatarAction {
+  icon: IconName;
+  label: string;
+  onClick?: () => void;
+  variant?: "admin" | "danger";
+  href?: string;
+  keepsOpen?: boolean;
+}
+
+/** Un groupe d'entrées ; `special` distingue le bloc admin (rendu en carte). */
+interface AvatarGroup {
+  special?: boolean;
+  items: AvatarAction[];
+}
 
 // ─── USER AVATAR (sync badge + sign-out popover) ─────────────────────────────
 export function UserAvatar() {
@@ -20,7 +38,7 @@ export function UserAvatar() {
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [dropPos, setDropPos] = useState({ top: 0, right: 0 });
-  const btnRef = useRef(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const online = useOnline();
   // Panneau plein écran qui glisse depuis la droite dès qu'on est en contexte
   // « mobile » : app installée (Capacitor / PWA standalone) OU viewport étroit
@@ -30,13 +48,13 @@ export function UserAvatar() {
   const useDrawer = appSurface || !isDesktop;
   // Sortie animée du menu (sinon il disparaissait d'un coup). `closing` bascule la
   // pastille sur la keyframe collapseUp, puis onAnimationEnd applique la fermeture.
-  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit(
+  const { closing, surfaceRef, beginClose, onAnimationEnd } = useModalExit<HTMLDivElement>(
     () => { setOpen(false); setConfirmSignOut(false); },
     { disabled: !open }
   );
   // Ferme en jouant la sortie, puis exécute l'action (navigation, ouverture d'une
   // autre modale…) une fois l'animation terminée.
-  const closeThen = (fn) => beginClose(() => { setOpen(false); setConfirmSignOut(false); fn?.(); });
+  const closeThen = (fn?: () => void) => beginClose(() => { setOpen(false); setConfirmSignOut(false); fn?.(); });
   // Le changelog vit dans « À propos » : d'autres composants (popup de nouveautés)
   // demandent son ouverture via un événement global plutôt qu'en dupliquant la modale.
   useEffect(() => {
@@ -65,28 +83,28 @@ export function UserAvatar() {
   // mobile. En groupes : le drawer en fait des cartes (dont une « spéciale » pour
   // l'admin), le dropdown web les aplatit. Chaque surface enrobe `onClick` à sa
   // façon (fermeture animée + action).
-  const groups = [
-    isAdmin && { special: true, items: [{ icon: "terminal", label: "Console admin", variant: "admin", onClick: () => navigate("/admin/dashboard") }] },
+  const groups: AvatarGroup[] = [
+    ...(isAdmin ? [{ special: true, items: [{ icon: "terminal" as IconName, label: "Console admin", variant: "admin" as const, onClick: () => navigate("/admin/dashboard") }] }] : []),
     { items: [
       { icon: "user", label: "Profil", onClick: () => navigate("/profile") },
-      onToggleTheme && { icon: isDark ? "sun" : "moon", label: isDark ? "Mode clair" : "Mode sombre", keepsOpen: true, onClick: onToggleTheme },
+      { icon: isDark ? "sun" : "moon", label: isDark ? "Mode clair" : "Mode sombre", keepsOpen: true, onClick: onToggleTheme },
       { icon: "sparkle", label: "Revoir l'introduction", onClick: () => window.dispatchEvent(new Event("mijote:show-onboarding")) },
       { icon: "help", label: "Guide d'utilisation", onClick: () => navigate("/guide") },
-    ].filter(Boolean) },
+    ] },
     { items: [
       { icon: "info", label: "À propos", onClick: () => setAbout(true) },
       { icon: "fileText", label: "Informations légales", onClick: () => navigate("/legal") },
     ] },
-  ].filter(Boolean);
+  ];
   const actions = groups.flatMap((g) => g.items); // dropdown web = liste à plat
-  const signOutAction = { icon: "logout", label: "Se déconnecter", variant: "danger", onClick: () => setConfirmSignOut(true) };
+  const signOutAction: AvatarAction = { icon: "logout", label: "Se déconnecter", variant: "danger", onClick: () => setConfirmSignOut(true) };
 
   // Rendu d'une rangée du dropdown WEB depuis une action (le drawer mobile a son
   // propre rendu dans AccountSheet). Styles inchangés par variante.
-  const dropDefault = { display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s", textDecoration: "none" };
-  const dropIn = e => e.currentTarget.style.color = "var(--text)";
-  const dropOut = e => e.currentTarget.style.color = "var(--text3)";
-  const dropRow = (a, i) => {
+  const dropDefault = { display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s", textDecoration: "none" } as const;
+  const dropIn = (e: MouseEvent<HTMLElement>) => e.currentTarget.style.color = "var(--text)";
+  const dropOut = (e: MouseEvent<HTMLElement>) => e.currentTarget.style.color = "var(--text3)";
+  const dropRow = (a: AvatarAction, i: number | string) => {
     if (a.variant === "admin") return (
       <button key={i} onClick={() => closeThen(a.onClick)}
         style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "opacity 0.15s" }}
@@ -110,7 +128,7 @@ export function UserAvatar() {
       </a>
     );
     return (
-      <button key={i} onClick={() => a.keepsOpen ? a.onClick() : closeThen(a.onClick)} style={dropDefault} onMouseEnter={dropIn} onMouseLeave={dropOut}>
+      <button key={i} onClick={() => a.keepsOpen ? a.onClick?.() : closeThen(a.onClick)} style={dropDefault} onMouseEnter={dropIn} onMouseLeave={dropOut}>
         <Icon name={a.icon} size={13} color="currentColor" /> {a.label}
       </button>
     );
