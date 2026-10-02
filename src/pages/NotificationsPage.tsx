@@ -1,12 +1,18 @@
 import { useNavigate } from "react-router-dom";
+import type { ActivityEvent } from "@/lib/notifications/activity.js";
 import { Icon } from "../components/ui/Icon.jsx";
 import { NotificationsSection } from "../components/user/NotificationsSection.jsx";
+
+interface NotificationsPageProps {
+  activities?: ActivityEvent[];
+  loading?: boolean;
+}
 
 // ─── NOTIFICATIONS ──────────────────────────────────────────────────────────────
 // Page dédiée /notifications : le journal d'activité du foyer, accessible depuis le
 // bouton rond de l'en-tête d'accueil. En-tête standard (titre serif 26/600) avec un
 // retour vers l'accueil ; le contenu (liste + état vide) vit dans NotificationsSection.
-export function NotificationsPage({ activities = [], loading = false }) {
+export function NotificationsPage({ activities = [], loading = false }: NotificationsPageProps) {
   const navigate = useNavigate();
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>

@@ -6,8 +6,12 @@ import { EmptyArt } from "../components/ui/EmptyArt.jsx";
 const APP_SHELL = typeof document !== "undefined"
   && document.documentElement.classList.contains("app-shell");
 
+interface LoadingPageProps {
+  isDark?: boolean;
+}
+
 // ─── LOADING SCREEN ───────────────────────────────────────────────────────────
-export function LoadingPage({ isDark }) {
+export function LoadingPage({ isDark }: LoadingPageProps) {
   // Sur la coquille app, on PROLONGE le splash d'ouverture (même gousse qui pulse)
   // plutôt que d'introduire un SECOND système de chargement (marmite + label) : un
   // seul indicateur perçu, continu du boot jusqu'à l'app. Sur web / desktop, pas de

@@ -1,14 +1,40 @@
 import { useState, useRef, useEffect } from "react";
+import type { CSSProperties } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
+
+/** Une action du menu « trois points » : libellé, icône, callback et teinte danger. */
+export interface MenuItem {
+  label: string;
+  icon: IconName;
+  onClick: () => void;
+  danger?: boolean;
+}
+
+interface HeroMenuProps {
+  items: MenuItem[];
+  btnStyle?: CSSProperties;
+  iconColor?: string;
+  iconSize?: number;
+  icon?: IconName;
+  className?: string;
+  align?: "left" | "right";
+}
+
+interface MenuPos {
+  top: number;
+  right?: number;
+  left?: number;
+}
 
 // Menu « trois points » des actions secondaires d'une recette (hero).
-// items : [{ label, icon, onClick, danger }]. Se ferme au clic extérieur / Échap.
-// Le dropdown utilise position:fixed pour échapper à tout overflow:hidden parent.
-export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, icon = "more", className, align = "right" }) {
+// Se ferme au clic extérieur / Échap. Le dropdown utilise position:fixed pour
+// échapper à tout overflow:hidden parent.
+export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, icon = "more", className, align = "right" }: HeroMenuProps) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, right: undefined, left: undefined });
-  const ref = useRef(null);
-  const btnRef = useRef(null);
+  const [pos, setPos] = useState<MenuPos>({ top: 0, right: undefined, left: undefined });
+  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   const openMenu = () => {
     if (btnRef.current) {
@@ -25,8 +51,8 @@ export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, i
 
   useEffect(() => {
     if (!open) return;
-    const onDown = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    const onKey = e => { if (e.key === "Escape") setOpen(false); };
+    const onDown = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };

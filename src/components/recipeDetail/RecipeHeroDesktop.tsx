@@ -1,15 +1,34 @@
+import type { ReactNode } from "react";
+import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
 import { HeroMenu } from "./HeroMenu.jsx";
+import type { MenuItem } from "./HeroMenu.jsx";
 import { RecipeHeroBadges } from "./RecipeHeroBadges.jsx";
+import type { HeroBadgesProps } from "./RecipeHeroBadges.jsx";
+
+interface RecipeHeroDesktopProps {
+  recipe: Recipe;
+  handleBack: () => void;
+  publicMode?: boolean;
+  onEdit: () => void;
+  onExportPDF: (recipe: Recipe) => void;
+  reportAvailable?: boolean;
+  adminDeleteAvailable?: boolean;
+  onOpenReport: () => void;
+  onOpenAdminDelete: () => void;
+  menuItems: MenuItem[];
+  attribution?: ReactNode;
+  badges: HeroBadgesProps;
+}
 
 /**
  * Hero compact de la fiche en desktop : image, dégradé, boutons d'action (édition/PDF/
  * menu, ou actions de modération en mode public), titre, attribution et rangée de badges.
  * Purement présentationnel ; toutes les actions sont fournies par le parent.
  */
-export function RecipeHeroDesktop({ recipe, handleBack, publicMode, onEdit, onExportPDF, reportAvailable, adminDeleteAvailable, onOpenReport, onOpenAdminDelete, menuItems, attribution, badges }) {
+export function RecipeHeroDesktop({ recipe, handleBack, publicMode, onEdit, onExportPDF, reportAvailable, adminDeleteAvailable, onOpenReport, onOpenAdminDelete, menuItems, attribution, badges }: RecipeHeroDesktopProps) {
   return (
     <div style={{ position: "relative", height: 160, flexShrink: 0, color: "#fff" }}>
       <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={72} style={{ width: "100%", height: "100%" }} />} />

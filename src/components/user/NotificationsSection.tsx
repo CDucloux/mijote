@@ -1,9 +1,31 @@
 import { useMemo, useState, useEffect } from "react";
+import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 import { describeActivity, actorLabel, relativeTime, dayBucketLabel } from "@/lib/notifications/activity.js";
+import type { ActivityEvent } from "@/lib/notifications/activity.js";
+
+interface ActivityRowProps {
+  event: ActivityEvent;
+  currentEmail: string;
+  onNavigate: (route: string) => void;
+  style?: CSSProperties;
+}
+
+interface NotificationsSectionProps {
+  activities?: ActivityEvent[];
+  loading?: boolean;
+  onNavigated?: () => void;
+}
+
+/** Jour de la timeline : libellé de bucket et les évènements qu'il regroupe. */
+interface DayGroup {
+  label: string;
+  events: ActivityEvent[];
+}
 
 // Nombre d'évènements montrés d'emblée ; le reste se déplie à la demande. Garde la
 // section courte au repos sans masquer l'historique déjà chargé.
@@ -12,15 +34,17 @@ const COLLAPSED = 10;
 // Une ligne de la timeline : pastille teintée (perce la spine) + phrase (2 lignes max)
 // + ligne acteur si ce n'est pas « Toi » + heure dédiée. Navigable (route non nulle)
 // → <button> pressable avec chevron d'affordance ; sinon (suppression) un <div> statique.
-function ActivityRow({ event, currentEmail, onNavigate, style }) {
+function ActivityRow({ event, currentEmail, onNavigate, style }: ActivityRowProps) {
+  // `icon` est garanti valide par les descripteurs internes (activity.ts), mais
+  // sa forme reste `string` côté lib pour ne pas faire dépendre `lib/` de l'UI.
   const { icon, color, title, route } = describeActivity(event);
   const who = actorLabel(event, currentEmail);
   const when = relativeTime(event.ts);
   const inner = (
     <>
       <span className="notif-spine-wrap">
-        <span className="notif-node" style={{ "--nc": color, background: `color-mix(in srgb, ${color} 13%, var(--surface))` }}>
-          <Icon name={icon} size={16} color={color} />
+        <span className="notif-node" style={{ "--nc": color, background: `color-mix(in srgb, ${color} 13%, var(--surface))` } as CSSProperties}>
+          <Icon name={icon as IconName} size={16} color={color} />
         </span>
       </span>
       <span className="notif-body">
@@ -76,8 +100,10 @@ function NotificationsSkeleton() {
  * @param loading - Données partagées encore en cours d'hydratation : on montre le
  *   squelette plutôt que l'état vide (qui flasherait avant l'arrivée du journal).
  */
-export function NotificationsSection({ activities = [], loading = false, onNavigated }) {
-  const { user } = useAppShell();
+export function NotificationsSection({ activities = [], loading = false, onNavigated }: NotificationsSectionProps) {
+  // Le contexte (JS) renvoie `never` après son garde interne : on ne lit que le
+  // champ utile ici, typé au point d'accès plutôt que de caster tout le contexte.
+  const { user } = useAppShell() as { user?: { email?: string } | null };
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [revealing, setRevealing] = useState(false);
@@ -93,7 +119,7 @@ export function NotificationsSection({ activities = [], loading = false, onNavig
   const currentEmail = user?.email || "";
   const rest = activities.length - COLLAPSED;
   // Renvoie vers l'onglet ciblé puis referme le panneau (accès via le bouton rond).
-  const go = (route) => { onNavigated?.(); navigate(route); };
+  const go = (route: string) => { onNavigated?.(); navigate(route); };
 
   // Dépliage en douceur : un court spinner, puis on révèle le reste (chaque ligne
   // supplémentaire apparaît en cascade, cf. l'index global plus bas).
@@ -105,7 +131,7 @@ export function NotificationsSection({ activities = [], loading = false, onNavig
 
   // Regroupe par jour SANS re-trier : préserve l'ordre `ts desc` du flux.
   const groups = useMemo(() => {
-    const out = [];
+    const out: DayGroup[] = [];
     for (const event of shown) {
       const label = dayBucketLabel(event.ts);
       const last = out[out.length - 1];

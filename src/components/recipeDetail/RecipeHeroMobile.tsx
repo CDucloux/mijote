@@ -1,9 +1,36 @@
+import type { ReactNode, RefObject } from "react";
+import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
 import { HeroMenu } from "./HeroMenu.jsx";
+import type { MenuItem } from "./HeroMenu.jsx";
 import { RecipeHeroBadges } from "./RecipeHeroBadges.jsx";
+import type { HeroBadgesProps } from "./RecipeHeroBadges.jsx";
 import { HERO_H } from "../../hooks/useHeroCollapse.js";
+
+interface RecipeHeroMobileProps {
+  recipe: Recipe;
+  handleBack: () => void;
+  publicMode?: boolean;
+  onEdit: () => void;
+  onExportPDF: (recipe: Recipe) => void;
+  reportAvailable?: boolean;
+  adminDeleteAvailable?: boolean;
+  onOpenReport: () => void;
+  onOpenAdminDelete: () => void;
+  menuItems: MenuItem[];
+  attribution?: ReactNode;
+  badges: HeroBadgesProps;
+  heroImgRef: RefObject<HTMLDivElement | null>;
+  shadeRef: RefObject<HTMLDivElement | null>;
+  ctrlLRef: RefObject<HTMLDivElement | null>;
+  ctrlRRef: RefObject<HTMLDivElement | null>;
+  titleRef: RefObject<HTMLHeadingElement | null>;
+  srcRef: RefObject<HTMLAnchorElement | null>;
+  attribRef: RefObject<HTMLDivElement | null>;
+  badgesRef: RefObject<HTMLDivElement | null>;
+}
 
 /**
  * Hero mobile plein cadre, replié au défilement par `useHeroCollapse` : image parallaxe,
@@ -13,7 +40,7 @@ import { HERO_H } from "../../hooks/useHeroCollapse.js";
 export function RecipeHeroMobile({
   recipe, handleBack, publicMode, onEdit, onExportPDF, reportAvailable, adminDeleteAvailable, onOpenReport, onOpenAdminDelete, menuItems, attribution, badges,
   heroImgRef, shadeRef, ctrlLRef, ctrlRRef, titleRef, srcRef, attribRef, badgesRef,
-}) {
+}: RecipeHeroMobileProps) {
   return (
     <div style={{ position: "relative", height: `calc(${HERO_H}px + var(--safe-hero-top))`, flexShrink: 0, color: "#fff", overflow: "hidden" }}>
       {/* Couche de parallaxe : transformée par le hook. transformOrigin en haut pour que
