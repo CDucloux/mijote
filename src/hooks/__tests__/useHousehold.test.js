@@ -27,7 +27,8 @@ vi.mock("@/lib/firebase/households.js", () => ({
   householdInviteQuery: () => ({ type: "invite" }),
   createHousehold: vi.fn(), inviteToHousehold: vi.fn(), acceptInvite: vi.fn(),
   declineInvite: vi.fn(), exitAllHouseholds: vi.fn(),
-  clearHouseholdPointer: vi.fn(),
+  clearHouseholdPointer: vi.fn(), setHouseholdPointer: vi.fn(),
+  subscribeHouseholdPointer: (_uid, cb) => { cb({ id: "h1", migrated: true }); return () => {}; },
 }));
 
 import { useHousehold } from "../useHousehold.js";
