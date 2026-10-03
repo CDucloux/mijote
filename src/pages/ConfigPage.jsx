@@ -988,7 +988,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             return (<>
               <div className="field-label">Précaution d'utilisation <span style={{ color: "var(--text3)", fontWeight: 400 }}>(facultatif)</span></div>
               <select className="field-input" value={prec.tone || "heat"} onChange={e => upPrec({ tone: e.target.value })} style={{ marginBottom: 10 }}>
-                {Object.entries(PRECAUTION_TONES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+                {Object.entries(PRECAUTION_TONES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
               <input className="field-input" placeholder="Titre (ex: Évitez le feu maximum)" value={prec.title || ""} onChange={e => upPrec({ title: e.target.value })} style={{ marginBottom: 10 }} />
               <textarea className="field-input" placeholder="Description courte (1 à 3 phrases)" rows={3} value={prec.description || ""} onChange={e => upPrec({ description: e.target.value })} style={{ marginBottom: 10, resize: "vertical" }} />
