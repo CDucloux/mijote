@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import { precautionVisual } from "@/lib/utensils/usagePrecaution.js";
+import { parsePrecautionDescription, type TableBlock } from "@/lib/utensils/precautionLayout.js";
 import type { PrecautionTone, UsagePrecaution } from "@/lib/types";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon, type IconName } from "../ui/Icon.jsx";
@@ -62,6 +64,55 @@ interface UtensilPrecautionSheetProps {
   zIndex?: number;
 }
 
+/**
+ * Rend une description de précaution : un tableau éditorial (lignes « label : valeur »
+ * ou Markdown à pipes) devient une vraie grille alignée ; le reste reste du texte.
+ * Sans tableau, le rendu est identique à un simple paragraphe (`pre-line`).
+ */
+function PrecautionDescription({ description, accent }: { description: string; accent: string }) {
+  const blocks = useMemo(() => parsePrecautionDescription(description), [description]);
+  return (
+    <>
+      {blocks.map((block, i) => block.kind === "paragraph" ? (
+        <p key={i} style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: i ? "12px 0 0" : 0, whiteSpace: "pre-line" }}>{block.text}</p>
+      ) : (
+        <PrecautionTable key={i} block={block} accent={accent} first={i === 0} />
+      ))}
+    </>
+  );
+}
+
+/** Grille alignée d'une précaution : en-tête optionnel, libellés à gauche, valeurs à droite (chiffres tabulaires pour aligner les fractions). */
+function PrecautionTable({ block, accent, first }: { block: TableBlock; accent: string; first: boolean }) {
+  const cols = block.header?.length || Math.max(2, ...block.rows.map(r => r.length));
+  const twoCol = cols === 2;
+  const template = twoCol ? "1fr auto" : `repeat(${cols}, 1fr)`;
+  return (
+    <div style={{ marginTop: first ? 0 : 12, borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden", background: "var(--surface)" }}>
+      {block.header && (
+        <div style={{ display: "grid", gridTemplateColumns: template, gap: 12, padding: "9px 14px", background: accent + "14" }}>
+          {block.header.map((cell, k) => (
+            <span key={k} style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: accent, textAlign: twoCol && k === 1 ? "right" : "left" }}>{cell}</span>
+          ))}
+        </div>
+      )}
+      {block.rows.map((row, r) => (
+        <div key={r} style={{ display: "grid", gridTemplateColumns: template, gap: 12, padding: "10px 14px", alignItems: "baseline", borderTop: r > 0 || block.header ? "1px solid var(--border)" : "none" }}>
+          {row.map((cell, k) => (
+            <span key={k} style={{
+              fontSize: 13.5, lineHeight: 1.45,
+              color: k === 0 ? "var(--text2)" : "var(--text)",
+              fontWeight: k === 0 ? 400 : 600,
+              textAlign: twoCol && k === 1 ? "right" : "left",
+              fontVariantNumeric: "tabular-nums",
+            }}>{cell}</span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function UtensilPrecautionSheet({ utensilName, precaution, onClose, zIndex }: UtensilPrecautionSheetProps) {
   if (!precaution) return null;
   const { icon, label, accent } = precautionVisual(precaution.tone);
@@ -76,7 +127,8 @@ export function UtensilPrecautionSheet({ utensilName, precaution, onClose, zInde
         </div>
       </div>
       <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 10px", color: "var(--text)" }}>{precaution.title}</h3>
-      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-line" }}>{precaution.description}</p>
+      <PrecautionDescription description={precaution.description} accent={accent} />
+
       {precaution.tip && (
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 16, padding: "12px 14px", borderRadius: 14, background: accent + "14", border: `1px solid ${accent}33` }}>
           <Icon name="bulb" size={16} color={accent} style={{ flexShrink: 0, marginTop: 1 }} />

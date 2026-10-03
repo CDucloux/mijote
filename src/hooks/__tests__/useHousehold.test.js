@@ -12,11 +12,21 @@ vi.mock("../../context/AppShellContext.jsx", () => ({
 let memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
 // Invitations simulées côté snapshot invite (vide par défaut).
 let inviteDocs = [];
+// Pointeur de workspace simulé (`users/{uid}/meta/household`) : null = aucun.
+let pointerVal = { id: "h1", migrated: true };
+// Callbacks capturés pour rejouer des snapshots (séquences : effacement transitoire,
+// retour du membre, changement de pointeur…).
+let memberCb = null;
+let pointerCb = null;
+
+// Quand true, le snapshot membre n'est PAS livré au montage (simule une appartenance
+// encore en cours de chargement : le pointeur peut arriver avant).
+let memberSilent = false;
 
 // onSnapshot livre synchronement un snapshot selon le type de requête (membre/invite).
 vi.mock("firebase/firestore", () => ({
   onSnapshot: (q, onNext) => {
-    if (q?.type === "member") onNext({ docs: memberDoc ? [memberDoc] : [] });
+    if (q?.type === "member") { memberCb = onNext; if (!memberSilent) onNext({ docs: memberDoc ? [memberDoc] : [] }); }
     else onNext({ docs: inviteDocs });
     return () => {};
   },
@@ -28,15 +38,27 @@ vi.mock("@/lib/firebase/households.js", () => ({
   createHousehold: vi.fn(), inviteToHousehold: vi.fn(), acceptInvite: vi.fn(),
   declineInvite: vi.fn(), exitAllHouseholds: vi.fn(),
   clearHouseholdPointer: vi.fn(), setHouseholdPointer: vi.fn(),
-  subscribeHouseholdPointer: (_uid, cb) => { cb({ id: "h1", migrated: true }); return () => {}; },
+  subscribeHouseholdPointer: (_uid, cb) => { pointerCb = cb; cb(pointerVal); return () => {}; },
 }));
 
 import { useHousehold } from "../useHousehold.js";
-import { exitAllHouseholds, createHousehold, acceptInvite } from "@/lib/firebase/households.js";
+import { exitAllHouseholds, createHousehold, acceptInvite, setHouseholdPointer, clearHouseholdPointer } from "@/lib/firebase/households.js";
 import { act } from "@testing-library/react";
 
+// Rejoue un snapshot d'appartenance (docs du foyer, ou aucun) dans un act().
+const emitMember = (doc) => act(() => { memberCb({ docs: doc ? [doc] : [] }); });
+// Rejoue un snapshot de pointeur dans un act().
+const emitPointer = (val) => act(() => { pointerCb(val); });
+
 describe("useHousehold", () => {
-  beforeEach(() => { memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) }; inviteDocs = []; vi.clearAllMocks(); });
+  beforeEach(() => {
+    memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
+    inviteDocs = [];
+    pointerVal = { id: "h1", migrated: true };
+    memberCb = null; pointerCb = null;
+    memberSilent = false;
+    vi.clearAllMocks();
+  });
 
   it("expose le foyer et sort de l'état loading après le 1er snapshot", () => {
     const { result } = renderHook(() => useHousehold());
@@ -93,6 +115,7 @@ describe("useHousehold", () => {
 
   it("ignore les créations concurrentes (verrou en vol) : un seul appel serveur", async () => {
     memberDoc = null; // aucun foyer : la création est autorisée
+    pointerVal = null;
     const { result } = renderHook(() => useHousehold());
     await act(async () => {
       const [a, b] = await Promise.all([
@@ -103,5 +126,81 @@ describe("useHousehold", () => {
       expect(b).toBe(false);
     });
     expect(createHousehold).toHaveBeenCalledTimes(1);
+  });
+
+  // ── Réconciliation du pointeur de workspace avec l'appartenance autoritaire ────
+  // Cœur du correctif foyer : un membre dont le pointeur diverge de son appartenance
+  // réelle lit/écrit le mauvais namespace Firestore et ne partage plus rien.
+  describe("réconciliation pointeur ↔ appartenance", () => {
+    it("membre d'un foyer SANS pointeur : pose le pointeur (migrated:false) pour fusion additive", () => {
+      memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
+      pointerVal = null; // le membre était coincé en solo
+      renderHook(() => useHousehold());
+      expect(setHouseholdPointer).toHaveBeenCalledWith("u1", "h1", false);
+      expect(clearHouseholdPointer).not.toHaveBeenCalled();
+    });
+
+    it("membre d'un foyer avec pointeur déjà aligné (migrated:true) : AUCUNE écriture (anti-boucle)", () => {
+      memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
+      pointerVal = { id: "h1", migrated: true };
+      renderHook(() => useHousehold());
+      expect(setHouseholdPointer).not.toHaveBeenCalled();
+      expect(clearHouseholdPointer).not.toHaveBeenCalled();
+    });
+
+    it("pointeur visant un AUTRE foyer que l'appartenance : réaligne sur le bon foyer", () => {
+      memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
+      pointerVal = { id: "h2", migrated: true }; // périmé sur un ancien foyer
+      renderHook(() => useHousehold());
+      expect(setHouseholdPointer).toHaveBeenCalledWith("u1", "h1", false);
+    });
+
+    it("plus membre d'aucun foyer (dissous par autrui) mais pointeur encore posé : efface le pointeur", () => {
+      memberDoc = null;
+      pointerVal = { id: "h1", migrated: true };
+      renderHook(() => useHousehold());
+      expect(clearHouseholdPointer).toHaveBeenCalledWith("u1");
+      expect(setHouseholdPointer).not.toHaveBeenCalled();
+    });
+
+    it("ni membre ni pointeur (vrai solo) : aucune écriture", () => {
+      memberDoc = null;
+      pointerVal = null;
+      renderHook(() => useHousehold());
+      expect(setHouseholdPointer).not.toHaveBeenCalled();
+      expect(clearHouseholdPointer).not.toHaveBeenCalled();
+    });
+
+    it("auto-réparation : pointeur effacé transitoirement puis membre confirmé → repose le pointeur", () => {
+      memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
+      pointerVal = { id: "h1", migrated: true };
+      renderHook(() => useHousehold());
+      expect(setHouseholdPointer).not.toHaveBeenCalled();
+      // Le pointeur disparaît (blip), puis un snapshot membre confirme l'appartenance.
+      emitPointer(null);
+      emitMember({ id: "h1", data: () => ({ name: "Mon foyer" }) });
+      expect(setHouseholdPointer).toHaveBeenCalledWith("u1", "h1", false);
+    });
+
+    it("appartenance pas encore chargée : un pointeur divergent n'est NI effacé NI réécrit (pas de cycle parasite au chargement)", () => {
+      memberSilent = true; // le snapshot membre n'arrive pas encore
+      pointerVal = { id: "h2", migrated: true }; // pointeur présent, appartenance inconnue
+      renderHook(() => useHousehold());
+      expect(clearHouseholdPointer).not.toHaveBeenCalled();
+      expect(setHouseholdPointer).not.toHaveBeenCalled();
+      // L'appartenance se confirme ensuite → là seulement le pointeur est réaligné.
+      emitMember({ id: "h1", data: () => ({ name: "Mon foyer" }) });
+      expect(setHouseholdPointer).toHaveBeenCalledWith("u1", "h1", false);
+    });
+
+    it("ne boucle pas : une fois le pointeur aligné (migrated:true), de nouveaux snapshots membres n'écrivent rien", () => {
+      memberDoc = { id: "h1", data: () => ({ name: "Mon foyer" }) };
+      pointerVal = { id: "h1", migrated: true };
+      renderHook(() => useHousehold());
+      emitMember({ id: "h1", data: () => ({ name: "Mon foyer" }) });
+      emitMember({ id: "h1", data: () => ({ name: "Mon foyer (renommé)" }) });
+      expect(setHouseholdPointer).not.toHaveBeenCalled();
+      expect(clearHouseholdPointer).not.toHaveBeenCalled();
+    });
   });
 });
