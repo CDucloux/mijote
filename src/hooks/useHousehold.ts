@@ -4,8 +4,10 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import {
   householdMemberQuery, householdInviteQuery,
   createHousehold, inviteToHousehold, acceptInvite, declineInvite,
-  exitAllHouseholds, clearHouseholdPointer,
+  exitAllHouseholds, clearHouseholdPointer, setHouseholdPointer,
+  subscribeHouseholdPointer,
 } from "@/lib/firebase/households.js";
+import { reconcileHouseholdPointer, type PointerState } from "@/lib/household/pointerSync.js";
 
 // ─── HOOK FOYER ───────────────────────────────────────────────────────────────
 // Abonnements temps réel : mon foyer actif (membre par uid) + mes invitations en
@@ -39,7 +41,6 @@ export function useHousehold() {
   const [invites, setInvites] = useState<DocumentData[]>(cached ? hhCache.invites : []);
   const [loading, setLoading] = useState(!cached);
   const [creating, setCreating] = useState(false);
-  const hadHousehold = useRef(!!(cached && hhCache.household));
   // Verrou anti double-création : un clic répété (ou deux onglets) ne doit pas
   // semer plusieurs foyers fantômes. Le ref garde l'invariant même entre deux
   // rendus, avant que `creating` (asynchrone) ne se propage.
@@ -49,17 +50,37 @@ export function useHousehold() {
     if (!user?.uid) { hhCache = { uid: null, household: null, invites: [] }; setHousehold(null); setInvites([]); setLoading(false); return; }
     // Changement de compte : on repart d'un état vierge (pas de fuite entre uids).
     if (hhCache.uid !== user.uid) { hhCache = { uid: user.uid, household: null, invites: [] }; setLoading(true); }
-    const unsubMember = onSnapshot(householdMemberQuery(user.uid), snap => {
+    const uid = user.uid;
+    // Réconciliation du pointeur de workspace avec l'APPARTENANCE autoritaire : sans
+    // elle, un membre dont le pointeur est absent/périmé (ex. effacé par erreur sur un
+    // snapshot transitoirement vide, ou adhésion dont le pointeur n'a jamais été posé)
+    // reste coincé sur son espace solo et ne partage plus RIEN avec le foyer. On garde
+    // en ref le dernier pointeur et la dernière appartenance connus, et on ne (ré)écrit
+    // le pointeur qu'en cas de divergence réelle (jamais d'écrasement d'un `migrated:true`
+    // sain, qui relancerait une fusion à chaque snapshot).
+    let memberHid: string | null = null;
+    let pointer: PointerState | null = null;
+    const reconcile = (): void => {
+      const action = reconcileHouseholdPointer(memberHid, pointer);
+      if (action.kind === "set") setHouseholdPointer(uid, action.hid, action.migrated);
+      else if (action.kind === "clear") clearHouseholdPointer(uid);
+    };
+    const unsubPointer = subscribeHouseholdPointer(uid, p => {
+      pointer = p && typeof p.id === "string" ? { id: p.id, migrated: !!p.migrated } : null;
+      reconcile();
+    });
+    const unsubMember = onSnapshot(householdMemberQuery(uid), snap => {
       // `.data()` ne porte JAMAIS l'id du document : on le rattache ici, sinon les
       // actions serveur (invitation, dissolution…) reçoivent `hid = undefined`.
       const d = snap.docs[0];
       const h = d ? { id: d.id, ...d.data() } : null;
-      hhCache = { ...hhCache, uid: user.uid, household: h };
+      hhCache = { ...hhCache, uid, household: h };
       setHousehold(h);
       setLoading(false);
-      // Foyer dissous par autrui pendant que j'en étais membre → nettoie mon pointeur.
-      if (hadHousehold.current && !h) clearHouseholdPointer(user.uid);
-      hadHousehold.current = !!h;
+      memberHid = h ? h.id : null;
+      // Ramène le pointeur de workspace en phase avec l'appartenance (pose à l'adhésion,
+      // efface sur foyer dissous par autrui, corrige un pointeur perdu/périmé).
+      reconcile();
     }, () => setLoading(false));
     let unsubInvite: Unsubscribe = () => {};
     if (user.email) {
@@ -68,7 +89,7 @@ export function useHousehold() {
         // reçoit `hid = undefined` et l'adhésion échoue au premier accès Firestore.
         snap => { const arr = snap.docs.map(d => ({ id: d.id, ...d.data() })); hhCache = { ...hhCache, uid: user.uid, invites: arr }; setInvites(arr); }, () => {});
     }
-    return () => { unsubMember(); unsubInvite(); };
+    return () => { unsubPointer(); unsubMember(); unsubInvite(); };
   }, [user]);
 
   // Garde online : les opérations d'appartenance ne doivent pas partir en file

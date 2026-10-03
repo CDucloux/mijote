@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactElement, ReactNode, TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../ui/Icon.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
@@ -8,7 +9,16 @@ import { useAppShell } from "../../context/AppShellContext.jsx";
 // Piste de cards pilotée par `active` : la variable CSS --onb-active positionne
 // la carte active au centre de la fenêtre (transform déterministe). Toute la
 // géométrie et le responsive vivent dans global.css (.onb-*). Portalisé <body>.
-const seenKey = (uid) => `mijote_onboarded_${uid}`;
+const seenKey = (uid: string) => `mijote_onboarded_${uid}`;
+
+// Une diapo du carrousel : illustration SVG, couleur de fond, titre et texte riche.
+interface Slide {
+  illustration?: () => ReactElement;
+  color: string;
+  title: string;
+  text: ReactNode;
+  emoji?: string;
+}
 
 // ── Illustrations SVG maison (test de style, 2 slides sur 7) ──────────────────
 const IL = { width: 116, height: 116, viewBox: "0 0 120 120", fill: "none" };
@@ -173,7 +183,7 @@ function HouseIllustration() {
   );
 }
 
-const SLIDES = [
+const SLIDES: Slide[] = [
   {
     illustration: PodIllustration, color: "#6e9a3f",
     title: "Bienvenue sur Cardamome",
@@ -216,8 +226,8 @@ export function OnboardingCarousel() {
   const [show, setShow] = useState(false);
   const [active, setActive] = useState(0);
   const [closing, setClosing] = useState(false);
-  const touchX = useRef(null);
-  const closeTimer = useRef(null);
+  const touchX = useRef<number | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -237,7 +247,7 @@ export function OnboardingCarousel() {
   // Navigation clavier (desktop) : flèches gauche/droite.
   useEffect(() => {
     if (!show) return;
-    const onKey = (e) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") setActive(a => Math.min(SLIDES.length - 1, a + 1));
       else if (e.key === "ArrowLeft") setActive(a => Math.max(0, a - 1));
     };
@@ -252,11 +262,11 @@ export function OnboardingCarousel() {
     setClosing(true);
     closeTimer.current = setTimeout(() => { setShow(false); setClosing(false); }, 300);
   };
-  const goTo = (n) => setActive(Math.max(0, Math.min(SLIDES.length - 1, n)));
+  const goTo = (n: number) => setActive(Math.max(0, Math.min(SLIDES.length - 1, n)));
   const next = () => (active < SLIDES.length - 1 ? setActive(active + 1) : finish());
 
-  const onTouchStart = (e) => { touchX.current = e.touches[0].clientX; };
-  const onTouchEnd = (e) => {
+  const onTouchStart = (e: ReactTouchEvent<HTMLDivElement>) => { touchX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e: ReactTouchEvent<HTMLDivElement>) => {
     if (touchX.current == null) return;
     const dx = e.changedTouches[0].clientX - touchX.current;
     if (dx < -45) goTo(active + 1);

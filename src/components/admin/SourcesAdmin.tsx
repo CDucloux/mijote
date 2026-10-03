@@ -1,8 +1,11 @@
 import { useState, useRef } from "react";
+import type { CSSProperties, Dispatch, ReactNode, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { uploadImage, deleteImageByUrl } from "@/lib/firebase/storage.js";
 import {
   SOURCE_TINTS, tintOf, monogramOf, prettyHost, normalizeSource, sanitizeSources,
+  type RecommendedSource,
 } from "@/lib/sources/recommendedSources.js";
 import "../../styles/import.css";
 
@@ -12,10 +15,10 @@ import "../../styles/import.css";
 // catégorie courte, badge « import net » et ordre d'affichage. Écriture admin.
 
 /** Brouillon vierge d'une nouvelle source. */
-const BLANK = { id: "", name: "", url: "", category: "", image: "", tint: "accent", mono: "", net: false, enabled: true };
+const BLANK: RecommendedSource = { id: "", name: "", url: "", category: "", image: "", tint: "accent", mono: "", net: false, enabled: true };
 
 /** Pastille d'aperçu (logo si présent, sinon monogramme teinté). */
-function Avatar({ source, size = 42 }) {
+function Avatar({ source, size = 42 }: { source: RecommendedSource; size?: number }) {
   const tint = tintOf(source.tint);
   return (
     <span className="imp-mono" style={{ width: size, height: size, background: `rgba(${tint.rgb},0.16)`, color: tint.color, fontSize: size * 0.42 }}>
@@ -24,18 +27,24 @@ function Avatar({ source, size = 42 }) {
   );
 }
 
-export function SourcesAdmin({ sources = [], setSources, isAdmin }) {
-  const [editing, setEditing] = useState(null); // null = liste ; objet = édition
+interface SourcesAdminProps {
+  sources?: RecommendedSource[];
+  setSources?: Dispatch<SetStateAction<RecommendedSource[]>>;
+  isAdmin: boolean;
+}
+
+export function SourcesAdmin({ sources = [], setSources, isAdmin }: SourcesAdminProps) {
+  const [editing, setEditing] = useState<RecommendedSource | null>(null); // null = liste ; objet = édition
   const [formError, setFormError] = useState("");
   const [uploading, setUploading] = useState(false);
-  const fileRef = useRef(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const list = sanitizeSources(sources);
 
   // Réécrit la liste complète en réattribuant `order` = position (contigu et stable).
-  const commit = (next) => setSources?.(() => next.map((s, i) => ({ ...s, order: i })));
+  const commit = (next: RecommendedSource[]) => setSources?.(() => next.map((s, i) => ({ ...s, order: i })));
 
-  const move = (id, dir) => {
+  const move = (id: string, dir: number) => {
     const idx = list.findIndex(s => s.id === id);
     const j = idx + dir;
     if (idx < 0 || j < 0 || j >= list.length) return;
@@ -43,20 +52,21 @@ export function SourcesAdmin({ sources = [], setSources, isAdmin }) {
     [next[idx], next[j]] = [next[j], next[idx]];
     commit(next);
   };
-  const toggleEnabled = (id) => commit(list.map(s => s.id === id ? { ...s, enabled: s.enabled === false } : s));
+  const toggleEnabled = (id: string) => commit(list.map(s => s.id === id ? { ...s, enabled: s.enabled === false } : s));
 
-  const pickLogo = async (file) => {
+  const pickLogo = async (file?: File) => {
     if (!file || !file.type.startsWith("image/")) return;
     setUploading(true); setFormError("");
     try {
       const url = await uploadImage(file, "master/sources");
-      setEditing(e => { if (e.image) deleteImageByUrl(e.image); return { ...e, image: url }; });
+      setEditing(e => { if (!e) return e; if (e.image) deleteImageByUrl(e.image); return { ...e, image: url }; });
     } catch { setFormError("L'upload du logo a échoué. Réessaie."); }
     finally { setUploading(false); }
   };
-  const removeLogo = () => setEditing(e => { if (e?.image) deleteImageByUrl(e.image); return { ...e, image: "" }; });
+  const removeLogo = () => setEditing(e => { if (!e) return e; if (e.image) deleteImageByUrl(e.image); return { ...e, image: "" }; });
 
   const save = () => {
+    if (!editing) return;
     const draft = { ...editing, id: editing.id || `src_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}` };
     const clean = normalizeSource(draft);
     if (!clean) { setFormError("Un nom et une URL complète (https://…) sont requis."); return; }
@@ -68,7 +78,8 @@ export function SourcesAdmin({ sources = [], setSources, isAdmin }) {
     setEditing(null); setFormError("");
   };
   const remove = () => {
-    if (editing?.image) deleteImageByUrl(editing.image);
+    if (!editing) return;
+    if (editing.image) deleteImageByUrl(editing.image);
     commit(list.filter(s => s.id !== editing.id));
     setEditing(null);
   };
@@ -212,11 +223,11 @@ export function SourcesAdmin({ sources = [], setSources, isAdmin }) {
   );
 }
 
-const inputStyle = { background: "var(--surface)", padding: "11px 14px", borderRadius: 12, width: "100%" };
-const pillBtn = { background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", padding: "9px 14px", fontSize: 13 };
+const inputStyle: CSSProperties = { background: "var(--surface)", padding: "11px 14px", borderRadius: 12, width: "100%" };
+const pillBtn: CSSProperties = { background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", padding: "9px 14px", fontSize: 13 };
 
 /** Libellé + aide au-dessus d'un champ. */
-function Field({ label, hint, children }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text2)" }}>{label}</span>
@@ -227,7 +238,7 @@ function Field({ label, hint, children }) {
 }
 
 /** Interrupteur pilulé (import net / affichée). */
-function Toggle({ label, hint, checked, onChange }) {
+function Toggle({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
       <div style={{ flex: 1 }}>
@@ -244,7 +255,7 @@ function Toggle({ label, hint, checked, onChange }) {
 }
 
 /** Petit bouton d'action icône (réordo / masquer / éditer). */
-function IconBtn({ name, title, onClick, disabled, rotate = 0, active }) {
+function IconBtn({ name, title, onClick, disabled, rotate = 0, active }: { name: IconName; title: string; onClick: () => void; disabled?: boolean; rotate?: number; active?: boolean }) {
   return (
     <button title={title} onClick={onClick} disabled={disabled}
       style={{ width: 30, height: 30, borderRadius: 8, border: "none", background: "none", cursor: disabled ? "default" : "pointer",

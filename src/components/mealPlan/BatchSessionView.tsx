@@ -1,12 +1,18 @@
 import { useState, useCallback } from "react";
+import type { ReactNode } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { fmtQtyUnit } from "@/lib/format.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { DEFAULT_CATEGORIES } from "../../constants/categories.js";
+import type { useMealBatchSession } from "../../hooks/useMealBatchSession.js";
+
+// Formes dérivées du hook de session batch (frontière hook -> vue).
+type BatchSession = ReturnType<typeof useMealBatchSession>;
 
 // En-tête de section : pastille icône + titre (+ sous-titre optionnel).
-function SecHead({ icon, title, sub }) {
+function SecHead({ icon, title, sub }: { icon: IconName; title: string; sub?: ReactNode }) {
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
@@ -27,9 +33,22 @@ function SecHead({ icon, title, sub }) {
  * La checklist est un état LOCAL : monté à l'ouverture (réinitialisé), et remonté au
  * changement de semaine via une `key` posée par le parent → repart toujours vierge.
  */
-export function BatchSessionView({ weekLabel, batch, miseEnPlace, cookingGroups, decoupeByName, prepCount, cookCount, mealOccasions, onClose, onSelectRecipe }) {
-  const [checkedPrep, setCheckedPrep] = useState(() => new Set());
-  const togglePrep = useCallback(key => setCheckedPrep(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; }), []);
+interface BatchSessionViewProps {
+  weekLabel: string;
+  batch: BatchSession["batch"];
+  miseEnPlace: BatchSession["miseEnPlace"];
+  cookingGroups: BatchSession["cookingGroups"];
+  decoupeByName: BatchSession["decoupeByName"];
+  prepCount: number;
+  cookCount: number;
+  mealOccasions: number;
+  onClose: () => void;
+  onSelectRecipe: (recipeId: string) => void;
+}
+
+export function BatchSessionView({ weekLabel, batch, miseEnPlace, cookingGroups, decoupeByName, prepCount, cookCount, mealOccasions, onClose, onSelectRecipe }: BatchSessionViewProps) {
+  const [checkedPrep, setCheckedPrep] = useState<Set<string>>(() => new Set());
+  const togglePrep = useCallback((key: string) => setCheckedPrep(prev => { const s = new Set(prev); if (s.has(key)) s.delete(key); else s.add(key); return s; }), []);
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 450, background: "var(--bg)", display: "flex", flexDirection: "column", animation: "cookModeIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
@@ -63,7 +82,7 @@ export function BatchSessionView({ weekLabel, batch, miseEnPlace, cookingGroups,
               { n: mealOccasions, l: mealOccasions > 1 ? "repas" : "repas", icon: "dish" },
             ].map((c, i) => (
               <div key={i} style={{ padding: "13px 8px", background: "var(--surface)", borderRadius: 15, border: "1px solid var(--border)", textAlign: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                <div style={{ display: "grid", placeItems: "center", marginBottom: 4 }}><Icon name={c.icon} size={16} color="var(--text3)" /></div>
+                <div style={{ display: "grid", placeItems: "center", marginBottom: 4 }}><Icon name={c.icon as IconName} size={16} color="var(--text3)" /></div>
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 23, fontWeight: 700, color: "var(--accent)", lineHeight: 1 }}>{c.n}</div>
                 <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 4 }}>{c.l}</div>
               </div>
@@ -75,7 +94,7 @@ export function BatchSessionView({ weekLabel, batch, miseEnPlace, cookingGroups,
             <div style={{ marginBottom: 24 }}>
               <SecHead icon="knife" title="Mise en place" sub="Prépare tous ces ingrédients d'un coup, toutes recettes confondues." />
               {miseEnPlace.map(group => {
-                const cat = DEFAULT_CATEGORIES[group.category] || { label: "Autres", icon: "📦" };
+                const cat = (DEFAULT_CATEGORIES as Record<string, { label: string; icon: string }>)[group.category] || { label: "Autres", icon: "📦" };
                 return (
                   <div key={group.category} style={{ marginBottom: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
@@ -170,7 +189,7 @@ export function BatchSessionView({ weekLabel, batch, miseEnPlace, cookingGroups,
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {batch.dishes.map(d => (
               <button key={d.recipe.id} onClick={() => { onSelectRecipe(d.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={d.recipe.image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
+                <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={(d.recipe as { image?: string }).image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{d.recipe.name}</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

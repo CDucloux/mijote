@@ -1,10 +1,15 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { PlusBadge } from "../badges/PlusBadge.jsx";
-import { monogramOf, tintOf } from "@/lib/sources/recommendedSources.js";
-import { CREDIT_COST } from "@/lib/aiQuota.js";
+import { monogramOf, tintOf, type RecommendedSource } from "@/lib/sources/recommendedSources.js";
+import { CREDIT_COST, type ImportKind, type CreditState } from "@/lib/aiQuota.js";
 import { GIFT_OFFER } from "@/lib/onboarding/giftRecipe.js";
+
+// Mode d'onglet de la page d'import (clés françaises de l'UI, distinctes de ImportKind).
+type ImportMode = "lien" | "photo" | "texte" | "pdf";
 
 // ─── BRIQUES DE LA PAGE D'IMPORT INTELLIGENT ────────────────────────────────
 // Présentation pure (aucune I/O) : contrôle segmenté, intro par mode, quota
@@ -12,7 +17,7 @@ import { GIFT_OFFER } from "@/lib/onboarding/giftRecipe.js";
 // (imports, quota réel, presse-papiers) vit dans ImportPage.
 
 /** Intro (titre + phrase) par mode. */
-export const LEDE = {
+export const LEDE: Record<ImportMode, { h: string; p: string }> = {
   lien: { h: "Colle un lien de recette", p: "L'import intelligent lit la page et met tout en forme. Tu relis et corriges avant d'enregistrer." },
   photo: { h: "Photographie la recette", p: "Prends une recette de livre en photo, jusqu'à 2 pages. Tu relis tout avant d'enregistrer." },
   texte: { h: "Colle ta recette", p: "Un mail, une note, un message : l'import intelligent met le texte en forme. Tu relis avant d'enregistrer." },
@@ -20,7 +25,7 @@ export const LEDE = {
 };
 
 /** Conseils propres à chaque mode (rail contextuel). */
-export const TIPS = {
+export const TIPS: Record<ImportMode, { h: string; items: [string, string][] }> = {
   lien: { h: "Bien importer un lien", items: [
     ["Vise la page de la recette", " : pas la page d'accueil ni une liste."],
     ["Blogs, magazines, sites perso", " : ça passe en général sans souci."],
@@ -43,7 +48,7 @@ export const TIPS = {
   ] },
 };
 
-const MODES = [
+const MODES: { key: ImportMode; label: string; icon: IconName | null }[] = [
   { key: "lien", label: "Lien", icon: "link" },
   { key: "photo", label: "Photo", icon: "photo" },
   { key: "texte", label: "Texte", icon: null },
@@ -60,7 +65,7 @@ function TextGlyph() {
 }
 
 /** Contrôle segmenté Lien / Photo / Texte, pouce glissant animé (index du mode). */
-export function Segmented({ mode, onSelect }) {
+export function Segmented({ mode, onSelect }: { mode: ImportMode; onSelect: (mode: ImportMode) => void }) {
   const i = MODES.findIndex(m => m.key === mode);
   return (
     <div className="imp-seg" role="tablist">
@@ -76,7 +81,7 @@ export function Segmented({ mode, onSelect }) {
 }
 
 /** Intro par mode. */
-export function Lede({ mode }) {
+export function Lede({ mode }: { mode: ImportMode }) {
   const l = LEDE[mode];
   return <div className="imp-lede"><h2>{l.h}</h2><p>{l.p}</p></div>;
 }
@@ -88,7 +93,7 @@ export function Lede({ mode }) {
  * et une variante admin (illimité). Purement indicatif : l'autorité reste le
  * serveur. `kind` = type de l'onglet courant (pour le coût de cet import).
  */
-export function QuotaBar({ credits, kind, unlimited }) {
+export function QuotaBar({ credits, kind, unlimited }: { credits?: CreditState | null; kind: ImportKind; unlimited?: boolean }) {
   if (unlimited) {
     return (
       <div className="imp-quota admin">
@@ -127,7 +132,7 @@ export function QuotaBar({ credits, kind, unlimited }) {
 }
 
 /** Une ligne créateur : logo (ou monogramme teinté) + nom + catégorie + « import net ». */
-function Creator({ source, onOpen }) {
+function Creator({ source, onOpen }: { source: RecommendedSource; onOpen: (url: string) => void }) {
   const tint = tintOf(source.tint);
   return (
     <button className="imp-creator ripple" onClick={() => onOpen(source.url)}>
@@ -153,10 +158,10 @@ const SHELF_PREVIEW = 4;
  * avec la note manuscrite) ou "side" (desktop : titre discret du rail droit).
  * Au-delà de 4 sources, un pied « Voir toutes les sources » déplie le reste.
  */
-export function SourcesShelf({ sources, layout = "shelf" }) {
+export function SourcesShelf({ sources, layout = "shelf" }: { sources: RecommendedSource[]; layout?: "shelf" | "side" }) {
   const [expanded, setExpanded] = useState(false);
   if (!sources.length) return null;
-  const openSource = (url) => { if (url) window.open(url, "_blank", "noopener"); };
+  const openSource = (url: string) => { if (url) window.open(url, "_blank", "noopener"); };
   const shown = expanded ? sources : sources.slice(0, SHELF_PREVIEW);
   const rest = sources.length - shown.length;
   const sub = "Des créatrices et créateurs que nous apprécions pour leurs recettes soignées, accessibles et pleines de goût.";
@@ -189,7 +194,7 @@ export function SourcesShelf({ sources, layout = "shelf" }) {
 }
 
 /** Rail de conseils numérotés propre au mode. */
-export function Tips({ mode }) {
+export function Tips({ mode }: { mode: ImportMode }) {
   const t = TIPS[mode];
   if (!t) return null;
   return (
@@ -206,7 +211,7 @@ export function Tips({ mode }) {
 }
 
 /** Argumentaire du mur d'offre, formulé selon le mode tenté. */
-const GATE_PITCH = {
+const GATE_PITCH: Record<ImportMode, string> = {
   lien: "Colle n'importe quel lien : l'import intelligent lit la page et met la recette en forme.",
   photo: "Photographie une recette de livre, jusqu'à 2 pages : l'import intelligent la reconstruit.",
   texte: "Un mail, une note, un message : l'import intelligent en fait une vraie recette, prête à relire.",
@@ -219,7 +224,7 @@ const GATE_PITCH = {
  * mode et bascule vers l'offre. Présentation pure ; la navigation vers /plan est
  * déléguée à `onUpgrade`, la fermeture à `onClose`.
  */
-export function ImportPlusGate({ mode, onClose, onUpgrade }) {
+export function ImportPlusGate({ mode, onClose, onUpgrade }: { mode: ImportMode; onClose: () => void; onUpgrade: () => void }) {
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (
@@ -250,7 +255,7 @@ export function ImportPlusGate({ mode, onClose, onUpgrade }) {
  * saisie) : on nomme la recette et on invite à la découvrir. Présentation pure ;
  * l'import et le marquage « déjà utilisé » sont délégués à `onAccept`.
  */
-export function ImportGiftOffer({ onAccept, onClose }) {
+export function ImportGiftOffer({ onAccept, onClose }: { onAccept: () => void; onClose: () => void }) {
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (
@@ -279,7 +284,7 @@ export function ImportGiftOffer({ onAccept, onClose }) {
 }
 
 /** Erreur inline (URL invalide, trop de photos, texte trop court…). */
-export function ImpInlineError({ children }) {
+export function ImpInlineError({ children }: { children: ReactNode }) {
   return (
     <div className="imp-inline-err">
       <Icon name="warning" size={15} color="var(--red)" />

@@ -1,26 +1,28 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
+import type { User } from "firebase/auth";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../ui/ConfirmDialog.jsx";
 import { AutoResizeTextarea } from "../ui/AutoResizeTextarea.jsx";
-import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots } from "@/lib/recipes/history.js";
+import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots, type HistoryEntry, type HistoryRecipe, type SnapshotDiff, type Snapshot } from "@/lib/recipes/history.js";
 import { RatingPicker, ratingColor } from "../ui/RatingPicker.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 
-const fmtDate = iso => {
+const fmtDate = (iso: string) => {
   try {
     return new Date(iso).toLocaleString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   } catch { return ""; }
 };
 
-function MiniAvatar({ user, size = 28 }) {
+function MiniAvatar({ user, size = 28 }: { user: User | null | undefined; size?: number }) {
   if (!user) return null;
   return user.photoURL
     ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, border: "1.5px solid var(--border)" }} />
     : <div style={{ width: size, height: size, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.42, fontWeight: 600, color: "#fff", flexShrink: 0 }}>{(user.displayName || "?")[0].toUpperCase()}</div>;
 }
 
-const VersionBadge = ({ label }) => (
+const VersionBadge = ({ label }: { label: string }) => (
   <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 800, color: "var(--bg)", background: "var(--text)", borderRadius: 8, padding: "3px 9px 3px 6px", flexShrink: 0 }}>
     <Icon name="history" size={11} color="var(--bg)" />
     {label}
@@ -29,20 +31,21 @@ const VersionBadge = ({ label }) => (
 
 
 // Couleurs des trois états de diff.
-const DIFF = {
+interface DiffStyle { bg: string; border: string; text: string; sign: string }
+const DIFF: Record<string, DiffStyle> = {
   added: { bg: "rgba(var(--green-rgb),0.12)", border: "var(--green)", text: "var(--green)", sign: "+" },
   removed: { bg: "rgba(224,82,82,0.1)", border: "var(--red)", text: "var(--red)", sign: "−" },
   changed: { bg: "rgba(240,153,42,0.12)", border: "var(--orange)", text: "var(--orange)", sign: "~" },
 };
 
-const DiffRow = ({ sign, text, bg, border, children }) => (
+const DiffRow = ({ sign, text, bg, border, children }: { sign: string; text: string; bg: string; border: string; children: ReactNode }) => (
   <div style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "8px 12px", background: bg, borderLeft: `3px solid ${border}`, borderRadius: "0 8px 8px 0" }}>
     <span style={{ fontSize: 13, fontWeight: 800, color: text, flexShrink: 0, width: 12, fontFamily: "monospace", lineHeight: 1.45 }}>{sign}</span>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
 
-const DiffSection = ({ title, children }) => (
+const DiffSection = ({ title, children }: { title: string; children: ReactNode }) => (
   <div>
     <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{title}</div>
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{children}</div>
@@ -50,7 +53,7 @@ const DiffSection = ({ title, children }) => (
 );
 
 // Vue « git diff » entre un snapshot de base et le snapshot affiché.
-function DiffView({ diff, baseLabel }) {
+function DiffView({ diff, baseLabel }: { diff: SnapshotDiff; baseLabel: string }) {
   if (!diff.hasChanges) {
     return <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.6, padding: "24px 0", textAlign: "center" }}>Aucune différence avec <strong style={{ color: "var(--text2)" }}>{baseLabel}</strong>.</p>;
   }
@@ -130,9 +133,9 @@ function DiffView({ diff, baseLabel }) {
 }
 
 // Comparaison d'une version : diff « git » par rapport à une base au choix.
-function VersionDiff({ entry, recipe, onClose }) {
+function VersionDiff({ entry, recipe, onClose }: { entry: HistoryEntry; recipe: HistoryRecipe; onClose: () => void }) {
   const { user } = useAppShell();
-  const s = entry.snapshot || {};
+  const s: Snapshot = entry.snapshot || {};
 
   // Bases comparables : versions chronologiques (sauf celle affichée) + recette actuelle.
   const chronological = recipe.history || [];
@@ -184,14 +187,19 @@ function VersionDiff({ entry, recipe, onClose }) {
   );
 }
 
-export function RecipeJournal({ recipe, onUpdateRecipe }) {
+interface RecipeJournalProps {
+  recipe: HistoryRecipe;
+  onUpdateRecipe: (recipe: HistoryRecipe) => void;
+}
+
+export function RecipeJournal({ recipe, onUpdateRecipe }: RecipeJournalProps) {
   const history = [...(recipe.history || [])].reverse();
   const [showForm, setShowForm] = useState(false);
   const [formLabel, setFormLabel] = useState("");
-  const [rating, setRating] = useState(null);
+  const [rating, setRating] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
-  const [diffEntry, setDiffEntry] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [diffEntry, setDiffEntry] = useState<HistoryEntry | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<HistoryEntry | null>(null);
   const { user } = useAppShell();
 
   const openForm = () => {
@@ -207,6 +215,7 @@ export function RecipeJournal({ recipe, onUpdateRecipe }) {
   };
 
   const doDelete = () => {
+    if (!deleteTarget) return;
     onUpdateRecipe(deleteVersion(recipe, deleteTarget.id));
     setDeleteTarget(null);
   };

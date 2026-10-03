@@ -1,14 +1,19 @@
 import { useState, useEffect } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../ui/Icon.jsx";
+import type { IconName } from "../ui/Icon.jsx";
 import { ConfirmDialog } from "../ui/ConfirmDialog.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 import { useHousehold } from "../../hooks/useHousehold.js";
-import { peopleCount, isOwner, MAX_HOUSEHOLD } from "@/lib/household/household.js";
+import { peopleCount, isOwner, MAX_HOUSEHOLD, type Household } from "@/lib/household/household.js";
 import { Row, Col } from "../ui/primitives.jsx";
 
+// Entrée d'annuaire (forme Firestore souple réduite aux champs lus ici).
+interface DirRow { uid?: string; email?: string; displayName?: string; photoURL?: string }
+
 // Avatar rond : photo si disponible, sinon initiale colorée.
-function Avatar({ photo, label, size = 34, dim = false }) {
+function Avatar({ photo, label, size = 34, dim = false }: { photo?: string; label?: string; size?: number; dim?: boolean }) {
   const ini = (label || "?").trim()[0]?.toUpperCase() || "?";
   return photo
     ? <img src={photo} alt="" referrerPolicy="no-referrer" style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, objectFit: "cover", border: "1px solid var(--border)" }} />
@@ -17,9 +22,12 @@ function Avatar({ photo, label, size = 34, dim = false }) {
 
 // ─── PANNEAU FOYER ────────────────────────────────────────────────────────────
 // `onClose` (optionnel) : ferme la feuille parente après un quitter/dissoudre.
-export function HouseholdPanel({ onClose }) {
-  const { user, directory = [], loadDirectory, preferences, isPlus } = useAppShell();
-  const { household, invites, loading, creating, actions } = useHousehold();
+export function HouseholdPanel({ onClose }: { onClose?: () => void }) {
+  const { user, directory = [], loadDirectory, isPlus } = useAppShell();
+  const { household: householdDoc, invites: invitesDoc, loading, creating, actions } = useHousehold();
+  const household = householdDoc as Household | null;
+  const invites = invitesDoc as Array<Household & { id: string }>;
+  const dir = directory as DirRow[];
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
@@ -30,11 +38,11 @@ export function HouseholdPanel({ onClose }) {
   // Instantané (nom + propriétaire) capturé à l'ouverture du dialogue : `household`
   // passe à null dès la suppression optimiste, bien avant la fin de l'action ; sans
   // cet instantané le dialogue lirait un nom nul et se démonterait (spinner qui saute).
-  const [confirmSnap, setConfirmSnap] = useState({ name: "", owner: false });
+  const [confirmSnap, setConfirmSnap] = useState<{ name: string; owner: boolean }>({ name: "", owner: false });
   // Foyer figé pendant la dissolution/le départ : `household` tombe à null dès la
   // suppression optimiste, ce qui viderait la sheet DERRIÈRE la modal (effet cassé).
   // On garde le dernier foyer connu pour l'afficher intact jusqu'à la fermeture.
-  const [frozenHh, setFrozenHh] = useState(null);
+  const [frozenHh, setFrozenHh] = useState<Household | null>(null);
   // Le panneau foyer a besoin de l'annuaire (candidats à l'invitation + avatars).
   useEffect(() => { loadDirectory?.(); }, [loadDirectory]);
 
@@ -49,20 +57,19 @@ export function HouseholdPanel({ onClose }) {
   const h = (working || leaving) ? (frozenHh || household) : household;
 
   const myEmail = (user?.email || "").toLowerCase();
-  const owner = h && isOwner(h, user?.uid);
-  const full = h && peopleCount(h) >= MAX_HOUSEHOLD;
-  const dirByEmail = new Map(directory.map(d => [(d.email || "").toLowerCase(), d]));
-  const photoFor = (email) => (email === myEmail ? user?.photoURL : dirByEmail.get(email)?.photoURL) || "";
-  // Mon nom personnalisé dans l'app (préférences) prime sur le nom technique de
-  // l'annuaire (Google/Firestore) ; pour les autres membres, seul l'annuaire est connu.
-  const myName = (preferences?.displayName || user?.displayName || "").trim();
-  const nameFor = (email) => (email === myEmail ? myName : "") || dirByEmail.get(email)?.displayName || "";
+  const owner = !!(h && isOwner(h, user?.uid ?? ""));
+  const full = !!(h && peopleCount(h) >= MAX_HOUSEHOLD);
+  const dirByEmail = new Map(dir.map(d => [(d.email || "").toLowerCase(), d]));
+  const photoFor = (email: string) => (email === myEmail ? user?.photoURL : dirByEmail.get(email)?.photoURL) || "";
+  // Nom technique de l'annuaire (Google/Firestore) ; pour moi, mon profil Firebase.
+  const myName = (user?.displayName || "").trim();
+  const nameFor = (email: string) => (email === myEmail ? myName : "") || dirByEmail.get(email)?.displayName || "";
 
   // Candidats à l'invitation : utilisateurs déjà connus, hors moi / membres / invités.
   const taken = new Set([...(h?.memberEmails || []), ...(h?.invitedEmails || []), myEmail]);
-  const candidates = directory.filter(d => d.email && !taken.has((d.email || "").toLowerCase()));
+  const candidates = dir.filter(d => d.email && !taken.has((d.email || "").toLowerCase()));
 
-  const card = (children, style) => (
+  const card = (children: ReactNode, style?: CSSProperties) => (
     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, ...style }}>{children}</div>
   );
 
@@ -83,7 +90,7 @@ export function HouseholdPanel({ onClose }) {
             { icon: "box", label: "Stock" },
           ].map(({ icon, label }) => (
             <Row key={label} gap={5} style={{ alignItems: "center", background: "var(--surface)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 999, padding: "5px 11px" }}>
-              <Icon name={icon} size={13} color="var(--accent)" />
+              <Icon name={icon as IconName} size={13} color="var(--accent)" />
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{label}</span>
             </Row>
           ))}
@@ -178,10 +185,10 @@ export function HouseholdPanel({ onClose }) {
                 ) : (
                   <Col gap={4} style={{ maxHeight: 240, overflowY: "auto", margin: "0 -6px" }}>
                     {candidates.map(d => (
-                      <Row as="button" key={d.uid || d.email} gap={11} onClick={() => actions.invite(d.email)}
+                      <Row as="button" key={d.uid || d.email} gap={11} onClick={() => d.email && actions.invite(d.email)}
                         style={{ padding: "8px 6px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left", width: "100%" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "var(--surface2)"}
-                        onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        onMouseEnter={(e: ReactMouseEvent<HTMLElement>) => e.currentTarget.style.background = "var(--surface2)"}
+                        onMouseLeave={(e: ReactMouseEvent<HTMLElement>) => e.currentTarget.style.background = "none"}>
                         <Avatar photo={d.photoURL} label={d.displayName || d.email} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.displayName || d.email}</div>
@@ -197,7 +204,7 @@ export function HouseholdPanel({ onClose }) {
           )}
 
           {/* Quitter / dissoudre : action destructive, franchement rouge (pilule teintée). */}
-          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => { setConfirmSnap({ name: household.name, owner }); setConfirmLeave(true); }}
+          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => { setConfirmSnap({ name: household?.name || "", owner }); setConfirmLeave(true); }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.2)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.12)"; }}>
             <Icon name="logout" size={15} color="var(--red)" /> {owner ? "Dissoudre le foyer" : "Quitter le foyer"}
