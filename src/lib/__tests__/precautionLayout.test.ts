@@ -63,17 +63,37 @@ describe("parsePrecautionDescription", () => {
     ]);
   });
 
-  it("paragraphe avant ET après un tableau : ordre préservé", () => {
+  it("cas réel (poêle inox) : intro en paragraphe, puissances en tableau, « À éviter » en paragraphe final", () => {
     const desc = [
-      "Bien chaude, l'inox devient quasi antiadhésive.",
+      "Bien chaude, l'inox devient quasi antiadhésive ; poussé à fond, il brûle l'huile. Puissance conseillée selon l'usage (en fraction du maximum) :",
       "Mijoter, maintenir : 1/5 à 1/3",
+      "Cuisson douce : 1/3 à 1/2",
+      "Sauté, cuisson normale : 1/2 à 2/3",
+      "Préchauffage rapide : 1/2 à 2/3",
       "Saisie très courte : 2/3 à fond",
       "À éviter : chauffer à vide à pleine puissance",
     ].join("\n");
     const blocks = parsePrecautionDescription(desc);
-    // intro (paragraphe) ; les 3 lignes « label : valeur » contiguës forment un seul tableau.
-    expect(blocks.map(b => b.kind)).toEqual(["paragraph", "table"]);
-    expect((blocks[1] as TableBlock).rows).toHaveLength(3);
+    expect(blocks.map(b => b.kind)).toEqual(["paragraph", "table", "paragraph"]);
+    expect((blocks[1] as TableBlock).rows).toEqual([
+      ["Mijoter, maintenir", "1/5 à 1/3"],
+      ["Cuisson douce", "1/3 à 1/2"],
+      ["Sauté, cuisson normale", "1/2 à 2/3"],
+      ["Préchauffage rapide", "1/2 à 2/3"],
+      ["Saisie très courte", "2/3 à fond"],
+    ]);
+    expect(blocks[2]).toEqual({ kind: "paragraph", text: "À éviter : chauffer à vide à pleine puissance" });
+  });
+
+  it("une paire en prose (valeur longue) coupe le tableau et reste un paragraphe", () => {
+    const desc = [
+      "Mijoter : 1/5 à 1/3",
+      "Saisie : 2/3 à fond",
+      "À éviter : chauffer à vide à pleine puissance longue phrase",
+    ].join("\n");
+    const blocks = parsePrecautionDescription(desc);
+    expect(blocks.map(b => b.kind)).toEqual(["table", "paragraph"]);
+    expect((blocks[0] as TableBlock).rows).toHaveLength(2);
   });
 
   it("ne perd aucune cellule : deux-points pleine chasse et valeurs à espaces multiples", () => {

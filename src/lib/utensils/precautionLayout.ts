@@ -47,18 +47,26 @@ function isPipeRow(line: string): boolean {
   return line.includes("|");
 }
 
+// Une valeur tabulaire est COMPACTE (« 1/5 à 1/3 », « 2/3 à fond ») : au plus
+// quelques mots. Au-delà, la ligne est une phrase en prose (« À éviter : chauffer à
+// vide à pleine puissance ») qui, bien que de forme « label : valeur », ne doit pas
+// finir en colonne de droite d'un tableau. On la laisse donc en paragraphe.
+const COMPACT_VALUE_MAX_WORDS = 4;
+
 /**
- * Découpe une ligne « label : valeur » en paire, ou `null` si ce n'en est pas une.
- * La valeur doit être non vide (« ... maximum : » seul, qui introduit le tableau,
- * n'est donc PAS une paire et reste un paragraphe). Gère le deux-points ASCII et
- * pleine chasse.
+ * Découpe une ligne « label : valeur » en paire TABULAIRE, ou `null` si ce n'en est
+ * pas une. La valeur doit être non vide (« ... maximum : » seul, qui introduit le
+ * tableau, n'est donc pas une paire) et compacte (une phrase en prose comme « À
+ * éviter : ... » reste un paragraphe). Gère le deux-points ASCII et pleine chasse.
  */
 function labelValuePair(line: string): [string, string] | null {
   const match = line.match(/^(.+?)\s*[:：]\s+(.+)$/);
   if (!match) return null;
   const label = match[1].trim();
   const value = match[2].trim();
-  return label && value ? [label, value] : null;
+  if (!label || !value) return null;
+  if (value.split(/\s+/).length > COMPACT_VALUE_MAX_WORDS) return null;
+  return [label, value];
 }
 
 /**
