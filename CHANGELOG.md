@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.12 – Cardamome · Foyer recollé
+
+### Corrections
+- **Partage de foyer réparé** : un membre pouvait rester « bien dans le foyer » tout en voyant un jeu de données disjoint (moins de recettes, planning non propagé dans les deux sens, aucune liste de courses partagée). En cause : l'espace de données actif suivait uniquement un pointeur local qui, s'il était absent, périmé ou effacé par erreur (coupure réseau, adhésion dont le pointeur n'avait jamais été posé), faisait basculer l'app en douce sur l'espace personnel. Le pointeur est désormais réconcilié en continu avec l'appartenance réelle au foyer : il se repose, se corrige ou s'efface tout seul, et les données personnelles résiduelles sont refusionnées de façon additive dans le foyer, sans rien écraser.
+
 ## v4.59.11 – Cardamome · Typage poursuivi
 
 ### Sous le capot
