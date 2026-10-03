@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.59.13 – Cardamome · Foyer consolidé, précautions lisibles
+
+### Corrections
+- **Partage de foyer durci** : la remise en phase de l'espace de données avec l'appartenance réelle au foyer n'agit plus tant que l'appartenance n'est pas confirmée. Au chargement, le pointeur d'espace arrive parfois avant l'appartenance ; sans ce garde-fou, l'app pouvait enchaîner un effacement puis une refusion inutiles à chaque ouverture. La zone est désormais couverte par une large batterie de tests (réconciliation, fusion non destructive des données, câblage).
+
+### Précautions d'ustensile
+- **Tableaux enfin lisibles** : une description qui contient un tableau (tableau Markdown à pipes, ou suite de lignes « libellé : valeur ») est rendue en vraie grille alignée (libellés à gauche, valeurs à droite en chiffres tabulaires), au lieu d'un enchaînement de lignes brutes. Le texte autour reste du texte, à sa place.
+- **Choix du ton épuré** : la liste de sélection du ton n'affiche plus de nom d'icône parasite devant le libellé.
+
+### Détails
+- **Listes déroulantes** : le chevron, auparavant collé au bord (chevron natif, surtout visible sur mobile), est remplacé par un chevron maison nettement détaché du bord, cohérent en clair comme en sombre.
+
 ## v4.59.12 – Cardamome · Foyer recollé
 
 ### Corrections
