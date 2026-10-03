@@ -60,7 +60,13 @@ export function useHousehold() {
     // sain, qui relancerait une fusion à chaque snapshot).
     let memberHid: string | null = null;
     let pointer: PointerState | null = null;
+    // Tant que l'appartenance n'a pas livré son 1er snapshot, `memberHid === null`
+    // signifie « inconnu », pas « aucun foyer » : réconcilier maintenant effacerait à
+    // tort le pointeur (puis le reposerait, déclenchant une fusion parasite à chaque
+    // chargement). On attend donc la confirmation de l'appartenance avant d'agir.
+    let memberLoaded = false;
     const reconcile = (): void => {
+      if (!memberLoaded) return;
       const action = reconcileHouseholdPointer(memberHid, pointer);
       if (action.kind === "set") setHouseholdPointer(uid, action.hid, action.migrated);
       else if (action.kind === "clear") clearHouseholdPointer(uid);
@@ -78,6 +84,7 @@ export function useHousehold() {
       setHousehold(h);
       setLoading(false);
       memberHid = h ? h.id : null;
+      memberLoaded = true;
       // Ramène le pointeur de workspace en phase avec l'appartenance (pose à l'adhésion,
       // efface sur foyer dissous par autrui, corrige un pointeur perdu/périmé).
       reconcile();
