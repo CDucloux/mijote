@@ -55,9 +55,18 @@ describe("buildRecipePdfHtml – tags de tête", () => {
       { ingredientDB: DB }
     );
     expect(html).toContain('<a class="hero-source"');
-    expect(html).toContain(">www.exemple.com<"); // domaine seul affiché
-    expect(html).toContain("truc.html"); // URL complète dans le href
+    expect(html).toContain(">exemple.com<"); // domaine seul affiché, sans www (comme dans l'app)
+    expect(html).toContain("truc.html?ref=cardamome"); // URL complète marquée pour la créatrice
     expect(html).not.toContain("Source :"); // plus dans le footer
+  });
+
+  it("une source non web (livre) s'affiche sans lien cliquable", () => {
+    const html = buildRecipePdfHtml(
+      { name: "X", image: "http://x/i.jpg", source: "Livre de mamie", ingredients: [] },
+      { ingredientDB: DB }
+    );
+    expect(html).toContain('<a class="hero-source">');
+    expect(html).not.toContain('href="https://Livre');
   });
 
   it("la source n'apparaît jamais dans le footer", () => {

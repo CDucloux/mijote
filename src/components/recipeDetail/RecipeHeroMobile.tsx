@@ -4,6 +4,7 @@ import { Icon } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
 import { HeroMenu } from "./HeroMenu.jsx";
+import { SourceLink } from "./SourceLink.jsx";
 import type { MenuItem } from "./HeroMenu.jsx";
 import { RecipeHeroBadges } from "./RecipeHeroBadges.jsx";
 import type { HeroBadgesProps } from "./RecipeHeroBadges.jsx";
@@ -83,11 +84,8 @@ export function RecipeHeroMobile({
         <h1 ref={titleRef} style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff", transformOrigin: "left bottom", willChange: "transform, opacity" }}>{recipe.name}</h1>
         {attribution && <div ref={attribRef} style={{ willChange: "transform, opacity" }}>{attribution}</div>}
         {!publicMode && recipe.source && (
-          <a ref={srcRef} href={recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source} target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.65)", textDecoration: "none", marginBottom: 6, willChange: "transform, opacity" }}>
-            {(() => { try { return new URL(recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source).hostname.replace(/^www\./, ""); } catch { return recipe.source.replace(/^https?:\/\/(?:www\.)?/, "").split("/")[0]; } })()}
-            <Icon name="externalLink" size={10} color="rgba(255,255,255,0.65)" />
-          </a>
+          <SourceLink ref={srcRef} source={recipe.source}
+            style={{ marginBottom: 6, willChange: "transform, opacity" }} />
         )}
         <div ref={badgesRef} style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center", willChange: "transform, opacity" }}>
           <RecipeHeroBadges recipe={recipe} {...badges} variant="mobile" />

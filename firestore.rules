@@ -85,7 +85,8 @@ service cloud.firestore {
     // Recettes publiques : `get` public (partage par lien, rendu Open Graph par
     // des crawlers non authentifiés) ; `list` (Découverte) réservé aux comptes
     // vérifiés et borné à 120 contre l'aspiration. Écriture par l'auteur (uid ==
-    // authorUid ET id préfixé `{uid}__`) ; suppression auteur ou admin (modération).
+    // authorUid ET id préfixé `{uid}__`, recette non sourcée) ; suppression auteur
+    // ou admin (modération).
     match /publicRecipes/{pubId} {
       function ownsDoc() {
         return hasVerifiedEmail()
@@ -94,9 +95,32 @@ service cloud.firestore {
       }
       allow get: if true;
       allow list: if hasVerifiedEmail() && request.query.limit <= 120;
-      allow create, update: if ownsDoc();
+      // Recette importée d'une source externe (créatrice, livre) : pas de
+      // republication, sauf admin (partenariat avec accord). Miroir de publishBlockers.
+      function unsourced() {
+        return request.resource.data.recipe.get('source', '') == '';
+      }
+      allow create, update: if ownsDoc() && (isAdmin() || unsourced());
       allow delete: if isAdmin()
         || (hasVerifiedEmail() && request.auth.uid == resource.data.authorUid);
+    }
+
+    // Clics sortants vers les sources (créatrices) : un compteur par domaine et par
+    // mois (`{domaine}__{YYYY-MM}`). Tout compte connecté peut ajouter exactement 1
+    // (création à 1, puis +1) sans toucher au domaine ni au mois ; lecture admin.
+    match /sourceClicks/{key} {
+      function validClick() {
+        return request.resource.data.keys().hasOnly(['host', 'month', 'count'])
+          && request.resource.data.host is string
+          && request.resource.data.month is string
+          && key == request.resource.data.host + '__' + request.resource.data.month;
+      }
+      allow create: if isSignedIn() && validClick() && request.resource.data.count == 1;
+      allow update: if isSignedIn() && validClick()
+        && request.resource.data.host == resource.data.host
+        && request.resource.data.month == resource.data.month
+        && request.resource.data.count == resource.data.count + 1;
+      allow read: if isAdmin();
     }
 
     // Signalements : création par le rapporteur (email vérifié) ; lecture et

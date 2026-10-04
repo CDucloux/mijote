@@ -1,7 +1,7 @@
 // Helper colocalisé en JS simple (préfixe `_` = non exposé comme endpoint) : la
 // fonction se charge sans bundling ni résolution TypeScript à l'exécution (une
 // version .ts importée ici faisait planter l'invocation, FUNCTION_INVOCATION_FAILED).
-import { parseFirestoreDoc, buildShareMeta, injectMetaTags } from "./_ogMeta.js";
+import { parseFirestoreDoc, buildShareMeta, injectMetaTags, previewImageUrl } from "./_ogMeta.js";
 
 // ─── OPEN GRAPH SSR (fonction Vercel) ────────────────────────────────────────
 // Rendu côté serveur des balises de partage pour /discover/:id. Les crawlers de
@@ -49,6 +49,7 @@ export default async function handler(req, res) {
     const meta = buildShareMeta(fields, {
       pageUrl: `${origin}/discover/${encodeURIComponent(id)}`,
       fallbackImage: `${origin}/pwa-512.png`,
+      previewImage: previewImageUrl(origin, id),
     });
     serve(injectMetaTags(html, meta));
   } catch {

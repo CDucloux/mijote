@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.59.14 – Cardamome · Gagnant-gagnant avec les créatrices
+
+### Créatrices
+- **Trafic retour mesuré** : chaque lien vers la source d'une recette ou vers une source recommandée porte `ref=cardamome`, pour que la créatrice voie dans ses propres statistiques le trafic renvoyé par Cardamome. Chaque clic est compté par site et par mois ; la console admin affiche les clics du mois en regard de chaque source recommandée.
+- **Contenu des créatrices respecté** : une recette importée d'une source externe (blog, livre), ou qui contient une préparation de base importée, ne peut plus être rendue publique. La feuille de publication explique pourquoi, sans ton d'alerte : la recette reste dans la bibliothèque et se partage toujours avec le foyer.
+
+### Partage
+- **Aperçu WhatsApp fiable** : le partage envoie le lien seul (précédé de texte, WhatsApp ne générait pas l'aperçu) et l'aperçu affiche une vignette dédiée, recadrée au format paysage sur le plat et allégée (moins de 100 Ko), au lieu de la photo d'origine trop lourde. La description présente l'auteur de la recette.
+
 ## v4.59.13 – Cardamome · Foyer consolidé, précautions lisibles
 
 ### Corrections

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   publicId, collectComponentDeps, deriveDietTags, buildKeywords,
   toPublicRecipe, buildPublishBundle, clonePublicBundle, filterPublicRecipes,
+  hasExternalSource, publishBlockers,
 } from "@/lib/household/publicRecipes.js";
 
 const user = { uid: "u1", displayName: "Chef Test", photoURL: "p.jpg" };
@@ -160,5 +161,33 @@ describe("filterPublicRecipes", () => {
   it("applies the injected season predicate", () => {
     const onlyB = filterPublicRecipes(list, { seasonOnly: true }, { isInSeason: (r) => r === list[1].recipe });
     expect(onlyB.map(p => p.pubId)).toEqual(["b"]);
+  });
+});
+
+describe("hasExternalSource", () => {
+  it("vrai pour une URL ou une source texte (livre)", () => {
+    expect(hasExternalSource({ source: "https://cestmafournee.com/tarte" })).toBe(true);
+    expect(hasExternalSource({ source: "Livre de mamie" })).toBe(true);
+  });
+  it("faux pour une source absente, vide ou blanche, et pour une recette nulle", () => {
+    expect(hasExternalSource({})).toBe(false);
+    expect(hasExternalSource({ source: "" })).toBe(false);
+    expect(hasExternalSource({ source: "   " })).toBe(false);
+    expect(hasExternalSource(null)).toBe(false);
+    expect(hasExternalSource(undefined)).toBe(false);
+  });
+});
+
+describe("publishBlockers", () => {
+  it("aucun bloquant pour une recette perso sans source ni base sourcée", () => {
+    expect(publishBlockers(dish, [sauce])).toEqual([]);
+  });
+  it("bloque une recette importée d'une créatrice", () => {
+    const imported = { ...dish, source: "https://cuisinealagrecque.fr/moussaka" };
+    expect(publishBlockers(imported, [sauce])).toEqual([imported]);
+  });
+  it("bloque aussi quand seule une préparation de base est sourcée (publiée avec la recette)", () => {
+    const sourcedSauce = { ...sauce, source: "cestmafournee.com/sauce" };
+    expect(publishBlockers(dish, [sourcedSauce])).toEqual([sourcedSauce]);
   });
 });

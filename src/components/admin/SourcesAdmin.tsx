@@ -7,6 +7,8 @@ import {
   SOURCE_TINTS, tintOf, monogramOf, prettyHost, normalizeSource, sanitizeSources,
   type RecommendedSource,
 } from "@/lib/sources/recommendedSources.js";
+import { clicksForSource } from "@/lib/sources/outboundLink.js";
+import { useSourceClicks } from "../../hooks/useSourceClicks.js";
 import "../../styles/import.css";
 
 // ─── CONSOLE ADMIN : SOURCES RECOMMANDÉES ────────────────────────────────────
@@ -35,6 +37,7 @@ interface SourcesAdminProps {
 
 export function SourcesAdmin({ sources = [], setSources, isAdmin }: SourcesAdminProps) {
   const [editing, setEditing] = useState<RecommendedSource | null>(null); // null = liste ; objet = édition
+  const clickCounts = useSourceClicks(isAdmin);
   const [formError, setFormError] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -206,6 +209,10 @@ export function SourcesAdmin({ sources = [], setSources, isAdmin }: SourcesAdmin
               <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 3 }}>
                 {s.category && <span className="imp-tag">{s.category}</span>}
                 <span style={{ fontSize: 11.5, color: "var(--text3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{prettyHost(s.url)}</span>
+                {isAdmin && (() => {
+                  const clicks = clicksForSource(clickCounts, s.url);
+                  return <span title="Clics vers son site ce mois-ci (liens de recettes et sources recommandées)" style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 600, color: clicks ? "var(--accent)" : "var(--text3)", fontVariantNumeric: "tabular-nums" }}>{clicks} clic{clicks > 1 ? "s" : ""} ce mois</span>;
+                })()}
               </div>
             </div>
             {isAdmin && (

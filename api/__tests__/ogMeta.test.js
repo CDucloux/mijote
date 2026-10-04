@@ -3,6 +3,9 @@ import {
   parseFirestoreDoc,
   buildShareMeta,
   injectMetaTags,
+  previewImageUrl,
+  isFetchableImageUrl,
+  PREVIEW_IMAGE,
   DEFAULT_TITLE,
   DEFAULT_DESCRIPTION,
 } from "../_ogMeta.js";
@@ -16,6 +19,7 @@ const doc = {
   fields: {
     name: { stringValue: "Guacamole" },
     cuisine: { stringValue: "Mexicaine" },
+    authorName: { stringValue: "Corentin" },
     recipe: {
       mapValue: {
         fields: {
@@ -29,13 +33,14 @@ const doc = {
 };
 
 describe("parseFirestoreDoc", () => {
-  it("extrait nom, cuisine, image et durées", () => {
+  it("extrait nom, cuisine, image, durées et auteur", () => {
     expect(parseFirestoreDoc(doc)).toEqual({
       name: "Guacamole",
       cuisine: "Mexicaine",
       image: IMG,
       prepTime: 15,
       cookTime: 0,
+      authorName: "Corentin",
     });
   });
 
@@ -72,13 +77,13 @@ describe("buildShareMeta", () => {
     expect(m.image).toBe(IMG);
     expect(m.url).toBe(opts.pageUrl);
     expect(m.description).toContain("Cuisine mexicaine");
-    expect(m.description).toContain("prêt en 15 min");
+    expect(m.description).toContain("prête en 15 min");
     expect(m.description).toContain("Cardamome");
   });
 
   it("additionne prep + cook pour le temps total", () => {
     const m = buildShareMeta({ name: "Boeuf", image: IMG, cuisine: null, prepTime: 20, cookTime: 100 }, opts);
-    expect(m.description).toContain("Prêt en 120 min");
+    expect(m.description).toContain("Prête en 120 min");
   });
 
   it("utilise l'image de repli quand la recette n'en a pas", () => {
@@ -91,6 +96,51 @@ describe("buildShareMeta", () => {
     expect(m.title).toBe(DEFAULT_TITLE);
     expect(m.description).toBe(DEFAULT_DESCRIPTION);
     expect(m.image).toBe(opts.fallbackImage);
+  });
+});
+
+describe("aperçu : vignette dédiée et auteur", () => {
+  const opts = {
+    pageUrl: "https://site/discover/uid__guac",
+    fallbackImage: "https://site/pwa-512.png",
+    previewImage: previewImageUrl("https://site", "uid__r1.55"),
+  };
+
+  it("parseFirestoreDoc lit l'auteur dénormalisé à la racine", () => {
+    expect(parseFirestoreDoc(doc)?.authorName).toBe("Corentin");
+  });
+
+  it("pointe l'aperçu vers la vignette 1200×630 et en déclare les dimensions", () => {
+    const m = buildShareMeta({ name: "Guacamole", image: IMG, cuisine: null, prepTime: null, cookTime: null }, opts);
+    expect(m.image).toBe("https://site/api/og-image?id=uid__r1.55");
+    expect(m.imageSize).toEqual(PREVIEW_IMAGE);
+  });
+
+  it("garde le logo de repli, sans dimensions, quand la recette n'a pas de photo", () => {
+    const m = buildShareMeta({ name: "Pain", image: null, cuisine: null, prepTime: null, cookTime: null }, opts);
+    expect(m.image).toBe(opts.fallbackImage);
+    expect(m.imageSize).toBeNull();
+  });
+
+  it("ouvre la description sur l'auteur", () => {
+    const m = buildShareMeta({ name: "Guacamole", image: IMG, cuisine: "Mexicaine", prepTime: 15, cookTime: 0, authorName: "Corentin" }, opts);
+    expect(m.description).toBe("Une recette de Corentin · cuisine mexicaine · prête en 15 min · à découvrir sur Cardamome.");
+  });
+
+  it("encode l'id dans l'URL de la vignette", () => {
+    expect(previewImageUrl("https://site", "a b/c")).toBe("https://site/api/og-image?id=a%20b%2Fc");
+  });
+});
+
+describe("isFetchableImageUrl", () => {
+  it("accepte uniquement les URL http(s) absolues", () => {
+    expect(isFetchableImageUrl(IMG)).toBe(true);
+    expect(isFetchableImageUrl("http://blog.fr/plat.jpg")).toBe(true);
+    expect(isFetchableImageUrl("data:image/png;base64,AAAA")).toBe(false);
+    expect(isFetchableImageUrl("file:///etc/passwd")).toBe(false);
+    expect(isFetchableImageUrl("/images/plat.jpg")).toBe(false);
+    expect(isFetchableImageUrl("")).toBe(false);
+    expect(isFetchableImageUrl(null)).toBe(false);
   });
 });
 
@@ -132,6 +182,13 @@ describe("injectMetaTags", () => {
     expect(out).not.toContain("og:image:width");
     expect(out).not.toContain("og:image:height");
     expect(out).not.toContain("og:image:type");
+  });
+
+  it("remplace les dimensions du logo par celles de la vignette quand elles sont fournies", () => {
+    const out = injectMetaTags(baseHtml, { ...meta, imageSize: PREVIEW_IMAGE });
+    expect(out).toContain(`<meta property="og:image:width" content="1200" />`);
+    expect(out).toContain(`<meta property="og:image:height" content="630" />`);
+    expect(out).toContain(`<meta property="og:image:type" content="image/jpeg" />`);
   });
 
   it("échappe les guillemets et esperluettes dans les valeurs", () => {

@@ -16,6 +16,7 @@ import { categoryLabel, categoryEmoji } from "@/constants/recipeCategories.js";
 import { cuisineEmoji, normalizeCuisine } from "@/constants/cuisines.js";
 import { DIFFICULTY_LABEL, computeDifficulty } from "@/lib/recipes/difficulty.js";
 import { fmtQtyUnit } from "@/lib/format.js";
+import { outboundSourceHref, sourceHost } from "@/lib/sources/outboundLink.js";
 import { Capacitor } from "@capacitor/core";
 import { Printer } from "@bcyesil/capacitor-plugin-printer";
 import type { IngredientLine, Step } from "@/lib/types.js";
@@ -91,11 +92,10 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
 
   // Lien source : badge en bas à gauche DANS l'image (domaine affiché, URL
   // complète cliquable). Repli dans le pied de page en l'absence d'image.
-  const sourceUrl = recipe.source ? (recipe.source.startsWith("http") ? recipe.source : "https://" + recipe.source) : "";
-  const sourceText = recipe.source ? recipe.source.replace(/^https?:\/\//, "").replace(/\/+$/, "") : "";
-  const sourceDomain = sourceText.split("/")[0];
+  const sourceUrl = outboundSourceHref(recipe.source) || "";
+  const sourceDomain = sourceHost(recipe.source);
   const linkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>`;
-  const heroSource = recipe.source ? `<a class="hero-source" href="${sourceUrl}">${linkSvg}<span class="hs-txt">${sourceDomain}</span></a>` : "";
+  const heroSource = recipe.source ? `<a class="hero-source"${sourceUrl ? ` href="${sourceUrl}"` : ""}>${linkSvg}<span class="hs-txt">${sourceDomain}</span></a>` : "";
   const heroBadges = [
     vegan ? `<span class="hbadge hbadge-vegan">${leafSvg}<span class="hb-txt">Vegan</span></span>` : "",
     recipe.category ? `<span class="hbadge hbadge-dark"><span class="hb-emoji">${categoryEmoji(recipe.category)}</span><span class="hb-txt">${categoryLabel(recipe.category)}</span></span>` : "",

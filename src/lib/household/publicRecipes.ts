@@ -93,6 +93,31 @@ export function collectComponentDeps(recipe: PubRecipe | null | undefined, recip
   return [...ids].map(id => recipesById.get(id)).filter((r): r is PubRecipe => !!r);
 }
 
+/**
+ * Vrai si la recette déclare une source externe (blog, créatrice, livre). Son
+ * texte et ses photos appartiennent alors à quelqu'un d'autre : on ne la
+ * republie pas dans la communauté, par respect du droit d'auteur et du trafic des
+ * créatrices (l'import dans la bibliothèque privée, lui, reste permis).
+ *
+ * @param recipe - La recette à examiner.
+ * @returns `true` si `source` est renseignée.
+ */
+export function hasExternalSource(recipe: Pick<Recipe, "source"> | null | undefined): boolean {
+  return typeof recipe?.source === "string" && recipe.source.trim() !== "";
+}
+
+/**
+ * Recettes d'un bundle de publication (la recette et ses préparations de base)
+ * qui empêchent la publication parce qu'elles déclarent une source externe.
+ *
+ * @param recipe - La recette principale.
+ * @param components - Ses préparations de base (cf. {@link collectComponentDeps}).
+ * @returns Les recettes bloquantes (vide = publication possible).
+ */
+export function publishBlockers<T extends Pick<Recipe, "source">>(recipe: T, components: readonly T[]): T[] {
+  return [recipe, ...components].filter(hasExternalSource);
+}
+
 /** Catégories d'ingrédients couvertes par la recette ET ses composants (mono-niveau). */
 function collectCategories(recipe: PubRecipe | null | undefined, ingredientDB: PubDbItem[], recipesById: Map<string, PubRecipe> | undefined): Set<string> {
   const byId = new Map((ingredientDB || []).map(i => [i.id, i]));

@@ -1,4 +1,6 @@
 import type { Recipe } from "@/lib/types.js";
+import { publishBlockers } from "@/lib/household/publicRecipes.js";
+import { sourceHost } from "@/lib/sources/outboundLink.js";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
@@ -7,14 +9,20 @@ interface PublishSheetProps {
   componentDeps: Recipe[];
   onClose: () => void;
   onPublish?: (recipe: Recipe) => void;
+  /** Admin : peut publier une recette sourcée (accord de la créatrice). */
+  isAdmin?: boolean;
 }
 
 /**
  * Feuille de confirmation de publication d'une recette vers la communauté Cardamome.
- * Rappelle le droit d'auteur si la recette a une source externe et liste les
- * préparations de base publiées avec elle. La publication réelle passe par `onPublish`.
+ * Une recette (ou une base) importée d'une source externe ne se publie pas : la
+ * feuille l'explique et ne propose que de la garder privée (seul l'admin passe, pour
+ * les partenariats avec accord). Sinon, liste les préparations de base publiées avec
+ * elle. La publication réelle passe par `onPublish`.
  */
-export function PublishSheet({ recipe, componentDeps, onClose, onPublish }: PublishSheetProps) {
+export function PublishSheet({ recipe, componentDeps, onClose, onPublish, isAdmin = false }: PublishSheetProps) {
+  const blockers = publishBlockers(recipe, componentDeps);
+  if (blockers.length && !isAdmin) return <BlockedPublishSheet recipe={recipe} blockers={blockers} onClose={onClose} />;
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (<>
@@ -28,10 +36,10 @@ export function PublishSheet({ recipe, componentDeps, onClose, onPublish }: Publ
             <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>Communauté Cardamome</p>
           </div>
         </div>
-        <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: recipe.source ? 16 : 12, lineHeight: 1.5 }}>
+        <p style={{ color: "var(--text2)", fontSize: 14, marginBottom: blockers.length ? 16 : 12, lineHeight: 1.5 }}>
           Elle rejoindra la communauté Cardamome : chacun pourra la découvrir et l'ajouter à ses recettes. Tu en restes l'auteur·e et peux la retirer à tout moment.
         </p>
-        {recipe.source && (
+        {blockers.length > 0 && (
           <div style={{ borderRadius: 16, background: "rgba(224,146,10,0.08)", border: "1px solid rgba(224,146,10,0.22)", padding: 16, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
               <span style={{ width: 30, height: 30, borderRadius: 10, flexShrink: 0, background: "rgba(224,146,10,0.16)", display: "grid", placeItems: "center" }}>
@@ -40,7 +48,7 @@ export function PublishSheet({ recipe, componentDeps, onClose, onPublish }: Publ
               <span style={{ fontSize: 13.5, fontWeight: 650, color: "var(--text)" }}>Attention au droit d'auteur</span>
             </div>
             <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5 }}>
-              Cette recette provient d'une source externe. Ne republie que ce dont tu as le droit : reformule les étapes avec tes propres mots et n'utilise pas de textes ou de photos protégés dont tu n'es pas l'auteur·e.
+              Recette sourcée : à ne publier qu'avec l'accord écrit de sa créatrice.
             </div>
           </div>
         )}
@@ -68,6 +76,40 @@ export function PublishSheet({ recipe, componentDeps, onClose, onPublish }: Publ
           <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => close(() => { onClose(); onPublish?.(recipe); })}>Publier</button>
         </div>
+      </>)}
+    </SwipeableSheet>
+  );
+}
+
+/**
+ * Variante bloquée : la recette vient d'une créatrice ou d'un livre. Explique
+ * pourquoi elle reste privée (sans ton d'alerte : rien n'est perdu) et nomme la
+ * base fautive quand ce n'est pas la recette elle-même.
+ */
+function BlockedPublishSheet({ recipe, blockers, onClose }: { recipe: Recipe; blockers: Recipe[]; onClose: () => void }) {
+  const self = blockers.find(b => b.id === recipe.id);
+  const origin = sourceHost((self ?? blockers[0]).source);
+  return (
+    <SwipeableSheet onClose={onClose}>
+      {(close) => (<>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <div style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0, background: "var(--surface2)", display: "grid", placeItems: "center" }}>
+            <Icon name="lock" size={20} color="var(--text2)" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Cette recette reste privée</h3>
+            <p style={{ fontSize: 12.5, color: "var(--text3)", margin: 0 }}>D'après {origin}</p>
+          </div>
+        </div>
+        <p style={{ color: "var(--text2)", fontSize: 14, lineHeight: 1.55, margin: "0 0 10px" }}>
+          {self
+            ? <>Son texte et ses photos appartiennent à {origin}. On ne la republie pas dans la communauté : c'est sa créatrice qui la fait vivre.</>
+            : <>Elle utilise {blockers.length > 1 ? "des préparations de base importées" : <>la base « {blockers[0].name} », importée</>} depuis {origin}. Leur texte et leurs photos appartiennent à leur créatrice : on ne les republie pas.</>}
+        </p>
+        <p style={{ color: "var(--text3)", fontSize: 13, lineHeight: 1.5, margin: "0 0 20px" }}>
+          Rien ne change pour toi : elle reste dans ta bibliothèque, à cuisiner et partager avec ton foyer autant que tu veux.
+        </p>
+        <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => close()}>Compris</button>
       </>)}
     </SwipeableSheet>
   );

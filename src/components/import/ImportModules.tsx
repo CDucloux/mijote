@@ -5,6 +5,8 @@ import type { IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { PlusBadge } from "../badges/PlusBadge.jsx";
 import { monogramOf, tintOf, type RecommendedSource } from "@/lib/sources/recommendedSources.js";
+import { outboundSourceHref } from "@/lib/sources/outboundLink.js";
+import { recordSourceClick } from "@/lib/firebase/sourceClicks.js";
 import { CREDIT_COST, type ImportKind, type CreditState } from "@/lib/aiQuota.js";
 import { GIFT_OFFER } from "@/lib/onboarding/giftRecipe.js";
 
@@ -161,7 +163,13 @@ const SHELF_PREVIEW = 4;
 export function SourcesShelf({ sources, layout = "shelf" }: { sources: RecommendedSource[]; layout?: "shelf" | "side" }) {
   const [expanded, setExpanded] = useState(false);
   if (!sources.length) return null;
-  const openSource = (url: string) => { if (url) window.open(url, "_blank", "noopener"); };
+  // Lien marqué ref=cardamome + clic compté : le trafic renvoyé aux créatrices devient mesurable.
+  const openSource = (url: string) => {
+    const href = outboundSourceHref(url);
+    if (!href) return;
+    void recordSourceClick(url);
+    window.open(href, "_blank", "noopener");
+  };
   const shown = expanded ? sources : sources.slice(0, SHELF_PREVIEW);
   const rest = sources.length - shown.length;
   const sub = "Des créatrices et créateurs que nous apprécions pour leurs recettes soignées, accessibles et pleines de goût.";

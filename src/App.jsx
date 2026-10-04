@@ -300,7 +300,7 @@ function AppInner({ user, isDark, toggleTheme }) {
 
   // Publier / dépublier / cloner des recettes publiques (communauté), voir usePublicRecipes.
   const { publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic } =
-    usePublicRecipes({ user, displayName: preferences?.displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate, logActivity });
+    usePublicRecipes({ user, displayName: preferences?.displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate, logActivity, isAdmin });
 
   // Snapshot des slices partagés (espace courant) – utilisé pour semer un foyer
   // à sa création (copie de mes données vers le namespace du foyer).
@@ -576,7 +576,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Corps de la fiche recette, monté à la fois pendant l'affichage et pendant la
   // sortie animée (voir la branche `dismissing` plus bas), d'où sa factorisation.
   const detailBody = selectedRecipe && currentRecipe ? (
-    <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => dismissDetail(() => setSelectedRecipe(null))} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
+    <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute} onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })} onBack={() => dismissDetail(() => setSelectedRecipe(null))} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave} onUpdateRecipe={(updated) => setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))} onCooked={logCooked} notify={notify} onAddToShopping={addToShopping} stock={stock} lowStock={lowStock} onAddToMealPlan={addRecipeToMealPlan} onExportJSON={exportJSON} onExportPDF={exportPDF} onPublish={publishRecipe} onUnpublish={unpublishRecipe} isAdmin={isAdmin} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} collections={collections} onUpdateCollections={setCollections} onToggleCollection={toggleRecipeCollection} />
   ) : null;
 
   const mainScreen = isEditing ? (

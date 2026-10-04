@@ -1,5 +1,5 @@
 import type { Recipe } from "@/lib/types.js";
-import { Icon } from "../ui/Icon.jsx";
+import { SourceLink } from "./SourceLink.jsx";
 import { OfficialAvatar } from "../user/OfficialAvatar.jsx";
 import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 
@@ -16,9 +16,6 @@ interface RecipeAttributionProps {
  * pastille du lien « d'après {source} » vers la source web d'origine.
  */
 export function RecipeAttribution({ recipe, authorUid, authorName, authorPhoto }: RecipeAttributionProps) {
-  const source = recipe.source;
-  const sourceHref = source ? (source.startsWith("http") ? source : "https://" + source) : null;
-  const sourceHost = source && sourceHref ? (() => { try { return new URL(sourceHref).hostname.replace(/^www\./, ""); } catch { return source.replace(/^https?:\/\/(?:www\.)?/, "").split("/")[0]; } })() : "";
   const official = isOfficialAuthor(authorUid ?? "");
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
@@ -31,10 +28,7 @@ export function RecipeAttribution({ recipe, authorUid, authorName, authorPhoto }
         <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>{official ? "Par" : "Créé par :"} {authorName || "un mijoteur"}</span>
       </span>
       {recipe.source && (
-        <a href={sourceHref ?? undefined} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
-          d'après {sourceHost}
-          <Icon name="externalLink" size={10} color="rgba(255,255,255,0.7)" />
-        </a>
+        <SourceLink source={recipe.source} prefix="d'après" iconColor="rgba(255,255,255,0.7)" />
       )}
     </div>
   );
