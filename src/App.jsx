@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
 import { useNavigate, useLocation, useNavigationType, Navigate, Routes, Route } from "react-router-dom";
 
 import { signInWithGoogle } from "@/lib/firebase/auth.js";
@@ -6,8 +6,6 @@ import { subscribeHouseholdPointer } from "@/lib/firebase/households.js";
 import { fetchUserDirectory } from "@/lib/firebase/userDirectory.js";
 import { deletePublicRecipe, reportPublicRecipe } from "@/lib/firebase/community.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
-import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
-import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
 import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
@@ -21,8 +19,6 @@ import { useLS } from "./hooks/useLS.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useOverlayThemeColor } from "./hooks/useOverlayThemeColor.js";
 import { useStatusBarSync } from "./hooks/useStatusBarSync.js";
-import { getRuntimeContext } from "./lib/ui/runtimeContext.js";
-import { shouldAnimateDismiss, DETAIL_DISMISS_MS } from "./lib/ui/screenTransition.js";
 import { useAuthUser } from "./hooks/useAuthUser.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useNotifications } from "./hooks/useNotifications.js";
@@ -32,6 +28,11 @@ import { useMasterData } from "./hooks/useMasterData.js";
 import { useRecipeImport } from "./hooks/useRecipeImport.js";
 import { usePublicRecipes } from "./hooks/usePublicRecipes.js";
 import { useAccount } from "./hooks/useAccount.js";
+import { pageTitle } from "./lib/ui/pageTitle.js";
+import { AppToast } from "./components/layout/AppToast.jsx";
+import { useRecipeActions } from "./hooks/useRecipeActions.js";
+import { useDiscoverReturnAnchor } from "./hooks/useDiscoverReturnAnchor.js";
+import { useDetailDismiss } from "./hooks/useDetailDismiss.js";
 import { useRecipeCrud } from "./hooks/useRecipeCrud.js";
 import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { useSoftKeyboardOpen } from "./hooks/useSoftKeyboardOpen.js";
@@ -39,7 +40,6 @@ import { usePageZoom } from "./hooks/usePageZoom.js";
 import { useAndroidBackButton } from "./hooks/useAndroidBackButton.js";
 import { SwipeableSheet } from "./components/ui/SwipeableSheet.jsx";
 import { PullToRefresh } from "./components/ui/PullToRefresh.jsx";
-import { Icon } from "./components/ui/Icon.jsx";
 import { RecipeNotFound } from "./components/recipe/RecipeNotFound.jsx";
 import { OfflineModal } from "./components/modals/OfflineModal.jsx";
 import { HouseholdWelcome } from "./components/household/HouseholdWelcome.jsx";
@@ -327,24 +327,25 @@ function AppInner({ user, isDark, toggleTheme }) {
     if (justDeleted) navigate("/recipes", { replace: true });
   }, [justDeleted, navigate]);
 
+  // Carnets, planning, journal de cuisine, duplication (cf. useRecipeActions).
+  const { guardQuota, toggleRecipeCollection, addRecipeToMealPlan, logCooked, duplicateRecipe } = useRecipeActions({
+    recipes, setRecipes, setCollections, setMealPlan, setPreferences, isPlus, notify, navigate, logActivity,
+  });
+
   // Ouvre l'éditeur sur une recette vierge, éventuellement pré-nommée (ex. depuis
   // l'état « aucun résultat » : « Créer "X" » passe { name: recherche }). On ne lit
   // que `name` : certains appelants passent l'évènement click en argument.
   const startNewRecipe = useCallback((preset) => {
     // Quota du plan gratuit vérifié À L'OUVERTURE (évite de remplir le formulaire
     // pour rien) : au-delà de la limite → offre Cardamome+.
-    if (!canAddRecipes(recipes, isPlus, 1)) {
-      notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
-      navigate("/plan");
-      return;
-    }
+    if (!guardQuota()) return;
     const p = preset && typeof preset === "object" ? preset : {};
     const name = typeof p.name === "string" ? p.name : "";
     // Un preset peut pré-remplir des lignes d'ingrédients (ex. « Publier » depuis
     // l'ingrédient du moment ouvre une recette le contenant déjà).
     const ingredients = Array.isArray(p.ingredients) ? p.ingredients : [];
     openDraftEditor({ name, description: "", prepTime: 0, cookTime: 0, servings: 2, cuisine: "", ingredients, utensils: [], steps: [], collections: [], image: "" });
-  }, [recipes, isPlus, notify, navigate, openDraftEditor]);
+  }, [guardQuota, openDraftEditor]);
 
   // Requête semée dans « Découvrir » depuis ailleurs (ex. « chercher dans la
   // communauté » quand la bibliothèque privée ne renvoie rien, ou l'ingrédient du
@@ -353,64 +354,6 @@ function AppInner({ user, isDark, toggleTheme }) {
   const [discoverSeed, setDiscoverSeed] = useState("");
   const goDiscover = useCallback((q = "") => { setDiscoverSeed((q || "").trim()); navigate("/discover"); }, [navigate]);
   const searchCommunity = goDiscover;
-
-  // Bascule l'appartenance d'une recette à un carnet + recalcule les compteurs.
-  // Partagé par la fiche recette et le menu d'appui long de la liste.
-  const toggleRecipeCollection = useCallback((recipeId, colId) => {
-    setRecipes(prev => {
-      const updated = prev.map(r => {
-        if (r.id !== recipeId) return r;
-        const cols = r.collections || [];
-        const next = cols.includes(colId) ? cols.filter(c => c !== colId) : [...cols, colId];
-        return { ...r, collections: next };
-      });
-      setCollections(c => c.map(col => ({ ...col, count: updated.filter(r => (r.collections || []).includes(col.id)).length })));
-      return updated;
-    });
-  }, []);
-
-  // Ajoute une recette au planning (créneau explicite). Extrait pour être réutilisé
-  // par la fiche et le menu d'appui long (via l'intention « plan »).
-  const addRecipeToMealPlan = useCallback((r, date, portions, slot) => {
-    setMealPlan(prev => ({ ...prev, [date]: [...(prev[date] || []), { recipeId: r.id, portions: portions || 1, slot: slot || "midi", groupId: newGroupId(), role: roleForCategory(r.category) }] }));
-    notify("Ajouté au planning");
-    logActivity({ type: "mealplan.add", target: r.name });
-  }, [notify, logActivity]);
-
-  // Journal de cuisine : un plat mené jusqu'au bout du mode pas à pas est consigné
-  // au jour courant (dans les préférences, synchronisées perso). C'est CE journal,
-  // et non le planning, qui alimente la heatmap d'activité du profil.
-  const logCooked = useCallback((recipeId) => {
-    if (!recipeId) return;
-    const day = new Date().toISOString().slice(0, 10);
-    setPreferences(p => {
-      const base = { ...DEFAULT_PREFERENCES, ...(p || {}) };
-      const log = { ...(base.cookLog || {}) };
-      log[day] = [...(log[day] || []), recipeId].slice(-50); // borne raisonnable par jour
-      return { ...base, cookLog: log };
-    });
-    const cooked = recipes.find(r => r.id === recipeId);
-    if (cooked) logActivity({ type: "recipe.cooked", target: cooked.name, targetId: cooked.id });
-  }, [setPreferences, recipes, logActivity]);
-
-  // Duplique une recette : copie privée (pas de lien public), nom suffixé, en tête
-  // de liste ; recalcule les compteurs de carnets (la copie hérite des carnets).
-  const duplicateRecipe = useCallback((recipe) => {
-    if (!canAddRecipes(recipes, isPlus, 1)) {
-      notify(`Plan gratuit limité à ${FREE_RECIPE_LIMIT} recettes. Passe à Cardamome+ pour en créer plus.`, "warning");
-      navigate("/plan");
-      return;
-    }
-    const copy = { ...recipe, id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: `${recipe.name} (copie)`, createdAt: Date.now(), updatedAt: Date.now() };
-    delete copy.visibility; delete copy.publicId; delete copy.clonedFrom;
-    setRecipes(prev => {
-      const next = [copy, ...prev];
-      setCollections(c => c.map(col => ({ ...col, count: next.filter(r => (r.collections || []).includes(col.id)).length })));
-      return next;
-    });
-    notify("Recette dupliquée");
-    logActivity({ type: "recipe.add", target: copy.name });
-  }, [notify, recipes, isPlus, navigate, logActivity]);
 
   // Ouvre une recette en transmettant une intention consommée à l'arrivée par la
   // fiche (« plan » → modale planning, « share » → flux de partage/publication).
@@ -423,55 +366,20 @@ function AppInner({ user, isDark, toggleTheme }) {
   const recipeBeingEdited = editingRecipe ?? (editRoute && currentRecipe ? currentRecipe : null);
   const isEditing = recipeBeingEdited !== null;
 
-  // Titre de l'onglet navigateur : nom de la recette quand on en consulte/édite une,
-  // sinon l'onglet courant.
+  // Titre de l'onglet navigateur (cf. pageTitle).
   useEffect(() => {
-    const TAB_TITLES = { home: "Accueil", recipes: "Recettes", "meal-plan": "Planning", shopping: "Courses", stock: "Mon Stock", admin: "Console admin", profile: "Profil", legal: "Informations légales", guide: "Guide" };
-    const recipeName = recipeBeingEdited
-      ? (recipeBeingEdited.name?.trim() || "Nouvelle recette")
-      : (publicDocs?.pub?.recipe?.name)
-      || (selectedRecipe && currentRecipe ? currentRecipe.name : null);
-    // Fiche ingrédient (/admin/ingredients/{id}) : on affiche le nom de l'ingrédient.
     const ingFicheId = adminFiche ? decodeURIComponent(location.pathname.replace(/^\/admin\/ingredients\//, "")) : null;
-    const ingName = ingFicheId ? ingredientDB.find(d => d.id === ingFicheId)?.name : null;
-    // Écrans hors onglets (dérivés de l'URL) : leur propre titre plutôt que le repli « Accueil ».
-    const routeName = planRoute ? "Abonnement" : null;
-    document.title = `Cardamome | ${recipeName || ingName || routeName || TAB_TITLES[tab] || "Accueil"}`;
-  }, [tab, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB, planRoute]);
+    document.title = pageTitle({
+      tab, editing: isEditing, editedName: recipeBeingEdited?.name,
+      viewedName: publicDocs?.pub?.recipe?.name || (selectedRecipe && currentRecipe ? currentRecipe.name : null),
+      ingredientName: ingFicheId ? ingredientDB.find(d => d.id === ingFicheId)?.name : null,
+      routeName: planRoute ? "Abonnement" : null,
+    });
+  }, [tab, isEditing, recipeBeingEdited, publicDocs, selectedRecipe, currentRecipe, adminFiche, location.pathname, ingredientDB, planRoute]);
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
-  // ── Sortie animée de la fiche recette (ressenti « app native ») ───────────────
-  // Sur la coquille Capacitor mobile, revenir de la fiche vers la liste doit faire
-  // GLISSER la fiche vers la droite (dismiss), plutôt que de la retirer d'un coup.
-  // On garde la fiche montée le temps de l'animation : la route ne change qu'à la
-  // fin. `dismissing` bascule donc la classe du conteneur et diffère la navigation.
-  const runtimeCtx = useMemo(() => getRuntimeContext(), []);
-  const [dismissing, setDismissing] = useState(false);
-  const dismissNavRef = useRef(null);   // navigation à jouer en fin d'animation
-  const dismissTimerRef = useRef(null); // filet si `animationend` ne remonte pas
-  // Consomme la navigation différée UNE seule fois (l'`animationend` et le filet de
-  // sécurité peuvent tous deux se déclencher) et remet l'état à plat.
-  const finishDismiss = useCallback(() => {
-    const go = dismissNavRef.current;
-    if (!go) return;
-    dismissNavRef.current = null;
-    clearTimeout(dismissTimerRef.current);
-    setDismissing(false);
-    go();
-  }, []);
-  // Enrobe un retour depuis la fiche : si la sortie doit être animée, on arme
-  // l'animation et on navigue à sa fin ; sinon on navigue immédiatement. Appelable
-  // sans condition (la décision d'animer vit dans `shouldAnimateDismiss`).
-  const dismissDetail = useCallback((doNavigate) => {
-    if (dismissing) return; // sortie déjà en cours
-    const onDetail = !!selectedRecipe && !!currentRecipe && !isEditing;
-    const reducedMotion = typeof window !== "undefined"
-      && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (!shouldAnimateDismiss({ ctx: runtimeCtx, isDesktop, onDetail, reducedMotion })) { doNavigate(); return; }
-    dismissNavRef.current = doNavigate;
-    dismissTimerRef.current = setTimeout(finishDismiss, DETAIL_DISMISS_MS + 80);
-    setDismissing(true);
-  }, [dismissing, selectedRecipe, currentRecipe, isEditing, runtimeCtx, isDesktop, finishDismiss]);
+  // Sortie animée de la fiche recette (Capacitor mobile), cf. useDetailDismiss.
+  const { dismissing, dismissDetail, finishDismiss } = useDetailDismiss({ onDetail: !!selectedRecipe && !!currentRecipe && !isEditing, isDesktop });
 
   // Bouton retour Android (matériel / geste) : navigation interne plutôt que sortie
   // de l'app. En cours d'édition, on réutilise la garde d'abandon (comme la TabBar)
@@ -499,45 +407,14 @@ function AppInner({ user, isDark, toggleTheme }) {
     user, setUser, notify, setMealPlan, setShoppingLists, setStock, setLowStock, setRecipes, setCollections,
   });
 
-  // Retour d'une recette publique → on revient sur la carte cliquée dans
-  // « Découvrir » via son ancre (#discover-card-<pubId>). `scrollIntoView` est
-  // agnostique du conteneur qui défile ; on réessaie tant que la carte n'existe
-  // pas encore (le feed public se charge de façon asynchrone au remontage).
-  const lastPublicPubId = useRef(null);
-  const wasAtTabView = useRef(true);
-  const [scrollHold, setScrollHold] = useState(false); // masque l'onglet le temps de se caler
-  useEffect(() => { if (publicPubId) lastPublicPubId.current = publicPubId; }, [publicPubId]);
   // La console admin (/admin) est réservée aux admins ; tout autre utilisateur connecté
   // est renvoyé vers son profil, SAUF la fiche ingrédient, qui reste publique.
   useEffect(() => { if (tab === "admin" && user && !isAdmin && !adminFiche) navigate("/profile", { replace: true }); }, [tab, user, isAdmin, adminFiche, navigate]);
+  // Retour d'une recette publique : recale « Découvrir » sur la carte cliquée.
   const atTabView = !isEditing && !publicPubId
     && !(selectedRecipe && currentRecipe)
     && !(selectedRecipe && !currentRecipe && workspaceReady);
-  useLayoutEffect(() => {
-    const returning = atTabView && !wasAtTabView.current;
-    wasAtTabView.current = atTabView;
-    const anchor = lastPublicPubId.current;
-    if (!returning || !anchor) return;
-    lastPublicPubId.current = null;
-    // L'ancre (#discover-card-…) ne vit QUE dans le feed « Découvrir » de l'Accueil.
-    // Quitter une recette publique vers un AUTRE onglet (Recettes, Planning…) n'a
-    // rien à restaurer : on ne masque pas le rendu, sinon la recherche de l'ancre
-    // absente tient l'écran blanc jusqu'à l'échéance (~1,2 s).
-    if (tab !== "home") return;
-    setScrollHold(true); // rendu masqué avant peinture → pas de flash en haut
-    // Filet de sécurité : le feed est réhydraté depuis le cache, l'ancre apparaît
-    // donc quasi immédiatement. On borne court pour ne jamais rester blanc longtemps.
-    const deadline = Date.now() + 1200;
-    let raf;
-    const tryScroll = () => {
-      const el = document.getElementById(`discover-card-${anchor}`);
-      if (el) { el.scrollIntoView({ block: "center", behavior: "auto" }); setScrollHold(false); return; }
-      if (Date.now() < deadline) raf = requestAnimationFrame(tryScroll);
-      else setScrollHold(false);
-    };
-    tryScroll();
-    return () => cancelAnimationFrame(raf);
-  }, [atTabView, tab]);
+  const scrollHold = useDiscoverReturnAnchor({ publicPubId, atTabView, tab });
 
 
   // Onglet réellement affiché sous la fiche : l'onglet d'ORIGINE (planning, accueil…)
@@ -691,19 +568,7 @@ function AppInner({ user, isDark, toggleTheme }) {
           <div className="rotate-guard__title">Tourne ton téléphone</div>
           <div className="rotate-guard__hint">Cardamome est pensé pour le mode portrait. Remets ton écran à la verticale pour continuer.</div>
         </div>
-        {notification && (
-          <div style={{ position: "fixed", left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none",
-            ...(isDesktop
-              ? { top: 16 }
-              : { bottom: "calc(var(--tab-h) + env(safe-area-inset-bottom) + 12px)" }) }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, maxWidth: "calc(100vw - 32px)", background: notification.type === "error" ? "var(--red)" : notification.type === "warning" ? "#e8920a" : notification.type === "info" ? "#4a90d9" : "var(--ok)", color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation: `${notifLeaving ? (isDesktop ? "toastOut 0.24s ease-in both" : "toastDown 0.24s cubic-bezier(0.4,0,1,1) both") : (isDesktop ? "toastIn" : "toastUp") + " 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both"}` }}>
-              <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name={notification.type === "error" ? "close" : notification.type === "warning" ? "warning" : notification.type === "info" ? "forward" : "check"} size={12} color="#fff" />
-              </div>
-              {notification.msg}
-            </div>
-          </div>
-        )}
+        {notification && <AppToast notification={notification} leaving={notifLeaving} isDesktop={isDesktop} />}
         {isDesktop ? (
           <>
             {/* Les pages légales s'affichent en plein écran : la sidebar y est superflue. */}
