@@ -171,7 +171,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     setShareOpen(false);
   };
   const nativeShare = async () => {
-    try { if (navigator.share) await navigator.share({ title: recipe.name, text: shareText, url: publicUrl }); }
+    // Sans `text` : les messageries concatènent texte + lien et perdent l'aperçu.
+    try { if (navigator.share) await navigator.share({ title: recipe.name, url: publicUrl }); }
     catch { /* annulé par l'utilisateur */ }
     setShareOpen(false);
   };
