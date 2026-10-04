@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
@@ -127,6 +127,11 @@ function Carousel({ icon, iconNode, iconColor = "var(--accent)", title, extra, c
 }
 
 // ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
+// Recherche, filtres et position de défilement mémorisés entre deux visites :
+// ouvrir une fiche démonte la section. Niveau module (réinitialisé au rechargement
+// complet), même dispositif que RecipesPage.
+let discoverMemo = { text: "", filters: { ...DEFAULT_FILTERS }, activeCat: "tout", usePrefs: false, authorUid: null, top: 0 };
+
 export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic, onNewRecipe, initialSearch = "", onSeedConsumed }) {
   const { user, techniques = [] } = useAppShell();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
@@ -134,7 +139,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
 
-  const [text, setText] = useState("");
+  const [text, setText] = useState(discoverMemo.text);
   const searchRef = useRef(null);
   useEffect(() => {
     const seed = (initialSearch || "").trim();
@@ -143,11 +148,13 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     requestAnimationFrame(() => searchRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }));
     onSeedConsumed?.();
   }, [initialSearch, onSeedConsumed]);
-  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+  const [filters, setFilters] = useState(discoverMemo.filters);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [activeCat, setActiveCat] = useState("tout");
-  const [usePrefs, setUsePrefs] = useState(false);
-  const [authorUid, setAuthorUid] = useState(null);
+  const [activeCat, setActiveCat] = useState(discoverMemo.activeCat);
+  const [usePrefs, setUsePrefs] = useState(discoverMemo.usePrefs);
+  const [authorUid, setAuthorUid] = useState(discoverMemo.authorUid);
+  useEffect(() => { discoverMemo = { ...discoverMemo, text, filters, activeCat, usePrefs, authorUid }; }, [text, filters, activeCat, usePrefs, authorUid]);
+  const rememberScroll = useCallback((e) => { discoverMemo.top = e.currentTarget.scrollTop; }, []);
   const [spinning, setSpinning] = useState(false);
 
   // pubId des recettes déjà dans MA bibliothèque (clonées) ou publiées par moi.
@@ -309,7 +316,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       )}
 
       {/* Zone défilante : feed éditorial / grille */}
-      <ElasticScroll style={{ flex: 1, padding: "14px 20px var(--page-pad-b)" }}>
+      <ElasticScroll initialScrollTop={discoverMemo.top} onScroll={rememberScroll} style={{ flex: 1, padding: "14px 20px var(--page-pad-b)" }}>
         {(loading && !loadedOnce) || spinning ? (
           <DiscoverSkeleton />
         ) : error ? (

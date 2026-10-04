@@ -1,4 +1,4 @@
-import type { ReactNode, RefObject } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
@@ -38,6 +38,9 @@ interface RecipeHeroMobileProps {
  * voile, boutons overlay, titre/source/attribution et badges. Les refs d'animation sont
  * fournies par le hook parent et attachées ici ; le hook écrit directement dans le DOM.
  */
+// Pastille d'action sur le héros : 44 px, cible tactile confortable au pouce.
+const HERO_BTN: CSSProperties = { width: 44, height: 44, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" };
+
 export function RecipeHeroMobile({
   recipe, handleBack, publicMode, onEdit, onExportPDF, reportAvailable, adminDeleteAvailable, onOpenReport, onOpenAdminDelete, menuItems, attribution, badges,
   heroImgRef, shadeRef, ctrlLRef, ctrlRRef, titleRef, srcRef, attribRef, badgesRef,
@@ -52,28 +55,28 @@ export function RecipeHeroMobile({
       <div ref={shadeRef} style={{ position: "absolute", inset: 0, willChange: "opacity", background: "linear-gradient(to bottom,rgba(0,0,0,0.34) 0%,transparent 38%,rgba(0,0,0,0.74) 100%)" }} />
       {/* Boutons overlay */}
       <div ref={ctrlLRef} style={{ position: "absolute", top: "calc(16px + var(--safe-hero-top))", left: 16 }}>
-        <button onClick={handleBack} className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} color="#fff" /></button>
+        <button onClick={handleBack} className="ripple ripple-light" style={HERO_BTN}><Icon name="back" size={22} color="#fff" /></button>
       </div>
       {publicMode && (onExportPDF || reportAvailable || adminDeleteAvailable) && (
       <div ref={ctrlRRef} style={{ position: "absolute", top: "calc(16px + var(--safe-hero-top))", right: 16, display: "flex", gap: 8 }}>
         {onExportPDF && (
-          <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
+          <button onClick={() => onExportPDF(recipe)} title="Exporter en PDF" className="ripple ripple-light" style={HERO_BTN}><Icon name="pdf" size={19} color="#fff" /></button>
         )}
         {reportAvailable && (
-          <button onClick={onOpenReport} title="Signaler" className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="flag" size={16} color="#fff" /></button>
+          <button onClick={onOpenReport} title="Signaler" className="ripple ripple-light" style={HERO_BTN}><Icon name="flag" size={19} color="#ff6b6b" /></button>
         )}
         {adminDeleteAvailable && (
-          <button onClick={onOpenAdminDelete} title="Supprimer (admin)" className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="trash" size={16} color="#ff6b6b" /></button>
+          <button onClick={onOpenAdminDelete} title="Supprimer (admin)" className="ripple ripple-light" style={HERO_BTN}><Icon name="trash" size={19} color="#ff6b6b" /></button>
         )}
       </div>
       )}
       {!publicMode && (
       <div ref={ctrlRRef} style={{ position: "absolute", top: "calc(16px + var(--safe-hero-top))", right: 16, display: "flex", gap: 8 }}>
-        <button onClick={onEdit} className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="edit" size={16} color="#fff" /></button>
-        <button onClick={() => onExportPDF(recipe)} className="ripple ripple-light" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="pdf" size={16} color="#fff" /></button>
+        <button onClick={onEdit} className="ripple ripple-light" style={HERO_BTN}><Icon name="edit" size={19} color="#fff" /></button>
+        <button onClick={() => onExportPDF(recipe)} className="ripple ripple-light" style={HERO_BTN}><Icon name="pdf" size={19} color="#fff" /></button>
         <HeroMenu
           className="ripple ripple-light"
-          btnStyle={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
+          btnStyle={HERO_BTN}
           items={menuItems} />
       </div>
       )}

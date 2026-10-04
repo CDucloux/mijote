@@ -1,5 +1,5 @@
-import { useLayoutEffect } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import { useLayoutEffect, useRef } from "react";
+import type { CSSProperties, ReactNode, UIEventHandler } from "react";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../../hooks/useIsDesktop.js";
 
@@ -23,18 +23,25 @@ interface ElasticScrollProps {
   contentStyle?: CSSProperties;
   /** Quand sa valeur change, le conteneur repart en haut (scrollTop 0). */
   resetKey?: unknown;
+  /** Position restaurée au montage (retour sur la page), au lieu du haut. */
+  initialScrollTop?: number;
+  /** Écoute du défilement (ex. mémoriser la position entre deux visites). */
+  onScroll?: UIEventHandler<HTMLDivElement>;
   /** Le contenu défilant. */
   children?: ReactNode;
 }
 
-export function ElasticScroll({ max = 90, armWhenUnscrollable = true, className, style, contentStyle, resetKey, children }: ElasticScrollProps) {
+export function ElasticScroll({ max = 90, armWhenUnscrollable = true, className, style, contentStyle, resetKey, initialScrollTop = 0, onScroll, children }: ElasticScrollProps) {
   const isDesktop = useIsDesktop();
   const { scrollRef, contentRef } = useElasticScroll<HTMLDivElement>({ max, disabled: isDesktop, armWhenUnscrollable });
+  const mounted = useRef(false);
   useLayoutEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    if (scrollRef.current) scrollRef.current.scrollTop = mounted.current ? 0 : initialScrollTop;
+    mounted.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey, scrollRef]);
   return (
-    <div ref={scrollRef} className={className} style={{ overflowY: "auto", ...style }}>
+    <div ref={scrollRef} onScroll={onScroll} className={className} style={{ overflowY: "auto", ...style }}>
       <div ref={contentRef} style={{ minHeight: "100%", ...contentStyle }}>
         {children}
       </div>

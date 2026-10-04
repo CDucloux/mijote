@@ -1,5 +1,21 @@
 # Changelog – Cardamome
 
+## v4.59.15 – Cardamome · Retours fluides
+
+### Découvrir
+- **On revient là où on était** : rouvrir Découvrir après une fiche retrouve la recherche, les filtres, la catégorie et la position de défilement, comme dans Recettes.
+
+### Fiche recette
+- **Boutons du héros plus généreux sur mobile** : retour, PDF, signaler et supprimer passent à 44 px, une vraie cible pour le pouce.
+- **Signaler en rouge**, comme la suppression, pour lire d'emblée la gravité de l'action.
+- **Feuille de signalement épurée** : le bouton dit simplement « Signaler » et les motifs répondent au toucher par l'onde native.
+
+### Corrections
+- **Fin du flash au retour d'une fiche ingrédient** : revenir en arrière sur une fiche recette ne rejoue plus son animation d'entrée, qui laissait transparaître l'écran du dessous.
+
+### Sous le capot
+- **Shell allégé** : actions recette, sortie animée de la fiche, recalage de Découvrir, toast et titre d'onglet sortent d'`App.jsx` vers des hooks typés, un composant et une fonction pure testée.
+
 ## v4.59.14 – Cardamome · Gagnant-gagnant avec les créatrices
 
 ### Créatrices

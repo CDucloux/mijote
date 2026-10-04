@@ -39,7 +39,7 @@ export function ReportSheet({ reportReason, setReportReason, reportNote, setRepo
           {REPORT_REASONS.map(r => {
             const on = reportReason === r.id;
             return (
-              <button key={r.id} onClick={() => setReportReason(r.id)}
+              <button key={r.id} className="ripple" onClick={() => setReportReason(r.id)}
                 style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", borderRadius: 13, cursor: "pointer", textAlign: "left",
                   background: on ? "rgba(224,82,82,0.08)" : "var(--surface2)", border: `1px solid ${on ? "rgba(224,82,82,0.45)" : "var(--border)"}` }}>
                 <span style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", border: `2px solid ${on ? "var(--red)" : "var(--border)"}`, background: on ? "var(--red)" : "transparent" }}>
@@ -54,9 +54,9 @@ export function ReportSheet({ reportReason, setReportReason, reportNote, setRepo
           placeholder="Précisions (optionnel)…" className="field-input" style={{ resize: "none", marginBottom: 14 }} />
         <div style={{ display: "flex", gap: 10 }}>
           <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
-          <button className="btn btn-danger btn-pill" style={{ flex: 1.3 }} disabled={!reportReason}
+          <button className="btn btn-danger btn-pill" style={{ flex: 1 }} disabled={!reportReason}
             onClick={() => close(() => { onClose(); onReport?.(reportReason, reportNote.trim()); })}>
-            <Icon name="flag" size={14} /> Envoyer le signalement
+            <Icon name="flag" size={15} /> Signaler
           </button>
         </div>
       </>)}
