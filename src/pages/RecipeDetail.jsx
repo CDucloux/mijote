@@ -367,7 +367,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         </ConfirmDialog>
       )}
       {pendingPublish && (
-        <PublishSheet recipe={recipe} componentDeps={componentDeps} onClose={() => setPendingPublish(false)} onPublish={onPublish} />
+        <PublishSheet recipe={recipe} componentDeps={componentDeps} onClose={() => setPendingPublish(false)} onPublish={onPublish} isAdmin={isAdmin} />
       )}
       {shareOpen && (
         <ShareSheet recipe={recipe} publicUrl={publicUrl} shareText={shareText}

@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { publishPublicBundle, unpublishPublicDocs, fetchPublicDocsByIds } from "@/lib/firebase/community.js";
-import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle, type PubUser, type PubRecipe, type PubDbItem, type PublicDoc } from "@/lib/household/publicRecipes.js";
+import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle, publishBlockers, type PubUser, type PubRecipe, type PubDbItem, type PublicDoc } from "@/lib/household/publicRecipes.js";
 import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
@@ -25,6 +25,8 @@ export interface PublicRecipesDeps {
   notify: (msg: string, type?: string) => void;
   navigate: (path: string, opts?: { state?: unknown }) => void;
   logActivity: (input: ActivityInput) => void;
+  /** Admin : seul autorisé à publier une recette sourcée (accord de la créatrice). */
+  isAdmin?: boolean;
 }
 
 /**
@@ -34,7 +36,7 @@ export interface PublicRecipesDeps {
  * @param deps - État de l'app, `notify` et `navigate`.
  * @returns `{ publishRecipe, unpublishRecipe, cloneFromPublic, quickCloneFromPublic }`.
  */
-export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate, logActivity }: PublicRecipesDeps) {
+export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCollections, ingredientDB, isPlus, notify, navigate, logActivity, isAdmin = false }: PublicRecipesDeps) {
   // Quota du plan gratuit : cloner une recette publique compte pour 1 (les bases
   // sont des composants, hors quota). Bloque + renvoie vers l'offre si dépassé.
   const guardQuota = (): boolean => {
@@ -47,6 +49,12 @@ export function usePublicRecipes({ user, displayName, recipes, setRecipes, setCo
     if (!user) return;
     try {
       const recipesById = indexOf(recipes);
+      // Recette (ou base) importée d'une source externe : jamais republiée, par respect
+      // du droit d'auteur et du trafic des créatrices (miroir de firestore.rules).
+      if (!isAdmin && publishBlockers(recipe, collectComponentDeps(recipe, recipesById)).length) {
+        notify("Recette importée d'une source externe : elle reste privée.", "warning");
+        return;
+      }
       // Nom d'auteur = celui choisi dans l'app (préférences), pas le nom Google brut.
       const pubUser = { uid: user.uid, displayName: (displayName || "").trim() || user.displayName || "", photoURL: user.photoURL };
       const { docs } = buildPublishBundle(recipe, pubUser, { ingredientDB, recipesById });
