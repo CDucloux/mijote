@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, Profiler } from "react";
-import { useNavigate, useLocation, Navigate, Routes, Route } from "react-router-dom";
+import { useNavigate, useLocation, useNavigationType, Navigate, Routes, Route } from "react-router-dom";
 
 import { signInWithGoogle } from "@/lib/firebase/auth.js";
 import { subscribeHouseholdPointer } from "@/lib/firebase/households.js";
@@ -80,6 +80,9 @@ const NOOP = () => {};
 function AppInner({ user, isDark, toggleTheme }) {
   usePageZoom();
   const location = useLocation();
+  // Retour arrière (POP, ex. depuis une fiche ingrédient) : la fiche recette réapparaît
+  // en place, sans rejouer son entrée (sinon l'onglet dessous transparaît un instant).
+  const detailEnter = useNavigationType() === "POP" ? "" : "editor-enter";
   const navigate = useNavigate();
   const tab = tabForPath(location.pathname);
   // Fiche ingrédient (/admin/ingredients/{id}) : page PUBLIQUE (lisible par tous, en
@@ -604,7 +607,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     </div>
   ) : publicPubId ? (
     publicDocs ? (
-      <div key={publicDocs.pub.pubId} className={`editor-enter${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
+      <div key={publicDocs.pub.pubId} className={`${detailEnter}${isDesktop ? " desktop-content" : ""}`} style={{ flex: 1, overflow: isDesktop ? "hidden" : "auto", minHeight: 0 }}>
         <RecipeDetail
           recipe={publicDocs.pub.recipe}
           recipes={publicDocs.components}
@@ -642,7 +645,7 @@ function AppInner({ user, isDark, toggleTheme }) {
     <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", boxSizing: "border-box", paddingTop: isDesktop ? 0 : "var(--safe-hero-top)" }}>
       {tabContent}
       <div key={selectedRecipe}
-        className={dismissing ? "page-dismiss-right" : `editor-enter${isDesktop ? " desktop-content" : ""}`}
+        className={dismissing ? "page-dismiss-right" : `${detailEnter}${isDesktop ? " desktop-content" : ""}`}
         onAnimationEnd={dismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); } : undefined}
         style={{ position: "absolute", inset: 0, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, background: "var(--bg)", zIndex: 2 }}>
         {detailBody}
