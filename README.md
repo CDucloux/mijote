@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.59.13-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.59.14-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -67,7 +67,9 @@ toujours avec vous.
   **100 crédits intelligents** : 1 crédit par lien / texte / PDF, 2 par photo,
   avec un garde-fou journalier discret ; illimité pour l'administrateur). Les quatre modes vivent sur un écran unique à
   onglets, avec une sélection de **sources recommandées** (configurable en console
-  admin) sur l'import depuis un lien. Un **premier import offert** accueille les
+  admin) sur l'import depuis un lien. Les liens vers les créatrices portent
+  `ref=cardamome` et chaque clic est compté par site et par mois (bilan affiché en
+  console admin). Un **premier import offert** accueille les
   non-abonnés avec une recette découverte, pour goûter la fonctionnalité sans
   abonnement.
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
@@ -106,8 +108,9 @@ toujours avec vous.
 - 🧭 **Découvrir & partager** : recettes publiées par la communauté, avec un feed
   éditorial (favoris, tendances, bases, de saison, rapides, mosaïque par cuisine),
   des catégories défilantes et des **favoris** propres à chaque utilisateur ;
-  clonables en un geste ; publication depuis vos propres recettes. Le partage
-  d'une recette publique génère un lien à l'**aperçu riche** (photo + titre, rendu
+  clonables en un geste ; publication depuis vos propres recettes (une recette
+  importée d'une source externe reste privée, par respect de sa créatrice). Le partage
+  d'une recette publique génère un lien à l'**aperçu riche** (vignette 1200×630 légère + titre, rendus
   côté serveur pour WhatsApp / iMessage…), lisible même sans compte.
 - 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable
   (regroupable par catégorie via un interrupteur, quantités affichables en
