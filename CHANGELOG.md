@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.16 – Cardamome · Juste mesure
+
+### Fiche recette
+- **Boutons du héros ajustés sur mobile** : les pastilles d'action passent de 44 à 40 px (icônes resserrées d'autant), le bon équilibre entre confort au pouce et discrétion au-dessus de la photo.
+
 ## v4.59.15 – Cardamome · Retours fluides
 
 ### Découvrir
