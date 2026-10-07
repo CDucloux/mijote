@@ -6,9 +6,8 @@ import { MoveArrows } from "../ui/MoveArrows.jsx";
 import { IngredientMatchSheet } from "../ingredient/IngredientMatchSheet.jsx";
 import { CutSheet } from "../ingredient/CutSheet.jsx";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../../hooks/useDragReorder.js";
-import { FORME_LABEL } from "@/lib/recipes/decoupe.js";
+import { CUT_GUIDE, cutSizeLabel } from "@/lib/recipes/cutGuide.js";
 import { ingredientMatch, type MatchTone } from "@/lib/recipes/ingredientMatch.js";
-import { capitalize } from "../../lib/format.js";
 import type { IngredientLine, IngredientDbItem, Recipe, Cut } from "@/lib/types";
 
 // Registre visuel de la pastille de statut d'appariement (foreground + fond doux).
@@ -100,7 +99,9 @@ function DraggableIngredientBase({
   }
 
   // ── Ligne ingrédient brut ──
-  const img = ing.dbId ? (ingredientDB.find(d => d.id === ing.dbId)?.image ?? undefined) : undefined;
+  const dbItem = ing.dbId ? ingredientDB.find(d => d.id === ing.dbId) : undefined;
+  const img = dbItem?.image ?? undefined;
+  const cutSize = ing.cut?.forme ? cutSizeLabel(ing.cut.forme, ing.cut.calibre) : "";
   // Statut d'appariement condensé en UNE pastille (à droite, avant la corbeille) qui
   // ouvre le détail à la demande, plutôt qu'une rangée de pilules sous chaque ligne.
   const match = ingredientMatch(ing);
@@ -151,7 +152,7 @@ function DraggableIngredientBase({
             ? <button type="button" className="tap ripple" onClick={() => setShowCut(true)}
                 style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px 6px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.35)" }}>
                 <Icon name="knife" size={13} color="var(--accent)" />
-                {FORME_LABEL[ing.cut.forme]}{ing.cut.calibre ? ` · ${capitalize(ing.cut.calibre)}` : ""}
+                {CUT_GUIDE[ing.cut.forme].name}{cutSize ? ` · ${cutSize}` : ""}
               </button>
             : <button type="button" className="tap ripple" onClick={() => setShowCut(true)}
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 9px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: "transparent", color: "var(--text3)", border: "1px dashed var(--border)" }}>
@@ -160,7 +161,7 @@ function DraggableIngredientBase({
         </div>
       )}
       {showCut && (
-        <CutSheet name={ing.name} cut={ing.cut}
+        <CutSheet name={ing.name} category={dbItem?.category} cut={ing.cut}
           onChange={(cut: Cut | null) => onCutChange?.(ing.id, cut)} onClose={() => setShowCut(false)} />
       )}
     </div>
