@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.59.17 – Cardamome · Découpe guidée
+
+### Éditeur de recette
+- **Feuille de découpe qui guide au lieu d'énumérer** : les découpes usuelles de l'ingrédient s'affichent d'abord (dés, bâtonnets ou lamelles pour du lard ; émincé, ciselé ou haché pour un oignon), les quinze formes restent à portée derrière « Toutes les découpes », rangées par résultat : tranches, cubes, hachés et râpés, bâtons et fils, morceaux.
+- **Le jargon traduit** : chaque forme porte le nom de son résultat et sa version en langage courant (« Brunoise, très petits dés », « Bâtonnets, comme des frites »).
+- **Le résultat avant de couper** : sous la sélection, une phrase dit ce qu'on obtiendra sur la planche, et la taille se lit en repères concrets (« Moyen, 1 cm ») ; elle disparaît pour les formes dont la taille fait partie de la définition (brunoise, julienne…).
+- **Un pictogramme par famille**, dessiné au trait : tranches, cubes, éclats, bâtons, orange en quartiers.
+- **Pill de découpe plus parlante** sur la ligne d'ingrédient : « Dés · environ 2 cm » plutôt que « Tailler en dés · Gros ».
+
 ## v4.59.16 – Cardamome · Juste mesure
 
 ### Fiche recette
