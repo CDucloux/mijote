@@ -4,7 +4,8 @@
  * Deux points d'entrée `onCall`, tous deux réservés côté serveur (admin illimité,
  * abonné Cardamome+ avec quota, cf. {@link assertImportAllowed}), jamais en masquant
  * un simple bouton :
- * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 4.5) ;
+ * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 4.5), ou
+ *   depuis la description d'une vidéo YouTube quand l'URL en désigne une ;
  * - {@link importRecipeFromImages} : extraction depuis 1–2 photos de livre (Sonnet) ;
  * - {@link importRecipeFromText} : extraction depuis un texte collé (Haiku) ;
  * - {@link importRecipeFromPdf} : extraction depuis le texte d'un PDF, extrait
@@ -33,9 +34,13 @@ import {
 import { assertImportAllowed } from "../quota/access.js";
 import { assertHostAllowed, BlockedHostError } from "./urlGuard.js";
 import { readFreshImport, writeImportCache } from "./importCache.js";
+import { parseYoutubeVideoId, looksLikeRecipe, youtubeRecipeText } from "./youtube.js";
+import { fetchYoutubeSnippet } from "./youtubeApi.js";
 
 /** Clé API Anthropic (secret), l'extraction IA est refusée si elle est absente. */
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
+/** Clé API Google restreinte à YouTube Data v3 (lecture de la description des vidéos). */
+const YOUTUBE_API_KEY = defineSecret("YOUTUBE_API_KEY");
 /** E-mail de l'admin autorisé (le créateur), paramètre non secret. */
 const ADMIN_EMAIL = defineString("ADMIN_EMAIL");
 
@@ -413,6 +418,27 @@ function logRawModelJson(kind: string, raw: string): void {
 }
 
 /**
+ * Extrait une recette depuis la DESCRIPTION d'une vidéo YouTube, où beaucoup de
+ * créateurs écrivent ingrédients et étapes. Aucune analyse de la vidéo elle-même :
+ * le texte part dans le pipeline texte (Haiku), la miniature sert de photo du plat.
+ *
+ * @param videoId - Id de la vidéo.
+ * @param url - URL saisie, conservée comme source de la recette.
+ * @returns Le brouillon intermédiaire, image et source renseignées.
+ * @throws HttpsError `not-found` si la description ne contient pas de recette.
+ */
+async function extractFromYoutube(videoId: string, url: string, knownUtensils: string[], applianceInfos: ApplianceInfo[]): Promise<Intermediate> {
+  const snippet = await fetchYoutubeSnippet(videoId, YOUTUBE_API_KEY.value());
+  const text = youtubeRecipeText(snippet);
+  if (!looksLikeRecipe(text)) throw new HttpsError("not-found", "La recette n'est pas écrite dans la description de cette vidéo. Colle-la plutôt dans l'import Texte.");
+  const inter = await extractFromText(text, knownUtensils, applianceInfos, "depuis le titre et la description d'une vidéo YouTube (ignore le sponsor, les codes promo et le matériel recommandé)", "youtube");
+  inter.source = url;
+  inter.image = snippet.thumbnail;
+  for (const s of inter.steps) s.image = ""; // aucune image d'étape dans une description
+  return inter;
+}
+
+/**
  * Lit et borne la liste de noms d'ustensiles connus fournie par le client (base
  * master), elle sert à restreindre les propositions du modèle.
  *
@@ -441,16 +467,17 @@ function applianceInfosFrom(request: CallableRequest): ApplianceInfo[] {
  * Flux : garde d'accès + quota → récupération du HTML → texte → extraction Haiku →
  * `og:image` comme image principale, filtrage des ustensiles à la base master, et
  * images d'étape restreintes aux URLs réellement présentes dans la page
- * (anti-hallucination). Le brouillon est renvoyé, jamais enregistré directement.
+ * (anti-hallucination). Une URL YouTube suit {@link extractFromYoutube} à la place
+ * du HTML. Le brouillon est renvoyé, jamais enregistré directement.
  *
  * NB : réactiver `enforceAppCheck: true` (ici et sur {@link importRecipeFromImages})
  * une fois le front déployé avec la clé reCAPTCHA v3, sinon l'import serait rejeté.
  *
- * @returns `{ recipe, method: "llm" }`.
+ * @returns `{ recipe, method: "llm" | "youtube" }`.
  * @throws HttpsError selon l'échec (accès/quota, URL, page, extraction).
  */
 export const importRecipeFromUrl = onCall(
-  { secrets: [ANTHROPIC_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
+  { secrets: [ANTHROPIC_API_KEY, YOUTUBE_API_KEY], region: "europe-west1", timeoutSeconds: 60, memory: "512MiB" },
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Connexion requise.");
     const requestId = (request.data as { requestId?: unknown })?.requestId;
@@ -467,20 +494,25 @@ export const importRecipeFromUrl = onCall(
     const applianceInfos = applianceInfosFrom(request);
 
     try {
-      const html = await fetchHtml(url);
-      const ogImage = extractOgImage(html); // image principale du plat
-      const text = htmlToText(html);
-      if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
-      const inter = await extractWithLlm(text, url, knownUtensils, applianceInfos);
-      inter.image = ogImage;
+      const videoId = parseYoutubeVideoId(url);
+      let inter: Intermediate;
+      if (videoId) inter = await extractFromYoutube(videoId, url, knownUtensils, applianceInfos);
+      else {
+        const html = await fetchHtml(url);
+        const ogImage = extractOgImage(html); // image principale du plat
+        const text = htmlToText(html);
+        if (text.length < 200) throw new HttpsError("invalid-argument", "Page sans contenu exploitable (site protégé ou vide).");
+        inter = await extractWithLlm(text, url, knownUtensils, applianceInfos);
+        inter.image = ogImage;
+        // Anti-hallucination : on ne garde que des URLs présentes dans la page, et
+        // jamais l'image principale du plat.
+        const pageImages = imageUrlsInText(text);
+        for (const s of inter.steps) s.image = (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
+      }
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
-      // Anti-hallucination : on ne garde que des URLs présentes dans la page, et
-      // jamais l'image principale du plat.
-      const pageImages = imageUrlsInText(text);
-      for (const s of inter.steps) s.image = (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
       const recipe = assignIdsAndLink(inter);
-      if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
-      const result = { recipe, method: "llm" };
+      if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", videoId ? "Aucune recette détectée dans la description de cette vidéo." : "Aucune recette détectée sur cette page.");
+      const result = { recipe, method: videoId ? "youtube" : "llm" };
       await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
       return result;
     } catch (e) {
