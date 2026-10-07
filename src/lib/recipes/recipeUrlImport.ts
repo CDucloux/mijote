@@ -55,7 +55,7 @@ export function mapImportError(error: unknown): ImportError {
  * @param url - URL de la page recette.
  * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
  * @param appliances - Descripteurs d'appareils connus (réglages à déduire par étape).
- * @returns La charge utile serveur `{ recipe, method: "llm" | "youtube" }`.
+ * @returns La charge utile serveur `{ recipe, method: "jsonld" | "llm" }`.
  * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
  */
 export async function importRecipeFromUrl(url: string, knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {
