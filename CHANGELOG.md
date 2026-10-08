@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.59.20 – Cardamome · Le calcul à découvert
+
+### Fiche recette
+- **Difficulté expliquée comme un ticket** : la note en grand, puis chaque ligne qui la compose (le geste le plus exigeant, les points de charge de travail) et le total sous un filet pointillé. Une lecture directe, sans cartes empilées.
+- **Onde tactile** sur le badge de difficulté et sur les actions du menu (journal, publication, export, suppression en rouge).
+
+### Recettes et Découvrir
+- **Filtre Chef** : les chefs présents dans la liste, du plus représenté au moins représenté ; le critère s'enregistre dans un carnet intelligent comme les autres.
+- **Feuille de filtres plus tactile** : toute la rangée d'une section ouvre son contenu, avec l'onde au toucher.
+
 ## v4.59.19 – Cardamome · Signé du chef
 
 ### Recettes
