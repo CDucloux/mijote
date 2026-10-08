@@ -35,6 +35,7 @@ export interface PdfRecipe {
   category?: string;
   cuisine?: string;
   source?: string;
+  chef?: string;
   prepTime?: number;
   cookTime?: number;
   servings?: number;
@@ -63,6 +64,11 @@ const diffColorPdf = (lvl: number): string => (lvl <= 2 ? "#3f9a54" : lvl === 3 
 
 const NUTRI_COLORS_PDF: Record<string, string> = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
 const num = (v: number | string | undefined): number => parseFloat(String(v).replace(",", ".")) || 0;
+
+/** Échappe un texte libre avant insertion dans le HTML du document. */
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
+}
 
 /**
  * Construit le document HTML complet d'une recette pour l'export PDF (fonction pure).
@@ -95,6 +101,10 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   const sourceUrl = outboundSourceHref(recipe.source) || "";
   const sourceDomain = sourceHost(recipe.source);
   const linkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>`;
+  // Chef (toque) sous le titre : texte libre saisi par l'utilisateur, donc échappé.
+  const chef = escapeHtml((recipe.chef || "").trim());
+  const chefSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17.5h10v-4a4 4 0 0 0 .6-7.7 5.2 5.2 0 0 0-11.2 0A4 4 0 0 0 7 13.5Z"/><path d="M7 20.5h10"/></svg>`;
+  const chefLine = chef ? `<div class="chef-line">${chefSvg}<span>${chef}</span></div>` : "";
   const heroSource = recipe.source ? `<a class="hero-source"${sourceUrl ? ` href="${sourceUrl}"` : ""}>${linkSvg}<span class="hs-txt">${sourceDomain}</span></a>` : "";
   const heroBadges = [
     vegan ? `<span class="hbadge hbadge-vegan">${leafSvg}<span class="hb-txt">Vegan</span></span>` : "",
@@ -286,6 +296,8 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .hero-source .hs-txt { font-size: 10.5px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .header { padding-bottom: 4px; margin-bottom: 12px; }
     h1 { font-family: 'Source Serif 4', Georgia, serif; font-size: 38px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; color: var(--text); }
+    .chef-line { display: flex; align-items: center; gap: 7px; margin: -6px 0 16px; font-size: 14px; font-weight: 600; color: var(--text2); }
+    .chef-line svg { width: 17px; height: 17px; color: var(--accent); flex-shrink: 0; }
     .title-rule { width: 48px; height: 4px; border-radius: 4px; background: var(--accent); margin-bottom: 18px; }
     .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
     .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
@@ -367,6 +379,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
       : ""}
   <div class="header">
     <h1>${recipe.name}</h1>
+    ${chefLine}
     <div class="title-rule"></div>
     ${!recipe.image && tagChips ? `<div class="tags">${tagChips}</div>` : ""}
     <div class="meta">

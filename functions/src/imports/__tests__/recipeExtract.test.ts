@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
-  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut, parseJsonLoose,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut, sanitizeChef, parseJsonLoose,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -435,5 +435,41 @@ describe("parseJsonLoose", () => {
   it("lève sur une chaîne vide ou sans JSON", () => {
     expect(() => parseJsonLoose("")).toThrow();
     expect(() => parseJsonLoose("aucun json ici")).toThrow();
+  });
+});
+
+describe("sanitizeChef", () => {
+  it("garde le nom de la personne, espaces normalisés", () => {
+    expect(sanitizeChef("Adam Byatt")).toBe("Adam Byatt");
+    expect(sanitizeChef("  Anne-Sophie   Pic ")).toBe("Anne-Sophie Pic");
+  });
+  it("retire les titres et formules d'attribution", () => {
+    expect(sanitizeChef("Chef Adam Byatt")).toBe("Adam Byatt");
+    expect(sanitizeChef("Cheffe Hélène Darroze")).toBe("Hélène Darroze");
+    expect(sanitizeChef("par Cyril Lignac")).toBe("Cyril Lignac");
+    expect(sanitizeChef("Recette de Philippe Etchebest")).toBe("Philippe Etchebest");
+    expect(sanitizeChef("by Ottolenghi")).toBe("Ottolenghi");
+  });
+  it("écarte un site ou une URL plutôt qu'une personne", () => {
+    expect(sanitizeChef("marmiton.org")).toBe("");
+    expect(sanitizeChef("https://www.bbcgoodfood.com")).toBe("");
+  });
+  it("rejette les valeurs vides ou mal typées et borne la longueur", () => {
+    expect(sanitizeChef("")).toBe("");
+    expect(sanitizeChef("Chef")).toBe("Chef");
+    expect(sanitizeChef(null)).toBe("");
+    expect(sanitizeChef(42)).toBe("");
+    expect(sanitizeChef({ name: "Adam" })).toBe("");
+    expect(sanitizeChef("x".repeat(300))).toHaveLength(120);
+  });
+});
+
+describe("assignIdsAndLink : chef", () => {
+  it("transporte le chef quand il est connu", () => {
+    expect(assignIdsAndLink({ name: "Bœuf bourguignon", chef: "Chef Adam Byatt" }).chef).toBe("Adam Byatt");
+  });
+  it("n'ajoute pas de champ chef quand il est absent ou vide", () => {
+    expect("chef" in assignIdsAndLink({ name: "Soupe" })).toBe(false);
+    expect("chef" in assignIdsAndLink({ name: "Soupe", chef: "  " })).toBe(false);
   });
 });

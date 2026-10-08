@@ -160,7 +160,7 @@ export function deriveDietTags(recipe: PubRecipe, ingredientDB: PubDbItem[], rec
 }
 
 /**
- * Construit les jetons de recherche (nom, cuisine, auteur, ingrédients),
+ * Construit les jetons de recherche (nom, cuisine, auteur, chef, ingrédients),
  * normalisés et dédoublonnés (mots de 2+ lettres).
  *
  * @param recipe - La recette source.
@@ -173,6 +173,7 @@ export function buildKeywords(recipe: PubRecipe | null | undefined, authorName: 
   push(recipe?.name);
   push(recipe?.cuisine);
   push(authorName);
+  push(recipe?.chef);
   (recipe?.tags || []).forEach(push);
   (recipe?.ingredients || []).forEach(l => push(l.name));
   return [...out];

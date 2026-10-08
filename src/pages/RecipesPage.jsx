@@ -9,7 +9,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/recipe/RecipeFilterSheet.jsx";
 import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "@/lib/recipes/recipeSort.js";
-import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters } from "@/lib/recipes/recipeFilters.js";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters, matchesRecipeSearch } from "@/lib/recipes/recipeFilters.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
@@ -198,14 +198,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   const carnetMatch = useCallback((col, r) => {
     if (isSmart(col)) {
       if (!matchesFilters(r, { ...DEFAULT_FILTERS, ...col.filters }, matchCtx)) return false;
-      const q = (col.search || "").trim();
-      if (q) {
-        const nq = normalizeStr(q);
-        const hit = normalizeStr(r.name).includes(nq) || (r.cuisine && normalizeStr(r.cuisine).includes(nq))
-          || r.ingredients?.some(i => normalizeStr(i.name).includes(nq));
-        if (!hit) return false;
-      }
-      return true;
+      return matchesRecipeSearch(r, col.search);
     }
     return (r.collections || []).includes(col.id);
   }, [matchCtx]);
@@ -230,13 +223,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   const filtered = useMemo(() => recipes
     .filter(r => {
       // Plats et bases cohabitent dans la même grille ; le badge en coin les distingue.
-      if (search) {
-        const q = normalizeStr(search);
-        const inName = normalizeStr(r.name).includes(q);
-        const inCuisine = r.cuisine && normalizeStr(r.cuisine).includes(q);
-        const inIngredients = r.ingredients?.some(i => normalizeStr(i.name).includes(q));
-        if (!inName && !inCuisine && !inIngredients) return false;
-      }
+      if (!matchesRecipeSearch(r, search)) return false;
       if (filterCol && !r.collections?.includes(filterCol)) return false;
       return matchesFilters(r, filters, { resolver, techniques, techIndex, recipes });
     })
@@ -312,7 +299,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
         </div>
         <div style={{ position: "relative", marginBottom: 14 }}>
           <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}><Icon name="search" size={17} color="var(--text3)" /></span>
-          <input className="field-input recipe-search" placeholder="Rechercher un plat, une cuisine, un ingrédient…" value={search} onChange={e => setSearch(e.target.value)}
+          <input className="field-input recipe-search" placeholder="Rechercher un plat, un chef, un ingrédient…" value={search} onChange={e => setSearch(e.target.value)}
             enterKeyHint="search"
             onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }}
             style={{ paddingLeft: 44, paddingRight: search ? 40 : 16 }} />

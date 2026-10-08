@@ -78,6 +78,11 @@ describe("buildKeywords", () => {
     const kw = buildKeywords(dish, "Chef Test");
     expect(kw).toEqual(expect.arrayContaining(["pates", "tomate", "italienne", "chef", "test"]));
   });
+  it("indexe le chef de la recette, même sans auteur", () => {
+    const kw = buildKeywords({ ...dish, chef: "Adam Byatt" }, "");
+    expect(kw).toEqual(expect.arrayContaining(["adam", "byatt"]));
+    expect(buildKeywords({ name: "Soupe", chef: "  " }, "")).toEqual(["soupe"]);
+  });
 });
 
 describe("toPublicRecipe / buildPublishBundle", () => {

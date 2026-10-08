@@ -101,3 +101,20 @@ describe("choosePrintStrategy", () => {
     expect(choosePrintStrategy(false)).toBe("popup");
   });
 });
+
+describe("buildRecipePdfHtml – chef", () => {
+  it("affiche le chef sous le titre", () => {
+    const html = buildRecipePdfHtml({ name: "Bœuf bourguignon", chef: "Adam Byatt", ingredients: [] }, { ingredientDB: DB });
+    expect(html).toContain('<div class="chef-line">');
+    expect(html).toContain("<span>Adam Byatt</span>");
+  });
+  it("n'affiche rien sans chef ou avec un chef vide", () => {
+    expect(buildRecipePdfHtml({ name: "Soupe", ingredients: [] }, { ingredientDB: DB })).not.toContain('<div class="chef-line">');
+    expect(buildRecipePdfHtml({ name: "Soupe", chef: "   ", ingredients: [] }, { ingredientDB: DB })).not.toContain('<div class="chef-line">');
+  });
+  it("échappe le HTML saisi dans le champ chef", () => {
+    const html = buildRecipePdfHtml({ name: "Soupe", chef: "<img src=x onerror=alert(1)> & co", ingredients: [] }, { ingredientDB: DB });
+    expect(html).toContain("&lt;img src=x onerror=alert(1)&gt; &amp; co");
+    expect(html).not.toContain("<img src=x");
+  });
+});
