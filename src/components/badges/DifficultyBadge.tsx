@@ -16,7 +16,7 @@ export function DifficultyBadge({ score, onImage = false, title, onClick }: Diff
   const empty = onImage ? "rgba(255,255,255,0.28)" : "var(--surface3)";
   const Tag: "button" | "span" = onClick ? "button" : "span";
   return (
-    <Tag className="tag" onClick={onClick} title={title || `Difficulté ${score}/5 · ${DIFFICULTY_LABEL[score]}`}
+    <Tag className={onClick ? `tag ripple${onImage ? " ripple-light" : ""}` : "tag"} onClick={onClick} title={title || `Difficulté ${score}/5 · ${DIFFICULTY_LABEL[score]}`}
       style={{
         display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 600,
         ...(onClick ? { cursor: "pointer" } : {}),

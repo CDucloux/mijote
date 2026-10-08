@@ -1,34 +1,40 @@
 import type { ReactNode } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { capitalize } from "../../lib/format.js";
 import { DIFFICULTY_LABEL, difficultyColor, type DifficultyExplain } from "@/lib/recipes/difficulty.js";
-import { Row, Col, IconChip } from "../ui/primitives.jsx";
 
 // ─── EXPLICATION DE LA DIFFICULTÉ ─────────────────────────────────────────────
-// Rend transparent le calcul du badge : d'où vient le niveau (geste dominant +
-// modificateurs). `data` provient de explainDifficulty().
+// Rend le calcul du badge lisible comme un ticket de cuisine : la note en grand,
+// puis les lignes qui la composent (geste dominant, points de charge) et le total
+// sous un filet pointillé. Pas de cartes : l'alignement et la typo font la structure.
+// `data` provient de explainDifficulty().
 
-// Teintes douces dérivées de la couleur de difficulté (vert / ambre / rouge).
-function tints(color: string) {
-  if (color === "var(--green)") return { soft: "rgba(var(--green-rgb),0.13)", line: "rgba(var(--green-rgb),0.32)" };
-  if (color === "var(--red)") return { soft: "rgba(224,82,82,0.13)", line: "rgba(224,82,82,0.32)" };
-  return { soft: "rgba(232,146,10,0.13)", line: "rgba(232,146,10,0.32)" };
-}
-
-// Jauge segmentée pleine largeur (5 segments).
-function Gauge({ level, color, height = 7 }: { level: number; color: string; height?: number }) {
+// Jauge fine en 5 segments : traduit la note, ne décore pas.
+function Gauge({ level, color }: { level: number; color: string }) {
   return (
-    <div style={{ display: "flex", gap: 5 }}>
+    <div style={{ display: "flex", gap: 4 }} aria-hidden="true">
       {[1, 2, 3, 4, 5].map(i => (
-        <span key={i} style={{ flex: 1, height, borderRadius: 999, background: i <= level ? color : "var(--surface3)", transition: "background 0.2s ease" }} />
+        <span key={i} style={{ flex: 1, height: 4, borderRadius: 999, background: i <= level ? color : "var(--surface3)" }} />
       ))}
     </div>
   );
 }
 
-// Libellé de section (petite étiquette accent).
-function SectionLabel({ children }: { children: ReactNode }) {
-  return <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 2px 11px" }}>{children}</div>;
+// Ligne du ticket : intitulé + précision à gauche, valeur alignée à droite.
+function LedgerRow({ title, hint, value, muted = false }: { title: ReactNode; hint?: ReactNode; value: ReactNode; muted?: boolean }) {
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 16, padding: "11px 0" }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: muted ? "var(--text3)" : "var(--text)", lineHeight: 1.35 }}>{title}</div>
+        {hint && <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2, lineHeight: 1.4 }}>{hint}</div>}
+      </div>
+      <div style={{ flexShrink: 0, fontSize: 15, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: muted ? "var(--text3)" : "var(--text)" }}>{value}</div>
+    </div>
+  );
 }
+
+const HEADING = { fontSize: 13, fontWeight: 650, color: "var(--text2)", margin: "0 0 4px" } as const;
 
 interface DifficultyModalProps {
   data?: DifficultyExplain | null;
@@ -38,88 +44,67 @@ interface DifficultyModalProps {
 export function DifficultyModal({ data, onClose }: DifficultyModalProps) {
   if (!data || data.score == null) return null;
   const color = difficultyColor(data.score);
-  const label = DIFFICULTY_LABEL[data.score];
-  const t = tints(color);
 
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "90dvh" }}>
-      {/* ── HERO : niveau + score + jauge (dégagé du handle) ── */}
-      <div style={{ borderRadius: 20, padding: "17px 18px 19px", background: `linear-gradient(150deg, ${t.soft}, transparent 88%)`, border: `1px solid ${t.line}`, marginBottom: 22 }}>
-        <Row align="flex-start" justify="space-between" gap={12}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, color: "var(--text3)", marginBottom: 6 }}>Niveau de difficulté</div>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 27, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{label}</div>
-          </div>
-          <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "baseline", gap: 1, padding: "7px 13px", borderRadius: 999, background: "var(--surface)", border: `1.5px solid ${color}`, color, fontWeight: 800, fontSize: 16, fontVariantNumeric: "tabular-nums" }}>
-            {data.score}<span style={{ fontSize: 11, fontWeight: 600, opacity: 0.65 }}>/5</span>
-          </span>
-        </Row>
-        <div style={{ marginTop: 16 }}><Gauge level={data.score} color={color} height={8} /></div>
+      {/* Note : l'élément dominant de la feuille. */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, margin: "4px 2px 14px" }}>
+        <div>
+          <div style={{ fontSize: 13, color: "var(--text3)", fontWeight: 500, marginBottom: 4 }}>Difficulté</div>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{DIFFICULTY_LABEL[data.score]}</div>
+        </div>
+        <div style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color, lineHeight: 0.9, fontVariantNumeric: "tabular-nums" }}>
+          <span style={{ fontSize: 46 }}>{data.score}</span>
+          <span style={{ fontSize: 20, color: "var(--text3)" }}>/5</span>
+        </div>
       </div>
+      <Gauge level={data.score} color={color} />
 
       {data.overridden ? (
-        <Row align="stretch" gap={12} style={{ padding: "14px 15px", borderRadius: 16, background: "var(--surface2)", border: "1px solid var(--border)" }}>
-          <IconChip size={34} radius={11} tint="rgba(155,135,245,0.14)" style={{ border: "1px solid rgba(155,135,245,0.32)", fontSize: 16 }}>✍️</IconChip>
-          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, margin: 0 }}>
-            Cette difficulté a été <strong style={{ color: "var(--text)" }}>définie manuellement</strong> par l'auteur de la recette. Elle ne dépend donc pas du calcul automatique.
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 22 }}>
+          <Icon name="edit" size={17} color="var(--text3)" style={{ marginTop: 2, flexShrink: 0 }} />
+          <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.6, margin: 0, maxWidth: "60ch" }}>
+            Cette difficulté a été fixée à la main dans la recette : elle ne vient pas du calcul automatique.
           </p>
-        </Row>
+        </div>
       ) : (
         <>
-          <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.6, margin: "0 2px 24px" }}>
-            Cardamome repère les <strong style={{ color: "var(--text)" }}>gestes techniques</strong> dans les étapes{data.inheritedFromBases ? " de la recette et de ses préparations de base" : ""} et retient le plus exigeant, puis ajoute des points selon la charge de travail.
+          <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.6, margin: "20px 2px 26px", maxWidth: "60ch" }}>
+            Le geste le plus technique des étapes{data.inheritedFromBases ? " (préparations de base comprises)" : ""} fixe le niveau de départ. La charge de travail ajoute ensuite jusqu'à deux points.
           </p>
 
-          {/* ── Geste dominant ── */}
-          <SectionLabel>Le geste le plus exigeant</SectionLabel>
-          <div style={{ padding: "14px 15px", borderRadius: 16, background: "var(--surface2)", border: "1px solid var(--border)", marginBottom: 24 }}>
-            <Row justify="space-between" gap={10} style={{ marginBottom: 11 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{data.drivers.join(", ")}</div>
-              {/* Hors cas `overridden` (traité plus haut), `base` est toujours un niveau calculé. */}
-              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 600, color: difficultyColor(data.base!), fontVariantNumeric: "tabular-nums" }}>niveau {data.base}</span>
-            </Row>
-            <Gauge level={data.base!} color={difficultyColor(data.base!)} height={6} />
+          {/* Le ticket : chaque ligne qui compose la note, puis le total. */}
+          <div style={HEADING}>Le calcul</div>
+          <LedgerRow title={data.drivers.join(", ")} hint="Geste le plus exigeant" value={`niveau ${data.base}`} />
+          {data.mods.map((m, i) => (
+            <LedgerRow key={i} muted={!m.applied} title={capitalize(m.detail)}
+              hint={`Un point si ${m.label.charAt(0).toLowerCase()}${m.label.slice(1)}`}
+              value={m.applied ? "+1" : "+0"} />
+          ))}
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, marginTop: 6, paddingTop: 14, borderTop: "1.5px dashed var(--border)" }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Total</div>
+              {data.modsCapped && <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>Bonus plafonné à deux points</div>}
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 800, color, fontVariantNumeric: "tabular-nums" }}>{data.score}/5</div>
           </div>
 
-          {/* ── Modificateurs ── */}
-          <SectionLabel>Points supplémentaires</SectionLabel>
-          <Col gap={8}>
-            {data.mods.map((m, i) => (
-              <Row key={i} gap={12} style={{ padding: "12px 14px", borderRadius: 14, background: m.applied ? "rgba(var(--accent-rgb),0.09)" : "var(--surface2)", border: `1px solid ${m.applied ? "rgba(var(--accent-rgb),0.28)" : "var(--border)"}`, opacity: m.applied ? 1 : 0.68 }}>
-                <IconChip size={26} radius={9} tint={m.applied ? "var(--accent)" : "var(--surface3)"} style={{ fontSize: 12.5, fontWeight: 800, color: m.applied ? "#fff" : "var(--text3)" }}>{m.applied ? "+1" : "-"}</IconChip>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{m.label}</div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 1 }}>{m.detail}</div>
-                </div>
-              </Row>
-            ))}
-          </Col>
-
-          {/* ── Récapitulatif du calcul ── */}
-          <Row justify="center" wrap gap={8} style={{ margin: "16px 2px 4px", padding: "12px 14px", borderRadius: 14, background: t.soft, border: `1px solid ${t.line}` }}>
-            <span style={{ fontSize: 13, color: "var(--text2)", fontWeight: 500 }}>Niveau {data.base}</span>
-            <span style={{ fontSize: 13, color: "var(--text3)" }}>+</span>
-            <span style={{ fontSize: 13, color: "var(--text2)", fontWeight: 500 }}>{data.modsApplied} point{data.modsApplied > 1 ? "s" : ""}</span>
-            <span style={{ fontSize: 13, color: "var(--text3)" }}>=</span>
-            <span style={{ display: "inline-flex", alignItems: "baseline", gap: 1, padding: "3px 10px", borderRadius: 999, background: "var(--surface)", border: `1.5px solid ${color}`, color, fontWeight: 800, fontSize: 13.5, fontVariantNumeric: "tabular-nums" }}>{data.score}<span style={{ fontSize: 10, opacity: 0.65 }}>/5</span></span>
-            {data.modsCapped && <span style={{ width: "100%", textAlign: "center", fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>Bonus plafonné à +2.</span>}
-          </Row>
-
-          {/* ── Gestes détectés ── */}
+          {/* Gestes repérés : les pastilles traduisent le niveau propre à chaque geste. */}
           {data.techniques.length > 0 && (
-            <div style={{ marginTop: 24 }}>
-              <SectionLabel>Gestes détectés · {data.techniques.length}</SectionLabel>
-              <Row wrap align="stretch" gap={7}>
+            <div style={{ marginTop: 30 }}>
+              <div style={{ ...HEADING, marginBottom: 10 }}>{data.techniques.length} geste{data.techniques.length > 1 ? "s" : ""} repéré{data.techniques.length > 1 ? "s" : ""} dans les étapes</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {data.techniques.map(tech => (
-                  <span key={tech.id} title={tech.inherited ? "Hérité d'une préparation de base" : undefined} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 11px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
-                    <span style={{ display: "inline-flex", gap: 2 }}>
+                  <span key={tech.id} title={tech.inherited ? "Vient d'une préparation de base" : undefined}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px", borderRadius: 999, fontSize: 13, fontWeight: 500, background: "var(--surface2)", color: "var(--text)" }}>
+                    <span style={{ display: "inline-flex", gap: 2 }} aria-label={`niveau ${tech.difficulty ?? 0}`}>
                       {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: i <= (tech.difficulty ?? 0) ? difficultyColor(tech.difficulty ?? 0) : "var(--surface3)" }} />)}
                     </span>
                     {tech.name}
-                    {tech.inherited && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>· base</span>}
+                    {tech.inherited && <span style={{ fontSize: 11.5, color: "var(--text3)" }}>base</span>}
                   </span>
                 ))}
-              </Row>
+              </div>
             </div>
           )}
         </>
