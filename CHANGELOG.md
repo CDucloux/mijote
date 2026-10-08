@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.18 – Cardamome · Ce qui ne se coupe pas
+
+### Éditeur de recette
+- **Plus de découpe là où elle n'a pas de sens** : alcools, huiles, acides et vinaigres, sauces et sucres ne proposent plus « + Découpe ». Une découpe déjà posée sur l'un d'eux reste visible pour pouvoir la retirer.
+
 ## v4.59.17 – Cardamome · Découpe guidée
 
 ### Éditeur de recette

@@ -3,7 +3,8 @@
  * vocabulaire de brigade. Trois responsabilités pures :
  *   1. ranger les formes par RÉSULTAT visible (cubes, tranches…), cf. {@link CUT_FAMILIES} ;
  *   2. décrire le résultat de chaque forme et ses tailles indicatives ({@link CUT_GUIDE}) ;
- *   3. suggérer les découpes usuelles d'un ingrédient ({@link cutShortlist}).
+ *   3. suggérer les découpes usuelles d'un ingrédient ({@link cutShortlist}) ;
+ *   4. écarter les catégories qui ne se taillent jamais ({@link isCuttableCategory}).
  *
  * Les tailles en millimètres ne sont QUE des repères d'affichage : le modèle stocké
  * reste le calibre grossier (fin/moyen/gros), cf. {@link Calibre}.
@@ -119,6 +120,21 @@ const MAX_SUGGESTIONS = 4;
 function nameHas(words: string, key: string): boolean {
   const esc = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(^| )${esc}[sx]?( |$)`).test(words);
+}
+
+/** Catégories liquides ou en vrac (alcools, huiles, vinaigres, sauces, sucres) : une
+ *  découpe n'y a aucun sens, on ne la propose donc même pas. */
+const UNCUTTABLE_CATEGORIES: ReadonlySet<string> = new Set(["alcohol", "oil", "acid", "sauce", "sugar"]);
+
+/**
+ * Dit si une découpe peut s'appliquer à un ingrédient de cette catégorie. Une catégorie
+ * inconnue ou absente reste découpable : on ne retire l'option qu'à coup sûr.
+ *
+ * @param category - Catégorie de l'ingrédient en base (`vegetable`, `alcohol`…), si connue.
+ * @returns `false` uniquement pour les catégories qui ne se taillent jamais.
+ */
+export function isCuttableCategory(category?: string | null): boolean {
+  return !category || !UNCUTTABLE_CATEGORIES.has(category);
 }
 
 /**

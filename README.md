@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.59.17-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.59.18-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -63,7 +63,8 @@ toujours avec vous.
   en lamelles, en rondelles, râpé…) pour alimenter le poste « Découpe » du
   mode cuisine (éditable ensuite dans l'éditeur via une feuille guidée :
   découpes usuelles de l'ingrédient d'abord, formes rangées par résultat avec
-  pictogramme, résultat attendu et taille en repères concrets), et
+  pictogramme, résultat attendu et taille en repères concrets ; jamais proposée pour alcools, huiles,
+  vinaigres, sauces et sucres), et
   **détecte les préparations de base** (caramel, pâte, fond…) et leur
   rendement estimé (réservé aux abonnés **Cardamome+**, sur un pool mensuel de
   **100 crédits intelligents** : 1 crédit par lien / texte / PDF, 2 par photo,
