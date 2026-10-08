@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { CUT_FAMILIES, CUT_GUIDE, familyOf, hasSizes, cutShortlist, cutSizeLabel } from "../cutGuide.js";
+import { CUT_FAMILIES, CUT_GUIDE, familyOf, hasSizes, cutShortlist, cutSizeLabel, isCuttableCategory } from "../cutGuide.js";
 import { FORMES } from "../decoupe.js";
 
 describe("CUT_FAMILIES", () => {
@@ -67,5 +67,20 @@ describe("cutSizeLabel", () => {
     expect(cutSizeLabel("des")).toBe("");
     expect(cutSizeLabel("des", null)).toBe("");
     expect(cutSizeLabel("brunoise", "gros")).toBe("");
+  });
+});
+
+describe("isCuttableCategory", () => {
+  it("exclut alcools, huiles, acides, sauces et sucres", () => {
+    for (const c of ["alcohol", "oil", "acid", "sauce", "sugar"]) expect(isCuttableCategory(c)).toBe(false);
+  });
+  it("garde les catégories qui se taillent", () => {
+    for (const c of ["vegetable", "herbs", "meat", "dairy", "other"]) expect(isCuttableCategory(c)).toBe(true);
+  });
+  it("reste découpable quand la catégorie est absente ou inconnue", () => {
+    expect(isCuttableCategory(undefined)).toBe(true);
+    expect(isCuttableCategory(null)).toBe(true);
+    expect(isCuttableCategory("")).toBe(true);
+    expect(isCuttableCategory("inconnue")).toBe(true);
   });
 });

@@ -6,7 +6,7 @@ import { MoveArrows } from "../ui/MoveArrows.jsx";
 import { IngredientMatchSheet } from "../ingredient/IngredientMatchSheet.jsx";
 import { CutSheet } from "../ingredient/CutSheet.jsx";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../../hooks/useDragReorder.js";
-import { CUT_GUIDE, cutSizeLabel } from "@/lib/recipes/cutGuide.js";
+import { CUT_GUIDE, cutSizeLabel, isCuttableCategory } from "@/lib/recipes/cutGuide.js";
 import { ingredientMatch, type MatchTone } from "@/lib/recipes/ingredientMatch.js";
 import type { IngredientLine, IngredientDbItem, Recipe, Cut } from "@/lib/types";
 
@@ -144,8 +144,10 @@ function DraggableIngredientBase({
       {showMatch && <IngredientMatchSheet ing={ing} image={img} onClose={() => setShowMatch(false)} />}
       {/* Découpe de mise en place : optionnelle, donc réduite à UN déclencheur discret
           quand rien n'est posé (« + Découpe »), ou à une pill accent résumant le choix.
-          L'édition (forme + calibre) se fait dans une feuille dédiée, pas en <select>. */}
-      {ing.name && onCutChange && (
+          L'édition (forme + calibre) se fait dans une feuille dédiée, pas en <select>.
+          Catégorie non découpable (alcool, huile…) : pas de déclencheur, mais une découpe
+          déjà posée reste visible pour pouvoir la retirer. */}
+      {ing.name && onCutChange && (ing.cut?.forme || isCuttableCategory(dbItem?.category)) && (
         <div style={{ marginTop: 8, marginLeft: isDraggable ? 72 : 82 }}>{/* Aligné au bord gauche
             du champ gris : poignée (16/26) + image (36) + 2 gouttières (10). */}
           {ing.cut?.forme
