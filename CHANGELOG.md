@@ -1,5 +1,22 @@
 # Changelog – Cardamome
 
+## v4.59.19 – Cardamome · Signé du chef
+
+### Recettes
+- **Champ Chef** : une recette peut porter le nom du chef qui la signe, saisi dans l'éditeur (avec une toque) et affiché sur la fiche, à côté de la source, en vue privée comme publique.
+- **Le chef à l'import** : lien, texte, PDF ou photo, l'extraction repère le chef qui signe la recette et le retire du titre (« Bœuf bourguignon (Adam Byatt) » devient « Bœuf bourguignon », signé Adam Byatt).
+- **Recherche par chef** dans la bibliothèque et les carnets intelligents ; Découvrir indexe le chef des recettes publiées.
+- **PDF** : le chef s'imprime sous le titre.
+
+### Mode cuisine
+- **Découpe dans l'ordre des étapes** : on taille d'abord ce qui part en premier dans la casserole ; une découpe rattachée à aucune étape passe en fin de liste.
+
+### Fiche recette
+- **Calculatrice recentrée** : l'onglet Conversions disparaît (les équivalents en cuillères vivent dans le mode cuisine), il reste « Adapter au moule ».
+
+### Éditeur de recette
+- **Onde tactile** sur « Choisir une photo » et sur la rangée « Préparation de base ».
+
 ## v4.59.18 – Cardamome · Ce qui ne se coupe pas
 
 ### Éditeur de recette

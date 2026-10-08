@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.59.18-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.59.19-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -43,8 +43,9 @@ toujours avec vous.
 
 ## ✨ Fonctionnalités
 
-- 📖 **Recettes** : éditeur complet (ingrédients, ustensiles, étapes liées),
-  recherche, filtres et tri (par défaut : les plus récentes d'abord). Chaque
+- 📖 **Recettes** : éditeur complet (ingrédients, ustensiles, étapes liées,
+  **chef** optionnel affiché avec une toque), recherche (plat, chef, cuisine,
+  ingrédient), filtres et tri (par défaut : les plus récentes d'abord). Chaque
   étape peut porter une photo et une astuce, reprises dans la fiche et le mode
   pas-à-pas. Les **ustensiles** sont rangés par famille, et les **appareils**
   (four, blender…) portent des réglages propres à chaque étape (température,
@@ -59,7 +60,7 @@ toujours avec vous.
   photos** d'un livre, un **texte collé** (mail, note, message) ou un **fichier
   PDF** : extraction,
   structuration et liaison des ingrédients / ustensiles par Claude, qui
-  **extrait aussi la découpe de chaque ingrédient** (émincé, ciselé, en dés,
+  repère le **chef** qui signe la recette, **extrait aussi la découpe de chaque ingrédient** (émincé, ciselé, en dés,
   en lamelles, en rondelles, râpé…) pour alimenter le poste « Découpe » du
   mode cuisine (éditable ensuite dans l'éditeur via une feuille guidée :
   découpes usuelles de l'ingrédient d'abord, formes rangées par résultat avec
@@ -118,8 +119,8 @@ toujours avec vous.
 - 👨‍🍳 **Mode cuisine** : guidage pas-à-pas plein écran, mise en place cochable
   (regroupable par catégorie via un interrupteur, quantités affichables en
   cuillères à soupe ou à café au choix), avec un **poste « Découpe »** qui
-  regroupe et ordonne tous les gestes de taille (émincer, ciseler, tailler en
-  dés, râper…) mis à l'échelle du nombre de convives, photos et astuces d'étape incluses, et
+  regroupe tous les gestes de taille (émincer, ciseler, tailler en dés,
+  râper…) dans l'ordre des étapes, mis à l'échelle du nombre de convives, photos et astuces d'étape incluses, et
   **minuteurs à notification native** (l'alerte sonne même écran verrouillé), et
   sur mobile une **barre de suivi façon lecteur média** dans les notifications
   (pochette de la recette, barre de progression du minuteur, texte de l'étape,
@@ -128,7 +129,7 @@ toujours avec vous.
   gestes techniques repérés dans les étapes ouvrent un **glossaire enrichi**
   (définition, résultat attendu, erreurs fréquentes, à ne pas confondre).
 - 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
-  coupées, badges vegan / cuisine / difficulté) et JSON (import / export).
+  coupées, badges vegan / cuisine / difficulté, chef sous le titre) et JSON (import / export).
 - 👤 **Profil** : nom d'affichage, heatmap d'activité cuisine façon GitHub, et
   zone de danger (purge ciblée, **suppression de compte** RGPD).
 - 📜 **Informations légales** : mentions légales, confidentialité, CGU et
