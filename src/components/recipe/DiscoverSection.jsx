@@ -16,7 +16,7 @@ import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
-import { DEFAULT_FILTERS, activeFilterCount, matchesFilters } from "@/lib/recipes/recipeFilters.js";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, collectChefs } from "@/lib/recipes/recipeFilters.js";
 import { DEFAULT_SORT_KEY, defaultDirFor, makeComparator } from "@/lib/recipes/recipeSort.js";
 import { STATIC_CATEGORIES, matchesDiscoverCategory, isQuickRecipe } from "@/lib/recipes/discoverFeed.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
@@ -212,6 +212,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   }, [pubs, text, authorUid, usePrefs, preferences, filters, activeCat, favorites, resolver, techniques, techIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const usedCuisines = useMemo(() => CUISINES.filter(c => pubs.some(p => p.cuisine === c.label)), [pubs]);
+  const usedChefs = useMemo(() => collectChefs(pubs.map(p => p.recipe || {})), [pubs]);
   // Catégories = statiques + cuisines réellement présentes (chips collants).
   const categories = useMemo(() => [
     ...STATIC_CATEGORIES,
@@ -310,7 +311,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
       {filterOpen && (
         <SwipeableSheet onClose={() => setFilterOpen(false)} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
           {(close) => (
-            <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} ingredientDB={ingredientDB} resultCount={filtered.length} onClose={() => close()} />
+            <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} usedChefs={usedChefs} ingredientDB={ingredientDB} resultCount={filtered.length} onClose={() => close()} />
           )}
         </SwipeableSheet>
       )}

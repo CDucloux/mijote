@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { CSSProperties } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import { spawnRipple } from "@/lib/ui/ripple.js";
 import type { IconName } from "../ui/Icon.jsx";
 
 /** Une action du menu « trois points » : libellé, icône, callback et teinte danger. */
@@ -10,6 +11,10 @@ export interface MenuItem {
   onClick: () => void;
   danger?: boolean;
 }
+
+/** Délai avant fermeture : laisse l'onde tactile se déployer sous le doigt avant
+ *  que le menu ne disparaisse (sinon un tap rapide ne montre aucun retour). */
+const RIPPLE_GRACE_MS = 140;
 
 interface HeroMenuProps {
   items: MenuItem[];
@@ -75,15 +80,11 @@ export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, i
           padding: 6, display: "flex", flexDirection: "column", gap: 2,
         }}>
           {items.map((it, i) => (
-            <button key={i} onClick={() => { setOpen(false); it.onClick(); }}
-              style={{
-                display: "flex", alignItems: "center", gap: 10, padding: "9px 11px",
-                borderRadius: 8, background: "none", border: "none", cursor: "pointer",
-                fontSize: 14, fontWeight: 500, textAlign: "left", width: "100%",
-                color: it.danger ? "var(--red)" : "var(--text)",
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = it.danger ? "rgba(224,82,82,0.1)" : "var(--surface2)"}
-              onMouseLeave={e => e.currentTarget.style.background = "none"}>
+            // `.menu-row` : onde tactile + teinte de maintien/survol partagées avec les
+            // autres menus (rouge pour la suppression). Seul le gabarit est resserré ici.
+            <button key={i} className={it.danger ? "menu-row menu-row-danger" : "menu-row"}
+              onPointerDown={spawnRipple} onClick={() => window.setTimeout(() => { setOpen(false); it.onClick(); }, RIPPLE_GRACE_MS)}
+              style={{ gap: 10, padding: "9px 11px", borderRadius: 8, fontSize: 14, fontWeight: 500 }}>
               <Icon name={it.icon} size={16} color={it.danger ? "var(--red)" : "var(--text2)"} />
               {it.label}
             </button>
