@@ -4,7 +4,7 @@
  * Deux points d'entrée `onCall`, tous deux réservés côté serveur (admin illimité,
  * abonné Cardamome+ avec quota, cf. {@link assertImportAllowed}), jamais en masquant
  * un simple bouton :
- * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 4.5) ;
+ * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 5.5) ;
  * - {@link importRecipeFromImages} : extraction depuis 1–2 photos de livre (Sonnet) ;
  * - {@link importRecipeFromText} : extraction depuis un texte collé (Haiku) ;
  * - {@link importRecipeFromPdf} : extraction depuis le texte d'un PDF, extrait
@@ -27,7 +27,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
-  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, sanitizeChef, parseJsonLoose,
+  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, sanitizeChef, parseJsonLoose, modelText,
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
@@ -45,15 +45,22 @@ const MAX_HTML_BYTES = 3_000_000;
 const FETCH_TIMEOUT_MS = 15_000;
 /** Nombre maximal de redirections suivies (chacune re-vérifiée anti-SSRF). */
 const MAX_REDIRECTS = 4;
-/** Modèle d'extraction pour l'URL (texte déjà propre). */
-const MODEL = "claude-haiku-4-5";
+/** Modèle d'extraction pour l'URL, le texte et le PDF (texte déjà propre). */
+const MODEL = "claude-haiku-5-5";
 /**
- * Plafond de tokens de sortie. 4096 était trop juste : une recette longue et
- * verbeuse (nombreuses étapes, astuces, conversions) dépassait ce budget, la
- * réponse était coupée en plein JSON et devenait illisible. 8192 donne une marge
- * confortable sans surcoût réel (le modèle s'arrête à `end_turn` bien avant).
+ * Effort de Haiku 5.5 : l'extraction est mécanique (relire, normaliser, relier),
+ * elle n'a pas besoin d'une réflexion profonde. `low` limite les tokens de
+ * réflexion facturés et la latence ; le modèle saute même la réflexion sur les
+ * pages simples. Le défaut du modèle serait `medium`.
  */
-const MAX_OUTPUT_TOKENS = 8192;
+const EXTRACTION_EFFORT = "low";
+/**
+ * Plafond de tokens de sortie. 4096 coupait déjà les recettes longues en plein
+ * JSON. Haiku 5.5 compte la réflexion dans ce plafond et son tokenizer produit
+ * environ 30 % de tokens de plus pour le même texte : 16000 garde la marge sans
+ * surcoût réel (le modèle s'arrête à `end_turn` bien avant).
+ */
+const MAX_OUTPUT_TOKENS = 16_000;
 /**
  * Modèle d'extraction pour les PHOTOS. L'OCR d'une page de livre exige une bien
  * meilleure vision que l'URL : on confie ce cas à Sonnet, plus fiable sur les
@@ -91,11 +98,17 @@ const IMG_PROMPT_ADDENDUM = fs.readFileSync(path.join(__dirname, "..", "..", "pr
  *   `resource-exhausted` si la sortie a été tronquée (recette trop longue).
  */
 function parseModelResponse(response: Anthropic.Message, kind: string): LlmDraft {
-  const block = (response.content || []).find((b) => b.type === "text");
-  if (!block || block.type !== "text") throw new HttpsError("internal", "Réponse IA vide.");
+  const out = modelText(response);
+  if (!out.ok) {
+    if (out.reason === "refusal") {
+      logger.warn(`import[${kind}] refus du modèle`, { category: response.stop_details?.category ?? null });
+      throw new HttpsError("failed-precondition", "L'IA n'a pas pu traiter ce contenu. Colle plutôt le texte de la recette dans l'import Texte.");
+    }
+    throw new HttpsError("internal", "Réponse IA vide.");
+  }
   let parsed: LlmDraft;
   try {
-    parsed = parseJsonLoose(block.text) as LlmDraft;
+    parsed = parseJsonLoose(out.text) as LlmDraft;
   } catch {
     if (response.stop_reason === "max_tokens") {
       logger.warn(`import[${kind}] réponse tronquée (max_tokens atteint)`);
@@ -103,7 +116,7 @@ function parseModelResponse(response: Anthropic.Message, kind: string): LlmDraft
     }
     throw new HttpsError("internal", "Réponse IA illisible (JSON non exploitable).");
   }
-  logRawModelJson(kind, block.text);
+  logRawModelJson(kind, out.text);
   logDetectedGroups(kind, parsed);
   return parsed;
 }
@@ -352,6 +365,7 @@ async function extractWithLlm(text: string, sourceUrl: string, knownUtensils: st
     response = await client.messages.create({
       model: MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
+      output_config: { effort: EXTRACTION_EFFORT },
       system,
       messages: [{ role: "user", content: `Texte de la page (source : ${sourceUrl}) :\n\n${body}` }],
     });
@@ -390,6 +404,7 @@ async function extractFromText(text: string, knownUtensils: string[], applianceI
     response = await client.messages.create({
       model: MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
+      output_config: { effort: EXTRACTION_EFFORT },
       system,
       messages: [{ role: "user", content: `Texte de la recette collée :\n\n${body}` }],
     });

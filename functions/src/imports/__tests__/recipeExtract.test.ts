@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
-  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut, sanitizeChef, parseJsonLoose,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut, sanitizeChef, parseJsonLoose, modelText,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -471,5 +471,21 @@ describe("assignIdsAndLink : chef", () => {
   it("n'ajoute pas de champ chef quand il est absent ou vide", () => {
     expect("chef" in assignIdsAndLink({ name: "Soupe" })).toBe(false);
     expect("chef" in assignIdsAndLink({ name: "Soupe", chef: "  " })).toBe(false);
+  });
+});
+
+describe("modelText", () => {
+  it("trouve le texte même derrière des blocs de réflexion", () => {
+    const response = { stop_reason: "end_turn", content: [{ type: "thinking", thinking: "" }, { type: "text", text: '{"name":"Soupe"}' }] };
+    expect(modelText(response)).toEqual({ ok: true, text: '{"name":"Soupe"}' });
+  });
+  it("distingue un refus de sécurité d'une réponse vide", () => {
+    expect(modelText({ stop_reason: "refusal", content: [{ type: "text", text: "..." }] })).toEqual({ ok: false, reason: "refusal" });
+    expect(modelText({ stop_reason: "end_turn", content: [{ type: "thinking" }] })).toEqual({ ok: false, reason: "empty" });
+  });
+  it("considère vide un texte blanc ou un contenu absent", () => {
+    expect(modelText({ stop_reason: "end_turn", content: [{ type: "text", text: "   " }] })).toEqual({ ok: false, reason: "empty" });
+    expect(modelText({ stop_reason: "max_tokens", content: null })).toEqual({ ok: false, reason: "empty" });
+    expect(modelText({})).toEqual({ ok: false, reason: "empty" });
   });
 });
