@@ -24,8 +24,10 @@ const TIME_LABEL: Record<number, string> = { 20: "≤ 20 min", 30: "≤ 30 min",
 function Group({ title, summary, defaultOpen = false, first = false, children }: { title: string; summary?: string | null; defaultOpen?: boolean; first?: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderTop: first ? "none" : "1px solid var(--border)", padding: first ? "3px 0 15px" : "15px 0" }}>
-      <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}>
+    <div style={{ borderTop: first ? "none" : "1px solid var(--border)" }}>
+      {/* La rangée entière est la cible (onde tactile comprise), débordant de 6px
+          de chaque côté pour que l'onde ne bute pas sur le bord du texte. */}
+      <button onClick={() => setOpen(o => !o)} className="ripple" style={{ display: "flex", alignItems: "center", gap: 8, width: "calc(100% + 12px)", margin: "0 -6px", padding: first ? "3px 6px 15px" : "15px 6px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
         <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{title}</span>
         {!open && summary && <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{summary}</span>}
         <span style={{ marginLeft: (!open && summary) ? 8 : "auto", display: "inline-flex", transition: "transform 0.2s ease", transform: open ? "rotate(180deg)" : "none" }}>
@@ -37,7 +39,7 @@ function Group({ title, summary, defaultOpen = false, first = false, children }:
           wrapper `overflow: hidden` clippe pendant l'animation. */}
       <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows 0.32s cubic-bezier(0.33, 1, 0.68, 1)" }}>
         <div style={{ overflow: "hidden", minHeight: 0 }}>
-          <div style={{ paddingTop: 13 }}>{children}</div>
+          <div style={{ padding: "0 0 15px" }}>{children}</div>
         </div>
       </div>
     </div>
@@ -107,6 +109,8 @@ interface RecipeFilterSheetProps {
   filters: RecipeFilters;
   setFilters: SetFilters;
   usedCuisines?: UsedCuisine[];
+  /** Chefs présents dans la liste filtrée (cf. `collectChefs`) ; section masquée si vide. */
+  usedChefs?: string[];
   ingredientDB?: DbEntry[];
   resultCount?: number;
   onClose: () => void;
@@ -115,11 +119,16 @@ interface RecipeFilterSheetProps {
   updatingCarnetName?: string | null;
 }
 
-export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false, updatingCarnetName = null }: RecipeFilterSheetProps) {
+export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], usedChefs = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false, updatingCarnetName = null }: RecipeFilterSheetProps) {
   const set = (patch: Partial<RecipeFilters>) => setFilters(f => ({ ...f, ...patch }));
   const toggleCuisine = (label: string) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
   }));
+  const chefs = filters.chefs || [];
+  const toggleChef = (name: string) => setFilters(f => {
+    const current = f.chefs || [];
+    return { ...f, chefs: current.includes(name) ? current.filter(c => c !== name) : [...current, name] };
+  });
   const toggleCooking = (id: string) => setFilters(f => ({
     ...f, cooking: f.cooking.includes(id) ? f.cooking.filter(c => c !== id) : [...f.cooking, id],
   }));
@@ -204,6 +213,19 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], ingr
             {usedCuisines.map(c => (
               <Chip key={c.label} on={filters.cuisines.includes(c.label)} onClick={() => toggleCuisine(c.label)}>
                 <span style={{ fontSize: 13, lineHeight: 1 }}>{cuisineEmoji(c.label)}</span> {c.label}
+              </Chip>
+            ))}
+          </Row>
+        </Group>
+      )}
+
+      {/* Chef (champ de la recette) */}
+      {usedChefs.length > 0 && (
+        <Group title="Chef" defaultOpen={false} summary={chefs.length ? (chefs.length === 1 ? chefs[0] : `${chefs.length} sélectionnés`) : null}>
+          <Row>
+            {usedChefs.map(name => (
+              <Chip key={name} on={chefs.includes(name)} onClick={() => toggleChef(name)}>
+                <Icon name="chef" size={14} color={chefs.includes(name) ? "var(--accent)" : "var(--text3)"} /> {name}
               </Chip>
             ))}
           </Row>

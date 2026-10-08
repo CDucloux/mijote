@@ -9,7 +9,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RecipeFilterSheet } from "../components/recipe/RecipeFilterSheet.jsx";
 import { SORT_OPTIONS, DEFAULT_SORT_KEY, sortOption, defaultDirFor, dirLabel, makeComparator } from "@/lib/recipes/recipeSort.js";
-import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters, matchesRecipeSearch } from "@/lib/recipes/recipeFilters.js";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, summarizeFilters, matchesRecipeSearch, collectChefs } from "@/lib/recipes/recipeFilters.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
@@ -188,6 +188,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
 
   // Styles de cuisine réellement utilisés, dans l'ordre canonique de la liste.
   const usedCuisines = CUISINES.filter(c => recipes.some(r => r.cuisine === c.label));
+  const usedChefs = useMemo(() => collectChefs(recipes), [recipes]);
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const nActiveFilters = activeFilterCount(filters);
 
@@ -335,7 +336,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
       {filterOpen && (
         <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
           {(close) => (
-          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => close()}
+          <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} usedChefs={usedChefs} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => close()}
             alreadySaved={!editingSmartId && collections.some(c => isSmart(c) && smartActive(c))}
             updatingCarnetName={editingSmartId ? collections.find(c => c.id === editingSmartId)?.name : null}
             onSaveAsCarnet={() => {
