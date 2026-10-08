@@ -175,6 +175,8 @@ export interface Recipe {
   collections?: string[];
   tags?: string[];
   source?: string;
+  /** Chef ou créatrice dont la recette est tirée (« Adam Byatt »). Optionnel, texte libre. */
+  chef?: string;
   image?: string;
   [k: string]: unknown;
 }

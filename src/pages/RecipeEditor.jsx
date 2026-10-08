@@ -453,6 +453,15 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <input className="field-input field-soft" placeholder="ex : Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46 }} />
               </div>
               <div>
+                <div className="field-label">Chef <span style={{ color: "var(--text3)", fontWeight: 400 }}>· optionnel</span></div>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 15, top: "50%", marginTop: -9, display: "flex", pointerEvents: "none" }}>
+                    <Icon name="chef" size={18} color={form.chef ? "var(--accent)" : "var(--text3)"} />
+                  </span>
+                  <input className="field-input field-soft" placeholder="ex : Adam Byatt" maxLength={120} value={form.chef || ""} onChange={e => up("chef", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
+                </div>
+              </div>
+              <div>
                 <div className="field-label">Source <span style={{ color: "var(--text3)", fontWeight: 400 }}>· optionnel</span></div>
                 <input className="field-input field-soft" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46 }} />
               </div>
@@ -485,8 +494,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
             </div>
 
             {/* Préparation de base (composant) : réutilisable comme ingrédient. */}
-            <div style={{ background: form.isComponent ? "rgba(var(--accent-rgb),0.05)" : "var(--surface)", border: `1px solid ${form.isComponent ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`, borderRadius: 16, padding: 15, transition: "border-color 0.2s, background-color 0.2s" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+            <div style={{ background: form.isComponent ? "rgba(var(--accent-rgb),0.05)" : "var(--surface)", border: `1px solid ${form.isComponent ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`, borderRadius: 16, overflow: "hidden", transition: "border-color 0.2s, background-color 0.2s" }}>
+              {/* `.ripple` sur la rangée seule : l'onde ne déborde pas sur le rendement déplié. */}
+              <label className="ripple" style={{ display: "flex", alignItems: "center", gap: 12, padding: 15, cursor: "pointer" }}>
                 <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: form.isComponent ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)" }}><BaseIcon size={20} color={form.isComponent ? "var(--accent)" : "var(--text2)"} /></span>
                 <div style={{ flex: 1, minWidth: 0 }} onClick={() => toggleComponent()}>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>Préparation de base</div>
@@ -498,7 +508,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </button>
               </label>
               {form.isComponent && (
-                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(var(--accent-rgb),0.25)" }}>
+                <div style={{ margin: "0 15px", padding: "14px 0 15px", borderTop: "1px solid rgba(var(--accent-rgb),0.25)" }}>
                   <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>· ce que produit la préparation</span></div>
                   <div style={{ display: "flex", gap: 10 }}>
                     <input className="field-input field-soft" type="number" min="0" step="any" placeholder="ex : 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2, background: "var(--surface)", borderRadius: 12 }} />

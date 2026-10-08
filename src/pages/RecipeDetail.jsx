@@ -7,7 +7,7 @@ import { NutritionModal } from "../components/modals/NutritionModal.jsx";
 import { BaseInfoModal } from "../components/modals/BaseInfoModal.jsx";
 import { DifficultyModal } from "../components/modals/DifficultyModal.jsx";
 import { RecipeJournal } from "../components/recipe/RecipeJournal.jsx";
-import { RecipeCalculators } from "../components/recipe/RecipeCalculators.jsx";
+import { PanScaleSheet } from "../components/recipe/PanScaleSheet.jsx";
 import { CookMode } from "./CookMode.jsx";
 import { RecipeHeroDesktop } from "../components/recipeDetail/RecipeHeroDesktop.jsx";
 import { RecipeHeroMobile } from "../components/recipeDetail/RecipeHeroMobile.jsx";
@@ -384,7 +384,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         </SwipeableSheet>
       )}
       {showCalc && (
-        <RecipeCalculators recipe={recipe} panApplied={panFactor !== 1}
+        <PanScaleSheet applied={panFactor !== 1}
           onApply={f => setPanFactor(f)} onReset={() => setPanFactor(1)} onClose={() => setShowCalc(false)} />
       )}
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}

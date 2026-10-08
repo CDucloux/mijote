@@ -5,7 +5,7 @@ import { parseDurations } from "@/lib/planning/stepTimers.js";
 import { BaseIcon } from "../components/ui/BaseIcon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
-import { buildPostesDecoupe, findDecoupeStepIndex } from "@/lib/recipes/decoupe.js";
+import { buildPostesDecoupe, findDecoupeStepIndex, sortPostesByStep } from "@/lib/recipes/decoupe.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
@@ -117,24 +117,19 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     () => groupIngredientsByCategory(recipe.ingredients, ingredientDB, categories),
     [recipe.ingredients, ingredientDB, categories],
   );
-  // Postes de découpe de la mise en place : regroupés/ordonnés depuis les
-  // ingrédients porteurs d'une découpe, aux quantités mises à l'échelle (mult).
-  const postesDecoupe = useMemo(() => {
+  // Postes de découpe de la mise en place, aux quantités mises à l'échelle (mult).
+  // Chaque poste est rattaché à l'étape réelle où sa découpe est décrite (clé du poste
+  // → index d'étape, -1 si aucune) : on y navigue pour vérifier une taille douteuse, et
+  // la liste suit l'ordre des étapes (on taille d'abord ce qui part en premier).
+  const { postesDecoupe, posteStepByKey } = useMemo(() => {
     const scaled = (recipe.ingredients || []).map(i => {
       const a = i.amount != null && i.amount !== "" ? Number(i.amount) * (mult || 1) : i.amount;
       return { ...i, amount: a };
     });
-    return buildPostesDecoupe(scaled, techIndex);
-  }, [recipe.ingredients, mult, techIndex]);
-  // Étape réelle où chaque découpe a été détectée (clé du poste → index d'étape, -1 si
-  // aucune) : permet d'y naviguer pour vérifier la classification d'une taille douteuse.
-  const posteStepByKey = useMemo(() => {
-    const m = new Map();
-    for (const poste of postesDecoupe) {
-      m.set(poste.key, findDecoupeStepIndex(poste, recipe.ingredients, recipe.steps));
-    }
-    return m;
-  }, [postesDecoupe, recipe.ingredients, recipe.steps]);
+    const postes = buildPostesDecoupe(scaled, techIndex);
+    const stepByKey = new Map(postes.map(poste => [poste.key, findDecoupeStepIndex(poste, recipe.ingredients, recipe.steps)]));
+    return { postesDecoupe: sortPostesByStep(postes, stepByKey), posteStepByKey: stepByKey };
+  }, [recipe.ingredients, recipe.steps, mult, techIndex]);
 
   const realStepCount = (recipe.steps || []).length;
   const pages = useMemo(() => {

@@ -28,7 +28,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)", borderRadius: 14, padding: "12px 16px", marginBottom: 14, border: "1px solid var(--border)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text2)" }}>Portions</span>
-              <button onClick={() => setShowCalc(true)} className="tap" title="Calculatrices (moule, conversions)" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, padding: "4px 9px", borderRadius: 999, border: "1px solid var(--border)", background: panFactor !== 1 ? "rgba(var(--accent-rgb),0.14)" : "var(--surface2)", color: panFactor !== 1 ? "var(--accent)" : "var(--text2)", cursor: "pointer" }}>
+              <button onClick={() => setShowCalc(true)} className="tap" title="Adapter la recette à un autre moule" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, padding: "4px 9px", borderRadius: 999, border: "1px solid var(--border)", background: panFactor !== 1 ? "rgba(var(--accent-rgb),0.14)" : "var(--surface2)", color: panFactor !== 1 ? "var(--accent)" : "var(--text2)", cursor: "pointer" }}>
                 <Icon name="sparkle" size={13} /> {panFactor !== 1 ? `Moule ×${(Math.round(panFactor * 100) / 100)}` : "Adapter"}
               </button>
             </div>

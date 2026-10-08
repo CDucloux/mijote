@@ -2,7 +2,8 @@
  * Calculatrices de recette (pures) :
  * 1. Moule / plat, facteur d'adaptation des quantités entre deux moules (ratio de
  *    surface, ou de volume si les deux hauteurs sont fournies).
- * 2. Conversions d'unités, masse ↔ volume via la densité de l'ingrédient.
+ * 2. Conversions d'unités, masse ↔ volume via la densité de l'ingrédient (équivalents
+ *    en cuillères du mode cuisine).
  *
  * @module food/calculators
  */
@@ -127,9 +128,6 @@ export function convertQuantity(value: number | string, from: string, to: string
   if (kf === "mass") { const ml = (v * MASS_G[from]) / density; return ml / VOLUME_ML[to]; }
   const g = (v * VOLUME_ML[from]) * density; return g / MASS_G[to]; // volume → mass
 }
-
-/** Unités proposées au convertisseur (ordre d'affichage). */
-export const CONVERT_UNITS = ["g", "kg", "ml", "cl", "l", "cuillère à soupe", "cuillère à café", "cup", "tasse"];
 
 /** Un équivalent en cuillères d'une quantité métrique. */
 export interface SpoonConversion { unit: string; value: number }
