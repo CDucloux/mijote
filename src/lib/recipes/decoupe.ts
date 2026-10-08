@@ -323,6 +323,27 @@ export function findDecoupeStepIndex(
 }
 
 /**
+ * Réordonne les postes dans l'ordre où la recette les utilise : on taille d'abord ce
+ * qui part en premier dans la casserole. Tri stable : à étape égale, l'ordre de
+ * {@link buildPostesDecoupe} (gestes regroupés, salissants en dernier) départage ; un
+ * poste rattaché à aucune étape (`-1` ou absent) passe à la fin.
+ *
+ * @param postes - Les postes, dans l'ordre de {@link buildPostesDecoupe}.
+ * @param stepIndexByKey - Index d'étape par clé de poste (cf. {@link findDecoupeStepIndex}).
+ * @returns Une nouvelle liste triée (l'entrée n'est pas modifiée).
+ */
+export function sortPostesByStep(
+  postes: readonly PosteDecoupe[],
+  stepIndexByKey: ReadonlyMap<string, number>,
+): PosteDecoupe[] {
+  const rank = (poste: PosteDecoupe): number => {
+    const idx = stepIndexByKey.get(poste.key);
+    return idx == null || idx < 0 ? Number.POSITIVE_INFINITY : idx;
+  };
+  return [...postes].sort((a, b) => rank(a) - rank(b));
+}
+
+/**
  * Libellé de check-list d'un poste : geste impératif, calibre entre parenthèses, puis
  * la quantité et le légume accordés (« Ciseler : 3 oignons », « Râper : 200 g carotte »).
  *

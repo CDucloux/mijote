@@ -27,7 +27,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
-  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, parseJsonLoose,
+  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, sanitizeChef, parseJsonLoose,
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
@@ -172,6 +172,8 @@ async function fetchHtml(url: string): Promise<string> {
 type LlmDraft = Record<string, unknown> & {
   name?: string; prepTime?: number; cookTime?: number; servings?: number;
   cuisine?: string; category?: string;
+  /** Chef qui signe la recette (borné ensuite par `sanitizeChef`). */
+  chef?: unknown;
   ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown; cut?: unknown }[];
   utensils?: { name?: string }[];
   steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; utensilParams?: unknown; group?: unknown }[];
@@ -228,6 +230,7 @@ function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
     cuisine: d.cuisine || "",
     category: d.category || "",
     source: sourceUrl,
+    chef: sanitizeChef(d.chef),
     ingredients: (d.ingredients || []).map((i) => {
       const ing: Intermediate["ingredients"][number] = { name: (i.name || "").slice(0, 120), _raw: (i.raw || "").slice(0, 160) };
       const a = num(i.amount); if (a != null) ing.amount = a;

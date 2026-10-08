@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual } from "@/lib/recipes/recipeFilters.js";
+import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, filtersEqual, matchesRecipeSearch } from "@/lib/recipes/recipeFilters.js";
 
 describe("matchesFilters – catégorie (type de recette)", () => {
   const dessert = { name: "Tarte", category: "dessert", ingredients: [], isComponent: false };
@@ -30,5 +30,28 @@ describe("filtersEqual", () => {
   });
   it("comble les champs manquants avec les valeurs par défaut", () => {
     expect(filtersEqual({}, { ...DEFAULT_FILTERS })).toBe(true);
+  });
+});
+
+describe("matchesRecipeSearch", () => {
+  const recipe = { name: "Bœuf bourguignon", cuisine: "Française", chef: "Adam Byatt", ingredients: [{ name: "lard" }, { name: "carotte" }] };
+
+  it("trouve par nom, cuisine, chef ou ingrédient, sans casse ni accents", () => {
+    expect(matchesRecipeSearch(recipe, "bourguignon")).toBe(true);
+    expect(matchesRecipeSearch(recipe, "francaise")).toBe(true);
+    expect(matchesRecipeSearch(recipe, "BYATT")).toBe(true);
+    expect(matchesRecipeSearch(recipe, "carotte")).toBe(true);
+  });
+  it("écarte une recette qui ne contient pas le texte", () => {
+    expect(matchesRecipeSearch(recipe, "tiramisu")).toBe(false);
+  });
+  it("laisse tout passer sur une requête vide", () => {
+    expect(matchesRecipeSearch(recipe, "")).toBe(true);
+    expect(matchesRecipeSearch(recipe, "   ")).toBe(true);
+    expect(matchesRecipeSearch(recipe, undefined)).toBe(true);
+  });
+  it("tolère une recette sans cuisine, chef ni ingrédients", () => {
+    expect(matchesRecipeSearch({ name: "Soupe" }, "soupe")).toBe(true);
+    expect(matchesRecipeSearch({ name: "Soupe" }, "byatt")).toBe(false);
   });
 });

@@ -4,7 +4,7 @@ import { Icon } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
 import { HeroMenu } from "./HeroMenu.jsx";
-import { SourceLink } from "./SourceLink.jsx";
+import { RecipeCredits } from "./RecipeCredits.jsx";
 import type { MenuItem } from "./HeroMenu.jsx";
 import { RecipeHeroBadges } from "./RecipeHeroBadges.jsx";
 import type { HeroBadgesProps } from "./RecipeHeroBadges.jsx";
@@ -28,7 +28,7 @@ interface RecipeHeroMobileProps {
   ctrlLRef: RefObject<HTMLDivElement | null>;
   ctrlRRef: RefObject<HTMLDivElement | null>;
   titleRef: RefObject<HTMLHeadingElement | null>;
-  srcRef: RefObject<HTMLAnchorElement | null>;
+  srcRef: RefObject<HTMLDivElement | null>;
   attribRef: RefObject<HTMLDivElement | null>;
   badgesRef: RefObject<HTMLDivElement | null>;
 }
@@ -80,14 +80,14 @@ export function RecipeHeroMobile({
           items={menuItems} />
       </div>
       )}
-      {/* Titre + source + tags, départ étagé piloté par le hook (refs). Décalé nettement
+      {/* Titre + chef/source + tags, départ étagé piloté par le hook (refs). Décalé nettement
           du bas : la carte de stats chevauche le hero de 20px (voir RecipeStatsMobile),
           on laisse ~20px d'image respirer entre les badges et le haut de la carte. */}
       <div style={{ position: "absolute", bottom: 40, left: 18, right: 18 }}>
         <h1 ref={titleRef} style={{ fontFamily: "var(--ff-display)", fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 4, color: "#fff", transformOrigin: "left bottom", willChange: "transform, opacity" }}>{recipe.name}</h1>
         {attribution && <div ref={attribRef} style={{ willChange: "transform, opacity" }}>{attribution}</div>}
-        {!publicMode && recipe.source && (
-          <SourceLink ref={srcRef} source={recipe.source}
+        {!publicMode && (
+          <RecipeCredits ref={srcRef} recipe={recipe}
             style={{ marginBottom: 6, willChange: "transform, opacity" }} />
         )}
         <div ref={badgesRef} style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center", willChange: "transform, opacity" }}>

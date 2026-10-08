@@ -9,6 +9,7 @@ import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { matchesCooking, COOKING_METHODS } from "@/lib/recipes/cooking.js";
 import { computeDifficulty, DIFFICULTY_LABEL } from "@/lib/recipes/difficulty.js";
 import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
+import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import type { Recipe } from "@/lib/types.js";
 
 /** État de filtrage avancé (une « vue » de la bibliothèque). */
@@ -130,4 +131,20 @@ export function matchesFilters(recipe: FilterableRecipe, filters: RecipeFilters,
     if (!filters.ingredients.every(id => ids.has(id))) return false;
   }
   return true;
+}
+
+/**
+ * Recherche plein texte de la bibliothèque : le texte saisi doit apparaître dans le
+ * nom, la cuisine, le chef ou un ingrédient de la recette (casse et accents ignorés).
+ * Une requête vide laisse tout passer. Partagé par la grille et les carnets
+ * intelligents pour qu'une même recherche donne le même résultat partout.
+ *
+ * @param recipe - La recette à tester.
+ * @param query - Le texte de recherche brut.
+ */
+export function matchesRecipeSearch(recipe: Pick<Recipe, "name" | "cuisine" | "chef" | "ingredients">, query: string | null | undefined): boolean {
+  const q = normalizeStr(query);
+  if (!q) return true;
+  const has = (text: string | null | undefined): boolean => normalizeStr(text).includes(q);
+  return has(recipe.name) || has(recipe.cuisine) || has(recipe.chef) || (recipe.ingredients || []).some((line) => has(line.name));
 }

@@ -1,5 +1,5 @@
 import type { Recipe } from "@/lib/types.js";
-import { SourceLink } from "./SourceLink.jsx";
+import { RecipeCredits } from "./RecipeCredits.jsx";
 import { OfficialAvatar } from "../user/OfficialAvatar.jsx";
 import { isOfficialAuthor } from "@/lib/household/publicRecipes.js";
 
@@ -13,7 +13,7 @@ interface RecipeAttributionProps {
 /**
  * Attribution affichée dans le hero d'une recette publique : pastille « Créé par :
  * {auteur} » (ou « Par » + avatar officiel pour un compte Cardamome), suivie hors
- * pastille du lien « d'après {source} » vers la source web d'origine.
+ * pastille du chef et du lien « d'après {source} » vers la source web d'origine.
  */
 export function RecipeAttribution({ recipe, authorUid, authorName, authorPhoto }: RecipeAttributionProps) {
   const official = isOfficialAuthor(authorUid ?? "");
@@ -27,9 +27,7 @@ export function RecipeAttribution({ recipe, authorUid, authorName, authorPhoto }
             : <span style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.25)" }} />}
         <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>{official ? "Par" : "Créé par :"} {authorName || "un mijoteur"}</span>
       </span>
-      {recipe.source && (
-        <SourceLink source={recipe.source} prefix="d'après" iconColor="rgba(255,255,255,0.7)" />
-      )}
+      <RecipeCredits recipe={recipe} sourcePrefix="d'après" />
     </div>
   );
 }

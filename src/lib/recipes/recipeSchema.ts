@@ -43,6 +43,8 @@ export function validateRecipeSchema(raw: unknown, label: string): string[] {
   });
   if (rec.image != null && typeof rec.image !== "string") errs.push(`${label} : "image" doit être une chaîne.`);
   if (rec.source != null && typeof rec.source !== "string") errs.push(`${label} : "source" doit être une chaîne.`);
+  if (rec.chef != null && typeof rec.chef !== "string") errs.push(`${label} : "chef" doit être une chaîne.`);
+  else if (typeof rec.chef === "string" && rec.chef.length > 120) errs.push(`${label} : "chef" trop long (max 120 caractères).`);
   if (rec.tags != null && (!Array.isArray(rec.tags) || rec.tags.some(t => typeof t !== "string")))
     errs.push(`${label} : "tags" doit être un tableau de chaînes.`);
   if (rec.cuisine != null && typeof rec.cuisine !== "string")

@@ -50,7 +50,7 @@ export function ImageUpload({ value, onChange, style, pathPrefix = "misc" }: Ima
           </label>
         </div>
       ) : (
-        <label htmlFor={inputId} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: style?.height || 80, background: "var(--surface2)", border: "2px dashed rgba(255,255,255,0.12)", borderRadius: 12, color: "var(--text3)", cursor: "pointer" }}>
+        <label htmlFor={inputId} className="ripple" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: style?.height || 80, background: "var(--surface2)", border: "2px dashed rgba(255,255,255,0.12)", borderRadius: 12, color: "var(--text3)", cursor: "pointer" }}>
           {uploading ? (
             <>
               <div style={{ width: 22, height: 22, border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />

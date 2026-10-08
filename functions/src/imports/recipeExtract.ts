@@ -92,6 +92,8 @@ export interface Intermediate {
   cuisine: string;
   category: string;
   source: string;
+  /** Chef qui signe la recette (déjà borné par {@link sanitizeChef}), `""` si inconnu. */
+  chef?: string;
   image?: string;
   ingredients: DraftIngredient[];
   utensils: DraftUtensil[];
@@ -151,6 +153,8 @@ export interface Recipe {
   cuisine: string;
   category: string;
   source: string;
+  /** Chef qui signe la recette. Absent quand la source n'en nomme pas. */
+  chef?: string;
   image: string;
   ingredients: RecipeIngredient[];
   utensils: RecipeUtensil[];
@@ -272,6 +276,24 @@ function pluralName(amount: number | string | undefined, name: string | undefine
     if (/ou$/.test(lo)) return OU_PLURAL_X.has(lo) ? w + "x" : w + "s";
     return w + "s";
   });
+}
+
+// Titres et formules d'attribution que le LLM laisse parfois devant le nom du chef.
+const CHEF_PREFIX = /^(?:(?:une\s+)?recette\s+(?:de|du|d['’])\s*|par\s+|by\s+|chef(?:fe)?\s+|chef(?:fe)?\s*:\s*)+/i;
+
+/**
+ * Borne le chef renvoyé par le LLM : chaîne nettoyée de ses formules d'attribution
+ * (« Chef », « par », « recette de »), plafonnée à 120 caractères. Écarte ce qui
+ * ressemble à un site plutôt qu'à une personne (URL, domaine).
+ *
+ * @param raw - Valeur brute (payload LLM non fiable).
+ * @returns Le nom du chef, ou `""` si absent ou inexploitable.
+ */
+export function sanitizeChef(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  const name = raw.replace(/\s+/g, " ").trim().replace(CHEF_PREFIX, "").trim();
+  if (!name || /https?:|www\.|\.(?:com|fr|net|org|co\.uk|io)\b/i.test(name)) return "";
+  return name.slice(0, 120);
 }
 
 /** Valide un id de catégorie renvoyé par le LLM (ou ""). */
@@ -519,6 +541,8 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     image: d.image || "",
     ingredients, utensils, steps,
   };
+  const chef = sanitizeChef(d.chef);
+  if (chef) recipe.chef = chef;
   if (isBase) {
     recipe.isComponent = true;
     recipe.yield = validateYield(d.yield);

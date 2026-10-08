@@ -9,6 +9,7 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
 ```
 {
   "name": string,
+  "chef": string,
   "cuisine": string,
   "category": string,
   "isBase": boolean,
@@ -22,7 +23,8 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
 ```
 
 TITRE & MÉTA
-- `name` : le vrai titre, sans nom de site ni mention parasite.
+- `name` : le vrai titre, sans nom de site, sans nom de chef ni mention parasite (« Bœuf bourguignon (Adam Byatt) » → `Bœuf bourguignon`).
+- `chef` : le nom de la personne (chef, cuisinier, créatrice) qui SIGNE la recette, seulement si la source la nomme explicitement comme auteur (« recette de », « par », titre « … (Adam Byatt) », chaîne ou blog personnel d'un cuisinier). Prénom et nom, sans titre ni fonction (« Chef Adam Byatt » → `Adam Byatt`). Jamais un nom de site, de marque ou de magazine. Sinon `""`. N'invente jamais un auteur.
 - `prepTime` / `cookTime` : minutes entières (0 si inconnu). `servings` : entier (2 si absent).
 - `cuisine` : une valeur EXACTE de cette liste, sinon `""` : {{CUISINE_LIST}}
 - `category` : le rôle de la recette dans le repas, un SEUL id EXACT de cette liste, sinon `""` : `aperitif`, `entree`, `soupe`, `salade`, `plat`, `gratin`, `pasta`, `pizza`, `accompagnement`, `dessert`, `tarte`, `petit-dej`, `boisson`, `sauce`, `boulangerie`. Choisis le plus spécifique : un plat de pâtes → `pasta` ; une pizza → `pizza` ; un gratin → `gratin` ; une tarte (salée ou sucrée) → `tarte`.

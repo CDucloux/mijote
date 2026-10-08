@@ -4,7 +4,7 @@ import { Icon } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
 import { HeroMenu } from "./HeroMenu.jsx";
-import { SourceLink } from "./SourceLink.jsx";
+import { RecipeCredits } from "./RecipeCredits.jsx";
 import type { MenuItem } from "./HeroMenu.jsx";
 import { RecipeHeroBadges } from "./RecipeHeroBadges.jsx";
 import type { HeroBadgesProps } from "./RecipeHeroBadges.jsx";
@@ -61,9 +61,7 @@ export function RecipeHeroDesktop({ recipe, handleBack, publicMode, onEdit, onEx
       <div style={{ position: "absolute", bottom: 14, left: 20, right: 20 }}>
         <h1 style={{ fontFamily: "var(--ff-display)", fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 2 }}>{recipe.name}</h1>
         {attribution}
-        {!publicMode && recipe.source && (
-          <SourceLink source={recipe.source} iconSize={11} style={{ marginTop: 1, marginBottom: 8 }} />
-        )}
+        {!publicMode && <RecipeCredits recipe={recipe} iconSize={11} style={{ marginTop: 1, marginBottom: 8 }} />}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           <RecipeHeroBadges recipe={recipe} {...badges} variant="desktop" />
         </div>
