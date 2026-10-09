@@ -612,6 +612,24 @@ export function imageUrlsInText(text: string): Set<string> {
   return set;
 }
 
+/** Texte utile d'une réponse du modèle, ou la raison pour laquelle il n'y en a pas. */
+export type ModelText = { ok: true; text: string } | { ok: false; reason: "refusal" | "empty" };
+
+/**
+ * Isole le texte de réponse d'un message du modèle. Les blocs de réflexion
+ * (`thinking`) peuvent précéder le texte : on cherche le bloc par son type, jamais
+ * par sa position. Un refus de sécurité (`stop_reason: "refusal"`) est distingué
+ * d'une réponse vide, car il appelle un autre message pour l'utilisateur.
+ *
+ * @param response - Le message brut (seuls `stop_reason` et `content` sont lus).
+ * @returns Le texte, ou la raison de son absence.
+ */
+export function modelText(response: { stop_reason?: string | null; content?: readonly { type: string; text?: string }[] | null }): ModelText {
+  if (response.stop_reason === "refusal") return { ok: false, reason: "refusal" };
+  const block = (response.content || []).find((b) => b.type === "text" && typeof b.text === "string" && b.text.trim());
+  return block?.text ? { ok: true, text: block.text } : { ok: false, reason: "empty" };
+}
+
 /**
  * Extrait un objet JSON d'une réponse LLM, en tolérant les fences ```json et le
  * texte parasite autour de l'objet. Une réponse TRONQUÉE (limite de tokens

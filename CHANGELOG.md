@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.59.21 – Cardamome · Import plus léger
+
+### Import intelligent
+- **Nouveau moteur pour le lien, le texte et le PDF** : l'extraction passe à Claude Haiku 5.5, plus précis à suivre les consignes et environ dix fois moins cher au token que Haiku 4.5. Les photos restent confiées à Sonnet 5.
+- **Recettes longues mieux tenues** : le plafond de réponse est relevé pour qu'une recette fournie (nombreuses étapes, sections) ne soit plus coupée en route.
+- **Message clair si l'IA décline un contenu** : l'import invite à coller le texte de la recette plutôt que d'afficher une erreur vague.
+
+### Sous le capot
+- SDK Anthropic des Cloud Functions mis à jour (0.68 vers 0.132). Actif après déploiement des Cloud Functions.
+
 ## v4.59.20 – Cardamome · Le calcul à découvert
 
 ### Fiche recette
