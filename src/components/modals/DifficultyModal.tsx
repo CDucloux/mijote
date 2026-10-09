@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
+import { StickySheetHeader } from "../ui/StickySheetHeader.jsx";
 import { capitalize } from "../../lib/format.js";
 import { DIFFICULTY_LABEL, difficultyColor, type DifficultyExplain, type Workload } from "@/lib/recipes/difficulty.js";
 
@@ -48,19 +49,21 @@ export function DifficultyModal({ data, workload, onClose }: DifficultyModalProp
   const color = difficultyColor(data.score);
 
   return (
-    <SwipeableSheet onClose={onClose} style={{ maxHeight: "90dvh" }}>
-      {/* Note : l'élément dominant de la feuille. */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, margin: "4px 2px 14px" }}>
-        <div>
-          <div style={{ fontSize: 13, color: "var(--text3)", fontWeight: 500, marginBottom: 4 }}>Difficulté</div>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{DIFFICULTY_LABEL[data.score]}</div>
+    <SwipeableSheet onClose={onClose} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0 }}>
+      {/* Note : l'élément dominant de la feuille, qui reste en haut pendant la lecture du calcul. */}
+      <StickySheetHeader>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, margin: "4px 2px 14px" }}>
+          <div>
+            <div style={{ fontSize: 13, color: "var(--text3)", fontWeight: 500, marginBottom: 4 }}>Difficulté</div>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{DIFFICULTY_LABEL[data.score]}</div>
+          </div>
+          <div style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color, lineHeight: 0.9, fontVariantNumeric: "tabular-nums" }}>
+            <span style={{ fontSize: 46 }}>{data.score}</span>
+            <span style={{ fontSize: 20, color: "var(--text3)" }}>/5</span>
+          </div>
         </div>
-        <div style={{ fontFamily: "var(--ff-display)", fontWeight: 700, color, lineHeight: 0.9, fontVariantNumeric: "tabular-nums" }}>
-          <span style={{ fontSize: 46 }}>{data.score}</span>
-          <span style={{ fontSize: 20, color: "var(--text3)" }}>/5</span>
-        </div>
-      </div>
-      <Gauge level={data.score} color={color} />
+        <Gauge level={data.score} color={color} />
+      </StickySheetHeader>
 
       {data.overridden ? (
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 22 }}>
