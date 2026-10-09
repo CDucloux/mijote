@@ -533,3 +533,30 @@ describe("parseUtensilsYaml – usagePrecaution", () => {
     expect(errors.join(" ")).toMatch(/tonalité/);
   });
 });
+
+describe("enveloppe des exports d'ingrédients et d'ustensiles", () => {
+  const NOW = new Date("2026-10-09T06:26:00.000Z");
+
+  it("écrit version, date et nombre en tête, entrées en colonne 0", () => {
+    const out = formatIngredientsYaml([{ id: "db_i1", name: "Ail", category: "vegetable" }], { now: NOW });
+    expect(out).toMatch(/^# Base d'ingrédients Cardamome \(1\)/);
+    expect(out).toContain("schema_version: 1\nexported_at: 2026-10-09T06:26:00.000Z\ncount: 1\ningredients:\n\n- id: db_i1");
+    const ut = formatUtensilsYaml([{ id: "db_u1", name: "Fouet" }], { now: NOW });
+    expect(ut).toContain("schema_version: 1\nexported_at: 2026-10-09T06:26:00.000Z\ncount: 1\nutensils:");
+  });
+  it("se réimporte à l'identique, et l'ancien format en liste nue reste lisible", () => {
+    const src = [{ id: "db_i1", name: "Ail", category: "vegetable", months: [1, 2] }];
+    expect(parseIngredientsYaml(formatIngredientsYaml(src, { now: NOW })).items).toEqual(src);
+    expect(parseIngredientsYaml("- id: db_i1\n  name: Ail\n").items).toEqual([{ id: "db_i1", name: "Ail" }]);
+  });
+  it("annule l'import d'un fichier tronqué ou au schéma trop récent", () => {
+    const truncated = formatIngredientsYaml([{ name: "Ail" }, { name: "Oignon" }], { now: NOW }).replace(/\n- name: Oignon\n?/, "\n");
+    expect(parseIngredientsYaml(truncated).errors[0]).toMatch(/annonce 2 entrées/);
+    expect(parseUtensilsYaml("schema_version: 9\nutensils: []\n").errors[0]).toMatch(/schéma v9/);
+  });
+  it("valide la base d'ingrédients versionnée dans data/", () => {
+    const { items, errors } = parseIngredientsYaml(readFileSync("data/ingredients.yaml", "utf8"));
+    expect(errors).toEqual([]);
+    expect(items.length).toBeGreaterThan(300);
+  });
+});

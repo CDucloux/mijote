@@ -17,6 +17,7 @@ import { isFruitVeg } from "@/constants/categories.js";
 import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { INGREDIENT_FORMS, normalizePreferredForms } from "@/lib/food/qualityRecommendation.js";
 import { PRECAUTION_TONES, isPrecautionTone } from "@/lib/utensils/usagePrecaution.js";
+import { buildEnvelope, readEnvelope, INGREDIENTS_SCHEMA_VERSION, UTENSILS_SCHEMA_VERSION } from "@/lib/household/dataEnvelope.js";
 
 /** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
 export interface ParseResult<T = Record<string, unknown>> {
@@ -40,6 +41,22 @@ const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat"
 const dumpYaml = (rows: unknown, header: string): string => {
   const body = stringifyYaml(rows, { lineWidth: 0 }).replace(/\n(- )/g, "\n\n$1");
   return header.replace(/\s*$/, "") + "\n\n" + body;
+};
+
+/**
+ * Variante enveloppée de {@link dumpYaml} : métadonnées (`schema_version`,
+ * `exported_at`, `count`) puis la liste sous `key`. Les entrées sont sérialisées
+ * comme une liste nue, en colonne 0 sous la clé (YAML valide) : leur rendu reste
+ * octet pour octet celui des anciens exports, donc les diffs Git ne bougent pas.
+ *
+ * @param envelope - Racine produite par `buildEnvelope` (liste rangée sous `key`).
+ * @param key - Clé de la liste dans l'enveloppe.
+ * @param header - En-tête (commentaire `#`) placé en tête du document.
+ * @returns Le document YAML complet.
+ */
+const dumpEnvelopeYaml = (envelope: Record<string, unknown>, key: string, header: string): string => {
+  const { [key]: rows, ...meta } = envelope;
+  return dumpYaml(rows, header).replace(/\n\n/, `\n\n${stringifyYaml(meta, { lineWidth: 0 })}${key}:\n\n`);
 };
 
 /** Catégories du glossaire des techniques (clé → libellé affiché). */
@@ -86,21 +103,23 @@ export function slugifyId(prefix: string, name: string): string {
 }
 
 /**
- * Charge un document YAML attendu comme une LISTE d'objets.
+ * Charge un document YAML de données : enveloppe versionnée (cf. `dataEnvelope`)
+ * ou ancienne liste nue d'objets.
  *
  * @param text - Source YAML brute.
- * @returns `{ list, error }` : `error` non nul si le YAML est invalide ou n'est pas une liste.
+ * @param key - Nom de la liste dans l'enveloppe (`ingredients`, `utensils`).
+ * @param supportedVersion - Plus haute version de schéma lisible.
+ * @returns `{ list, error }` : `error` non nul si le YAML est invalide, mal formé ou trop récent.
  */
-function loadYamlList(text: string): { list: unknown[] | null; error: string | null } {
+function loadYamlList(text: string, key: string, supportedVersion: number): { list: unknown[] | null; error: string | null } {
   let doc: unknown;
   try {
     doc = parseYaml(text);
   } catch (e) {
     return { list: null, error: `YAML invalide : ${(e as Error)?.message || e}.` };
   }
-  if (doc == null) return { list: null, error: "Fichier vide." };
-  if (!Array.isArray(doc)) return { list: null, error: "Le document doit être une liste d'entrées (« - … »)." };
-  return { list: doc, error: null };
+  const { list, error } = readEnvelope(doc, key, supportedVersion);
+  return { list, error };
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
@@ -374,9 +393,10 @@ interface IngredientRow {
  * @param list - Ingrédients à exporter.
  * @param options - Options de tri.
  * @param options.categoryOrder - Ordre des catégories (sinon tri alphabétique seul).
- * @returns Le document YAML réimportable.
+ * @param options.now - Instant d'export inscrit dans l'enveloppe (`exported_at`).
+ * @returns Le document YAML réimportable, enveloppé (version, date, nombre).
  */
-export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [] }: { categoryOrder?: string[] } = {}): string {
+export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [], now = new Date() }: { categoryOrder?: string[]; now?: Date } = {}): string {
   const order = categoryOrder.length ? categoryOrder : null;
   const rows = [...(list || [])]
     .sort((a, b) => {
@@ -408,7 +428,10 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
       }
       return o;
     });
-  return dumpYaml(rows, `# Base d'ingrédients Cardamome (${rows.length}) – généré, réimportable. Valeurs pour 100 g.\n`);
+  return dumpEnvelopeYaml(
+    buildEnvelope("ingredients", rows, INGREDIENTS_SCHEMA_VERSION, now), "ingredients",
+    `# Base d'ingrédients Cardamome (${rows.length}) – généré, réimportable. Valeurs pour 100 g.\n# Valeurs nutritionnelles de référence : table Ciqual (data/ciqual/).\n`,
+  );
 }
 
 /** Ustensile (forme minimale utilisée par l'export). */
@@ -419,9 +442,11 @@ interface UtensilRow { id?: string; name?: string; category?: string; appliance?
  * sérialisée après le nom (avant l'image) pour rester lisible en revue de diff.
  *
  * @param list - Ustensiles à exporter.
- * @returns Le document YAML réimportable.
+ * @param options - Options d'export.
+ * @param options.now - Instant d'export inscrit dans l'enveloppe (`exported_at`).
+ * @returns Le document YAML réimportable, enveloppé (version, date, nombre).
  */
-export function formatUtensilsYaml(list: UtensilRow[]): string {
+export function formatUtensilsYaml(list: UtensilRow[], { now = new Date() }: { now?: Date } = {}): string {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
     .map(d => {
@@ -444,7 +469,7 @@ export function formatUtensilsYaml(list: UtensilRow[]): string {
       }
       return o;
     });
-  return dumpYaml(rows, `# Base d'ustensiles Cardamome (${rows.length}) – généré, réimportable.\n`);
+  return dumpEnvelopeYaml(buildEnvelope("utensils", rows, UTENSILS_SCHEMA_VERSION, now), "utensils", `# Base d'ustensiles Cardamome (${rows.length}) – généré, réimportable.\n`);
 }
 
 // ─── INGRÉDIENTS ──────────────────────────────────────────────────────────────
@@ -459,7 +484,7 @@ export function formatUtensilsYaml(list: UtensilRow[]): string {
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
  */
 export function parseIngredientsYaml(text: string, { validCategories }: { validCategories?: Set<string> | string[] } = {}): ParseResult {
-  const { list, error } = loadYamlList(text);
+  const { list, error } = loadYamlList(text, "ingredients", INGREDIENTS_SCHEMA_VERSION);
   if (error) return { items: [], errors: [error] };
 
   const valid = validCategories instanceof Set ? validCategories : new Set(validCategories || []);
@@ -561,7 +586,7 @@ export function parseIngredientsYaml(text: string, { validCategories }: { validC
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
  */
 export function parseUtensilsYaml(text: string): ParseResult {
-  const { list, error } = loadYamlList(text);
+  const { list, error } = loadYamlList(text, "utensils", UTENSILS_SCHEMA_VERSION);
   if (error) return { items: [], errors: [error] };
 
   const errors: string[] = [];
