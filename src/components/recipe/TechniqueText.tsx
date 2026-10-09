@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+import { StickySheetHeader } from "../ui/StickySheetHeader.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 import { buildTechniqueIndex, annotateText } from "@/lib/recipes/techniques.js";
 import type { TechniqueEntry, TechniqueIndex } from "@/lib/recipes/techniques.js";
@@ -102,25 +103,28 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }: { tech: Techn
   const topRef = useRef<HTMLDivElement>(null);
   useEffect(() => { topRef.current?.closest(".modal-sheet")?.scrollTo({ top: 0 }); }, [tech.id]);
   return (
-    <SwipeableSheet onClose={onClose} zIndex={760} style={{ maxHeight: "88dvh" }}>
+    <SwipeableSheet onClose={onClose} zIndex={760} hideHandle style={{ maxHeight: "88dvh", paddingTop: 0 }}>
       {(close) => (
         <div ref={topRef}>
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon as IconName} size={27} color={c.color} /></span>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h2 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{tech.name}</h2>
-              {diff > 0 && (
-                <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 3, alignItems: "center", marginTop: 8 }}>
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= diff ? c.color : "var(--surface3)" }} />
-                  ))}
-                </span>
-              )}
+          {/* En-tête collant : le nom du geste et la fermeture restent à portée pendant la lecture. */}
+          <StickySheetHeader>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
+              <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon as IconName} size={27} color={c.color} /></span>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <h2 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{tech.name}</h2>
+                {diff > 0 && (
+                  <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 3, alignItems: "center", marginTop: 8 }}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= diff ? c.color : "var(--surface3)" }} />
+                    ))}
+                  </span>
+                )}
+              </div>
+              <button type="button" onClick={() => close()} aria-label="Fermer" className="pressable sheet-close-btn" style={{ flexShrink: 0, alignSelf: "flex-start", width: 32, height: 32, borderRadius: "50%", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}>
+                <Icon name="close" size={16} color="var(--text2)" />
+              </button>
             </div>
-            <button type="button" onClick={() => close()} aria-label="Fermer" className="pressable sheet-close-btn" style={{ flexShrink: 0, alignSelf: "flex-start", width: 32, height: 32, borderRadius: "50%", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}>
-              <Icon name="close" size={16} color="var(--text2)" />
-            </button>
-          </div>
+          </StickySheetHeader>
 
           {/* Fil d'ariane taxonomique : catégorie > ... > parent direct (la technique
               courante est le titre ci-dessus). Rend la hiérarchie lisible d'un coup d'œil. */}

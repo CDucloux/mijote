@@ -1,7 +1,7 @@
 {
   "name": "mijote",
   "private": true,
-  "version": "4.59.32",
+  "version": "4.59.33",
   "type": "module",
   "engines": {
     "node": "22"
