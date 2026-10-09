@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.59.30 – Cardamome · Le feu à vue
+
+### Interface
+- **Thermostats dessinés dans les précautions d'ustensile** : un tableau de puissance (« 1/5 à 1/3 », « 2/3 à fond ») se lit sur un bouton de plaque à 6 crans. Les crans de la plage s'allument, une bande les relie et le repère tourne jusqu'à son cran à l'ouverture. Un tableau dont une valeur n'est pas une puissance lisible reste en texte.
+
+### Console admin
+- **Survol des boutons modifier / supprimer des ustensiles** sur desktop, cohérent avec celui des techniques.
+
 ## v4.59.29 – Cardamome · Ustensiles en tête
 
 ### Console admin
