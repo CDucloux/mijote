@@ -15,7 +15,7 @@ import { SheetIdentityHeader } from "../components/ui/SheetIdentityHeader.jsx";
 import { countTrackingFilters, matchesTrackingFilter } from "@/lib/food/ingredientTracking.js";
 import { ReadOnlyBanner, AdminBanner } from "../components/ui/Banners.jsx";
 import { IngredientDetail } from "../components/ingredient/IngredientDetail.jsx";
-import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { mergeImport, importHeadline, importContext } from "@/lib/household/importMerge.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
 import { ING_MD_COLUMNS, formatTips } from "@/lib/food/ingredientsMarkdown.js";
 import {
@@ -47,6 +47,11 @@ function downloadText(filename, text, type = "text/plain") {
 
 // Bouton rond d'action (modifier / supprimer) des cartes de la console : le survol
 // desktop vient des classes `.icon-btn-soft` / `.icon-btn-danger` (global.css).
+// Libellés des bilans d'import (titre « 3 ustensiles mis à jour », « 1 nouvel ingrédient »…).
+const INGREDIENT_NOUN = { one: "ingrédient", many: "ingrédients", newOne: "nouvel ingrédient", newMany: "nouveaux ingrédients" };
+const UTENSIL_NOUN = { one: "ustensile", many: "ustensiles", newOne: "nouvel ustensile", newMany: "nouveaux ustensiles" };
+const TECHNIQUE_NOUN = { one: "geste technique", many: "gestes techniques", newOne: "nouveau geste technique", newMany: "nouveaux gestes techniques" };
+
 const ROUND_ICON_BTN = { width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", color: "var(--text3)", cursor: "pointer" };
 
 // Zone d'import YAML réutilisable (ingrédients / ustensiles / techniques).
@@ -369,14 +374,13 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     details: errors,
   });
   const reportEmpty = (what) => setImportResult({ ok: false, title: "Rien à importer", message: `Aucun ${what} reconnu dans le fichier.` });
-  const reportDone = (read, created, updated, feminine = false) => {
-    const e = feminine ? "e" : "";
-    setImportResult({
-      ok: true,
-      title: "Import terminé",
-      message: `${read} entrée${read > 1 ? "s" : ""} lue${read > 1 ? "s" : ""} : ${created} créé${e}${created > 1 ? "s" : ""}, ${updated} mis${feminine ? `e${updated > 1 ? "s" : ""}` : ""} à jour. Rien n'a été supprimé.`,
-    });
-  };
+  // Bilan : seules les entrées réellement modifiées comptent, le reste est « déjà à jour ».
+  const reportDone = (report, noun) => setImportResult({
+    ok: true,
+    title: importHeadline(report, noun),
+    message: importContext(report, noun),
+    report,
+  });
 
   // Fusion calculée sur l'état courant (et non dans un updater de setState, que
   // React peut différer ou rejouer en mode strict) : les compteurs restent justes.
@@ -385,27 +389,13 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     const { items: parsed, errors } = parseIngredientsYaml(text, { validCategories: new Set(Object.keys(categories)) });
     if (errors.length) return reportErrors(errors);
     if (!parsed.length) return reportEmpty("ingrédient");
-    let created = 0, updated = 0;
-    const next = [...ingredientDB];
-    const idxById = new Map(next.map((d, i) => [d.id, i]));
-    const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
-    parsed.forEach((row, n) => {
-      const idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
-        : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
-      if (idx >= 0) {
-        const cur = next[idx];
-        next[idx] = { ...cur, ...row, id: cur.id, nutrition: row.nutrition || cur.nutrition };
-        updated++;
-      } else {
-        const id = row.id || ("db_i" + Date.now() + "_" + n);
-        next.push({ ...row, id });
-        idxById.set(id, next.length - 1);
-        idxByName.set(normalizeStr(row.name), next.length - 1);
-        created++;
-      }
+    const { next, report } = mergeImport(ingredientDB, parsed, {
+      matchByName: true,
+      combine: (cur, row) => ({ ...cur, ...row, id: cur.id, nutrition: row.nutrition || cur.nutrition }),
+      newId: (_row, n) => "db_i" + Date.now() + "_" + n,
     });
-    setIngredientDB(next);
-    reportDone(parsed.length, created, updated);
+    if (report.created.length || report.updated.length) setIngredientDB(next);
+    reportDone(report, INGREDIENT_NOUN);
   };
 
   // Import YAML des ustensiles (master). Upsert par id puis par nom.
@@ -413,40 +403,27 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     const { items: parsed, errors } = parseUtensilsYaml(text);
     if (errors.length) return reportErrors(errors);
     if (!parsed.length) return reportEmpty("ustensile");
-    let created = 0, updated = 0;
-    const next = [...utensilDB];
-    const idxById = new Map(next.map((d, i) => [d.id, i]));
-    const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
-    parsed.forEach((row, n) => {
-      const idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
-        : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
-      if (idx >= 0) { next[idx] = { ...next[idx], ...row, id: next[idx].id }; updated++; }
-      else {
-        const id = row.id || ("db_u" + Date.now() + "_" + n);
-        next.push({ ...row, id });
-        idxById.set(id, next.length - 1);
-        idxByName.set(normalizeStr(row.name), next.length - 1);
-        created++;
-      }
+    const { next, report } = mergeImport(utensilDB, parsed, {
+      matchByName: true,
+      combine: (cur, row) => ({ ...cur, ...row, id: cur.id }),
+      newId: (_row, n) => "db_u" + Date.now() + "_" + n,
     });
-    setUtensilDB(next);
-    reportDone(parsed.length, created, updated);
+    if (report.created.length || report.updated.length) setUtensilDB(next);
+    reportDone(report, UTENSIL_NOUN);
   };
 
-  // Import YAML du glossaire des techniques (master). Upsert par id.
+  // Import YAML du glossaire des techniques (master). Upsert par id, la ligne remplace l'entrée.
   const importTechniquesYaml = (text) => {
     const { items: parsed, errors } = parseTechniquesYaml(text);
     if (errors.length) return reportErrors(errors);
     if (!parsed.length) return reportEmpty("geste technique");
-    let created = 0, updated = 0;
-    const next = [...(techniques || [])];
-    const idxById = new Map(next.map((d, i) => [d.id, i]));
-    parsed.forEach(row => {
-      if (idxById.has(row.id)) { next[idxById.get(row.id)] = row; updated++; }
-      else { next.push(row); idxById.set(row.id, next.length - 1); created++; }
+    const { next, report } = mergeImport(techniques || [], parsed, {
+      matchByName: false,
+      combine: (_cur, row) => row,
+      newId: row => row.id,
     });
-    setTechniques?.(next);
-    reportDone(parsed.length, created, updated);
+    if (report.created.length || report.updated.length) setTechniques?.(next);
+    reportDone(report, TECHNIQUE_NOUN);
   };
 
   const exportTechniquesMarkdown = () => downloadText("techniques_cardamome.md", formatTechniquesMarkdown(techniques), "text/markdown");

@@ -34,8 +34,15 @@ utensils:
   usagePrecaution:
     tone: heat
     title: Pas besoin de chauffer trop fort
-    description: "L'inox chauffe vite et bien : inutile de dépasser les deux tiers de la puissance maximale de la plaque. Au-delà, on ne cuit pas plus vite, mais on brûle l'huile et on fait accrocher les aliments."
-    tip: Reste autour des deux tiers de la puissance maximale de la plaque (par exemple 4 sur 6) et adapte à la taille du fond.
+    description: |-
+      L'inox chauffe vite et bien : au-delà des deux tiers de la puissance, on ne cuit pas plus vite, on brûle le fond et on fait accrocher. Seul un grand volume d'eau à porter à ébullition demande de pousser la plaque au maximum. Puissance conseillée selon l'usage (en fraction du maximum) :
+
+      | Usage | Puissance |
+      | --- | --- |
+      | Maintenir au chaud, faire fondre | 1/5 à 1/3 |
+      | Frémir, réduire une sauce | 1/3 à 1/2 |
+      | Cuire des légumes, du riz | 1/2 à 2/3 |
+      | Porter un grand volume d'eau à ébullition | 2/3 à fond |
 
 - id: db_u_cercle_a_patisserie
   name: Cercle à pâtisserie
@@ -59,7 +66,15 @@ utensils:
   usagePrecaution:
     tone: heat
     title: Montée en température progressive
-    description: La fonte accumule fortement la chaleur et la restitue longtemps. À feu vif elle surchauffe et attache.
+    description: |-
+      La fonte accumule fortement la chaleur et la restitue longtemps : à feu vif elle surchauffe et attache. Une fois chaude, elle n'a plus besoin de plus des deux tiers. Puissance conseillée selon l'usage (en fraction du maximum) :
+
+      | Usage | Puissance |
+      | --- | --- |
+      | Mijoter à couvert | 1/5 à 1/3 |
+      | Faire suer, cuisson douce | 1/3 à 1/2 |
+      | Monter en température | 1/2 à 2/3 |
+      | Saisir, rissoler une fois chaude | 1/2 à 2/3 |
     tip: "Démarre à feu moyen, puis baisse une fois chaude : elle tient la température seule."
 
 - id: db_u_cocotte_minute
@@ -145,7 +160,15 @@ utensils:
   usagePrecaution:
     tone: heat
     title: Parfait pour mijoter doucement
-    description: "La fonte garde la chaleur : une fois à température, un tout petit feu suffit à entretenir le frémissement d'un bouillon ou d'une sauce."
+    description: |-
+      La fonte garde la chaleur : une fois à température, un tout petit feu suffit à entretenir le frémissement d'un bouillon ou d'une sauce. Puissance conseillée selon l'usage (en fraction du maximum) :
+
+      | Usage | Puissance |
+      | --- | --- |
+      | Mijoter, entretenir le frémissement | 1/5 à 1/3 |
+      | Faire revenir, faire suer | 1/3 à 1/2 |
+      | Monter en température | 1/2 à 2/3 |
+      | Porter à ébullition | 2/3 |
     tip: Porte à ébullition puis réduis au minimum pour mijoter sans déborder.
 
 - id: db_u1781461063647

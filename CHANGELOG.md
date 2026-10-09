@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.59.31 – Cardamome · Le compte est bon
+
+### Console admin
+- **Bilan d'import juste** : réimporter un export ne compte plus chaque ligne comme « mise à jour ». Seules les entrées réellement modifiées le sont, les autres sont « déjà à jour », et la base n'est pas réécrite si rien n'a changé (ingrédients, ustensiles, gestes techniques).
+- **Popup de bilan repensée** : le titre dit ce qui a changé (« 1 ustensile mis à jour », « Tout était déjà à jour »), une barre montre la répartition nouveaux / modifiés / déjà à jour, et chaque entrée touchée est nommée.
+
+### Interface
+- **Thermostat seul** : dans les précautions d'ustensile, le bouton à 6 crans remplace la fraction écrite à côté.
+
+### Données
+- **Tableaux de chauffe** pour la Casserole Inox, la Cocotte en fonte et le Faitout en fonte (`data/utensils.yaml`, à réimporter dans la console). La fonte ne dépasse pas les deux tiers de la puissance.
+
 ## v4.59.30 – Cardamome · Le feu à vue
 
 ### Interface

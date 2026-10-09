@@ -5138,3 +5138,15 @@ html.light .sheet-sticky-head::after {
 @media (prefers-reduced-motion: reduce) {
   .heat-knob-pointer { animation: none; }
 }
+
+/* Bilan d'import : les segments de la barre se remplissent depuis la gauche, l'un après l'autre. */
+@keyframes importBarGrow {
+  from { transform: scaleX(0); }
+}
+.import-bar-seg {
+  transform-origin: left center;
+  animation: importBarGrow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.12s backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .import-bar-seg { animation: none; }
+}
