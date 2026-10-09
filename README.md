@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.59.20-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.59.21-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -162,7 +162,7 @@ toujours avec vous.
 | Build | Vite 8 (Rolldown), `vite-plugin-pwa` |
 | Backend | Firebase 12 (Auth, Firestore, Storage) |
 | Serveur | Cloud Functions v2 (Node 22, `europe-west1`) |
-| IA | Claude (Anthropic) pour l'import de recettes (vision + texte) |
+| IA | Claude (Anthropic) pour l'import de recettes : Haiku 5.5 pour le texte (lien, texte collé, PDF), Sonnet 5 pour la vision (photos) |
 | Tests | Vitest 4 (1051 tests unitaires sur les libs et hooks critiques) |
 | CI | GitHub Actions (test + build sur chaque push) |
 | Qualité | ESLint 10 |
