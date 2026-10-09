@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.59.27 – Cardamome · Poignée en tête
+
+### Console admin
+- **En-tête collant réparé pour de bon** : la fiche de geste est construite comme la feuille Filtres, sans bande au-dessus de l'en-tête. Le formulaire ne peut plus défiler par-dessus, quel que soit le navigateur.
+- **Poignée toujours visible** : la petite poignée grise vit dans l'en-tête collant et reste en haut pendant le défilement, pour glisser et fermer à tout moment.
+
 ## v4.59.26 – Cardamome · Rien au-dessus
 
 ### Console admin
