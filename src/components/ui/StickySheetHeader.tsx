@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
 // défilement). La feuille doit être SANS padding haut (`paddingTop: 0`, comme la
 // feuille Filtres) : un sticky `top: 0` se colle au bord du scrollport, le contenu
 // défilerait sinon dans ce padding, au-dessus de l'en-tête. L'en-tête porte donc
-// lui-même cet espace. Le séparateur n'apparaît qu'une fois du contenu passé
+// lui-même cet espace, ainsi que la poignée (feuille ouverte en `hideHandle`), qui
+// reste ainsi visible au défilement. Le séparateur n'apparaît qu'une fois du contenu passé
 // dessous : une sentinelle juste avant l'en-tête sort du cadre dès le défilement.
 export function StickySheetHeader({ children }: { children: ReactNode }) {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -22,6 +23,9 @@ export function StickySheetHeader({ children }: { children: ReactNode }) {
 
   return (<>
     <div ref={sentinelRef} aria-hidden />
-    <div className={`sheet-sticky-head${stuck ? " is-stuck" : ""}`}>{children}</div>
+    <div className={`sheet-sticky-head${stuck ? " is-stuck" : ""}`}>
+      <div className="modal-handle" />
+      {children}
+    </div>
   </>);
 }
