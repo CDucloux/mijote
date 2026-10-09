@@ -1,5 +1,16 @@
 # Changelog – Cardamome
 
+## v4.59.22 – Cardamome · Données au carré
+
+### Console admin
+- **Exports datés et versionnés** : les exports YAML d'ingrédients, d'ustensiles et de techniques commencent par la version du schéma, la date d'export et le nombre d'entrées. L'import refuse un fichier écrit par une version plus récente de l'app, ou tronqué, au lieu de l'avaler à moitié ; les anciens exports restent importables.
+- **Un export se réimporte toujours** : la précaution d'un ustensile pouvait dépasser à l'écriture la limite acceptée à l'import (cas de la poêle en inox et de son tableau de puissance). La console et l'import partagent désormais les mêmes limites.
+- **Exports de techniques stables** : leurs sous-champs sont toujours écrits dans le même ordre, un nouvel export ne montre que ce qui a vraiment changé.
+
+### Données
+- **Bases de référence à jour dans le dépôt** : 326 ingrédients, 69 ustensiles et 82 techniques, tels qu'exportés de la console.
+- **Table Ciqual 2025 de l'ANSES** rangée avec les données, comme référence des valeurs nutritionnelles.
+
 ## v4.59.21 – Cardamome · Import plus léger
 
 ### Import intelligent
