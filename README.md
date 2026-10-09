@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.59.29-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.59.30-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -92,7 +92,7 @@ toujours avec vous.
 - 💡 **Qualité & précautions** : recommandation discrète de forme à l'achat pour
   certains ingrédients (frais / surgelé…), en recette et en courses ; précautions
   d'utilisation éditoriales des ustensiles (chaleur, revêtement…) sur leur fiche et
-  en contexte de recette.
+  en contexte de recette, la puissance conseillée dessinée en bouton de plaque à 6 crans.
 - 📅 **Planning repas** : semainier glisser-déposer, menu contextuel par repas
   (ouvrir, replanifier vers une autre semaine, retirer), **générateur de semaine**
   (styles facile / équilibré / aventureux, repas composés, affinité de saison,

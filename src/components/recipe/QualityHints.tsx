@@ -2,9 +2,11 @@ import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import { precautionVisual } from "@/lib/utensils/usagePrecaution.js";
 import { parsePrecautionDescription, type TableBlock } from "@/lib/utensils/precautionLayout.js";
+import { heatRows } from "@/lib/utensils/heatDial.js";
 import type { PrecautionTone, UsagePrecaution } from "@/lib/types";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon, type IconName } from "../ui/Icon.jsx";
+import { HeatKnob } from "./HeatKnob.jsx";
 
 // ─── INDICES QUALITÉ (recommandation d'ingrédient / précaution d'ustensile) ───
 // Présentationnels et discrets : la logique (résolution, libellé, tonalité) vit
@@ -84,6 +86,7 @@ function PrecautionDescription({ description, accent }: { description: string; a
 
 /** Grille alignée d'une précaution : en-tête optionnel, libellés à gauche, valeurs à droite (chiffres tabulaires pour aligner les fractions). */
 function PrecautionTable({ block, accent, first }: { block: TableBlock; accent: string; first: boolean }) {
+  const heat = useMemo(() => heatRows(block), [block]);
   const cols = block.header?.length || Math.max(2, ...block.rows.map(r => r.length));
   const twoCol = cols === 2;
   const template = twoCol ? "1fr auto" : `repeat(${cols}, 1fr)`;
@@ -96,7 +99,13 @@ function PrecautionTable({ block, accent, first }: { block: TableBlock; accent: 
           ))}
         </div>
       )}
-      {block.rows.map((row, r) => (
+      {heat ? heat.map((row, r) => (
+        <div key={r} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px 8px 14px", borderTop: r > 0 || block.header ? "1px solid var(--border)" : "none" }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, lineHeight: 1.45, color: "var(--text2)" }}>{row.label}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{row.value}</span>
+          <HeatKnob notches={row.notches} accent={accent} />
+        </div>
+      )) : block.rows.map((row, r) => (
         <div key={r} style={{ display: "grid", gridTemplateColumns: template, gap: 12, padding: "10px 14px", alignItems: "baseline", borderTop: r > 0 || block.header ? "1px solid var(--border)" : "none" }}>
           {row.map((cell, k) => (
             <span key={k} style={{

@@ -45,6 +45,10 @@ function downloadText(filename, text, type = "text/plain") {
   URL.revokeObjectURL(a.href);
 }
 
+// Bouton rond d'action (modifier / supprimer) des cartes de la console : le survol
+// desktop vient des classes `.icon-btn-soft` / `.icon-btn-danger` (global.css).
+const ROUND_ICON_BTN = { width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", color: "var(--text3)", cursor: "pointer" };
+
 // Zone d'import YAML réutilisable (ingrédients / ustensiles / techniques).
 // Gère son propre input fichier et son état de survol ; délègue la lecture à
 // `onText(contenu, nomFichier)`. L'export reste en Markdown (boutons dédiés).
@@ -640,8 +644,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                           {item._ro
                             ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8 }}>Master</span>
                             : <>
-                              <button onClick={() => setEditUt({ ...item })} style={{ color: "var(--text3)" }}><Icon name="edit" size={14} /></button>
-                              <button onClick={() => setConfirmDel({ type: "ut", item })} style={{ color: "var(--red)" }}><Icon name="trash" size={14} /></button>
+                              <button className="icon-btn-soft" onClick={() => setEditUt({ ...item })} title="Modifier" style={ROUND_ICON_BTN}><Icon name="edit" size={14} /></button>
+                              <button className="icon-btn-danger" onClick={() => setConfirmDel({ type: "ut", item })} title="Supprimer" style={ROUND_ICON_BTN}><Icon name="trash" size={14} /></button>
                             </>
                           }
                         </div>
@@ -723,10 +727,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                           </div>
                           {isAdmin && (
                             <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                              <button className="icon-btn-soft" onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier"
-                                style={{ width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", color: "var(--text3)", cursor: "pointer" }}><Icon name="edit" size={14} /></button>
-                              <button className="icon-btn-danger" onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer"
-                                style={{ width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", color: "var(--text3)", cursor: "pointer" }}><Icon name="trash" size={14} /></button>
+                              <button className="icon-btn-soft" onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier" style={ROUND_ICON_BTN}><Icon name="edit" size={14} /></button>
+                              <button className="icon-btn-danger" onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer" style={ROUND_ICON_BTN}><Icon name="trash" size={14} /></button>
                             </div>
                           )}
                         </div>
